@@ -30,18 +30,18 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseDataReport));
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.最大行数 = new System.Windows.Forms.ToolStripLabel();
-            this.txtMaxRow = new System.Windows.Forms.ToolStripTextBox();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripBtnAdvQuery = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton13 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripBtnExport = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton12 = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnFunction = new System.Windows.Forms.ToolStripDropDownButton();
             this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.最大行数 = new System.Windows.Forms.ToolStripLabel();
+            this.txtMaxRow = new System.Windows.Forms.ToolStripTextBox();
             this.BasekryptonSplitContainer = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.kryptonPanelData = new Krypton.Toolkit.KryptonPanel();
@@ -77,35 +77,6 @@
             this.BaseToolStrip.TabIndex = 5;
             this.BaseToolStrip.Text = "toolStrip1";
             // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Margin = new System.Windows.Forms.Padding(100, 0, 0, 0);
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
-            // 
-            // 最大行数
-            // 
-            this.最大行数.Name = "最大行数";
-            this.最大行数.Size = new System.Drawing.Size(59, 22);
-            this.最大行数.Text = "最大行数";
-            // 
-            // txtMaxRow
-            // 
-            this.txtMaxRow.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
-            this.txtMaxRow.Name = "txtMaxRow";
-            this.txtMaxRow.Size = new System.Drawing.Size(100, 25);
-            this.txtMaxRow.Text = "200";
-            // 
             // toolStripButton4
             // 
             this.toolStripButton4.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton4.Image")));
@@ -113,6 +84,11 @@
             this.toolStripButton4.Name = "toolStripButton4";
             this.toolStripButton4.Size = new System.Drawing.Size(53, 22);
             this.toolStripButton4.Text = "查询";
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
             // toolStripBtnAdvQuery
             // 
@@ -130,6 +106,11 @@
             this.toolStripButton13.Name = "toolStripButton13";
             this.toolStripButton13.Size = new System.Drawing.Size(53, 22);
             this.toolStripButton13.Text = "打印";
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
             // 
             // toolStripBtnExport
             // 
@@ -163,6 +144,25 @@
             this.复制性新增ToolStripMenuItem.Name = "复制性新增ToolStripMenuItem";
             this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
             this.复制性新增ToolStripMenuItem.Text = "复制性新增";
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Margin = new System.Windows.Forms.Padding(100, 0, 0, 0);
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 25);
+            // 
+            // 最大行数
+            // 
+            this.最大行数.Name = "最大行数";
+            this.最大行数.Size = new System.Drawing.Size(59, 22);
+            this.最大行数.Text = "最大行数";
+            // 
+            // txtMaxRow
+            // 
+            this.txtMaxRow.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
+            this.txtMaxRow.Name = "txtMaxRow";
+            this.txtMaxRow.Size = new System.Drawing.Size(100, 25);
+            this.txtMaxRow.Text = "200";
             // 
             // BasekryptonSplitContainer
             // 

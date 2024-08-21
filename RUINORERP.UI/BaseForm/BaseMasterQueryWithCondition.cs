@@ -34,7 +34,7 @@ namespace RUINORERP.UI.BaseForm
 
     /// <summary>
     /// 单表带条件查询 并且可以带分析outlook
-    /// 作废
+    /// 作废 将用BaseNavigatorGeneric 代替
     /// </summary>
     /// <typeparam name="M"></typeparam>
     public partial class BaseMasterQueryWithCondition<M> : UserControl where M : class

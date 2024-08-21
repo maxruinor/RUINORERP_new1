@@ -29,6 +29,12 @@ namespace RUINORERP.UI.PSI.PUR
             ReladtedEntityType = typeof(View_PurEntryItems);
         }
 
+        public override List<NavParts[]> AddNavParts()
+        {
+            List<NavParts[]> strings = new List<NavParts[]>();
+            strings.Add(new NavParts[] { NavParts.查询结果, NavParts.分组显示 });
+            return strings;
+        }
 
         public override void BuildColDisplayTypes()
         {

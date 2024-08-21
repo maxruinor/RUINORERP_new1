@@ -751,7 +751,7 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
             }
 
 
-            //foreach (KryptonPage page in Kpages)
+            //foreach (KryptonPage page in Kpages)      
             //{
             //    if (!(page is KryptonStorePage) && !kryptonWorkspace1.AllPages().Contains(page))
             //    {

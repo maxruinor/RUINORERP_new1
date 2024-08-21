@@ -604,12 +604,6 @@
     <Compile Include="BaseForm\frmBaseEditList.Designer.cs">
       <DependentUpon>frmBaseEditList.cs</DependentUpon>
     </Compile>
-    <Compile Include="BaseForm\frmBaseQuery.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="BaseForm\frmBaseQuery.Designer.cs">
-      <DependentUpon>frmBaseQuery.cs</DependentUpon>
-    </Compile>
     <Compile Include="BaseForm\UCBaseQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1348,18 +1342,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="PSI\INV\frmStocktakeFilterByProd.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PSI\INV\frmStocktakeFilterByProd.Designer.cs">
-      <DependentUpon>frmStocktakeFilterByProd.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PSI\INV\frmStocktakeFilterByStock.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PSI\INV\frmStocktakeFilterByStock.Designer.cs">
-      <DependentUpon>frmStocktakeFilterByStock.cs</DependentUpon>
-    </Compile>
     <Compile Include="PSI\INV\UCInventoryQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2090,9 +2072,6 @@
     <EmbeddedResource Include="BaseForm\frmBaseEditList.resx">
       <DependentUpon>frmBaseEditList.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="BaseForm\frmBaseQuery.resx">
-      <DependentUpon>frmBaseQuery.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\UCBillChildQuery.resx">
       <DependentUpon>UCBillChildQuery.cs</DependentUpon>
     </EmbeddedResource>
@@ -2430,12 +2409,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PSI\INV\frmStocktakeFilterByProd.resx">
-      <DependentUpon>frmStocktakeFilterByProd.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PSI\INV\frmStocktakeFilterByStock.resx">
-      <DependentUpon>frmStocktakeFilterByStock.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCInventoryQuery.resx">
       <DependentUpon>UCInventoryQuery.cs</DependentUpon>

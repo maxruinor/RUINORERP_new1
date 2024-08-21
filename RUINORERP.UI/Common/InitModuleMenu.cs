@@ -16,6 +16,7 @@ using RUINORERP.Common.Helper;
 using System.Windows.Forms;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINORERP.Common;
+using RUINORERP.Common.SnowflakeIdHelper;
 
 namespace RUINORERP.UI.Common
 {
@@ -81,7 +82,7 @@ namespace RUINORERP.UI.Common
                 menuInfoparent.CaptionCN = item.Name;
                 menuInfoparent.MenuType = "导航菜单";
                 menuInfoparent.Parent_id = 0;
-                menuInfoparent.ModuleID = mod.ModuleID;
+     
                 menuInfoparent.Created_at = System.DateTime.Now;
                 tb_MenuInfo MenuInfo = mc.IsExistEntity(e => e.MenuName == menuInfoparent.MenuName && e.Parent_id == 0);
                 if (MenuInfo == null)

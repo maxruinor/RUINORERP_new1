@@ -46,7 +46,7 @@ namespace HLH.Lib.Helper
             try
             {
                 Proc = System.Diagnostics.Process.Start(Info);
-                System.Threading.Thread.Sleep(500);
+                System.Threading.Thread.Sleep(200);
             }
             catch (System.ComponentModel.Win32Exception)
             {

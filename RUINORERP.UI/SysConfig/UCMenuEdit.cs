@@ -826,6 +826,10 @@ namespace RUINORERP.UI.SysConfig
                         // 从原位置移除节点
                         // 作为同级节点放置
                         TreeNode parentNode = NewTargetNode.Parent;
+                        if (parentNode == null)
+                        {
+                            return;
+                        }
                         int index = parentNode.Nodes.IndexOf(NewTargetNode);
                         parentNode.Nodes.Insert(index + 1, sourceNode);
 
@@ -833,6 +837,31 @@ namespace RUINORERP.UI.SysConfig
                         int tempSort = SourceMenuInfo.Sort;
                         SourceMenuInfo.Sort = NewTargetMenuInfo.Sort;
                         NewTargetMenuInfo.Sort = tempSort;
+
+                        //实际上面三行交换sort的值没有啥用
+                        //更新排序     Level: 这个有用？
+                        SourceMenuInfo.Sort = sourceNode.Index;
+
+                        //更新排序 要更新当前节点下面的所有子节点的排序值+1  or -1
+                        //List<tb_MenuInfo> levelMenuItems = mc.Query().Where(c => c.Parent_id == NewTargetMenuInfo.Parent_id && ).ToList();
+                        List<tb_MenuInfo> levelMenuItems = new List<tb_MenuInfo>();
+                        foreach (var item in NewTargetNode.Parent.Nodes)
+                        {
+                            if (item is TreeNode treeNode)
+                            {
+                                if (treeNode.Index >= NewTargetNode.Index)
+                                {
+                                    if (treeNode.Tag is tb_MenuInfo sortNodeMenuInfo)
+                                    {
+                                        sortNodeMenuInfo.Sort = treeNode.Index;
+                                        await mc.UpdateMenuInfo(sortNodeMenuInfo);
+                                    }
+                                }
+                            }
+                        }
+
+
+
                     }
                     else
                     {
@@ -843,17 +872,21 @@ namespace RUINORERP.UI.SysConfig
                         int tempSort = SourceMenuInfo.Sort;
                         SourceMenuInfo.Sort = NewTargetMenuInfo.Sort;
                         NewTargetMenuInfo.Sort = tempSort;
-                        SourceMenuInfo.Parent_id= NewTargetMenuInfo.MenuID;
+                        SourceMenuInfo.Parent_id = NewTargetMenuInfo.MenuID;
+
+                        //实际上面三行交换sort的值没有啥用
+                        //更新排序
+                        //SourceMenuInfo.Sort = sourceNode.Index;
                     }
 
-                    await mc.UpdateMenuInfo(SourceMenuInfo);
-                    await mc.UpdateMenuInfo(NewTargetMenuInfo);
+                    //await mc.UpdateMenuInfo(SourceMenuInfo);
+                    //await mc.UpdateMenuInfo(NewTargetMenuInfo);
                 }
 
 
-    
 
-    
+
+
             }
 
         }

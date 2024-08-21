@@ -254,14 +254,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 }
 
-                //存在参与计算的才重新计划总数后面是否优化为  变动了才算？
-                //这个事件传到sourcegridhelper.OnCalculateColumnValue
-                if (OnCalculateColumnValue != null && CurrGridDefine[sender.Position.Column].Summary)
-                {
-                    var currentObj = CurrGridDefine.grid.Rows[sender.Position.Row].RowData;
-                    OnCalculateColumnValue(currentObj, CurrGridDefine, sender.Position);
-                }
-
             }
 
             #endregion
@@ -346,7 +338,13 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             #endregion
 
-
+            //存在参与计算的才重新计划总数后面是否优化为  变动了才算？
+            //这个事件传到sourcegridhelper.OnCalculateColumnValue
+            if (OnCalculateColumnValue != null && CurrGridDefine[sender.Position.Column].Summary)
+            {
+                var currentObj = CurrGridDefine.grid.Rows[sender.Position.Row].RowData;
+                OnCalculateColumnValue(currentObj, CurrGridDefine, sender.Position);
+            }
 
 
         }

@@ -529,7 +529,7 @@ namespace AutoUpdate
                         for (int i = 0; i < p.Threads.Count; i++)
                             p.Threads[i].Dispose();
                         p.Kill();
-                        Thread.Sleep(500);
+                        Thread.Sleep(200);
                         isRun = true;
                         //break;
                     }

@@ -163,6 +163,10 @@ namespace RUINORERP.UI.SysConfig
             foreach (var item in Modules)
             {
                 tb_MenuInfo _MenuInfo = item.tb_MenuInfos.FirstOrDefault(c => c.MenuName == item.ModuleName);
+                if (_MenuInfo == null)
+                {
+                    return;
+                }
                 string NodeText = "";
                 NodeText = item.ModuleName;
                 //建立一个新节点
@@ -181,7 +185,7 @@ namespace RUINORERP.UI.SysConfig
 
         private void AddTreeNode(ThreeStateTreeNode nd, List<tb_MenuInfo> list, long parent_id)
         {
-            var selectList = list.Where(m => m.Parent_id == parent_id);
+            var selectList = list.Where(m => m.Parent_id == parent_id).OrderBy(c => c.Sort);
             foreach (var item in selectList)
             {
                 string NodeText = "";

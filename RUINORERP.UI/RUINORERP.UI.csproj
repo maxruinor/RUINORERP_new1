@@ -1236,6 +1236,12 @@
     <Compile Include="MRP\PPLAN\UCProductionPlan.designer.cs">
       <DependentUpon>UCProductionPlan.cs</DependentUpon>
     </Compile>
+    <Compile Include="MRP\PPLAN\UCProduceRequirementQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PPLAN\UCProduceRequirementQuery.Designer.cs">
+      <DependentUpon>UCProduceRequirementQuery.cs</DependentUpon>
+    </Compile>
     <Compile Include="MRP\PPLAN\UCProductionPlanQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2368,6 +2374,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MRP\PPLAN\UCProductionPlan.resx">
       <DependentUpon>UCProductionPlan.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PPLAN\UCProduceRequirementQuery.resx">
+      <DependentUpon>UCProduceRequirementQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MRP\PPLAN\UCProductionPlanQuery.resx">
       <DependentUpon>UCProductionPlanQuery.cs</DependentUpon>

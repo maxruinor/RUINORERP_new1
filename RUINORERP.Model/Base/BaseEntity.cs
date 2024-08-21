@@ -1,5 +1,6 @@
 ﻿
 using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model.Base;
 using SqlSugar;
 using System;
@@ -136,12 +137,29 @@ namespace RUINORERP.Model
         [Browsable(false)]
         public bool HasChanged { get; set; }
 
+
+
+
+        private ActionStatus _ActionStatus;
+
         /// <summary>
-        /// 操作状态码
+        /// 操作状态码,实际的属性变化事件中，调用OnPropertyChanged方法
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
-        public ActionStatus ActionStatus { get; set; }
+        public ActionStatus ActionStatus
+        {
+            get { return _ActionStatus; }
+            set
+            {
+                SetProperty(ref _ActionStatus, value);
+            }
+        }
+
+
+
+
+
 
         /// <summary>
         /// 保存删除的ID

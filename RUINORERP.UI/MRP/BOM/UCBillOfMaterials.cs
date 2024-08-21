@@ -774,36 +774,36 @@ namespace RUINORERP.UI.MRP.BOM
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, k => k.SKU, txtProdDetailID, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_BOM_S>(entity, v => v.ProdDetailID, txtProdDetailID, true);
 
-            //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
-            if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
-            {
-                base.InitRequiredToControl(new tb_BOM_SValidator(), kryptonSplitContainer1.Panel1.Controls);
-                //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
-                //  base.InitFilterForControl<View_ProdDetail, View_ProdDetailQueryDto>(entity, txtProdDetailID, c => c.CNName);
 
-
-                //创建表达式  草稿 结案 和没有提交的都不显示
-                var lambdaOrder = Expressionable.Create<View_ProdDetail>()
-                                // .And(t => t.DataStatus == (int)DataStatus.确认)
-                                .ToExpression();//注意 这一句 不能少
-
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_ProdDetail).Name + "Processor");
-                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-
-                ///视图指定成实体表，为了显示关联数据
-                DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(entity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
-            }
             //如果属性变化 则状态为修改
-            entity.PropertyChanged += async (sender, s2) =>
+            EditEntity.PropertyChanged += async (sender, s2) =>
             {
+                //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
+                //这样在新增加和修改时才会触发添加母件的快捷按钮
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.ActionStatus))
+                {
+                    base.InitRequiredToControl(new tb_BOM_SValidator(), kryptonSplitContainer1.Panel1.Controls);
+                    //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
+                    //  base.InitFilterForControl<View_ProdDetail, View_ProdDetailQueryDto>(entity, txtProdDetailID, c => c.CNName);
 
+                    //创建表达式  草稿 结案 和没有提交的都不显示
+                    var lambdaOrder = Expressionable.Create<View_ProdDetail>()
+                                    // .And(t => t.DataStatus == (int)DataStatus.确认)
+                                    .ToExpression();//注意 这一句 不能少
+
+                    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_ProdDetail).Name + "Processor");
+                    QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+
+                    ///视图指定成实体表，为了显示关联数据
+                    DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(entity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
+                }
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
                     entity.ActionStatus = ActionStatus.修改;
                     base.ToolBarEnabledControl(MenuItemEnums.修改);
 
-                    if (entity.ProdDetailID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProdDetail>(c => c.ProdDetailID))
+                    if (entity.ProdDetailID > 0 && s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.ProdDetailID))
                     {
                         //视图来的，没有导航查询到相关数据
                         //find bomid
@@ -886,6 +886,8 @@ namespace RUINORERP.UI.MRP.BOM
             LoadTreeData(TransToDataTableByTreeAsync(entity));
         }
 
+
+ 
 
         protected override void AddByCopy()
         {

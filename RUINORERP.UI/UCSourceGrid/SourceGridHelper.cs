@@ -1752,8 +1752,8 @@ namespace RUINORERP.UI.UCSourceGrid
                         //如果是主键值类型，有外键关系
                         if (newcolType.FullName == "System.Int64" && dci.FKRelationCol != null)
                         {
-                            //用上面通用设置方法，不需要单独设置
-                            //这里是
+                            //用上面通用设置方法 SetComboxEditor ，不需要单独设置
+                            //这里跳过
                             continue;
                         }
 
@@ -2187,9 +2187,14 @@ namespace RUINORERP.UI.UCSourceGrid
                     ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
                     foreach (var item in tlist)
                     {
+
+                        //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
+                        //这里要不要利用process中设置的条件来判断呢？
+
+
                         string id = ReflectionHelper.GetPropertyValue(item, ColID).ToString();
-                        ids.Add(id.ToString());
-                        OutNames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());
+                        ids.Add(id.ToString());//设置一个主键集合 
+                        OutNames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());//设置一个显示名称的集合
                     }
                     if (tlist == null || tlist.Count == 0)
                     {

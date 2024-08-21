@@ -1466,6 +1466,7 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
+                EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
                 toolStripbtnModify.Enabled = false;
             }
         }

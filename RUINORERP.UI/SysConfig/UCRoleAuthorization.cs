@@ -976,13 +976,13 @@ namespace RUINORERP.UI.SysConfig
             if (dataGridView1.Rows[e.RowIndex].DataBoundItem is tb_P4Button)
             {
                 tb_P4Button pb = dataGridView1.Rows[e.RowIndex].DataBoundItem as tb_P4Button;
-                if (pb.tb_buttoninfo != null && colDbName == "ButtonInfo_ID")
+                if (pb.tb_buttoninfo != null && colDbName == pb.GetPropertyName<tb_P4Button>(c => c.ButtonInfo_ID))
                 {
                     e.Value = pb.tb_buttoninfo.BtnText;
                     return;
                 }
                 //因为是下拉选的角色来配置这里直接用下拉的
-                if (colDbName == "RoleID")
+                if (colDbName == pb.GetPropertyName<tb_P4Button>(c => c.RoleID))
                 {
                     e.Value = CurrentRole.RoleName;
                     return;
@@ -1047,12 +1047,12 @@ namespace RUINORERP.UI.SysConfig
             if (dataGridView2.Rows[e.RowIndex].DataBoundItem is tb_P4Field)
             {
                 tb_P4Field pf = dataGridView2.Rows[e.RowIndex].DataBoundItem as tb_P4Field;
-                if (pf.tb_fieldinfo != null && colDbName == "FieldInfo_ID")
+                if (pf.tb_fieldinfo != null && colDbName == pf.GetPropertyName<tb_P4Field>(c => c.FieldInfo_ID)) 
                 {
                     e.Value = pf.tb_fieldinfo.FieldText;
                 }
                 //因为是下拉选的角色来配置这里直接用下拉的
-                if (colDbName == "RoleID")
+                if (colDbName == pf.GetPropertyName<tb_P4Field>(c => c.RoleID))
                 {
                     e.Value = CurrentRole.RoleName;
                     return;

@@ -28,7 +28,7 @@ namespace RUINORERP.UI.MRP.MP
 {
 
     [MenuAttrAssemblyInfo("需求分析查询", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制造规划, BizType.生产需求分析)]
-    public partial class UCProduceRequirementQuery : BaseBillQueryMC<tb_ProductionDemand, tb_ProductionDemand>
+    public partial class UCProduceRequirementQuery : BaseBillQueryMC<tb_ProductionDemand, tb_ProductionDemandDetail>
     {
         public UCProduceRequirementQuery()
         {

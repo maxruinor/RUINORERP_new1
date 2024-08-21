@@ -468,6 +468,32 @@ namespace RUINORERP.UI.UserCenter
 
         private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, NodeParameter nodeParameter)
         {
+            //查询条件给值前先将条件清空
+            foreach (var item in nodeParameter.queryFilter.QueryFields)
+            {
+                if (item.FKTableName.IsNotEmptyOrNull() && item.IsRelated)
+                {
+                    QueryDto.SetPropertyValue(item.FieldName, -1L);
+                    continue;
+                }
+                if (item.FieldPropertyInfo.PropertyType.IsGenericType && item.FieldPropertyInfo.PropertyType.GetBaseType().Name == "DateTime")
+                {
+                    QueryDto.SetPropertyValue(item.FieldName, null);
+                    if (QueryDto.ContainsProperty(item.FieldName + "_Start"))
+                    {
+                        QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
+                    }
+                    if (QueryDto.ContainsProperty(item.FieldName + "_End"))
+                    {
+                        QueryDto.SetPropertyValue(item.FieldName + "_End", null);
+                    }
+                    continue;
+                }
+
+            }
+
+
+
             //传入查询对象的实例，
             foreach (ConditionalModel item in nodeParameter.conditionals)
             {
@@ -512,9 +538,9 @@ namespace RUINORERP.UI.UserCenter
             {
                 if (menuItem.Owner is ContextMenuStrip contextMenu)
                 {
-                    if(contextMenu.SourceControl.Parent == kryptonTreeViewJobList)
+                    if (contextMenu.SourceControl.Parent == kryptonTreeViewJobList)
                     {
-                        if(kryptonTreeViewJobList.Nodes[0].Tag is tb_WorkCenterConfig config)
+                        if (kryptonTreeViewJobList.Nodes[0].Tag is tb_WorkCenterConfig config)
                         {
                             BuilderToDoListTreeView(config);
                         }
@@ -522,7 +548,7 @@ namespace RUINORERP.UI.UserCenter
                 }
             }
             //tb_WorkCenterConfig
-           
+
         }
     }
 }

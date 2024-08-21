@@ -22,6 +22,12 @@ namespace RUINORERP.Common.Extensions
                     //如果类型是例如此代码可为空，返回int部分(底层类型)。如果只需要将对象转换为特定类型，则可以使用System.Convert.ChangeType方法。
                 }
          */
+
+        /// <summary>
+        /// 获取基础类型
+        /// </summary>
+        /// <param name="DataType"></param>
+        /// <returns></returns>
         public static Type GetBaseType(this Type DataType)
         {
             Type dataType = DataType;

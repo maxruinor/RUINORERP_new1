@@ -1170,6 +1170,15 @@ namespace RUINORERP.UI.BaseForm
             }
             var obj = (entity as M);
             List<C> list = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(obj, typeof(C).Name + "s") as List<C>;
+            if (list == null)
+            {
+                return;
+                //特殊情况时
+                if (typeof(M).Name == "tb_ProdctionDemand")
+                {
+
+                }
+            }
             _UCBillChildQuery.bindingSourceChild.DataSource = list.ToBindingSortCollection();
             _UCBillChildQuery.newSumDataGridViewChild.DataSource = list.ToBindingSortCollection();
             ShowChildSum();

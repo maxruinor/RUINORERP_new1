@@ -42,6 +42,13 @@ namespace RUINORERP.UI.ProductEAV
     public partial class UCProdQuery : BaseUControl
     {
 
+        /*
+         目前这个是用于一个公用的查询模板，对于一些特殊情况下的调用。用枚举类型来区别一下。
+         */
+
+        public ProdQueryUseType UseType = ProdQueryUseType.None;
+
+
         //  this.AcceptButton = this.btnQueryForGoods;
         //this.CancelButton = this.btnCancel;
         private long _LocationID = 0;
@@ -52,7 +59,7 @@ namespace RUINORERP.UI.ProductEAV
         public long LocationID { get => _LocationID; set => _LocationID = value; }
 
 
-        private string _queryValue = string.Empty;
+        private object _queryValue = string.Empty;
 
         private string _queryField = string.Empty;
 
@@ -499,6 +506,8 @@ namespace RUINORERP.UI.ProductEAV
            .AndIF(cmbStockJudgement.SelectedItem != null && cmbStockJudgement.SelectedItem.ToString() == "大于零", w => w.Quantity.HasValue && w.Quantity.Value > 0)
            .AndIF(cmbStockJudgement.SelectedItem != null && cmbStockJudgement.SelectedItem.ToString() == " 等于零", w => w.Quantity.HasValue && w.Quantity.Value.Equals(0))
            .AndIF(cmbStockJudgement.SelectedItem != null && cmbStockJudgement.SelectedItem.ToString() == "小于零", w => w.Quantity.HasValue && w.Quantity.Value < 0)
+           .AndIF(UseType == ProdQueryUseType.盘点导入 && dtp1.Checked && dtp1.Value != null, w => w.LastInventoryDate.Value >= dtp1.Value)
+           .AndIF(UseType == ProdQueryUseType.盘点导入 && dtp1.Checked && dtp2.Value != null, w => w.LastInventoryDate.Value <= dtp2.Value)
            .ToExpression();
             return exp;
         }
@@ -687,7 +696,7 @@ namespace RUINORERP.UI.ProductEAV
 
         //改版
         //返回值将单个值对象等，改为数组
-        public string QueryValue { get => _queryValue; set => _queryValue = value; }
+        public object QueryValue { get => _queryValue; set => _queryValue = value; }
 
         /// <summary>
         ///  明细表格时传进来的查询字段条件
@@ -706,6 +715,21 @@ namespace RUINORERP.UI.ProductEAV
 
         private async void QueryForm_Load(object sender, EventArgs e)
         {
+            if (UseType==ProdQueryUseType.盘点导入)
+            {
+                lblLastInventoryDate.Visible = true;
+                dtp1.Visible = true;
+                dtp2.Visible = true;
+                kryptonLabel10.Visible= true;
+            }
+            else
+            {
+                lblLastInventoryDate.Visible = false;
+                dtp1.Visible = false;
+                dtp2.Visible = false;
+                kryptonLabel10.Visible = false;
+            }
+
             kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.Hide;
             chkMultiSelect.Checked = MultipleChoices;
             kryptonDataGridView产品.MultiSelect = MultipleChoices;
@@ -730,7 +754,7 @@ namespace RUINORERP.UI.ProductEAV
             }
 
 
-            if (!string.IsNullOrEmpty(QueryValue))
+            if (QueryValue != null && QueryValue.ToString().Length > 0)
             {
                 QueryObject.SetPropertyValue(QueryField, QueryValue);
                 BindData();
@@ -788,6 +812,9 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
+        /// <summary>
+        /// 这里字段是用来可以主动设置查询条件的
+        /// </summary>
         public void BindData()
         {
             View_ProdDetail entity = QueryObject as View_ProdDetail;
@@ -797,9 +824,8 @@ namespace RUINORERP.UI.ProductEAV
                 return;
             }
 
-
             DataBindingHelper.BindData4TextBox<View_ProdDetail>(entity, t => t.SKU, txtSKU码, BindDataType4TextBox.Text, false);
-            //DataBindingHelper.BindData4Cmb<tb_ProductType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);
+            DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, cmbLocation);
             DataBindingHelper.BindData4TextBox<View_ProdDetail>(entity, t => t.CNName.ToString(), txtName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<View_ProdDetail>(entity, t => t.BarCode.ToString(), txtBarCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<View_ProdDetail>(entity, t => t.ShortCode, txtShortCode, BindDataType4TextBox.Text, false);
@@ -918,7 +944,7 @@ namespace RUINORERP.UI.ProductEAV
 
                 //退出
                 Form frm = (this as Control).Parent.Parent as Form;
-                if (frm==null)
+                if (frm == null)
                 {
                     return;
                 }
@@ -1125,7 +1151,7 @@ namespace RUINORERP.UI.ProductEAV
 
             //退出
             Form frm = (this as Control).Parent.Parent as Form;
-            if (frm==null)
+            if (frm == null)
             {
                 return;
             }

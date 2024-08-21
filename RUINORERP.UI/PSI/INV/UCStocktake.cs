@@ -624,7 +624,7 @@ namespace RUINORERP.UI.PSI.INV
                     return;
                 }
 
-                
+
 
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
@@ -872,6 +872,13 @@ namespace RUINORERP.UI.PSI.INV
 
         private void btnImportCheckProd_Click(object sender, EventArgs e)
         {
+            if (EditEntity == null)
+            {
+                MessageBox.Show("请先查询或新建盘点单。");
+                return;
+            }
+
+
             if (EditEntity.Location_ID == 0 || EditEntity.Location_ID == -1)
             {
                 MessageBox.Show("请先选择盘点产品所在的库位。");
@@ -880,9 +887,13 @@ namespace RUINORERP.UI.PSI.INV
 
             using (QueryFormGeneric dg = new QueryFormGeneric())
             {
+                dg.Text = "盘点数据导入";
                 dg.StartPosition = FormStartPosition.CenterScreen;
                 dg.prodQuery.MultipleChoices = true;
-                // dg.QueryField = this.QueryField;
+                dg.prodQuery.QueryField = EditEntity.GetPropertyName<tb_Stocktake>(c => c.Location_ID);
+                dg.prodQuery.QueryValue = EditEntity.Location_ID;
+                dg.prodQuery.UseType = ProdQueryUseType.盘点导入;
+
                 if (dg.ShowDialog() == DialogResult.OK)
                 {
                     /// Control.Tag = dg.QueryObjects;

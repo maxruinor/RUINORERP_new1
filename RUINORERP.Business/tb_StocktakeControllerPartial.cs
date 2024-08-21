@@ -83,7 +83,7 @@ namespace RUINORERP.Business
                             {
                                 inv.Quantity = inv.Quantity + child.DiffQty;
                             }
-
+                            inv.LastInventoryDate = System.DateTime.Now;
                             //ctrinv.EditEntity(inv);
                             BusinessHelper.Instance.EditEntity(inv);
 
@@ -248,7 +248,7 @@ namespace RUINORERP.Business
                             {
                                 inv.Quantity = inv.Quantity - child.DiffQty;
                             }
-
+                            inv.LastInventoryDate = null;
                             BusinessHelper.Instance.EditEntity(inv);
                         }
                         else

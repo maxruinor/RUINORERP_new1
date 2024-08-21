@@ -43,7 +43,7 @@ namespace SourceGrid2.DataModels
                     TextBoxTypedButtonQuery l_ComboBox = sender as TextBoxTypedButtonQuery;
                     //l_ComboBox.Tag = dg.QueryObject;//TagValue
                     l_ComboBox.TextBox.Value = dg.prodQuery.QueryValue;
-                    l_ComboBox.TextBox.Text = dg.prodQuery.QueryValue;
+                    l_ComboBox.TextBox.Text = dg.prodQuery.QueryValue.ToString();
                     l_ComboBox.TextBox.TagValue = dg.prodQuery.QueryObjects;
 
 

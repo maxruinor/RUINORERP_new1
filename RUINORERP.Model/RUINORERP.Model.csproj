@@ -46,7 +46,7 @@
     <PackageReference Include="FluentValidation" Version="11.4.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-    <PackageReference Include="SqlSugar" Version="5.1.4.130" />
+    <PackageReference Include="SqlSugar" Version="5.1.4.160" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="WorkflowCore" Version="3.10.0" />
     <PackageReference Include="WorkflowCore.DSL" Version="3.10.0" />

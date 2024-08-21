@@ -7,6 +7,16 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global
 {
+
+    public enum ProdQueryUseType
+    {
+        None = 0,
+        [Description("全部")]
+        盘点导入 = 1,
+        单据录入 = 2,
+        产品查询 = 3
+    }
+
     /// <summary>
     /// 在做采购入库退回单时，需要选择处理方式
     /// </summary>

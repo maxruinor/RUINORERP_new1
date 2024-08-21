@@ -245,6 +245,12 @@ namespace RUINORERP.Model
             }
         }
 
+        /// <summary>
+        /// 取属性名称（列名）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <returns></returns>
         public string GetPropertyName<T>(Expression<Func<T, object>> expression)
         {
             string pname = string.Empty;

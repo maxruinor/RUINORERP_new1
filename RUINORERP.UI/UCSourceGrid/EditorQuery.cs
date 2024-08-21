@@ -90,7 +90,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 //{
                 //    dg.LocationID = dci.ParentGridDefine.GridData.GetPropertyValue(warehouse.GetMemberInfo().Name).ToLong();
                 //}
-
+                dg.Text="产品选择";
                 dg.StartPosition = FormStartPosition.CenterScreen;
                 dg.prodQuery.QueryField = this.QueryField;
                 if (this.EditCellContext.Value != null)

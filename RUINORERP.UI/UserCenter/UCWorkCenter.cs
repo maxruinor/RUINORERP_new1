@@ -234,6 +234,12 @@ namespace RUINORERP.UI.UserCenter
                         case 待办事项.请购单:
                             bizTypes.Add(BizType.请购单);
                             break;
+                        case 待办事项.借出单:
+                            bizTypes.Add(BizType.借出单);
+                            break;
+                        case 待办事项.归还单:
+                            bizTypes.Add(BizType.归还单);
+                            break;
                         default:
                             break;
                     }

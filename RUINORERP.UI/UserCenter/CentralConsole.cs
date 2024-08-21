@@ -54,6 +54,8 @@ namespace RUINORERP.UI.UserCenter
         财务_费用报销单,
 
         请购单,
+        借出单,
+        归还单,
     }
 
     public enum 常用操作

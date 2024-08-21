@@ -1,0 +1,16 @@
+{
+  "Id": "HelloWorld123",
+  "Version": 1,
+  "Steps": [
+    {
+      "Id": "Hello",
+      "StepType": "RUINORERP.Server.Workflow.Steps.SayHello,RUINORERP.Server",
+      "NextStepId": "Bye"
+    },
+    {
+      "Id": "Bye",
+      "StepType": "RUINORERP.Server.Workflow.Steps.SayGoodbye,RUINORERP.Server"
+
+    }
+  ]
+}

@@ -1,0 +1,557 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{4346ACB3-CF7F-4797-BAE6-681E32E10FF5}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CSharpWin</RootNamespace>
+    <AssemblyName>WinLib</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <SccProjectName>Svn</SccProjectName>
+    <SccLocalPath>Svn</SccLocalPath>
+    <SccAuxPath>Svn</SccAuxPath>
+    <SccProvider>SubversionScc</SccProvider>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <PublishUrl>发布\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DocumentationFile>bin\x86\Debug\WinLib.XML</DocumentationFile>
+    <NoWarn>1591</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Button\ButtonEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ControlState.cs" />
+    <Compile Include="CheckBox\CheckBoxEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataGridViewEx\RowMergeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataGridViewEx\RowMergeView.designer.cs">
+      <DependentUpon>RowMergeView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileTransfersControl\FileTansfersContainer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FileTransfersControl\FileTransfersItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="FileTransfersControl\FileTransfersItemStyle.cs" />
+    <Compile Include="FileTransfersControl\FileTransfersItemText.cs" />
+    <Compile Include="FileTransfersControl\IFileTransfersItemText.cs" />
+    <Compile Include="GroupBoxEx\GroupBoxEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Html\CssAnonymousBlockBox.cs" />
+    <Compile Include="Html\CssAnonymousBox.cs" />
+    <Compile Include="Html\CssBlock.cs" />
+    <Compile Include="Html\CssBox.cs" />
+    <Compile Include="Html\CssBoxWord.cs" />
+    <Compile Include="Html\CssBoxWordSplitter.cs" />
+    <Compile Include="Html\CssConstants.cs" />
+    <Compile Include="Html\CssDefaults.cs" />
+    <Compile Include="Html\CssDrawingHelper.cs" />
+    <Compile Include="Html\CssLayoutEngine.cs" />
+    <Compile Include="Html\CssLength.cs" />
+    <Compile Include="Html\CssLineBox.cs" />
+    <Compile Include="Html\CssPropertyAttribute.cs" />
+    <Compile Include="Html\CssPropertyInheritedAttribute.cs" />
+    <Compile Include="Html\CssRectangle.cs" />
+    <Compile Include="Html\CssTable.cs" />
+    <Compile Include="Html\CssValue.cs" />
+    <Compile Include="Html\HtmlConstants.cs" />
+    <Compile Include="Html\HtmlLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Html\HtmlPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Html\HtmlRenderer.cs" />
+    <Compile Include="Html\HtmlTag.cs" />
+    <Compile Include="Html\HtmlToolTip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Html\InitialContainer.cs" />
+    <Compile Include="Html\Parser.cs" />
+    <Compile Include="ImageComboBox\ComboBoxEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ImageComboBox\EditorAssemblyName.cs" />
+    <Compile Include="ImageComboBox\ImageComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ImageComboBox\ImageComboBoxItem.cs" />
+    <Compile Include="ImageComboBox\ImageIndexer.cs" />
+    <Compile Include="ImageComboBox\InterpolationModeGraphics.cs" />
+    <Compile Include="ImageComboBox\NativeMethods.cs" />
+    <Compile Include="ImageComboBox\NoneExcludedImageIndexConverter.cs" />
+    <Compile Include="ImageComboBox\SmoothingModeGraphics.cs" />
+    <Compile Include="ImageComboBox\TextRenderingHintGraphics.cs" />
+    <Compile Include="Line\GroupLine.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Line\GroupLine.Designer.cs">
+      <DependentUpon>GroupLine.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Line\SmartLine.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Line\SmartLineControlDesigner.cs" />
+    <Compile Include="ListBoxEx\ListBoxEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ListBoxEx\ListBoxExItemCollection.cs" />
+    <Compile Include="ListBoxEx\ListBoxItemEx.cs" />
+    <Compile Include="ListViewEx\ListViewEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ListViewEx\NativeMethods.cs" />
+    <Compile Include="LoadingProgress\ClockLoadingProgress.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="LoadingProgress\LoadingProgress.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="LoadingProgress\LoadingProgressStyle.cs" />
+    <Compile Include="LoadingProgress\QQLoadingProgress.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="NumericUpDownEx\NumericUpDownEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="OwnerDrawSystemMenu\DrawItemExEvent.cs" />
+    <Compile Include="OwnerDrawSystemMenu\GraphicsPathHelper.cs" />
+    <Compile Include="OwnerDrawSystemMenu\HookScope.cs" />
+    <Compile Include="OwnerDrawSystemMenu\LegalCopyright.cs" />
+    <Compile Include="OwnerDrawSystemMenu\MeasureItemExEvent.cs" />
+    <Compile Include="OwnerDrawSystemMenu\NativeMethods.cs" />
+    <Compile Include="OwnerDrawSystemMenu\RenderHelper.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OwnerDrawSystemMenu\SystemInfomationHelper.cs" />
+    <Compile Include="OwnerDrawSystemMenu\SystemMenuColorTable.cs" />
+    <Compile Include="OwnerDrawSystemMenu\SystemmenuHook.cs" />
+    <Compile Include="OwnerDrawSystemMenu\SystemMenuNCRenderEvent.cs" />
+    <Compile Include="OwnerDrawSystemMenu\SystemMenuProfessionalRenderer.cs" />
+    <Compile Include="OwnerDrawSystemMenu\SystemMenuRender.cs" />
+    <Compile Include="OwnerDrawSystemMenu\WindowsHook.cs" />
+    <Compile Include="OwnerDrawSystemMenu\WindowsType.cs" />
+    <Compile Include="PanelEx\PanelEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PushPanel\BorderPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PushPanel\CaptionImageStyle.cs" />
+    <Compile Include="PushPanel\CaptionPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PushPanel\CaptionStyle.cs" />
+    <Compile Include="PushPanel\ControlPaintEx.cs" />
+    <Compile Include="PushPanel\ControlState.cs" />
+    <Compile Include="PushPanel\Design\PanelDesigner.cs" />
+    <Compile Include="PushPanel\Design\PushPanelDesigner.cs" />
+    <Compile Include="PushPanel\Design\PushPanelItemDesigner.cs" />
+    <Compile Include="PushPanel\GraphicsPathHelper.cs" />
+    <Compile Include="PushPanel\ImageDc.cs" />
+    <Compile Include="PushPanel\InterpolationModeGraphics.cs" />
+    <Compile Include="PushPanel\NCPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PushPanel\PanelBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PushPanel\PanelColorTable.cs" />
+    <Compile Include="PushPanel\PushPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PushPanel\PushPanelItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PushPanel\PushPanelItemCaptionClickEventArgs.cs" />
+    <Compile Include="PushPanel\RegionHelper.cs" />
+    <Compile Include="PushPanel\RenderHelper.cs" />
+    <Compile Include="PushPanel\RoundStyle.cs" />
+    <Compile Include="PushPanel\SmoothingModeGraphics.cs" />
+    <Compile Include="PushPanel\TextRenderingHintGraphics.cs" />
+    <Compile Include="PushPanel\ThumbArrowDirection.cs" />
+    <Compile Include="PushPanel\Win32\ClassName.cs" />
+    <Compile Include="PushPanel\Win32\Const\AC.cs" />
+    <Compile Include="PushPanel\Win32\Const\CDDS.cs" />
+    <Compile Include="PushPanel\Win32\Const\CDRF.cs" />
+    <Compile Include="PushPanel\Win32\Const\ESB.cs" />
+    <Compile Include="PushPanel\Win32\Const\GWL.cs" />
+    <Compile Include="PushPanel\Win32\Const\HITTEST.cs" />
+    <Compile Include="PushPanel\Win32\Const\HWND.cs" />
+    <Compile Include="PushPanel\Win32\Const\ICC.cs" />
+    <Compile Include="PushPanel\Win32\Const\LPSTR.cs" />
+    <Compile Include="PushPanel\Win32\Const\NM.cs" />
+    <Compile Include="PushPanel\Win32\Const\OBJID.cs" />
+    <Compile Include="PushPanel\Win32\Const\RDW.cs" />
+    <Compile Include="PushPanel\Win32\Const\SB.cs" />
+    <Compile Include="PushPanel\Win32\Const\SBM.cs" />
+    <Compile Include="PushPanel\Win32\Const\SIF.cs" />
+    <Compile Include="PushPanel\Win32\Const\SS.cs" />
+    <Compile Include="PushPanel\Win32\Const\SW.cs" />
+    <Compile Include="PushPanel\Win32\Const\SWP.cs" />
+    <Compile Include="PushPanel\Win32\Const\TBM.cs" />
+    <Compile Include="PushPanel\Win32\Const\TernaryRasterOperations.cs" />
+    <Compile Include="PushPanel\Win32\Const\TTDT.cs" />
+    <Compile Include="PushPanel\Win32\Const\TTF.cs" />
+    <Compile Include="PushPanel\Win32\Const\TTI.cs" />
+    <Compile Include="PushPanel\Win32\Const\TTM.cs" />
+    <Compile Include="PushPanel\Win32\Const\TTN.cs" />
+    <Compile Include="PushPanel\Win32\Const\TTS.cs" />
+    <Compile Include="PushPanel\Win32\Const\VK.cs" />
+    <Compile Include="PushPanel\Win32\Const\WM.cs" />
+    <Compile Include="PushPanel\Win32\Const\WS.cs" />
+    <Compile Include="PushPanel\Win32\Const\WS_EX.cs" />
+    <Compile Include="PushPanel\Win32\Enum\TRACKMOUSEEVENT_FLAGS.cs" />
+    <Compile Include="PushPanel\Win32\Helper.cs" />
+    <Compile Include="PushPanel\Win32\NativeMethods.cs" />
+    <Compile Include="PushPanel\Win32\Result.cs" />
+    <Compile Include="PushPanel\Win32\Struct\BLENDFUNCTION.cs" />
+    <Compile Include="PushPanel\Win32\Struct\INITCOMMONCONTROLSEX.cs" />
+    <Compile Include="PushPanel\Win32\Struct\NCCALCSIZE_PARAMS.cs" />
+    <Compile Include="PushPanel\Win32\Struct\NMCUSTOMDRAW.cs" />
+    <Compile Include="PushPanel\Win32\Struct\NMHDR.cs" />
+    <Compile Include="PushPanel\Win32\Struct\NMTTCUSTOMDRAW.cs" />
+    <Compile Include="PushPanel\Win32\Struct\NMTTDISPINFO.cs" />
+    <Compile Include="PushPanel\Win32\Struct\PAINTSTRUCT.cs" />
+    <Compile Include="PushPanel\Win32\Struct\POINT.cs" />
+    <Compile Include="PushPanel\Win32\Struct\RECT.cs" />
+    <Compile Include="PushPanel\Win32\Struct\SCROLLBARINFO.cs" />
+    <Compile Include="PushPanel\Win32\Struct\SCROLLINFO.cs" />
+    <Compile Include="PushPanel\Win32\Struct\STYLESTRUCT.cs" />
+    <Compile Include="PushPanel\Win32\Struct\TOOLINFO.cs" />
+    <Compile Include="PushPanel\Win32\Struct\TRACKMOUSEEVENT.cs" />
+    <Compile Include="PushPanel\Win32\Struct\TT_HITTESTINFO.cs" />
+    <Compile Include="PushPanel\Win32\Struct\WINDOWINFO.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PushPanel\Win32\Struct\WINDOWPOS.cs" />
+    <Compile Include="RadioButtonEx\RadioButtonEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="RegTextBox\RegDropDownEditor.cs" />
+    <Compile Include="RegTextBox\RegEditorSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RegTextBox\RegEditorSelect.Designer.cs">
+      <DependentUpon>RegEditorSelect.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RegTextBox\RegEditorSelectControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RegTextBox\RegEditorSelectControl.Designer.cs">
+      <DependentUpon>RegEditorSelectControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RegTextBox\RegTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="RegTextBox\RegTextInterface.cs" />
+    <Compile Include="RegTextBox\RegularAuthenticationSettings.cs" />
+    <Compile Include="RegTextBox\TzhtecButton.cs" />
+    <Compile Include="SkinForm\AntiAliasGraphics.cs" />
+    <Compile Include="SkinForm\ControlBoxManager.cs" />
+    <Compile Include="SkinForm\ControlBoxState.cs" />
+    <Compile Include="SkinForm\ControlBoxStyle.cs" />
+    <Compile Include="SkinForm\MouseOperate.cs" />
+    <Compile Include="SkinForm\NativeMethods.cs" />
+    <Compile Include="SkinForm\RoundStyle.cs" />
+    <Compile Include="SkinForm\SkinForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SkinForm\SkinFormBackgroundRenderEvent.cs" />
+    <Compile Include="SkinForm\SkinFormBorderRenderEvent.cs" />
+    <Compile Include="SkinForm\SkinFormCaptionRenderEvent.cs" />
+    <Compile Include="SkinForm\SkinFormColorTable.cs" />
+    <Compile Include="SkinForm\SkinFormControlBoxRenderEvent.cs" />
+    <Compile Include="SkinForm\SkinFormProfessionalRenderer.cs" />
+    <Compile Include="SkinForm\SkinFormRenderer.cs" />
+    <Compile Include="SplitContainerEx\CollapsePanel.cs" />
+    <Compile Include="SplitContainerEx\RenderHelper.cs" />
+    <Compile Include="SplitContainerEx\SplitContainerEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SplitContainerEx\SpliterPanelState.cs" />
+    <Compile Include="SplitContainerEx\ThumbArrowDirection.cs" />
+    <Compile Include="SystemMenu\MenuItemFlag.cs" />
+    <Compile Include="SystemMenu\NativeMethods.cs" />
+    <Compile Include="SystemMenu\SystemMenuNativeWindow.cs" />
+    <Compile Include="ScrollBarEx\ControlPaintEx.cs" />
+    <Compile Include="ScrollBarEx\ControlState.cs" />
+    <Compile Include="ScrollBarEx\GraphicsPathHelper.cs" />
+    <Compile Include="ScrollBarEx\HScrollBarEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ScrollBarEx\ImageDc.cs" />
+    <Compile Include="ScrollBarEx\Imaging\ColorConvertEx.cs" />
+    <Compile Include="ScrollBarEx\Imaging\GrayscaleStyel.cs" />
+    <Compile Include="ScrollBarEx\Imaging\HSL.cs" />
+    <Compile Include="ScrollBarEx\Imaging\RGB.cs" />
+    <Compile Include="ScrollBarEx\InterpolationModeGraphics.cs" />
+    <Compile Include="ScrollBarEx\IScrollBarPaint.cs" />
+    <Compile Include="ScrollBarEx\MaskControlBase.cs" />
+    <Compile Include="ScrollBarEx\PaintScrollBarArrowEventArgs.cs" />
+    <Compile Include="ScrollBarEx\PaintScrollBarThumbEventArgs.cs" />
+    <Compile Include="ScrollBarEx\PaintScrollBarTrackEventArgs.cs" />
+    <Compile Include="ScrollBarEx\RegionHelper.cs" />
+    <Compile Include="ScrollBarEx\RenderHelper.cs" />
+    <Compile Include="ScrollBarEx\RoundStyle.cs" />
+    <Compile Include="ScrollBarEx\ScrollBarColorTable.cs" />
+    <Compile Include="ScrollBarEx\ScrollBarHistTest.cs" />
+    <Compile Include="ScrollBarEx\ScrollBarManager.cs" />
+    <Compile Include="ScrollBarEx\SmoothingModeGraphics.cs" />
+    <Compile Include="ScrollBarEx\TextRenderingHintGraphics.cs" />
+    <Compile Include="ScrollBarEx\ThumbArrowDirection.cs" />
+    <Compile Include="ScrollBarEx\VScrollBarEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ScrollBarEx\Win32\ClassName.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\AC.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\CDDS.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\CDRF.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\GWL.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\HWND.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\ICC.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\LPSTR.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\NM.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\OBJID.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\RDW.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\SBM.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\SS.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\SW.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\SWP.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\TBM.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\TernaryRasterOperations.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\TTDT.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\TTF.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\TTI.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\TTM.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\TTN.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\TTS.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\VK.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\WM.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\WS.cs" />
+    <Compile Include="ScrollBarEx\Win32\Const\WS_EX.cs" />
+    <Compile Include="ScrollBarEx\Win32\Enum\TRACKMOUSEEVENT_FLAGS.cs" />
+    <Compile Include="ScrollBarEx\Win32\Helper.cs" />
+    <Compile Include="ScrollBarEx\Win32\NativeMethods.cs" />
+    <Compile Include="ScrollBarEx\Win32\Result.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\BLENDFUNCTION.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\INITCOMMONCONTROLSEX.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\NMCUSTOMDRAW.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\NMHDR.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\NMTTCUSTOMDRAW.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\NMTTDISPINFO.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\PAINTSTRUCT.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\POINT.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\RECT.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\SCROLLBARINFO.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\SCROLLINFO.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\STYLESTRUCT.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\TOOLINFO.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\TRACKMOUSEEVENT.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\TT_HITTESTINFO.cs" />
+    <Compile Include="ScrollBarEx\Win32\Struct\WINDOWPOS.cs" />
+    <Compile Include="TabControlEx\Events.cs" />
+    <Compile Include="TabControlEx\NativeMethods.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TabControlEx\TabControlEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TextLabel\ArtTextLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TextLabel\ArtTextStyle.cs" />
+    <Compile Include="ToolStripRendererEx\LayoutUtils.cs" />
+    <Compile Include="ToolStripRendererEx\ProfessionalToolStripRendererEx.cs" />
+    <Compile Include="ToolStripRendererEx\ToolStripColorTable.cs" />
+    <Compile Include="ToolTipEx\ImageDc.cs" />
+    <Compile Include="ToolTipEx\RegionHelper.cs" />
+    <Compile Include="ToolTipEx\RenderHelper.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ToolTipEx\ToolTipColorTable.cs" />
+    <Compile Include="ToolTipEx\ToolTipEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ToolTipEx\Win32\ClassName.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\AC.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\CDDS.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\CDRF.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\GWL.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\HWND.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\ICC.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\LPSTR.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\NM.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\SWP.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\TTDT.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\TTF.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\TTI.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\TTM.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\TTN.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\TTS.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\WM.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\WS.cs" />
+    <Compile Include="ToolTipEx\Win32\Const\WS_EX.cs" />
+    <Compile Include="ToolTipEx\Win32\Enum\TRACKMOUSEEVENT_FLAGS.cs" />
+    <Compile Include="ToolTipEx\Win32\NativeMethods.cs" />
+    <Compile Include="ToolTipEx\Win32\Result.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\BLENDFUNCTION.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\INITCOMMONCONTROLSEX.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\NMCUSTOMDRAW.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\NMHDR.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\NMTTCUSTOMDRAW.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\NMTTDISPINFO.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\PAINTSTRUCT.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\POINT.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\RECT.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\TOOLINFO.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\TRACKMOUSEEVENT.cs" />
+    <Compile Include="ToolTipEx\Win32\Struct\TT_HITTESTINFO.cs" />
+    <Compile Include="TreeViewForThreeState\Enumerations\CheckBoxState.cs" />
+    <Compile Include="TreeViewForThreeState\ThreeStateTreeNode.cs" />
+    <Compile Include="TreeViewForThreeState\ThreeStateTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="WatermarkRichTextBox\WatermarkRichTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="WatermarkTextBox\WatermarkTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="WinLibResource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>WinLibResource.resx</DependentUpon>
+    </Compile>
+    <Service Include="{94E38DFF-614B-4cbd-B67C-F211BB35CE8B}" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DataGridViewEx\RowMergeView.resx">
+      <DependentUpon>RowMergeView.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Line\GroupLine.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>GroupLine.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RegTextBox\RegEditorSelect.resx">
+      <DependentUpon>RegEditorSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RegTextBox\RegEditorSelectControl.resx">
+      <DependentUpon>RegEditorSelectControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="WinLibResource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>WinLibResource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="PushPanel\PushPanel.csproj" />
+    <Content Include="RegTextBox\TextFile1.txt" />
+    <None Include="Resources\cppunittestproj.ico" />
+    <None Include="Resources\LockedIcon.ico" />
+    <None Include="Resources\LockedIcon.ico.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\DataSources\CSharpWin.RegTextBox.RegularAuthenticationSettings.datasource">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

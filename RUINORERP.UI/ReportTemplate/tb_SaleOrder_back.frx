@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="12/09/2023 15:18:15" ReportInfo.Modified="01/04/2024 14:48:55" ReportInfo.CreatorVersion="2019.1.5.0">
+  <Dictionary>
+    <BusinessObjectDataSource Name="ReportDataSource" ReferenceName="ReportDataSource" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+      <Column Name="SOrder_ID" DataType="System.Int64"/>
+      <Column Name="SOrderNo" DataType="System.String"/>
+      <Column Name="PayStatus" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Paytype_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="CustomerVendor_ID" DataType="System.Int64"/>
+      <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Store_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ShipCost" DataType="System.Decimal"/>
+      <Column Name="TotalQty" DataType="System.Int32"/>
+      <Column Name="TotalCost" DataType="System.Decimal"/>
+      <Column Name="TotalAmount" DataType="System.Decimal"/>
+      <Column Name="TotalTaxAmount" DataType="System.Decimal"/>
+      <Column Name="PreDeliveryDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="SaleDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="DeliveryDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ShippingAddress" DataType="System.String"/>
+      <Column Name="ShippingWay" DataType="System.String"/>
+      <Column Name="TrackNo" DataType="System.String"/>
+      <Column Name="CollectedMoney" DataType="System.Decimal"/>
+      <Column Name="PrePayMoney" DataType="System.Decimal"/>
+      <Column Name="Deposit" DataType="System.Decimal"/>
+      <Column Name="TaxRate" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="DeliveryDateConfirm" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="UntaxedTotalAmont" DataType="System.Decimal"/>
+      <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Notes" DataType="System.String"/>
+      <Column Name="ApprovalOpinions" DataType="System.String"/>
+      <Column Name="Approver_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Approver_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ApprovalStatus" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ApprovalResults" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="KeepAccountsType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="TaxDeductionType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="OrderPriority" DataType="System.Int32"/>
+      <Column Name="PlatformOrderNo" DataType="System.String"/>
+      <Column Name="PrintStatus" DataType="System.Int32"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource1" Alias="tb_SaleOrderDetails" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrderDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOrderDetails" Enabled="true">
+        <Column Name="SaleOrderDetail_ID" DataType="System.Int64"/>
+        <Column Name="SOrder_ID" DataType="System.Int64"/>
+        <Column Name="ProdDetailID" DataType="System.Int64"/>
+        <Column Name="Location_ID" DataType="System.Int64"/>
+        <Column Name="UnitPrice" DataType="System.Decimal"/>
+        <Column Name="Discount" DataType="System.Decimal"/>
+        <Column Name="TransactionPrice" DataType="System.Decimal"/>
+        <Column Name="Quantity" DataType="System.Int32"/>
+        <Column Name="SubtotalTransactionAmount" DataType="System.Decimal"/>
+        <Column Name="Cost" DataType="System.Decimal"/>
+        <Column Name="SubtotalCostAmount" DataType="System.Decimal"/>
+        <Column Name="DeliveredQty" DataType="System.Int32"/>
+        <Column Name="CommissionAmont" DataType="System.Decimal"/>
+        <Column Name="TaxRate" DataType="System.Decimal"/>
+        <Column Name="TaxSubtotalAmount" DataType="System.Decimal"/>
+        <Column Name="UntaxedAmont" DataType="System.Decimal"/>
+        <Column Name="Summary" DataType="System.String"/>
+        <Column Name="CustomerPartNo" DataType="System.String"/>
+        <Column Name="Gift" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="ReturnedQty" DataType="System.Int32"/>
+        <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+      </BusinessObjectDataSource>
+      <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+    </BusinessObjectDataSource>
+  </Dictionary>
+  <ReportPage Name="Page1" PaperWidth="215" PaperHeight="140" FirstPageSource="4" OtherPagesSource="4">
+    <ReportTitleBand Name="ReportTitle1" Width="737.1" Height="85.05">
+      <TextObject Name="Text5" Left="179.55" Top="9.45" Width="311.85" Height="28.35" Border.Lines="Bottom" Text="深圳贝思特高新技术有限公司" HorzAlign="Center" Font="微软雅黑, 16pt, style=Bold"/>
+      <TextObject Name="Text1" Left="9.45" Top="47.25" Width="198.45" Height="37.8" Text="[ReportDataSource.SOrderNo]"/>
+      <TextObject Name="Text2" Left="510.3" Top="28.35" Width="217.35" Height="18.9" Text="销售订单单号:[ReportDataSource.SOrderNo]"/>
+      <TextObject Name="Text4" Left="198.45" Top="-9.45" Width="94.5" Height="18.9"/>
+    </ReportTitleBand>
+    <PageHeaderBand Name="PageHeader1" Top="89.05" Width="737.1" Height="122.85">
+      <TextObject Name="Text3" Left="56.7" Top="28.35" Width="179.55" Height="47.25" Text="[ReportDataSource.TotalQty]"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="215.9" Width="737.1" Height="207.9" DataSource="ReportDataSource">
+      <TableObject Name="Table1" Left="37.8" Top="37.8" Width="642.6" Height="94.5" Border.Lines="Bottom">
+        <TableColumn Name="Column1" Width="128.52"/>
+        <TableColumn Name="Column2" Width="128.52"/>
+        <TableColumn Name="Column3" Width="128.52"/>
+        <TableColumn Name="Column4" Width="128.52"/>
+        <TableColumn Name="Column5" Width="128.52"/>
+        <TableRow Name="Row1">
+          <TableCell Name="Cell1"/>
+          <TableCell Name="Cell2" Text="[ReportDataSource.tb_SaleOrderDetails.Quantity]"/>
+          <TableCell Name="Cell3"/>
+          <TableCell Name="Cell4"/>
+          <TableCell Name="Cell5"/>
+        </TableRow>
+        <TableRow Name="Row2">
+          <TableCell Name="Cell6"/>
+          <TableCell Name="Cell7"/>
+          <TableCell Name="Cell8"/>
+          <TableCell Name="Cell9"/>
+          <TableCell Name="Cell10"/>
+        </TableRow>
+        <TableRow Name="Row3">
+          <TableCell Name="Cell11"/>
+          <TableCell Name="Cell12"/>
+          <TableCell Name="Cell13"/>
+          <TableCell Name="Cell14"/>
+          <TableCell Name="Cell15"/>
+        </TableRow>
+        <TableRow Name="Row4">
+          <TableCell Name="Cell16"/>
+          <TableCell Name="Cell17"/>
+          <TableCell Name="Cell18"/>
+          <TableCell Name="Cell19"/>
+          <TableCell Name="Cell20"/>
+        </TableRow>
+        <TableRow Name="Row5">
+          <TableCell Name="Cell21"/>
+          <TableCell Name="Cell22"/>
+          <TableCell Name="Cell23"/>
+          <TableCell Name="Cell24"/>
+          <TableCell Name="Cell25"/>
+        </TableRow>
+      </TableObject>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="427.8" Width="737.1" Height="170.1"/>
+  </ReportPage>
+</Report>

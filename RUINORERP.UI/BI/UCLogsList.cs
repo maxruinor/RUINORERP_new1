@@ -1,0 +1,71 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using RUINORERP.Business.LogicaService;
+using RUINORERP.Model;
+using RUINORERP.UI.Common;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINOR.Core;
+using RUINORERP.Common.Helper;
+using RUINORERP.Business;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using SqlSugar;
+
+
+namespace RUINORERP.UI.BI
+{
+
+    [MenuAttrAssemblyInfo("日志管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.日志管理)]
+    public partial class UCLogsList : BaseForm.BaseListGeneric<Logs>
+    {
+        public UCLogsList()
+        {
+            InitializeComponent();
+            base.EditForm = typeof(UCLogsEdit);
+            toolStripButtonAdd.Visible = false;
+            toolStripButtonModify.Visible = false;
+            toolStripButtonSave.Visible = false;
+        }
+
+        public override void QueryConditionBuilder()
+        {
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(Logs).Name + "Processor");
+            QueryConditionFilter = baseProcessor.GetQueryFilter();
+
+            //非超级用户时，只能查看自己的日志
+            var lambda = Expressionable.Create<Logs>()
+         .AndIF(!MainForm.Instance.AppContext.IsSuperUser && MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null, t => t.Operator == MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName + "(" + MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + ")")
+         .AndIF(!MainForm.Instance.AppContext.IsSuperUser && MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee == null, t => t.Operator == MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName)
+         .ToExpression();
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+        }
+
+
+        LogsController<Logs> pctr = Startup.GetFromFac<LogsController<Logs>>();
+        protected async override void Delete()
+        {
+            List<Logs> list = new List<Logs>();
+            //如果是选择了多行。则批量删除
+            foreach (DataGridViewRow dr in this.dataGridView1.SelectedRows)
+            {
+                list.Add(dr.DataBoundItem as Logs);
+            }
+            bool rs = await pctr.DeleteAsync(list.Select(c => c.ID).ToArray());
+            if (rs)
+            {
+                Query();
+            }
+            //await pctr.BaseDeleteAsync(list);
+        }
+
+
+    }
+}

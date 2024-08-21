@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <configSections>
+    <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler,log4net" />
+  </configSections>
+  <log4net>
+    <root>
+    </root>
+    <!--记录所有-->
+    <logger name="Watson">
+      <level value="ALL" />
+      <appender-ref ref="rollingFile" />
+    </logger>
+
+    <!--记录信息-->
+    <logger name="log">
+      <level value="INFO" />
+      <appender-ref ref="rollingFile" />
+    </logger>
+
+    <!--配置文件输出-->
+    <appender name="rollingFile" type="log4net.Appender.RollingFileAppender,log4net" >
+      <param name="File" type="" value="log/" />
+      <param name="AppendToFile" value="true" />
+      <param name="RollingStyle" value="Date" />
+      <param name="DatePattern" value="yyyyMMdd&quot;.txt&quot;" />
+      <param name="StaticLogFileName" value="false" />
+      <!-- <param name="CountDirection" value="1" />-->
+      <layout type="log4net.Layout.PatternLayout,log4net">
+        <param name="ConversionPattern" value="%n%d [%t] %-5p %c - %m%n" />
+        <param name="Header" value=" ----------------------header-------------- " />
+        <param name="Footer" value=" ----------------------footer-------------- " />
+      </layout>
+    </appender>
+    
+    
+    
+  </log4net>
+</configuration>
+
+
+<!-- root 在框架的体系里，所有的日志对象都是根日志(root logger)的后代。 
+因此如果一个日志对象没有在配置文件里显式定义，则框架使用根日志中定义的属性。在<root>标签里，可以定义level级别值和Appender的列表。
+如果没有定义LEVEL的值，则缺省为DEBUG。可以通过<appender-ref>标签定义日志对象使用的Appender对象。<appender-ref>声明了在其他地方定义的Appender对象的一个引用。在一个logger对象中的设置会覆盖根日志的设置。
+而对Appender属性来说，子日志对象则会继承父日志对象的Appender列表。这种缺省的行为方式也可以通过显式地设定<logger>;标签的additivity属性为false而改变。-->
+<!-- 格式名含义
+%c输出日志信息所属的类的全名
+%d输出日志时间点的日期或时间，默认格式为ISO8601，也可以在其后指定格式，比如：%d{yyy-MM-ddHH:mm:ss}，输出类似：2002-10-18-22：10：28
+%f输出日志信息所属的类的类名
+%l输出日志事件的发生位置，即输出日志信息的语句处于它所在的类的第几行
+%m输出代码中指定的信息，如log(message)中的message
+%n输出一个回车换行符，Windows平台为“\r\n”，Unix平台为“\n”
+%p输出优先级，即DEBUG，INFO，WARN，ERROR，FATAL。如果是调用debug()输出的，则为DEBUG，依此类推
+%r输出自应用启动到输出该日志信息所耗费的毫秒数
+%t输出产生该日志事件的线程名
+ -->

@@ -1,0 +1,79 @@
+﻿namespace TransInstruction
+{
+    public enum PackageSourceType
+    {
+        Client,
+        Server
+    }
+    public enum MessageType
+    {
+        说话 = 1,
+        呼喊 = 2,
+        黄色警告 = 3,
+        耳语,
+        提示 = 150
+    }
+
+    /// <summary>
+    /// 来自客户端的指令 动作
+    /// </summary>
+    public enum ClientCmdEnum
+    {
+        准备登陆 = 0x13,
+        用户登陆 = 0x10,
+        发送消息 = 0x11,
+        客户端心跳包 = 0x99,
+        打开U帮助 = 0x90156,
+        删除帮助项 = 0x90158,
+        换线登陆 = 0x90091,
+        角色处于等待 = 0x90092,
+        工作流指令 = 0x9,
+        工作流启动 = 0x8,
+        工作流审批 = 0x12,
+    
+    }
+
+    /// <summary>
+    /// 客户端操作后，传到服务器。
+    /// 服务器按这个类型来处理不同的工作流任务，启动工作流
+    /// </summary>
+    public enum WorkflowBizType
+    {
+        基础数据信息推送 = 1,
+    }
+
+
+    /// <summary>
+    /// 来自客户端的指令 动作
+    /// </summary>
+    public enum ClientSubCmdEnum
+    {
+        审批 = 0x90,
+        反审 = 0x91,
+    }
+
+    /// <summary>
+    /// 来自服务器的指令 已经过时  实际指令  分 主cmd  细分指令  再可能再细分 如角色信息修改变化
+    /// </summary>
+    public enum ServerCmdEnum
+    {
+        //  
+        未知指令 = 0,
+        用户登陆回复 = 0xA,
+        发送在线列表 = 0x1,
+        转发消息 = 0x2,
+        转发消息结果 = 0x3,
+        强制用户退出 = 0x4,
+        给客户端发提示消息 = 0x5,
+        通知审批人审批 = 0x6,
+        通知相关人员审批完成 = 0x7,
+        通知发起人启动成功 = 0x8,
+        推送版本更新 = 0x9,
+        心跳回复 = 0x99,
+        关机 = 0x94,
+        删除列的配置文件 = 0x95,
+        工作流数据推送 = 0x96,
+    }
+
+
+}

@@ -1,0 +1,346 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FDE50FFC-02CB-42AC-A7CA-F3C3D7DA61C2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RUINORERP.WF</RootNamespace>
+    <AssemblyName>RUINORERP.WF</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ConcurrentCollections, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\ConcurrentHashSet.1.1.0\lib\net461\ConcurrentCollections.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Bcl.HashCode.1.1.0\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Data.SqlClient, Version=1.0.19269.1, Culture=neutral, PublicKeyToken=23ec7fc2d6eaa4a5, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Data.SqlClient.1.0.19269.1\lib\net46\Microsoft.Data.SqlClient.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore, Version=3.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.EntityFrameworkCore.3.1.2\lib\netstandard2.0\Microsoft.EntityFrameworkCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.Abstractions, Version=3.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.EntityFrameworkCore.Abstractions.3.1.2\lib\netstandard2.0\Microsoft.EntityFrameworkCore.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.Relational, Version=3.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.EntityFrameworkCore.Relational.3.1.2\lib\netstandard2.0\Microsoft.EntityFrameworkCore.Relational.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.EntityFrameworkCore.SqlServer, Version=3.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.EntityFrameworkCore.SqlServer.3.1.2\lib\netstandard2.0\Microsoft.EntityFrameworkCore.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Abstractions, Version=3.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.Caching.Abstractions.3.1.2\lib\netstandard2.0\Microsoft.Extensions.Caching.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Caching.Memory, Version=3.1.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.Caching.Memory.3.1.2\lib\netstandard2.0\Microsoft.Extensions.Caching.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.Configuration.Abstractions.2.2.0\lib\netstandard2.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.DependencyInjection.8.0.0\lib\net462\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.DependencyInjection.Abstractions.8.0.0\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileProviders.Abstractions, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.FileProviders.Abstractions.2.2.0\lib\netstandard2.0\Microsoft.Extensions.FileProviders.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Hosting.Abstractions, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.Hosting.Abstractions.2.2.0\lib\netstandard2.0\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.Logging.7.0.0\lib\net462\Microsoft.Extensions.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.Logging.Abstractions.7.0.0\lib\net462\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Debug, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.Logging.Debug.7.0.0\lib\net462\Microsoft.Extensions.Logging.Debug.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.ObjectPool, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.ObjectPool.2.2.0\lib\netstandard2.0\Microsoft.Extensions.ObjectPool.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.Options.8.0.0\lib\net462\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Primitives, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Extensions.Primitives.8.0.0\lib\net462\Microsoft.Extensions.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Identity.Client, Version=3.0.8.0, Culture=neutral, PublicKeyToken=0a613f4dd989e8ae, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Microsoft.Identity.Client.3.0.8\lib\net45\Microsoft.Identity.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTelemetry.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7bd6737fe5b67e3c, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\OpenTelemetry.Api.1.1.0\lib\net452\OpenTelemetry.Api.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpYaml, Version=1.6.5.0, Culture=neutral, PublicKeyToken=1ced8108e942bc02, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\SharpYaml.1.6.5\lib\net45\SharpYaml.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Collections.Immutable.1.7.0\lib\netstandard2.0\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.ComponentModel.Annotations.4.7.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Common, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Data.Common.4.3.0\lib\net451\System.Data.Common.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Diagnostics.DiagnosticSource.8.0.0\lib\net462\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.Linq.Dynamic.Core, Version=1.3.0.0, Culture=neutral, PublicKeyToken=0f07ec44de6ac832, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Linq.Dynamic.Core.1.3.0\lib\net46\System.Linq.Dynamic.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Reflection.4.3.0\lib\net462\System.Reflection.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reflection.TypeExtensions, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Reflection.TypeExtensions.4.7.0\lib\net461\System.Reflection.TypeExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Thread, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Threading.Thread.4.3.0\lib\net46\System.Threading.Thread.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Threading.ThreadPool, Version=4.0.11.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.Threading.ThreadPool.4.3.0\lib\net46\System.Threading.ThreadPool.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WorkflowCore, Version=3.10.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\WorkflowCore.3.10.0\lib\netstandard2.0\WorkflowCore.dll</HintPath>
+    </Reference>
+    <Reference Include="WorkflowCore.DSL, Version=3.10.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\WorkflowCore.DSL.3.10.0\lib\netstandard2.0\WorkflowCore.DSL.dll</HintPath>
+    </Reference>
+    <Reference Include="WorkflowCore.Persistence.EntityFramework, Version=3.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\WorkflowCore.Persistence.EntityFramework.3.1.1\lib\netstandard2.0\WorkflowCore.Persistence.EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="WorkflowCore.Persistence.SqlServer, Version=3.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\WorkflowCore.Persistence.SqlServer.3.1.1\lib\netstandard2.0\WorkflowCore.Persistence.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="WorkflowCore.Users, Version=3.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\RUINORERP.Server\packages\WorkflowCore.Users.3.9.0\lib\netstandard2.0\WorkflowCore.Users.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BaseStepBody.cs" />
+    <Compile Include="BizOperation\BaseBizData.cs" />
+    <Compile Include="BizOperation\BizEntities\BizCondition.cs" />
+    <Compile Include="BizOperation\Condition\ConditionConfigUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BizOperation\Condition\ConditionConfigUI.Designer.cs">
+      <DependentUpon>ConditionConfigUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BizOperation\Condition\RoleSeletor.cs" />
+    <Compile Include="BizOperation\Condition\UserSeletor.cs" />
+    <Compile Include="BizOperation\IWorkflowDataMarker.cs" />
+    <Compile Include="BizOperation\IWorkflowMarker.cs" />
+    <Compile Include="BizOperation\Steps\DecisionStepUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BizOperation\Steps\DecisionStepUI.Designer.cs">
+      <DependentUpon>DecisionStepUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BizOperation\Steps\DecisionStep.cs" />
+    <Compile Include="BizOperation\Steps\ApprovalStepUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BizOperation\Steps\ApprovalStepUI.Designer.cs">
+      <DependentUpon>ApprovalStepUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BizOperation\Steps\ApprovalStep.cs" />
+    <Compile Include="BizOperation\Steps\NotificationStep.cs" />
+    <Compile Include="BizOperation\Steps\CloseCaseStep.cs" />
+    <Compile Include="BizOperation\Steps\SubmitStep.cs" />
+    <Compile Include="BizOperation\BizOperationData.cs" />
+    <Compile Include="BizOperation\WFSO.cs" />
+    <Compile Include="BizOperation\Condition\AmountCondition.cs" />
+    <Compile Include="BizOperation\Condition\ConditionConfig.cs" />
+    <Compile Include="BizOperation\Condition\ConditionRegistry.cs" />
+    <Compile Include="BizOperation\Condition\DaysCondition.cs" />
+    <Compile Include="BizOperation\Condition\IWorkflowCondition.cs" />
+    <Compile Include="BizOperation\Condition\LoadConditionFromConfig.cs" />
+    <Compile Include="BizOperation\WFSOProcess.cs" />
+    <Compile Include="BizOperation\WrokflowData\BillPara.cs" />
+    <Compile Include="Enums\WorkflowEnums.cs" />
+    <Compile Include="UI\UCNodePropEditBase.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\UCNodePropEditBase.Designer.cs">
+      <DependentUpon>UCNodePropEditBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WorkFlowContextData.cs" />
+    <Compile Include="UI\UCWFStartEdit.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\UCWFStartEdit.Designer.cs">
+      <DependentUpon>UCWFStartEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WFApproval\ApprovalData.cs" />
+    <Compile Include="WFApproval\ApprovalNodes.cs" />
+    <Compile Include="WFApproval\ApprovalWorkflow.cs" />
+    <Compile Include="WFApproval\BillApprovalWorkflow.cs" />
+    <Compile Include="WFApproval\Steps\CancelStep.cs" />
+    <Compile Include="WFApproval\Steps\RejectedStep.cs" />
+    <Compile Include="WFApproval\Steps\ApprovedStep.cs" />
+    <Compile Include="WFApproval\Steps\UserTask.cs" />
+    <Compile Include="WFApproval\Steps\InitialStep.cs" />
+    <Compile Include="WFController.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WFServiceExtensions\WFConfigExtensions.cs" />
+    <Compile Include="WFServiceExtensions\WorkflowStartup.cs" />
+    <Compile Include="WorkflowContext.cs" />
+    <Compile Include="WorkFlow\Steps\Class1.cs" />
+    <Compile Include="WorkFlow\UserSelector.cs" />
+    <Compile Include="WorkFlow\IUserSelector.cs" />
+    <Compile Include="WorkFlow\ProcessData.cs" />
+    <Compile Include="WorkFlow\Steps\ApproveStep.cs" />
+    <Compile Include="WorkFlow\Steps\CloseCase.cs" />
+    <Compile Include="WorkFlow\Steps\RejectStep.cs" />
+    <Compile Include="WorkFlow\Steps\SubmitStep.cs" />
+    <Compile Include="WorkFlow\WorkflowItem.cs" />
+    <Compile Include="WorkFlow\WorkflowRegisterService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="项目说明.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="BizOperation\PUR\" />
+    <Folder Include="BizOperation\SO\" />
+    <Folder Include="UI\Inputs\" />
+    <Folder Include="UI\Outputs\" />
+    <Folder Include="WorkFlow\CustomizedWF\Conditions\" />
+    <Folder Include="WorkFlow\CustomizedWF\Steps\" />
+    <Folder Include="WorkFlow\FixedWF\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
+      <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
+      <Name>HLH.Lib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Business\RUINORERP.Business.csproj">
+      <Project>{e573f9da-cfcc-446d-9450-58874895a73f}</Project>
+      <Name>RUINORERP.Business</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj">
+      <Project>{ee910588-f33c-4f65-9c50-72bf3fe8d063}</Project>
+      <Name>RUINORERP.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj">
+      <Project>{c7bca755-1931-43e0-a7d5-e8983df05f4f}</Project>
+      <Name>RUINORERP.Extensions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj">
+      <Project>{059e2c38-245c-425c-9d9c-a4d7afd457f7}</Project>
+      <Name>RUINORERP.Global</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.IServices\RUINORERP.IServices.csproj">
+      <Project>{1b8111a7-df75-49e1-ba66-8058f78b2162}</Project>
+      <Name>RUINORERP.IServices</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj">
+      <Project>{775c01a3-d64c-4a72-b87b-73007633281d}</Project>
+      <Name>RUINORERP.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Repository\RUINORERP.Repository.csproj">
+      <Project>{2389a8f1-d1bc-4637-b980-c9d10985c2d2}</Project>
+      <Name>RUINORERP.Repository</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="BizOperation\Condition\ConditionConfigUI.resx">
+      <DependentUpon>ConditionConfigUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BizOperation\Steps\DecisionStepUI.resx">
+      <DependentUpon>DecisionStepUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BizOperation\Steps\ApprovalStepUI.resx">
+      <DependentUpon>ApprovalStepUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\UCWFStartEdit.resx">
+      <DependentUpon>UCWFStartEdit.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\RUINORERP.Server\packages\Microsoft.Data.SqlClient.SNI.1.0.19235.1\build\net46\Microsoft.Data.SqlClient.SNI.targets" Condition="Exists('..\RUINORERP.Server\packages\Microsoft.Data.SqlClient.SNI.1.0.19235.1\build\net46\Microsoft.Data.SqlClient.SNI.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\RUINORERP.Server\packages\Microsoft.Data.SqlClient.SNI.1.0.19235.1\build\net46\Microsoft.Data.SqlClient.SNI.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\RUINORERP.Server\packages\Microsoft.Data.SqlClient.SNI.1.0.19235.1\build\net46\Microsoft.Data.SqlClient.SNI.targets'))" />
+  </Target>
+</Project>

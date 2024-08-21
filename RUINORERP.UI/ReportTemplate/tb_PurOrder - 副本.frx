@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="01/04/2024 00:22:48" ReportInfo.Modified="01/04/2024 23:37:59" ReportInfo.CreatorVersion="2019.1.5.0">
+  <Styles>
+    <Style Name="采购订单" Border.Lines="All"/>
+  </Styles>
+  <Dictionary>
+    <BusinessObjectDataSource Name="ReportDataSource" ReferenceName="ReportDataSource" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+      <Column Name="PurOrder_ID" DataType="System.Int64"/>
+      <Column Name="PurOrderNo" DataType="System.String"/>
+      <Column Name="CustomerVendor_ID" DataType="System.Int64"/>
+      <Column Name="Employee_ID" DataType="System.Int64"/>
+      <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Paytype_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="SOrder_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="PDID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="PurDate" DataType="System.DateTime"/>
+      <Column Name="PreDeliveryDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="TotalQty" DataType="System.Int32"/>
+      <Column Name="ShippingCost" DataType="System.Decimal"/>
+      <Column Name="TotalTaxAmount" DataType="System.Decimal"/>
+      <Column Name="TotalAmount" DataType="System.Decimal"/>
+      <Column Name="Arrival_date" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Notes" DataType="System.String"/>
+      <Column Name="IsIncludeTax" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="KeepAccountsType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="PrePayMoney" DataType="System.Decimal"/>
+      <Column Name="Deposit" DataType="System.Decimal"/>
+      <Column Name="TaxDeductionType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ApprovalOpinions" DataType="System.String"/>
+      <Column Name="ApprovalStatus" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ApprovalResults" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Approver_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Approver_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="RefBillID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="RefNO" DataType="System.String"/>
+      <Column Name="RefBizType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="PrintStatus" DataType="System.Int32"/>
+      <Column Name="tb_customervendor" DataType="RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="CustomerVendor_ID" DataType="System.Int64"/>
+        <Column Name="CVCode" DataType="System.String"/>
+        <Column Name="CVName" DataType="System.String"/>
+        <Column Name="ShortName" DataType="System.String"/>
+        <Column Name="Type_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Paytype_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Customer_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Area" DataType="System.String"/>
+        <Column Name="Contact" DataType="System.String"/>
+        <Column Name="Phone" DataType="System.String"/>
+        <Column Name="Address" DataType="System.String"/>
+        <Column Name="Website" DataType="System.String"/>
+        <Column Name="IsCustomer" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="IsVendor" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+      </Column>
+      <Column Name="tb_employee" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="Employee_ID" DataType="System.Int64"/>
+        <Column Name="DepartmentID" DataType="System.Int64"/>
+        <Column Name="Employee_NO" DataType="System.String"/>
+        <Column Name="Employee_Name" DataType="System.String"/>
+        <Column Name="Gender" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Position" DataType="System.String"/>
+        <Column Name="Marriage" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Birthday" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="StartDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="JobTitle" DataType="System.String"/>
+        <Column Name="Address" DataType="System.String"/>
+        <Column Name="Email" DataType="System.String"/>
+        <Column Name="Education" DataType="System.String"/>
+        <Column Name="LanguageSkills" DataType="System.String"/>
+        <Column Name="University" DataType="System.String"/>
+        <Column Name="IDNumber" DataType="System.String"/>
+        <Column Name="EndDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="salary" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+      </Column>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource1" Alias="tb_PurOrderDetails" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrderDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrderDetails" Enabled="true">
+        <Column Name="PurOrder_ChildID" DataType="System.Int64"/>
+        <Column Name="ProdDetailID" DataType="System.Int64"/>
+        <Column Name="PurOrder_ID" DataType="System.Int64"/>
+        <Column Name="Location_ID" DataType="System.Int64"/>
+        <Column Name="property" DataType="System.String"/>
+        <Column Name="Quantity" DataType="System.Int32"/>
+        <Column Name="UnitPrice" DataType="System.Decimal"/>
+        <Column Name="Discount" DataType="System.Decimal"/>
+        <Column Name="TransactionPrice" DataType="System.Decimal"/>
+        <Column Name="TaxRate" DataType="System.Decimal"/>
+        <Column Name="TaxAmount" DataType="System.Decimal"/>
+        <Column Name="TotalAmount" DataType="System.Decimal"/>
+        <Column Name="IsGift" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="PreDeliveryDate" DataType="System.DateTime"/>
+        <Column Name="CustomertModel" DataType="System.String"/>
+        <Column Name="DeliveredQuantity" DataType="System.Int32"/>
+        <Column Name="IncludingTax" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="tb_proddetail" DataType="RUINORERP.Model.tb_ProdDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="ProdDetailID" DataType="System.Int64"/>
+          <Column Name="ProdBaseID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="MainID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="SKU" DataType="System.String"/>
+          <Column Name="BarCode" DataType="System.String"/>
+          <Column Name="ImagesPath" DataType="System.String"/>
+          <Column Name="Images" DataType="System.Byte[]" BindableControl="Picture"/>
+          <Column Name="Weight" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Standard_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Transfer_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Wholesale_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Market_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Discount_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Image" DataType="System.Byte[]" BindableControl="Picture"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="SalePublish" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Is_enabled" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Is_available" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="tb_prod" DataType="RUINORERP.Model.tb_Prod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="ProdBaseID" DataType="System.Int64"/>
+            <Column Name="ProductNo" DataType="System.String"/>
+            <Column Name="CNName" DataType="System.String"/>
+            <Column Name="Model" DataType="System.String"/>
+            <Column Name="ShortCode" DataType="System.String"/>
+            <Column Name="Specifications" DataType="System.String"/>
+            <Column Name="Type_ID" DataType="System.Int64"/>
+            <Column Name="Category_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="PropertyType" DataType="System.Int32"/>
+            <Column Name="Unit_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="CustomerVendor_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Location_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Rack_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Brand" DataType="System.String"/>
+            <Column Name="ImagesPath" DataType="System.String"/>
+            <Column Name="Images" DataType="System.Byte[]" BindableControl="Picture"/>
+            <Column Name="SourceType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="ENName" DataType="System.String"/>
+            <Column Name="ProductENDesc" DataType="System.String"/>
+            <Column Name="ProductCNDesc" DataType="System.String"/>
+            <Column Name="TaxRate" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="CustomsCode" DataType="System.String"/>
+            <Column Name="Tag" DataType="System.String"/>
+            <Column Name="SalePublish" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="tb_unit" DataType="RUINORERP.Model.tb_Unit, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+              <Column Name="Unit_ID" DataType="System.Int64"/>
+              <Column Name="UnitName" DataType="System.String"/>
+              <Column Name="Notes" DataType="System.String"/>
+              <Column Name="is_measurement_unit" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+            </Column>
+            <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+          </Column>
+          <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource2" Alias="tb_Prod_Attr_Relations" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Prod_Attr_Relation, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Prod_Attr_Relations"/>
+        </Column>
+        <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+      </BusinessObjectDataSource>
+      <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+    </BusinessObjectDataSource>
+  </Dictionary>
+  <ReportPage Name="Page1" PaperWidth="241" PaperHeight="139.7" LeftMargin="6" TopMargin="6" RightMargin="6" BottomMargin="6" FirstPageSource="4" OtherPagesSource="4" Guides="311.85,472.5,519.75,680.4,94.5,765.45,9.45,292.95,699.3,850.5,727.65,869.4,841.01,42.52,198.44,420.51,472.48,543.35,623.67,722.89,850.43,46.06,196.07,412.23,458.29,523.25,597.66,690.97,47.25,264.6,784.35,330.75,425.25,642.6,737.1">
+    <ReportTitleBand Name="ReportTitle1" Width="865.62" Height="103.95" Guides="47.25,75.6,56.7,9.45">
+      <TextObject Name="Text1" Left="330.75" Top="56.7" Width="160.65" Height="28.35" Text="采购订单" Font="宋体, 18pt, style=Bold"/>
+      <TextObject Name="Text2" Left="519.75" Top="56.7" Width="160.65" Height="18.9" Text="单号:[ReportDataSource.PurOrderNo]"/>
+      <TextObject Name="Text3" Left="132.3" Top="9.45" Width="585.9" Height="37.8" Text="深圳市贝思特高新技术有限公司" Font="宋体, 28pt, style=Bold"/>
+      <TextObject Name="Text7" Left="18.9" Top="47.25" Width="283.5" Height="18.9" Text="To:[ReportDataSource.tb_customervendor.CVName]" Font="宋体, 9pt, style=Bold"/>
+      <TextObject Name="Text10" Left="699.3" Top="56.7" Width="151.2" Height="18.9" Text="订购日期:[FormatDateTime([ReportDataSource.PurDate],&quot;yyyy-MM-dd&quot;)]"/>
+      <TextObject Name="Text11" Left="-9450" Top="-9450" Width="94.5" Height="18.9" Border.Lines="All" HorzAlign="Center"/>
+      <TextObject Name="Text36" Left="37.8" Top="66.15" Width="283.5" Height="18.9" Text="联系人:[ReportDataSource.tb_customervendor.Contact]" Font="宋体, 9pt, style=Bold"/>
+    </ReportTitleBand>
+    <PageHeaderBand Name="PageHeader1" Top="106.24" Width="865.62" Height="18.9" Guides="0,18.9">
+      <TextObject Name="Text5" Left="689.85" Width="160.65" Height="18.9" Text="[Page#]/[TotalPages#]" Font="宋体, 10pt"/>
+    </PageHeaderBand>
+    <ColumnHeaderBand Name="ColumnHeader1" Top="127.42" Width="865.62" Height="18.9">
+      <TextObject Name="Text12" Left="9.45" Width="29.48" Height="18.9" Border.Lines="All" Text="序号" HorzAlign="Center" VertAlign="Center" Font="宋体, 6.5pt"/>
+      <TextObject Name="Text13" Left="170.1" Width="170.1" Height="18.9" Border.Lines="All" Text="规格" HorzAlign="Center" VertAlign="Center" Font="宋体, 6.5pt"/>
+      <TextObject Name="Text14" Left="37.8" Width="132.3" Height="18.9" Border.Lines="Right, Top, Bottom" Text="名称" HorzAlign="Center" VertAlign="Center" Font="宋体, 6.5pt"/>
+      <TextObject Name="Text15" Left="415.8" Width="28.35" Height="18.9" Border.Lines="All" Text="单位" HorzAlign="Center" VertAlign="Center" Font="宋体, 6.5pt"/>
+      <TextObject Name="Text16" Left="444.15" Width="37.8" Height="18.9" Border.Lines="All" Text="数量" HorzAlign="Center" VertAlign="Center" Font="宋体, 6.5pt"/>
+      <TextObject Name="Text17" Left="481.95" Width="47.25" Height="18.9" Border.Lines="All" Text="单价" HorzAlign="Center" VertAlign="Center" Font="宋体, 6.5pt"/>
+      <TextObject Name="Text18" Left="529.2" Width="66.15" Height="18.9" Border.Lines="All" Text="金额" HorzAlign="Center" VertAlign="Center" Font="宋体, 6.5pt"/>
+      <TextObject Name="Text19" Left="595.35" Width="226.8" Height="18.9" Border.Lines="All" Text="摘要" HorzAlign="Center" VertAlign="Center" Font="宋体, 6.5pt"/>
+      <TextObject Name="Text20" Left="340.2" Width="75.6" Height="18.9" Border.Lines="All" Text="属性" HorzAlign="Center" VertAlign="Center" Font="宋体, 6.5pt"/>
+    </ColumnHeaderBand>
+    <DataBand Name="Data1" Top="148.61" Width="865.62" Guides="9.45,28.35,0,18.9">
+      <DataBand Name="Data2" Top="150.89" Width="865.62" Height="28.35" Guides="0,28.35" DataSource="BusinessObjectDataSource1">
+        <TextObject Name="Text21" Left="9.45" Width="29.48" Height="28.35" Border.Lines="All" Text="[Row#]" HorzAlign="Center" VertAlign="Center"/>
+        <TextObject Name="Text22" Left="37.8" Width="132.3" Height="28.35" Border.Lines="Right, Top, Bottom" Text="[ReportDataSource.tb_PurOrderDetails.tb_proddetail.tb_prod.CNName]" VertAlign="Center"/>
+        <TextObject Name="Text23" Left="170.1" Width="170.1" Height="28.35" Border.Lines="All" Text="[ReportDataSource.tb_PurOrderDetails.tb_proddetail.tb_prod.Specifications]" VertAlign="Center"/>
+        <TextObject Name="Text24" Left="340.2" Width="75.6" Height="28.35" Border.Lines="All" Text="[ReportDataSource.tb_PurOrderDetails.property]" VertAlign="Center"/>
+        <TextObject Name="Text25" Left="415.8" Width="28.35" Height="28.35" Border.Lines="All" Text="[ReportDataSource.tb_PurOrderDetails.tb_proddetail.tb_prod.tb_unit.UnitName]" VertAlign="Center"/>
+        <TextObject Name="Text26" Left="444.15" Width="37.8" Height="28.35" Border.Lines="All" Text="[ReportDataSource.tb_PurOrderDetails.Quantity]" VertAlign="Center"/>
+        <TextObject Name="Text27" Left="481.95" Width="47.25" Height="28.35" Border.Lines="All" Text="[FormatNumber([ReportDataSource.tb_PurOrderDetails.TransactionPrice],2)]" VertAlign="Center"/>
+        <TextObject Name="Text28" Left="529.2" Width="66.15" Height="28.35" Border.Lines="All" Text="[FormatNumber([ReportDataSource.tb_PurOrderDetails.TotalAmount],2)]" VertAlign="Center"/>
+        <TextObject Name="Text29" Left="595.35" Width="226.8" Height="28.35" Border.Lines="All" Text="[ReportDataSource.tb_PurOrderDetails.Notes]" VertAlign="Center"/>
+      </DataBand>
+    </DataBand>
+    <ReportSummaryBand Name="ReportSummary1" Top="181.53" Width="865.62" Height="37.8">
+      <TextObject Name="Text30" Left="378" Top="9.45" Width="85.05" Height="28.35" Text="[ReportDataSource.TotalQty]"/>
+      <TextObject Name="Text31" Left="567" Top="9.45" Width="66.15" Height="28.35" Text="[FormatNumber([ReportDataSource.TotalAmount],2)]"/>
+      <TextObject Name="Text32" Left="283.5" Top="9.45" Width="66.15" Height="28.35" Text="数量" VertAlign="Bottom"/>
+      <TextObject Name="Text33" Left="491.4" Top="9.45" Width="47.25" Height="28.35" Text="金额" VertAlign="Bottom"/>
+      <TextObject Name="Text34" Left="689.85" Top="9.45" Width="94.5" Height="18.9" HorzAlign="Center" VertAlign="Bottom"/>
+    </ReportSummaryBand>
+    <PageFooterBand Name="PageFooter1" Top="221.61" Width="865.62" Height="122.85" Guides="75.6,94.5,0,66.15">
+      <TextObject Name="Text4" Left="47.25" Top="75.6" Width="274.05" Height="18.9" Text="采购: [ReportDataSource.tb_employee.Employee_Name]"/>
+      <TextObject Name="Text6" Left="47.25" Width="737.1" Height="66.15" Text="注：1、收到订单21小时内必须盖章签字回传，并书面回复详细的交货计划；2、品质要求供方提供符合我司的质量标准并经我司确认之样品的货物，3,、违约责任供方须按时按质量交货 ，如货期有延误，撇司将扣货款=延误天数*10%此单货款，4、订单执行过程中如有任何条目的变更，双方以书面确认为准&#13;&#10;补充：1、送货必须放送货单（一式三联），送货单需写送货厂商、我司料号、品名、产品规格型号、数量；2、送货外箱需贴物料标签（标签上需写我司料号，规格型号、装箱数量）&#13;&#10;地址：深圳市龙华区大浪街道丽荣路1号 国乐科技园5栋6楼(西侧)"/>
+      <TextObject Name="Text8" Left="340.2" Top="75.6" Width="94.5" Height="18.9" Text="审核: "/>
+      <TextObject Name="Text9" Left="604.8" Top="75.6" Width="94.5" Height="18.9" Text="供应商回签: "/>
+      <TextObject Name="Text35" Left="47.25" Top="103.95" Width="226.8" Height="18.9" Text="打印时间:[Date]"/>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

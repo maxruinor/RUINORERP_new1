@@ -1,0 +1,109 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Apollo\**" />
+    <EmbeddedResource Remove="Apollo\**" />
+    <None Remove="Apollo\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Authorizations\Behaviors\IUserBehaviorService.cs" />
+    <Compile Remove="Authorizations\Behaviors\UserBehaviorService.cs" />
+    <Compile Remove="Authorizations\Policys\ApiResponseHandler.cs" />
+    <Compile Remove="Authorizations\Policys\JwtToken.cs" />
+    <Compile Remove="Authorizations\Policys\PermissionHandler.cs" />
+    <Compile Remove="Authorizations\Policys\PermissionItem.cs" />
+    <Compile Remove="Authorizations\Policys\PermissionRequirement.cs" />
+    <Compile Remove="EventHandling\BlogQueryIntegrationEvent.cs" />
+    <Compile Remove="EventHandling\BlogQueryIntegrationEventHandler.cs" />
+    <Compile Remove="Filter\AutofacPropertityModuleReg.cs" />
+    <Compile Remove="Filter\CustomRouteAttribute.cs" />
+    <Compile Remove="Filter\GlobalAuthorizeFilter.cs" />
+    <Compile Remove="Filter\GlobalRoutePrefixFilter.cs" />
+    <Compile Remove="Filter\UserRegisterVo.cs" />
+    <Compile Remove="Filter\UseServiceDIAttribute.cs" />
+    <Compile Remove="Middlewares\AllServicesMiddleware.cs" />
+    <Compile Remove="Middlewares\ByPassAuthMiddleware.cs" />
+    <Compile Remove="Middlewares\ConsulMiddleware.cs" />
+    <Compile Remove="Middlewares\ExceptionHandlerMiddleware.cs" />
+    <Compile Remove="Middlewares\IpLimitMiddleware.cs" />
+    <Compile Remove="Middlewares\IpLogMiddleware.cs" />
+    <Compile Remove="Middlewares\JwtTokenAuthMiddleware.cs" />
+    <Compile Remove="Middlewares\MiddlewareHelpers.cs" />
+    <Compile Remove="Middlewares\MiniProfilerMiddleware.cs" />
+    <Compile Remove="Middlewares\QuartzJobMiddleware.cs" />
+    <Compile Remove="Middlewares\RecordAccessLogsMiddleware.cs" />
+    <Compile Remove="Middlewares\RequRespLogMiddleware.cs" />
+    <Compile Remove="Middlewares\SeedDataMiddleware.cs" />
+    <Compile Remove="Middlewares\SignalRSendMiddleware.cs" />
+    <Compile Remove="Middlewares\SwaggerAuthMiddleware.cs" />
+    <Compile Remove="Middlewares\SwaggerMiddleware.cs" />
+    <Compile Remove="NacosConfig\NacosListenConfigurationTask.cs" />
+    <Compile Remove="NacosConfig\NacosListenNamingTask.cs" />
+    <Compile Remove="Redis\RedisCache.cs" />
+    <Compile Remove="Redis\RedisSubscribe.cs" />
+    <Compile Remove="Redis\RedisSubscribe2.cs" />
+    <Compile Remove="ServiceExtensions\AppConfigSetup.cs" />
+    <Compile Remove="ServiceExtensions\Authentication_Ids4Setup.cs" />
+    <Compile Remove="ServiceExtensions\Authentication_JWTSetup.cs" />
+    <Compile Remove="ServiceExtensions\AuthorizationSetup.cs" />
+    <Compile Remove="ServiceExtensions\AutofacModuleRegister.cs" />
+    <Compile Remove="ServiceExtensions\AutoMapperSetup.cs" />
+    <Compile Remove="ServiceExtensions\CorsSetup.cs" />
+    <Compile Remove="ServiceExtensions\DbSetup.cs" />
+    <Compile Remove="ServiceExtensions\EventBusSetup.cs" />
+    <Compile Remove="ServiceExtensions\HttpContextSetup.cs" />
+    <Compile Remove="ServiceExtensions\HttpPollySetup.cs" />
+    <Compile Remove="ServiceExtensions\IocStartup.cs" />
+    <Compile Remove="ServiceExtensions\IpPolicyRateLimitSetup.cs" />
+    <Compile Remove="ServiceExtensions\JobSetup.cs" />
+    <Compile Remove="ServiceExtensions\KafkaSetup.cs" />
+    <Compile Remove="ServiceExtensions\MiniProfilerSetup.cs" />
+    <Compile Remove="ServiceExtensions\NacosSetup.cs" />
+    <Compile Remove="ServiceExtensions\RabbitMQSetup.cs" />
+    <Compile Remove="ServiceExtensions\RedisInitMqSetup.cs" />
+    <Compile Remove="ServiceExtensions\SwaggerSetup.cs" />
+    <Compile Remove="ServiceExtensions\UiFilesZipSetup.cs" />
+    <Compile Remove="ServiceExtensions\WebApiClientSetup.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Autofac.Extras.DynamicProxy" Version="6.0.1" />
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+    <PackageReference Include="CacheManager.Microsoft.Extensions.Caching.Memory" Version="1.2.0" />
+    <PackageReference Include="CacheManager.Microsoft.Extensions.Logging" Version="2.0.0-beta-1629" />
+    <PackageReference Include="CacheManager.SystemRuntimeCaching" Version="2.0.0-beta-1629" />
+    <PackageReference Include="log4net" Version="2.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.90" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
+    <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj" />
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
+    <ProjectReference Include="..\RUINORERP.Services\RUINORERP.Services.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Authorizations\Behaviors\" />
+    <Folder Include="Authorizations\Policys\" />
+    <Folder Include="EventHandling\" />
+    <Folder Include="NacosConfig\" />
+  </ItemGroup>
+</Project>

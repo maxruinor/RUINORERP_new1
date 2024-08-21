@@ -1,0 +1,67 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>销售订单</title>
+<meta name="GENERATOR" content="WinCHM">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style>
+html,body { 
+	/* Default Font */
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11pt;
+}
+</style>
+
+</head>
+
+<body>
+<P>销售订单</P>
+<P>录入</P>
+<P>思路是：表格中是要录入的数据，自动带出的数据来自于产品明细表中。</P>
+<P>目前发现 销售明细录入时 
+品名的列名（ProductSharePart中的列）要与view_prodDetail中的品名要一致。</P>
+<P>  
+但是无法换行？</P>
+<P>数量金额小计。给默认值为0</P>
+<P>UCSourceGrid</P>
+<P><A 
+href="https://help.shangmaoguanjia.com/home/article/detail/id/16.html">https://help.shangmaoguanjia.com/home/article/detail/id/16.html</A>&nbsp;&nbsp; 
+可以看一下参考下</P>
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P>交易方式，，
+<TABLE style="LINE-HEIGHT: 1.54" border=0 cellSpacing=0 cellPadding=0>
+  
+  <TR style="VERTICAL-ALIGN: baseline" vAlign=baseline>
+    <TD><SPAN 
+      style="FONT-FAMILY: '宋体'; COLOR: #000000">交易方式：这个主要是对账款进行控制，包括账款的账期以及是否即付现金。特别是账期直接影响还款日期，后续的账龄分析的依据。</SPAN></TD></TR></TABLE></P>
+<P>&nbsp;</P>
+<P>整几个常用业务，<FONT color=#ff0000>采购 
+销售，其它出入库，销售退回，采购退回。。然后快速做成功能。测试。然后再做数据导入。</FONT></P>
+<P><FONT color=#ff0000></FONT>&nbsp;</P>
+<P><FONT color=#ff0000>打印： 销售订单 </FONT></P>
+<P>OnFocusEntering&nbsp; 删除行时 会出错</P>
+<P>&nbsp;</P>
+<P>思路是。开始编辑 时OnFocusEntering 就给一个固定的新行初阶 
+（单据明细的实体）后面操作时再给他一个主键（产品ID)和其它值。才认为他是有效值</P>
+<P>流程中，从视图中查询，给公共部分字段给值（这个公共部分无产品ID），视图中有产品ID，所以给到单据明细中的产品ID，查重复是以产品ID为依据</P>
+<P>queryform&nbsp; 查询条件没有</P>
+<P> grid设置某些列不能编辑</P>
+<P> 其它出入库。加载时。能不能过滤一下&nbsp; 区分出 和入？</P>
+<P>   采购入库退回</P>
+<P>&nbsp;===============   </P>
+<P>   表格下拉时。可以添加一个空白项？</P>
+<P>  
+  
+   &nbsp;</P>
+<P>  
+  
+   太多设置值的  
+  
+   代码了。重复了</P>
+<P><STRONG>SetCellValue</STRONG> 这个方法是 
+查询出来引出数据。除指向性的配对，如果只是用来显示看的。不需要反射。如果不存在也反射不进去。</P>
+<P>      全跑一下。按出入库为标准</P>
+<P>    打印这块。没有数据是不可以操作的。要提示判断 
+是否存盘，打印了就增加打印的次数</P></body>
+</html>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="MongoRepository\**" />
+    <EmbeddedResource Remove="MongoRepository\**" />
+    <None Remove="MongoRepository\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="IRoleModulePermissionRepository.cs" />
+    <Compile Remove="RoleModulePermissionRepository.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
+  </ItemGroup>
+
+</Project>

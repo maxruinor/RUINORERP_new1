@@ -1,0 +1,905 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using RUINORERP.Common;
+using RUINORERP.UI.Common;
+using RUINORERP.Model;
+using RUINORERP.Business;
+using RUINORERP.UI.UCSourceGrid;
+using System.Reflection;
+using System.Collections.Concurrent;
+using RUINORERP.Common.CollectionExtension;
+using static RUINORERP.UI.Common.DataBindingHelper;
+using static RUINORERP.UI.Common.GUIUtils;
+using RUINORERP.Model.Dto;
+using DevAge.Windows.Forms;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global;
+using RUINORERP.UI.Report;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.Model.QueryDto;
+using Microsoft.Extensions.Logging;
+using RUINOR.Core;
+using SqlSugar;
+using FluentValidation.Results;
+using System.Linq.Expressions;
+using Krypton.Toolkit;
+using AutoMapper;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using SourceGrid;
+using EnumsNET;
+using RUINORERP.UI.PSI.PUR;
+
+namespace RUINORERP.UI.PSI.SAL
+{
+    [MenuAttrAssemblyInfo("销售退回单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.销售管理, BizType.销售退回单)]
+    public partial class UCSaleOutRe : BaseBillEditGeneric<tb_SaleOutRe, tb_SaleOutReQueryDto>
+    {
+        public UCSaleOutRe()
+        {
+            InitializeComponent();
+            //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOutRe>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
+            base.OnBindDataToUIEvent += UcSaleOrderEdit_OnBindDataToUIEvent;
+
+        }
+
+
+        public override void QueryConditionBuilder()
+        {
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOutRe).Name + "Processor");
+            QueryConditionFilter = baseProcessor.GetQueryFilter();
+            return;
+        }
+
+        private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_SaleOutRe entity)
+        {
+            BindData(entity);
+
+        }
+
+        internal override void LoadDataToUI(object Entity)
+        {
+            BindData(Entity as tb_SaleOutRe);
+        }
+
+
+        public void BindData(tb_SaleOutRe entity)
+        {
+            if (entity == null)
+            {
+                MainForm.Instance.uclog.AddLog("实体不能为空", UILogType.警告);
+                return;
+            }
+
+            if (entity != null)
+            {
+                if (entity.SaleOutRe_ID > 0)
+                {
+                    entity.PrimaryKeyID = entity.SaleOutRe_ID;
+                    entity.ActionStatus = ActionStatus.加载;
+                    //entity.DataStatus = (int)DataStatus.确认;
+                    //如果审核了，审核要灰色
+                }
+                else
+                {
+                    entity.ActionStatus = ActionStatus.新增;
+                    entity.DataStatus = (int)DataStatus.草稿;
+                    entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售退回单);
+                    //entity.OutDate = System.DateTime.Now;
+
+                }
+
+            }
+
+            if (entity.ApprovalStatus.HasValue)
+            {
+                lblReview.Text = ((ApprovalStatus)entity.ApprovalStatus).ToString();
+            }
+            EditEntity = entity;
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ReturnNo, txtReturnNo, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, v => v.SaleOut_NO, txtSaleOutNo, BindDataType4TextBox.Text, true);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ShipCost.ToString(), txtShipcost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ActualRefundAmount.ToString(), txtActualRefundAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4DataTime<tb_SaleOutRe>(entity, t => t.ReturnDate, dtpDeliveryDate, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ReturnReason, txtReturnReason, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4DataTime<tb_SaleOutRe>(entity, t => t.Approver_at, dtpApprover_at, false);
+            DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+            DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
+            DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.RefundOnly, chkRefundOnly, false);
+            DataBindingHelper.BindData4CheckBox<tb_SaleOutRe>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
+
+            base.errorProviderForAllInput.DataSource = entity;
+            base.errorProviderForAllInput.ContainerControl = this;
+            //this.ValidateChildren();
+            this.AutoValidate = AutoValidate.EnableAllowFocusChange;
+            DataBindingHelper.BindData4ControlByEnum<tb_SaleOutRe>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_SaleOutRe>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
+            if (entity.tb_SaleOutReDetails != null && entity.tb_SaleOutReDetails.Count > 0)
+            {
+                //LoadDataToGrid(entity.tb_SaleOutReDetails);
+                sgh.LoadItemDataToGrid<tb_SaleOutReDetail>(grid1, sgd, entity.tb_SaleOutReDetails, c => c.ProdDetailID);
+            }
+            else
+            {
+                //LoadDataToGrid(new List<tb_SaleOutReDetail>());
+                sgh.LoadItemDataToGrid<tb_SaleOutReDetail>(grid1, sgd, new List<tb_SaleOutReDetail>(), c => c.ProdDetailID);
+            }
+
+            if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null && entity.tb_SaleOutReRefurbishedMaterialsDetails.Count > 0)
+            {
+                //LoadDataToGrid(entity.tb_SaleOutReDetails);
+                sgh2.LoadItemDataToGrid<tb_SaleOutReRefurbishedMaterialsDetail>(grid2, sgd2, entity.tb_SaleOutReRefurbishedMaterialsDetails, c => c.ProdDetailID);
+            }
+            else
+            {
+                //LoadDataToGrid(new List<tb_SaleOutReDetail>());
+                sgh2.LoadItemDataToGrid<tb_SaleOutReRefurbishedMaterialsDetail>(grid2, sgd2, new List<tb_SaleOutReRefurbishedMaterialsDetail>(), c => c.ProdDetailID);
+            }
+
+
+
+
+            //创建表达式
+            var lambda = Expressionable.Create<tb_CustomerVendor>()
+                              .And(t => t.IsCustomer == true)
+                              .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            queryFilterC.FilterLimitExpressions.Add(lambda);
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+
+
+            //先绑定这个。InitFilterForControl 这个才生效
+            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_SaleOutRe>(entity, v => v.SaleOut_MainID, txtSaleOutNo, true);
+
+            //创建表达式  草稿 结案 和没有提交的都不显示
+            var lambdaSO = Expressionable.Create<tb_SaleOut>()
+                            .And(t => t.DataStatus == (int)DataStatus.确认)
+                             .And(t => t.isdeleted == false)
+                            .ToExpression();//注意 这一句 不能少
+            BaseProcessor baseProcessorSO = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOut).Name + "Processor");
+            QueryFilter queryFilterSO = baseProcessorSO.GetQueryFilter();
+            queryFilterSO.FilterLimitExpressions.Add(lambdaSO);
+            DataBindingHelper.InitFilterForControlByExp<tb_SaleOut>(entity, txtSaleOutNo, c => c.SaleOutNo, queryFilterSO);
+            ToolBarEnabledControl(entity);
+
+            //如果属性变化 则状态为修改
+            entity.PropertyChanged += (sender, s2) =>
+            {
+                //权限允许
+                if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
+                {
+                    entity.ActionStatus = ActionStatus.修改;
+                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                }
+                //如果是销售订单引入变化则加载明细及相关数据
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.SaleOut_MainID.HasValue && entity.SaleOut_MainID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOutRe>(c => c.SaleOut_MainID))
+                {
+                    LoadSaleOutBillData(entity.SaleOut_MainID);
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog(entity.ActionStatus.GetName());
+                }
+                if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
+                {
+                    var obj = CacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    if (obj != null && obj.ToString() != "System.Object")
+                    {
+                        if (obj is tb_CustomerVendor cv)
+                        {
+                            EditEntity.Employee_ID = cv.Employee_ID;
+                        }
+                    }
+                }
+                //显示 打印状态 如果是草稿状态 不显示打印
+                if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
+                {
+                    toolStripbtnPrint.Enabled = true;
+                    if (EditEntity.PrintStatus == 0)
+                    {
+                        lblPrintStatus.Text = "未打印";
+                    }
+                    else
+                    {
+                        lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
+                    }
+
+                }
+                else
+                {
+                    toolStripbtnPrint.Enabled = false;
+                }
+            };
+        }
+
+        public void InitDataTocmbbox()
+        {
+            DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            DataBindingHelper.InitDataToCmb<tb_CustomerVendor>(k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);
+        }
+
+        /*
+         重要思路提示，这个表格控件，数据源的思路是，
+        产品共享表 ProductSharePart+tb_SaleOutReDetail 有合体，SetDependencyObject 根据字段名相同的给值，值来自产品明细表
+         并且，表格中可以编辑的需要查询的列是唯一能查到详情的
+
+        SetDependencyObject<P, S, T>   P包含S字段包含T字段--》是有且包含
+         */
+
+
+
+        SourceGridDefine sgd = null;
+        SourceGridDefine sgd2 = null;
+
+        SourceGridHelper sgh = new SourceGridHelper();
+
+        SourceGridHelper sgh2 = new SourceGridHelper();
+        //设计关联列和目标列
+        View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
+        List<View_ProdDetail> list = new List<View_ProdDetail>();
+        private void UcSaleOrderEdit_Load(object sender, EventArgs e)
+        {
+            InitDataTocmbbox();
+            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            LoadGrid1();
+            LoadGrid2();
+        }
+
+        private void LoadGrid1()
+        {
+            ///显示列表对应的中文
+            //base.FieldNameList = UIHelper.GetFieldNameList<tb_SaleOutReDetail>();
+
+            grid1.BorderStyle = BorderStyle.FixedSingle;
+            grid1.Selection.EnableMultiSelection = false;
+
+            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            //指定了关键字段ProdDetailID
+            listCols = sgh.GetGridColumns<ProductSharePart, tb_SaleOutReDetail>(c => c.ProdDetailID, false);
+
+            listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.SaleOutRe_ID);
+            listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.SOutReturnDetail_ID);
+            listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.ProdDetailID);
+            ControlChildColumnsInvisible(listCols);
+
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            if (!AppContext.SysConfig.UseBarCode)
+            {
+                listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
+            }
+            sgd = new SourceGridDefine(grid1, listCols, true);
+            sgd.GridData = EditEntity;
+            /*
+            //具体审核权限的人才显示
+            if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
+            {
+                listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.TotalCostAmount, true);
+                listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.Cost);
+                listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.TotalCostAmount);
+            }*/
+            listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.Quantity);
+            listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.SubtotalTransAmount);
+
+
+
+            listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCostAmount);
+            listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);
+            listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.SubtotalTransAmount - b.SubtotalTaxAmount, c => c.SubtotalUntaxedAmount);
+            listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
+            // listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.TaxSubtotalAmount, d => d.UntaxedAmount);
+
+            //应该是审核时要处理的逻辑暂时隐藏
+            //将数量默认为已出库数量
+            //listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.Quantity, c => c.TotalReturnedQty);
+            //listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.TotalReturnedQty);
+
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReDetail>(sgd, f => f.Standard_Price, t => t.TransactionPrice);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReDetail>(sgd, f => f.prop, t => t.property);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
+
+
+
+            //应该只提供一个结构
+            List<tb_SaleOutReDetail> lines = new List<tb_SaleOutReDetail>();
+            bindingSourceSub.DataSource = lines;
+            sgd.BindingSourceLines = bindingSourceSub;
+            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+         .AndIF(true, w => w.CNName.Length > 0)
+        // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
+        .ToExpression();//注意 这一句 不能少
+                        // StringBuilder sb = new StringBuilder();
+            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
+            list = dc.BaseQueryByWhere(exp);
+            sgd.SetDependencyObject<ProductSharePart, tb_SaleOutReDetail>(list);
+            sgd.HasRowHeader = true;
+            sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutReDetail));
+            sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
+            sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
+        }
+        private void LoadGrid2()
+        {
+
+            ///显示列表对应的中文
+
+            grid2.BorderStyle = BorderStyle.FixedSingle;
+            grid2.Selection.EnableMultiSelection = false;
+            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            //指定了关键字段ProdDetailID
+            listCols = sgh2.GetGridColumns<ProductSharePart, tb_SaleOutReRefurbishedMaterialsDetail>(c => c.ProdDetailID, false);
+
+            listCols.SetCol_NeverVisible<tb_SaleOutReRefurbishedMaterialsDetail>(c => c.SaleOutRe_ID);
+            listCols.SetCol_NeverVisible<tb_SaleOutReRefurbishedMaterialsDetail>(c => c.SOutReturnDetail_ID);
+            listCols.SetCol_NeverVisible<tb_SaleOutReRefurbishedMaterialsDetail>(c => c.ProdDetailID);
+            ControlChildColumnsInvisible(listCols);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            if (!AppContext.SysConfig.UseBarCode)
+            {
+                listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
+            }
+            sgd2 = new SourceGridDefine(grid2, listCols, true);
+
+            /*
+            //具体审核权限的人才显示
+            if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
+            {
+                listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.TotalCostAmount, true);
+                listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.Cost);
+                listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.TotalCostAmount);
+            }*/
+            listCols.SetCol_Summary<tb_SaleOutReRefurbishedMaterialsDetail>(c => c.Quantity);
+            listCols.SetCol_Summary<tb_SaleOutReRefurbishedMaterialsDetail>(c => c.SubtotalTransAmount);
+
+
+
+            listCols.SetCol_Formula<tb_SaleOutReRefurbishedMaterialsDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCostAmount);
+            listCols.SetCol_Formula<tb_SaleOutReRefurbishedMaterialsDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);
+            listCols.SetCol_Formula<tb_SaleOutReRefurbishedMaterialsDetail>((a, b) => a.SubtotalTransAmount - b.SubtotalTaxAmount, c => c.SubtotalUntaxedAmount);
+            listCols.SetCol_Formula<tb_SaleOutReRefurbishedMaterialsDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
+            // listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.TaxSubtotalAmount, d => d.UntaxedAmount);
+
+            //应该是审核时要处理的逻辑暂时隐藏
+            //将数量默认为已出库数量
+            //listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.Quantity, c => c.TotalReturnedQty);
+            //listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.TotalReturnedQty);
+
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReRefurbishedMaterialsDetail>(sgd2, f => f.Inv_Cost, t => t.Cost);
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReRefurbishedMaterialsDetail>(sgd2, f => f.Standard_Price, t => t.TransactionPrice);
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReRefurbishedMaterialsDetail>(sgd2, f => f.prop, t => t.property);
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReRefurbishedMaterialsDetail>(sgd2, f => f.Location_ID, t => t.Location_ID);
+
+
+
+            //应该只提供一个结构
+            List<tb_SaleOutReRefurbishedMaterialsDetail> lines = new List<tb_SaleOutReRefurbishedMaterialsDetail>();
+            bindingSourceOtherSub.DataSource = lines;
+            sgd2.BindingSourceLines = bindingSourceOtherSub;
+            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+         .AndIF(true, w => w.CNName.Length > 0)
+        // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
+        .ToExpression();//注意 这一句 不能少
+                        // StringBuilder sb = new StringBuilder();
+            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
+            list = dc.BaseQueryByWhere(exp);
+            sgd2.SetDependencyObject<ProductSharePart, tb_SaleOutReRefurbishedMaterialsDetail>(list);
+            sgd2.HasRowHeader = true;
+            sgh2.InitGrid(grid2, sgd2, true, nameof(tb_SaleOutReRefurbishedMaterialsDetail));
+            sgh2.OnLoadMultiRowData += Sgh2_OnLoadMultiRowData;
+        }
+
+        private void Sgh_OnLoadMultiRowData(object rows, Position position)
+        {
+            List<View_ProdDetail> RowDetails = new List<View_ProdDetail>();
+            var rowss = ((IEnumerable<dynamic>)rows).ToList();
+            foreach (var item in rowss)
+            {
+                RowDetails.Add(item);
+            }
+            if (RowDetails != null)
+            {
+                List<tb_SaleOutReDetail> details = new List<tb_SaleOutReDetail>();
+                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                foreach (var item in RowDetails)
+                {
+                    tb_SaleOutReDetail bOM_SDetail = mapper.Map<tb_SaleOutReDetail>(item);
+                    bOM_SDetail.Quantity = 0;
+                    details.Add(bOM_SDetail);
+                }
+                sgh.InsertItemDataToGrid<tb_SaleOutReDetail>(grid1, sgd, details, c => c.ProdDetailID, position);
+            }
+        }
+
+        private void Sgh2_OnLoadMultiRowData(object rows, Position position)
+        {
+            List<View_ProdDetail> RowDetails = new List<View_ProdDetail>();
+            var rowss = ((IEnumerable<dynamic>)rows).ToList();
+            foreach (var item in rowss)
+            {
+                RowDetails.Add(item);
+            }
+            if (RowDetails != null)
+            {
+                List<tb_SaleOutReRefurbishedMaterialsDetail> details = new List<tb_SaleOutReRefurbishedMaterialsDetail>();
+                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                foreach (var item in RowDetails)
+                {
+                    tb_SaleOutReRefurbishedMaterialsDetail bOM_SDetail = mapper.Map<tb_SaleOutReRefurbishedMaterialsDetail>(item);
+                    bOM_SDetail.Quantity = 0;
+                    details.Add(bOM_SDetail);
+                }
+                sgh2.InsertItemDataToGrid<tb_SaleOutReRefurbishedMaterialsDetail>(grid2, sgd2, details, c => c.ProdDetailID, position);
+            }
+
+        }
+
+        private void Sgh_OnCalculateColumnValue(object rowObj, SourceGridDefine griddefine, SourceGrid.Position Position)
+        {
+            if (EditEntity == null)
+            {
+                //都不是正常状态
+                MainForm.Instance.uclog.AddLog("请先使用新增或查询加载数据");
+                return;
+            }
+            try
+            {
+                //计算总金额  这些逻辑是不是放到业务层？后面要优化
+                List<tb_SaleOutReDetail> details = sgd.BindingSourceLines.DataSource as List<tb_SaleOutReDetail>;
+                details = details.Where(c => c.ProdDetailID > 0).ToList();
+                if (details.Count == 0)
+                {
+                    MainForm.Instance.uclog.AddLog("请先选择产品数据");
+                    return;
+                }
+                EditEntity.TotalQty = details.Sum(c => c.Quantity);
+                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.ShipCost;
+                EditEntity.ActualRefundAmount = EditEntity.TotalAmount;
+
+            }
+            catch (Exception ex)
+            {
+
+                logger.LogError("计算出错", ex);
+                MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
+            }
+        }
+
+        List<tb_SaleOutReDetail> details = new List<tb_SaleOutReDetail>();
+        /// <summary>
+        /// 查询结果 选中行的变化事件
+        /// </summary>
+        /// <param name="entity"></param>
+
+        protected async override void Save()
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+            var eer = errorProviderForAllInput.GetError(txtTotalAmount);
+
+            bindingSourceSub.EndEdit();
+
+            List<tb_SaleOutReDetail> oldOjb = new List<tb_SaleOutReDetail>(details.ToArray());
+
+            List<tb_SaleOutReDetail> detailentity = bindingSourceSub.DataSource as List<tb_SaleOutReDetail>;
+            List<tb_SaleOutReRefurbishedMaterialsDetail> RefurbishedMaterials = bindingSourceOtherSub.DataSource as List<tb_SaleOutReRefurbishedMaterialsDetail>;
+            List<tb_SaleOutReRefurbishedMaterialsDetail> LastRefurbishedMaterials = bindingSourceOtherSub.DataSource as List<tb_SaleOutReRefurbishedMaterialsDetail>;
+
+
+            if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
+            {
+                //产品ID有值才算有效值
+                details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
+                var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                if (aa.Count > 1)
+                {
+                    System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                //因为有一个特殊验证： RuleFor(tb_SaleOutReDetail => tb_SaleOutReDetail.Quantity).NotEqual(0).When(c => c.tb_saleoutre.RefundOnly == false).WithMessage("非仅退款时，退回数量不能为0为零。");
+                foreach (var item in details)
+                {
+                    item.tb_saleoutre = EditEntity;
+                }
+
+
+                EditEntity.tb_SaleOutReDetails = details;
+
+
+                //产品ID有值才算有效值
+                LastRefurbishedMaterials = RefurbishedMaterials.Where(t => t.ProdDetailID > 0).ToList();
+                var bb = LastRefurbishedMaterials.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                if (bb.Count > 1)
+                {
+                    System.Windows.Forms.MessageBox.Show("翻新物料明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                EditEntity.tb_SaleOutReRefurbishedMaterialsDetails = LastRefurbishedMaterials;
+
+                //没有经验通过下面先不计算
+                if (!base.Validator(EditEntity))
+                {
+                    return;
+                }
+                if (!base.Validator<tb_SaleOutReDetail>(details))
+                {
+                    return;
+                }
+                if (!base.Validator<tb_SaleOutReRefurbishedMaterialsDetail>(LastRefurbishedMaterials))
+                {
+                    return;
+                }
+                if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
+                {
+                    System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                //计算总金额
+                if (!EditEntity.RefundOnly && (EditEntity.TotalQty == 0 || details.Sum(c => c.Quantity) == 0 || EditEntity.TotalAmount == 0))
+                {
+                    System.Windows.Forms.MessageBox.Show(" 退回总数量和金额不能为零，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+
+                if (EditEntity.SaleOutRe_ID > 0)
+                {
+                    //更新式
+                    await base.Save(EditEntity);
+                }
+                else
+                {
+
+                    ReturnMainSubResults<tb_SaleOutRe> SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
+                    }
+                }
+
+            }
+        }
+
+
+        protected async override Task<ApprovalEntity> Review()
+        {
+            if (EditEntity == null)
+            {
+                return null;
+            }
+            //如果已经审核通过，则不能重复审核
+            if (EditEntity.ApprovalStatus.HasValue)
+            {
+                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+                {
+                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+                    {
+                        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
+                        return null;
+                    }
+                }
+            }
+
+            Command command = new Command();
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            tb_SaleOutRe oldobj = CloneHelper.DeepCloneObject<tb_SaleOutRe>(EditEntity);
+            command.UndoOperation = delegate ()
+            {
+                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                CloneHelper.SetValues<tb_SaleOutRe>(EditEntity, oldobj);
+            };
+            ApprovalEntity ae = await base.Review();
+            if (EditEntity == null)
+            {
+                return null;
+            }
+            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
+            {
+                return null;
+            }
+            //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
+            // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            //因为只需要更新主表
+            //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+            // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+            tb_SaleOutReController<tb_SaleOutRe> ctr = Startup.GetFromFac<tb_SaleOutReController<tb_SaleOutRe>>();
+            ReturnResults<bool> rs = await ctr.AdjustingAsync(EditEntity, ae);
+            if (rs.Succeeded)
+            {
+
+                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+                //{
+
+                //}
+                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                //MainForm.Instance.ecs.AddSendData(od);
+
+                //审核成功
+                base.ToolBarEnabledControl(MenuItemEnums.审核);
+                //如果审核结果为不通过时，审核不是灰色。
+                if (!ae.ApprovalResults)
+                {
+                    toolStripbtnReview.Enabled = true;
+                }
+            }
+            else
+            {
+                //审核失败 要恢复之前的值
+                command.Undo();
+                string msg = $"{ae.bizName}:{ae.BillNo}审核失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！";
+                MainForm.Instance.PrintInfoLog(msg, Color.Red);
+                MessageBox.Show(msg);
+                toolStripbtnReview.Enabled = true;
+                toolStripbtnSubmit.Enabled = false;
+                toolStripbtnAdd.Enabled = false;
+            }
+
+            return ae;
+        }
+
+        /// <summary>
+        /// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理
+        /// </summary>
+        protected async override void ReReview()
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            //反审，要审核过，并且通过了，才能反审。
+            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
+            {
+                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
+                return;
+            }
+
+
+            if (EditEntity.tb_SaleOutReDetails == null || EditEntity.tb_SaleOutReDetails.Count == 0)
+            {
+                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
+                return;
+            }
+
+            Command command = new Command();
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            tb_SaleOutRe oldobj = CloneHelper.DeepCloneObject<tb_SaleOutRe>(EditEntity);
+            command.UndoOperation = delegate ()
+            {
+                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                CloneHelper.SetValues<tb_SaleOut>(EditEntity, oldobj);
+            };
+
+            tb_SaleOutReController<tb_SaleOutRe> ctr = Startup.GetFromFac<tb_SaleOutReController<tb_SaleOutRe>>();
+            //  List<tb_SaleOutRe> list = new List<tb_SaleOutRe>();
+            //、、list.Add(EditEntity);
+            ReturnResults<bool> rs = await ctr.AntiAdjustingAsync(EditEntity);
+            if (rs.Succeeded)
+            {
+
+                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+                //{
+
+                //}
+                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                //MainForm.Instance.ecs.AddSendData(od);
+
+                //审核成功
+                base.ToolBarEnabledControl(MenuItemEnums.反审);
+                toolStripbtnReview.Enabled = true;
+
+            }
+            else
+            {
+                //审核失败 要恢复之前的值
+                command.Undo();
+                MainForm.Instance.PrintInfoLog($"销售退回单{EditEntity.ReturnNo}反审失败,{rs.ErrorMsg},请联系管理员！", Color.Red);
+            }
+
+        }
+
+
+
+        private void cmbCustomerVendor_ID_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cmbCustomerVendor_ID.SelectedIndex > 0)
+            {
+                if (cmbCustomerVendor_ID.SelectedItem is tb_CustomerVendor cv)
+                {
+                    if (cv.Employee_ID.HasValue)
+                    {
+                        cmbEmployee_ID.SelectedValue = cv.Employee_ID.Value;
+                    }
+                }
+            }
+        }
+
+
+
+
+
+        /*
+          protected override void Preview()
+        {
+            //RptMainForm PRT = new RptMainForm();
+            //PRT.ShowDialog();
+            //return;
+            //RptPreviewForm pForm = new RptPreviewForm();
+            //pForm.ReprotfileName = "SOB.frx";
+            //List<tb_SaleOutRe> main = new List<tb_SaleOutRe>();
+            //main.Add(_EditEntity);
+            //pForm.Show();
+            tb_Stocktake testmain = new tb_Stocktake();
+            //要给值
+            //if (EditEntity == null)
+            //{
+            //    return;
+            //    EditEntity = new tb_Stocktake();
+            //}
+
+            List<T> main = new List<T>();
+            testmain.tb_StocktakeDetails = details;
+            main.Add(testmain);
+            FastReport.Report FReport;
+            FReport = new FastReport.Report();
+            FReport.RegisterData(main, "Main");
+            String reportFile = "SOB.frx";
+            RptPreviewForm frm = new RptPreviewForm();
+            frm.ReprotfileName = reportFile;
+            frm.MyReport = FReport;
+            frm.ShowDialog();
+        }
+         */
+
+        /*
+        protected async override void ReReview()
+        {
+            _EditEntity = bindingSourceMain.Current as tb_Stocktake;
+            if (_EditEntity == null)
+            {
+                return;
+            }
+
+            _EditEntity.actionStatus = ActionStatus.修改;
+            if (_EditEntity.status == BillStateEnums.已审核.ToString() && _EditEntity.actionStatus == ActionStatus.修改)
+            {
+                //反审 TODO 这里有详细逻辑，比方，如果出库了，则无法反审，需要将对应关联的出库单反审核，才可以
+
+                _EditEntity.status = BillStateEnums.未审核.ToString();
+                bool rs = await soc.UpdateAsync(_EditEntity);
+                if (rs)
+                {
+                    //显示审核状态
+                    lblReview.Text = _EditEntity.status;
+                }
+            }
+            base.ToolBarEnabledControl(MenuItemEnums.保存);
+            base.Save();
+        }
+        */
+
+
+        /// <summary>
+        /// 将销售订单转换为销售退货单
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void LoadSaleOutBillData(long? saleoutid)
+        {
+            //要加一个判断 值是否有变化
+            //新增时才可以
+            //转单
+            ButtonSpecAny bsa = (txtSaleOutNo as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
+            if (bsa == null)
+            {
+                return;
+            }
+            var saleout = bsa.Tag as tb_SaleOut;//这个tag值。赋值会比较当前方法晚，所以失效
+            saleout = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>().Where(c => c.SaleOut_MainID == saleoutid)
+            .Includes(t => t.tb_SaleOutDetails, d => d.tb_proddetail)
+            .Includes(t => t.tb_SaleOutRes, a => a.tb_SaleOutReDetails)
+            .SingleAsync();
+            if (saleout != null)
+            {
+                //如果这个销售出库单，已经有提交或审核过的。并且数量等于出库总数量则无法再次录入退回单。应该是不会显示出来了。
+                if (saleout.tb_SaleOutRes.Sum(c => c.TotalQty) == saleout.tb_SaleOutDetails.Sum(c => c.Quantity))
+                {
+                    MainForm.Instance.uclog.AddLog("当前出库单已经全部退回，无法再次退回。");
+                    return;
+                }
+
+                saleoutid = saleout.SaleOut_MainID;
+                IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                tb_SaleOutRe entity = mapper.Map<tb_SaleOutRe>(saleout);
+                List<tb_SaleOutReDetail> details = mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
+                List<tb_SaleOutReDetail> NewDetails = new List<tb_SaleOutReDetail>();
+                List<string> tipsMsg = new List<string>();
+                for (global::System.Int32 i = 0; i < details.Count; i++)
+                {
+                    tb_SaleOutDetail item = saleout.tb_SaleOutDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                    details[i].Quantity = details[i].Quantity - item.TotalReturnedQty;// 减掉已经退回的数量
+                    details[i].SubtotalTransAmount = details[i].TransactionPrice * details[i].Quantity;
+                    details[i].SubtotalCostAmount = details[i].Cost * details[i].Quantity;
+
+                    if (details[i].Quantity > 0)
+                    {
+                        NewDetails.Add(details[i]);
+                    }
+                    else
+                    {
+                        tipsMsg.Add($"当前行的SKU:{item.tb_proddetail.SKU}已退库数量为{details[i].Quantity}，当前行数据将不会加载到明细！");
+                    }
+                }
+
+                if (NewDetails.Count == 0)
+                {
+                    tipsMsg.Add($"销售出库单:{entity.SaleOut_NO}已全部退回，请检查是否正在重复操作！");
+                }
+
+                StringBuilder msg = new StringBuilder();
+                foreach (var item in tipsMsg)
+                {
+                    msg.Append(item).Append("\r\n");
+
+                }
+                if (tipsMsg.Count > 0)
+                {
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
+
+                entity.tb_SaleOutReDetails = NewDetails;
+                entity.ReturnDate = System.DateTime.Now;
+                dtpDeliveryDate.Checked = true;
+                entity.DataStatus = (int)DataStatus.草稿;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                entity.ApprovalResults = null;
+                entity.ApprovalOpinions = "";
+                entity.Approver_at = null;
+                entity.Approver_by = null;
+                entity.PrintStatus = 0;
+                entity.ActionStatus = ActionStatus.新增;
+                if (entity.SaleOut_MainID.HasValue && entity.SaleOut_MainID > 0)
+                {
+                    entity.CustomerVendor_ID = saleout.CustomerVendor_ID;
+                    entity.SaleOut_NO = saleout.SaleOutNo;
+                    entity.SaleOut_MainID = saleout.SaleOut_MainID;
+                }
+                BusinessHelper.Instance.InitEntity(entity);
+                BindData(entity as tb_SaleOutRe);
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog("选取的对象为空！");
+            }
+        }
+    }
+}

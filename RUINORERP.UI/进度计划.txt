@@ -1,0 +1,138 @@
+﻿框架完善
+
+IOC注入顺序格式等影响很多。
+https://www.jb51.net/article/233100.htm
+
+bussins 用虚方法来AOP
+service 用接口AOP
+
+测试出批量注册的写法
+
+自动生成 
+同步 异步方法  命名参考SEP项目
+外键是不是可以查出对应的？ 缓存 ？
+
+过滤器
+https://www.cnblogs.com/redo/p/12520682.html
+
+bussin virtual方法 中 调用 sevice接口的。 按理是不是两次AOP？
+
+在控制台中测试一下。
+
+https://www.freesion.com/article/7655616995/ 看一下
+
+普通调用 无法aop嵌套
+结论暂时定义到业务层
+如果两层嵌套拦截，需要注册时指定属性（构造函数中用到的）
+缓存
+框架优化
+
+Business 业务 TO UI
+Service  服务 to business
+autofac 
+Microsoft.Extensions.DependencyInjection
+两种注入方式。
+
+参数传递？
+
+测试AOP  事务 缓存 日志等
+
+事务OK
+AOP拦截 OK
+日志OK
+
+
+AUTOFAC IOC通过名称来解析。要看这来测试下
+https://www.codenong.com/35975635/
+
+这里是不是可以窗体 控件或基类。然后再名称  !!!
+https://www.shuzhiduo.com/A/gVdnE885Wl/
+
+
+可以一次性创建菜单表  按命名空间为层级，或 特性中体现
+
+控件器中
+
+=======
+工作流，为了持久化可以降级引用。
+利用json配置可以做一个设置器 动态设计流程。对象步骤固定好。 (将来)
+csla 
+https://blog.51cto.com/u_6555766/3240911
+https://www.cnblogs.com/lonely7345/archive/2010/02/04/1663120.html
+
+
+数据翻页
+
+UI loger base基类中，货 frmmain.Instance
+
+var task = Task<int>.Run(() => { int i = UpdateResult(dictionaryStockReal[stockCode]); return i; });
+ //报告一次进度后退出
+if(task.Result ==1)
+其中： UpdateResult就是progress.Report调用的函数。
+总结：灵活运行Task，可以完全抛弃MS程式化的IProgress.Report 方法！
+
+五、Task.Delay
+解释：创建将在时间延迟后完成的任务。命名空间: System.Threading.Tasks
+
+在上面的演示中用到了多次，例：
+
+await Task.Delay(TimeSpan.FromSeconds(0.5));
+在 Delay 方法中，可以用 TimeSpan 中的时、分、秒 表示
+
+参考：
+
+Delay(Int32)	
+创建一个在指定的毫秒数后完成的任务。
+
+Delay(TimeSpan)	
+创建一个在指定的时间间隔后完成的任务。
+
+Delay(Int32, CancellationToken)	
+创建一个在指定的毫秒数后完成的可取消任务。
+
+Delay(TimeSpan, CancellationToken)	
+创建一个在指定的时间间隔后完成的可取消任务
+
+
+为了实际一些特殊业务，会在数据库表的设计中，
+考虑在表中动态加入数据行，来实现软件中的数据列的横向扩展，这个应该怎么实现。用SQL加注释来表达一下你的建议。
+
+研究自定义控制 风格统一，
+做一些 自己的控制  比较 没有框只有横线的 用于单据，有售点主有选择的按钮。。。
+
+完善一下产品录入后，实现库存表功能。查询，
+再单据功能
+
+https://article.itxueyuan.com/nWPR4n
+绑定下拉。进一步封装。 
+//类似这样
+cmbUnit.bind<tb_unit>(p=>p.unitID);
+
+字段用表达式模式，编译时就可以发现错误。绑定ID 与引用 的表ID要一样。有不有办法检测呢？
+
+ObjectsComparer 对象比较 识别是否修改过。
+https://blog.csdn.net/zls365365/article/details/123887960
+
+
+c# 表格控件 和 SourceGrid使用总结
+http://www.devage.com/  vpn go
+4.9
+https://blog.csdn.net/vainnetwork/article/details/1858229
+
+https://www.cnblogs.com/jht/category/29740.html
+ 
+https://www.cnblogs.com/zhoushuang0426/p/10868268.html
+ https://blog.csdn.net/yunsongblue/article/details/108123578
+ https://blog.51cto.com/u_15127679/4327129
+
+Reflection.Emit!!!!!
+https://www.cnblogs.com/cuihongyu3503319/archive/2009/12/01/1614298.html
+https://www.cnblogs.com/shijun/p/6374987.html
+https://cloud.tencent.com/developer/article/2065987
+
+=============
+
+销售订单时，如果未付款，或部分付款。会自动生成凭证不能取消。
+一个应收账款。在出库审核时。也审核。
+
+如果应收审核收到时。回写订单及出库单。

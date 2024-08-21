@@ -1,0 +1,8 @@
+﻿Shape、Connector、Connection共通的一些属性:
+
+Site：用来引用GraphControl画布对象
+IsSelected：表明对象是否处于选中状态
+IsHovered：鼠标是否正悬停在对象上
+Paint()：用来画出对象的方法
+Hit()：检测对象是否被矩形包含或包含某个坐标点
+OnMouseDown、OnMouseMove、OnMouseUp：鼠标事件委托，可以捕捉鼠标事件

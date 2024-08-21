@@ -1,0 +1,754 @@
+﻿using CacheManager.Core;
+using RUINORERP.Common.Helper;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Model;
+
+namespace RUINORERP.Extensions.Middlewares
+{
+    /// <summary>
+    /// CacheManager引用第三方框架
+    /// 这里这样设置为了在控制层中   方便添加删除修改，在UI层再加一层为了引用调用
+    /// 当前系统暂时一般只处理基础性的资料不包含主子表的单据情况
+    /// 三种缓存的操作方法，功能独立开来不要混合调用
+    /// 
+    /// 2023-10-25 相对于基础资料的缓存 应该只保留 CacheEntityList，单个实体可以从缓存列表中再找，删除也可以，更新也同理
+    /// 暂时不去掉CacheEntity单个实体的代码
+    /// </summary>
+    public class MyCacheManager
+    {
+
+        private ICacheManager<object> _cache;
+
+        /// <summary>
+        /// 缓存的是什么对象呢？
+        /// 目前是一个特殊的key对应的一个特殊的值
+        /// </summary>
+        public ICacheManager<object> Cache { get => _cache; set => _cache = value; }
+
+
+
+        private ICacheManager<object> _cacheEntityList;
+
+        /// <summary>
+        /// 缓存所有的基础数据的实体列表，通过表名寻找
+        /// 得到实体列表，用于下拉等绑定
+        /// </summary>
+        public ICacheManager<object> CacheEntityList { get => _cacheEntityList; set => _cacheEntityList = value; }
+
+
+
+        //  private ICacheManager<object> _cacheEntity;
+
+
+        /// <summary>
+        /// 缓存所有的基础数据的实体，通过表名，主键列名，和主键值的组合寻找
+        /// tableName + ":" + key + ":" + KeyValue; 得到实体
+        /// tb_Unit:ID:12312312为搜索的key，返回是一个实体,当然保存的也是实体
+        /// </summary>
+        //   public ICacheManager<object> CacheEntity { get => _cacheEntity; set => _cacheEntity = value; }
+
+
+
+        private static MyCacheManager _manager;
+        public static MyCacheManager Instance
+        {
+            get
+            {
+                if (_manager == null)
+                {
+                    var cache = CacheFactory.Build<object>(p => p.WithSystemRuntimeCacheHandle());
+                    var cacheEntity = CacheFactory.Build<object>(p => p.WithSystemRuntimeCacheHandle());
+                    var cacheEntityList = CacheFactory.Build<object>(p => p.WithSystemRuntimeCacheHandle());
+                    _manager = new MyCacheManager(cache, cacheEntity, cacheEntityList);
+                }
+                return _manager;
+            }
+        }
+
+        private ConcurrentDictionary<string, List<KeyValuePair<string, string>>> _fkPairTableList = new ConcurrentDictionary<string, List<KeyValuePair<string, string>>>();
+
+        private ConcurrentDictionary<string, KeyValuePair<string, string>> _newTableList = new ConcurrentDictionary<string, KeyValuePair<string, string>>();
+
+        /// <summary>
+        /// 保存要缓存的表以及对应的所有外键的字段及其对应名称字段名 外键字段在一个表中，不能同名，但是可以来自于同一个表，例如创建人，修改人
+        /// 就是通过创建人（createby）的列找到关联的表，再通过表名找到对应的名称列 NewTableList
+        /// string:tb_Favorite    
+        /// ConcurrentDictionary<tb_product, List<KeyValuePair<createby, tb_emploxxx>>
+        /// ConcurrentDictionary<tb_product, List<KeyValuePair<modifyby, tb_emploxxx>>
+        /// </summary>
+        public ConcurrentDictionary<string, List<KeyValuePair<string, string>>> FkPairTableList { get => _fkPairTableList; set => _fkPairTableList = value; }
+
+        public ConcurrentDictionary<string, KeyValuePair<string, string>> NewTableList { get => _newTableList; set => _newTableList = value; }
+
+
+
+
+        // private ConcurrentDictionary<string, Type> _TableTypeList = new ConcurrentDictionary<string, Type>();
+
+        /// <summary>
+        /// 为了把所有基础数据的表名 实际 和类型关联起来 在列表datagridview的cellFormating中显示名称时 通过关联的外键找到的基础数据的表名和值。从而得到名称
+        /// 直接通过泛型参数得到Type
+        /// </summary>
+        // public ConcurrentDictionary<string, Type> TableTypeList { get => _TableTypeList; set => _TableTypeList = value; }
+
+
+        public void SetFkColList<T>()
+        {
+            Type type = typeof(T);
+            SetFkColList(type);
+        }
+
+        public void SetFkColList(Type type)
+        {
+            string tableName = type.Name;
+            if (!FkPairTableList.ContainsKey(tableName))
+            {
+                List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
+                foreach (var field in type.GetProperties())
+                {
+                    //获取指定类型的自定义特性
+                    object[] attrs = field.GetCustomAttributes(false);
+                    foreach (var attr in attrs)
+                    {
+                        if (attr is FKRelationAttribute)
+                        {
+                            FKRelationAttribute fkrattr = attr as FKRelationAttribute;
+
+                            //TODO:特殊处理：因 为fkrattr.FKTableName 如果是tb_ProdDetail 换为 视图，产品表没有缓存
+                            //// SetDictDataSource<tb_ProdDetail>(k => k.ProdDetailID, v => v.SKU);//这个不能缓存 在girdsetvalue时
+                            //SetDictDataSource<View_ProdDetail>(k => k.ProdDetailID.Value, v => v.CNName);
+                            if (fkrattr.FKTableName == "tb_ProdDetail")
+                            {
+                                fkrattr.FKTableName = "View_ProdDetail";
+                            }
+
+                            KeyValuePair<string, string> kv = new KeyValuePair<string, string>(fkrattr.FK_IDColName, fkrattr.FKTableName);
+                            kvlist.Add(kv);
+                        }
+                    }
+                }
+                if (kvlist.Count > 0)
+                {
+                    FkPairTableList.TryAdd(tableName, kvlist);
+                }
+            }
+            else
+            {
+                //更新?
+            }
+
+
+
+
+        }
+
+        /*
+        public void AddCacheEntity<T>(object entity, Expression<Func<T, int>> expkey, Expression<Func<T, string>> expvalue)
+        {
+            string key = expkey.Body.ToString().Split('.')[1];
+            string value = expvalue.Body.ToString().Split('.')[1];
+            string tableName = expkey.Parameters[0].Type.Name;
+            //只处理需要缓存的表
+            if (TableList.ContainsKey(tableName))
+            {
+                //设置属性的值
+                object xkey = typeof(T).GetProperty(key).GetValue(entity, null);
+                object xValue = typeof(T).GetProperty(value).GetValue(entity, null);
+                string dckey = tableName + ":" + key + ":" + xkey;
+                if (!Cache.Exists(dckey))
+                {
+                    Cache.Add(dckey, xValue);
+                }
+            }
+        }
+
+
+        public void AddCacheEntity<T>(T entity)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+            string tableName = typeof(T).Name;
+            //只处理需要缓存的表
+            if (TableList.ContainsKey(tableName))
+            {
+                //ID
+                string key = TableList[tableName].Split(':')[0];
+                //NAME 列名而已
+                string value = TableList[tableName].Split(':')[1];
+                //设置属性的值
+                object xkey = typeof(T).GetProperty(key).GetValue(entity, null);
+                object xValue = typeof(T).GetProperty(value).GetValue(entity, null);
+                string dckey = tableName + ":" + key + ":" + xkey;
+                if (!CacheEntity.Exists(dckey))
+                {
+                    CacheEntity.Add(dckey, entity);
+                }
+                else
+                {
+                    UpdateEntity<T>(entity);
+                }
+
+                //if (CacheEntityList.Exists(tableName))
+                //{
+                //   List<T> old= CacheEntityList.Get<T>(tableName) as List<T>;
+                //    old.Add((T)entity);
+                //    CacheEntityList.Update(tableName,o=> old);
+                //    //CacheEntityList.TryUpdate(tableName, old, out old);
+                //}
+
+            }
+        }
+
+        public void AddCacheEntity<T>(object entity)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+            string tableName = typeof(T).Name;
+            //只处理需要缓存的表
+            if (TableList.ContainsKey(tableName))
+            {
+                //ID
+                string key = TableList[tableName].Split(':')[0];
+                //NAME 列名而已
+                string value = TableList[tableName].Split(':')[1];
+                //设置属性的值
+                object xkey = typeof(T).GetProperty(key).GetValue(entity, null);
+                object xValue = typeof(T).GetProperty(value).GetValue(entity, null);
+                string dckey = tableName + ":" + key + ":" + xkey;
+                if (!CacheEntity.Exists(dckey))
+                {
+                    CacheEntity.Add(dckey, entity);
+                }
+                else
+                {
+                    UpdateEntity<T>(entity);
+                }
+
+                //if (CacheEntityList.Exists(tableName))
+                //{
+                //   List<T> old= CacheEntityList.Get<T>(tableName) as List<T>;
+                //    old.Add((T)entity);
+                //    CacheEntityList.Update(tableName,o=> old);
+                //    //CacheEntityList.TryUpdate(tableName, old, out old);
+                //}
+
+            }
+        }
+
+        public void AddCacheEntity<T>(List<T> list)
+        {
+            if (list == null)
+            {
+                return;
+            }
+            foreach (var item in list)
+            {
+                AddCacheEntity<T>(item);
+            }
+        }
+        */
+
+        public void UpdateEntityList<T>(List<T> newlist)
+        {
+            //newlist是引用类型不可以对他操作，不然会体现到上现操作。例如查询
+            if (newlist == null)
+            {
+                return;
+            }
+            string tableName = typeof(T).Name;
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                #region 处理新表
+                //只处理需要缓存的表  并且基础信息的列查算是一次查出来？即使筛选则  新旧合并？
+                if (CacheEntityList.Exists(tableName))
+                {
+                    //列中的数据，已经ADD delete正常操作了。存的旧值是正常的，新的中列表list如果在旧中没有就添加。其他不管？
+                    //
+                    List<T> oldlist = CacheEntityList.Get(tableName) as List<T>;
+                    foreach (var item in newlist)
+                    {
+                        if (!oldlist.Exists(n => n.GetPropertyValue(pair.Key).ToString() == item.GetPropertyValue(pair.Key).ToString()))
+                        {
+                            oldlist.Add(item);
+                        }
+                    }
+                    if (newlist.Count != oldlist.Count)
+                    {
+                        CacheEntityList.Update(tableName, k => oldlist);
+                    }
+
+                }
+                else
+                {
+                    CacheEntityList.Add(tableName, newlist);
+                }
+                #endregion
+            }
+
+            /*
+            //只处理需要缓存的表
+            if (TableList.ContainsKey(tableName))
+            {
+                //设置属性的值
+                if (CacheEntityList.Exists(tableName))
+                {
+                    //如果缓存中已经包含的这个表的部分行值呢？以新的为标准，把新的叫包含了旧值的去掉，没有的就添加
+                    List<T> oldlist = CacheEntityList.Get(tableName) as List<T>;
+
+                    foreach (var item in oldlist)
+                    {
+                        if (!newlist.Exists(n => n.GetPropertyValue("ID") == item.GetPropertyValue("")))
+                        {
+
+                        }
+                    }
+                    CacheEntityList.Update(tableName, k => newlist);
+                }
+                else
+                {
+                    CacheEntityList.Add(tableName, newlist);
+                }
+            }
+            */
+        }
+
+
+        public void UpdateEntityList(Type type, List<object> newlist)
+        {
+            //newlist是引用类型不可以对他操作，不然会体现到上现操作。例如查询
+            if (newlist == null)
+            {
+                return;
+            }
+            string tableName = type.Name;
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                #region 处理新表
+                //只处理需要缓存的表  并且基础信息的列查算是一次查出来？即使筛选则  新旧合并？
+                if (CacheEntityList.Exists(tableName))
+                {
+                    //列中的数据，已经ADD delete正常操作了。存的旧值是正常的，新的中列表list如果在旧中没有就添加。其他不管？
+                    //
+                    List<object> oldlist = CacheEntityList.Get(tableName) as List<object>;
+                    foreach (var item in newlist)
+                    {
+                        if (!oldlist.Exists(n => n.GetPropertyValue(pair.Key).ToString() == item.GetPropertyValue(pair.Key).ToString()))
+                        {
+                            oldlist.Add(item);
+                        }
+                    }
+                    if (newlist.Count != oldlist.Count)
+                    {
+                        CacheEntityList.Update(tableName, k => oldlist);
+                    }
+
+                }
+                else
+                {
+                    CacheEntityList.Add(tableName, newlist);
+                }
+                #endregion
+            }
+
+            /*
+            //只处理需要缓存的表
+            if (TableList.ContainsKey(tableName))
+            {
+                //设置属性的值
+                if (CacheEntityList.Exists(tableName))
+                {
+                    //如果缓存中已经包含的这个表的部分行值呢？以新的为标准，把新的叫包含了旧值的去掉，没有的就添加
+                    List<T> oldlist = CacheEntityList.Get(tableName) as List<T>;
+
+                    foreach (var item in oldlist)
+                    {
+                        if (!newlist.Exists(n => n.GetPropertyValue("ID") == item.GetPropertyValue("")))
+                        {
+
+                        }
+                    }
+                    CacheEntityList.Update(tableName, k => newlist);
+                }
+                else
+                {
+                    CacheEntityList.Add(tableName, newlist);
+                }
+            }
+            */
+        }
+
+        /*
+
+        public void AddCacheEntityList<T>(T entity)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+            string tableName = typeof(T).Name;
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                //只处理需要缓存的表
+                if (CacheEntityList.Exists(tableName))
+                {
+                    //设置属性的值
+                    UpdateEntityList<T>(entity);
+                }
+                else
+                {
+                    //没有对应的列表 则插入
+                    List<T> list = new List<T>();
+                    list.Add(entity);
+                    CacheEntityList.Add(tableName, list);
+                }
+            }
+
+        }
+        */
+
+        /*
+        public void AddCacheEntityList<T>(object entity)
+        {
+            string tableName = typeof(T).Name;
+            //只处理需要缓存的表
+            if (TableList.ContainsKey(tableName))
+            {
+                string key = TableList[tableName].Split(':')[0];
+                string value = TableList[tableName].Split(':')[1];
+
+                //设置属性的值
+                object Newkey = typeof(T).GetProperty(key).GetValue(entity, null);
+                object NewValue = typeof(T).GetProperty(value).GetValue(entity, null);
+
+                if (CacheEntityList.Exists(tableName))
+                {
+                    var oldlist = CacheEntityList.Get(tableName) as List<T>;
+                    if (oldlist == null)
+                    {
+                        return;
+                    }
+                    if (oldlist.Exists(k => k.Equals(entity)))
+                    {
+
+                    }
+                    else
+                    {
+                        oldlist.Add((T)entity);
+                    }
+
+                    CacheEntityList.Update(tableName, v => oldlist);
+                }
+            }
+        }
+        */
+        //public void UpdateEntity<T>(object entity)
+        //{
+        //    string tableName = typeof(T).Name;
+        //    //只处理需要缓存的表
+        //    if (TableList.ContainsKey(tableName))
+        //    {
+        //        string key = TableList[tableName].Split(':')[0];
+        //        string value = TableList[tableName].Split(':')[1];
+        //        //设置属性的值
+        //        object xkey = typeof(T).GetProperty(key).GetValue(entity, null);
+        //        object xValue = typeof(T).GetProperty(value).GetValue(entity, null);
+        //        string dckey = tableName + ":" + key + ":" + xkey;
+        //        if (CacheEntity.Exists(dckey))
+        //        {
+        //            CacheEntity.Update(dckey, v => entity);
+        //        }
+        //    }
+        //}
+
+        /// <summary>
+        /// 更新列表中的一个值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        public void UpdateEntityList<T>(T entity)
+        {
+            string tableName = typeof(T).Name;
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                if (CacheEntityList.Exists(tableName))
+                {
+                    string key = pair.Key;
+                    object Newkey = typeof(T).GetProperty(key).GetValue(entity, null);
+
+                    var oldlist = CacheEntityList.Get(tableName) as List<T>;
+
+                    //如果旧列表中有这个值，则直接删除，把新的添加上
+                    var olditem = oldlist.Find(n => n.GetPropertyValue(pair.Key).ToString() == entity.GetPropertyValue(pair.Key).ToString());
+                    if (olditem != null)
+                    {
+                        oldlist.Remove(olditem);
+                    }
+                    oldlist.Add(entity);
+                    CacheEntityList.Update(tableName, v => oldlist);
+                    /*
+                    bool flag = false;
+                    foreach (var item in oldlist)
+                    {
+                        //设置属性的值
+                        object oldkey = typeof(T).GetProperty(key).GetValue(item, null);
+                        object oldValue = typeof(T).GetProperty(value).GetValue(item, null);
+
+
+                        if (oldkey.ToString() == Newkey.ToString())
+                        {
+                            oldValue = NewValue;
+                            ReflectionHelper.SetPropertyValue(item, value, NewValue);
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (!flag)
+                    {
+                        oldlist.Add((T)entity);
+                    }
+                    CacheEntityList.Update(tableName, v => oldlist);
+                    */
+                }
+                else
+                {
+                    List<T> clist = new List<T>();
+                    clist.Add((T)entity);
+                    CacheEntityList.Add(tableName, clist);
+                }
+
+            }
+
+
+
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expkey"></param>
+        /// <returns></returns>
+        //public void DeleteEntity<T>(object entity)
+        //{
+        //    string tableName = typeof(T).Name;
+        //    //只处理需要缓存的表
+        //    if (TableList.ContainsKey(tableName))
+        //    {
+        //        string key = TableList[tableName].Split(':')[0];
+        //        string value = TableList[tableName].Split(':')[1];
+        //        //设置属性的值
+        //        object xkey = typeof(T).GetProperty(key).GetValue(entity, null);
+        //        //object xValue = typeof(T).GetProperty(value).GetValue(entity, null);
+        //        string dckey = tableName + ":" + key + ":" + xkey;
+        //        if (CacheEntity.Exists(dckey))
+        //        {
+        //            CacheEntity.Remove(dckey);
+        //        }
+        //    }
+        //}
+
+        /// <summary>
+        /// TODO
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        public void DeleteEntityList<T>(T entity)
+        {
+            string tableName = typeof(T).Name;
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                string key = pair.Key;
+                object newkey = typeof(T).GetProperty(key).GetValue(entity, null);
+                if (CacheEntityList.Exists(tableName))
+                {
+                    var oldlist = CacheEntityList.Get(tableName) as List<T>;
+                    //如果不TOstring()会出错，object不能直接对比
+                    var deleItem = oldlist.Find(o => o.GetPropertyValue(key).ToString() == newkey.ToString());
+                    if (deleItem != null)
+                    {
+                        oldlist.Remove(deleItem);
+                    }
+                    /*
+                    // 会不会集合异常呢？
+                    foreach (var item in oldlist)
+                    {
+                        //设置属性的值
+                        object oldkey = typeof(T).GetProperty(key).GetValue(item, null);
+                        // object oldValue = typeof(T).GetProperty(value).GetValue(item, null);
+                        // if (oldkey.ToString()==newkey.ToString() && oldValue.ToString()==newvalue.ToString())
+                        if (oldkey.ToString() == newkey.ToString())
+                        {
+                            //deleteItem = item;
+                            oldlist.Remove(item);
+                            break;
+
+                        }
+
+                    }
+                    */
+
+                    CacheEntityList.Update(tableName, v => oldlist);
+                }
+            }
+        }
+
+        /// <summary>
+        /// TODO
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        public void DeleteEntityList<T>(long[] IDs)
+        {
+            foreach (int id in IDs)
+            {
+                DeleteEntityList<T>(id);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expkey"></param>
+        /// <returns></returns>
+        //public void DeleteEntity<T>(long ID)
+        //{
+        //    string tableName = typeof(T).Name;
+        //    //只处理需要缓存的表
+        //    if (TableList.ContainsKey(tableName))
+        //    {
+        //        string key = TableList[tableName].Split(':')[0];
+        //        string value = TableList[tableName].Split(':')[1];
+        //        string dckey = tableName + ":" + key + ":" + ID.ToString();
+        //        if (CacheEntity.Exists(dckey))
+        //        {
+        //            CacheEntity.Remove(dckey);
+        //        }
+        //    }
+        //}
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expkey"></param>
+        /// <returns></returns>
+        public void DeleteEntityList<T>(long ID)
+        {
+            string tableName = typeof(T).Name;
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                string key = pair.Key;
+                //string value = pair.Value;
+                if (CacheEntityList.Exists(tableName))
+                {
+                    var oldlist = CacheEntityList.Get(tableName) as List<T>;
+                    //foreach (var item in oldlist)
+                    //{
+                    //    //设置属性的值
+                    //    object oldkey = typeof(T).GetProperty(key).GetValue(item, null);
+                    //    object oldValue = typeof(T).GetProperty(value).GetValue(item, null);
+                    //    if (oldkey.ToString() == ID.ToString())
+                    //    {
+                    //        oldlist.Remove(item);
+                    //    }
+                    //}
+
+                    foreach (var item in oldlist)
+                    {
+                        //设置属性的值
+                        object oldkey = typeof(T).GetProperty(key).GetValue(item, null);
+                        // object oldValue = typeof(T).GetProperty(value).GetValue(item, null);
+                        if (oldkey.ToString() == ID.ToString())
+                        {
+                            oldlist.Remove(item);
+                        }
+                    }
+                    CacheEntityList.Update(tableName, v => oldlist);
+
+                }
+            }
+        }
+
+
+
+
+
+        //[Obsolete]
+        //private void delete<T>(Expression<Func<T, int>> expkey, object value)
+        //{
+        //    //  var mb = expkey.GetMemberInfo();
+        //    // string key = mb.Name;
+        //    string key = expkey.Body.ToString().Split('.')[1];
+        //    string tableName = expkey.Parameters[0].Type.Name;
+        //    key = tableName + ":" + key + ":" + value.ToString();
+        //    if (Cache.Exists(key))
+        //    {
+        //        Cache.Remove(key);
+        //    }
+        //}
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cache">一般缓存</param>
+        /// <param name="cacheEntity">实体缓存</param>
+        /// <param name="cacheEntitylist">列表缓存</param>
+        public MyCacheManager(ICacheManager<object> cache, ICacheManager<object> cacheEntity, ICacheManager<object> cacheEntitylist)
+        {
+            Cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            // _cacheEntity = cacheEntity ?? throw new ArgumentNullException(nameof(cacheEntity));
+            _cacheEntityList = cacheEntitylist ?? throw new ArgumentNullException(nameof(cacheEntitylist));
+
+            _manager = this;
+        }
+
+        private static void MostSimpleCacheManager()
+        {
+            var config = new ConfigurationBuilder()
+                .WithSystemRuntimeCacheHandle()
+                .Build();
+
+            var cache = new BaseCacheManager<string>(config);
+            // or
+            var cache2 = CacheFactory.FromConfiguration<string>(config);
+        }
+
+        private static void MostSimpleCacheManagerB()
+        {
+            var cache = new BaseCacheManager<string>(
+                new CacheManagerConfiguration()
+                    .Builder
+                    .WithSystemRuntimeCacheHandle()
+                    .Build());
+        }
+
+        private static void MostSimpleCacheManagerC()
+        {
+            var cache = CacheFactory.Build<string>(
+                p => p.WithSystemRuntimeCacheHandle());
+
+        }
+
+    }
+
+}

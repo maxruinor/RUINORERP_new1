@@ -1,0 +1,53 @@
+﻿本项目是一个exe执行文件(项目中引用时，可生成为dll，也可为exe），为远程自动升级工具
+使用：
+AutoUpdaterList.xml  服务器和本地各一份
+
+    .xml 这个文件应该放在       <Url>http://elebest2021.tpddns.cn:8888/html/misupdate/updaterFiler/</Url> 这个路径的下面
+
+升级时自动从配置文件中指定路径下载这个xml，查找版本添加和更新（加）的文件下载复制。可以打包rar等，支持7z格式，可以自我更新（AutoUpdate）
+
+rar等解压为一级目录根目录。
+不能包括AutoUpdate.exe
+7z.dll 7z64.dll  Sever7zipsharp 等解压相关程序。不然会说其它程序在使用
+
+本身。
+
+
+AutoUpdate.exe 单上可以自我更新。解压如果包括这个。会导致解压不出来。
+---2023-12-12去掉了7z使用系统zip解压。
+
+需要把 SevenZip.dll  7z.dll 为内容文件，生成时产品在bin目录下。（64位操作系统中为7z64.dll)
+
+
+--2024-1-10 解压不好用。写了单个文件组的生成工具，并且更新了版本号的比较算法。
+
+配置文件 ： AutoUpdaterList.xml 在实际项目使用时，不要生成最新。
+
+
+<?xml version="1.0" encoding="gb2312"?>
+<AutoUpdater>
+  <description>Application autoUpdate</description>
+  <Updater>
+       <Url>http://elebest.tpddns.cn:8888/html/misupdate/updaterFiler/</Url>
+    <LastUpdateTime>2020-3-19</LastUpdateTime>
+  </Updater>
+  <Application applicationId="SMTAPI">
+    <EntryPoint>Mainframe.exe</EntryPoint>
+    <Location>.</Location>
+    <Version>1.0.0.1</Version>
+  </Application>
+  <Files>
+ <File Ver="1.0.0.0" Name="AutoUpdate.exe" />
+ <File Ver="1.0.0.1" Name="XXX.rar" />
+</Files>
+</AutoUpdater>
+
+
+
+
+
+//代码混淆
+
+https://blog.csdn.net/yueliangge910101/article/details/109365354?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-109365354-blog-107756810.pc_relevant_antiscanv3&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-109365354-blog-107756810.pc_relevant_antiscanv3&utm_relevant_index=2
+
+是不是要提供版本选择的功能。优先最新。但是也可以选择稳定版本

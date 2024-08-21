@@ -1,0 +1,24 @@
+﻿数据源不显示子表明细是实体属性中
+
+ [Browsable(false)]
+
+
+思路：
+报表设置保存到数据库中。
+需要设计表
+
+结构：
+
+能配置多种报表形式
+
+已建表：tb_PrintConfig 
+
+
+
+https://www.cnblogs.com/yoyo-524/p/6116884.html 安装
+https://www.jb51.net/article/250717.htm
+
+
+
+//设计
+https://blog.csdn.net/qq_18932003/article/details/104151186/?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0--blog-110474441.235^v40^pc_relevant_anti_t3&spm=1001.2101.3001.4242.1&utm_relevant_index=3

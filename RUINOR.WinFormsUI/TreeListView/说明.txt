@@ -1,0 +1,11 @@
+﻿1.把TreeListView控件添加到工具箱。
+右击工具箱中的常规选项卡->选择项，找到System.Windows.Forms.TreeListView.dll
+添加进来。然后就可以像普通控件一样拖一个到窗体。
+2.设置属性这里主要设置一下Columns集合与SmallImageList
+设置用来显示节点图标。如果不设置SmallImageList属性，无法正常显示。
+如果不设置图标的话，图标显示的位置为空白。
+CheckBoxs属性可以设置为Recursive可以显示成复选框。
+3.通过AddItems()添加小项，
+编写BeforeExpand();BeforeCollapse();BeforeLabelEdit();
+三个事件的响应函数。就是展开或者折叠时显示哪个图标。
+4.附带TreeListView的源码，以备二次开发。

@@ -1,0 +1,119 @@
+﻿using FastReport.DevComponents.DotNetBar.Controls;
+using NPOI.SS.Formula.Functions;
+using Pipelines.Sockets.Unofficial.Arenas;
+using RUINORERP.Business;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global.Model;
+using RUINORERP.Model;
+using SourceGrid2.Win32;
+using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace RUINORERP.UI.Common
+{
+
+    /// <summary>
+    /// 公共方法
+    /// </summary>
+    public class CommonHelper
+    {
+        private static CommonHelper m_instance;
+
+        public static CommonHelper Instance
+        {
+            get
+            {
+                if (m_instance == null)
+                {
+                    Initialize();
+                }
+                return m_instance;
+            }
+            set
+            {
+                m_instance = value;
+            }
+        }
+
+
+        /// <summary>
+        /// 对象实例化
+        /// </summary>
+        public static void Initialize()
+        {
+            m_instance = new CommonHelper();
+        }
+        public List<KeyValuePair<object, string>> GetKeyValuePairs(Type enumType)
+        {
+            List<KeyValuePair<object, string>> kvlistPayStatus = new List<KeyValuePair<object, string>>();
+            Array enumValues = Enum.GetValues(enumType);
+            IEnumerator e = enumValues.GetEnumerator();
+            e.Reset();
+            int currentValue;
+            string currentName;
+            while (e.MoveNext())
+            {
+                currentValue = (int)e.Current;
+                currentName = e.Current.ToString();
+                kvlistPayStatus.Add(new KeyValuePair<object, string>(currentValue, currentName));
+            }
+            return kvlistPayStatus;
+        }
+
+
+        /// <summary>
+        /// 返回真实类型的值
+        /// </summary>
+        /// <param name="DataType"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public object GetRealValueByDataType(Type DataType, object value)
+        {
+            Type newcolType = GetRealType(DataType);
+            if (value == null || string.IsNullOrEmpty(value.ToString()) || value == DBNull.Value || value.ToString() == "")
+            {
+                return null;
+            }
+            // We need to convert the value
+            return Convert.ChangeType(value, newcolType);
+        }
+
+
+        /// <summary>
+        /// 得到真实类型
+        /// </summary>
+        /// <param name="DataType"></param>
+        /// <returns></returns>
+        public Type GetRealType(Type DataType)
+        {
+            Type newcolType;
+            // We need to check whether the property is NULLABLE
+            if (DataType.IsGenericType && DataType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                // If it is NULLABLE, then get the underlying type. eg if "Nullable<int>" then this will return just "int"
+                newcolType = DataType.GetGenericArguments()[0];
+                //newcolType = DataType.GetUnderlyingType(DataType);//这个也可以
+                //如果类型是例如此代码可为空，返回int部分(底层类型)。如果只需要将对象转换为特定类型，则可以使用System.Convert.ChangeType方法。
+            }
+            else
+            {
+                newcolType = DataType;
+            }
+            return newcolType;
+        }
+
+ 
+
+
+ 
+
+      
+
+    }
+}

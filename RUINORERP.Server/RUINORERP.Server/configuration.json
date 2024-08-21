@@ -1,0 +1,25 @@
+﻿{
+    "Logging": {
+        "IncludeScopes": false,
+        "LogLevel": {
+            "Default": "Debug",
+            "System": "Information",
+            "Microsoft": "Information"
+        }
+    },
+    "File": {
+        "LogLevel": {
+            "Default": "Debug" //具体输入级别自行修改，也可添加详细的分类别输出
+        }
+    },
+    "ConnectionStrings": {
+        "es_mssql": "Host=localhost;Database=mykx;Username=postgres;Password=amwtjhwxf",
+        "redis1": "127.0.0.1:5432,password=amwtjhwxf,defaultDatabase=0,poolsize=50,ssl=false,writeBuffer=20480,prefix=es",
+        "redis2": "User ID=root;Password=myPassword;Host=localhost;Port=5432;Database=myDataBase;Pooling=true;Min Pool Size=0;Max Pool Size=100;Connection Lifetime=0;",
+        "Npgsql": "Host=localhost;Database=mykx;Username=postgres;Password=amwtjhwxf;Pooling=true;minPoolSize=0;maxPoolSize=10;Connection Lifetime=1000;",
+        "mssql": "server=192.168.0.254;uid=sa;pwd=SA!@#123sa ;database=erp"
+    },
+    "es_BLL_ITEM_CACHE": {
+        "Timeout": 180
+    }
+}

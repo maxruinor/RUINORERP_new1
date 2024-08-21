@@ -1,0 +1,3054 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Linq.Expressions;
+using System.Windows.Forms;
+using Krypton.Toolkit;
+using RUINORERP.Business;
+using RUINORERP.Business.CommService;
+using System.ComponentModel;
+using RUINORERP.Common.Helper;
+using RUINORERP.Common.Extensions;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using RUINORERP.Model;
+using System.Collections;
+using System.Reflection.Emit;
+//using System.Workflow.ComponentModel.Serialization;
+using RUINORERP.Common;
+using System.Globalization;
+using RUINORERP.Model.Base;
+using System.Drawing;
+using System.IO;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using System.Drawing.Imaging;
+using SqlSugar;
+using RUINORERP.Business.Processor;
+using RUINOR.WinFormsUI.ChkComboBox;
+using HLH.Lib;
+using System.Workflow.ComponentModel.Serialization;
+using OfficeOpenXml.FormulaParsing.ExpressionGraph;
+using Expression = System.Linq.Expressions.Expression;
+using ConstantExpression = System.Linq.Expressions.ConstantExpression;
+using Microsoft.Extensions.Logging;
+
+
+namespace RUINORERP.UI.Common
+{
+
+    public enum BindDataType4Enum
+    {
+
+        /// <summary>
+        /// 显示枚举名
+        /// </summary>
+        EnumName,
+
+        /// <summary>
+        /// 显示枚举名的显示特性 [Display(Name ="Permanent")]
+        /// </summary>
+        EnumDisplay
+    }
+
+    public enum BindDataType4TextBox
+    {
+        Money,
+        Text,
+        Bool,
+        Qty
+
+    }
+
+    public class DataBindingHelper
+    {
+        /*
+        /// <summary>
+        /// 关联查询时带出的快速查询的功能
+        /// </summary>
+        /// <typeparam name="P"></typeparam>
+        /// <typeparam name="Dto"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="item"></param>
+        /// <param name="DisplayColExp"></param>
+        /// <param name="whereLambda">额外限制性条件，如供应商不会显示到销售订单下</param>
+        /// <param name="KeyValueTypeForDgv">视图时使用，显示结果表格时能关联外健的实体</param>
+        /// <param name="QueryConditions"></param>
+        public static void InitFilterForControl<P>(BaseEntity entity, System.Windows.Forms.Control item,
+           string DisplayCol, Expression<Func<P, bool>> whereLambda, Type KeyValueTypeForDgv,
+            params string[] QueryConditions) where P : class
+        {
+            if (item is Control)
+            {
+                string display = DisplayCol;
+                string ValueField = string.Empty;
+                if (item is VisualControlBase)
+                {
+                    Type targetEntity = typeof(P);
+                    if (item.GetType().Name == "KryptonComboBox")
+                    {
+                        KryptonComboBox ktb = item as KryptonComboBox;
+                        //不重复添加
+                        if (ktb.ButtonSpecs.Where(b => b.UniqueName == "btnQuery").Any())
+                        {
+                            return;
+                        }
+
+                        if ((item as Control).DataBindings.Count > 0)
+                        {
+                            //if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
+                            //{
+                            ButtonSpecAny bsa = new ButtonSpecAny();
+                            bsa.Image = Image.FromStream(GetResource("help4"));
+                            bsa.UniqueName = "btnQuery";
+                            bsa.Tag = ktb;
+                            ktb.Tag = targetEntity;
+
+                            //bsa.Click += BsaEdit_Click;
+                            bsa.Click += (sender, e) =>
+                            {
+                                #region
+                                KryptonComboBox ktb = bsa.Owner as KryptonComboBox;
+                                //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+                                UCAdvFilterGeneric<P> ucBaseList = new UCAdvFilterGeneric<P>();
+                                ucBaseList.LimitQueryConditions = whereLambda;
+
+                                ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                                ucBaseList.control = item;
+                                ucBaseList.Runway = BaseListRunWay.选中模式;
+                                //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+                                frmBaseEditList frmedit = new frmBaseEditList();
+                                frmedit.StartPosition = FormStartPosition.CenterScreen;
+                                ucBaseList.Dock = DockStyle.Fill;
+                                frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+
+                                //BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                                //CommBillData cbd = bcf.GetBillData<P>(null);
+                                //frmedit.Text = cbd.BizName + "查询";
+                                frmedit.Text = "关联查询";
+
+                                if (frmedit.ShowDialog() == DialogResult.OK)
+                                {
+                                    string ucTypeName = bsa.Owner.GetType().Name;
+                                    if (ucTypeName == "KryptonComboBox")
+                                    {
+                                        //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
+                                        if (ucBaseList.Tag != null)
+                                        {
+                                            //来自查询的数据源和选中值
+                                            BindingSource bs = ucBaseList.Tag as BindingSource;
+
+                                            //控件加载时绑定信息
+                                            Binding binding = null;
+                                            if (ktb.DataBindings.Count > 0)
+                                            {
+                                                binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
+                                                                               //string filedName = binding.BindingMemberInfo.BindingField;
+                                            }
+                                            else
+                                            {
+                                                MessageBox.Show("没有绑定数据！");
+                                            }
+                                            //绑定的值字段
+                                            ValueField = binding.BindingMemberInfo.BindingField;
+                                            if (string.IsNullOrEmpty(ValueField))
+                                            {
+                                                throw new Exception("ValueField主键字段名不能为空" + ktb.ValueMember);
+                                            }
+                                            object selectItem = bs.Current;
+                                            object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(selectItem, ValueField);
+                                            //从缓存中重新加载 
+                                            BindingSource NewBsList = new BindingSource();
+                                            //将List<T>类型的结果是object的转换为指定类型的List
+                                            //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
+                                            //有缓存的情况
+                                            var rslist = CacheHelper.Manager.CacheEntityList.Get(targetEntity.Name);
+                                            //条件如果有限制了。就不能全部加载
+                                            if (rslist != null && whereLambda == null)
+                                            {
+                                                var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                                                if (lastlist != null)
+                                                {
+                                                    #region  
+                                                    NewBsList.DataSource = lastlist;
+                                                    Common.DataBindingHelper.InitDataToCmb(NewBsList, ValueField, display, ktb);
+                                                    #endregion
+                                                }
+                                            }
+                                            else
+                                            {
+                                                //单据类没有缓存 并且开始没有绑定有数据的数据源，这就重新绑定一下
+                                                // ktb.DataBindings.Clear();
+                                                //Common.DataBindingHelper.BindData4Cmb(bs, bs.DataSource, ValueField, display, ktb);
+                                                //会修改当前选择的项
+                                                Common.DataBindingHelper.InitDataToCmb(bs, ValueField, display, ktb);
+                                            }
+                                            try
+                                            {
+                                                RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);
+                                            }
+                                            catch (Exception ex)
+                                            {
+
+                                            }
+
+                                            ktb.SelectedItem = selectItem;
+                                        }
+                                    }
+
+                                }
+
+                                #endregion
+
+                            };
+
+
+                            ktb.ButtonSpecs.Add(bsa);
+                        }
+                    }
+
+                    if (item.GetType().Name == "KryptonTextBox")
+                    {
+                        KryptonTextBox ktb = item as KryptonTextBox;
+                        //不重复添加
+                        if (ktb.ButtonSpecs.Count > 0)
+                        {
+                            return;
+                        }
+                        if ((item as Control).DataBindings.Count > 0)
+                        {
+                            //if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
+                            //{
+                            ButtonSpecAny bsa = new ButtonSpecAny();
+                            bsa.Image = Image.FromStream(GetResource("help4"));
+                            // bsa.Tag = ktb;
+                            bsa.UniqueName = "btnQuery";
+                            ktb.Tag = targetEntity;
+
+                            //bsa.Click += BsaEdit_Click;
+                            bsa.Click += (sender, e) =>
+                            {
+                                #region
+                                KryptonTextBox ktb = bsa.Owner as KryptonTextBox;
+                                //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+                                UCAdvFilterGeneric<P> ucBaseList = new UCAdvFilterGeneric<P>(); // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                                ucBaseList.LimitQueryConditions = whereLambda;
+                               
+                                
+                                ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                ucBaseList.control = item;
+                                ucBaseList.Runway = BaseListRunWay.选中模式;
+                                //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+                                frmBaseEditList frmedit = new frmBaseEditList();
+                                frmedit.StartPosition = FormStartPosition.CenterScreen;
+                                ucBaseList.Dock = DockStyle.Fill;
+                                frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+
+                                //BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                                //CommBillData cbd = bcf.GetBillData<P>(null);
+                                //frmedit.Text = cbd.BizName + "查询";
+                                frmedit.Text = "关联查询";
+
+                                if (frmedit.ShowDialog() == DialogResult.OK)
+                                {
+                                    string ucTypeName = bsa.Owner.GetType().Name;
+                                    if (ucTypeName == "KryptonTextBox")
+                                    {
+                                        //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
+                                        if (ucBaseList.Tag != null)
+                                        {
+                                            //来自查询的数据源和选中值
+                                            BindingSource bs = ucBaseList.Tag as BindingSource;
+                                            //控件加载时绑定信息
+                                            Binding binding = null;
+                                            binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
+                                            //绑定的值字段
+                                            ValueField = binding.BindingMemberInfo.BindingField;
+                                            BindingSource NewBsList = new BindingSource();
+                                            object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(bs.Current, ValueField);
+                                            RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);
+                                            ktb.Text = bs.Current.GetPropertyValue(display).ToString();
+                                            bsa.Tag = bs.Current;
+
+                                            //
+                                            //item.CausesValidation = false;
+
+                                            // bool validControl = ValidationHelper.IsValid(item);
+
+                                            //this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+
+                                            // if (ValidationHelper.hasValidationErrors(this.Controls))
+                                            //     return;
+                                        }
+                                    }
+
+                                }
+
+                                #endregion
+
+                            };
+
+
+                            ktb.ButtonSpecs.Add(bsa);
+                        }
+                    }
+
+
+                }
+            }
+        }
+        */
+        //===new
+
+
+
+        /// <summary>
+        /// 关联查询时带出的快速查询的功能
+        /// 注意【引用与被引用的 编号和ID字段在两个表中要一致】
+        /// </summary>
+        /// <typeparam name="P"></typeparam>
+        /// <typeparam name="Dto"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="item"></param>
+        /// <param name="DisplayColExp"></param>
+        /// <param name="whereLambda">额外限制性条件，如供应商不会显示到销售订单下</param>
+        /// <param name="KeyValueTypeForDgv">视图时使用，显示结果表格时能关联外健的实体</param>
+        /// <param name="QueryConditions"></param>
+        /// <param name="ValueFieldCol">是指源头的ID列名,被引用的实体的ID列</param>
+        public static void InitFilterForControlByExp<P>(BaseEntity entity, System.Windows.Forms.Control item, Expression<Func<P, object>> DisplayColExp, QueryFilter queryFilter, Type KeyValueTypeForDgv = null, Expression<Func<P, object>> ValueFieldColExp = null) where P : class
+        {
+            if (ValueFieldColExp == null)
+            {
+                InitFilterForControlRef<P>(entity, item, DisplayColExp.GetMemberInfo().Name, queryFilter, KeyValueTypeForDgv);
+            }
+            else
+            {
+                InitFilterForControlRef<P>(entity, item, DisplayColExp.GetMemberInfo().Name, queryFilter, KeyValueTypeForDgv, ValueFieldColExp.GetMemberInfo().Name);
+            }
+
+        }
+        /// <summary>
+        /// 关联查询时带出的快速查询的功能
+        /// 如果是反射调用 方法名不能用相同的重载的名字。无法识别匹配
+        /// !!!注意这个会被dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { mytype });
+        /// 参数变化会引用那边异常
+        /// </summary>
+        /// <typeparam name="P"></typeparam>
+        /// <typeparam name="Dto"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="item"></param>
+        /// <param name="DisplayColExp"></param>
+        /// <param name="whereLambda">额外限制性条件，如供应商不会显示到销售订单下</param>
+        /// <param name="KeyValueTypeForDgv">视图时使用，显示结果表格时能关联外健的实体</param>
+        /// <param name="QueryConditions"></param>
+        /// <param name="ValueFieldCol">是指源头的ID列名,被引用的实体的ID列</param>
+        public static void InitFilterForControlRef<P>(BaseEntity entity, System.Windows.Forms.Control item, string DisplayCol, QueryFilter queryFilter,
+            Type KeyValueTypeForDgv = null, string ValueFieldCol = null) where P : class
+        {
+            if (item is Control)
+            {
+                string display = DisplayCol;
+                string ValueField = string.Empty;
+                if (item is VisualControlBase)
+                {
+                    Type targetEntity = typeof(P);
+                    if (item.GetType().Name == "KryptonComboBox")
+                    {
+                        KryptonComboBox ktb = item as KryptonComboBox;
+                        //不重复添加
+                        if (ktb.ButtonSpecs.Where(b => b.UniqueName == "btnQuery").Any())
+                        {
+                            return;
+                        }
+
+                        if ((item as Control).DataBindings.Count > 0)
+                        {
+                            //if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
+                            //{
+                            ButtonSpecAny bsa = new ButtonSpecAny();
+                            bsa.Image = Image.FromStream(GetResource("help4"));
+                            bsa.UniqueName = "btnQuery";
+                            bsa.Tag = ktb;
+                            ktb.Tag = targetEntity;
+
+                            //bsa.Click += BsaEdit_Click;
+                            bsa.Click += (sender, e) =>
+                            {
+                                #region
+                                KryptonComboBox ktbcombo = bsa.Owner as KryptonComboBox;
+                                //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+                                UCAdvFilterGeneric<P> ucBaseList = new UCAdvFilterGeneric<P>();
+                                ucBaseList.QueryConditionFilter = queryFilter;
+
+                                ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                                ucBaseList.control = item;
+                                ucBaseList.Runway = BaseListRunWay.选中模式;
+                                //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+                                frmBaseEditList frmedit = new frmBaseEditList();
+                                frmedit.StartPosition = FormStartPosition.CenterScreen;
+                                ucBaseList.Dock = DockStyle.Fill;
+                                frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+
+                                BizTypeMapper mapper = new BizTypeMapper();
+                                var BizTypeText = mapper.GetBizType(typeof(P).Name).ToString();
+                                frmedit.Text = "关联查询" + "-" + BizTypeText;
+
+
+                                if (frmedit.ShowDialog() == DialogResult.OK)
+                                {
+                                    string ucTypeName = bsa.Owner.GetType().Name;
+                                    if (ucTypeName == "KryptonComboBox")
+                                    {
+                                        //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
+                                        if (ucBaseList.Tag != null)
+                                        {
+                                            //来自查询的数据源和选中值
+                                            BindingSource bs = ucBaseList.Tag as BindingSource;
+
+                                            //控件加载时绑定信息
+                                            Binding binding = null;
+                                            if (ktbcombo.DataBindings.Count > 0)
+                                            {
+                                                binding = ktbcombo.DataBindings[0]; //这个是下拉绑定的实体集合
+                                                                                    //string filedName = binding.BindingMemberInfo.BindingField;
+                                            }
+                                            else
+                                            {
+                                                MessageBox.Show("没有绑定数据！");
+                                            }
+                                            //绑定的值字段
+                                            ValueField = binding.BindingMemberInfo.BindingField;
+                                            if (string.IsNullOrEmpty(ValueField))
+                                            {
+                                                throw new Exception("ValueField主键字段名不能为空" + ktbcombo.ValueMember);
+                                            }
+                                            object selectItem = bs.Current;
+                                            object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(selectItem, ValueField);
+                                            //从缓存中重新加载 
+                                            BindingSource NewBsList = new BindingSource();
+                                            //将List<T>类型的结果是object的转换为指定类型的List
+                                            //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
+                                            //有缓存的情况
+                                            var rslist = CacheHelper.Manager.CacheEntityList.Get(targetEntity.Name);
+                                            //条件如果有限制了。就不能全部加载
+                                            if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
+                                            {
+                                                var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                                                if (lastlist != null)
+                                                {
+                                                    #region  
+                                                    NewBsList.DataSource = lastlist;
+                                                    Common.DataBindingHelper.InitDataToCmb(NewBsList, ValueField, display, ktbcombo);
+                                                    #endregion
+                                                }
+                                            }
+                                            else
+                                            {
+                                                //单据类没有缓存 并且开始没有绑定有数据的数据源，这就重新绑定一下
+                                                // ktb.DataBindings.Clear();
+                                                //Common.DataBindingHelper.BindData4Cmb(bs, bs.DataSource, ValueField, display, ktb);
+                                                //会修改当前选择的项
+                                                Common.DataBindingHelper.InitDataToCmb(bs, ValueField, display, ktbcombo);
+                                            }
+                                            try
+                                            {
+                                                RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);
+                                            }
+                                            catch (Exception ex)
+                                            {
+
+                                            }
+
+                                            ktbcombo.SelectedItem = selectItem;
+                                        }
+                                    }
+
+                                }
+
+                                #endregion
+                            };
+
+
+                            ktb.ButtonSpecs.Add(bsa);
+                        }
+                    }
+
+                    if (item.GetType().Name == "KryptonTextBox")
+                    {
+                        KryptonTextBox ktb = item as KryptonTextBox;
+                        //不重复添加
+                        if (ktb.ButtonSpecs.Count > 0)
+                        {
+                            return;
+                        }
+                        if ((item as Control).DataBindings.Count > 0)
+                        {
+                            //if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
+                            //{
+                            ButtonSpecAny bsa = new ButtonSpecAny();
+                            bsa.Image = Image.FromStream(GetResource("help4"));
+                            // bsa.Tag = ktb;
+                            bsa.UniqueName = "btnQuery";
+                            ktb.Tag = targetEntity;
+
+                            //bsa.Click += BsaEdit_Click;
+                            bsa.Click += (sender, e) =>
+                            {
+                                #region
+                                KryptonTextBox ktbTxt = bsa.Owner as KryptonTextBox;
+                                //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+                                UCAdvFilterGeneric<P> ucBaseList = new UCAdvFilterGeneric<P>(); // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+
+                                ucBaseList.QueryConditionFilter = queryFilter;
+                                ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                ucBaseList.control = item;
+                                ucBaseList.Runway = BaseListRunWay.选中模式;
+                                //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+                                frmBaseEditList frmedit = new frmBaseEditList();
+                                frmedit.StartPosition = FormStartPosition.CenterScreen;
+                                ucBaseList.Dock = DockStyle.Fill;
+                                frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+                    
+
+                                BizTypeMapper mapper = new BizTypeMapper();
+                                var BizTypeText = mapper.GetBizType(typeof(P).Name).ToString();
+                                frmedit.Text = "关联查询" + "-" + BizTypeText;
+
+                                if (frmedit.ShowDialog() == DialogResult.OK)
+                                {
+                                    string ucTypeName = bsa.Owner.GetType().Name;
+                                    if (ucTypeName == "KryptonTextBox")
+                                    {
+                                        //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
+                                        if (ucBaseList.Tag != null)
+                                        {
+                                            //来自查询的数据源和选中值
+                                            BindingSource bs = ucBaseList.Tag as BindingSource;
+                                            //控件加载时绑定信息
+                                            Binding binding = null;
+                                            binding = ktbTxt.DataBindings[0]; //这个是下拉绑定的实体集合
+                                                                              //绑定的值字段
+                                            ValueField = binding.BindingMemberInfo.BindingField;
+                                            BindingSource NewBsList = new BindingSource();
+                                            object selectValue = string.Empty;
+                                            if (ValueFieldCol.IsNotEmptyOrNull())
+                                            {
+                                                selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(bs.Current, ValueFieldCol);
+                                            }
+                                            else
+                                            {
+                                                selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(bs.Current, ValueField);
+                                            }
+                                            object displayObj = bs.Current.GetPropertyValue(display);
+                                            if (displayObj != null)
+                                            {
+                                                ktbTxt.Text = displayObj.ToString();
+                                            }
+                                            else
+                                            {
+                                                MessageBox.Show("没有获取到显示字段值{display}，请联系管理员。");
+                                                MainForm.Instance.logger.LogInformation($"没有获取到显示字段值{display}，请联系管理员。  ");
+                                                return;
+                                            }
+                                      
+
+                                            RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, display, ktbTxt.Text);
+                                            RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);
+                                            bsa.Tag = bs.Current;
+                                            //
+                                            //item.CausesValidation = false;
+                                            // bool validControl = ValidationHelper.IsValid(item);
+                                            //this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+                                            // if (ValidationHelper.hasValidationErrors(this.Controls))
+                                            //     return;
+                                        }
+                                    }
+
+                                }
+
+                                #endregion
+
+                            };
+
+
+                            ktb.ButtonSpecs.Add(bsa);
+                        }
+                    }
+
+
+                }
+            }
+        }
+
+
+        //==
+        /*
+
+        #region 实现自动生成的UI界面上带有查询功能
+
+
+
+        /// <summary>
+        /// 关联查询时带出的快速查询的功能
+        /// </summary>
+        /// <typeparam name="P"></typeparam>
+        /// <typeparam name="Dto"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="item"></param>
+        /// <param name="DisplayColExp"></param>
+        /// <param name="whereLambda">额外限制性条件，如供应商不会显示到销售订单下</param>
+        /// <param name="KeyValueTypeForDgv">视图时使用，显示结果表格时能关联外健的实体</param>
+        /// <param name="QueryConditions"></param>
+        //public static void InitFilterForControl<P>(BaseEntity entity, System.Windows.Forms.Control item,
+        //   string DisplayCol, Expression<Func<P, bool>> whereLambda, Type KeyValueTypeForDgv,
+        //    params string[] QueryConditions) where P : class
+
+        //和BaseBillEditGeneric.cs中的方法一样。只是为了能反射调用 MethodInfo mf2 = dbh.GetType().GetMethod("InitFilterForControl").MakeGenericMethod(new Type[] { mytype });
+        public static void InitFilterForControl<P>(BaseEntity entity, System.Windows.Forms.Control item,
+  string DisplayCol, Expression<Func<P, bool>> whereLambda, Type KeyValueTypeForDgv,
+   List<object> queryParameters) where P : class
+        {
+                if (item is Control)
+                {
+                    string display = DisplayCol;
+                    string ValueField = string.Empty;
+                    if (item is VisualControlBase)
+                    {
+                        Type targetEntity = typeof(P);
+                        if (item.GetType().Name == "KryptonComboBox")
+                        {
+                            KryptonComboBox ktb = item as KryptonComboBox;
+                            //不重复添加
+                            if (ktb.ButtonSpecs.Where(b => b.UniqueName == "btnQuery").Any())
+                            {
+                                return;
+                            }
+
+                            if ((item as Control).DataBindings.Count > 0)
+                            {
+                                //if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
+                                //{
+                                ButtonSpecAny bsa = new ButtonSpecAny();
+                                bsa.Image = Image.FromStream(GetResource("help4"));
+                                bsa.UniqueName = "btnQuery";
+                                bsa.Tag = ktb;
+                                ktb.Tag = targetEntity;
+
+                                //bsa.Click += BsaEdit_Click;
+                                bsa.Click += (sender, e) =>
+                                {
+                                    #region
+                                    KryptonComboBox ktb = bsa.Owner as KryptonComboBox;
+                                    //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+                                    UCAdvFilterGeneric<P> ucBaseList = new UCAdvFilterGeneric<P>();
+                                    ucBaseList.LimitQueryConditions = whereLambda;
+
+                                    List<QueryParameter<P>> queryParametersok= new List<QueryParameter<P>>();
+                                    queryParametersok = queryParameters as List<QueryParameter<P>>;
+                                      ucBaseList.QueryParameters = queryParametersok;
+                                    
+                                    ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                    // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                                    ucBaseList.control = item;
+                                    ucBaseList.Runway = BaseListRunWay.选中模式;
+                                    //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+                                    frmBaseEditList frmedit = new frmBaseEditList();
+                                    frmedit.StartPosition = FormStartPosition.CenterScreen;
+                                    ucBaseList.Dock = DockStyle.Fill;
+                                    frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+
+                                    //BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                                    //CommBillData cbd = bcf.GetBillData<P>(null);
+                                    //frmedit.Text = cbd.BizName + "查询";
+                                    frmedit.Text = "关联查询";
+
+                                    if (frmedit.ShowDialog() == DialogResult.OK)
+                                    {
+                                        string ucTypeName = bsa.Owner.GetType().Name;
+                                        if (ucTypeName == "KryptonComboBox")
+                                        {
+                                            //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
+                                            if (ucBaseList.Tag != null)
+                                            {
+                                                //来自查询的数据源和选中值
+                                                BindingSource bs = ucBaseList.Tag as BindingSource;
+
+                                                //控件加载时绑定信息
+                                                Binding binding = null;
+                                                if (ktb.DataBindings.Count > 0)
+                                                {
+                                                    binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
+                                                                                   //string filedName = binding.BindingMemberInfo.BindingField;
+                                                }
+                                                else
+                                                {
+                                                    MessageBox.Show("没有绑定数据！");
+                                                }
+                                                //绑定的值字段
+                                                ValueField = binding.BindingMemberInfo.BindingField;
+                                                if (string.IsNullOrEmpty(ValueField))
+                                                {
+                                                    throw new Exception("ValueField主键字段名不能为空" + ktb.ValueMember);
+                                                }
+                                                object selectItem = bs.Current;
+                                                object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(selectItem, ValueField);
+                                                //从缓存中重新加载 
+                                                BindingSource NewBsList = new BindingSource();
+                                                //将List<T>类型的结果是object的转换为指定类型的List
+                                                //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
+                                                //有缓存的情况
+                                                var rslist = CacheHelper.Manager.CacheEntityList.Get(targetEntity.Name);
+                                                //条件如果有限制了。就不能全部加载
+                                                if (rslist != null && whereLambda == null)
+                                                {
+                                                    var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                                                    if (lastlist != null)
+                                                    {
+                                                        #region  
+                                                        NewBsList.DataSource = lastlist;
+                                                        Common.DataBindingHelper.InitDataToCmb(NewBsList, ValueField, display, ktb);
+                                                        #endregion
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    //单据类没有缓存 并且开始没有绑定有数据的数据源，这就重新绑定一下
+                                                    // ktb.DataBindings.Clear();
+                                                    //Common.DataBindingHelper.BindData4Cmb(bs, bs.DataSource, ValueField, display, ktb);
+                                                    //会修改当前选择的项
+                                                    Common.DataBindingHelper.InitDataToCmb(bs, ValueField, display, ktb);
+                                                }
+                                                try
+                                                {
+                                                    RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);
+                                                }
+                                                catch (Exception ex)
+                                                {
+
+                                                }
+
+                                                ktb.SelectedItem = selectItem;
+                                            }
+                                        }
+
+                                    }
+
+                                    #endregion
+
+                                };
+
+
+                                ktb.ButtonSpecs.Add(bsa);
+                            }
+                        }
+
+                        if (item.GetType().Name == "KryptonTextBox")
+                        {
+                            KryptonTextBox ktb = item as KryptonTextBox;
+                            //不重复添加
+                            if (ktb.ButtonSpecs.Count > 0)
+                            {
+                                return;
+                            }
+                            if ((item as Control).DataBindings.Count > 0)
+                            {
+                                //if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
+                                //{
+                                ButtonSpecAny bsa = new ButtonSpecAny();
+                                bsa.Image = Image.FromStream(GetResource("help4"));
+                                // bsa.Tag = ktb;
+                                bsa.UniqueName = "btnQuery";
+                                ktb.Tag = targetEntity;
+
+                                //bsa.Click += BsaEdit_Click;
+                                bsa.Click += (sender, e) =>
+                                {
+                                    #region
+                                    KryptonTextBox ktb = bsa.Owner as KryptonTextBox;
+                                    //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+                                    UCAdvFilterGeneric<P> ucBaseList = new UCAdvFilterGeneric<P>(); // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                                    ucBaseList.LimitQueryConditions = whereLambda;
+
+                                    List<QueryParameter<P>> queryParametersok = new List<QueryParameter<P>>();
+                                    queryParametersok = queryParameters as List<QueryParameter<P>>;
+                                    ucBaseList.QueryParameters = queryParametersok;
+
+                                    ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                    ucBaseList.control = item;
+                                    ucBaseList.Runway = BaseListRunWay.选中模式;
+                                    //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+                                    frmBaseEditList frmedit = new frmBaseEditList();
+                                    frmedit.StartPosition = FormStartPosition.CenterScreen;
+                                    ucBaseList.Dock = DockStyle.Fill;
+                                    frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+
+                                    //BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                                    //CommBillData cbd = bcf.GetBillData<P>(null);
+                                    //frmedit.Text = cbd.BizName + "查询";
+                                    frmedit.Text = "关联查询";
+
+                                    if (frmedit.ShowDialog() == DialogResult.OK)
+                                    {
+                                        string ucTypeName = bsa.Owner.GetType().Name;
+                                        if (ucTypeName == "KryptonTextBox")
+                                        {
+                                            //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
+                                            if (ucBaseList.Tag != null)
+                                            {
+                                                //来自查询的数据源和选中值
+                                                BindingSource bs = ucBaseList.Tag as BindingSource;
+                                                //控件加载时绑定信息
+                                                Binding binding = null;
+                                                binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
+                                                //绑定的值字段
+                                                ValueField = binding.BindingMemberInfo.BindingField;
+                                                BindingSource NewBsList = new BindingSource();
+                                                object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(bs.Current, ValueField);
+                                                RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);
+                                                ktb.Text = bs.Current.GetPropertyValue(display).ToString();
+                                                bsa.Tag = bs.Current;
+
+                                                //
+                                                //item.CausesValidation = false;
+
+                                                // bool validControl = ValidationHelper.IsValid(item);
+
+                                                //this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+
+                                                // if (ValidationHelper.hasValidationErrors(this.Controls))
+                                                //     return;
+                                            }
+                                        }
+
+                                    }
+
+                                    #endregion
+
+                                };
+
+
+                                ktb.ButtonSpecs.Add(bsa);
+                            }
+                        }
+
+
+                    }
+                }
+            }
+
+      
+
+        /// <summary>
+        /// 关联查询时带出的快速查询的功能  by watson 最新实现的灵活参数化
+        /// </summary>
+        /// <typeparam name="P"></typeparam>
+        /// <typeparam name="Dto"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="item"></param>
+        /// <param name="DisplayColExp"></param>
+        /// <param name="whereLambda">额外限制性条件，如供应商不会显示到销售订单下</param>
+        /// <param name="KeyValueTypeForDgv">视图时使用，显示结果表格时能关联外健的实体</param>
+        /// <param name="QueryConditions"></param>
+        public void InitFilterForControl<P, Dto>(BaseEntity entity, System.Windows.Forms.Control item,
+            Expression<Func<P, object>> DisplayColExp, Expression<Func<P, bool>> whereLambda, Type KeyValueTypeForDgv,
+            List<QueryParameter<P>> queryParameters) where P : class
+        {
+            if (item is Control)
+            {
+                string display = DisplayColExp.GetMemberInfo().Name;
+                string ValueField = string.Empty;
+                if (item is VisualControlBase)
+                {
+                    Type targetEntity = typeof(P);
+                    if (item.GetType().Name == "KryptonComboBox")
+                    {
+                        KryptonComboBox ktb = item as KryptonComboBox;
+                        //不重复添加
+                        if (ktb.ButtonSpecs.Where(b => b.UniqueName == "btnQuery").Any())
+                        {
+                            return;
+                        }
+
+                        if ((item as Control).DataBindings.Count > 0)
+                        {
+                            //if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
+                            //{
+                            ButtonSpecAny bsa = new ButtonSpecAny();
+                            bsa.Image = Image.FromStream(Common.DataBindingHelper.GetResource("help4"));
+                            bsa.UniqueName = "btnQuery";
+                            bsa.Tag = ktb;
+                            ktb.Tag = targetEntity;
+
+                            //bsa.Click += BsaEdit_Click;
+                            bsa.Click += (sender, e) =>
+                            {
+                                #region
+                                KryptonComboBox ktb = bsa.Owner as KryptonComboBox;
+                                //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+                                UCAdvFilterGeneric<P> ucBaseList = new UCAdvFilterGeneric<P>();
+                                ucBaseList.LimitQueryConditions = whereLambda;
+                                ucBaseList.QueryParameters = queryParameters;
+                                ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                                ucBaseList.control = item;
+                                ucBaseList.Runway = BaseListRunWay.选中模式;
+                                //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+                                frmBaseEditList frmedit = new frmBaseEditList();
+                                frmedit.StartPosition = FormStartPosition.CenterScreen;
+                                ucBaseList.Dock = DockStyle.Fill;
+                                frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+
+                                //BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                                //CommBillData cbd = bcf.GetBillData<P>(null);
+                                //frmedit.Text = cbd.BizName + "查询";
+                                frmedit.Text = "关联查询";
+
+                                if (frmedit.ShowDialog() == DialogResult.OK)
+                                {
+                                    string ucTypeName = bsa.Owner.GetType().Name;
+                                    if (ucTypeName == "KryptonComboBox")
+                                    {
+                                        //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
+                                        if (ucBaseList.Tag != null)
+                                        {
+                                            //来自查询的数据源和选中值
+                                            BindingSource bs = ucBaseList.Tag as BindingSource;
+
+                                            //控件加载时绑定信息
+                                            Binding binding = null;
+                                            if (ktb.DataBindings.Count > 0)
+                                            {
+                                                binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
+                                                                               //string filedName = binding.BindingMemberInfo.BindingField;
+                                            }
+                                            else
+                                            {
+                                                MessageBox.Show("没有绑定数据！");
+                                            }
+                                            //绑定的值字段
+                                            ValueField = binding.BindingMemberInfo.BindingField;
+                                            if (string.IsNullOrEmpty(ValueField))
+                                            {
+                                                throw new Exception("ValueField主键字段名不能为空" + ktb.ValueMember);
+                                            }
+                                            object selectItem = bs.Current;
+                                            object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(selectItem, ValueField);
+                                            //从缓存中重新加载 
+                                            BindingSource NewBsList = new BindingSource();
+                                            //将List<T>类型的结果是object的转换为指定类型的List
+                                            //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
+                                            //有缓存的情况
+                                            var rslist = CacheHelper.Manager.CacheEntityList.Get(targetEntity.Name);
+                                            //条件如果有限制了。就不能全部加载
+                                            if (rslist != null && whereLambda == null)
+                                            {
+                                                var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                                                if (lastlist != null)
+                                                {
+                                                    #region  
+                                                    NewBsList.DataSource = lastlist;
+                                                    Common.DataBindingHelper.InitDataToCmb(NewBsList, ValueField, display, ktb);
+                                                    #endregion
+                                                }
+                                            }
+                                            else
+                                            {
+                                                //单据类没有缓存 并且开始没有绑定有数据的数据源，这就重新绑定一下
+                                                // ktb.DataBindings.Clear();
+                                                //Common.DataBindingHelper.BindData4Cmb(bs, bs.DataSource, ValueField, display, ktb);
+                                                //会修改当前选择的项
+                                                Common.DataBindingHelper.InitDataToCmb(bs, ValueField, display, ktb);
+                                            }
+                                            try
+                                            {
+                                                RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);
+                                            }
+                                            catch (Exception ex)
+                                            {
+
+                                            }
+
+                                            ktb.SelectedItem = selectItem;
+                                        }
+                                    }
+
+                                }
+
+                                #endregion
+
+                            };
+
+
+                            ktb.ButtonSpecs.Add(bsa);
+                        }
+                    }
+
+                    if (item.GetType().Name == "KryptonTextBox")
+                    {
+                        KryptonTextBox ktb = item as KryptonTextBox;
+                        //不重复添加
+                        if (ktb.ButtonSpecs.Count > 0)
+                        {
+                            return;
+                        }
+                        if ((item as Control).DataBindings.Count > 0)
+                        {
+                            //if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
+                            //{
+                            ButtonSpecAny bsa = new ButtonSpecAny();
+                            bsa.Image = Image.FromStream(Common.DataBindingHelper.GetResource("help4"));
+                            // bsa.Tag = ktb;
+                            bsa.UniqueName = "btnQuery";
+                            ktb.Tag = targetEntity;
+
+                            //bsa.Click += BsaEdit_Click;
+                            bsa.Click += (sender, e) =>
+                            {
+                                #region
+                                KryptonTextBox ktb = bsa.Owner as KryptonTextBox;
+                                //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+                                UCAdvFilterGeneric<P> ucBaseList = new UCAdvFilterGeneric<P>(); // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                                ucBaseList.LimitQueryConditions = whereLambda;
+                                ucBaseList.QueryParameters = queryParameters;
+                                ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                ucBaseList.control = item;
+                                ucBaseList.Runway = BaseListRunWay.选中模式;
+                                //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
+                                frmBaseEditList frmedit = new frmBaseEditList();
+                                frmedit.StartPosition = FormStartPosition.CenterScreen;
+                                ucBaseList.Dock = DockStyle.Fill;
+                                frmedit.kryptonPanel1.Controls.Add(ucBaseList);
+
+                                //BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+                                //CommBillData cbd = bcf.GetBillData<P>(null);
+                                //frmedit.Text = cbd.BizName + "查询";
+                                frmedit.Text = "关联查询";
+
+                                if (frmedit.ShowDialog() == DialogResult.OK)
+                                {
+                                    string ucTypeName = bsa.Owner.GetType().Name;
+                                    if (ucTypeName == "KryptonTextBox")
+                                    {
+                                        //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
+                                        if (ucBaseList.Tag != null)
+                                        {
+                                            //来自查询的数据源和选中值
+                                            BindingSource bs = ucBaseList.Tag as BindingSource;
+                                            //控件加载时绑定信息
+                                            Binding binding = null;
+                                            binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
+                                            //绑定的值字段
+                                            ValueField = binding.BindingMemberInfo.BindingField;
+                                            BindingSource NewBsList = new BindingSource();
+                                            object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(bs.Current, ValueField);
+                                            RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);
+                                            ktb.Text = bs.Current.GetPropertyValue(display).ToString();
+                                            bsa.Tag = bs.Current;
+
+                                            //
+                                            //item.CausesValidation = false;
+
+                                            // bool validControl = ValidationHelper.IsValid(item);
+
+                                            //this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+
+                                            // if (ValidationHelper.hasValidationErrors(this.Controls))
+                                            //     return;
+                                        }
+                                    }
+
+                                }
+
+                                #endregion
+
+                            };
+
+
+                            ktb.ButtonSpecs.Add(bsa);
+                        }
+                    }
+
+
+                }
+            }
+        }
+
+
+
+
+
+
+        #endregion
+
+        */
+
+
+
+        /// <summary>
+        /// 从项目嵌入的资源中读取指定的资源文件。
+        /// </summary>
+        /// <param name="filename">指定的资源文件名称</param>
+        /// <returns>返回的资源文件流</returns>
+        public static Stream GetResource(string filename)
+        {
+            Stream istr = null;
+            Properties.Resources res = new Properties.Resources();
+            PropertyInfo[] properInfo = res.GetType().GetProperties(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (PropertyInfo item in properInfo)
+            {
+                // 获取指定文件名格式的图片
+                //if (item.Name.Contains(filename) && item.PropertyType.Name == "Bitmap")
+                if (item.Name.Contains(filename))
+                {
+                    Bitmap b = (Bitmap)Properties.Resources.ResourceManager.GetObject(item.Name, Properties.Resources.Culture);
+                    MemoryStream stream = new MemoryStream();
+                    b.Save(stream, ImageFormat.Jpeg);
+                    byte[] data = new byte[stream.Length];
+                    stream.Seek(0, SeekOrigin.Begin);
+                    stream.Read(data, 0, Convert.ToInt32(stream.Length));
+                    // do someting..
+                    istr = stream;
+                    break;
+
+                }
+            }
+            return istr;
+        }
+
+
+        public static void BindData4RadioGroupTrueFalse<T>(object entity, Expression<Func<T, bool?>> exp, KryptonRadioButton RadioButton1, KryptonRadioButton RadioButton2)
+        {
+            MemberInfo minfo = exp.GetMemberInfo();
+            string key = minfo.Name;
+            BindData4RadioGroupTrueFalse(entity, key, RadioButton1, RadioButton2);
+        }
+
+        public static void BindData4RadioGroupTrueFalse(object entity, string key, KryptonRadioButton RadioButton1, KryptonRadioButton RadioButton2)
+        {
+            RadioButton1.DataBindings.Clear();
+            string value = ReflectionHelper.GetModelValue(key, entity);
+            if (value == null)
+            {
+                value = "false";
+            }
+            // Set initial values
+            RadioButton1.Checked = bool.Parse(value);
+            RadioButton2.Checked = !bool.Parse(value);
+            // Change on event
+            RadioButton1.CheckedChanged += delegate
+            {
+                ReflectionHelper.SetPropertyValue(entity, key, RadioButton1.Checked);
+            };
+            //RadioButton2.CheckedChanged += delegate
+            //{
+            //ReflectionHelper.SetPropertyValue(entity, key, RadioButton2.Checked);
+            //};
+
+            Binding binddata = null;
+            binddata = new Binding("Checked", entity, key, true, DataSourceUpdateMode.OnValidation);
+            // binddata.Format += (s, args) => args.Value = ((string)args.Value) == RadioButton1.Text;
+            //binddata.Parse += (s, args) => args.Value = (bool)args.Value ? RadioButton1.Text : RadioButton2.Text;
+            //数据源的数据类型转换为控件要求的数据类型。
+            binddata.Format += (s, args) => args.Value = args.Value == null ? false : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            binddata.Parse += (s, args) => args.Value = args.Value == null ? false : args.Value;
+            RadioButton1.DataBindings.Add(binddata);
+            //RadioButton2.DataBindings.Add(binddata);
+        }
+
+
+        public static void BindData4RadioGroupTrueFalse<T>(object entity, Expression<Func<T, bool?>> exp, RadioButton RadioButton1, RadioButton RadioButton2)
+        {
+            MemberInfo minfo = exp.GetMemberInfo();
+            string key = minfo.Name;
+            BindData4RadioGroupTrueFalse(entity, key, RadioButton1, RadioButton2);
+        }
+
+        public static void BindData4RadioGroupTrueFalse(object entity, string key, RadioButton RadioButton1, RadioButton RadioButton2)
+        {
+            string value = ReflectionHelper.GetModelValue(key, entity);
+            if (value == null)
+            {
+                value = "false";
+            }
+            // Set initial values
+            RadioButton1.Checked = bool.Parse(value);
+            RadioButton2.Checked = !bool.Parse(value);
+            // Change on event
+            RadioButton1.CheckedChanged += delegate
+            {
+                ReflectionHelper.SetPropertyValue(entity, key, RadioButton1.Checked);
+            };
+            //RadioButton2.CheckedChanged += delegate
+            //{
+            //ReflectionHelper.SetPropertyValue(entity, key, RadioButton2.Checked);
+            //};
+
+            Binding binddata = null;
+            binddata = new Binding("Checked", entity, key, true, DataSourceUpdateMode.OnValidation);
+            // binddata.Format += (s, args) => args.Value = ((string)args.Value) == RadioButton1.Text;
+            //binddata.Parse += (s, args) => args.Value = (bool)args.Value ? RadioButton1.Text : RadioButton2.Text;
+            //数据源的数据类型转换为控件要求的数据类型。
+            binddata.Format += (s, args) => args.Value = args.Value == null ? false : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            binddata.Parse += (s, args) => args.Value = args.Value == null ? false : args.Value;
+            RadioButton1.DataBindings.Add(binddata);
+            //RadioButton2.DataBindings.Add(binddata);
+        }
+
+
+
+        //产品表中日子好的例子。。参考 之前 华聪的文章。金额等分类型？
+
+
+        /// <summary>
+        /// 绑定枚举类型
+        /// </summary>
+        /// <typeparam name="T">数据库对应该表实体名</typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4CmbByEnum<T>(object entity, Expression<Func<T, int?>> expkey, Type enumType, KryptonComboBox cmbBox, bool addSelect)
+        {
+            cmbBox.DataBindings.Clear();
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            BindData4CmbByEnum<T>(entity, key, enumType, cmbBox, addSelect);
+        }
+        /// <summary>
+        /// 绑定枚举类型
+        /// </summary>
+        /// <typeparam name="T">数据库对应该表实体名</typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4CmbByEnum<T>(object entity, string keyName, Type enumType, KryptonComboBox cmbBox, bool addSelect)
+        {
+            cmbBox.Tag = keyName;
+            InitDataToCmbByEnumDynamicGeneratedDataSource(enumType, keyName, cmbBox, addSelect);
+
+            var depa = new Binding("SelectedValue", entity, keyName, true, DataSourceUpdateMode.OnPropertyChanged);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+
+        }
+
+        /// <summary>
+        /// 绑定枚举类型
+        /// </summary>
+        /// <typeparam name="T">数据库对应该表实体名</typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4CmbByEnumRef(object entity, string keyName, Type enumType, KryptonComboBox cmbBox, bool addSelect)
+        {
+            cmbBox.Tag = keyName;
+            InitDataToCmbByEnumDynamicGeneratedDataSource(enumType, keyName, cmbBox, addSelect);
+
+            var depa = new Binding("SelectedValue", entity, keyName, true, DataSourceUpdateMode.OnPropertyChanged);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+
+        }
+
+
+        /// <summary>
+        /// 绑定枚举类型
+        /// </summary>
+        /// <typeparam name="T">数据库对应该表实体名</typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4CmbByEnumData<T>(object entity, Expression<Func<T, int?>> expkey, KryptonComboBox cmbBox)
+        {
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            cmbBox.Tag = key;
+            var depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+
+        /// <summary>
+        /// 绑定枚举类型
+        /// </summary>
+        /// <typeparam name="T">数据库对应该表实体名</typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="defaultExp">默认值的</param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4CmbByEnum<T>(Type enumType, object entity, Expression<Func<T, int?>> expkey, Func<object, object> defaultExp, KryptonComboBox cmbBox, bool addSelect)
+        {
+            cmbBox.DataBindings.Clear();
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            InitDataToCmbByEnumDynamicGeneratedDataSource(enumType, key, cmbBox, addSelect);
+
+            var depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+            cmbBox.SelectedValue = defaultExp;
+        }
+
+
+        /// <summary>
+        /// 绑定数据到UI，只传入了id
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey">显示名</param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4CmbByEntity<T>(object entity, Expression<Func<T, long>> expkey, KryptonComboBox cmbBox) where T : class
+        {
+            cmbBox.DataBindings.Clear();
+            InitDataToCmb<T>(expkey, cmbBox);
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            var depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+
+
+        #region  绑定数据到UI,下拉列表的主键在引用表中字段不一致的时候使用
+        /// <summary>
+        /// 这个绑定下拉时，比方在产品表中。T会为tb_unit，expkey为unit_id，expValue为unit_name，Unit_ID会作为外键保存在产品中。
+        /// 如果外键列名和单位表本身主键ID不一致时会出错。
+        /// 这个方法是为了解决上述问题
+        /// <typeparamref name="T1"/>单位（引用表）<typeparamref name="T1"/>
+        /// <typeparamref name="T2"/>产品表（主表）<typeparamref name="T2"/>
+        /// </summary>
+        public static void BindData4Cmb<T1, T2>(object entity, Expression<Func<T1, long>> expkey, Expression<Func<T1, string>> expValue,
+            Expression<Func<T2, long>> RefExpkey, KryptonComboBox cmbBox, bool SyncUI, Expression<Func<T1, bool>> expCondition = null) where T1 : class where T2 : class
+        {
+            cmbBox.DataBindings.Clear();
+            InitDataToCmb<T1>(expkey, expValue, cmbBox, expCondition);
+            // InitDataToCmb<T1>(expkey, expValue, cmbBox);
+            MemberInfo minfo = RefExpkey.GetMemberInfo();
+            string key = minfo.Name;
+            Binding depa = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+
+
+
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+
+
+
+        #endregion
+
+
+
+
+        /// <summary>
+        /// 这个绑定下拉时，比方在产品表中。T会为tb_unit，expkey为unit_id，expValue为unit_name，Unit_ID会作为外键保存在产品中。
+        /// 如果外键列名和单位表本身主键ID不一致时会出错。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox) where T : class
+        {
+            BindData4Cmb<T>(entity, expkey, expValue, cmbBox, false);
+        }
+
+
+
+        /// <summary>
+        /// 绑定数据到UI，要求引用的外键名要和表ID名一致
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey">显示名</param>
+        /// <param name="expValue">id</param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, bool SyncUI) where T : class
+        {
+            cmbBox.DataBindings.Clear();
+            InitDataToCmb<T>(expkey, expValue, cmbBox);
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            Binding depa = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+
+
+
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+
+        /// <summary>
+        /// 绑定数据到UI，要求引用的外键名要和表ID名一致
+        /// 只是关联不初始下拉数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey">显示名</param>
+        /// <param name="expValue">id</param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4CmbRelated<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, bool SyncUI, bool NeedInitData) where T : class
+        {
+            if (NeedInitData)
+            {
+                InitDataToCmb<T>(expkey, expValue, cmbBox);
+            }
+
+            cmbBox.DataBindings.Clear();
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            Binding depa = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+
+
+
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+
+
+        public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        {
+            cmbBox.DataBindings.Clear();
+
+            BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
+            QueryFilter queryFilter = basePro.GetQueryFilter();
+            queryFilter.FilterLimitExpressions.Add(expCondition);
+
+            InitDataToCmb<T>(expkey, expValue, cmbBox, queryFilter.GetFilterExpression<T>());
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            var depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+
+            #region 添加清除功能
+            //不重复添加
+            if (cmbBox.ButtonSpecs.Where(b => b.UniqueName == "btnclear").Any())
+            {
+                return;
+            }
+            if ((cmbBox as Control).DataBindings.Count > 0)
+            {
+                if (cmbBox.DataBindings.Count > 0 && cmbBox.DataSource is BindingSource)
+                {
+                    ButtonSpecAny bsa = new ButtonSpecAny();
+                    // bsa.Image = Image.FromStream(GetResource("RUINORERP.UI.ResourceFile.search.ico"));
+                    // bsa.Tag = ktb;
+                    // cmbBox.Tag = targetEntity;
+                    bsa.UniqueName = "btnclear";
+                    bsa.Type = PaletteButtonSpecStyle.Close;
+                    bsa.Edge = PaletteRelativeEdgeAlign.Near;
+                    //bsa.Click += BsaEdit_Click;
+                    bsa.Click += (sender, e) =>
+                    {
+                        #region
+                        cmbBox.DataSource = cmbBox.DataSource;
+                        cmbBox.Text = "";
+                        InitDataToCmb<T>(expkey, expValue, cmbBox, expCondition);
+                        cmbBox.SelectedItem = null;
+                        cmbBox.SelectedValue = -1;
+                        #endregion
+
+                    };
+                    cmbBox.ButtonSpecs.Add(bsa);
+                }
+            }
+            #endregion
+        }
+
+        public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition, bool WithClear)
+        {
+            BindData4Cmb<T>(entity, expkey, expValue, cmbBox, expCondition);
+        }
+
+        /// <summary>
+        /// 为了能用Type 当T 调用，反射，方法名另取
+        /// 这个用于 自动生成的介面 如查询条件
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="expValue"></param>
+        /// <param name="tableName"></param>
+        /// <param name="cmbBox"></param>
+        public static void BindData4CmbRef<T>(object entity, string expkey, string expValue, string tableName, KryptonComboBox cmbBox) where T : class
+        {
+            InitDataToCmb<T>(expkey, expValue, tableName, cmbBox);
+            string key = expkey;
+            var depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+
+
+
+        public static void BindData4CmbRefWithLimited<T>(object entity, string expkey, string expValue, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        {
+            cmbBox.DataBindings.Clear();
+            InitDataToCmbWithCondition<T>(expkey, expValue, tableName, cmbBox, expCondition);
+            string key = expkey;
+            var depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+
+            #region 添加清除功能
+            //不重复添加
+            if (cmbBox.ButtonSpecs.Where(b => b.UniqueName == "btnclear").Any())
+            {
+                return;
+            }
+            if ((cmbBox as Control).DataBindings.Count > 0)
+            {
+                if (cmbBox.DataBindings.Count > 0 && cmbBox.DataSource is BindingSource)
+                {
+                    ButtonSpecAny bsa = new ButtonSpecAny();
+                    // bsa.Image = Image.FromStream(GetResource("RUINORERP.UI.ResourceFile.search.ico"));
+                    // bsa.Tag = ktb;
+                    // cmbBox.Tag = targetEntity;
+                    bsa.UniqueName = "btnclear";
+                    bsa.Type = PaletteButtonSpecStyle.Close;
+                    bsa.Edge = PaletteRelativeEdgeAlign.Near;
+                    //bsa.Click += BsaEdit_Click;
+                    bsa.Click += (sender, e) =>
+                    {
+                        #region
+                        cmbBox.DataSource = cmbBox.DataSource;
+                        cmbBox.Text = "";
+                        InitDataToCmbWithCondition<T>(expkey, expValue, tableName, cmbBox, expCondition);
+                        cmbBox.SelectedItem = null;
+                        cmbBox.SelectedIndex = -1;
+                        cmbBox.SelectedValue = -1L;//为了验证通过设置为long型
+
+                        // 手动设置验证通过
+                        // ((INotifyPropertyChanged)cmbBox).PropertyChanged -= MyComboBox_PropertyChanged;
+                        // cmbBox.SelectedIndex = -1;
+                        //  ((INotifyPropertyChanged)myComboBox).PropertyChanged += MyComboBox_PropertyChanged;
+
+
+
+                        //cmbBox.SelectedItem
+                        #endregion
+
+                    };
+                    cmbBox.ButtonSpecs.Add(bsa);
+                }
+            }
+            #endregion
+        }
+
+
+
+
+        /// <summary>
+        /// 绑定特殊多选，
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expkey"></param>
+        /// <param name="expValue"></param>
+        /// <param name="tableName"></param>
+        /// <param name="cmbBox"></param>
+        /// <param name="expCondition"></param>
+        public static void BindData4CmbChkRefWithLimited<T>(object entity, string expkey, string expValue, string tableName, CheckBoxComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        {
+            //查询DTO实体 其中有一个属性会同步对应选中的结果。这样后面SQL就对这个选的结果进行处理。
+            //cmbBox.DataBindings.Clear();
+            InitDataToCmbChkWithCondition<T>(expkey, expValue, tableName, cmbBox, expCondition);
+            string key = expkey;// colName+"_MultiChoiceResults" 是动态修改DTO时生成的。为了传值给sql
+            var depa = new Binding("MultiChoiceResults", entity, key + "_MultiChoiceResults", true, DataSourceUpdateMode.OnPropertyChanged);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) =>
+            {
+                args.Value = args.Value == null ? new List<object>() : args.Value;
+            };
+
+            //depa.Format += (s, args) => args.Value = args.Value == null ? new List<object>() : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            //depa.Parse += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+            depa.Parse += (s, args) =>
+            {
+                args.Value = args.Value == null ? new List<object>() : args.Value;
+            };
+            cmbBox.DataBindings.Add(depa);
+
+            #region 添加清除功能
+            //不重复添加
+            //if (cmbBox.ButtonSpecs.Where(b => b.UniqueName == "btnclear").Any())
+            //{
+            //    return;
+            //}
+            //if ((cmbBox as Control).DataBindings.Count > 0)
+            //{
+            //    if (cmbBox.DataBindings.Count > 0 && cmbBox.DataSource is BindingSource)
+            //    {
+            //        ButtonSpecAny bsa = new ButtonSpecAny();
+            //        // bsa.Image = Image.FromStream(GetResource("RUINORERP.UI.ResourceFile.search.ico"));
+            //        // bsa.Tag = ktb;
+            //        // cmbBox.Tag = targetEntity;
+            //        bsa.UniqueName = "btnclear";
+            //        bsa.Type = PaletteButtonSpecStyle.Close;
+            //        bsa.Edge = PaletteRelativeEdgeAlign.Near;
+            //        //bsa.Click += BsaEdit_Click;
+            //        bsa.Click += (sender, e) =>
+            //        {
+            //            #region
+            //            cmbBox.DataSource = cmbBox.DataSource;
+            //            cmbBox.Text = "";
+            //            InitDataToCmbWithCondition<T>(expkey, expValue, tableName, cmbBox, expCondition);
+            //            cmbBox.SelectedItem = null;
+            //            cmbBox.SelectedValue = -1;
+            //            #endregion
+
+            //        };
+            //        cmbBox.ButtonSpecs.Add(bsa);
+            //    }
+            //}
+            #endregion
+        }
+
+ 
+
+        public static void BindData4Cmb<T>(object entity, string expkey, string expValue, string tableName, KryptonComboBox cmbBox) where T : class
+        {
+            InitDataToCmb<T>(expkey, expValue, tableName, cmbBox);
+            string key = expkey;
+            var depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+
+        public static void BindData4Cmb(BindingSource droplistdatasouce, object entity, string ValueMember, string DisplayMember, KryptonComboBox cmbBox)
+        {
+            InitDataToCmb(droplistdatasouce, ValueMember, DisplayMember, cmbBox);
+            var depa = new Binding("SelectedValue", entity, ValueMember, true, DataSourceUpdateMode.OnValidation);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+
+        public static void BindData4CheckBox(object entity, string key, KryptonCheckBox chkBox, bool SyncUI)
+        {
+            Binding binddata = null;
+            if (SyncUI)
+            {
+                binddata = new Binding("Checked", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+            else
+            {
+                binddata = new Binding("Checked", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+            string value = ReflectionHelper.GetModelValue(key, entity);
+            if (value == null)
+            {
+                value = "false";
+            }
+            // Set initial values
+            chkBox.Checked = bool.Parse(value);
+
+            // Change on event
+            chkBox.CheckedChanged += delegate
+            {
+                ReflectionHelper.SetPropertyValue(entity, key, chkBox.Checked);
+            };
+            //数据源的数据类型转换为控件要求的数据类型。
+            binddata.Format += (s, args) => args.Value = args.Value == null ? false : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            binddata.Parse += (s, args) => args.Value = args.Value == null ? false : args.Value;
+            chkBox.DataBindings.Add(binddata);
+        }
+
+        public static void BindData4CheckBox<T>(object entity, string key, KryptonCheckBox chkBox, bool SyncUI)
+        {
+            chkBox.DataBindings.Clear();
+            Binding binddata = null;
+            if (SyncUI)
+            {
+                binddata = new Binding("Checked", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+            else
+            {
+                binddata = new Binding("Checked", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+            string value = ReflectionHelper.GetModelValue(key, entity);
+            if (value == null)
+            {
+                value = "false";
+            }
+            // Set initial values
+            chkBox.Checked = bool.Parse(value);
+
+            // Change on event
+            chkBox.CheckedChanged += delegate
+            {
+                ReflectionHelper.SetPropertyValue(entity, key, chkBox.Checked);
+            };
+            //数据源的数据类型转换为控件要求的数据类型。
+            binddata.Format += (s, args) => args.Value = args.Value == null ? false : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            binddata.Parse += (s, args) => args.Value = args.Value == null ? false : args.Value;
+            chkBox.DataBindings.Add(binddata);
+        }
+
+
+        public static void BindData4CheckBox<T>(object entity, Expression<Func<T, bool?>> exp, KryptonCheckBox chkBox, bool SyncUI)
+        {
+
+            var mb = exp.GetMemberInfo();
+            string key = mb.Name;
+            BindData4CheckBox<T>(entity, key, chkBox, SyncUI);
+        }
+
+        public static void BindData4DataTime(object entity, object datetimeValue, string key, KryptonDateTimePicker dtp, bool SyncUI)
+        {
+            dtp.DataBindings.Clear();
+            //chkbox
+            Binding dtpdata = null;
+            if (SyncUI)
+            {
+                dtpdata = new Binding("Value", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                dtpdata = new Binding("Value", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+
+
+            //数据源的数据类型转换为控件要求的数据类型。
+            dtpdata.Format += (s, args) =>
+            {
+                if (args.Value == null || args.Value.ToString() == "0001-01-01 00:00:00")
+                {
+                    args.Value = " ";
+                    dtp.ValueNullable = DBNull.Value;
+                }
+
+            };
+            //将控件的数据类型转换为数据源要求的数据类型。
+            dtpdata.Parse += (s, args) =>
+            {
+                args.Value = !dtp.Checked ? null : args.Value;
+            };
+            dtp.Validating += dtp_Validating;
+            dtp.CheckedChanged += Dtp_CheckedChanged;
+
+            if (datetimeValue == null)
+            {
+                dtp.Format = DateTimePickerFormat.Custom;
+                dtp.CustomFormat = "   ";
+            }
+
+            dtp.DataBindings.Add(dtpdata);
+        }
+
+
+        public static void BindData4DataTime<T>(object entity, Expression<Func<T, DateTime?>> exp, KryptonDateTimePicker dtp, bool SyncUI)
+        {
+            var mb = exp.GetMemberInfo();
+            string key = mb.Name;
+            object datetimeValue = typeof(T).GetProperty(key).GetValue(entity, null);
+
+            BindData4DataTime(entity, datetimeValue, key, dtp, SyncUI);
+        }
+
+        private static void Dtp_CheckedChanged(object sender, EventArgs e)
+        {
+            KryptonDateTimePicker dtp = sender as KryptonDateTimePicker;
+            if (!dtp.Checked)
+            {
+                dtp.Format = DateTimePickerFormat.Custom;
+                dtp.CustomFormat = "   ";
+                //将绑定的实体的值清空 = null;
+                if (dtp.DataBindings.Count > 0)
+                {
+                    RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(dtp.DataBindings[0].DataSource, dtp.DataBindings[0].BindingMemberInfo.BindingMember, null);
+                }
+                dtp.CausesValidation = false;
+                //如果 CausesValidation 属性设置为 false，则将取消 Validating 和 Validated 事件。
+                ////dtp.Value = System.DateTime.Now;
+
+            }
+            else
+            {
+                dtp.Format = DateTimePickerFormat.Short;
+                dtp.CustomFormat = null;
+                if (dtp.DataBindings.Count > 0)
+                {
+                    if (dtp.Value != null && dtp.Value.Year == 1)
+                    {
+                        dtp.Value = System.DateTime.Now;
+                    }
+                    RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(dtp.DataBindings[0].DataSource, dtp.DataBindings[0].BindingMemberInfo.BindingMember, dtp.Value);
+                }
+                else
+                {
+                    //if (dtp.DataBindings.Count == 0)
+                    //{
+                    //    dtp.DataBindings.Add(dtp.DataBindings[0]);
+                    //}
+                }
+                dtp.CausesValidation = true;
+                //如果 CausesValidation 属性设置为 false，则将取消 Validating 和 Validated 事件。
+
+            }
+        }
+
+
+
+        private static void dtp_Validating(object sender, CancelEventArgs e)
+        {
+            KryptonDateTimePicker dtp = sender as KryptonDateTimePicker;
+            if (!dtp.Checked)
+            {
+                //将绑定的实体的值清空 = null;
+                if (dtp.DataBindings.Count > 0)
+                {
+                    RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(dtp.DataBindings[0].DataSource, dtp.DataBindings[0].BindingMemberInfo.BindingMember, null);
+                }
+                //dtp.DataBindings.Clear();
+                e.Cancel = false;
+            }
+            else
+            {
+                //将绑定的实体的值清空 = null;
+                if (dtp.DataBindings.Count > 0)
+                {
+                    RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(dtp.DataBindings[0].DataSource, dtp.DataBindings[0].BindingMemberInfo.BindingMember, dtp.Value);
+                }
+                //dtp.DataBindings.Clear();
+                e.Cancel = false;
+            }
+
+        }
+
+        public static void BindData4Money<T>(object entity, Expression<Func<T, int>> expkey, KryptonTextBox txtBox, bool SyncUI)
+        {
+            var mb = expkey.GetMemberInfo();
+            string key = mb.Name;
+            Binding depa = null;
+            if (SyncUI)
+            {
+                depa = new Binding("Text", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+            else
+            {
+                depa = new Binding("Text", entity, key, true, DataSourceUpdateMode.OnValidation);
+            }
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? 0 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? 0 : args.Value;
+            txtBox.DataBindings.Add(depa);
+        }
+
+
+
+
+        public static void BindData4TextBox<T>(object entity,
+        Expression<Func<T, object>> expTextField,
+        KryptonTextBox txtBox,
+        BindDataType4TextBox type, bool SyncUI
+        )
+        {
+            txtBox.DataBindings.Clear();
+            // string textField = expTextField.Body.ToString().Split('.')[1];
+            MemberInfo minfo = expTextField.GetMemberInfo();
+            string textField = minfo.Name;
+            BindData4TextBox<T>(entity, textField, txtBox, type, SyncUI);
+        }
+
+
+        /// <summary>
+        /// 请注意。这个指定绑定的是tag属性不是Text->BindData4TextBoxWithQuery
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="expValueField"></param>
+        /// <param name="txtBox"></param>
+        /// <param name="SyncUI"></param>
+        public static void BindData4TextBoxWithTagQuery<T>(object entity,
+        Expression<Func<T, object>> expValueField,
+        KryptonTextBox txtBox,
+        bool SyncUI
+        )
+        {
+            txtBox.DataBindings.Clear();
+            //MemberInfo minfo = expTextField.GetMemberInfo();
+            //string textField = minfo.Name;
+            MemberInfo minfoValue = expValueField.GetMemberInfo();
+            string valueField = minfoValue.Name;
+
+            BindData4TextBoxWithTagQuery(entity, valueField, txtBox, SyncUI);
+        }
+
+
+
+        public static void BindData4ControlByEnum<T>(object entity, Expression<Func<T, object>> expTextField, Control control,
+        BindDataType4Enum type, Type enumType
+        )
+        {
+            control.DataBindings.Clear();
+            MemberInfo minfo = expTextField.GetMemberInfo();
+            string textField = minfo.Name;
+            BindData4ControlByEnum<T>(entity, textField, control, type, enumType);
+        }
+
+        public static void BindData4ControlByEnum<T>(object entity, string textField, Control txtBox, BindDataType4Enum type, Type enumType)
+        {
+            Binding depa = null;
+            //if (SyncUI)
+            //{
+            //    //双向绑定 应用于加载和编辑
+            //    depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnPropertyChanged);
+            //}
+            //else
+            //{
+            //    //单向绑定 应用于加载
+            depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
+            //}
+
+            switch (type)
+            {
+                case BindDataType4Enum.EnumName:
+                    //数据源的数据类型转换为控件要求的数据类型。
+                    //
+                    depa.Format += (s, args) =>
+                    {
+                        if (args.Value == null)
+                        {
+                            args.Value = "";
+                        }
+                        else
+                        {
+                            args.Value = Enum.ToObject(enumType, args.Value).ToString();
+                        }
+
+                    };
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) =>
+                    {
+                        if (args == null)
+                        {
+                            args.Value = 0;
+                        }
+                        else
+                        {
+                            args.Value = (int)args.Value;
+                        }
+                    };
+
+                    break;
+                case BindDataType4Enum.EnumDisplay:
+                    //数据源的数据类型转换为控件要求的数据类型。
+                    depa.Format += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+
+                    break;
+                default:
+                    break;
+            }
+
+            txtBox.DataBindings.Add(depa);
+        }
+
+
+
+
+
+
+        public static void BindData4Label<T>(object entity,
+        Expression<Func<T, string>> expTextField,
+        KryptonLabel lbl,
+        BindDataType4TextBox type, bool SyncUI
+        )
+        {
+            lbl.DataBindings.Clear();
+            // string textField = expTextField.Body.ToString().Split('.')[1];
+            MemberInfo minfo = expTextField.GetMemberInfo();
+            string textField = minfo.Name;
+            BindData4Label<T>(entity, textField, lbl, type, SyncUI);
+        }
+
+
+        public static void BindData4Label<T>(object entity, string textField, KryptonLabel lbl, BindDataType4TextBox type, bool SyncUI)
+        {
+            Binding depa = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
+            }
+
+            switch (type)
+            {
+                case BindDataType4TextBox.Qty:
+                    //数据源的数据类型转换为控件要求的数据类型。
+
+                    depa.Format += (s, args) =>
+                    {
+                        args.Value = args.Value == null ? 0 : args.Value;
+                        lbl.Text = args.Value.ToString();
+                    };
+
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) =>
+                    {
+                        args.Value = args.Value == null ? 0 : args.Value;
+                    };
+
+
+                    break;
+                case BindDataType4TextBox.Money:
+                    //数据源的数据类型转换为控件要求的数据类型。
+                    depa.Format += (s, args) =>
+                    {
+                        args.Value = args.Value == null ? 0.00 : args.Value;
+                        lbl.Text = args.Value.ToString("##.##");//这里是不是可以控制小数显示位数？
+                    };
+
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) =>
+                    {
+                        args.Value = args.Value == null ? 0.00 : args.Value;
+                    };
+
+
+                    break;
+                case BindDataType4TextBox.Text:
+                    //数据源的数据类型转换为控件要求的数据类型。
+                    depa.Format += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+
+                    break;
+                default:
+                    break;
+            }
+
+            lbl.DataBindings.Add(depa);
+        }
+
+
+        /// <summary>
+        /// 请注意。这个指定绑定的是tag属性不是Text
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="valueField"></param>
+        /// <param name="txtBox"></param>
+        /// <param name="SyncUI"></param>
+        public static void BindData4TextBoxWithTagQuery(object entity, string valueField, KryptonTextBox txtBox, bool SyncUI)
+        {
+            Binding depa = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depa = new Binding("Tag", entity, valueField, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depa = new Binding("Tag", entity, valueField, true, DataSourceUpdateMode.OnValidation);
+            }
+
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+
+
+            txtBox.DataBindings.Add(depa);
+
+            //===============================
+
+            /*
+            Binding depaText = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depaText = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depaText = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
+            }
+
+            //数据源的数据类型转换为控件要求的数据类型。
+            depaText.Format += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depaText.Parse += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+
+
+            txtBox.DataBindings.Add(depaText);
+            */
+
+
+        }
+
+
+
+        public static void BindData4TextBox<T>(object entity, string textField, KryptonTextBox txtBox, BindDataType4TextBox type, bool SyncUI)
+        {
+            Binding depa = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
+            }
+
+            switch (type)
+            {
+                case BindDataType4TextBox.Qty:
+                    //数据源的数据类型转换为控件要求的数据类型。
+
+                    depa.Format += (s, args) =>
+                    {
+                        args.Value = args.Value == null ? 0 : args.Value;
+                        txtBox.Text = args.Value.ToString();
+                    };
+
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) =>
+                    {
+                        args.Value = args.Value == null ? 0 : args.Value;
+                    };
+
+
+                    break;
+                case BindDataType4TextBox.Money:
+                    //数据源的数据类型转换为控件要求的数据类型。
+                    depa.Format += (s, args) =>
+                    {
+                        args.Value = args.Value == null ? 0.00 : args.Value;
+                        txtBox.Text = args.Value.ToString("##.##");//这里是不是可以控制小数显示位数？
+                    };
+
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) =>
+                    {
+                        args.Value = args.Value == null ? 0.00 : args.Value;
+                    };
+
+
+                    break;
+                case BindDataType4TextBox.Text:
+                    //数据源的数据类型转换为控件要求的数据类型。
+                    depa.Format += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+
+                    break;
+
+                default:
+                    break;
+            }
+
+            txtBox.DataBindings.Add(depa);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="textField"></param>
+        /// <param name="txtBox"></param>
+        /// <param name="type"></param>
+        /// <param name="SyncUI"></param>
+        public static void BindData4TextBox(object entity, string textField, KryptonTextBox txtBox, BindDataType4TextBox type, bool SyncUI)
+        {
+            Binding depa = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depa = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
+            }
+
+            switch (type)
+            {
+                case BindDataType4TextBox.Qty:
+                    //数据源的数据类型转换为控件要求的数据类型。
+                    depa.Format += (s, args) => args.Value = args.Value == null ? 0 : args.Value;
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) => args.Value = args.Value == null ? 0 : args.Value;
+
+                    break;
+                case BindDataType4TextBox.Money:
+                    //数据源的数据类型转换为控件要求的数据类型。
+                    depa.Format += (s, args) => args.Value = args.Value == null ? 0.00 : args.Value;
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) => args.Value = args.Value == null ? 0.00 : args.Value;
+
+                    break;
+                case BindDataType4TextBox.Text:
+                    //数据源的数据类型转换为控件要求的数据类型。
+                    depa.Format += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+                    //将控件的数据类型转换为数据源要求的数据类型。
+                    depa.Parse += (s, args) => args.Value = args.Value == null ? "" : args.Value;
+
+                    break;
+                default:
+                    break;
+            }
+
+            txtBox.DataBindings.Add(depa);
+        }
+
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmb<T>(Expression<Func<T, long>> expression, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox) where T : class
+        {
+            MemberInfo minfo = expression.GetMemberInfo();
+            string key = minfo.Name;
+            MemberInfo minfoValue = expValue.GetMemberInfo();
+            string value = minfoValue.Name;
+            string tableName = expression.Parameters[0].Type.Name;
+            InitDataToCmb<T>(key, value, tableName, cmbBox);
+        }
+
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// 一般是载入UI时使用，目前很多都 使用的 BindData4Cmb，里面就包含了这个
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmb<T>(Expression<Func<T, long>> expression, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        {
+            MemberInfo minfo = expression.GetMemberInfo();
+            string key = minfo.Name;
+            MemberInfo minfoValue = expValue.GetMemberInfo();
+            string value = minfoValue.Name;
+            string tableName = expression.Parameters[0].Type.Name;
+
+
+            BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
+            QueryFilter queryFilter = basePro.GetQueryFilter();
+            queryFilter.FilterLimitExpressions.Add(expCondition);
+
+            InitDataToCmbWithCondition<T>(key, value, tableName, cmbBox, queryFilter.GetFilterExpression<T>());
+
+            //InitDataToCmbWithCondition<T>(key, value, tableName, cmbBox, expCondition);
+
+        }
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmbByControl<T>(Expression<Func<T, long>> expression, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox) where T : class
+        {
+            MemberInfo minfo = expression.GetMemberInfo();
+            string key = minfo.Name;
+            MemberInfo minfoValue = expValue.GetMemberInfo();
+            string value = minfoValue.Name;
+            string tableName = expression.Parameters[0].Type.Name;
+            InitDataToCmb<T>(key, value, tableName, cmbBox);
+        }
+
+        public static void InitDataToCmb<T>(Expression<Func<T, long>> expression, KryptonComboBox cmbBox) where T : class
+        {
+            MemberInfo minfo = expression.GetMemberInfo();
+            string key = minfo.Name;
+            string value = "";
+            string tableName = expression.Parameters[0].Type.Name;
+            InitDataToCmb<T>(key, value, tableName, cmbBox);
+        }
+
+        public static void InitDataToCmbByEnumDynamicGeneratedDataSource<T>(Type enumType, Expression<Func<T, int?>> expKey, KryptonComboBox cmbBox, bool addSelect)
+        {
+            MemberInfo minfo = expKey.GetMemberInfo();
+            string key = minfo.Name;
+            InitDataToCmbByEnumDynamicGeneratedDataSource(enumType, key, cmbBox, addSelect);
+        }
+
+
+
+        /// <summary>
+        /// 枚举名称要与DB表中的字段名相同
+        /// </summary>
+        /// <typeparam name="T">枚举的类型</typeparam>
+        /// <param name="enumTypeName"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmbByEnumDynamicGeneratedDataSource(Type enumType, string keyName, KryptonComboBox cmbBox, bool addSelect)
+        {
+            //枚举值为int，动态生成一个类再绑定，
+            //var type = typeof(T);
+            var type = enumType;
+            var aName = new System.Reflection.AssemblyName(Assembly.GetExecutingAssembly().GetName().Name);
+            //var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(aName, AssemblyBuilderAccess.Run);//定义
+            //var mb = ab.DefineDynamicModule(aName.Name);
+            //var tb = mb.DefineType(type.Name + "EnumProxy", System.Reflection.TypeAttributes.Public, type);
+
+            //string newlikeProName1 = coldata.ColName + "_Like";
+            //var attrlikeBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.ColName, "like", newlikeProName1, AdvQueryProcessType.stringLike });
+            ////动态属性要提前创建生成，后面要实体化传入控件
+            //PropertyBuilder newlikeProp1 = AddProperty(tb, newlikeProName1);
+            //newlikeProp1.SetCustomAttribute(attrlikeBuilder1);
+
+            TypeConfig typeConfig = new TypeConfig();
+            typeConfig.FullName = aName.Name;
+
+            //要创建的属性
+            PropertyConfig propertyConfigKey = new PropertyConfig();
+            propertyConfigKey.PropertyName = keyName;// type.Name;默认枚举名改为可以指定名
+            propertyConfigKey.PropertyType = typeof(int);//枚举值为int 默认
+
+            PropertyConfig propertyConfigName = new PropertyConfig();
+            propertyConfigName.PropertyName = "Name";
+            propertyConfigName.PropertyType = typeof(string);
+
+            typeConfig.Properties.Add(propertyConfigKey);
+            typeConfig.Properties.Add(propertyConfigName);
+            Type newType = TypeBuilderHelper.BuildType(typeConfig);
+
+            List<object> list = new List<object>();
+            //(enumType[])Enum.GetValues(typeof(enumType));
+            Array enumValues = Enum.GetValues(type);
+            IEnumerator e = enumValues.GetEnumerator();
+            e.Reset();
+            int currentValue;
+            string currentName;
+            while (e.MoveNext())
+            {
+                object eobj = Activator.CreateInstance(newType);
+                currentValue = (int)e.Current;
+                currentName = e.Current.ToString();
+                eobj.SetPropertyValue(keyName, currentValue);
+                eobj.SetPropertyValue("Name", currentName);
+                list.Add(eobj);
+            }
+            if (addSelect)
+            {
+                object sobj = Activator.CreateInstance(newType);
+                sobj.SetPropertyValue(keyName, -1);
+                sobj.SetPropertyValue("Name", "请选择");
+                list.Insert(0, sobj);
+            }
+
+            cmbBox.SelectedValue = -1;
+
+            BindingSource bs = new BindingSource();
+            bs.DataSource = list;
+            ComboBoxHelper.InitDropList(bs, cmbBox, keyName, "Name", ComboBoxStyle.DropDown, false);
+
+        }
+
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmb<T>(string key, string value, string tableName, KryptonComboBox cmbBox) where T : class
+        {
+            if (CacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    value = CacheHelper.Manager.NewTableList[tableName].Value;
+                }
+                BindingSource bs = new BindingSource();
+                List<T> tlist = CacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
+
+
+
+                if (tlist == null || tlist.Count == 0)
+                {
+                    Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+                    tlist = bdc.GetBindSource<T>(tableName);
+
+                }
+                else
+                {
+                    //可不可以在这里过滤掉公共限制条件的数据。因为缓存时为了显示原始记录。没有限制
+                    //暂时没有实现，有难度因为T是未知的     https://www.cnblogs.com/sportsky/p/16006713.html
+                    /*
+                    BaseProcessor baseProcessor = MainForm.Instance.AppContext.GetRequiredServiceByName<BaseProcessor>(tableName + "Processor");
+                    QueryFilter queryFilter = baseProcessor.GetQueryFilter();
+
+                    //限制
+                    if (queryFilter.FilterLimitExpressions != null && queryFilter.FilterLimitExpressions.Count > 0)
+                    {
+
+                        // 获取属性信息
+                        BinaryExpression binaryExpression = (BinaryExpression)queryFilter.FilterLimitExpressions[0].Body;
+                        switch (binaryExpression.NodeType)
+                        {
+                            case ExpressionType.Equal:
+                                // 等于
+                                break;
+                            case ExpressionType.GreaterThan:
+                                // 大于
+                                break;
+                            case ExpressionType.GreaterThanOrEqual:
+                                // 大于等于
+                                break;
+                            case ExpressionType.LessThan:
+                                // 小于
+                                break;
+                            case ExpressionType.LessThanOrEqual:
+                                // 小于等于
+                                break;
+                            case ExpressionType.And:
+                                // 与
+                                break;
+                            case ExpressionType.Or:
+                                // 或
+                                break;
+                            case ExpressionType.Not:
+                                // 非
+                                break;
+                            case ExpressionType.OrElse:
+
+                                break;
+                            default:
+                                break;
+                        }
+
+                        重新建一个小项目。做一个实体，来调试性完成这个通用方法
+
+                        if (binaryExpression.NodeType == ExpressionType.Equal)
+                        {
+
+                        }
+                        //PropertyInfo propertyInfo = (PropertyInfo)binaryExpression.NodeType;
+
+                        // 创建参数表达式
+                        ParameterExpression parameter = Expression.Parameter(typeof(T), "t");
+
+                        // 创建属性表达式
+                        // MemberExpression property = Expression.Property(parameter, propertyInfo);
+
+                        // 创建常量表达式
+                        ConstantExpression value1 = Expression.Constant(true);
+
+                        // 创建相等比较表达式
+                        // BinaryExpression equal = Expression.Equal(property, value1);
+
+                        // 创建过滤条件
+                        //Expression<Func<T, bool>> filter = Expression.Lambda<Func<T, bool>>(equal, parameter);
+
+                        // 执行过滤操作
+                        //  tlist.Where(filter.Compile()).ToList();
+
+                       
+                        // 获取 Employee_Name 属性
+                        PropertyInfo propertyInfo = typeof(T).GetProperty("is_available");
+                        // 构建过滤条件
+                        ParameterExpression parameter = Expression.Parameter(typeof(T), "t");
+                        MemberExpression property = Expression.Property(parameter, propertyInfo);
+                        ConstantExpression value1 = Expression.Constant(true);
+                        BinaryExpression equal = Expression.Equal(property, value1);
+
+                        // 创建过滤表达式
+                        Expression<Func<T, bool>> filterExpression1 = Expression.Lambda<Func<T, bool>>(equal, parameter);
+
+                        
+
+
+
+                        // 将 LambdaExpression 转换为 Expression<Func<T, bool>>
+                        //Expression<Func<T, bool>> filterExpression = Expression.Lambda<Func<T, bool>>(queryFilter.GetFilterExpression<T>().Body, queryFilter.GetFilterExpression<T>().Parameters);
+
+                        //Func<T, bool> compiledFilter = queryFilter.GetFilterExpression<T>().Compile();
+
+                        // 过滤列表
+                        // List<T> lastList = tlist.Where(filter.Compile()).ToList();
+                        // InsertSelectItem<T>(key, value, lastList);
+                        // bs.DataSource = lastList;
+                    }
+                    */
+                    InsertSelectItem<T>(key, value, tlist);
+
+                }
+
+                #region exp process
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
+
+                List<T> newlist = baseProcessor.GetListByLimitExp<T>(tlist);
+
+                #endregion
+                InsertSelectItem<T>(key, value, newlist);
+                bs.DataSource = newlist;
+                ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, true);
+            }
+        }
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmbWithCondition<T>(string key, string value, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        {
+            //if (CacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            //{
+            //    if (string.IsNullOrEmpty(value))
+            //    {
+            //        value = CacheHelper.Manager.NewTableList[tableName].Value;
+            //    }
+            BindingSource bs = new BindingSource();
+            //    List<T> tlist = CacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
+            //    if (tlist == null || tlist.Count == 0)
+            //    {
+            Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+            var list = bdc.GetBindSource<T>(tableName, expCondition);
+            // Func<T, bool> funCondition = ExpressionHelper.ConvertToFunc<T>(expCondition);
+            List<T> Newlist = list.ToList();
+            InsertSelectItem<T>(key, value, Newlist);
+            bs.DataSource = Newlist;
+            //}
+            //else
+            //{
+            //    List<T> Newlist = tlist.Where(expCondition.Compile()).ToList();
+            //    InsertSelectItem<T>(key, value, Newlist);
+            //    bs.DataSource = Newlist;
+            //}
+            ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
+
+            // }
+        }
+
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmbChkWithCondition<T>(string key, string value, string tableName, CheckBoxComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        {
+            if (expCondition == null)
+            {
+                expCondition = c => true;
+            }
+            // BindingSource bs = new BindingSource();
+            Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+            var list = bdc.GetBindSource<T>(tableName, expCondition);
+            // Func<T, bool> funCondition = ExpressionHelper.ConvertToFunc<T>(expCondition);
+            List<T> Newlist = list.ToList();
+            // InsertSelectItem<T>(key, value, Newlist);
+            //bs.DataSource = Newlist;
+            //将数据 源转换一下
+            List<CmbChkItem> cmbItems = new List<CmbChkItem>();
+            foreach (var item in Newlist)
+            {
+                cmbItems.Add(new CmbChkItem(item.GetPropertyValue(key).ToString(), item.GetPropertyValue(value).ToString()));
+            }
+
+            ListSelectionWrapper<CmbChkItem> selectionWrappers = new ListSelectionWrapper<CmbChkItem>(cmbItems, "Name");
+            cmbBox.BeginUpdate();
+            cmbBox.DataSource = selectionWrappers;
+            cmbBox.DisplayMemberSingleItem = "Name";//CmbItem 这个类中显示名称的属性名
+            cmbBox.DisplayMember = "NameConcatenated";//固定的？ 将名称可以多选中联系&起来显示？
+            cmbBox.ValueMember = "Selected";//固定的一个bool型
+                                            // cmbBox.CheckBoxItems[3].DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
+            cmbBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
+            //设置默认选中
+            // StatusSelections.FindObjectWithItem(UpdatedStatus).Selected = true;
+            cmbBox.EndUpdate();
+
+        }
+
+
+
+        /// <summary>
+        /// 搜寻匹配的列表
+        /// </summary>
+        /// <param name="currentPartX">X字符串的当前比较部分</param>
+        /// <param name="currentPartY">Y字符串的当前比较部分</param>
+        /// <returns></returns>
+        private static List<string> SearchMatchedList(string currentPartX, string currentPartY, List<List<string>> _preferenceList)
+        {
+            List<string> matchedList = null;
+            foreach (var list in _preferenceList)
+            {
+                if (list.Exists(currentPartX.Contains) && list.Exists(currentPartY.Contains))
+                {
+                    matchedList = list;
+                    break;
+                }
+            }
+
+            return matchedList;
+        }
+
+
+
+        /// <summary>
+        /// 默认比较
+        /// </summary>
+        private static int DefaultCompare(string x, string y)
+        {
+            return string.Compare(x, y, false, CultureInfo.CurrentCulture);
+        }
+
+
+
+
+
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存机制）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmb(string key, string tableName, ComboBox cmbBox)
+        {
+
+            if (CacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            {
+                string ShowName = CacheHelper.Manager.NewTableList[tableName].Value;
+
+                BindingSource bs = new BindingSource();
+                var objlist = CacheHelper.Manager.CacheEntityList.Get(tableName);
+                var tlist = ((IEnumerable<dynamic>)objlist).ToList();
+                if (tlist == null || tlist.Count == 0)
+                {
+                    Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+                    var list = bdc.GetBindSourceList(tableName);
+                    // InsertSelectItem<T>(key, value, tlist);
+                    // bs.DataSource = list;
+                }
+                else
+                {
+                    // InsertSelectItem<T>(key, value, tlist);
+                    bs.DataSource = tlist;
+                }
+                ComboBoxHelper.InitDropList(bs, cmbBox, key, ShowName, ComboBoxStyle.DropDownList, false, true);
+            }
+        }
+
+
+        /// <summary>
+        /// 插入默认的下拉 请选择
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="list"></param>
+        public static void InsertSelectItem<T>(string key, string value, List<T> list)
+        {
+            bool haveDefautValue = false;
+            if (list == null)
+            {
+                return;
+            }
+            foreach (var item in list)
+            {
+                if (item.GetPropertyValue(value) == null || item.GetPropertyValue(value).ToString() == "请选择")
+                {
+                    haveDefautValue = true;
+                    break;
+                }
+            }
+            if (!haveDefautValue)
+            {
+                object defaultSelectObj = Activator.CreateInstance(typeof(T));
+                if (defaultSelectObj.GetType().GetProperty(key, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static).PropertyType.FullName.Contains("Int64"))
+                {
+                    defaultSelectObj.SetPropertyValue(key, -1L);//long類型， F、f 或 M
+                }
+                else
+                {
+                    defaultSelectObj.SetPropertyValue(key, -1);
+                }
+
+
+                defaultSelectObj.SetPropertyValue(value, "请选择");
+                list.Insert(0, (T)defaultSelectObj);
+            }
+        }
+
+
+        private static void InsertSelectItem(string key, string value, IEnumerable list, Type type)
+        {
+            bool haveDefautValue = false;
+            foreach (var item in list)
+            {
+                if (item.GetPropertyValue(value).ToString() == "请选择")
+                {
+                    haveDefautValue = true;
+                    break;
+                }
+            }
+            if (!haveDefautValue)
+            {
+                object defaultSelectObj = Activator.CreateInstance(type);
+                defaultSelectObj.SetPropertyValue(key, -1);
+                defaultSelectObj.SetPropertyValue(value, "请选择");
+                // list.CastToList < type.GetType() >.Insert(0, defaultSelectObj);
+            }
+        }
+
+
+        #region 原生cmb的绑定
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expID"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitCmb<T>(Expression<Func<T, long>> expID, Expression<Func<T, string>> expValue, ComboBox cmbBox, bool HasSelectItem) where T : class
+        {
+            MemberInfo minfo = expID.GetMemberInfo();
+            string key = minfo.Name;
+            MemberInfo minfoValue = expValue.GetMemberInfo();
+            string value = minfoValue.Name;
+            string tableName = expID.Parameters[0].Type.Name;
+            InitCmb<T>(key, value, tableName, cmbBox, HasSelectItem);
+        }
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitCmb<T>(string key, string value, string tableName, ComboBox cmbBox, bool HasSelectItem) where T : class
+        {
+
+            if (CacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            {
+                BindingSource bs = new BindingSource();
+                List<T> tlist = CacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
+                if (tlist == null || tlist.Count == 0)
+                {
+                    Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+                    var list = bdc.GetBindSource<T>(tableName);
+                    if (HasSelectItem)
+                    {
+                        InsertSelectItem<T>(key, value, tlist);
+                    }
+
+                    bs.DataSource = list;
+                }
+                else
+                {
+                    if (HasSelectItem)
+                    {
+                        InsertSelectItem<T>(key, value, tlist);
+                    }
+                    bs.DataSource = tlist;
+                }
+                InitCmb(bs, cmbBox, key, value, ComboBoxStyle.DropDownList, false, true);
+            }
+        }
+
+
+
+        /// <summary>
+        /// 下拉列表的绑定
+        /// </summary>
+        /// <param name="ds">要绑定的数据源(集)</param>
+        /// <param name="cmb">要绑定的控件名</param>
+        /// <param name="ValueMember">值的列名</param>
+        /// <param name="DisplayMember">显示的列名</param>
+        /// <param name="DropStyle">下拉类别</param>
+        /// <param name="auto">是否有自动完成功能</param>
+        /// <param name="add请选择">  是数据源绑定形式不可以自由添加，只能在数据源上做文章 ("请选择", "-1")</param>
+        public static void InitCmb(BindingSource bs, ComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto, bool add请选择)
+        {
+            cmb.BeginUpdate();
+            cmb.DataSource = bs;
+            cmb.DropDownStyle = DropStyle;
+            cmb.DisplayMember = DisplayMember;
+            cmb.ValueMember = ValueMember;
+            AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
+
+            foreach (var dr in bs.List)
+            {
+                sc.Add(ReflectionHelper.GetPropertyValue(dr, DisplayMember).ToString());
+            }
+
+            if (auto)
+            {
+                if (DropStyle == ComboBoxStyle.DropDown)
+                {
+
+                    cmb.AutoCompleteCustomSource = sc;
+                    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                }
+            }
+
+            cmb.EndUpdate();
+
+            cmb.SelectedIndex = -1;
+        }
+
+
+        #endregion
+
+        /// <summary>
+        /// 绑定数据到下拉  用于编辑时 下拉关联再次深度编辑 时重新绑定上级下拉数据
+        /// </summary>
+        /// <param name="bs"></param>
+        /// <param name="ValueMember"></param>
+        /// <param name="DisplayMember"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmb(BindingSource bs, string ValueMember, string DisplayMember, KryptonComboBox cmbBox)
+        {
+            //Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+            ComboBoxHelper.InitDropList(bs, cmbBox, ValueMember, DisplayMember, ComboBoxStyle.DropDownList, false);
+        }
+
+
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"></param>
+        /// <param name="expValue"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmb<T>(Expression<Func<T, string>> expr, KryptonComboBox cmbBox, Type enumTypeName)
+        {
+            var mb = expr.GetMemberInfo();
+            string key = mb.Name;
+            ComboBoxHelper.InitDropListForWin(cmbBox, enumTypeName);
+        }
+
+
+        #region 
+
+
+
+
+
+        public static void BindComboBox(KryptonComboBox cmbBox, string Field_ID, string Field_Name, object entity, BindingSource bs)
+        {
+            //ID在主表和外键中 字段要统一
+            ComboBoxHelper.InitDropList(bs, cmbBox, Field_ID, Field_Name, ComboBoxStyle.DropDownList, false);
+            var depa = new Binding("SelectedValue", entity, Field_ID, true, DataSourceUpdateMode.OnValidation);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+
+
+
+
+        #endregion
+
+
+
+
+        #region 枚举绑定数据源的新实现 可以select枚举 选择对应的集合来使用
+        public enum RULE
+        {
+            [Description("Любые, без ограничений")]
+            any,
+            [Description("Любые если будет три в ряд")]
+            anyThree,
+            [Description("Соседние, без ограничений")]
+            nearAny,
+            [Description("Соседние если будет три в ряд")]
+            nearThree
+        }
+
+        public static object Values
+        {
+            get
+            {
+                List<object> list = new List<object>();
+                foreach (RULE rule in Enum.GetValues(typeof(RULE)))
+                {
+                    string desc = rule.GetType().GetMember(rule.ToString())[0].GetCustomAttribute<DescriptionAttribute>().Description;
+                    list.Add(new { value = rule, desc = desc });
+                }
+                return list;
+            }
+        }
+
+        #endregion
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+    public class EnumerationExtension : MarkupExtension
+    {
+        private Type _enumType;
+
+
+        public EnumerationExtension(Type enumType)
+        {
+            if (enumType == null)
+                throw new ArgumentNullException("enumType");
+
+            EnumType = enumType;
+        }
+
+        public Type EnumType
+        {
+            get { return _enumType; }
+            private set
+            {
+                if (_enumType == value)
+                    return;
+
+                var enumType = Nullable.GetUnderlyingType(value) ?? value;
+
+                if (enumType.IsEnum == false)
+                    throw new ArgumentException("Type must be an Enum.");
+
+                _enumType = value;
+            }
+        }
+
+        public override object ProvideValue(IServiceProvider serviceProvider)
+        {
+            var enumValues = Enum.GetValues(EnumType);
+
+            return (
+              from object enumValue in enumValues
+              select new EnumEntityMember
+              {
+                  Value = enumValue,
+                  Description = GetDescription(enumValue)
+              }).ToArray();
+        }
+
+        private string GetDescription(object enumValue)
+        {
+            var descriptionAttribute = EnumType
+              .GetField(enumValue.ToString())
+              .GetCustomAttributes(typeof(DescriptionAttribute), false)
+              .FirstOrDefault() as DescriptionAttribute;
+
+
+            return descriptionAttribute != null
+              ? descriptionAttribute.Description
+              : enumValue.ToString();
+        }
+
+
+    }
+
+
+}

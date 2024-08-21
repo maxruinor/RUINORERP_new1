@@ -1,0 +1,315 @@
+﻿https://www.cnblogs.com/mq0036/p/16940895.html Expression<Func<T,object>> expr
+
+
+sqlsugr
+http://www.manongjc.com/detail/29-exzbckkqvuqrmxg.html
+
+
+IEnumerbale主要是用委托来作为传参，而解析型查询
+IQueryable则用Expression来作为传参：
+https://blog.51cto.com/u_4018548/6446588
+
+
+list 编辑时的撤销 重做 
+ 参考原始的那个 我买的那个书
+ https://blog.csdn.net/likewindy/article/details/126741173?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-1-126741173-blog-126727881.pc_relevant_recovery_v2&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-1-126741173-blog-126727881.pc_relevant_recovery_v2&utm_relevant_index=2
+
+ 工作流
+ 
+ WorkflowCore
+ https://workflow-core.readthedocs.io/en/latest/json-yaml/  重点！！
+ https://workflow-core.readthedocs.io/en/latest/
+ https://www.cnblogs.com/lispring/p/13738600.html#t3  josn
+https://workflow-core.readthedocs.io/en/latest/external-events/#json-yaml-api
+https://workflow-core.readthedocs.io/en/latest/getting-started/
+
+ https://cloud.tencent.com/developer/article/1484708
+ https://www.cnblogs.com/wl-blog/p/16500455.html  xml定义json
+ https://www.cnblogs.com/whuanle/p/11332892.html  很重要！！！
+ https://www.cnblogs.com/whuanle/p/12811429.html
+ https://www.cnblogs.com/keep-study-to-die/p/12001408.html 简单例子
+ https://www.bbsmax.com/A/8Bz8AeMNJx/
+ 
+ https://www.cnblogs.com/zhenl/p/16495977.html 测试  理解事务
+
+ https://www.freesion.com/article/702460671/  循环任务 计划任务
+ https://toutiao.io/posts/v3h1dk8/preview  事务？
+ https://blog.csdn.net/weixin_44064908/article/details/127096743   注入等用了工作流
+
+ C# WinForm开发系列 - 控件
+https://www.cnblogs.com/peterzb/archive/2009/06/14/1502918.html
+https://www.cnblogs.com/peterzb/archive/2009/05/29/1491891.html
+
+
+T4  代码生成
+https://www.bbsmax.com/A/KE5QqkWM5L/
+
+
+框架的实践  控件的应用
+分组统计：OutlookGrid
+表格 XPTable  
+类Excel表格:ReoGrid
+SourceGrid2 SourceLibrary
+https://www.shuzhiduo.com/A/KE5QNR3jdL/
+
+aspose.Cells使用方法 ！！！！
+https://www.cnblogs.com/li-lun/p/7724551.html
+https://www.wenkub.com/doc-21270447.html
+https://blog.csdn.net/lele198838/article/details/134483075
+
+报表： EastReport
+框架：dockpanelsuite  WeifenLuo.WinFormsUI
+右侧框架：NaviBar
+
+表格控制集合
+https://www.cnblogs.com/peterzb/archive/2009/05/29/1491781.html
+https://blog.51cto.com/u_15127679/4327129
+
+
+ZedGraph.dll
+https://github.com/ComponentFactory/Krypton
+齐全的控件库
+
+ORM框架
+
+db:
+https://blog.csdn.net/weixin_51621120/article/details/124632754
+
+日志为两类，程序级，业务级
+
+《ICSharpCode快速解压缩帮助类》——即粘即用
+http://t.zoukankan.com/doNetTom-p-3638227.html	
+
+
+要弄一个清单，
+自己弄的东西多。都不清楚哪些常用 
+
+工具.dll  低依赖
+生成器  灵活
+
+
+
+TextBox双向绑定
+http://www.dedeyun.com/it/csharp/88832.html
+https://www.freesion.com/article/1993152282/
+https://blog.csdn.net/mengtoumingren/article/details/78680208?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-3-78680208-blog-118191170.pc_relevant_recovery_v2&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EOPENSEARCH%7ERate-3-78680208-blog-118191170.pc_relevant_recovery_v2&utm_relevant_index=6
+https://www.cnblogs.com/scy251147/archive/2011/10/23/2221991.html 详细 
+https://blog.csdn.net/weixin_43426682/article/details/102646699
+
+bindsource
+https://social.msdn.microsoft.com/Forums/vstudio/fr-FR/a059f56c-3b98-4ff2-b4a9-523f9a0c292d/bindinglistlttgt2031620026bindingsource3034025968254542830465292229142?forum=adonetzhchs
+https://www.xin3721.com/ArticlecSharp/c11664.html 绑图片
+https://www.cnblogs.com/pegasus/archive/2008/08/31/1280712.html  ID显示值 数据少可以用 数据多用视图
+sqlsugar
+https://gitee.com/changuncle/SqlSugarEncapsulation/tree/master
+
+https://blog.51cto.com/wuhuacong/5159705
+https://www.cnblogs.com/wangshunyun/p/16225289.html
+https://blog.csdn.net/m0_37894611/article/details/123715840
+https://blog.csdn.net/qq_42455262/article/details/125207761
+https://blog.csdn.net/dxm809/article/details/121191571
+https://www.cnblogs.com/chenwolong/p/15041137.html
+
+
+http://winformgenerator.codeplex.com/
+
+
+.net  框架是不是要相对高一些？
+
+
+
+验证框架
+https://www.cnblogs.com/Alex80/p/8848025.html
+https://github.com/cleftheris/FluentValidation
+
+// After Migration:
+RuleFor(x => x.SomeDecimal).PrecisionScale(4, 2, false);
+RuleFor(x => x.SomeDecimalIgnoringTrailingZeros).PrecisionScale(4, 2, true);
+请注意，除了参数的交换顺序外，您还必须明确指示是否要忽略尾随零。例子：
+
+什么ignoreTrailingZeros时候false小数123.4500将被认为具有 7 的精度和 4 的小数位数
+什么时候ignoreTrailingZeros小数true将123.4500被认为具有 5 的精度和 2 的小数位数。
+
+
+redis
+https://www.cnblogs.com/lhxsoft/p/16840584.html
+Redis在C#中的使用
+https://www.cnblogs.com/moon3/p/14017118.html
+
+autofac 批量注册
+https://www.shuzhiduo.com/A/gGdXvyk7J4/
+
+AutoFac
+https://blog.csdn.net/weixin_29696711/article/details/111944933
+https://www.cnblogs.com/bigbox777/p/14414582.html
+https://blog.csdn.net/Mr_chunchun/article/details/123131546  多个构造函数
+autofac 参数
+https://blog.csdn.net/qq_43307934/article/details/125621641
+autofac名种形式注册
+https://www.dotblogs.com.tw/bda605/2022/05/29/212255   一个复杂的注册写法
+https://www.1024sou.com/article/539567.html
+https://www.shuzhiduo.com/A/A7zgGq6Pz4/
+第三方DI框架：Autofac
+https://www.cnblogs.com/abc1069/p/16212015.html
+
+autofac 注入日志 可以看一下
+https://www.feiqueyun.cn/zixun/jishu/283964.html
+
+
+应用AOP简化WinForm的异步操作——PostSharp实现
+https://www.cnblogs.com/Seven77yixuan/p/10848978.html
+https://blog.csdn.net/educast/article/details/6990518 过度
+https://www.cnblogs.com/laozhang-is-phi/p/10287023.html
+https://blog.csdn.net/weixin_30566063/article/details/99392525 权限
+
+Castle.DynamicProxy 实际AOP  拦截性能 日志 事务等
+https://blog.csdn.net/acrodelphi/article/details/7436907
+Winform 按钮权限拦截AOP
+https://www.cnblogs.com/Chareree/p/8998360.html
+虚方法 和接口？
+
+winform 分页
+https://gitee.com/zhangbin0521/base-frame/blob/master/BaseFrame/userControl/MgncPager.cs
+
+
+IOC 
+https://www.cnblogs.com/wuhuacong/p/16304615.html
+
+依赖注入
+https://betheme.net/dashuju/20960.html?action=onClick
+https://www.jb51.net/article/232636.htm  111
+https://www.bbsmax.com/A/D85469jpzE/ 再详细看
+https://www.cnblogs.com/JerryMouseLi/p/12080618.html  winfrom  重点看
+https://blog.csdn.net/sD7O95O/article/details/78097375  小技巧
+https://blog.csdn.net/qq_25086397/article/details/103742909  深入讲解.
+
+
+DI：是一种软件设计模式，Asp.net core支持该模式。这是一种在类及其依赖关系之间实现控制反转 (IoC) 的技术。
+
+依赖项：指另一个对象所依赖的对象。
+
+常见的DI框架：Autofac、Unity......
+
+依赖关系注入概述——  谁依赖谁，将谁注入谁
+依赖注入是指在创建一个对象时，自动地创建它所依赖的对象，并注入。
+
+依赖注入的方式：1.构造方法注入；　　2.Set方法注入；　　3.方法参数注入
+1.使用接口或基类将依赖关系实现抽象化
+
+2.在服务容器中注册依赖关系。 ASP.NET Core 提供了一个内置的服务容器 IServiceProvider。 服务通常已在应用的 Startup.ConfigureServices 方法中注册。
+
+3.将服务注入到使用它的类的构造函数中。 框架负责创建依赖关系的实例，并在不再需要时将其释放。
+
+标准化处理
+https://www.cnblogs.com/wuhuacong/p/15979319.html
+https://www.shuzhiduo.com/A/GBJrxYQad0/
+事务
+https://cloud.tencent.com/developer/article/1976384
+
+
+https://www.cnblogs.com/zzy-tongzhi-cnblog/p/15477805.html
+
+
+AutoMapper
+http://www.hzhcontrols.com/new-663418.html
+https://cloud.tencent.com/developer/article/1611191?from=15425&areaSource=102001.2&traceId=JB2KzzxjN6MonTDEWEvQI
+
+AutoMapper 高级功能
+https://zhuanlan.zhihu.com/p/347732054
+修改默认值。在转换前后写入不同值 嵌套等！！
+
+c# 模仿 vue 实现 winform 的数据模型双向绑定 --升级版（动态代理版）
+https://blog.csdn.net/mengtoumingren/article/details/82192928
+
+
+伍华聪 win框架
+https://www.cnblogs.com/wuhuacong/p/16269515.html
+
+win 详细的注入
+https://www.bbsmax.com/A/nAJv1w2nzr/
+
+
+框架说明 @@@@
+https://www.cnblogs.com/laozhang-is-phi/p/9541414.html
+https://www.cnblogs.com/stulzq/p/6880394.html
+
+
+进度条 载入框等待
+https://blog.csdn.net/educast/article/details/6990518
+
+两种IOC 合并
+https://www.bbsmax.com/A/D85469jpzE/
+
+日志异常等
+https://www.cnblogs.com/shy1766IT/p/16917227.html
+
+拦截
+https://www.ssfiction.com/ckf/984577.html
+https://www.cnblogs.com/stulzq/p/6880394.html  AOP测试有用
+
+ASP.NET Core中使用IOC三部曲(三.采用替换后的Autofac来实现AOP拦截)
+https://blog.csdn.net/weixin_34235105/article/details/86256603?spm=1001.2101.3001.6650.4&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-4-86256603-blog-103742909.pc_relevant_aa2&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-4-86256603-blog-103742909.pc_relevant_aa2&utm_relevant_index=5
+https://www.cnblogs.com/JerryMouseLi/p/12080618.html
+
+Autofac在项目中应用的体会，一个接口多个实现的情况
+https://www.cnblogs.com/fuyujian/p/4115474.html
+https://www.codenong.com/31424195/
+https://www.xin3721.com/Python/python13875.html
+autofac 注入单例
+https://blog.csdn.net/weixin_38083655/article/details/110218847
+
+sqltools 性能监控 
+https://www.cnblogs.com/hllxy/p/12659031.html
+Miniprofiler  StackExchange.Profiling.Data
+只在framwork下用
+
+日志 注入
+https://blog.csdn.net/helldoger/article/details/125466303
+
+形参
+
+https://www.zhangshengrong.com/p/AvN6Y3zRam/
+
+
+条码生成
+https://www.cnblogs.com/mq0036/p/14445834.html
+https://www.cnblogs.com/10weiweina/p/3730841.html
+
+
+高级搜索
+https://blog.csdn.net/peixiaofei0721/article/details/125335230
+
+using System;
+using System.Linq.Expressions;
+using NUnit.Framework;
+
+public class Person
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+}
+
+public static class ExpressionBuilder
+{
+    public static Expression<Func<TClass, TProperty>> Build<TClass, TProperty>(string fieldName)
+    {
+        var param = Expression.Parameter(typeof(TClass));
+        var field = Expression.PropertyOrField(param, fieldName);
+        return Expression.Lambda<Func<TClass, TProperty>>(field, param);
+    }
+}
+
+[TestFixture]
+public class Test
+{
+    [Test]
+    public void TestExpressionBuilder()
+    {
+        var person = new Person { FirstName = "firstName", LastName = "lastName" };
+        var expression = ExpressionBuilder.Build<Person, string>("FirstName");
+
+        var firstName = expression.Compile()(person);
+
+        Assert.That(firstName, Is.EqualTo(person.FirstName));
+    }
+}

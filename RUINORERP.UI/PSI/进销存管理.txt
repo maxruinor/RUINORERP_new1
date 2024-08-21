@@ -1,0 +1,137 @@
+﻿https://blog.csdn.net/qq_39110534/article/details/103240488?spm=1001.2101.3001.6650.5&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7ERate-5-103240488-blog-106612960.235%5Ev38%5Epc_relevant_default_base&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7ERate-5-103240488-blog-106612960.235%5Ev38%5Epc_relevant_default_base&utm_relevant_index=10
+ERP术语英语
+
+打印配置
+通用功能性设计
+
+ 拆分：用于进行产品分仓库存放。
+
+库存业务
+库存报表
+批号管理
+库存分析报表
+成本计算
+
+单据的状态
+录入
+业务审核
+财务审核
+业务反审
+财务反审
+业务流程审核 是可以自定义。按需设置
+*
+期初多种设置方式，
+
+导入
+期初入库单
+期初盘点（盘点单标记）
+
+
+
+成本选择
+https://baijiahao.baidu.com/s?id=1719375008650622455&wfr=spider&for=pc
+
+是否使用货架功能
+或中途开启
+
+https://www.zhihu.com/question/599368779
+
+
+
+先把期初表设计好。
+导入的方式也可以。
+用盘点的方式入进去。
+盘点库存  
+盘点类型:期初盘点，一般盘点，随机盘点
+如果是期初盘点，则需要把数据保存到期初表中。
+
+
+库存调整单
+-----------
+
+SOCKET 图片传输显示
+ERP图片使用什么样的方式保存 socket？
+
+保存导入导出各种个性化设置保存到db中
+
+
+参考说明书
+http://www.newpage.cn/product-10.html  
+产品组装与拆分？
+
+数据库设计
+https://www.docin.com/p-3431511778.html
+
+
+先实现 库存初始化，盘点和 入库 和出库。进行简单的  操作  
+来测试完善 权限  功能  业务 流程 审核等
+
+https://baijiahao.baidu.com/s?id=1727443819695122486&wfr=spider&for=pc
+库存业务：
+报损单
+报溢单
+其它出库单
+其它入库单
+同价调拨单
+异价调拨单
+
+销售报价单  可以在将来添加，自动生成PDF显示正规，可以后加是因为相对独立，与库存 财务金额无任何关系。只与产品和客户有关系。
+
+
+如果查询 指定日期的库存，应该是将期初 然后计算 
+这段时间内的所有出入数，倒数出来。
+
+
+批次管理
+将批次表ID，保存到入库和出库中。用外键 但不要关联。用逻辑外键。这样可以开关。是否启用。
+
+其它出入库 是除采购 和销售外有  只影响数量 不直接影响成本的业务。
+
+
+//放到实体中，不过要单独验证dll出来
+
+        //public string this[string columnName]
+        //{
+        //    get
+        //    {
+        //        if (validator == null)
+        //        {
+        //            validator = new tb_SaleOrderDetailValidator();
+        //        }
+        //        var firstOrDefault = validator.Validate(this)
+        //            .Errors.FirstOrDefault(lol => lol.PropertyName == columnName);
+        //        return firstOrDefault?.ErrorMessage;
+        //    }
+        //}
+        //public string Error
+        //{
+        //    get
+        //    {
+        //        var results = validator.Validate(this);
+        //        if (results != null && results.Errors.Any())
+        //        {
+        //            var errors = string.Join(Environment.NewLine, results.Errors.Select(x => x.ErrorMessage).ToArray());
+        //            return errors;
+        //        }
+
+        //        return string.Empty;
+        //    }
+        //}
+
+        //private tb_SaleOrderDetailValidator validator;
+
+
+
+        批量导入 产品要盘点@！
+        仓库看得到成本！业务也可能看到。
+        库存查询时 条件无法下拉
+        ---------------------
+
+        拆分组合功能
+
+        本来是了解到，老系统缴库时会有切割缴库的功能。
+
+        我想到平时也会有这个业务。 一个产品拆开卖。或多个产品组合卖。
+
+        专门实现一下这个功能。已经实现
+

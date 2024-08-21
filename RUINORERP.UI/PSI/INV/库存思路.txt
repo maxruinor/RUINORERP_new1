@@ -1,0 +1,14 @@
+﻿查询
+针对现在及预警将来这块
+
+
+
+跟踪（横向，纵向) 按库位 ，单个品及时间
+针对历史记录这块
+
+
+
+报表？
+https://www.bilibili.com/read/cv28070956/
+
+https://www.cnblogs.com/jonnysun/p/14005410.html进销存快速开发框架

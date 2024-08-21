@@ -1,0 +1,88 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+	<LangVersion>preview</LangVersion>
+	<Platforms>AnyCPU;x86</Platforms>
+   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="SystemService\**" />
+    <Compile Remove="UseCsla\**" />
+    <Compile Remove="Validator_back\**" />
+    <EmbeddedResource Remove="SystemService\**" />
+    <EmbeddedResource Remove="UseCsla\**" />
+    <EmbeddedResource Remove="Validator_back\**" />
+    <None Remove="SystemService\**" />
+    <None Remove="UseCsla\**" />
+    <None Remove="Validator_back\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="AssemblyInfo.cs" />
+    <Compile Remove="AutoMapper\CslaProfile.cs" />
+    <Compile Remove="CommService\DictServiceHelper.cs" />
+    <Compile Remove="CommService\InitDBData.cs" />
+    <Compile Remove="Ean13.cs" />
+    <Compile Remove="LogicaService\LocTypeController.cs" />
+    <Compile Remove="SaleOrderController.cs" />
+    <Compile Remove="Security\Credentials.cs" />
+    <Compile Remove="Security\CredentialValidator.cs" />
+    <Compile Remove="tb_OpeningIinventoryController.cs" />
+    <Compile Remove="tb_OpeningIinventory_detailController.cs" />
+    <Compile Remove="tb_ProdBaseController.cs" />
+    <Compile Remove="tb_ProductCategoriesController.cs" />
+    <Compile Remove="tb_ProductCategoriesControllerPartial.cs" />
+    <Compile Remove="tb_ProductController.cs" />
+    <Compile Remove="tb_Product_BaseController.cs" />
+    <Compile Remove="tb_Product_BaseControllerPartial.cs" />
+    <Compile Remove="tb_Product_DetailController.cs" />
+    <Compile Remove="tb_Product_GroupController.cs" />
+    <Compile Remove="tb_Product_Group_DetailController.cs" />
+    <Compile Remove="tb_Prod_Attr_RelationshipController.cs" />
+    <Compile Remove="tb_sales_orderController.cs" />
+    <Compile Remove="tb_sales_orderControllerPartial.cs" />
+    <Compile Remove="tb_sales_order_detailController.cs" />
+    <Compile Remove="Validator\BaseValidatorGeneric.cs" />
+    <Compile Remove="Validator\tb_ProdBaseValidator.cs" />
+    <Compile Remove="Validator\tb_ProductCategoriesValidator.cs" />
+    <Compile Remove="Validator\tb_Product_BaseValidator.cs" />
+    <Compile Remove="Validator\tb_Product_BaseValidatorPartial.cs" />
+    <Compile Remove="Validator\tb_Product_DetailValidator.cs" />
+    <Compile Remove="Validator\tb_Product_GroupValidator.cs" />
+    <Compile Remove="Validator\tb_Product_Group_DetailValidator.cs" />
+    <Compile Remove="Validator\tb_Prod_Attr_RelationshipValidator.cs" />
+    <Compile Remove="Validator\tb_sales_orderValidator.cs" />
+    <Compile Remove="Validator\tb_sales_order_detailValidator.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.4.0" />
+    <PackageReference Include="SqlSugar" Version="5.1.4.130" />
+    <PackageReference Include="StackExchange.Redis" Version="2.7.10" />
+    <PackageReference Include="ZXing.Net" Version="0.16.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BNR\BNR.csproj" />
+    <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj" />
+    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
+    <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj" />
+    <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj" />
+    <ProjectReference Include="..\RUINORERP.IServices\RUINORERP.IServices.csproj" />
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
+    <ProjectReference Include="..\RUINORERP.Repository\RUINORERP.Repository.csproj" />
+    <ProjectReference Include="..\RUINORERP.Services\RUINORERP.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Windows.Forms.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="IocExtensions\" />
+  </ItemGroup>
+
+</Project>

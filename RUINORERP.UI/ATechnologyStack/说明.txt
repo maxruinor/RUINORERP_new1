@@ -1,0 +1,28 @@
+﻿必须在UI层的，有关技术性的都在这里
+AOP
+DI
+Extensions
+DB
+
+
+
+
+https://github.com/StackExchange/StackExchange.Redis
+
+Redis缓存
+
+https://www.cnblogs.com/change4now/p/6421850.html 安装
+
+https://www.php.cn/faq/584835.html  c#调用
+
+
+StackExchange.Redis
+
+
+https://www.cnblogs.com/wolf-sun/p/5166854.html  另一套调用方式
+
+
+https://blog.csdn.net/cxu123321/article/details/104897757  服务安装
+
+
+-----------------------------

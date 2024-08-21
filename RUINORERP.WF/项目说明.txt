@@ -1,0 +1,31 @@
+﻿使用的是国外的  https://github.com/danielgerlag/workflow-core
+可以参考一些思路 国内的 https://gitee.com/mengtree/workflow-engine
+
+============
+有审核流程，
+有订单推送
+有智能提示
+
+
+订单流程
+--》生产流程，可以是独立的。也可以是订单下面的子流程
+
+
+
+
+https://www.cnblogs.com/lispring/p/13738600.html#t3  拦截器等 重点参考
+
+2024-7-1因为工作流在服务器支行。但是设计器可以在用户端执行。所以公共抽出来处理。
+https://workflow-core.readthedocs.io/en/latest/external-events/
+https://workflow-core.readthedocs.io/en/latest/json-yaml/  可以用关键词去搜索
+
+
+设计器中选择的节点都 是在工作流中配置过的？
+
+
+锁单功能？
+比方A创建提交了一个SO，但是并没有退出。到下一个人审核前。他又修改了订单？这时是不是要取消流程。或在其它人审核时。要判断这个单是否锁定。
+using StackExchange.Redis;
+using System;
+using System.Threading.Tasks;
+用这个？

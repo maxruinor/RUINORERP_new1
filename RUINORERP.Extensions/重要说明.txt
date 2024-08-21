@@ -1,0 +1,12 @@
+﻿
+
+与业务有关系  方便注入的 放到这里。
+
+
+
+common中 放了很多公共 可能用不到。不方便注入
+
+暂时不使用，
+c#  CacheManager的介绍与使用
+https://github.com/MichaCo/CacheManager/tree/dev/src
+https://developer.aliyun.com/article/326036

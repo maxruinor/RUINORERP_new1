@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/08/2023 19:18:10" ReportInfo.Modified="05/08/2023 19:29:47" ReportInfo.CreatorVersion="2020.3.7.0">
+  <Dictionary>
+    <BusinessObjectDataSource Name="Categories" ReferenceName="Categories" DataType="System.Collections.Generic.List`1[[RUINORERP.UI.Report.Category, RUINORERP.UI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+      <Column Name="Name" DataType="System.String"/>
+      <Column Name="Description" DataType="System.String"/>
+      <BusinessObjectDataSource Name="Products" DataType="System.Collections.Generic.List`1[[RUINORERP.UI.Report.Product, RUINORERP.UI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+        <Column Name="Name" DataType="System.String"/>
+        <Column Name="UnitPrice" DataType="System.Decimal"/>
+      </BusinessObjectDataSource>
+    </BusinessObjectDataSource>
+  </Dictionary>
+  <ReportPage Name="Page1" Watermark.Font="宋体, 60pt">
+    <ReportTitleBand Name="ReportTitle1" Width="718.2" Height="56.7">
+      <TextObject Name="Text1" Left="66.15" Top="18.9" Width="170.1" Height="18.9" Text="[Categories.Name]" Font="宋体, 9pt"/>
+      <TextObject Name="Text2" Left="538.65" Top="28.35" Width="189" Height="18.9" Text="[Categories.Description]" Font="宋体, 9pt"/>
+    </ReportTitleBand>
+    <PageHeaderBand Name="PageHeader1" Top="60.7" Width="718.2" Height="28.35"/>
+    <DataBand Name="Data1" Top="93.05" Width="718.2" Height="75.6" DataSource="Products">
+      <TextObject Name="Text3" Left="56.7" Top="9.45" Width="207.9" Height="18.9" Text="[Categories.Products.Name]" Font="宋体, 9pt"/>
+      <TextObject Name="Text4" Left="359.1" Top="9.45" Width="274.05" Height="18.9" Text="[Categories.Products.UnitPrice]" Format="Currency" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" WordWrap="false" Font="宋体, 9pt" Trimming="EllipsisCharacter"/>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="172.65" Width="718.2" Height="18.9"/>
+  </ReportPage>
+</Report>

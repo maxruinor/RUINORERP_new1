@@ -1,0 +1,515 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DF7D3616-94E5-43DF-813A-D656C32EBD48}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RUINOR.WinFormsUI</RootNamespace>
+    <AssemblyName>RUINOR.WinFormsUI</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ChkComboBox\CheckBoxComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ChkComboBox\CheckBoxComboBox.designer.cs">
+      <DependentUpon>CheckBoxComboBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ChkComboBox\GripBounds.cs" />
+    <Compile Include="ChkComboBox\NativeMethods.cs" />
+    <Compile Include="ChkComboBox\Popup.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ChkComboBox\Popup.designer.cs">
+      <DependentUpon>Popup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ChkComboBox\PopupComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ChkComboBox\PopupComboBox.designer.cs">
+      <DependentUpon>PopupComboBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ChkComboBox\Selection Wrappers\ListSelectionWrapper.cs" />
+    <Compile Include="ChkComboBox\Selection Wrappers\ObjectSelectionWrapper.cs" />
+    <Compile Include="CollapsibleSplitter.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ComboBoxTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DockingToolbar\AllowedBorders.cs" />
+    <Compile Include="DockingToolbar\DockLocation.cs" />
+    <Compile Include="DockingToolbar\ToolBarDockArea.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DockingToolbar\ToolBarDockHolder.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DockingToolbar\ToolBarManager.cs" />
+    <Compile Include="GlacialList\BorderStrip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GlacialList\ColumnCollection.cs" />
+    <Compile Include="GlacialList\GlacialList.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GlacialList\GLComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GlacialList\GLDateTimePicker.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GlacialList\GLEmbeddedControl.cs" />
+    <Compile Include="GlacialList\GLMergeSort.cs" />
+    <Compile Include="GlacialList\GLQuickSort.cs" />
+    <Compile Include="GlacialList\GLTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GlacialList\HelperFunctions.cs" />
+    <Compile Include="GlacialList\ItemCollection.cs" />
+    <Compile Include="GlacialList\ManagedHScrollBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GlacialList\ManagedVScrollBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GlacialList\ThemeRoutines.cs" />
+    <Compile Include="GlacialList\Win32.cs" />
+    <Compile Include="OutlookGrid\DataSourceManager.cs" />
+    <Compile Include="OutlookGrid\OutlookGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="OutlookGrid\OutlookGrid.Designer.cs">
+      <DependentUpon>OutlookGrid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="OutlookGrid\OutlookGridGroup.cs" />
+    <Compile Include="OutlookGrid\OutlookGridRow.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RegTextBox\RegDropDownEditor.cs" />
+    <Compile Include="RegTextBox\RegEditorSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RegTextBox\RegEditorSelect.Designer.cs">
+      <DependentUpon>RegEditorSelect.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RegTextBox\RegEditorSelectControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RegTextBox\RegEditorSelectControl.Designer.cs">
+      <DependentUpon>RegEditorSelectControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RegTextBox\RegTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="RegTextBox\RegTextInterface.cs" />
+    <Compile Include="RegTextBox\RegularAuthenticationSettings.cs" />
+    <Compile Include="RegTextBox\TzhtecButton.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\BehaviorModelCollection.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\BehaviorModelGroup.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\BindProperty.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\Button.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\CheckBox.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\ColumnHeader.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\Common.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\ContextMenu.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\Cursor.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\CustomEvents.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\Header.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\IBehaviorModel.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\Resize.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\RowHeader.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\ToolTipText.cs" />
+    <Compile Include="SourceGrid2\BehaviorModels\Unselectable.cs" />
+    <Compile Include="SourceGrid2\Cells\Button.cs" />
+    <Compile Include="SourceGrid2\Cells\Cell.cs" />
+    <Compile Include="SourceGrid2\Cells\CellControl.cs" />
+    <Compile Include="SourceGrid2\Cells\CellVirtual.cs" />
+    <Compile Include="SourceGrid2\Cells\CheckBox.cs" />
+    <Compile Include="SourceGrid2\Cells\ColumnHeader.cs" />
+    <Compile Include="SourceGrid2\Cells\ComboBox.cs" />
+    <Compile Include="SourceGrid2\Cells\Header.cs" />
+    <Compile Include="SourceGrid2\Cells\ICell.cs" />
+    <Compile Include="SourceGrid2\Cells\ICellCheckBox.cs" />
+    <Compile Include="SourceGrid2\Cells\ICellContextMenu.cs" />
+    <Compile Include="SourceGrid2\Cells\ICellCursor.cs" />
+    <Compile Include="SourceGrid2\Cells\ICellSortableHeader.cs" />
+    <Compile Include="SourceGrid2\Cells\ICellToolTipText.cs" />
+    <Compile Include="SourceGrid2\Cells\ICellVirtual.cs" />
+    <Compile Include="SourceGrid2\Cells\Link.cs" />
+    <Compile Include="SourceGrid2\Cells\RowHeader.cs" />
+    <Compile Include="SourceGrid2\Common\Border.cs" />
+    <Compile Include="SourceGrid2\Common\CellVirtualCollection.cs" />
+    <Compile Include="SourceGrid2\Common\ColumnInfo.cs" />
+    <Compile Include="SourceGrid2\Common\CustomScrollControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\Common\Enums.cs" />
+    <Compile Include="SourceGrid2\Common\Events.cs" />
+    <Compile Include="SourceGrid2\Common\frmCellSize.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\Common\GridContextMenu.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\Common\GridSubPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\Common\Position.cs" />
+    <Compile Include="SourceGrid2\Common\Range.cs" />
+    <Compile Include="SourceGrid2\Common\RowInfo.cs" />
+    <Compile Include="SourceGrid2\Common\Selection.cs" />
+    <Compile Include="SourceGrid2\Common\Utility.cs" />
+    <Compile Include="SourceGrid2\CurTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\DataModels\ControlsRepository.cs" />
+    <Compile Include="SourceGrid2\DataModels\DataModelBase.cs" />
+    <Compile Include="SourceGrid2\DataModels\EditorComboBox.cs" />
+    <Compile Include="SourceGrid2\DataModels\EditorControlBase.cs" />
+    <Compile Include="SourceGrid2\DataModels\EditorDateTime.cs" />
+    <Compile Include="SourceGrid2\DataModels\EditorNumericUpDown.cs" />
+    <Compile Include="SourceGrid2\DataModels\EditorTextBox.cs" />
+    <Compile Include="SourceGrid2\DataModels\EditorTextBoxButton.cs" />
+    <Compile Include="SourceGrid2\DataModels\EditorTextBoxNumeric.cs" />
+    <Compile Include="SourceGrid2\DataModels\EditorUITypeEditor.cs" />
+    <Compile Include="SourceGrid2\DataModels\IDataModel.cs" />
+    <Compile Include="SourceGrid2\General\ArrayUtils.cs" />
+    <Compile Include="SourceGrid2\General\BooleanFlagsMap.cs" />
+    <Compile Include="SourceGrid2\General\ColorUtil.cs" />
+    <Compile Include="SourceGrid2\General\CommonDragging.cs" />
+    <Compile Include="SourceGrid2\General\DoubleBuffer.cs" />
+    <Compile Include="SourceGrid2\General\Enumerations.cs" />
+    <Compile Include="SourceGrid2\General\GDIUtil.cs" />
+    <Compile Include="SourceGrid2\General\GDIUtilities.cs" />
+    <Compile Include="SourceGrid2\General\MathUtils.cs" />
+    <Compile Include="SourceGrid2\General\ResourceUtil.cs" />
+    <Compile Include="SourceGrid2\General\TextUtil.cs" />
+    <Compile Include="SourceGrid2\Grids\Grid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\Grids\GridVirtual.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\HScrollBarEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\ScrollBarEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\TextBoxButton.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\VisualModels\CheckBox.cs" />
+    <Compile Include="SourceGrid2\VisualModels\Common.cs" />
+    <Compile Include="SourceGrid2\VisualModels\Header.cs" />
+    <Compile Include="SourceGrid2\VisualModels\IVisualModel.cs" />
+    <Compile Include="SourceGrid2\VisualModels\MultiImages.cs" />
+    <Compile Include="SourceGrid2\VisualModels\VisualModelBase.cs" />
+    <Compile Include="SourceGrid2\VScrollBarEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceGrid2\Win32\Enums.cs" />
+    <Compile Include="SourceGrid2\Win32\Functions.cs" />
+    <Compile Include="SourceGrid2\Win32\RegistryUtil.cs" />
+    <Compile Include="SourceGrid2\Win32\Structs.cs" />
+    <Compile Include="SourceLibrary\ComponentModel\Converter\CurrencyTypeConverter.cs" />
+    <Compile Include="SourceLibrary\ComponentModel\Converter\DateTimeTypeConverter.cs" />
+    <Compile Include="SourceLibrary\ComponentModel\Converter\NumberTypeConverter.cs" />
+    <Compile Include="SourceLibrary\ComponentModel\Converter\PercentTypeConverter.cs" />
+    <Compile Include="SourceLibrary\ComponentModel\ValidatingEvent.cs" />
+    <Compile Include="SourceLibrary\ComponentModel\Validator\IValidator.cs" />
+    <Compile Include="SourceLibrary\ComponentModel\Validator\ValidatorBase.cs" />
+    <Compile Include="SourceLibrary\ComponentModel\Validator\ValidatorTypeConverter.cs" />
+    <Compile Include="SourceLibrary\ComponentModel\Validator\ValueMapping.cs" />
+    <Compile Include="SourceLibrary\Drawing\ControlPaint.cs" />
+    <Compile Include="SourceLibrary\IO\IsolatedStorage\IsolatedStorageSettingBase.cs" />
+    <Compile Include="SourceLibrary\IO\IsolatedStorage\IsolatedStorageSettingVersionBase.cs" />
+    <Compile Include="SourceLibrary\IO\StreamPersistence.cs" />
+    <Compile Include="SourceLibrary\Security\Cryptography.cs" />
+    <Compile Include="SourceLibrary\Security\Password.cs" />
+    <Compile Include="SourceLibrary\Utility\Utility.cs" />
+    <Compile Include="SourceLibrary\Web\Mail\MailTo.cs" />
+    <Compile Include="SourceLibrary\Windows\Forms\ButtonMultiSelection.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\Chris.Beckett.MenuImageLib\MenuImage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\ColorPicker.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\ComboBoxTyped.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\DropDownCustom.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\ErrorDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\ErrorDialogDetails.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\FormPosition.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\FormSingleton.cs" />
+    <Compile Include="SourceLibrary\Windows\Forms\HeaderGroupBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\MenuItemImage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\NumericUpDownEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\PositionRecorder.cs" />
+    <Compile Include="SourceLibrary\Windows\Forms\TextBoxButtonUITypeEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\TextBoxTyped.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\TextBoxTypedButtonQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\TextBoxTypedButton.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SourceLibrary\Windows\Forms\TextBoxTypedNumeric.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="StatePersistence.cs" />
+    <Compile Include="TreeGridView\TreeGridCell.cs" />
+    <Compile Include="TreeGridView\TreeGridEvents.cs" />
+    <Compile Include="TreeGridView\TreeGridNode.cs" />
+    <Compile Include="TreeGridView\TreeGridNodeCollection.cs" />
+    <Compile Include="TreeGridView\TreeGridView.cs" />
+    <Compile Include="TreeListView\Forms\TreeListViewItemsEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TreeListView\ITreeListViewItemComparer.cs" />
+    <Compile Include="TreeListView\SelectedTreeListViewItemCollection.cs" />
+    <Compile Include="TreeListView\TreeListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TreeListView\TreeListViewItem.cs" />
+    <Compile Include="TreeListView\TreeListViewItemCollection.cs" />
+    <Compile Include="TreeListView\TreeListViewSubItemEdit.cs" />
+    <Compile Include="TreeViewColumns\TreeViewColumns.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="TreeViewColumns\TreeViewColumns.designer.cs">
+      <DependentUpon>TreeViewColumns.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TreeViewThreeState\Enumerations\CheckBoxState.cs" />
+    <Compile Include="TreeViewThreeState\ThreeStateTreeNode.cs" />
+    <Compile Include="TreeViewThreeState\ThreeStateTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="GlacialList\checked.bmp" />
+    <Content Include="GlacialList\GlacialList.bmp" />
+    <Content Include="GlacialList\GlacialListXDoc.xml" />
+    <Content Include="GlacialList\unchecked.bmp" />
+    <Content Include="OutlookGrid\outlookgird说明.txt" />
+    <Content Include="SourceGrid2\Grid.bmp" />
+    <Content Include="SourceGrid2\GridVirtual.bmp" />
+    <Content Include="TreeViewThreeState\TreeViewThreeStateTest.png" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RegTextBox\RegEditorSelect.resx">
+      <DependentUpon>RegEditorSelect.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RegTextBox\RegEditorSelectControl.resx">
+      <DependentUpon>RegEditorSelectControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <Content Include="RegTextBox\TextFile1.txt" />
+    <Content Include="SourceLibrary\Res\DownArrow.ico" />
+    <Content Include="SourceLibrary\Res\DownArrowSmall.ico" />
+    <Content Include="SourceLibrary\Windows\Forms\Chris.Beckett.MenuImageLib\SubItem16.ico" />
+    <Content Include="TreeListView\Icons\Minus.gif" />
+    <Content Include="TreeListView\Icons\Plus.gif" />
+    <Content Include="TreeListView\说明.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ChkComboBox\PopupComboBox.resx">
+      <DependentUpon>PopupComboBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DockingToolbar\ToolBarDockArea.resx">
+      <DependentUpon>ToolBarDockArea.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DockingToolbar\ToolBarDockHolder.resx">
+      <DependentUpon>ToolBarDockHolder.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GlacialList\BorderStrip.resx">
+      <DependentUpon>BorderStrip.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GlacialList\GlacialList.resx">
+      <DependentUpon>GlacialList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GlacialList\GLComboBox.resx">
+      <DependentUpon>GLComboBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GlacialList\GLDateTimePicker.resx">
+      <DependentUpon>GLDateTimePicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GlacialList\GLTextBox.resx">
+      <DependentUpon>GLTextBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GlacialList\ManagedHScrollBar.resx">
+      <DependentUpon>ManagedHScrollBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GlacialList\ManagedVScrollBar.resx">
+      <DependentUpon>ManagedVScrollBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceGrid2\Common\frmCellSize.resx">
+      <DependentUpon>frmCellSize.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxChecked.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxCheckedDisable.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxCheckedSel.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxUnChecked.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxUnCheckedDisable.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxUnCheckedSel.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\clear.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\copy.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\cut.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\DeleteCol.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\DeleteRow.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\InsertCol.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\InsertRow.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\paste.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\properties.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\SortDown.ico" />
+    <EmbeddedResource Include="SourceGrid2\Common\Icons\SortUp.ico" />
+    <EmbeddedResource Include="SourceGrid2\HScrollBarEx.resx">
+      <DependentUpon>HScrollBarEx.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceGrid2\ScrollBarEx.resx">
+      <DependentUpon>ScrollBarEx.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceGrid2\TextBoxButton.resx">
+      <DependentUpon>TextBoxButton.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceGrid2\VScrollBarEx.resx">
+      <DependentUpon>VScrollBarEx.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\ButtonMultiSelection.resx">
+      <DependentUpon>ButtonMultiSelection.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\ColorPicker.resx">
+      <DependentUpon>ColorPicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\ComboBoxTyped.resx">
+      <DependentUpon>ComboBoxTyped.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\DropDownCustom.resx">
+      <DependentUpon>DropDownCustom.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\ErrorDialog.resx">
+      <DependentUpon>ErrorDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\ErrorDialogDetails.resx">
+      <DependentUpon>ErrorDialogDetails.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\FormPosition.resx">
+      <DependentUpon>FormPosition.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\NumericUpDownEx.resx">
+      <DependentUpon>NumericUpDownEx.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\TextBoxButtonUITypeEditor.resx">
+      <DependentUpon>TextBoxButtonUITypeEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\TextBoxTyped.resx">
+      <DependentUpon>TextBoxTyped.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\TextBoxTypedButtonQuery.resx">
+      <DependentUpon>TextBoxTypedButtonQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SourceLibrary\Windows\Forms\TextBoxTypedButton.resx">
+      <DependentUpon>TextBoxTypedButton.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TreeListView\Forms\TreeListViewItemsEditor.resx">
+      <DependentUpon>TreeListViewItemsEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TreeListView\TreeListView.resx">
+      <DependentUpon>TreeListView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TreeListView\TreeListViewSubItemEdit.resx">
+      <DependentUpon>TreeListViewSubItemEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TreeViewColumns\TreeViewColumns.resx">
+      <DependentUpon>TreeViewColumns.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="GlacialList\GlacialList.csproj" />
+    <None Include="SourceGrid2\General\vssver.scc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
+      <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
+      <Name>HLH.Lib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Krypton Components\Krypton.Toolkit\Krypton.Toolkit 2022.csproj">
+      <Project>{626b796f-f3a0-40b7-8fc2-38804726c1f5}</Project>
+      <Name>Krypton.Toolkit 2022</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINOR.Runtime.InteropServices.APIs\RUINOR.Runtime.InteropServices.APIs.csproj">
+      <Project>{3ae43324-7d66-42ec-8fdf-13ba0faf1dbc}</Project>
+      <Name>RUINOR.Runtime.InteropServices.APIs</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -1,0 +1,153 @@
+﻿                        //var firstArgumentType = GetFirstArgumentType(rslist.GetType());
+                        //listType.MakeGenericType(GetFirstArgumentType(rslist.GetType()));
+                        //将List<T>类型的结果是object的转换为指定类型的List 学习 重要 TODO 重点学习代码
+                        //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
+                        var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                        if (lastlist != null)
+
+
+                        将 List<Expression<Func<T, bool>>> 组合到 OR 子句 LINQ
+
+                        https://www.coder.work/article/3023930
+
+
+
+                        例如，将oldList中的ID列提取出来存放到newList中：
+
+List<ushort> newList = new List<ushort>(oldList.Select(t => t.ID).ToList())
+
+2.使用 LINQ 查询语句选择要保留的列。例如：
+
+List myList = new List();
+// ...
+var filteredList = myList.Select(x => new { x.Column1, x.Column3 }).ToList();
+
+
+
+
+                         //非常值和学习借鉴有代码 TODO 重点学习代码
+                                    ExpConverter expConverter = new ExpConverter();
+                                    var whereExp = expConverter.ExportByClassName(queryParameter.limitedExpType, queryParameter.FieldLimitCondition);
+                                    #region 
+                                    MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimited").MakeGenericMethod(new Type[] { mytype });
+                                    object[] args1 = new object[6] { newDto, IDColName, ColName, coldata.FKTableName, cmb, whereExp };
+                                    mf1.Invoke(dbh, args1);
+                                    #endregion
+
+
+
+
+
+
+
+工作用SQL
+后面用一个独立文件来保存常用SQL
+
+    ////导致SKU明细数量大于实际数量时
+
+SELECT * from tb_SaleOrder WHERE SOrder_ID in (
+SELECT SOrder_ID from tb_SaleOrderDetail WHERE tb_SaleOrderDetail.DeliveredQty>0) and DataStatus=4
+
+
+--出库单审核了，订单没有结案的数据
+SELECT * from tb_SaleOrder WHERE tb_SaleOrder.SOrderNo IN (SELECT  SaleOrderNo  FROM tb_SaleOut WHERE DataStatus=4) AND DataStatus=4
+--UPDATE tb_SaleOrder SET DataStatus=8 WHERE tb_SaleOrder.SOrderNo IN (SELECT  SaleOrderNo  FROM tb_SaleOut WHERE DataStatus=4) AND DataStatus=4
+
+--多次出库单的订单
+SELECT SaleOrderNo from tb_SaleOut GROUP BY  SaleOrderNo HAVING count(SaleOrderNo)>1
+
+
+
+using System;
+using System.Reflection;
+
+class Program
+{
+    static void Main()
+    {
+        // 假设已知 T 的类型名称
+        string typeName = "MyType";
+
+        // 使用反射创建 PrintHelper<T> 的实例
+        object instance = CreateInstanceOfPrintHelper(typeName);
+
+        // 可以对实例进行操作
+        // 例如，调用实例的方法或访问属性
+        MethodInfo method = instance.GetType().GetMethod("DoSomething");
+        if (method!= null)
+        {
+            method.Invoke(instance, null);
+        }
+    }
+
+    static object CreateInstanceOfPrintHelper(string typeName)
+    {
+        // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
+        Assembly assembly = Assembly.Load("YourAssemblyName");
+
+        // 使用 GetType 方法获取 PrintHelper<T> 的类型
+        Type type = assembly.GetType($"PrintHelper`1[{typeName}]");
+
+        // 创建类型的实例
+        object instance = Activator.CreateInstance(type);
+
+        return instance;
+    }
+}
+
+public class PrintHelper<T> where T : class
+{
+    public void DoSomething()
+    {
+        Console.WriteLine($"Type of T: {typeof(T).Name}");
+    }
+}
+
+搜索这个能找到 GRID录入时。根据录入内容确定下拉内容的代码。
+DevAge.ComponentModel.Validator.ComboxValueMapping comboMapping
+
+                System.Reflection.PropertyInfo pi = null;
+                pi = sf.TagetCol.ColPropertyInfo;
+                Type newcolType; ;
+                // We need to check whether the property is NULLABLE
+                if (pi.PropertyType.IsGenericType && pi.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    // If it is NULLABLE, then get the underlying type. eg if "Nullable<int>" then this will return just "int"
+                    newcolType = pi.PropertyType.GetGenericArguments()[0];
+                }
+                else
+                {
+                    newcolType = pi.PropertyType;
+                }
+
+
+                ///默认值
+
+                 return Task.FromResult(false);
+
+
+
+
+SqlFunc.下面有很多函数
+
+                 分别表示And，Or。怎样理解呢？就是说，这一条键值对与前一个关系模型是And还是Or。
+
+看一下示例：
+
+// and id=100 and (id=1 or id=2 and id=1)
+conModels.Add(new ConditionalModel() { FieldName = "id", ConditionalType = ConditionalType.Equal, FieldValue = "100" });
+conModels.Add(new ConditionalCollections() { ConditionalList=
+new List<KeyValuePair<WhereType, SqlSugar.ConditionalModel>>()
+{
+new KeyValuePair<WhereType, ConditionalModel>
+( WhereType.And ,
+new ConditionalModel() { FieldName = "id", ConditionalType = ConditionalType.Equal, FieldValue = "1" }),
+new KeyValuePair<WhereType, ConditionalModel>
+(WhereType.Or,
+new ConditionalModel() { FieldName = "id", ConditionalType = ConditionalType.Equal, FieldValue = "2" }),
+new KeyValuePair<WhereType, ConditionalModel>
+( WhereType.And,
+new ConditionalModel() { FieldName = "id", ConditionalType = ConditionalType.Equal, FieldValue = "2" })
+}
+});
+var student = db.Queryable<Student>().Where(conModels).ToList();

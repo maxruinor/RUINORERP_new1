@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="IGuestbookServices.cs" />
+    <Compile Remove="Ioutsourcing_orderServices.cs" />
+    <Compile Remove="IPermissionServices.cs" />
+    <Compile Remove="IRoleModulePermissionServices.cs" />
+    <Compile Remove="IRoleServices.cs" />
+    <Compile Remove="IsysUserInfoServices.cs" />
+    <Compile Remove="Itb_ProductCategoriesServices.cs" />
+    <Compile Remove="Itb_Product_BaseServices.cs" />
+    <Compile Remove="Itb_Product_DetailServices.cs" />
+    <Compile Remove="Itb_Product_GroupServices.cs" />
+    <Compile Remove="Itb_Product_Group_DetailServices.cs" />
+    <Compile Remove="Itb_Prod_Attr_RelationshipServices.cs" />
+    <Compile Remove="Itb_sales_orderServices.cs" />
+    <Compile Remove="Itb_sales_orderServicesPartial.cs" />
+    <Compile Remove="Itb_sales_order_detailServices.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
+  </ItemGroup>
+
+</Project>

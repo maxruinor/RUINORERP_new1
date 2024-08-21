@@ -1,0 +1,447 @@
+﻿
+大思路是：
+
+如销售订单数据会可能变为多个出库单，那么销售订单中会有已出库数量 。
+出库单数据 可以转入退回单那么出库单明细中可有退回数量，订单中可以有退回总数量
+
+采购同理
+
+
+
+
+
+--------------
+有系统级配置 默认设置
+有菜单级的配置对应到角色组中。权限配置时控制
+菜单单级的配置优先于系统级。并且硬编码 比方销售订单查询，是否限制销售人员各查各的
+采购订单中的小数位更多。默认2位
+
+思路是哪个要特别设置，就那个生效。
+
+
+-----------------------------
+流程设计
+https://blog.51cto.com/springwang/3181998
+
+
+PB设置https://www.cnblogs.com/Alex80/p/17349137.html
+按各模块设置总体属性，再分到打印配置？
+
+ 
+-----
+表单录入功能 尽量少具体实现，使用公用和类型来区别，比方盘点分期初，一般，随机，日常，年度，月度？
+销售中盘点
+-------------------
+模块表  是指大模块
+
+
+
+!!!
+
+	  销售订单	   采购订单
+						
+BOM-》生产计划-》 生产需求分析--》制令单-》领料/退料-》成品缴库
+
+			      材料需求分析
+
+
+
+老系统是: 
+生产,MRP计划生产 品质检验 成本管理
+财务，
+
+物流，
+采购管理PUR 
+销售管理 
+库存管理 INV
+品质检验
+
+人事行政，administration management    ADM
+人事HR
+
+
+物流
+
+报表，   
+基础资料 BI
+进销存  PSI
+系统设置 system setting SS
+客户关系管理
+CRM
+
+针对电商 做一个 订单 客户模块
+
+----------------
+保存在数据库中的基本数据要用脚本形式来维护，可以随时生成修改
+
+
+
+成品入库
+先进先出  依日期批次
+
+
+
+
+-------------
+
+BOM生产模块
+https://blog.csdn.net/jackeyabc/article/details/5735588
+
+除自己出的安全库存外，还可以做 针对单个客户的一个库存推算。
+
+
+
+MRPⅡ---制造资源计划
+
+（ManufacturingResource Planning）.
+
+
+
+MRP---物料需求计划
+
+(Material Requirements Planning).
+
+
+
+MPS---主生产计划
+
+(MasterProduction schedules).
+
+
+
+MTO---订货生产
+
+（Make-to-Order）.
+
+
+
+BOM---物料清单或产品结构表
+
+（Bill of material）.
+
+
+
+BPR---企业业务流程重组
+
+（Business process Reengineering）
+
+
+
+IM---库存管理
+
+（Inventory Management）.
+
+
+
+PAC—生产作业控制
+
+（Production Activity Control）.
+
+
+
+PP---生产计划大纲
+
+（Production Planning）.
+
+
+
+POQ---周期订货法
+
+（Period Order Quantity）.
+
+
+
+HR---人力资源计划
+
+（Human Resources）.
+
+
+
+SD--分销管理
+
+(Sales And Distribution)
+
+
+
+SOP---销售与运作规划
+
+（Sales and Operations Planning）.
+
+
+
+SS---安全库存
+
+（Safety Stock）. 安全库存：是一种额外持有的库存，它作为一种缓冲器用来补偿在订货提前期内实际需求超过期望需求量或实际提前期超过期望提前期所产生的需求。
+
+
+
+L/T---提前期
+
+（Lead Time）.
+
+
+
+LLC---低层码
+
+（Low-Level Code）.
+
+
+
+SFC---车间作业控制
+
+（Shop Floor Control）.
+
+
+
+RCCP---粗能力计划
+
+（Rough-cut Capacity Planning）.
+
+
+
+CRP----能力需求计划
+
+（Capacity Requirements Planning）.
+
+
+
+ECN---设计变更通知
+
+（Engineering change notice）.
+
+
+
+ECO---设计变更通知
+
+（Engineering change Order）.
+
+
+
+ETO---专项生产
+
+（Engineer-to-Order）.
+
+
+
+FOQ---固定批量法
+
+（Fixed Order Quantity）. 一种批量订货方法，每次订货时都采用预先确定的同样数量。
+
+
+
+EOQ--经济订货批量
+
+(Economic Order Quantity)
+
+
+
+FG---成品
+
+(Finished Goods )
+
+
+
+RM-- -原材料
+
+(Raw Materials )
+
+
+
+I/O--投入/产出控制
+
+（Input/Output Control ）
+
+
+
+KPI--关键业绩指标
+
+（Key Performance Indicator ）
+
+OA— 办公自动化
+
+(Office Automation)
+
+
+
+EAM--企业资产管理
+
+（EnterpriseAssets Management ）
+
+
+
+WMS--仓库管理系统
+
+（WarehouseManagement System）
+
+
+
+Win-Win—共赢
+
+
+
+TCO--总体拥有成本
+
+（Total Cost Ownership）
+
+
+
+RTE--实时企业
+
+（Real-timeEnterprise）
+
+
+
+EIP--企业信息门户
+
+（Enterprise Information Portal ）
+
+
+
+MIS-- 管理信息系统
+
+(management information system)
+
+
+
+KM-- 知识管理
+
+(knowledge management)
+
+
+
+SCM-- 供应链管理
+
+(supply chain management)
+
+
+
+EAI-- 企业应用集成
+
+(enterprise application integration)
+
+
+
+BSC--平衡记分卡
+
+(Balanced Score Card)
+
+
+
+CO -- 客户订单
+
+(Customer Order)
+
+
+
+ETO--工程生产
+
+(Engineer To Order)
+
+
+
+FCS-- 预估
+
+(Fore_cast)
+
+
+
+IPQC--制程质量管理
+
+(In-Process Quality Control)
+
+
+
+IQC-- 进料质量管理
+
+(Incoming Quality Control)
+
+
+
+ISO-- 国际标准组织
+
+(International Organization forStandardization)
+
+
+
+OQC-- 出货质量管理
+
+(Out-going Quality Control)
+
+
+
+PDCA--PDCA 管理循环
+
+(Plan-Do-Check-Action)
+
+
+
+QA-- 质量保证
+
+(Quality Assurance)
+
+
+
+QC -- 质量管理
+
+(Quality Control)
+
+
+
+QCC-- 品管圈
+
+(Quality Control Circle)
+
+
+
+QE -- 质量工程
+
+(Quality Engineering)
+
+
+
+SFC-- 现场控制
+
+(Shop Floor Control)
+
+
+
+SO-- 订单
+
+(Sales Order)
+
+
+
+WIP--在制品
+
+(Work In Process)
+
+
+
+Ac_countPayable—应付款
+
+
+
+Ac_countReceivable—应收款
+
+
+
+Address Book—地址名册
+
+
+
+Agreement—协议
+
+
+
+ABC Classification--ABC 分类法
+
+
+高级查询   一个框架参考
+https://blog.51cto.com/springwang/3188834
+
+
+
+安装打包的工具 NSIS (Nullsoft Scriptable Install System) 是一个专业开源的制作 windows 安装程序的工具。
+https://www.oschina.net/p/nsis?hmsr=aladdin1e1
+
+https://www.cnblogs.com/spring_wang/p/6139827.html

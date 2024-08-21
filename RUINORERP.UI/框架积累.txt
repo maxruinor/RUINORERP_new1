@@ -1,0 +1,53 @@
+﻿
+可视化大屏设计器
+https://github.com/foolin/goview
+https://github.com/foolin/goview#basic-example
+https://blog.csdn.net/qq_54919252/article/details/133898426
+
+
+.NET 的一个重要的概念IHost（主机），其由HostBuilder生成
+https://blog.csdn.net/dabusidede/article/details/124857607
+
+autofac
+https://www.cjavapy.com/article/259/
+
+autofac 注册的三种方式
+https://www.cnblogs.com/hkncd/archive/2012/12/12/2813964.html
+
+
+csla
+https://www.cnblogs.com/nonepassby/archive/2012/09/06/2668971.html
+https://www.cnblogs.com/huolong/p/3710443.html
+https://blog.csdn.net/tmxfh/article/details/12525663   登陆
+
+
+csla的试验失败。过于复杂。时间上不允许。但是可以借鉴。
+后面可以模仿
+
+登陆这块更加深入理解
+
+
+ 属性双向绑定及通知
+https://www.cnblogs.com/beginor/archive/2012/08/13/2636418.html
+
+
+SourceGrid
+https://www.cnblogs.com/llcdbk/p/5160262.html
+ 固定列行，应该是一个索引的数组
+
+
+
+ 使用表达式
+ https://www.codenong.com/2133525/
+
+
+  开源框架汇总
+  https://blog.csdn.net/freeherotoday/article/details/125500285
+
+
+  一款开源且功能强大的C#甘特图控件.NET Winforms Gantt Chart Control
+  https://www.cnblogs.com/grj001/p/12223482.html
+
+
+  //Newtonsoft.Json高级用法 1.忽略某些属性 2.默认值的处理 3.空值的处理 4.支持非公共成员 5.日期处理 6.自定义序列化的字段名称
+  https://www.cnblogs.com/1175429393wljblog/p/5888098.html

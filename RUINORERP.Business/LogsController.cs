@@ -1,0 +1,562 @@
+﻿
+// **************************************
+// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+// 项目：信息系统
+// 版权：Copyright RUINOR
+// 作者：Watson
+// 时间：07/20/2024 20:30:00
+// **************************************
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using RUINORERP.IServices;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Model;
+using FluentValidation.Results;
+using RUINORERP.Services;
+using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Model.Base;
+using RUINORERP.Common.Extensions;
+using RUINORERP.IServices.BASE;
+using RUINORERP.Model.Context;
+using System.Linq;
+using RUINOR.Core;
+using RUINORERP.Common.Helper;
+
+namespace RUINORERP.Business
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    public partial class LogsController<T>:BaseController<T> where T : class
+    {
+        /// <summary>
+        /// 本为私有修改为公有，暴露出来方便使用
+        /// </summary>
+        //public readonly IUnitOfWorkManage _unitOfWorkManage;
+        //public readonly ILogger<BaseController<T>> _logger;
+        public ILogsServices _LogsServices { get; set; }
+       // private readonly ApplicationContext _appContext;
+       
+        public LogsController(ILogger<LogsController<T>> logger, IUnitOfWorkManage unitOfWorkManage,LogsServices LogsServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        {
+            _logger = logger;
+           _unitOfWorkManage = unitOfWorkManage;
+           _LogsServices = LogsServices;
+            _appContext = appContext;
+        }
+      
+        
+        
+        
+         public ValidationResult Validator(Logs info)
+        {
+            LogsValidator validator = new LogsValidator();
+            ValidationResult results = validator.Validate(info);
+            return results;
+        }
+        
+        #region 扩展方法
+        
+        /// <summary>
+        /// 某字段是否存在
+        /// </summary>
+        /// <param name="exp">e => e.ModeuleName == mod.ModeuleName</param>
+        /// <returns></returns>
+        public override bool ExistFieldValue(Expression<Func<T, bool>> exp)
+        {
+            return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).Any();
+        }
+      
+        
+        /// <summary>
+        /// 雪花ID模式下的新增和修改
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async Task<ReturnResults<Logs>> SaveOrUpdate(Logs entity)
+        {
+            ReturnResults<Logs> rr = new ReturnResults<Logs>();
+            Logs Returnobj;
+            try
+            {
+                //生成时暂时只考虑了一个主键的情况
+                if (entity.ID > 0)
+                {
+                    bool rs = await _LogsServices.Update(entity);
+                    if (rs)
+                    {
+                        MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                    }
+                    Returnobj = entity;
+                }
+                else
+                {
+                    Returnobj = await _LogsServices.AddReEntityAsync(entity);
+                    MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                }
+
+                rr.ReturnObject = Returnobj;
+                rr.Succeeded = true;
+                entity.ActionStatus = ActionStatus.无操作;
+            }
+            catch (Exception ex)
+            {
+                ////这里需要进一步优化处理？
+                throw ex;
+            }
+            return rr;
+        }
+        
+        
+        /// <summary>
+        /// 雪花ID模式下的新增和修改
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
+        {
+            ReturnResults<T> rr = new ReturnResults<T>();
+            Logs entity = model as Logs;
+            T Returnobj;
+            try
+            {
+                //生成时暂时只考虑了一个主键的情况
+                if (entity.ID > 0)
+                {
+                    bool rs = await _LogsServices.Update(entity);
+                    if (rs)
+                    {
+                        MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                    }
+                    Returnobj = entity as T;
+                }
+                else
+                {
+                    Returnobj = await _LogsServices.AddReEntityAsync(entity) as T ;
+                    MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                }
+
+                rr.ReturnObject = Returnobj;
+                rr.Succeeded = true;
+                entity.ActionStatus = ActionStatus.无操作;
+            }
+            catch (Exception ex)
+            {
+                ////这里需要进一步优化处理？
+                throw ex;
+            }
+            return rr;
+        }
+        
+        public async override Task<List<T>> BaseQueryAsync(string wheresql) 
+        {
+            List<T> list = await _LogsServices.QueryAsync(wheresql) as List<T>;
+            foreach (var item in list)
+            {
+                Logs entity = item as Logs;
+                entity.HasChanged = false;
+            }
+            if (list != null)
+            {
+                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+             }
+            return list;
+        }
+        
+        public async override Task<List<T>> BaseQueryAsync() 
+        {
+            List<T> list = await _LogsServices.QueryAsync() as List<T>;
+            foreach (var item in list)
+            {
+                Logs entity = item as Logs;
+                entity.HasChanged = false;
+            }
+            if (list != null)
+            {
+                MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
+             }
+            return list;
+        }
+        
+        
+        public async override Task<bool> BaseDeleteAsync(T model)
+        {
+            Logs entity = model as Logs;
+            bool rs = await _LogsServices.Delete(entity);
+            if (rs)
+            {
+                ////生成时暂时只考虑了一个主键的情况
+                MyCacheManager.Instance.DeleteEntityList<Logs>(entity);
+            }
+            return rs;
+        }
+        
+        public async override Task<bool> BaseDeleteAsync(List<T> models)
+        {
+            bool rs=false;
+            List<Logs> entitys = models as List<Logs>;
+            int c = await _unitOfWorkManage.GetDbClient().Deleteable<Logs>(entitys).ExecuteCommandAsync();
+            if (c>0)
+            {
+                rs=true;
+                ////生成时暂时只考虑了一个主键的情况
+                 long[] result = entitys.Select(e => e.ID).ToArray();
+                MyCacheManager.Instance.DeleteEntityList<Logs>(result);
+            }
+            return rs;
+        }
+        
+        public override ValidationResult BaseValidator(T info)
+        {
+            LogsValidator validator = new LogsValidator();
+            ValidationResult results = validator.Validate(info as Logs);
+            return results;
+        }
+        
+        
+        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
+        {
+            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike,dto);
+            return await querySqlQueryable.ToListAsync();
+        }
+        
+        public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
+        {
+            bool rs = false;
+            Command command = new Command();
+            ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                 //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+                Logs entity = model as Logs;
+                command.UndoOperation = delegate ()
+                {
+                    //Undo操作会执行到的代码
+                    CloneHelper.SetValues<T>(entity, oldobj);
+                };
+       
+            if (entity.ID > 0)
+            {
+                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<Logs>(entity as Logs)
+            //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                            .ExecuteCommandAsync();
+         
+        }
+        else    
+        {
+            rs = await _unitOfWorkManage.GetDbClient().InsertNav<Logs>(entity as Logs)
+        //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                                .ExecuteCommandAsync();
+        }
+        
+                // 注意信息的完整性
+                _unitOfWorkManage.CommitTran();
+                rsms.ReturnObject = entity as T ;
+                entity.PrimaryKeyID = entity.ID;
+                rsms.Succeeded = rs;
+            }
+            catch (Exception ex)
+            {
+                //出错后，取消生成的ID等值
+                command.Undo();
+                _logger.Error(ex);
+                _unitOfWorkManage.RollbackTran();
+                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
+                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
+                rsms.ErrorMsg = ex.Message;
+                rsms.Succeeded = false;
+            }
+
+            return rsms;
+        }
+        
+        #endregion
+        
+        
+        #region override mothed
+
+        public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
+        {
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<Logs>()
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                                .Where(useLike, dto);
+            return await querySqlQueryable.ToListAsync()as List<T>;
+        }
+
+
+        public async override Task<bool> BaseDeleteByNavAsync(T model) 
+        {
+            Logs entity = model as Logs;
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<Logs>(m => m.ID== entity.ID)
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                                .ExecuteCommandAsync();
+            if (rs)
+            {
+                //////生成时暂时只考虑了一个主键的情况
+                MyCacheManager.Instance.DeleteEntityList<T>(model);
+            }
+            return rs;
+        }
+        #endregion
+        
+        
+        
+        public Logs AddReEntity(Logs entity)
+        {
+            Logs AddEntity =  _LogsServices.AddReEntity(entity);
+            MyCacheManager.Instance.UpdateEntityList<Logs>(AddEntity);
+            entity.ActionStatus = ActionStatus.无操作;
+            return AddEntity;
+        }
+        
+         public async Task<Logs> AddReEntityAsync(Logs entity)
+        {
+            Logs AddEntity = await _LogsServices.AddReEntityAsync(entity);
+            MyCacheManager.Instance.UpdateEntityList<Logs>(AddEntity);
+            entity.ActionStatus = ActionStatus.无操作;
+            return AddEntity;
+        }
+        
+        public async Task<long> AddAsync(Logs entity)
+        {
+            long id = await _LogsServices.Add(entity);
+            if(id>0)
+            {
+                 MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+            }
+            return id;
+        }
+        
+        public async Task<List<long>> AddAsync(List<Logs> infos)
+        {
+            List<long> ids = await _LogsServices.Add(infos);
+            if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
+            {
+                 MyCacheManager.Instance.UpdateEntityList<Logs>(infos);
+            }
+            return ids;
+        }
+        
+        
+        public async Task<bool> DeleteAsync(Logs entity)
+        {
+            bool rs = await _LogsServices.Delete(entity);
+            if (rs)
+            {
+                MyCacheManager.Instance.DeleteEntityList<Logs>(entity);
+                
+            }
+            return rs;
+        }
+        
+        public async Task<bool> UpdateAsync(Logs entity)
+        {
+            bool rs = await _LogsServices.Update(entity);
+            if (rs)
+            {
+                 MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+                entity.ActionStatus = ActionStatus.无操作;
+            }
+            return rs;
+        }
+        
+        public async Task<bool> DeleteAsync(long id)
+        {
+            bool rs = await _LogsServices.DeleteById(id);
+            if (rs)
+            {
+                MyCacheManager.Instance.DeleteEntityList<Logs>(id);
+            }
+            return rs;
+        }
+        
+         public async Task<bool> DeleteAsync(long[] ids)
+        {
+            bool rs = await _LogsServices.DeleteByIds(ids);
+            if (rs)
+            {
+                MyCacheManager.Instance.DeleteEntityList<Logs>(ids);
+            }
+            return rs;
+        }
+        
+        public virtual async Task<List<Logs>> QueryAsync()
+        {
+            List<Logs> list = await  _LogsServices.QueryAsync();
+            foreach (var item in list)
+            {
+                item.HasChanged = false;
+            }
+            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            return list;
+        }
+        
+        public virtual List<Logs> Query()
+        {
+            List<Logs> list =  _LogsServices.Query();
+            foreach (var item in list)
+            {
+                item.HasChanged = false;
+            }
+            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            return list;
+        }
+        
+        public virtual List<Logs> Query(string wheresql)
+        {
+            List<Logs> list =  _LogsServices.Query(wheresql);
+            foreach (var item in list)
+            {
+                item.HasChanged = false;
+            }
+            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            return list;
+        }
+        
+        public virtual async Task<List<Logs>> QueryAsync(string wheresql) 
+        {
+            List<Logs> list = await _LogsServices.QueryAsync(wheresql);
+            foreach (var item in list)
+            {
+                item.HasChanged = false;
+            }
+            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            return list;
+        }
+        
+
+
+        /// <summary>
+        /// 带参数查询
+        /// </summary>
+        /// <param name="exp"></param>
+        /// <returns></returns>
+        public async Task<List<Logs>> QueryAsync(Expression<Func<Logs, bool>> exp)
+        {
+            List<Logs> list = await _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(exp).ToListAsync();
+            foreach (var item in list)
+            {
+                item.HasChanged = false;
+            }
+            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            return list;
+        }
+        
+        
+        
+        /// <summary>
+        /// 无参数异步导航查询
+        /// </summary>
+        /// <returns>数据列表</returns>
+         public virtual async Task<List<Logs>> QueryByNavAsync()
+        {
+            List<Logs> list = await _unitOfWorkManage.GetDbClient().Queryable<Logs>()
+                               .Includes(t => t.tb_userinfo )
+                                    .ToListAsync();
+            
+            foreach (var item in list)
+            {
+                item.HasChanged = false;
+            }
+            
+            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            return list;
+        }
+
+
+        /// <summary>
+        /// 带参数异步导航查询
+        /// </summary>
+        /// <returns>数据列表</returns>
+         public virtual async Task<List<Logs>> QueryByNavAsync(Expression<Func<Logs, bool>> exp)
+        {
+            List<Logs> list = await _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(exp)
+                               .Includes(t => t.tb_userinfo )
+                                    .ToListAsync();
+            
+            foreach (var item in list)
+            {
+                item.HasChanged = false;
+            }
+            
+            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            return list;
+        }
+        
+        
+        /// <summary>
+        /// 带参数异步导航查询
+        /// </summary>
+        /// <returns>数据列表</returns>
+         public virtual List<Logs> QueryByNav(Expression<Func<Logs, bool>> exp)
+        {
+            List<Logs> list = _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(exp)
+                            .Includes(t => t.tb_userinfo )
+                                    .ToList();
+            
+            foreach (var item in list)
+            {
+                item.HasChanged = false;
+            }
+            
+            MyCacheManager.Instance.UpdateEntityList<Logs>(list);
+            return list;
+        }
+        
+        
+
+        /// <summary>
+        /// 高级查询
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<Logs>> QueryByAdvancedAsync(bool useLike,object dto)
+        {
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(useLike,dto);
+            return await querySqlQueryable.ToListAsync();
+        }
+
+
+
+        public async override Task<T> BaseQueryByIdAsync(object id)
+        {
+            T entity = await _LogsServices.QueryByIdAsync(id) as T;
+            return entity;
+        }
+        
+        
+        
+        public override async Task<T> BaseQueryByIdNavAsync(object id)
+        {
+            Logs entity = await _unitOfWorkManage.GetDbClient().Queryable<Logs>().Where(w => w.ID == (long)id)
+                             .Includes(t => t.tb_userinfo )
+                                    .FirstAsync();
+            if(entity!=null)
+            {
+                entity.HasChanged = false;
+            }
+
+            MyCacheManager.Instance.UpdateEntityList<Logs>(entity);
+            return entity as T;
+        }
+        
+        
+        
+        
+        
+        
+    }
+}
+
+
+

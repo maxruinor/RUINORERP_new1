@@ -1,0 +1,22 @@
+﻿使用的是国外的  https://github.com/danielgerlag/workflow-core
+可以参考一些思路 国内的 https://gitee.com/mengtree/workflow-engine
+
+推送：基本信息，比方A用户新增加了一个客户资料。要反应到其它（或指定的用户）
+
+
+============
+有审核流程，
+有订单推送
+
+有智能提示
+任务系统
+
+订单流程
+--》生产流程，可以是独立的。也可以是订单下面的子流程
+
+
+
+
+https://www.cnblogs.com/lispring/p/13738600.html#t3  拦截器等
+
+

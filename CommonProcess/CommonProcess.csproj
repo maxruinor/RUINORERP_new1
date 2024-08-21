@@ -1,0 +1,323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3A6491BD-4731-42EA-8FFE-61489C2F7C55}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CommonProcess</RootNamespace>
+    <AssemblyName>CommonProcess</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>Svn</SccProjectName>
+    <SccLocalPath>Svn</SccLocalPath>
+    <SccAuxPath>Svn</SccAuxPath>
+    <SccProvider>SubversionScc</SccProvider>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>2</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\DLL\HtmlAgilityPack.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.TextEditor">
+      <HintPath>..\..\DLL\ICSharpCode.TextEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="Ivony.Core, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ivony.Core.1.1.1\lib\Ivony.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Ivony.Html, Version=3.0.12.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Jumony.Core.3.0.18\lib\Ivony.Html.dll</HintPath>
+    </Reference>
+    <Reference Include="Ivony.Html.Parser, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Jumony.Core.3.0.18\lib\Ivony.Html.Parser.dll</HintPath>
+    </Reference>
+    <Reference Include="Ivony.Html.Parser.Regulars, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Jumony.Core.3.0.18\lib\Ivony.Html.Parser.Regulars.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=2.0.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Build.Tasks.v4.0" />
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NSoup">
+      <HintPath>..\..\DLL\NSoup.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Winista.HtmlParser">
+      <HintPath>..\DLL\Winista.HtmlParser.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Class1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="ProcessAction.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryProcess\ConsumablesButtonDesigner.cs" />
+    <Compile Include="QueryProcess\frmMultiRowkeyselector.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="QueryProcess\frmMultiRowkeyselector.designer.cs">
+      <DependentUpon>frmMultiRowkeyselector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="QueryProcess\UCMultirowkeyselector.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="QueryProcess\UCMultirowkeyselector.Designer.cs">
+      <DependentUpon>UCMultirowkeyselector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\frmDynamicCompilation.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StringProcess\frmDynamicCompilation.designer.cs">
+      <DependentUpon>frmDynamicCompilation.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\frmJsonAnalyzer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StringProcess\frmJsonAnalyzer.designer.cs">
+      <DependentUpon>frmJsonAnalyzer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\IUCBase.cs" />
+    <Compile Include="StringProcess\StringProcessConfig.cs" />
+    <Compile Include="StringProcess\UCBasePara.cs" />
+    <Compile Include="StringProcess\UCBaseParaT.cs" />
+    <Compile Include="StringProcess\UCJson路径提取Find.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCJson路径提取Find.Designer.cs">
+      <DependentUpon>UCJson路径提取Find.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCRepairStringPara.cs" />
+    <Compile Include="StringProcess\UCJson路径提取Para.cs" />
+    <Compile Include="StringProcess\UCDownloadFile.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCDownloadFile.Designer.cs">
+      <DependentUpon>UCDownloadFile.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCDownloadFilePara.cs" />
+    <Compile Include="StringProcess\UCXpathPick.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCXpathPick.Designer.cs">
+      <DependentUpon>UCXpathPick.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCXpathPickPara.cs" />
+    <Compile Include="StringProcess\UCHtmltagProcess.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCHtmltagProcess.Designer.cs">
+      <DependentUpon>UCHtmltagProcess.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCHtmltagProcessPara.cs" />
+    <Compile Include="StringProcess\UC动态程序代码处理.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UC动态程序代码处理.Designer.cs">
+      <DependentUpon>UC动态程序代码处理.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UC动态程序代码处理Para.cs" />
+    <Compile Include="StringProcess\UC数组分割提取Para.cs" />
+    <Compile Include="StringProcess\frmTextProcesserTest.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StringProcess\frmTextProcesserTest.designer.cs">
+      <DependentUpon>frmTextProcesserTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UC正则式提取.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UC正则式提取.Designer.cs">
+      <DependentUpon>UC正则式提取.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCFindSpecialChar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCFindSpecialChar.Designer.cs">
+      <DependentUpon>UCFindSpecialChar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCHTMLStructuralAnalysis.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCHTMLStructuralAnalysis.Designer.cs">
+      <DependentUpon>UCHTMLStructuralAnalysis.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCMyBase.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCMyBase.Designer.cs">
+      <DependentUpon>UCMyBase.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCRepairString.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCRepairString.Designer.cs">
+      <DependentUpon>UCRepairString.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCSetSpecFieldValue.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCSetSpecFieldValue.Designer.cs">
+      <DependentUpon>UCSetSpecFieldValue.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCSmartPackaging.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCSmartPackaging.Designer.cs">
+      <DependentUpon>UCSmartPackaging.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UCCheckData.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UCCheckData.Designer.cs">
+      <DependentUpon>UCCheckData.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UC数组分割提取.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StringProcess\UC数组分割提取.Designer.cs">
+      <DependentUpon>UC数组分割提取.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StringProcess\UC正则式提取Para.cs" />
+    <Compile Include="TextBoxContainButton.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="TextBoxContainButton.Designer.cs">
+      <DependentUpon>TextBoxContainButton.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Crawler\Crawler.csproj">
+      <Project>{983fe0cc-031c-40ad-8b78-c9f4bf446406}</Project>
+      <Name>Crawler</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HLH.Control\HLH.WinControl.csproj">
+      <Project>{fbc35412-5c4c-4461-a281-ebf1b1a0a785}</Project>
+      <Name>HLH.WinControl</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
+      <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
+      <Name>HLH.Lib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SiteRules\SiteRules.csproj">
+      <Project>{b0717dfa-442a-40eb-b7c4-4171da4194c1}</Project>
+      <Name>SiteRules</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WinLib\WinLib.csproj">
+      <Project>{4346acb3-cf7f-4797-bae6-681e32e10ff5}</Project>
+      <Name>WinLib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="QueryProcess\frmMultiRowkeyselector.resx">
+      <DependentUpon>frmMultiRowkeyselector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\frmDynamicCompilation.resx">
+      <DependentUpon>frmDynamicCompilation.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\frmJsonAnalyzer.resx">
+      <DependentUpon>frmJsonAnalyzer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\frmTextProcesserTest.resx">
+      <DependentUpon>frmTextProcesserTest.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCDownloadFile.resx">
+      <DependentUpon>UCDownloadFile.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCXpathPick.resx">
+      <DependentUpon>UCXpathPick.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCHtmltagProcess.resx">
+      <DependentUpon>UCHtmltagProcess.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UC动态程序代码处理.resx">
+      <DependentUpon>UC动态程序代码处理.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UC正则式提取.resx">
+      <DependentUpon>UC正则式提取.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCFindSpecialChar.resx">
+      <DependentUpon>UCFindSpecialChar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCHTMLStructuralAnalysis.resx">
+      <DependentUpon>UCHTMLStructuralAnalysis.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCJson路径提取Find.resx">
+      <DependentUpon>UCJson路径提取Find.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCMyBase.resx">
+      <DependentUpon>UCMyBase.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCRepairString.resx">
+      <DependentUpon>UCRepairString.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCSetSpecFieldValue.resx">
+      <DependentUpon>UCSetSpecFieldValue.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCSmartPackaging.resx">
+      <DependentUpon>UCSmartPackaging.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UCCheckData.resx">
+      <DependentUpon>UCCheckData.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StringProcess\UC数组分割提取.resx">
+      <DependentUpon>UC数组分割提取.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TextBoxContainButton.resx">
+      <DependentUpon>TextBoxContainButton.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="项目说明.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

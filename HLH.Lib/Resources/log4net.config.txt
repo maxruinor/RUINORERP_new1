@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <configSections>
+    <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler,log4net" />
+  </configSections>
+  <log4net>
+    <root>
+    </root>
+
+    <logger name="#Watson#">
+      <level value="ALL" />
+      <appender-ref ref="rollingFile" />
+    </logger>
+
+
+    <logger name="log">
+      <level value="INFO" />
+      <appender-ref ref="rollingFile" />
+    </logger>
+
+
+    <appender name="rollingFile" type="log4net.Appender.RollingFileAppender,log4net" >
+      <param name="File" type="" value="data/" />
+      <param name="AppendToFile" value="true" />
+      <param name="RollingStyle" value="Date" />
+      <param name="DatePattern" value="#Watson#_yyyyMMdd&quot;.txt&quot;" />
+      <param name="StaticLogFileName" value="false" />
+      <!-- <param name="CountDirection" value="1" />-->
+      <layout type="log4net.Layout.PatternLayout,log4net">
+        <param name="ConversionPattern" value="%m%n" />
+      </layout>
+    </appender>
+  </log4net>
+</configuration>

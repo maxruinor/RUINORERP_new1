@@ -1,0 +1,446 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{FBC35412-5C4C-4461-A281-EBF1B1A0A785}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>HLH.WinControl</RootNamespace>
+    <AssemblyName>HLH.WinControl</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <SccProjectName>Svn</SccProjectName>
+    <SccLocalPath>Svn</SccLocalPath>
+    <SccAuxPath>Svn</SccAuxPath>
+    <SccProvider>SubversionScc</SccProvider>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <PublishUrl>发布\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ControlLib\Class1.cs" />
+    <Compile Include="ControlLib\CustomProperty.cs" />
+    <Compile Include="ControlLib\DataBaseTypeConverter.cs" />
+    <Compile Include="ControlLib\OptionCollectionAttribute.cs" />
+    <Compile Include="ControlLib\OptionValuesTypeConvertor.cs" />
+    <Compile Include="DateTimePickers\DateTimeChoser.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DateTimePickers\DateTimeChoser.Designer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DateTimePickers\UCDateTimePickers.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DateTimePickers\UCDateTimePickers.Designer.cs">
+      <DependentUpon>UCDateTimePickers.cs</DependentUpon>
+    </Compile>
+    <Compile Include="HierarchicalGrid\DataGridSource.cs" />
+    <Compile Include="HierarchicalGrid\HierarchicalGrid.cs" />
+    <Compile Include="HierarchicalGrid\HierarchicalGridCell.cs" />
+    <Compile Include="HierarchicalGrid\HierarchicalGridEvents.cs" />
+    <Compile Include="HierarchicalGrid\HierarchicalGridNode.cs" />
+    <Compile Include="HierarchicalGrid\HierarchicalGridNodeCollection.cs" />
+    <Compile Include="Mycontrol\PictureBoxColumn.cs" />
+    <Compile Include="MyDataGrid\NewSumDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyTypeConverter\UCExtensionMethods.cs" />
+    <Compile Include="MyTypeConverter\GenericListTypeConverter.cs" />
+    <Compile Include="MyTypeConverter\MenuControllerConverter.cs" />
+    <Compile Include="MyTypeConverter\ScopeConverter.cs" />
+    <Compile Include="PublicForm\frmBatchSetValues.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PublicForm\frmBatchSetValues.designer.cs">
+      <DependentUpon>frmBatchSetValues.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SerializableDictionary.cs" />
+    <Compile Include="CodeTextBox\CodeTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CodeTextBox\CodeTextBox.designer.cs">
+      <DependentUpon>CodeTextBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CodeTextBox\ImageListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CodeTextBox\ImageListBox.designer.cs">
+      <DependentUpon>ImageListBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CodeTextBox\ImageListItem.cs" />
+    <Compile Include="CodeTextBox\Intellisense\IntellisenseManager.cs" />
+    <Compile Include="CodeTextBox\Resource1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
+    <Compile Include="CodeTextBox\RichTextboxHelper.cs" />
+    <Compile Include="CodeTextBox\SyntaxHighlight\SyntaxHighlighter.cs" />
+    <Compile Include="ComBoBoxEx\CheckBoxComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ComBoBoxEx\CheckBoxComboBox.designer.cs">
+      <DependentUpon>CheckBoxComboBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ComBoBoxEx\GripBounds.cs" />
+    <Compile Include="ComBoBoxEx\NativeMethods.cs" />
+    <Compile Include="ComBoBoxEx\Popup.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ComBoBoxEx\Popup.designer.cs">
+      <DependentUpon>Popup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ComBoBoxEx\PopupComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ComBoBoxEx\PopupComboBox.designer.cs">
+      <DependentUpon>PopupComboBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ComBoBoxEx\Selection Wrappers\ListSelectionWrapper.cs" />
+    <Compile Include="ComBoBoxEx\Selection Wrappers\ObjectSelectionWrapper.cs" />
+    <Compile Include="ComBoBoxEx\Statusses.cs" />
+    <Compile Include="ExpandableGridView\TreeGridCell.cs" />
+    <Compile Include="ExpandableGridView\TreeGridEvents.cs" />
+    <Compile Include="ExpandableGridView\TreeGridNode.cs" />
+    <Compile Include="ExpandableGridView\TreeGridNodeCollection.cs" />
+    <Compile Include="ExpandableGridView\TreeGridView.cs" />
+    <Compile Include="Mycontrol\AutoCompleteComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\CustomizeGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\CustomizeGrid.Designer.cs">
+      <DependentUpon>CustomizeGrid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Mycontrol\DataBoundTreeView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\ForCustomizeGrid\frmColumnsSets.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\ForCustomizeGrid\frmColumnsSets.designer.cs">
+      <DependentUpon>frmColumnsSets.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Mycontrol\MultiSelectTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\MyButtonGroup.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\MyButtonGroup.Designer.cs">
+      <DependentUpon>MyButtonGroup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Mycontrol\myButtonQueryAndExcel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\myButtonQueryAndExcel.Designer.cs">
+      <DependentUpon>myButtonQueryAndExcel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Mycontrol\MyControlDesigner.cs" />
+    <Compile Include="Mycontrol\MytoolStrip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\MytoolStrip.Designer.cs">
+      <DependentUpon>MytoolStrip.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Mycontrol\Pager.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\Pager.designer.cs">
+      <DependentUpon>Pager.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Mycontrol\PagerControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\PagerControl.designer.cs">
+      <DependentUpon>PagerControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Mycontrol\ProgressBarColumn.cs" />
+    <Compile Include="Mycontrol\TreeViewColumns.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\TreeViewColumns.designer.cs">
+      <DependentUpon>TreeViewColumns.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Mycontrol\TriStateTreeNode.cs" />
+    <Compile Include="Mycontrol\TriStateTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\UCMoveRows.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Mycontrol\UCMoveRows.Designer.cs">
+      <DependentUpon>UCMoveRows.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MyDataGrid\CalendarColumn.cs" />
+    <Compile Include="MyDataGrid\DataGridControlCS.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\DataGridViewDateTime\DataGridViewDateTimeCell.cs" />
+    <Compile Include="MyDataGrid\DataGridViewDateTime\DataGridViewDateTimeColumn.cs" />
+    <Compile Include="MyDataGrid\DataGridViewDateTime\DataGridViewDateTimeEditingControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\DataGridViewFormat\ComboBoxFormat.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\DataGridViewFormat\DataGridViewFormatCell.cs" />
+    <Compile Include="MyDataGrid\DataGridViewFormat\DataGridViewFormatColumn.cs" />
+    <Compile Include="MyDataGrid\DataGridViewFormat\DataGridViewFormatEditingControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\DataGridViewFormat\FormFormat.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\DataGridViewFormat\FormFormat.Designer.cs">
+      <DependentUpon>FormFormat.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MyDataGrid\DataGridViewMaskedTextBox\DataGridViewMaskedTextBoxCell.cs" />
+    <Compile Include="MyDataGrid\DataGridViewMaskedTextBox\DataGridViewMaskedTextBoxColumn.cs" />
+    <Compile Include="MyDataGrid\DataGridViewMaskedTextBox\DataGridViewMaskedTextBoxEditingControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\DataGridViewTreeView\ComboBoxTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\DataGridViewTreeView\DataGridViewTreeViewCell.cs" />
+    <Compile Include="MyDataGrid\DataGridViewTreeView\DataGridViewTreeViewColumn.cs" />
+    <Compile Include="MyDataGrid\DataGridViewTreeView\DataGridViewTreeViewEditingControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\HorizontalMoveDG.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\MD.cs" />
+    <Compile Include="MyDataGrid\MYDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\MYDataGridView.Designer.cs">
+      <DependentUpon>MYDataGridView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MyDataGrid\MyGrid.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\MyGrid.Designer.cs">
+      <DependentUpon>MyGrid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MyDataGrid\MySumDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MyDataGrid\MySumDataGridView.Designer.cs">
+      <DependentUpon>MySumDataGridView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MyRichTextBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MySumDataGridViewOfName.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MySumDataGridViewOfName.designer.cs">
+      <DependentUpon>MySumDataGridViewOfName.cs</DependentUpon>
+    </Compile>
+    <Compile Include="NumberTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="OutlookGrid\DataSourceManager.cs" />
+    <Compile Include="OutlookGrid\MyOutLookGrid.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="OutlookGrid\MyOutLookGrid.Designer.cs">
+      <DependentUpon>MyOutLookGrid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="OutlookGrid\OutlookGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="OutlookGrid\OutlookGrid.Designer.cs">
+      <DependentUpon>OutlookGrid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="OutlookGrid\OutlookGridGroup.cs" />
+    <Compile Include="OutlookGrid\OutlookGridRow.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Service Include="{94E38DFF-614B-4cbd-B67C-F211BB35CE8B}" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="CodeTextBox\Resource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource1.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ComBoBoxEx\PopupComboBox.resx">
+      <DependentUpon>PopupComboBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DateTimePickers\UCDateTimePickers.resx">
+      <DependentUpon>UCDateTimePickers.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mycontrol\DataBoundTreeView.resx">
+      <DependentUpon>DataBoundTreeView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mycontrol\ForCustomizeGrid\frmColumnsSets.resx">
+      <DependentUpon>frmColumnsSets.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mycontrol\MyButtonGroup.resx">
+      <DependentUpon>MyButtonGroup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mycontrol\myButtonQueryAndExcel.resx">
+      <DependentUpon>myButtonQueryAndExcel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mycontrol\Pager.resx">
+      <DependentUpon>Pager.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mycontrol\PagerControl.resx">
+      <DependentUpon>PagerControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mycontrol\TreeViewColumns.resx">
+      <DependentUpon>TreeViewColumns.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mycontrol\TriStateTreeView.resx">
+      <DependentUpon>TriStateTreeView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mycontrol\UCMoveRows.resx">
+      <DependentUpon>UCMoveRows.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MyDataGrid\DataGridViewFormat\FormFormat.resx">
+      <DependentUpon>FormFormat.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MyDataGrid\MYDataGridView.resx">
+      <DependentUpon>MYDataGridView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MyDataGrid\MyGrid.resx">
+      <DependentUpon>MyGrid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MyRichTextBox.resx">
+      <DependentUpon>MyRichTextBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MySumDataGridViewOfName.resx">
+      <DependentUpon>MySumDataGridViewOfName.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="OutlookGrid\MyOutLookGrid.resx">
+      <DependentUpon>MyOutLookGrid.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PublicForm\frmBatchSetValues.resx">
+      <DependentUpon>frmBatchSetValues.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="MyDataGrid\DataGridViewMaskedTextBox\vssver2.scc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="OutlookGrid\说明.txt" />
+    <EmbeddedResource Include="CodeTextBox\images\class.gif" />
+    <EmbeddedResource Include="CodeTextBox\images\event.gif" />
+    <EmbeddedResource Include="CodeTextBox\images\interface.gif" />
+    <EmbeddedResource Include="CodeTextBox\images\method.gif" />
+    <EmbeddedResource Include="CodeTextBox\images\namespace.gif" />
+    <EmbeddedResource Include="CodeTextBox\images\property.gif" />
+    <Content Include="CodeTextBox\TODO.txt" />
+    <Content Include="ControlLib\说明.txt" />
+    <Content Include="MyDataGrid\FIND.BMP" />
+    <Content Include="MyDataGrid\VW-DTLS.BMP" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
+      <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
+      <Name>HLH.Lib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WinLib\WinLib.csproj">
+      <Project>{4346acb3-cf7f-4797-bae6-681e32e10ff5}</Project>
+      <Name>WinLib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

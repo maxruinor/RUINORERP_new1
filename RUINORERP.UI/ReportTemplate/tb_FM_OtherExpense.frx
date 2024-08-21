@@ -1,0 +1,191 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="01/11/2024 19:39:47" ReportInfo.Modified="01/11/2024 19:41:48" ReportInfo.CreatorVersion="2019.1.5.0">
+  <Dictionary>
+    <BusinessObjectDataSource Name="rd" ReferenceName="rd" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_OtherExpense, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+      <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="PrintStatus" DataType="System.Int32"/>
+      <Column Name="ExpenseMainID" DataType="System.Int64"/>
+      <Column Name="ExpenseNo" DataType="System.String"/>
+      <Column Name="Employee_ID" DataType="System.Int64"/>
+      <Column Name="DocumentDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="TotalAmount" DataType="System.Decimal"/>
+      <Column Name="EXPOrINC" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="IncludeTax" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="Notes" DataType="System.String"/>
+      <Column Name="TaxAmount" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="TaxRate" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="UntaxedAmont" DataType="System.Decimal"/>
+      <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ApprovalOpinions" DataType="System.String"/>
+      <Column Name="Approver_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Approver_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ApprovalStatus" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ApprovalResults" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <BusinessObjectDataSource Name="tb_FM_OtherExpenseDetails" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_OtherExpenseDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+        <Column Name="ExpenseSubID" DataType="System.Int64"/>
+        <Column Name="ExpenseMainID" DataType="System.Int64"/>
+        <Column Name="ExpenseName" DataType="System.String"/>
+        <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="ExpenseType_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="account_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="CustomerVendor_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="subject_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="tb_Employee_ID_Tran" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="CheckOutDate" DataType="System.DateTime"/>
+        <Column Name="TotalAmount" DataType="System.Decimal"/>
+        <Column Name="EXPOrINC" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="IncludeTax" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="TaxAmount" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="TaxRate" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="UntaxedAmont" DataType="System.Decimal"/>
+        <Column Name="tb_customervendor" DataType="RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="CustomerVendor_ID" DataType="System.Int64"/>
+          <Column Name="CVCode" DataType="System.String"/>
+          <Column Name="CVName" DataType="System.String"/>
+          <Column Name="ShortName" DataType="System.String"/>
+          <Column Name="Type_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Paytype_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Customer_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Area" DataType="System.String"/>
+          <Column Name="Contact" DataType="System.String"/>
+          <Column Name="Phone" DataType="System.String"/>
+          <Column Name="Address" DataType="System.String"/>
+          <Column Name="Website" DataType="System.String"/>
+          <Column Name="IsCustomer" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="IsVendor" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+        </Column>
+        <Column Name="tb_department" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="DepartmentID" DataType="System.Int64"/>
+          <Column Name="DepartmentCode" DataType="System.String"/>
+          <Column Name="DepartmentName" DataType="System.String"/>
+          <Column Name="TEL" DataType="System.String"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="Director" DataType="System.String"/>
+          <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+        </Column>
+        <Column Name="tb_employee" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="Employee_ID" DataType="System.Int64"/>
+          <Column Name="DepartmentID" DataType="System.Int64"/>
+          <Column Name="Employee_NO" DataType="System.String"/>
+          <Column Name="Employee_Name" DataType="System.String"/>
+          <Column Name="Gender" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Position" DataType="System.String"/>
+          <Column Name="PhoneNumber" DataType="System.String"/>
+          <Column Name="Marriage" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Birthday" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="StartDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="JobTitle" DataType="System.String"/>
+          <Column Name="Address" DataType="System.String"/>
+          <Column Name="Email" DataType="System.String"/>
+          <Column Name="Education" DataType="System.String"/>
+          <Column Name="LanguageSkills" DataType="System.String"/>
+          <Column Name="University" DataType="System.String"/>
+          <Column Name="IDNumber" DataType="System.String"/>
+          <Column Name="EndDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="salary" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+        </Column>
+        <Column Name="tb_employee_tran" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="Employee_ID" DataType="System.Int64"/>
+          <Column Name="DepartmentID" DataType="System.Int64"/>
+          <Column Name="Employee_NO" DataType="System.String"/>
+          <Column Name="Employee_Name" DataType="System.String"/>
+          <Column Name="Gender" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Position" DataType="System.String"/>
+          <Column Name="PhoneNumber" DataType="System.String"/>
+          <Column Name="Marriage" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Birthday" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="StartDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="JobTitle" DataType="System.String"/>
+          <Column Name="Address" DataType="System.String"/>
+          <Column Name="Email" DataType="System.String"/>
+          <Column Name="Education" DataType="System.String"/>
+          <Column Name="LanguageSkills" DataType="System.String"/>
+          <Column Name="University" DataType="System.String"/>
+          <Column Name="IDNumber" DataType="System.String"/>
+          <Column Name="EndDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="salary" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+        </Column>
+        <Column Name="tb_fm_account" DataType="RUINORERP.Model.tb_FM_Account, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="account_id" DataType="System.Int64"/>
+          <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="subject_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Currency_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="account_name" DataType="System.String"/>
+          <Column Name="account_No" DataType="System.String"/>
+          <Column Name="account_type" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Bank" DataType="System.String"/>
+          <Column Name="OpeningBalance" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="CurrentBalance" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+        </Column>
+        <Column Name="tb_fm_expensetype" DataType="RUINORERP.Model.tb_FM_ExpenseType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="ExpenseType_id" DataType="System.Int64"/>
+          <Column Name="subject_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Expense_name" DataType="System.String"/>
+          <Column Name="EXPOrINC" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+        </Column>
+        <Column Name="tb_fm_subject" DataType="RUINORERP.Model.tb_FM_Subject, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="subject_id" DataType="System.Int64"/>
+          <Column Name="parent_subject_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="subject_code" DataType="System.String"/>
+          <Column Name="subject_name" DataType="System.String"/>
+          <Column Name="subject_en_name" DataType="System.String"/>
+          <Column Name="Subject_Type" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Balance_direction" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+        </Column>
+        <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+      </BusinessObjectDataSource>
+      <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+    </BusinessObjectDataSource>
+  </Dictionary>
+  <ReportPage Name="Page1">
+    <ReportTitleBand Name="ReportTitle1" Width="718.2" Height="37.8"/>
+    <PageHeaderBand Name="PageHeader1" Top="40.47" Width="718.2" Height="28.35"/>
+    <DataBand Name="Data1" Top="71.48" Width="718.2" Height="75.6" DataSource="tb_FM_OtherExpenseDetails">
+      <TextObject Name="Text1" Left="113.4" Top="28.35" Width="94.5" Height="18.9" Text="[rd.tb_FM_OtherExpenseDetails.TaxAmount]"/>
+      <TextObject Name="Text2" Left="434.7" Top="28.35" Width="160.65" Height="18.9" Text="[rd.tb_FM_OtherExpenseDetails.TotalAmount]"/>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="149.75" Width="718.2" Height="18.9"/>
+  </ReportPage>
+</Report>

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="LogInterceptor.cs" />
+    <Compile Remove="RoleModulePermissionServices.cs" />
+    <Compile Remove="tb_ProductCategoriesServices.cs" />
+    <Compile Remove="tb_Product_BaseServices.cs" />
+    <Compile Remove="tb_Product_DetailServices.cs" />
+    <Compile Remove="tb_Product_GroupServices.cs" />
+    <Compile Remove="tb_Product_Group_DetailServices.cs" />
+    <Compile Remove="tb_Prod_Attr_RelationshipServices.cs" />
+    <Compile Remove="tb_sales_orderServices.cs" />
+    <Compile Remove="tb_sales_order_detailServices.cs" />
+    <Compile Remove="UnitServices.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.IServices\RUINORERP.IServices.csproj" />
+    <ProjectReference Include="..\RUINORERP.Repository\RUINORERP.Repository.csproj" />
+  </ItemGroup>
+
+</Project>

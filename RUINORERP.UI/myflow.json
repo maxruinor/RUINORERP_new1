@@ -1,0 +1,26 @@
+{
+  "Id": "129f1c6c7d77d448fc8de616f76140c4d1",
+  "Version": "1",
+  "Name": "xxx",
+  "Description": "流程开始这里是流程全局变量",
+  "DataType": "RUINORERP.WF.WorkFlowContextData,RUINORERP.WF",
+  "Steps": [
+    {
+      "StepType": "RUINORERP.WF.BizOperation.Steps.DecisionStep,RUINORERP.WF",
+      "Id": "296d0e1e14a7440aad7f6e31d96808e3",
+      "Name": "判断",
+      "NextStepId": "9f5c588f589a4dc7a237e8e628aaf0de",
+      "Inputs": { "RequestData": "data.Name" },//全局传给步骤
+      "Outputs": { "MessageData": "step.RequestData" },//步骤处理完后传出给全局的MessageData
+      "SelectNextStep": {}
+    },
+    {
+      "StepType": "RUINORERP.WF.BizOperation.Steps.ApprovalStep,RUINORERP.WF",
+      "Id": "9f5c588f589a4dc7a237e8e628aaf0de",
+      "Name": "审核",
+      "Inputs": { "Message": "data.MessageData" }, //全局给步骤
+      "Outputs": {},
+      "SelectNextStep": {}
+    }
+  ]
+}

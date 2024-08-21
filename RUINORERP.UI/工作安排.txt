@@ -1,0 +1,139 @@
+﻿产品添加后
+再看库存是提前 生成还是? 配合gpt确认
+试行一个单据,销售订单相对独立
+再审核打印等工作试行
+tips
+https://www.cnblogs.com/JuneZhang/archive/2011/04/02/2003315.html
+
+托盘提示
+https://www.jb51.net/article/260432.htm
+https://blog.csdn.net/weixin_42291376/article/details/128154881?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EYuanLiJiHua%7EPosition-3-128154881-blog-121444633.pc_relevant_landingrelevant&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EYuanLiJiHua%7EPosition-3-128154881-blog-121444633.pc_relevant_landingrelevant&utm_relevant_index=6
+
+
+toolTip 帮助提示思路
+FluentValidation
+tb_ProductValidatorPartial
+在验证的分类中定义一组帮助信息，
+
+
+
+c#的Winform弹窗定时消失功能，
+实现了可以自定义弹窗显示一段时间然后自动消失
+https://blog.csdn.net/qq_41464425/article/details/118667744
+
+
+最近使用文件，实现常用功能模板
+https://blog.51cto.com/wuhuacong/3183521
+
+
+冷门库
+https://www.cnblogs.com/guangzhiruijie/p/17020215.html
+
+
+自定义列等这些 不能明文保存，要加密处理
+
+keyValue的字段不为null
+
+还存在新增加时 重复添加，还可能是状态原因。
+
+
+
+https://developer.kingdee.com/article/304202325411557632?productLineId=6&isKnowledge=2
+参考
+https://www.kancloud.cn/wangcaisoft/wangcaisoft-zhubaopifa/1117695
+
+
+
+
+表格中 要加一列作为rowheader 行号。
+表格提示功能
+
+实体中，判断如果是外键，特别是属性指定绑在中的。加上一个特性 给出一些参数方便后面自动加载
+
+重载一个表格编辑的...
+
+编辑的列 背景不一样，价格数量默认为0?
+有焦点就进入编辑模式
+
+双向绑定
+https://www.cnblogs.com/EasyInvoice/p/3832092.html
+https://blog.csdn.net/newjlwg/article/details/118583497
+
+
+
+验证体系
+https://www.shuzhiduo.com/A/l1dyeBRnde/
+https://blog.csdn.net/t673afa/article/details/6066278
+
+
+只读属性给值
+https://blog.csdn.net/shuzhongke123/article/details/106091047
+
+
+//==
+
+目前，实体加开关 haschanged，快。
+
+将来，用csla，先只测试几个情况。
+
+整理一下代码。两情况前后。
+
+单据业务
+
+比方 总计。是不是用特性来标记需要总计的列。
+
+
+审核  是自动审核，还是有审核动作。在属性中设置。 （有权限的,每个/种单据都要保存配置数据）
+
+单据属性表：
+是否自动审核
+
+销售订单：
+新增完是否立即打印
+单价低于最低售价动作？
+允许预交日为空	
+
+https://www.cnblogs.com/fengjc/p/14581240.html
+NPOI
+https://www.cnblogs.com/lgx5/p/16840219.html  看
+https://zhuanlan.zhihu.com/p/545290583
+
+
+
+控制中心的-》流程图？
+
+还一个是真正的数据推送流程设置配置
+比方 A建了单。需要B审核 再到C 复核
+这种是可以动态配置的。
+
+STNodeEditor
+https://blog.csdn.net/crystal_lz/article/details/117131080
+
+售后也要流程处理
+
+-----------------
+
+采购订单中 主表要加一个字段 产品金额，
+
+总金额是加了运费等其它 。或叫实付款？
+
+转入库单时也要注意处理。实付金额
+
+采购订单中  实际到货时间，是由入库单时写回。
+
+
+
+采购入库单中。 明细中不需要预交日期了
+
+
+==========
+单据编辑时，绑定显示的事件。可以加一个参数来标记当前的操作动作。
+比方目前上取消也会绑定。绑定也会生成一次单据号。并且还绑定一下操作。
+后面新增加再绑定。重复了。后面可以优化大重构一下
+
+
+统一处理：主子表查询时。子表中不显示引用的主表ID。
+子表显示一些总计的字段。
+
+讨论：分仓是不是要有保存总库存？
+货架功能。要管到数量层级？ 

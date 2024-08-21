@@ -1,0 +1,471 @@
+﻿
+// **************************************
+// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+// 项目：信息系统
+// 版权：Copyright RUINOR
+// 作者：Watson
+// 时间：03/20/2024 10:31:35
+// **************************************
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using RUINORERP.IServices;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Model;
+using FluentValidation.Results;
+using RUINORERP.Services;
+using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Model.Base;
+using RUINORERP.Common.Extensions;
+using RUINORERP.IServices.BASE;
+using RUINORERP.Model.Context;
+using System.Linq;
+using RUINOR.Core;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Business.Security;
+using AutoMapper;
+using RUINORERP.Business.CommService;
+
+namespace RUINORERP.Business
+{
+    /// <summary>
+    /// 制令单-生产工单 ，工单(MO)各种企业的叫法不一样，比如生产单，制令单，生产指导单，裁单，等等。其实都是同一个东西–MO,    来源于 销售订单，计划单，生产需求单，我在下文都以工单简称。https://blog.csdn.net/qq_37365475/article/details/106612960
+    /// </summary>
+    public partial class tb_ManufacturingOrderController<T> : BaseController<T> where T : class
+    {
+        public async Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_ManufacturingOrder> entitys)
+        {
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                #region 结案
+                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+
+                //更新拟销售量  减少
+                for (int m = 0; m < entitys.Count; m++)
+                {
+                    //判断 能结案的 是确认审核过的。
+                    if (entitys[m].DataStatus != (int)DataStatus.确认 || !entitys[m].ApprovalResults.HasValue)
+                    {
+                        //return false;
+                        continue;
+                    }
+
+                    //更新 未发数量？
+                    //如果领料明细中的出库数量小于制令单中应发数量，则未发数要减去这个差值
+                    decimal 已发数 = entitys[m].tb_ManufacturingOrderDetails.Select(c => c.ActualSentQty).Sum();
+                    decimal 应发数 = entitys[m].tb_ManufacturingOrderDetails.Select(c => c.ShouldSendQty).Sum();
+
+                    tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                    for (int c = 0; c < entitys[m].tb_ManufacturingOrderDetails.Count; c++)
+                    {
+
+                        #region 库存表的更新 ，
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID
+                        && i.Location_ID == entitys[m].tb_ManufacturingOrderDetails[c].Location_ID);
+                        if (inv == null)
+                        {
+                            inv = new tb_Inventory();
+                            inv.ProdDetailID = entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID;
+                            inv.Location_ID = entitys[m].tb_ManufacturingOrderDetails[c].Location_ID;
+                            inv.Quantity = 0;
+                            inv.InitInventory = (int)inv.Quantity;
+                            inv.Notes = "";//后面修改数据库是不需要？
+                                           //inv.LatestStorageTime = System.DateTime.Now;
+                            BusinessHelper.Instance.InitEntity(inv);
+                        }
+                        //更新未发数,这种情况是少发领料，强制结案时。
+                        if (已发数 < 应发数)
+                        {
+                            decimal diffqty = 应发数 - 已发数;
+                            inv.NotOutQty = inv.NotOutQty - diffqty.ToInt();
+                        }
+
+                        //这个情况时。领料时候，已经发完了。超发也不会负数。 notoutqty=0  相对于这个品这个单而言
+                        if (已发数 >= 应发数)
+                        {
+                            //inv.NotOutQty -= (entitys[m].tb_ManufacturingOrderDetails[c].ShouldSendQty - entitys[m].tb_ManufacturingOrderDetails[c].ActualSentQty);
+                        }
+                        BusinessHelper.Instance.EditEntity(inv);
+                        #endregion
+                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                        if (rr.Succeeded)
+                        {
+
+                        }
+                    }
+
+                    //这部分是否能提出到上一级公共部分？
+                    entitys[m].DataStatus = (int)DataStatus.完结;
+                    entitys[m].CloseCaseOpinions = "强制结案";
+                    BusinessHelper.Instance.EditEntity(entitys[m]);
+                    //后面是不是要做一个审核历史记录表？
+
+                    //只更新指定列
+                    var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.Modified_by, it.Modified_at, it.Notes }).ExecuteCommandAsync();
+                }
+
+                #endregion
+                // 注意信息的完整性
+                _unitOfWorkManage.CommitTran();
+                rs.Succeeded = true;
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex);
+                _unitOfWorkManage.RollbackTran();
+                rs.ErrorMsg = ex.Message;
+                rs.Succeeded = false;
+                return rs;
+            }
+
+        }
+
+        public async Task<ReturnResults<bool>> BatchAntiApprovalAsync(List<tb_ManufacturingOrder> entitys)
+        {
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                //更新拟销售量减少
+
+                foreach (tb_ManufacturingOrder entity in entitys)
+                {
+                    if (entity.tb_productiondemand == null)
+                    {
+                        entity.tb_productiondemand = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
+                                                     .Includes(e => e.tb_ProduceGoodsRecommendDetails)
+                                                    .Where(c => c.PDID == entity.PDID).Single();
+                    }
+                    else
+                    {
+                        //判断是否能反审?
+                        if (entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails == null)
+                        {
+                            entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProduceGoodsRecommendDetail>()
+                                .Where(c => c.PDID == entity.tb_productiondemand.PDID).ToList();
+                        }
+                    }
+
+
+                    if (entity.tb_MaterialRequisitions != null
+                        && (entity.tb_MaterialRequisitions.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_MaterialRequisitions.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                    {
+
+                        rs.ErrorMsg = "存在已确认或已完结，或已审核的领料单，不能反审核  ";
+                        rs.Succeeded = false;
+                        continue;
+                    }
+
+
+                    //判断是否能反审?
+                    if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
+                    {
+                        rs.ErrorMsg = "计划单非确认或非完结，不能反审核  ";
+                        rs.Succeeded = false;
+                        continue;
+
+                    }
+
+                    #region 并且更新需求分析时 自制品建议的生成单号等信息
+                    tb_ProduceGoodsRecommendDetail pgrd = entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == entity.ProdDetailID && c.Location_ID == entity.Location_ID);
+                    if (pgrd != null)
+                    {
+                        pgrd.RefBillNO = string.Empty;
+                        pgrd.RefBillID = null;
+                        pgrd.RefBillType = null;
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_ProduceGoodsRecommendDetail>(pgrd).ExecuteCommandAsync();
+                    }
+                    #endregion
+
+                    #region 更新在制数量，这个是针对主表目标的更新
+
+                    tb_Inventory invMain = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
+                    if (invMain == null)
+                    {
+                        invMain = new tb_Inventory();
+                        invMain.ProdDetailID = entity.ProdDetailID;
+                        invMain.Location_ID = entity.Location_ID;
+                        invMain.Quantity = 0;
+                        invMain.InitInventory = (int)invMain.Quantity;
+                        invMain.Notes = "";//后面修改数据库是不需要？
+                                           //inv.LatestStorageTime = System.DateTime.Now;
+                        BusinessHelper.Instance.InitEntity(invMain);
+                    }
+                    invMain.MakingQty -= entity.ManufacturingQty.ToInt();
+                    //更新未发数量
+
+                    BusinessHelper.Instance.EditEntity(invMain);
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(invMain);
+                    if (rr.Succeeded)
+                    {
+
+                    }
+
+                    #endregion
+
+
+                    foreach (tb_ManufacturingOrderDetail item in entity.tb_ManufacturingOrderDetails)
+                    {
+                        #region 更新未发数量 是要在明细中体现的
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == item.ProdDetailID && i.Location_ID == item.Location_ID);
+                        if (invMain != null)
+                        {
+                            inv.NotOutQty -= item.ShouldSendQty.ToInt();
+                        }
+                        else
+                        {
+                            throw new Exception($"ProdDetailID:{inv.ProdDetailID}不存在库存信息");
+                        }
+                        BusinessHelper.Instance.EditEntity(inv);
+                        ReturnResults<tb_Inventory> rv = await ctrinv.SaveOrUpdate(inv);
+                        if (rv.Succeeded)
+                        {
+
+                        }
+                        #endregion
+                    }
+
+                    //这部分是否能提出到上一级公共部分？
+                    entity.DataStatus = (int)DataStatus.新建;
+                    entity.ApprovalResults = false;
+                    entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                    BusinessHelper.Instance.ApproverEntity(entity);
+
+                    //后面是不是要做一个审核历史记录表？
+
+                    //只更新指定列
+                    // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(entity).ExecuteCommandAsync();
+                }
+
+
+                // 注意信息的完整性
+                _unitOfWorkManage.CommitTran();
+                rs.Succeeded = true;
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex);
+                _unitOfWorkManage.RollbackTran();
+                rs.Succeeded = false;
+                BizTypeMapper mapper = new BizTypeMapper();
+                rs.ErrorMsg = mapper.GetBizType(typeof(tb_ManufacturingOrder)).ToString() + "事务回滚=>" + ex.Message;
+                rs.ErrorMsg = ex.Message;
+                //  _logger.Error(approvalEntity.bizName + "事务回滚");
+                return rs;
+            }
+        }
+
+        /// <summary>
+        /// 批量审核 未发量,在制量的更新，并且更新需求分析时 自制品建议的生成单号等信息
+        /// 制作令明细中是可以存在相同产品的并且数量不同，会在领料单中合并
+        /// </summary>
+        /// <param name="entitys"></param>
+        /// <param name="approvalEntity"></param>
+        /// <returns></returns>
+        public async Task<ReturnResults<bool>> BatchApprovalAsync(List<tb_ManufacturingOrder> entitys, ApprovalEntity approvalEntity)
+        {
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                if (!approvalEntity.ApprovalResults)
+                {
+                    if (entitys == null)
+                    {
+                        return rs;
+                    }
+
+                }
+                else
+                {
+                    //更新未发料量
+                    #region 审核
+                    foreach (var entity in entitys)
+                    {
+
+                        #region 并且更新需求分析时 自制品建议的生成单号等信息
+                        if (entity.tb_productiondemand == null)
+                        {
+                            entity.tb_productiondemand = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
+                                                         .Includes(e => e.tb_ProduceGoodsRecommendDetails)
+                                                        .Where(c => c.PDID == entity.PDID).Single();
+                        }
+                        else
+                        {
+                            //判断是否能反审?
+                            if (entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails == null)
+                            {
+                                entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProduceGoodsRecommendDetail>()
+                                    .Where(c => c.PDID == entity.tb_productiondemand.PDID).ToList();
+                            }
+                        }
+                        
+
+                        tb_ProduceGoodsRecommendDetail pgrd = entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == entity.ProdDetailID && c.Location_ID == entity.Location_ID);
+                        if (pgrd != null)
+                        {
+                            pgrd.RefBillNO = entity.MONO;
+                            pgrd.RefBillID = entity.MOID;
+                            pgrd.RefBillType = (int)BizType.制令单;
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_ProduceGoodsRecommendDetail>(pgrd).ExecuteCommandAsync();
+                        }
+                        #endregion
+
+                        #region 更新在制数量，这个是针对主表目标的更新
+                        bool MainOpening = false;
+                        tb_Inventory invMain = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
+                        if (invMain == null)
+                        {
+                            MainOpening = true;
+                            invMain = new tb_Inventory();
+                            invMain.ProdDetailID = entity.ProdDetailID;
+                            invMain.Location_ID = entity.Location_ID;
+                            invMain.Quantity = 0;
+                            invMain.InitInventory = 0;
+                            invMain.Notes = "制令单审核时，自动生成库存信息";
+                            BusinessHelper.Instance.InitEntity(invMain);
+                        }
+                        invMain.MakingQty += entity.ManufacturingQty.ToInt();
+
+                        #endregion
+
+                        BusinessHelper.Instance.EditEntity(invMain);
+
+                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(invMain);
+                        if (rr.Succeeded)
+                        {
+                            if (MainOpening)
+                            {
+                                #region 处理期初
+                                //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
+                                tb_OpeningInventory oinv = new tb_OpeningInventory();
+                                oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
+                                oinv.Cost_price = rr.ReturnObject.Inv_Cost;
+                                oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
+                                oinv.InitInvDate = System.DateTime.Now;
+                                oinv.InitQty = 0;
+                                oinv.InitInvDate = System.DateTime.Now;
+                                oinv.Notes = "制令单审核时，自动生成期初信息";
+                                await ctrOPinv.AddReEntityAsync(oinv);
+                                #endregion
+                            }
+                        }
+
+                        foreach (tb_ManufacturingOrderDetail item in entity.tb_ManufacturingOrderDetails)
+                        {
+                            #region 更新未发数量 是要在明细中体现的
+                            bool Opening = false;
+                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == item.ProdDetailID && i.Location_ID == item.Location_ID);
+                            if (inv != null)
+                            {
+                                inv.NotOutQty += item.ShouldSendQty.ToInt();
+                                BusinessHelper.Instance.EditEntity(inv);
+                            }
+                            else
+                            {
+                                Opening = true;
+                                inv = new tb_Inventory();
+                                inv.ProdDetailID = item.ProdDetailID;
+                                inv.Location_ID = item.Location_ID;
+                                inv.Quantity = 0;
+                                inv.InitInventory = 0;
+                                inv.Notes = "制令单审核时，自动生成库存信息";
+                                BusinessHelper.Instance.InitEntity(inv);
+                            }
+                            ReturnResults<tb_Inventory> rv = await ctrinv.SaveOrUpdate(inv);
+                            if (rv.Succeeded)
+                            {
+                                if (Opening)
+                                {
+                                    #region 处理期初
+                                    //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
+                                    tb_OpeningInventory oinvSub = new tb_OpeningInventory();
+                                    oinvSub.Inventory_ID = rv.ReturnObject.Inventory_ID;
+                                    oinvSub.Cost_price = rv.ReturnObject.Inv_Cost;
+                                    oinvSub.Subtotal_Cost_Price = oinvSub.Cost_price * oinvSub.InitQty;
+                                    oinvSub.InitInvDate = System.DateTime.Now;
+                                    oinvSub.InitQty = 0;
+                                    oinvSub.InitInvDate = System.DateTime.Now;
+                                    oinvSub.Notes = "制令单审核时，自动生成期初信息";
+                                    await ctrOPinv.AddReEntityAsync(oinvSub);
+                                    #endregion
+                                }
+                            }
+                            #endregion
+                        }
+
+
+                        //这部分是否能提出到上一级公共部分？
+                        entity.DataStatus = (int)DataStatus.确认;
+                        entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                        //后面已经修改为
+                        entity.ApprovalResults = approvalEntity.ApprovalResults;
+                        entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                        BusinessHelper.Instance.ApproverEntity(entity);
+                        //只更新指定列
+                        // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(entity).ExecuteCommandAsync();
+
+                    }
+
+
+                    #endregion
+
+                }
+
+                // 注意信息的完整性
+                _unitOfWorkManage.CommitTran();
+                rs.Succeeded = true;
+                _logger.Info(approvalEntity.bizName + "审核事务成功");
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex);
+                _unitOfWorkManage.RollbackTran();
+                rs.ErrorMsg = ex.Message;
+                _logger.Error(approvalEntity.bizName + "事务回滚");
+                return rs;
+            }
+        }
+
+
+        public async override Task<List<T>> GetPrintDataSource(long MainID)
+        {
+            List<tb_ManufacturingOrder> list = await _appContext.Db.CopyNew().Queryable<tb_ManufacturingOrder>().Where(m => m.MOID == MainID)
+                             .Includes(a => a.tb_customervendor)
+                             .Includes(a => a.tb_customervendor_out)
+                            .Includes(a => a.tb_employee)
+                               .Includes(a => a.tb_department)
+                                     .Includes(a => a.tb_location)
+                                     .Includes(a => a.tb_producttype)
+                                     .Includes(a => a.tb_unit)
+                              .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                              .Includes(a => a.tb_ManufacturingOrderDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_unit)
+                               .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                                 .ToListAsync();
+            return list as List<T>;
+        }
+
+    }
+}
+
+
+

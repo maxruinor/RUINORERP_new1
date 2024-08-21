@@ -1,0 +1,14 @@
+﻿
+            List<ButtonBase> ctlist = new List<ButtonBase>();
+            foreach (DictionaryEntry kv in ht)
+            {
+                if (kv.Value == sender as ButtonBase)
+                {
+                    ctlist.Add(kv.Value as ButtonBase);
+                }
+            }
+
+            ctlist.Sort(delegate(ButtonBase x, ButtonBase y)
+            {
+                return x.TabIndex.CompareTo(y.TabIndex);
+            });

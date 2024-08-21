@@ -1,0 +1,70 @@
+﻿BOM
+
+可以做一个分析的，按明细分组可以查出 哪些明细在多个BOM中存在。
+
+SELECT ProdDetailID,COUNT(BOM_ID) FROM tb_BOM_SDetail GROUP BY ProdDetailID having COUNT(ProdDetailID)>0 order by COUNT(BOM_ID)
+
+
+生产过程
+生产规划
+
+制程生产
+制造规则：
+MR：Manufacturing Rule
+MFG Rule：Manufacturing Rule
+Prod Rule：Production Rule
+制程生产：
+PP：Process Production
+PC：Process Control
+MP：Manufacturing Process
+生产过程：
+PP：Production Process
+Proc：Process
+Prod Proc：Production Procedure
+生产规划：
+PPL：Production Planning
+Prod Plan：Production Plan
+MFG Plan：Manufacturing Plan
+
+由销售订单或主动添加明细到计划生产单，（主动的数量。将来可以分析库存，销量等。同期产生建议）
+
+再引到生产需求分析，得到要采购的材料。 （这时的生产需求数量很明确就是计划生产单中的产品及数量）
+
+========
+
+Material Requirements Planning物料需求计划
+
+MRP:
+BOM
+
+MP 生产计划 制造规划 tb_ProductionPlan
+生产需求分析 UCProduceRequirement
+
+
+MO 制令单 tb_ManufacturingOrder  生产工单==》对应 外托工单
+
+Requisition_Return     对应托工领料单  退料单 在字段中标识
+领料单  退料单
+
+子件用途表-》就是用一个货号去查哪些配方中使用了他。
+
+生产需要分析时，自制品中可以选出一些外发，生成外发托工单
+
+生产工单
+和外发托工单  都会有生产领料、生产退料、生产补料、托工领料、托工退料、托工补料。当是生产/托工领、补料时库存会减少；当是生产/托工退料时库存会增加
+是不是可以做成一套，用一个字段来标记？如要添加几个字段也没关系。减少开发量。
+ 
+
+修改制令/生产通知单/托工单
+当制令单、生产通知单或托工单已经下达后希望修改生产部门、预开工和预完工日期；当制令单、生产通知单已经下达后，发现机台生产能力不足，这时需要拆分一部分给另外一个机台或托外加工。
+
+ 
+很多属性功能 要怎么处理呢？
+
+非生产领料/退料 用其它出入库解决
+
+制造规划
+	生产需求分析 成品 ，材料
+	采购单
+	制令单
+	

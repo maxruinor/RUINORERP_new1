@@ -1,0 +1,643 @@
+﻿using Krypton.Toolkit;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.QueryDto;
+using RUINORERP.UI.Common;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common;
+using RUINORERP.Common.Helper;
+using System.Linq.Expressions;
+using Krypton.Workspace;
+using Krypton.Navigator;
+using System.Collections.Concurrent;
+using System.Reflection;
+using System.Diagnostics;
+using SqlSugar;
+using System.Linq.Dynamic.Core;
+using System.Reflection.Emit;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global;
+using AutoMapper;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Business.Processor;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.Model.Models;
+
+
+namespace RUINORERP.UI.AdvancedUIModule
+{
+    /// <summary>
+    /// 传入要查询的实体的类型和他的查询参数实体类型
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public partial class UCAdvFilterGeneric<T> : UCAdvFilter where T : class
+    {
+        public UCAdvFilterGeneric()
+        {
+            InitializeComponent();
+            this.BaseToolStrip.ItemClicked += ToolStrip1_ItemClicked;
+            string tableName = typeof(T).Name;
+            DtoEntityTalbeName = tableName;
+            DtoEntityType = typeof(T);
+            DtoEntityFieldNameList = UIHelper.GetDtoFieldNameList<T>().OrderBy(v => v.FieldName).ToList();
+
+            toolStripBtnExport.Visible = false;
+            toolStripBtnImport.Visible = false;
+
+            System.Linq.Expressions.Expression<Func<tb_Prod, int?>> expr;
+            expr = (p) => p.SourceType;
+            ColNameDataDictionary.TryAdd(expr.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource)));
+
+            ColNameDataDictionary.TryAdd("ApprovalStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
+            ColNameDataDictionary.TryAdd("PayStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));
+            ColNameDataDictionary.TryAdd("DataStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+            ColNameDataDictionary.TryAdd("Priority", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
+
+            InitBaseValue();
+            InitListData();
+
+            //这里是用来设置菜单的KEY ，并不是实际的菜单路径。只是继承了公共基类
+            //这里为空时。引出的。InitFilterForControlNew
+            if (CurMenuInfo == null)
+            {
+                CurMenuInfo = new tb_MenuInfo();
+                CurMenuInfo.ClassPath = typeof(T).Name + "UCAdvFilterGeneric";
+            }
+        }
+
+        /// <summary>
+        /// 用来显示用关联外键的类型
+        /// </summary>
+        public Type KeyValueTypeForDgv { get; set; }
+
+        /// <summary>
+        /// 用来保存外键表名与外键主键列名  通过这个打到对应的名称。
+        /// </summary>
+        public static ConcurrentDictionary<string, string> FKValueColNameTBList = new ConcurrentDictionary<string, string>();
+
+        /// <summary>
+        /// 设置关联表名
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="exp">可为空用另一个两名方法无参的</param>
+        private void InitBaseValue()
+        {
+            string tableName = typeof(T).Name;
+            foreach (var field in typeof(T).GetProperties())
+            {
+                //获取指定类型的自定义特性
+                object[] attrs = field.GetCustomAttributes(false);
+                foreach (var attr in attrs)
+                {
+                    if (attr is FKRelationAttribute)
+                    {
+                        FKRelationAttribute fkrattr = attr as FKRelationAttribute;
+                        //这个加入到这里没有看到使用，后面可以去掉。并且QueryFilter这也有类似处理的代码可以重构掉
+                        FKValueColNameTBList.TryAdd(fkrattr.FK_IDColName, fkrattr.FKTableName);
+                    }
+                }
+            }
+
+
+            //这里不这样了，直接用登陆时查出来的。按菜单路径找到菜单 去再搜索 字段。
+            //    显示按钮也一样的思路
+            this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
+            /*
+            bool hasMenu = false;
+            tb_MenuInfo menuInfo
+            MainForm.Instance.AppContext.CurUserInfo.UserModList.ForEach((mod) =>
+            {
+                hasMenu = mod.tb_MenuInfos.Where(m => m.IsVisble && m.EntityName == typeof(T).Name && m.ClassPath == this.ToString()).Any();
+            });
+            if (!hasMenu)
+            {
+                MessageBox.Show("菜单不能为空，请联系管理员。");
+                return;
+            }
+
+
+            tb_MenuInfo menuInfo = MainForm.Instance.AppContext.CurUserInfo.UserMenuList.FirstOrDefault(m => m.ClassPath == this.GetType().FullName);
+            if (menuInfo != null)
+            {
+                var fields = MainForm.Instance.AppContext.CurUserInfo.UserFieldList.Where(f => f.MenuID == menuInfo.MenuID).ToList();
+                foreach (var field in fields)
+                {
+                    //这里权限控制了一下
+                    if (!field.IsEnabled)
+                    {
+                        continue;
+                    }
+                    KeyValuePair<string, bool> kv;
+                    if (this.dataGridView1.FieldNameList.TryGetValue(field.FieldName, out kv) && !field.IsEnabled)
+                    {
+                        //存在但不可用就是无权限   
+                        this.dataGridView1.FieldNameList.TryRemove(field.FieldName, out kv);
+                    }
+
+                }
+            }
+            */
+
+
+            //重构？
+            dataGridView1.XmlFileName = tableName;
+
+            // Refreshs();
+        }
+
+        /// <summary>
+        /// 初始化列表数据
+        /// </summary>
+        internal void InitListData()
+        {
+            this.dataGridView1.DataSource = null;
+            //绑定导航
+            this.bindingNavigatorList.BindingSource = bindingSourceList;
+            this.dataGridView1.DataSource = bindingSourceList.DataSource;
+        }
+
+        private List<BaseDtoField> dtoEntityfieldNameList;
+        public List<BaseDtoField> DtoEntityFieldNameList { get => dtoEntityfieldNameList; set => dtoEntityfieldNameList = value; }
+
+
+        // [AdvAttribute("asd")]
+        public string DtoEntityTalbeName { get => dtoEntityTalbeName; set => dtoEntityTalbeName = value; }
+        private BaseEntity _queryDto = new BaseEntity();
+
+        public BaseEntity QueryDto { get => _queryDto; set => _queryDto = value; }
+
+        private string dtoEntityTalbeName;
+        private Type dtoEntityType;
+        public Type DtoEntityType { get => dtoEntityType; set => dtoEntityType = value; }
+
+        protected virtual void ToolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            MainForm.Instance.AppContext.log.ActionName = e.ClickedItem.Text.ToString();
+            if (e.ClickedItem.Text.Length > 0)
+            {
+                DoButtonClick(EnumHelper.GetEnumByString<AdvQueryMenuItemEnums>(e.ClickedItem.Text));
+            }
+            else
+            {
+
+            }
+
+
+        }
+
+        /// <summary>
+        /// 控制功能按钮
+        /// </summary>
+        /// <param name="p_Text"></param>
+        protected virtual void DoButtonClick(AdvQueryMenuItemEnums menuItem)
+        {
+            //操作前将数据收集
+            this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+            switch (menuItem)
+            {
+                case AdvQueryMenuItemEnums.查询:
+                    toolStripBtnQuery.Select();
+                    Query(QueryDto);
+                    break;
+                case AdvQueryMenuItemEnums.关闭:
+                    Exit(this);
+                    break;
+                case AdvQueryMenuItemEnums.选中:
+                    SelectedData();
+                    break;
+                case AdvQueryMenuItemEnums.属性:
+                    MenuPersonalizedSettings();
+                    break;
+                default:
+                    break;
+            }
+
+        }
+        protected virtual void MenuPersonalizedSettings()
+        {
+            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
+            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
+            if (frmMenu.ShowDialog() == DialogResult.OK)
+            {
+                LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
+            }
+        }
+
+        /// <summary>
+        /// esc退出窗体
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="keyData"></param>
+        /// <returns></returns>
+        protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
+        {
+            int WM_KEYDOWN = 256;
+            int WM_SYSKEYDOWN = 260;
+
+            if (msg.Msg == WM_KEYDOWN | msg.Msg == WM_SYSKEYDOWN)
+            {
+                switch (keyData)
+                {
+                    case Keys.Escape:
+                        Exit(this);
+                        break;
+                    case Keys.F1:
+
+                        break;
+                    case Keys.Enter:
+                        toolStripBtnQuery.Select();
+                        Query(QueryDto);
+                        break;
+                }
+
+            }
+            return false;
+        }
+
+
+        protected async virtual void Query(BaseEntity dto)
+        {
+            if (ValidationHelper.hasValidationErrors(this.Controls))
+                return;
+
+            dataGridView1.ReadOnly = true;
+            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            //QueryConditions 如果条件为0，则会查询全部结果
+            //List<T> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditions, LimitQueryConditions, dto);
+
+            List<T> list = new List<T>();
+            int pageNum = 1;
+            int pageSize = int.Parse(txtMaxRows.Text);
+            //提取指定的列名，即条件集合
+            //List<string> queryConditions = new List<string>();
+            //queryConditions = new List<string>(QueryConditionFilter.QueryFields.Select(t => t.FieldName).ToList());
+            //ExpConverter expConverter = new ExpConverter();
+            //if (Filter.FilterLimitExpression != null)
+            //{
+            //    var whereExp = expConverter.ConvertToFuncByClassName(typeof(T), Filter.FilterLimitExpression);
+            //    LimitQueryConditions = whereExp as Expression<Func<T, bool>>;
+            //}
+            //else
+            //{
+            //    LimitQueryConditions = c => true;// queryFilter.FieldLimitCondition;
+            //}
+            // LimitQueryConditions = QueryConditionFilter.GetFilterExpression<T>();
+
+            //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, QueryConditionFilter.GetFilterExpression<T>(), QueryDto, pageNum, pageSize) as List<T>;
+            list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<T>;
+
+            bindingSourceList.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
+            dataGridView1.DataSource = bindingSourceList;
+      
+        }
+
+
+
+        #region 定义所有工具栏的方法
+
+
+        protected void SelectedData()
+        {
+            if (bindingSourceList.Current != null)
+            {
+                if (OnSelectDataRow != null)
+                {
+                    OnSelectDataRow(bindingSourceList.Current);
+                }
+                //将选中的值保存到这里，用在 复杂编辑UI时 编辑外键的其他资料
+                base.Tag = bindingSourceList;
+                //退出
+                Form frm = (this as Control).Parent.Parent as Form;
+                frm.DialogResult = DialogResult.OK;
+                frm.Close();
+                return;
+            }
+
+            //bindingSourceList.Current
+
+            //control.DataBindings.Add()
+            //control.CausesValidation = true;
+            //control.DataBindings.EndCurrentEdit();
+            //  this.Tag = bindingSourceList.Current;
+            /*
+            string ucTypeName = control.GetType().Name;
+            if (ucTypeName == "KryptonComboBox")
+            {
+                KryptonComboBox ktb = control as KryptonComboBox;
+                //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
+                if (bindingSourceList.Current != null)
+                {
+                    object obj = bindingSourceList.Current;
+                    //从缓存中重新加载 
+                    BindingSource NewBsList = new BindingSource();
+                    //将List<T>类型的结果是object的转换为指定类型的List
+                    //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
+                    // var rslist = CacheHelper.Manager.CacheEntityList.Get(typeof(T).Name);
+                    // var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                    if (bindingSourceList.DataSource != null)
+                    {
+                        NewBsList.DataSource = bindingSourceList.DataSource;
+                       // Common.DataBindingHelper.InitDataToCmb(NewBsList, ktb.ValueMember, ktb.DisplayMember,ktb );
+
+                        Binding binding = null;
+                        if (control.DataBindings.Count > 0)
+                        {
+                            binding = control.DataBindings[0]; //这个是下拉绑定的实体集合
+                                                               //string filedName = binding.BindingMemberInfo.BindingField;
+                        }
+                        else
+                        {
+                            // binding = new Binding();
+                        }
+                        string SelectField = binding.BindingMemberInfo.BindingField;
+                        ////因为选择中 实体数据并没有更新，下面两行是将对象对应的属性给一个选中的值。
+                        object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(obj, SelectField);
+
+                        RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, SelectField, selectValue);
+
+                        //实体更新后会反应的下拉选中状态
+                    }
+
+                }
+            }
+            */
+            //SelectedData()
+            if (control != null)
+            {
+                control.CausesValidation = true;
+            }
+
+            Exit(this);
+        }
+
+
+
+        private void CloseTheForm(object thisform)
+        {
+            KryptonWorkspaceCell cell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
+            if (cell == null)
+            {
+                cell = new KryptonWorkspaceCell();
+                MainForm.Instance.kryptonDockableWorkspace1.Root.Children.Add(cell);
+            }
+            if ((thisform as Control).Parent is KryptonPage)
+            {
+                KryptonPage page = (thisform as Control).Parent as KryptonPage;
+                page.Hide(); //高级查询 如果移除会 工具栏失效一次，找不到原因。目前暂时隐藏处理
+                             //如果上一级的窗体关闭则删除？
+                             //MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
+                             //page.Dispose();
+            }
+            else
+            {
+                if (thisform is Form)
+                {
+                    Form frm = (thisform as Form);
+                    frm.Close();
+                }
+                else
+                {
+                    Form frm = (thisform as Control).Parent.Parent as Form;
+                    frm.Close();
+                }
+
+
+            }
+            /*
+           if (page == null)
+           {
+               //浮动
+
+           }
+           else
+           {
+               //活动内
+               if (cell.Pages.Contains(page))
+               {
+                   cell.Pages.Remove(page);
+                   page.Dispose();
+               }
+           }
+           */
+        }
+
+        protected virtual void Exit(object thisform)
+        {
+            //if (!Edited)
+            //{
+            //    //退出
+            CloseTheForm(thisform);
+            //}
+            //else
+            //{
+            //    if (MessageBox.Show(this, "有数据没有保存\r\n你确定要退出吗?   这里是不是可以进一步提示 哪些内容没有保存？", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+            //    {
+            //        //退出
+            //        CloseTheForm(thisform);
+            //    }
+            //}
+        }
+
+
+        #endregion
+
+
+        public QueryFilter QueryConditionFilter { get; set; } = new QueryFilter();
+
+
+        /// <summary>
+        /// 默认不是模糊查询
+        /// </summary>
+        /// <param name="useLike"></param>
+        public void LoadQueryConditionToUI(decimal QueryConditionShowColQty)
+        {
+            //为了验证设置的属性
+            this.AutoValidate = AutoValidate.EnableAllowFocusChange;
+
+            UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
+
+            PanelForQuery.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance
+| System.Reflection.BindingFlags.NonPublic).SetValue(PanelForQuery, true, null);
+            PanelForQuery.Visible = false;
+            PanelForQuery.Controls.Clear();
+            PanelForQuery.SuspendLayout();
+
+
+            //QueryDto = uIQueryHelper.SetQueryUI(true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
+            QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
+
+            PanelForQuery.ResumeLayout();
+            PanelForQuery.Visible = true;
+            List<T> list = new List<T>();
+
+            if (QueryConditionFilter != null && QueryConditionFilter.InvisibleCols != null)
+            {
+                //统一将主键ID不显示
+
+                string pkColName = UIHelper.GetPrimaryKeyColName(typeof(T));
+                //这里设置了指定列不可见
+                if (!QueryConditionFilter.InvisibleCols.Contains(pkColName))
+                {
+                    QueryConditionFilter.InvisibleCols.Add(pkColName);
+                }
+
+                //目前没有想好，就是采购入库单中会有引用的采购订单ID，实际只要显示订单号即可。 其它类似业务也一样。就是引用另一个单的情况
+
+                if (typeof(T).Name == typeof(tb_PurEntry).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("PurOrder_ID");
+                }
+                if (typeof(T).Name == typeof(tb_SaleOut).Name)
+                {
+                    QueryConditionFilter.InvisibleCols.Add("SOrder_ID");
+                }
+
+
+
+                //这里设置了指定列不可见
+                foreach (var item in QueryConditionFilter.InvisibleCols)
+                {
+                    KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
+                    dataGridView1.FieldNameList.TryRemove(item, out kv);
+                }
+            }
+
+
+            bindingSourceList.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
+            dataGridView1.DataSource = bindingSourceList;
+
+            //TODO:!!!!!!加总功能暂时不做。不方便显示。到时能控制再说。
+            /*
+            var SummaryCols = QueryConditionFilter.GetSummaryCols<T>();
+            if (SummaryCols.Count > 0)
+            {
+                dataGridView1.IsShowSumRow = true;
+                dataGridView1.SumColumns = SummaryCols.ToArray();
+            }*/
+        }
+
+
+
+
+        private void UCAdvFilterGeneric_Load(object sender, EventArgs e)
+        {
+            if (!this.DesignMode)
+            {
+                MenuPersonalization personalization = new MenuPersonalization();
+                UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
+                if (personalization != null)
+                {
+                    decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
+                    LoadQueryConditionToUI(QueryShowColQty);
+                }
+                else
+                {
+                    LoadQueryConditionToUI(4);
+                }
+            }
+        }
+
+        #region
+
+        public Control control { get; set; }
+
+        public delegate void SelectDataRowHandler(object entity);
+
+        [Browsable(true), Description("双击将数据载入到明细外部事件")]
+        public event SelectDataRowHandler OnSelectDataRow;
+        private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            SelectedData();
+        }
+        //三级 还是两级呢。  反向来 一是 KEY VALUE  然后是列名
+        ConcurrentDictionary<string, List<KeyValuePair<object, string>>> _DataDictionary = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
+        /// <summary>
+        /// 固定的值显示，入库ture 出库false
+        /// 每个列表对应的值 ，单独设置
+        /// </summary>
+        public ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ColNameDataDictionary { get => _DataDictionary; set => _DataDictionary = value; }
+        private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.Value == null)
+            {
+                e.Value = "";
+                return;
+            }
+
+            //固定字典值显示
+            string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
+            if (ColNameDataDictionary.ContainsKey(colDbName))
+            {
+                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
+                //意思是通过列名找，再通过值找到对应的文本
+                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
+                if (kvlist != null)
+                {
+                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
+                    if (kv.Value != null)
+                    {
+                        e.Value = kv.Value;
+                    }
+                }
+            }
+
+            //动态字典值显示
+            string colName = string.Empty;
+            if (KeyValueTypeForDgv != null)
+            {
+                colName = UIHelper.ShowGridColumnsNameValue(KeyValueTypeForDgv, colDbName, e.Value);
+            }
+            else
+            {
+                colName = UIHelper.ShowGridColumnsNameValue<T>(colDbName, e.Value);
+            }
+            if (!string.IsNullOrEmpty(colName))
+            {
+                e.Value = colName;
+            }
+
+            //图片特殊处理
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    e.Value = image;
+                    //这里用缓存
+                }
+            }
+
+
+        }
+        private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+
+        }
+
+
+        #endregion
+
+
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (OnSelectDataRow != null)
+            {
+                OnSelectDataRow(bindingSourceList.Current);
+            }
+        }
+    }
+}

@@ -1,0 +1,657 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/08/2023 23:46:31" ReportInfo.Modified="05/08/2023 23:49:31" ReportInfo.CreatorVersion="2020.3.7.0">
+  <Dictionary>
+    <BusinessObjectDataSource Name="Main" ReferenceName="Main" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+      <Column Name="Order_ID" DataType="System.Int32"/>
+      <Column Name="OrderNo" DataType="System.String"/>
+      <Column Name="Employee_ID" DataType="System.Int32"/>
+      <Column Name="Paytype_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="CustomerVendor_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="TotalAmount" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="sale_date" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="delivery_date" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Modified_at" DataType="System.DateTime"/>
+      <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Notes" DataType="System.String"/>
+      <Column Name="ShippingAddress" DataType="System.String"/>
+      <Column Name="status" DataType="System.String"/>
+      <Column Name="is_closed" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="approver_id" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="approver_time" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="shippingWay" DataType="System.String"/>
+      <Column Name="TrackNo" DataType="System.String"/>
+      <Column Name="tb_CustomerVendor" DataType="RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="CustomerVendor_ID" DataType="System.Int32"/>
+        <Column Name="Type_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="CVName" DataType="System.String"/>
+        <Column Name="Contact" DataType="System.String"/>
+        <Column Name="Phone" DataType="System.String"/>
+        <Column Name="Address" DataType="System.String"/>
+        <Column Name="Website" DataType="System.String"/>
+        <Column Name="IsCustomer" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="IsVendor" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="tb_CustomerVendorType" DataType="RUINORERP.Model.tb_CustomerVendorType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="Type_ID" DataType="System.Int32"/>
+          <Column Name="TypeName" DataType="System.String"/>
+          <Column Name="Desc" DataType="System.String"/>
+          <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+          <Column Name="Error" DataType="System.String"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource1" Alias="tb_CustomerVendors" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendors"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource2" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource3" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource4" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+        </Column>
+        <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="Error" DataType="System.String"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource5" Alias="tb_CustomerVendorFileses" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendorFiles, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendorFileses"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource6" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource7" Alias="tb_sales_orders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_orders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource8" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource9" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource10" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+      </Column>
+      <Column Name="tb_Employee" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="Employee_ID" DataType="System.Int32"/>
+        <Column Name="Employee_NO" DataType="System.String"/>
+        <Column Name="Employee_Name" DataType="System.String"/>
+        <Column Name="Gender" DataType="System.String"/>
+        <Column Name="Position" DataType="System.String"/>
+        <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Marriage" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Birthday" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="StartDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="JobTitle" DataType="System.String"/>
+        <Column Name="Address" DataType="System.String"/>
+        <Column Name="Email" DataType="System.String"/>
+        <Column Name="Education" DataType="System.String"/>
+        <Column Name="LanguageSkills" DataType="System.String"/>
+        <Column Name="University" DataType="System.String"/>
+        <Column Name="IDNumber" DataType="System.String"/>
+        <Column Name="EndDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Is_enabled" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Is_available" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="salary" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="tb_Department" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="DepartmentID" DataType="System.Int32"/>
+          <Column Name="DepartmentName" DataType="System.String"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+          <Column Name="Error" DataType="System.String"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource11" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource12" Alias="tb_Employees" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Employees"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource13" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource14" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource15" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+        </Column>
+        <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="Error" DataType="System.String"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource16" Alias="tb_sales_orders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_orders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource17" Alias="tb_UserInfos" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_UserInfo, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_UserInfos"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource18" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource19" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource20" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+      </Column>
+      <Column Name="tb_Payment_method" DataType="RUINORERP.Model.tb_Payment_method, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="Paytype_ID" DataType="System.Int32"/>
+        <Column Name="Paytype_Name" DataType="System.String"/>
+        <Column Name="Desc" DataType="System.String"/>
+        <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="Error" DataType="System.String"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource21" Alias="tb_sales_orders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_orders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource22" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource23" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource24" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+      </Column>
+      <BusinessObjectDataSource Name="tb_sales_order_details" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order_detail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+        <Column Name="SaleOrderDetail_ID" DataType="System.Int32"/>
+        <Column Name="Order_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Product_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="quantity" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Summary" DataType="System.String"/>
+        <Column Name="tb_Product" DataType="RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="Product_ID" DataType="System.Int32"/>
+          <Column Name="ProductNo" DataType="System.String"/>
+          <Column Name="Name" DataType="System.String"/>
+          <Column Name="ShortCode" DataType="System.String"/>
+          <Column Name="BarCode" DataType="System.String"/>
+          <Column Name="Specifications" DataType="System.String"/>
+          <Column Name="Category_ID" DataType="System.Int32"/>
+          <Column Name="CustomerVendor_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Location_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Type_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Unit_ID" DataType="System.Int32"/>
+          <Column Name="Purchase_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Sales_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Transfer_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Cost_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Market_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Discount_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Brand" DataType="System.String"/>
+          <Column Name="Weight" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Image" DataType="System.Byte[]" BindableControl="Picture"/>
+          <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="tb_Department" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="DepartmentID" DataType="System.Int32"/>
+            <Column Name="DepartmentName" DataType="System.String"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource25" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource26" Alias="tb_Employees" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Employees"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource27" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource28" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource29" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </Column>
+          <Column Name="tb_ProductCategories" DataType="RUINORERP.Model.tb_ProductCategories, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="parent_id" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Category_ID" DataType="System.Int32"/>
+            <Column Name="category_name" DataType="System.String"/>
+            <Column Name="categoryCode" DataType="System.String"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Sort" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Images" DataType="System.Byte[]" BindableControl="Picture"/>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource30" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource31" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource32" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource33" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </Column>
+          <Column Name="tb_CustomerVendor" DataType="RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="CustomerVendor_ID" DataType="System.Int32"/>
+            <Column Name="Type_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="CVName" DataType="System.String"/>
+            <Column Name="Contact" DataType="System.String"/>
+            <Column Name="Phone" DataType="System.String"/>
+            <Column Name="Address" DataType="System.String"/>
+            <Column Name="Website" DataType="System.String"/>
+            <Column Name="IsCustomer" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="IsVendor" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="tb_CustomerVendorType" DataType="RUINORERP.Model.tb_CustomerVendorType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+              <Column Name="Type_ID" DataType="System.Int32"/>
+              <Column Name="TypeName" DataType="System.String"/>
+              <Column Name="Desc" DataType="System.String"/>
+              <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+              <Column Name="Error" DataType="System.String"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource34" Alias="tb_CustomerVendors" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendors"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource35" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource36" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource37" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+            </Column>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource38" Alias="tb_CustomerVendorFileses" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendorFiles, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendorFileses"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource39" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource40" Alias="tb_sales_orders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_orders"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource41" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource42" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource43" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </Column>
+          <Column Name="tb_Location" DataType="RUINORERP.Model.tb_Location, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="Location_ID" DataType="System.Int32"/>
+            <Column Name="LocationType_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Name" DataType="System.String"/>
+            <Column Name="Desc" DataType="System.String"/>
+            <Column Name="tb_LocationType" DataType="RUINORERP.Model.tb_LocationType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+              <Column Name="LocationType_ID" DataType="System.Int32"/>
+              <Column Name="TypeName" DataType="System.String"/>
+              <Column Name="Desc" DataType="System.String"/>
+              <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+              <Column Name="Error" DataType="System.String"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource44" Alias="tb_Locations" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Location, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Locations"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource45" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource46" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource47" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+            </Column>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource48" Alias="tb_Inventories" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Inventory, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Inventories"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource49" Alias="tb_OpeningIinventories" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_OpeningIinventory, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_OpeningIinventories"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource50" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource51" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource52" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource53" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </Column>
+          <Column Name="tb_Unit" DataType="RUINORERP.Model.tb_Unit, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="Unit_ID" DataType="System.Int32"/>
+            <Column Name="UnitName" DataType="System.String"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource54" Alias="tb_Packagings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Packaging, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Packagings"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource55" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource56" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource57" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource58" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </Column>
+          <Column Name="tb_ProductType" DataType="RUINORERP.Model.tb_ProductType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="Type_ID" DataType="System.Int32"/>
+            <Column Name="TypeName" DataType="System.String"/>
+            <Column Name="TypeDesc" DataType="System.String"/>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource59" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource60" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource61" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource62" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </Column>
+          <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+          <Column Name="Error" DataType="System.String"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource63" Alias="tb_Inventories" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Inventory, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Inventories"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource64" Alias="tb_OpeningIinventory_details" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_OpeningIinventory_detail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_OpeningIinventory_details"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource65" Alias="tb_Packagings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Packaging, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Packagings"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource66" Alias="tb_ProdAttributes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdAttribute, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdAttributes"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource67" Alias="tb_Product_Group_Details" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product_Group_Detail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Product_Group_Details"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource68" Alias="tb_sales_order_details" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order_detail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_order_details"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource69" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource70" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource71" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+        </Column>
+        <Column Name="tb_sales_order" DataType="RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="Order_ID" DataType="System.Int32"/>
+          <Column Name="OrderNo" DataType="System.String"/>
+          <Column Name="Employee_ID" DataType="System.Int32"/>
+          <Column Name="Paytype_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="CustomerVendor_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="TotalAmount" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="sale_date" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="delivery_date" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_at" DataType="System.DateTime"/>
+          <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="ShippingAddress" DataType="System.String"/>
+          <Column Name="status" DataType="System.String"/>
+          <Column Name="is_closed" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="approver_id" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="approver_time" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="shippingWay" DataType="System.String"/>
+          <Column Name="TrackNo" DataType="System.String"/>
+          <Column Name="tb_CustomerVendor" DataType="RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="CustomerVendor_ID" DataType="System.Int32"/>
+            <Column Name="Type_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="CVName" DataType="System.String"/>
+            <Column Name="Contact" DataType="System.String"/>
+            <Column Name="Phone" DataType="System.String"/>
+            <Column Name="Address" DataType="System.String"/>
+            <Column Name="Website" DataType="System.String"/>
+            <Column Name="IsCustomer" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="IsVendor" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="tb_CustomerVendorType" DataType="RUINORERP.Model.tb_CustomerVendorType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+              <Column Name="Type_ID" DataType="System.Int32"/>
+              <Column Name="TypeName" DataType="System.String"/>
+              <Column Name="Desc" DataType="System.String"/>
+              <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+              <Column Name="Error" DataType="System.String"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource72" Alias="tb_CustomerVendors" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendors"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource73" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource74" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource75" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+            </Column>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource76" Alias="tb_CustomerVendorFileses" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendorFiles, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendorFileses"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource77" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource78" Alias="tb_sales_orders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_orders"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource79" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource80" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource81" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </Column>
+          <Column Name="tb_Employee" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="Employee_ID" DataType="System.Int32"/>
+            <Column Name="Employee_NO" DataType="System.String"/>
+            <Column Name="Employee_Name" DataType="System.String"/>
+            <Column Name="Gender" DataType="System.String"/>
+            <Column Name="Position" DataType="System.String"/>
+            <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Marriage" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Birthday" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="StartDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="JobTitle" DataType="System.String"/>
+            <Column Name="Address" DataType="System.String"/>
+            <Column Name="Email" DataType="System.String"/>
+            <Column Name="Education" DataType="System.String"/>
+            <Column Name="LanguageSkills" DataType="System.String"/>
+            <Column Name="University" DataType="System.String"/>
+            <Column Name="IDNumber" DataType="System.String"/>
+            <Column Name="EndDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Is_enabled" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="Is_available" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="salary" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="tb_Department" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+              <Column Name="DepartmentID" DataType="System.Int32"/>
+              <Column Name="DepartmentName" DataType="System.String"/>
+              <Column Name="Notes" DataType="System.String"/>
+              <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+              <Column Name="Error" DataType="System.String"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource82" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource83" Alias="tb_Employees" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Employees"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource84" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource85" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource86" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+            </Column>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource87" Alias="tb_sales_orders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_orders"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource88" Alias="tb_UserInfos" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_UserInfo, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_UserInfos"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource89" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource90" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource91" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </Column>
+          <Column Name="tb_Payment_method" DataType="RUINORERP.Model.tb_Payment_method, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="Paytype_ID" DataType="System.Int32"/>
+            <Column Name="Paytype_Name" DataType="System.String"/>
+            <Column Name="Desc" DataType="System.String"/>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource92" Alias="tb_sales_orders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_orders"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource93" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource94" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource95" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </Column>
+          <BusinessObjectDataSource Name="tb_sales_order_details1" Alias="tb_sales_order_details" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order_detail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_order_details" Enabled="true">
+            <Column Name="SaleOrderDetail_ID" DataType="System.Int32"/>
+            <Column Name="Order_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Product_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="quantity" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Summary" DataType="System.String"/>
+            <Column Name="tb_Product" DataType="RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+              <Column Name="Product_ID" DataType="System.Int32"/>
+              <Column Name="ProductNo" DataType="System.String"/>
+              <Column Name="Name" DataType="System.String"/>
+              <Column Name="ShortCode" DataType="System.String"/>
+              <Column Name="BarCode" DataType="System.String"/>
+              <Column Name="Specifications" DataType="System.String"/>
+              <Column Name="Category_ID" DataType="System.Int32"/>
+              <Column Name="CustomerVendor_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Location_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Type_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Unit_ID" DataType="System.Int32"/>
+              <Column Name="Purchase_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Sales_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Transfer_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Cost_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Market_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Discount_price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Brand" DataType="System.String"/>
+              <Column Name="Weight" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Image" DataType="System.Byte[]" BindableControl="Picture"/>
+              <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Notes" DataType="System.String"/>
+              <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+              <Column Name="tb_Department" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+                <Column Name="DepartmentID" DataType="System.Int32"/>
+                <Column Name="DepartmentName" DataType="System.String"/>
+                <Column Name="Notes" DataType="System.String"/>
+                <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+                <Column Name="Error" DataType="System.String"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource96" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource97" Alias="tb_Employees" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Employees"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource98" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource99" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource100" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+              </Column>
+              <Column Name="tb_ProductCategories" DataType="RUINORERP.Model.tb_ProductCategories, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+                <Column Name="parent_id" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="Category_ID" DataType="System.Int32"/>
+                <Column Name="category_name" DataType="System.String"/>
+                <Column Name="categoryCode" DataType="System.String"/>
+                <Column Name="Notes" DataType="System.String"/>
+                <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="Sort" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="Images" DataType="System.Byte[]" BindableControl="Picture"/>
+                <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+                <Column Name="Error" DataType="System.String"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource101" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource102" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource103" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource104" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+              </Column>
+              <Column Name="tb_CustomerVendor" DataType="RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+                <Column Name="CustomerVendor_ID" DataType="System.Int32"/>
+                <Column Name="Type_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="CVName" DataType="System.String"/>
+                <Column Name="Contact" DataType="System.String"/>
+                <Column Name="Phone" DataType="System.String"/>
+                <Column Name="Address" DataType="System.String"/>
+                <Column Name="Website" DataType="System.String"/>
+                <Column Name="IsCustomer" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="IsVendor" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="Notes" DataType="System.String"/>
+                <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="Created_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="tb_CustomerVendorType" DataType="RUINORERP.Model.tb_CustomerVendorType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+                  <Column Name="Type_ID" DataType="System.Int32"/>
+                  <Column Name="TypeName" DataType="System.String"/>
+                  <Column Name="Desc" DataType="System.String"/>
+                  <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                  <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                  <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+                  <Column Name="Error" DataType="System.String"/>
+                  <BusinessObjectDataSource Name="BusinessObjectDataSource105" Alias="tb_CustomerVendors" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendors"/>
+                  <BusinessObjectDataSource Name="BusinessObjectDataSource106" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+                  <BusinessObjectDataSource Name="BusinessObjectDataSource107" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+                  <BusinessObjectDataSource Name="BusinessObjectDataSource108" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+                </Column>
+                <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+                <Column Name="Error" DataType="System.String"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource109" Alias="tb_CustomerVendorFileses" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendorFiles, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendorFileses"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource110" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource111" Alias="tb_sales_orders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_orders"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource112" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource113" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource114" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+              </Column>
+              <Column Name="tb_Location" DataType="RUINORERP.Model.tb_Location, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+                <Column Name="Location_ID" DataType="System.Int32"/>
+                <Column Name="LocationType_ID" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+                <Column Name="Name" DataType="System.String"/>
+                <Column Name="Desc" DataType="System.String"/>
+                <Column Name="tb_LocationType" DataType="RUINORERP.Model.tb_LocationType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+                  <Column Name="LocationType_ID" DataType="System.Int32"/>
+                  <Column Name="TypeName" DataType="System.String"/>
+                  <Column Name="Desc" DataType="System.String"/>
+                  <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                  <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                  <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+                  <Column Name="Error" DataType="System.String"/>
+                  <BusinessObjectDataSource Name="BusinessObjectDataSource115" Alias="tb_Locations" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Location, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Locations"/>
+                  <BusinessObjectDataSource Name="BusinessObjectDataSource116" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+                  <BusinessObjectDataSource Name="BusinessObjectDataSource117" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+                  <BusinessObjectDataSource Name="BusinessObjectDataSource118" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+                </Column>
+                <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+                <Column Name="Error" DataType="System.String"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource119" Alias="tb_Inventories" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Inventory, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Inventories"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource120" Alias="tb_OpeningIinventories" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_OpeningIinventory, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_OpeningIinventories"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource121" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource122" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource123" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource124" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+              </Column>
+              <Column Name="tb_Unit" DataType="RUINORERP.Model.tb_Unit, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+                <Column Name="Unit_ID" DataType="System.Int32"/>
+                <Column Name="UnitName" DataType="System.String"/>
+                <Column Name="Notes" DataType="System.String"/>
+                <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+                <Column Name="Error" DataType="System.String"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource125" Alias="tb_Packagings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Packaging, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Packagings"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource126" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource127" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource128" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource129" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+              </Column>
+              <Column Name="tb_ProductType" DataType="RUINORERP.Model.tb_ProductType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+                <Column Name="Type_ID" DataType="System.Int32"/>
+                <Column Name="TypeName" DataType="System.String"/>
+                <Column Name="TypeDesc" DataType="System.String"/>
+                <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+                <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+                <Column Name="Error" DataType="System.String"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource130" Alias="tb_Products" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Products"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource131" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource132" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+                <BusinessObjectDataSource Name="BusinessObjectDataSource133" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+              </Column>
+              <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+              <Column Name="Error" DataType="System.String"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource134" Alias="tb_Inventories" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Inventory, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Inventories"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource135" Alias="tb_OpeningIinventory_details" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_OpeningIinventory_detail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_OpeningIinventory_details"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource136" Alias="tb_Packagings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Packaging, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Packagings"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource137" Alias="tb_ProdAttributes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdAttribute, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdAttributes"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource138" Alias="tb_Product_Group_Details" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Product_Group_Detail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Product_Group_Details"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource139" Alias="tb_sales_order_details" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_sales_order_detail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_sales_order_details"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource140" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource141" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource142" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            </Column>
+            <Column Name="tb_sales_order" Enabled="false" DataType="RUINORERP.Model.tb_sales_order, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Error" DataType="System.String"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource143" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource144" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource145" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+          </BusinessObjectDataSource>
+          <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+          <Column Name="Error" DataType="System.String"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource146" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource147" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource148" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+        </Column>
+        <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="Error" DataType="System.String"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource149" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource150" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource151" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+      </BusinessObjectDataSource>
+      <Column Name="SuppressNotifyPropertyChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="HasChanged" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="actionStatus" DataType="RUINORERP.Model.ActionStatus, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+      <Column Name="Error" DataType="System.String"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource152" Alias="FieldNameList" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="FieldNameList"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource153" Alias="DeleteIDs" Enabled="false" DataType="System.Collections.Generic.List`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="DeleteIDs"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource154" Alias="HelpInfos" Enabled="false" DataType="System.Collections.Concurrent.ConcurrentDictionary`2[[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" PropName="HelpInfos"/>
+    </BusinessObjectDataSource>
+  </Dictionary>
+  <ReportPage Name="Page1" Watermark.Font="宋体, 60pt">
+    <ReportTitleBand Name="ReportTitle1" Width="718.2" Height="151.2"/>
+    <PageHeaderBand Name="PageHeader1" Top="155.2" Width="718.2" Height="264.6">
+      <TextObject Name="Text10" Left="28.35" Top="9.45" Width="94.5" Height="18.9" Text="[Main.OrderNo]" Font="宋体, 9pt"/>
+      <TextObject Name="Text11" Left="207.9" Top="18.9" Width="94.5" Height="18.9" Text="[Main.Order_ID]" Font="宋体, 9pt"/>
+      <TextObject Name="Text12" Left="434.7" Top="18.9" Width="94.5" Height="18.9" Text="[Main.TotalAmount]" Font="宋体, 9pt"/>
+      <TextObject Name="Text13" Left="604.8" Top="18.9" Width="94.5" Height="18.9" Text="[Main.Created_at]" Font="宋体, 9pt"/>
+    </PageHeaderBand>
+    <DataBand Name="Data1" Top="423.8" Width="718.2" Height="75.6" DataSource="tb_sales_order_details">
+      <TextObject Name="Text1" Left="18.9" Top="18.9" Width="94.5" Height="18.9" Text="[Main.tb_sales_order_details.SaleOrderDetail_ID]" Font="宋体, 9pt"/>
+      <TextObject Name="Text3" Left="141.75" Top="18.9" Width="94.5" Height="18.9" Text="[Main.tb_sales_order_details.Product_ID]" Font="宋体, 9pt"/>
+      <TextObject Name="Text5" Left="274.05" Top="18.9" Width="94.5" Height="18.9" Text="[Main.tb_sales_order_details.quantity]" Font="宋体, 9pt"/>
+      <TextObject Name="Text7" Left="396.9" Top="28.35" Width="94.5" Height="18.9" Text="[Main.tb_sales_order_details.price]" Font="宋体, 9pt"/>
+      <TextObject Name="Text9" Left="538.65" Top="18.9" Width="94.5" Height="18.9" Text="[Main.tb_sales_order_details.tb_Product.Name]" Font="宋体, 9pt"/>
+    </DataBand>
+    <PageFooterBand Name="PageFooter1" Top="503.4" Width="718.2" Height="198.45">
+      <TextObject Name="Text14" Left="113.4" Top="113.4" Width="94.5" Height="18.9" Text="[Main.ShippingAddress]" Font="宋体, 9pt"/>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

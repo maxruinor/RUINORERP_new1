@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Serialization\**" />
+    <EmbeddedResource Remove="Serialization\**" />
+    <None Remove="Serialization\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="BizEnums.cs" />
+    <Compile Remove="Core\FieldManager\DefaultPropertyInfoFactory.cs" />
+    <Compile Remove="Core\FieldManager\FieldData.cs" />
+    <Compile Remove="Core\FieldManager\FieldDataList.cs" />
+    <Compile Remove="Core\FieldManager\FieldDataManager.cs" />
+    <Compile Remove="Core\FieldManager\IFieldData.cs" />
+    <Compile Remove="Core\FieldManager\IFieldDataT.cs" />
+    <Compile Remove="Core\FieldManager\PropertyInfoFactory.cs" />
+    <Compile Remove="Core\FieldManager\PropertyInfoList.cs" />
+    <Compile Remove="Core\FieldManager\PropertyInfoManager.cs" />
+    <Compile Remove="Core\IMemberInfo.cs" />
+    <Compile Remove="Core\IPropertyInfo.cs" />
+    <Compile Remove="Core\IPropertyInfoFactory.cs" />
+    <Compile Remove="PropertyInfo.cs" />
+    <Compile Remove="RelationshipTypes.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Core\FieldManager\" />
+  </ItemGroup>
+
+</Project>

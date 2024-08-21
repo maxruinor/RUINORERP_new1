@@ -1,0 +1,121 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Platforms>AnyCPU;x86</Platforms>
+  </PropertyGroup>
+<PropertyGroup>
+<LangVersion>latest</LangVersion>
+</PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PlatformTarget>AnyCPU</PlatformTarget>
+</PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+  <PlatformTarget>AnyCPU</PlatformTarget>
+</PropertyGroup>
+<ItemGroup>
+  <Compile Remove="EnumExt\**" />
+  <Compile Remove="HttpContextUser\**" />
+  <Compile Remove="HttpPolly\**" />
+  <Compile Remove="HttpRestSharp\**" />
+  <Compile Remove="Hubs\**" />
+  <Compile Remove="LogHelper\Seri\**" />
+  <Compile Remove="Model\**" />
+  <Compile Remove="Seed\**" />
+  <EmbeddedResource Remove="EnumExt\**" />
+  <EmbeddedResource Remove="HttpContextUser\**" />
+  <EmbeddedResource Remove="HttpPolly\**" />
+  <EmbeddedResource Remove="HttpRestSharp\**" />
+  <EmbeddedResource Remove="Hubs\**" />
+  <EmbeddedResource Remove="LogHelper\Seri\**" />
+  <EmbeddedResource Remove="Model\**" />
+  <EmbeddedResource Remove="Seed\**" />
+  <None Remove="EnumExt\**" />
+  <None Remove="HttpContextUser\**" />
+  <None Remove="HttpPolly\**" />
+  <None Remove="HttpRestSharp\**" />
+  <None Remove="Hubs\**" />
+  <None Remove="LogHelper\Seri\**" />
+  <None Remove="Model\**" />
+  <None Remove="Seed\**" />
+</ItemGroup>
+<ItemGroup>
+  <Compile Remove="CustomAttribute\CacheAttribute.cs" />
+  <Compile Remove="CustomAttribute\MenuAttribute.cs" />
+  <Compile Remove="DI\AutofacHelper.cs" />
+  <Compile Remove="DI\RuntimeHelper.cs" />
+  <Compile Remove="Extensions\Ext.ActionExecutingContext.cs" />
+  <Compile Remove="Extensions\Ext.Decimal.cs" />
+  <Compile Remove="Extensions\Ext.HttpContext.cs" />
+  <Compile Remove="Extensions\Ext.Uri.cs" />
+  <Compile Remove="Extensions\Extention.Expression.cs" />
+  <Compile Remove="Extensions\Guard.cs" />
+  <Compile Remove="GlobalVar\GlobalVars.cs" />
+  <Compile Remove="Global\AppSettings.cs" />
+  <Compile Remove="Global\GlobalVar.cs" />
+  <Compile Remove="Helper\ApplicationHelper.cs" />
+  <Compile Remove="Helper\Class1.cs" />
+  <Compile Remove="Helper\HttpHelper.cs" />
+  <Compile Remove="Helper\ImgHelper.cs" />
+  <Compile Remove="Helper\ImgVerifyCodeHelper.cs" />
+  <Compile Remove="Helper\JsEncryptHelper.cs" />
+  <Compile Remove="Helper\PingYinHelper.cs" />
+  <Compile Remove="Helper\RequiredHelper.cs" />
+  <Compile Remove="Helper\RSAHelperExtend.cs" />
+  <Compile Remove="Helper\ServerMonitorHelper.cs" />
+  <Compile Remove="Helper\WaterMarkHelper.cs" />
+  <Compile Remove="Helper\WeChatHelper.cs" />
+  <Compile Remove="log4netHelper.cs" />
+  <Compile Remove="Log4Net\CustomAdoNetAppender.cs" />
+  <Compile Remove="Logging\Class1.cs" />
+  <Compile Remove="Logging\ConsoleLoggingProvider.cs" />
+  <Compile Remove="Logging\PeriodBatchingLoggingService.cs" />
+  <Compile Remove="MemoryCache\DictServiceHelper.cs" />
+</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.5.0" />
+    <PackageReference Include="Autofac.Extras.DynamicProxy" Version="6.0.1" />
+    <PackageReference Include="EPPlus" Version="7.2.0" />
+    <PackageReference Include="log4net" Version="2.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="NodaTime" Version="3.1.6" />
+    <PackageReference Include="PinYinConverterCore" Version="1.0.2" />
+    <PackageReference Include="SqlSugar" Version="5.1.4.130" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.90" />
+    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.26.0" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.2" />
+    <PackageReference Include="System.Management" Version="7.0.0" />
+    <PackageReference Include="ZXing.Net" Version="0.16.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="GlobalVar\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Extensions\Ext.Decimal.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Windows.Forms.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

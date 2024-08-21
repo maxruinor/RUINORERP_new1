@@ -1,0 +1,511 @@
+﻿
+// **************************************
+// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+// 项目：信息系统
+// 版权：Copyright RUINOR
+// 作者：Watson
+// 时间：07/20/2024 20:30:04
+// **************************************
+using System;
+﻿using SqlSugar;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using System.Collections.Concurrent;
+using RUINORERP.Global.CustomAttribute;
+
+namespace RUINORERP.Model
+{
+    /// <summary>
+    /// 产品拆分单
+    /// </summary>
+    [Serializable()]
+    [Description("tb_ProdSplit")]
+    [SugarTable("tb_ProdSplit")]
+    public partial class tb_ProdSplit: BaseEntity, ICloneable
+    {
+        public tb_ProdSplit()
+        {
+            base.FieldNameList = fieldNameList;
+            if (!PK_FK_ID_Check())
+            {
+                throw new Exception("tb_ProdSplit" + "外键ID与对应主主键名称不一致。请修改数据库");
+            }
+        }
+
+
+        #region 属性
+        private long _SplitID;
+        /// <summary>
+        /// 拆分单ID
+        /// </summary>
+ 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SplitID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "拆分单ID" , IsPrimaryKey = true)]
+        public long SplitID
+        { 
+            get{return _SplitID;}
+            set{
+            base.PrimaryKeyID = _SplitID;
+            SetProperty(ref _SplitID, value);
+            }
+        }
+
+        private long? _Employee_ID;
+        /// <summary>
+        /// 经办人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "经办人" )]
+        [FKRelationAttribute("tb_Employee","Employee_ID")]
+        public long? Employee_ID
+        { 
+            get{return _Employee_ID;}
+            set{
+            SetProperty(ref _Employee_ID, value);
+            }
+        }
+
+        private long _Location_ID;
+        /// <summary>
+        /// 库位
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "库位")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "库位" )]
+        [FKRelationAttribute("tb_Location","Location_ID")]
+        public long Location_ID
+        { 
+            get{return _Location_ID;}
+            set{
+            SetProperty(ref _Location_ID, value);
+            }
+        }
+
+        private string _SplitNo;
+        /// <summary>
+        /// 拆分单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SplitNo",ColDesc = "拆分单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SplitNo" ,Length=50,IsNullable = true,ColumnDescription = "拆分单号" )]
+        public string SplitNo
+        { 
+            get{return _SplitNo;}
+            set{
+            SetProperty(ref _SplitNo, value);
+            }
+        }
+
+        private DateTime? _SplitDate;
+        /// <summary>
+        /// 拆分日期
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SplitDate",ColDesc = "拆分日期")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "SplitDate" ,IsNullable = true,ColumnDescription = "拆分日期" )]
+        public DateTime? SplitDate
+        { 
+            get{return _SplitDate;}
+            set{
+            SetProperty(ref _SplitDate, value);
+            }
+        }
+
+        private long _ProdDetailID;
+        /// <summary>
+        /// 母件
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "母件")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "母件" )]
+        [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
+        public long ProdDetailID
+        { 
+            get{return _ProdDetailID;}
+            set{
+            SetProperty(ref _ProdDetailID, value);
+            }
+        }
+
+        private string _SKU;
+        /// <summary>
+        /// SKU码
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SKU",ColDesc = "SKU码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU" ,Length=80,IsNullable = true,ColumnDescription = "SKU码" )]
+        public string SKU
+        { 
+            get{return _SKU;}
+            set{
+            SetProperty(ref _SKU, value);
+            }
+        }
+
+        private int _SplitParentQty= ((0));
+        /// <summary>
+        /// 母件数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SplitParentQty",ColDesc = "母件数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "SplitParentQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "母件数量" )]
+        public int SplitParentQty
+        { 
+            get{return _SplitParentQty;}
+            set{
+            SetProperty(ref _SplitParentQty, value);
+            }
+        }
+
+        private int _SplitChildTotalQty= ((0));
+        /// <summary>
+        /// 子件总数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SplitChildTotalQty",ColDesc = "子件总数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "SplitChildTotalQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "子件总数量" )]
+        public int SplitChildTotalQty
+        { 
+            get{return _SplitChildTotalQty;}
+            set{
+            SetProperty(ref _SplitChildTotalQty, value);
+            }
+        }
+
+        private string _property;
+        /// <summary>
+        /// 属性
+        /// </summary>
+        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "property" ,Length=255,IsNullable = true,ColumnDescription = "属性" )]
+        public string property
+        { 
+            get{return _property;}
+            set{
+            SetProperty(ref _property, value);
+            }
+        }
+
+        private string _Notes;
+        /// <summary>
+        /// 备注
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=1500,IsNullable = true,ColumnDescription = "备注" )]
+        public string Notes
+        { 
+            get{return _Notes;}
+            set{
+            SetProperty(ref _Notes, value);
+            }
+        }
+
+        private long _BOM_ID;
+        /// <summary>
+        /// 拆分配方
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "拆分配方")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "拆分配方" )]
+        [FKRelationAttribute("tb_BOM_S","BOM_ID")]
+        public long BOM_ID
+        { 
+            get{return _BOM_ID;}
+            set{
+            SetProperty(ref _BOM_ID, value);
+            }
+        }
+
+        private string _BOM_No;
+        /// <summary>
+        /// 配方编号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BOM_No",ColDesc = "配方编号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BOM_No" ,Length=50,IsNullable = false,ColumnDescription = "配方编号" )]
+        public string BOM_No
+        { 
+            get{return _BOM_No;}
+            set{
+            SetProperty(ref _BOM_No, value);
+            }
+        }
+
+        private DateTime? _Created_at;
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = true,ColumnDescription = "创建时间" )]
+        public DateTime? Created_at
+        { 
+            get{return _Created_at;}
+            set{
+            SetProperty(ref _Created_at, value);
+            }
+        }
+
+        private long? _Created_by;
+        /// <summary>
+        /// 创建人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_by",ColDesc = "创建人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Created_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "创建人" )]
+        public long? Created_by
+        { 
+            get{return _Created_by;}
+            set{
+            SetProperty(ref _Created_by, value);
+            }
+        }
+
+        private DateTime? _Modified_at;
+        /// <summary>
+        /// 修改时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = true,ColumnDescription = "修改时间" )]
+        public DateTime? Modified_at
+        { 
+            get{return _Modified_at;}
+            set{
+            SetProperty(ref _Modified_at, value);
+            }
+        }
+
+        private long? _Modified_by;
+        /// <summary>
+        /// 修改人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Modified_by",ColDesc = "修改人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Modified_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "修改人" )]
+        public long? Modified_by
+        { 
+            get{return _Modified_by;}
+            set{
+            SetProperty(ref _Modified_by, value);
+            }
+        }
+
+        private bool _isdeleted= false;
+        /// <summary>
+        /// 逻辑删除
+        /// </summary>
+        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "isdeleted" ,IsNullable = false,ColumnDescription = "逻辑删除" )]
+        [Browsable(false)]
+        public bool isdeleted
+        { 
+            get{return _isdeleted;}
+            set{
+            SetProperty(ref _isdeleted, value);
+            }
+        }
+
+        private int _DataStatus;
+        /// <summary>
+        /// 数据状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "数据状态" )]
+        public int DataStatus
+        { 
+            get{return _DataStatus;}
+            set{
+            SetProperty(ref _DataStatus, value);
+            }
+        }
+
+        private string _ApprovalOpinions;
+        /// <summary>
+        /// 审批意见
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ApprovalOpinions",ColDesc = "审批意见")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ApprovalOpinions" ,Length=500,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string ApprovalOpinions
+        { 
+            get{return _ApprovalOpinions;}
+            set{
+            SetProperty(ref _ApprovalOpinions, value);
+            }
+        }
+
+        private long? _Approver_by;
+        /// <summary>
+        /// 审批人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Approver_by",ColDesc = "审批人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Approver_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "审批人" )]
+        public long? Approver_by
+        { 
+            get{return _Approver_by;}
+            set{
+            SetProperty(ref _Approver_by, value);
+            }
+        }
+
+        private DateTime? _Approver_at;
+        /// <summary>
+        /// 审批时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Approver_at",ColDesc = "审批时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Approver_at" ,IsNullable = true,ColumnDescription = "审批时间" )]
+        public DateTime? Approver_at
+        { 
+            get{return _Approver_at;}
+            set{
+            SetProperty(ref _Approver_at, value);
+            }
+        }
+
+        private int? _ApprovalStatus= ((0));
+        /// <summary>
+        /// 审批状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ApprovalStatus",ColDesc = "审批状态")] 
+        [SugarColumn(ColumnDataType = "tinyint", SqlParameterDbType ="SByte",  ColumnName = "ApprovalStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "审批状态" )]
+        public int? ApprovalStatus
+        { 
+            get{return _ApprovalStatus;}
+            set{
+            SetProperty(ref _ApprovalStatus, value);
+            }
+        }
+
+        private bool? _ApprovalResults;
+        /// <summary>
+        /// 审批结果
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ApprovalResults",ColDesc = "审批结果")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ApprovalResults" ,IsNullable = true,ColumnDescription = "审批结果" )]
+        public bool? ApprovalResults
+        { 
+            get{return _ApprovalResults;}
+            set{
+            SetProperty(ref _ApprovalResults, value);
+            }
+        }
+
+        private int _PrintStatus= ((0));
+        /// <summary>
+        /// 打印状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrintStatus",ColDesc = "打印状态")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PrintStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "打印状态" )]
+        public int PrintStatus
+        { 
+            get{return _PrintStatus;}
+            set{
+            SetProperty(ref _PrintStatus, value);
+            }
+        }
+
+        #endregion
+
+        #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
+        public virtual tb_BOM_S tb_bom_s { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
+        public virtual tb_Location tb_location { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
+        public virtual tb_ProdDetail tb_proddetail { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
+        public virtual tb_Employee tb_employee { get; set; }
+
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdSplitDetail.SplitID))]
+        public virtual List<tb_ProdSplitDetail> tb_ProdSplitDetails { get; set; }
+        //tb_ProdSplitDetail.SplitID)
+        //SplitID.FK_TB_PRODSplitDetail_REF_PRODSplit)
+        //tb_ProdSplit.SplitID)
+
+
+        #endregion
+
+
+
+
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
+{
+  bool rs=true;
+return rs;
+}
+
+
+
+
+
+
+        #region 字段描述对应列表
+        private ConcurrentDictionary<string, string> fieldNameList;
+
+
+        /// <summary>
+        /// 表列名的中文描述集合
+        /// </summary>
+        [Description("列名中文描述"), Category("自定属性")]
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public override ConcurrentDictionary<string, string> FieldNameList
+        {
+            get
+            {
+                if (fieldNameList == null)
+                {
+                    fieldNameList = new ConcurrentDictionary<string, string>();
+                    SugarColumn entityAttr;
+                    Type type = typeof(tb_ProdSplit);
+                    
+                       foreach (PropertyInfo field in type.GetProperties())
+                            {
+                                foreach (Attribute attr in field.GetCustomAttributes(true))
+                                {
+                                    entityAttr = attr as SugarColumn;
+                                    if (null != entityAttr)
+                                    {
+                                        if (entityAttr.ColumnDescription == null)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsIdentity)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsPrimaryKey)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.ColumnDescription.Trim().Length > 0)
+                                        {
+                                            fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
+                                        }
+                                    }
+                                }
+                            }
+                }
+                
+                return fieldNameList;
+            }
+            set
+            {
+                fieldNameList = value;
+            }
+
+        }
+        #endregion
+        
+
+        public override object Clone()
+        {
+            tb_ProdSplit loctype = (tb_ProdSplit)this.MemberwiseClone(); //创建当前对象的浅拷贝。
+            return loctype;
+        }
+    }
+}
+

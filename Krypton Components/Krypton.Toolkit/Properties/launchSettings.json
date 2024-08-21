@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Krypton.Toolkit 2022": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

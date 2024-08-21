@@ -1,0 +1,71 @@
+﻿SELECT dd.PROP,BB.*,D.* FROM
+(SELECT DISTINCT T.Prod_Detail_ID, T.Prod_Base_ID,
+STUFF((SELECT ','+PropertyValueName FROM v_Property PN WHERE PN.Prod_Detail_ID=T.Prod_Detail_ID  FOR XML PATH('')), 1, 1, '') AS prop 
+FROM v_Property as T) AS DD
+LEFT JOIN tb_Prod_Detail D on DD.Prod_Detail_ID=D.Prod_Detail_ID
+LEFT JOIN tb_Prod_Base BB on bb.Prod_Base_ID=DD.Prod_Base_ID
+
+
+SELECT dd.PROP,BB.*,D.* FROM
+(SELECT DISTINCT T.Prod_Detail_ID, T.Prod_Base_ID,
+STUFF((SELECT ','+PropertyValueName FROM v_Property PN WHERE PN.Prod_Detail_ID=T.Prod_Detail_ID  FOR XML PATH('')), 1, 1, '') AS prop 
+FROM v_Property as T) AS DD
+LEFT JOIN tb_Prod_Detail D on DD.Prod_Detail_ID=D.Prod_Detail_ID
+LEFT JOIN tb_Prod_Base BB on bb.Prod_Base_ID=DD.Prod_Base_ID
+WHERE dd.Prod_Detail_ID=20
+
+
+
+ProductNo:为中间库生成，以后分发可以将这个为标准。
+变体也是这个，这样多个平台 重复铺货。管理库存时以这个为准
+添加一个字段为sku码，可以是参考 引用 其它平台的ID->SKU
+
+SELECT distinct a.ProductNo,c.SKU from tb_Prod_Base a LEFT JOIN tb_Prod_Attr_Relation b on a.Prod_Base_ID=b.Prod_Base_ID
+
+INNER JOIN tb_Prod_Detail c on b.Prod_Detail_ID=c.Prod_Detail_ID
+
+最先入库操作时才有库存记录。
+
+
+http://www.manongjc.com/detail/50-xdazdulminrevet.html
+
+-------------
+实体表--》特性 ==》特性值（又分int varchar,bool text)
+估计是解决。一个实体，有多种可能性的属性。比方衣服有颜色，电器有电压，实际设计时，并不知道会用于这种产品。
+
+Entity: 实体代表 Magento 中产品、客户、分类和订单等的数据项(对象)，每个实体都通过独立ID存储在数据库中。
+Attribute: 即对象的属性，属性并不是作为产品表单独一列来进行存放，而是存储在一组单独的数据库表中。
+Value: 顾名思义，是指特定属性所关联的值。
+这种设计得以让 Magento 有很强的灵活性，可以在不修改代码或模板的情况下添加或删除属性。
+如果将模型看作是一种数据库的垂直增长的话(添加属性也会增加行的数量)，传统的模型则是一种横向增长(添加属性意味着列数的增长)，那会导致在添加一个属性时需要进行重新的架构。EAV 模型不仅仅允许数据库快速扩充，而且更为高效。因为它只允许非空属性，而不需在数据库中预留空间存储空值。
+
+当然这种强大的灵活性也是需要付出代价的，应用 EAV 模型将会使实体数据分布 到大量的表中，例如Proudct模型就占用了40张表。EAV的另一个缺点是在获取大量EAV对象集合时会对性能产生影响并使查询数据库变得更为复杂。这主要是因为数据被分割到多个表中，select一条记录就可能要用到多次join。
+
+eav_attribute表的主要列：
+
+attribute_id:它是每个属性的唯一标识符，也是此表的主键
+entity_type_id:此项将属性与特定的EAV模型类型进行关联
+attribute_code:此项为属性的名称或键名，用于生成魔术方法的getter和setter方法
+backend_model:后台模型用于向数据库中加载或存储数据的管理
+backend_type:该项指定属性是否不是保存在默认的EAV表中而是保存在一个特定的表中
+frontend_model:前端模型负责属性元素在浏览器上的输出效果
+frontend_input:与前端模型相似，前端输入指定在浏览器上输入项目的类型
+frontend_label:此项是属性在浏览器上输出的标签或名称
+source_model:源模型用于向一个属性传递可能存在的值，Magento自带有一些预定义的源模型，如国家，yes或no值，区域等等
+
+---
+
+https://zhuanlan.zhihu.com/p/396043292
+
+电商平台铺货
+SKU是指实际库存
+SPU是电商平台的代码
+
+====
+https://wenku.baidu.com/view/04335648bb4ae45c3b3567ec102de2bd9605de1d.html?_wkts_=1694617621868&bdQuery=%E4%BA%A7%E5%93%81%E5%B1%9E%E6%80%A7%E7%BB%84%E5%90%88%E5%86%B3%E5%AE%9ASKU+%E6%95%B0%E6%8D%AE%E5%BA%93%E8%AE%BE%E8%AE%A1
+
+
+属性是指SKU属性与库存有关
+
+特性是指类目下 的不同描述的字段，只是对产品SKU的描述
+

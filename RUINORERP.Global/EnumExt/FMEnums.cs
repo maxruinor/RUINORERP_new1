@@ -1,0 +1,58 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RUINORERP.Global.EnumExt
+{
+
+    public enum AccountType
+    {
+        银行账户,
+        现金账户,
+        网络账户
+    }
+
+
+    /// <summary>
+    /// 科目类型
+    /// 资产类科目：用于记录企业的资产，如现金、应收账款、固定资产等。
+    /// 负债类科目：用于记录企业的负债，如应付账款、短期借款、长期借款等。
+    /// 权益类科目：用于记录企业的所有者权益，如股本、资本公积、留存收益等。
+    /// 成本类科目：用于记录企业的生产成本，如直接材料、直接人工、制造费用等。
+    /// 损益类科目：用于记录企业的收入和费用，如销售收入、销售成本、管理费用、财务费用等。
+    /// </summary>
+    public enum SubjectType
+    {
+        /// <summary>
+        /// ASSET
+        /// </summary>
+        资产 = 1,
+        /// <summary>
+        /// LIABILITY类型
+        /// </summary>
+        负债 = 2,
+        /// <summary>
+        /// EQUITY类型
+        /// </summary>
+        权益 = 3,
+
+        /// <summary>
+        ///  COST
+        /// </summary>
+        成本 = 4,
+
+        /// <summary>
+        /// ProfitAndLoss
+        /// </summary>
+        损益 = 5,
+        /// <summary>
+        /// Other
+        /// </summary>
+        其他 = 6
+
+
+
+    }
+}

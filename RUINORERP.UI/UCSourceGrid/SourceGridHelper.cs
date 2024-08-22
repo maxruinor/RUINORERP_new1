@@ -2581,7 +2581,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         var currentObj = sgdefine.grid.Rows[p.Row].RowData;
                         var cellDefaultValue = ReflectionHelper.GetPropertyValue(currentObj, item.ColName);
 
-                        if (cellDefaultValue != null && !item.IsFKRelationColumn)
+                        if (cellDefaultValue != null && !item.IsFKRelationColumn && cellDefaultValue.IsNotEmptyOrNull())
                         {
                             sgdefine.grid[p.Row, item.ColIndex].Value = cellDefaultValue;
                             switch (item.CustomFormat)

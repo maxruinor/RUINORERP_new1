@@ -23,7 +23,7 @@ using SqlSugar;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo("日志管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.日志管理)]
+    [MenuAttrAssemblyInfo("异常日志管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.异常日志)]
     public partial class UCLogsList : BaseForm.BaseListGeneric<Logs>
     {
         public UCLogsList()

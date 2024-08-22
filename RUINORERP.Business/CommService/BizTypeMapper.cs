@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Business.CommService
 {
+    /// <summary>
+    /// 业务类型与表名的映射关系（实体名）
+    /// </summary>
     public class BizTypeMapper
     {
         private Dictionary<BizType, Type> mapping;
@@ -47,7 +50,7 @@ namespace RUINORERP.Business.CommService
             mapping.Add(BizType.产品组合单, typeof(tb_ProdMerge));
             mapping.Add(BizType.产品分割单, typeof(tb_ProdSplit));
             mapping.Add(BizType.套装组合, typeof(tb_ProdBundle));
- 
+
             //mapping.Add(BizType.退料单, typeof(tb_Return));
 
             // 省略其他枚举值与表名的对应关系

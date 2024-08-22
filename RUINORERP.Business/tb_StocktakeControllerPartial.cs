@@ -25,6 +25,7 @@ using SqlSugar;
 using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Business
 {

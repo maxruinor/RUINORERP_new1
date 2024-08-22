@@ -38,7 +38,7 @@ namespace RUINORERP.Model.Context
         public WorkflowCore.Interface.IDefinitionLoader definitionLoader;
 
         #endregion
-      
+
 
         /// <summary>
         /// 与客户端有关的信息
@@ -393,6 +393,8 @@ namespace RUINORERP.Model.Context
             var gt = genericType.MakeGenericType(paramTypes);
             return CreateInstance(gt);
         }
+
+
 
     }
 }

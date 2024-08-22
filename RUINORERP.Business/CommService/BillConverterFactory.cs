@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Business;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Context;
 
-namespace RUINORERP.Business
+namespace RUINORERP.Business.CommService
 {
     /// <summary>
     /// 目前的方法不合理。写死的 ,暂时没有想到好办法 
@@ -34,7 +35,7 @@ namespace RUINORERP.Business
             {
                 if (_UserMenuList == null)
                 {
-                    _UserMenuList = this._context.Db.CopyNew().Queryable<tb_MenuInfo>().Where(r => r.IsVisble == true)
+                    _UserMenuList = _context.Db.CopyNew().Queryable<tb_MenuInfo>().Where(r => r.IsVisble == true)
                 //.Includes(t => t.)
                 //.Includes(t => t.tb_roleinfo)
                 .ToList();
@@ -79,12 +80,20 @@ namespace RUINORERP.Business
                     return cbd;
                 }
                 bizType = (BizType)menuInfo.BizType;
+                //if (bizType==null)
+                //{
+                //    _logger.Error($"业务类型未配置: {menuInfo.MenuName}");
+                //    return cbd;
+                //}
+         
                 cbd.BizType = bizType;
+                
             }
-            if (Entity == null)
-            {
-                Entity = Activator.CreateInstance(type);
-            }
+            //if (Entity == null)
+            //{
+            //    Entity = Activator.CreateInstance(type);
+            //}
+            Entity = Entity ?? Activator.CreateInstance(type);
 
             switch (bizType)
             {
@@ -283,8 +292,8 @@ namespace RUINORERP.Business
                     //cbd.BillNo = PurEntryStatistics.BillNo;
                     break;
                 default:
-                    throw new Exception("请实现对应业务类型的单号提取！");
-                    break;
+                    throw new Exception($"未实现的业务类型处理: {bizType}");
+
             }
             cbd.BizName = bizType.ObjToString();
             return cbd;

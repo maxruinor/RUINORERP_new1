@@ -29,6 +29,7 @@ using RUINORERP.Business.Security;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static log4net.Appender.ColoredConsoleAppender;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Business
 {

@@ -27,6 +27,7 @@ using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
 using System.Windows.Forms;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Business
 {

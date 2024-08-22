@@ -1311,6 +1311,10 @@ namespace RUINORERP.UI.BaseForm
             {
                 //审核了。数据状态要更新为
                 EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+
+                AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults}");
+
+
                 //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
                 PropertyInfo[] array_property = ae.GetType().GetProperties();
                 {
@@ -1372,7 +1376,19 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-            throw new Exception(" 谁为什么反审？后续完善");
+            if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+            {
+                //反审，要审核过，并且通过了，才能反审。
+                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
+                    && EditEntity.GetPropertyValue("ApprovalResults") != null
+                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
+                    )
+                {
+                    MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
+                    return;
+                }
+            }
+
             //EditEntity
             CommonUI.frmApproval frm = new CommonUI.frmApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -1463,6 +1479,7 @@ namespace RUINORERP.UI.BaseForm
                 BusinessHelper.Instance.EditEntity(EditEntity);
                 base.Modify();
                 ToolBarEnabledControl(MenuItemEnums.修改);
+                AuditLogHelper.Instance.CreateAuditLog<T>("修改", EditEntity);
             }
             else
             {
@@ -1601,6 +1618,14 @@ namespace RUINORERP.UI.BaseForm
 
                 ToolBarEnabledControl(MenuItemEnums.保存);
                 MainForm.Instance.uclog.AddLog("保存成功");
+
+                //var sw = new Stopwatch();
+                //sw.Start();
+                //var resultContext = await next();
+                //sw.Stop();
+
+                //审计日志
+                AuditLogHelper.Instance.CreateAuditLog<T>("保存", rmr.ReturnObject);
             }
             else
             {
@@ -1633,14 +1658,15 @@ namespace RUINORERP.UI.BaseForm
                     rss.ReturnObject = editEntity;
                     if (rs)
                     {
+                        AuditLogHelper.Instance.CreateAuditLog<T>("删除", editEntity);
                         if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         {
-
                             MainForm.Instance.logger.LogInformation($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
                         }
                         bindingSourceSub.Clear();
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
+
                         //加载一个空的显示的UI
                         bindingSourceSub.Clear();
                         OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T);
@@ -1686,6 +1712,8 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
+                        AuditLogHelper.Instance.CreateAuditLog<T>("提交", rmr.ReturnObject);
+
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                         // MainForm.Instance.ecs.AddSendData(od);]
@@ -1724,6 +1752,7 @@ namespace RUINORERP.UI.BaseForm
                                         //MainForm.Instance.ecs.AddSendData(od);
                                         //审核成功
                                         ToolBarEnabledControl(MenuItemEnums.审核);
+                                        AuditLogHelper.Instance.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
                                         //如果审核结果为不通过时，审核不是灰色。
                                         if (!ae.ApprovalResults)
                                         {
@@ -1766,6 +1795,7 @@ namespace RUINORERP.UI.BaseForm
 
                                         //审核成功
                                         ToolBarEnabledControl(MenuItemEnums.审核);
+                                        AuditLogHelper.Instance.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
                                         //如果审核结果为不通过时，审核不是灰色。
                                         if (!ae.ApprovalResults)
                                         {
@@ -2055,6 +2085,7 @@ namespace RUINORERP.UI.BaseForm
                 PrintConfig = PrintHelper<T>.GetPrintConfig(list);
             }
             await PrintHelper<T>.Print(list, RptMode.PRINT, PrintConfig);
+            AuditLogHelper.Instance.CreateAuditLog<T>("打印", EditEntity);
         }
 
 

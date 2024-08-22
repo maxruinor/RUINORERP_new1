@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
 using FastReport;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.Report
 {

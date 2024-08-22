@@ -841,7 +841,7 @@ public IHost CslaDIPortBackup()
             services.AddScoped<IMapper, Mapper>();
             services.AddSingleton<IMapper>(mapper);
             services.AddAutoMapperSetup();
-      
+
             //services.AddCorsSetup();
             //services.AddMiniProfilerSetup();
             //services.AddSwaggerSetup();

@@ -20,7 +20,7 @@ namespace RUINORERP.UI.BI
 {
 
 
-    [MenuAttrAssemblyInfo("日志查看", true, UIType.单表数据)]
+    [MenuAttrAssemblyInfo("异常日志查看", true, UIType.单表数据)]
     public partial class UCLogsEdit : BaseEditGeneric<Logs>
     {
         public UCLogsEdit()

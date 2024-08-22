@@ -51,9 +51,12 @@ namespace RUINORERP.Extensions
                     //单例参数配置，所有上下文生效       
                     db.Aop.OnLogExecuting = (sql, pars) =>
                         {
-                            Console.WriteLine(sql);//输出sql
+                            //获取原生SQL推荐 5.1.4.63  性能OK
+                            //Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
+
                             if (CheckEvent != null)
                             {
+                                //kimi查询到说这个性能更好
                                 CheckEvent(Common.DB.SqlProfiler.FormatParam(sql, pars));
                             }
                         };

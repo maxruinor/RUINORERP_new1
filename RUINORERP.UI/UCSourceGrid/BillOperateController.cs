@@ -420,8 +420,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 switch (CurrGridDefine[sf.TagetCol.ColIndex].CustomFormat)
                 {
-                    case CustomFormatType.DefaultFormat:
-                        break;
+                
                     case CustomFormatType.PercentFormat:
 
                         //实际上面转换过一次了。
@@ -439,7 +438,11 @@ namespace RUINORERP.UI.UCSourceGrid
                         CurrGridDefine.grid[rowindex, sf.TagetCol.ColIndex].DisplayText = string.Format("{0:C}", amount.ToString());
                         break;
                     case CustomFormatType.DecimalPrecision:
+                        ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, decimal.Parse(obj.ToString()));
+                        CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = decimal.Parse(obj.ToString());
                         break;
+
+                    case CustomFormatType.DefaultFormat:
                     default:
                         ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, int.Parse(obj.ToString()));
                         CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = int.Parse(obj.ToString());
@@ -558,8 +561,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 switch (CurrGridDefine[sf.TagetCol.ColIndex].CustomFormat)
                 {
-                    case CustomFormatType.DefaultFormat:
-                        break;
+                    
                     case CustomFormatType.PercentFormat:
 
                         //实际上面转换过一次了。
@@ -577,7 +579,10 @@ namespace RUINORERP.UI.UCSourceGrid
                         CurrGridDefine.grid[rowindex, sf.TagetCol.ColIndex].DisplayText = string.Format("{0:C}", amount.ToString());
                         break;
                     case CustomFormatType.DecimalPrecision:
+                        ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, decimal.Parse(obj.ToString()));
+                        CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = decimal.Parse(obj.ToString());
                         break;
+                    case CustomFormatType.DefaultFormat:
                     default:
                         ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, int.Parse(obj.ToString()));
                         CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = int.Parse(obj.ToString());

@@ -33,6 +33,9 @@ namespace RUINORERP.UI.PSI.INV
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
+            this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
+            this.lblReview = new Krypton.Toolkit.KryptonLabel();
             this.lblLocation_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbLocation_ID = new Krypton.Toolkit.KryptonComboBox();
             this.btnImportCheckProd = new Krypton.Toolkit.KryptonButton();
@@ -67,9 +70,6 @@ namespace RUINORERP.UI.PSI.INV
             this.txtCarryingTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblCarryingTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.lblCarryingTotalQty = new Krypton.Toolkit.KryptonLabel();
-            this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
-            this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
-            this.lblReview = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -128,12 +128,42 @@ namespace RUINORERP.UI.PSI.INV
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.SplitContainerGridAndSub);
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(927, 545);
-            this.kryptonSplitContainer1.SplitterDistance = 227;
+            this.kryptonSplitContainer1.SplitterDistance = 189;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // lblDataStatus
+            // 
+            this.lblDataStatus.Location = new System.Drawing.Point(799, 6);
+            this.lblDataStatus.Name = "lblDataStatus";
+            this.lblDataStatus.Size = new System.Drawing.Size(125, 38);
+            this.lblDataStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblDataStatus.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblDataStatus.TabIndex = 103;
+            this.lblDataStatus.Values.Text = "数据状态";
+            // 
+            // lblPrintStatus
+            // 
+            this.lblPrintStatus.Location = new System.Drawing.Point(455, 6);
+            this.lblPrintStatus.Name = "lblPrintStatus";
+            this.lblPrintStatus.Size = new System.Drawing.Size(125, 38);
+            this.lblPrintStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblPrintStatus.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblPrintStatus.TabIndex = 102;
+            this.lblPrintStatus.Values.Text = "打印状态";
+            // 
+            // lblReview
+            // 
+            this.lblReview.Location = new System.Drawing.Point(628, 6);
+            this.lblReview.Name = "lblReview";
+            this.lblReview.Size = new System.Drawing.Size(125, 38);
+            this.lblReview.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblReview.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblReview.TabIndex = 101;
+            this.lblReview.Values.Text = "审核状态";
             // 
             // lblLocation_ID
             // 
-            this.lblLocation_ID.Location = new System.Drawing.Point(50, 122);
+            this.lblLocation_ID.Location = new System.Drawing.Point(50, 103);
             this.lblLocation_ID.Name = "lblLocation_ID";
             this.lblLocation_ID.Size = new System.Drawing.Size(62, 20);
             this.lblLocation_ID.TabIndex = 85;
@@ -143,14 +173,14 @@ namespace RUINORERP.UI.PSI.INV
             // 
             this.cmbLocation_ID.DropDownWidth = 100;
             this.cmbLocation_ID.IntegralHeight = false;
-            this.cmbLocation_ID.Location = new System.Drawing.Point(123, 118);
+            this.cmbLocation_ID.Location = new System.Drawing.Point(123, 99);
             this.cmbLocation_ID.Name = "cmbLocation_ID";
             this.cmbLocation_ID.Size = new System.Drawing.Size(132, 21);
             this.cmbLocation_ID.TabIndex = 86;
             // 
             // btnImportCheckProd
             // 
-            this.btnImportCheckProd.Location = new System.Drawing.Point(388, 117);
+            this.btnImportCheckProd.Location = new System.Drawing.Point(388, 98);
             this.btnImportCheckProd.Name = "btnImportCheckProd";
             this.btnImportCheckProd.Size = new System.Drawing.Size(137, 25);
             this.btnImportCheckProd.TabIndex = 83;
@@ -159,7 +189,7 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(315, 90);
+            this.kryptonLabel3.Location = new System.Drawing.Point(315, 71);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel3.TabIndex = 80;
@@ -168,7 +198,7 @@ namespace RUINORERP.UI.PSI.INV
             // dtpCarryingDate
             // 
             this.dtpCarryingDate.CalendarTodayDate = new System.DateTime(2023, 10, 13, 0, 0, 0, 0);
-            this.dtpCarryingDate.Location = new System.Drawing.Point(388, 90);
+            this.dtpCarryingDate.Location = new System.Drawing.Point(388, 71);
             this.dtpCarryingDate.Name = "dtpCarryingDate";
             this.dtpCarryingDate.Size = new System.Drawing.Size(137, 21);
             this.dtpCarryingDate.TabIndex = 81;
@@ -177,7 +207,7 @@ namespace RUINORERP.UI.PSI.INV
             // 
             this.cmbCheckMode.DropDownWidth = 100;
             this.cmbCheckMode.IntegralHeight = false;
-            this.cmbCheckMode.Location = new System.Drawing.Point(388, 61);
+            this.cmbCheckMode.Location = new System.Drawing.Point(388, 42);
             this.cmbCheckMode.Name = "cmbCheckMode";
             this.cmbCheckMode.Size = new System.Drawing.Size(137, 21);
             this.cmbCheckMode.TabIndex = 79;
@@ -185,7 +215,7 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(315, 61);
+            this.kryptonLabel2.Location = new System.Drawing.Point(315, 42);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel2.TabIndex = 78;
@@ -195,14 +225,14 @@ namespace RUINORERP.UI.PSI.INV
             // 
             this.cmb调整类型.DropDownWidth = 100;
             this.cmb调整类型.IntegralHeight = false;
-            this.cmb调整类型.Location = new System.Drawing.Point(653, 90);
+            this.cmb调整类型.Location = new System.Drawing.Point(653, 71);
             this.cmb调整类型.Name = "cmb调整类型";
             this.cmb调整类型.Size = new System.Drawing.Size(131, 21);
             this.cmb调整类型.TabIndex = 77;
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(592, 90);
+            this.kryptonLabel1.Location = new System.Drawing.Point(592, 71);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel1.TabIndex = 76;
@@ -212,14 +242,14 @@ namespace RUINORERP.UI.PSI.INV
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(653, 61);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(653, 42);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
             this.cmbEmployee_ID.Size = new System.Drawing.Size(131, 21);
             this.cmbEmployee_ID.TabIndex = 75;
             // 
             // lblEmployee
             // 
-            this.lblEmployee.Location = new System.Drawing.Point(579, 61);
+            this.lblEmployee.Location = new System.Drawing.Point(579, 42);
             this.lblEmployee.Name = "lblEmployee";
             this.lblEmployee.Size = new System.Drawing.Size(75, 20);
             this.lblEmployee.TabIndex = 74;
@@ -227,7 +257,7 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(50, 146);
+            this.lblNotes.Location = new System.Drawing.Point(50, 127);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 57;
@@ -235,15 +265,15 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(123, 146);
+            this.txtNotes.Location = new System.Drawing.Point(123, 127);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(661, 74);
+            this.txtNotes.Size = new System.Drawing.Size(661, 57);
             this.txtNotes.TabIndex = 58;
             // 
             // lblstatus
             // 
-            this.lblstatus.Location = new System.Drawing.Point(592, 117);
+            this.lblstatus.Location = new System.Drawing.Point(592, 98);
             this.lblstatus.Name = "lblstatus";
             this.lblstatus.Size = new System.Drawing.Size(62, 20);
             this.lblstatus.TabIndex = 59;
@@ -251,14 +281,14 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // txtstatus
             // 
-            this.txtstatus.Location = new System.Drawing.Point(653, 117);
+            this.txtstatus.Location = new System.Drawing.Point(653, 98);
             this.txtstatus.Name = "txtstatus";
             this.txtstatus.Size = new System.Drawing.Size(131, 23);
             this.txtstatus.TabIndex = 60;
             // 
             // lblCheckNo
             // 
-            this.lblCheckNo.Location = new System.Drawing.Point(50, 62);
+            this.lblCheckNo.Location = new System.Drawing.Point(50, 43);
             this.lblCheckNo.Name = "lblCheckNo";
             this.lblCheckNo.Size = new System.Drawing.Size(62, 20);
             this.lblCheckNo.TabIndex = 45;
@@ -266,14 +296,14 @@ namespace RUINORERP.UI.PSI.INV
             // 
             // txtCheckNo
             // 
-            this.txtCheckNo.Location = new System.Drawing.Point(123, 62);
+            this.txtCheckNo.Location = new System.Drawing.Point(123, 43);
             this.txtCheckNo.Name = "txtCheckNo";
             this.txtCheckNo.Size = new System.Drawing.Size(132, 23);
             this.txtCheckNo.TabIndex = 46;
             // 
             // lblcheck_date
             // 
-            this.lblcheck_date.Location = new System.Drawing.Point(50, 91);
+            this.lblcheck_date.Location = new System.Drawing.Point(50, 72);
             this.lblcheck_date.Name = "lblcheck_date";
             this.lblcheck_date.Size = new System.Drawing.Size(62, 20);
             this.lblcheck_date.TabIndex = 51;
@@ -282,7 +312,7 @@ namespace RUINORERP.UI.PSI.INV
             // dtpcheck_date
             // 
             this.dtpcheck_date.CalendarTodayDate = new System.DateTime(2023, 10, 13, 0, 0, 0, 0);
-            this.dtpcheck_date.Location = new System.Drawing.Point(123, 91);
+            this.dtpcheck_date.Location = new System.Drawing.Point(123, 72);
             this.dtpcheck_date.Name = "dtpcheck_date";
             this.dtpcheck_date.Size = new System.Drawing.Size(132, 21);
             this.dtpcheck_date.TabIndex = 52;
@@ -324,8 +354,8 @@ namespace RUINORERP.UI.PSI.INV
             this.SplitContainerGridAndSub.Panel2.Controls.Add(this.txtCarryingTotalAmount);
             this.SplitContainerGridAndSub.Panel2.Controls.Add(this.lblCarryingTotalAmount);
             this.SplitContainerGridAndSub.Panel2.Controls.Add(this.lblCarryingTotalQty);
-            this.SplitContainerGridAndSub.Size = new System.Drawing.Size(927, 313);
-            this.SplitContainerGridAndSub.SplitterDistance = 223;
+            this.SplitContainerGridAndSub.Size = new System.Drawing.Size(927, 351);
+            this.SplitContainerGridAndSub.SplitterDistance = 250;
             this.SplitContainerGridAndSub.TabIndex = 2;
             // 
             // grid1
@@ -337,7 +367,7 @@ namespace RUINORERP.UI.PSI.INV
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(927, 223);
+            this.grid1.Size = new System.Drawing.Size(927, 250);
             this.grid1.TabIndex = 1;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
@@ -432,36 +462,6 @@ namespace RUINORERP.UI.PSI.INV
             this.lblCarryingTotalQty.Size = new System.Drawing.Size(75, 20);
             this.lblCarryingTotalQty.TabIndex = 47;
             this.lblCarryingTotalQty.Values.Text = "载账总数量";
-            // 
-            // lblDataStatus
-            // 
-            this.lblDataStatus.Location = new System.Drawing.Point(799, 6);
-            this.lblDataStatus.Name = "lblDataStatus";
-            this.lblDataStatus.Size = new System.Drawing.Size(125, 38);
-            this.lblDataStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
-            this.lblDataStatus.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblDataStatus.TabIndex = 103;
-            this.lblDataStatus.Values.Text = "数据状态";
-            // 
-            // lblPrintStatus
-            // 
-            this.lblPrintStatus.Location = new System.Drawing.Point(455, 6);
-            this.lblPrintStatus.Name = "lblPrintStatus";
-            this.lblPrintStatus.Size = new System.Drawing.Size(125, 38);
-            this.lblPrintStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
-            this.lblPrintStatus.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblPrintStatus.TabIndex = 102;
-            this.lblPrintStatus.Values.Text = "打印状态";
-            // 
-            // lblReview
-            // 
-            this.lblReview.Location = new System.Drawing.Point(628, 6);
-            this.lblReview.Name = "lblReview";
-            this.lblReview.Size = new System.Drawing.Size(125, 38);
-            this.lblReview.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
-            this.lblReview.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblReview.TabIndex = 101;
-            this.lblReview.Values.Text = "审核状态";
             // 
             // UCStocktake
             // 

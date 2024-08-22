@@ -350,10 +350,13 @@ namespace RUINORERP.UI.PSI.INV
 
             // DoSomething((x, y) => rowObj.CheckQty - rowObj.CarryinglQty);
 
-            listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);
+            // listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);
+            listCols.SetCol_FormulaReverse<tb_StocktakeDetail>(d => d.CheckQty != d.CarryinglQty, (a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);//-->成交价是结果列
+
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.DiffQty * b.Cost), r => r.DiffSubtotalAmount);
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CarryinglQty * b.Cost), r => r.CarryingSubtotalAmount);
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CheckQty * b.Cost), r => r.CheckSubtotalAmount);
+
 
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);

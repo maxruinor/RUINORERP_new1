@@ -919,13 +919,18 @@ namespace RUINORERP.UI.Common
             //优先处理本身，比方 BOM_ID显示BOM_NO，只要传tb_BOM_S
             if (CacheHelper.Manager.NewTableList.ContainsKey(type.Name))
             {
-                string baseTableName = type.Name;
-                object obj = CacheHelper.Instance.GetValue(baseTableName, value);
-                if (obj != null && obj.GetType().Name != "Object")
+                var nkv= CacheHelper.Manager.NewTableList[type.Name];
+                if (nkv.Key == idColName)
                 {
-                    NameValue = obj.ToString();
-                    return NameValue;
+                    string baseTableName = type.Name;
+                    object obj = CacheHelper.Instance.GetValue(baseTableName, value);
+                    if (obj != null && obj.GetType().Name != "Object")
+                    {
+                        NameValue = obj.ToString();
+                        return NameValue;
+                    }
                 }
+                
             }
 
             List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();

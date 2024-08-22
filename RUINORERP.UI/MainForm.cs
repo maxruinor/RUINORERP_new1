@@ -293,7 +293,7 @@ namespace RUINORERP.UI
             timer1.Start();
             tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
             List<tb_Company> company = await companyController.QueryAsync();
-            Version = "2024-08-21";
+            Version = "2024-08-22";
             if (company != null)
             {
                 this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + Version;
@@ -1800,9 +1800,6 @@ namespace RUINORERP.UI
         {
             await UpdateSys(true);
         }
-
-
-
 
 
         //public async Task Create(CreateUpdateRoleDto createUpdateRoleDto)

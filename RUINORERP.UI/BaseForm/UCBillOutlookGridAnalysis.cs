@@ -373,9 +373,15 @@ namespace RUINORERP.UI.BaseForm
                 object[] values = new object[kryptonOutlookGrid1.ColumnCount];
                 for (int i = 0; i < kryptonOutlookGrid1.Columns.Count; i++)
                 {
+
                     object value = item.GetPropertyValue(kryptonOutlookGrid1.Columns[i].Name);
                     if (value != null)
                     {
+                        if (kryptonOutlookGrid1.Columns[i].Name == "数量" && value.ToString() == "-1")
+                        {
+
+                        }
+
                         //取关联值来显示
                         string displayText = GetDisplayText(kryptonOutlookGrid1.Columns[i].Name, value);
                         if (!string.IsNullOrEmpty(displayText))
@@ -386,7 +392,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             values[i] = value;
                         }
-                        
+
                     }
                     else
                     {

@@ -2694,7 +2694,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     #endregion
 
-
                     continue;
                 }
                 #region 设置表格UI中的其他关联列的值

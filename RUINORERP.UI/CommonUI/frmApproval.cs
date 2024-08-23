@@ -14,8 +14,16 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.CommonUI
 {
+    /// <summary>
+    /// 审核审批窗口，应用于审核和反审核，字段标记区别
+    /// </summary>
     public partial class frmApproval : frmBase
     {
+        private bool _IsApproval = true;
+
+        public bool IsApproval { get => _IsApproval; set => _IsApproval = value; }
+
+
         public frmApproval()
         {
             InitializeComponent();
@@ -37,7 +45,7 @@ namespace RUINORERP.UI.CommonUI
 
         private void frmApproval_Load(object sender, EventArgs e)
         {
-            rdbis_Yes.CheckedChanged+=rdbis_Yes_CheckedChanged;
+            rdbis_Yes.CheckedChanged += rdbis_Yes_CheckedChanged;
             rdbis_No.CheckedChanged += rdbis_Yes_CheckedChanged;
             if (rdbis_Yes.Checked)
             {
@@ -50,6 +58,8 @@ namespace RUINORERP.UI.CommonUI
         }
 
         private ApprovalEntity _entity;
+
+
         public void BindData(ApprovalEntity entity)
         {
             _entity = entity;

@@ -568,6 +568,10 @@ namespace RUINORERP.UI.SysConfig
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.ColumnIndex == -1)
+            {
+                return;
+            }
             //指定要控制的列名
             Expression<Func<tb_User_Role, object>> expSelected = c => c.DefaultRole;
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)

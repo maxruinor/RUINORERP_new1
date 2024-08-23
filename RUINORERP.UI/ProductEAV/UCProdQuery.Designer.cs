@@ -32,13 +32,14 @@ namespace RUINORERP.UI.ProductEAV
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer1 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer2 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCProdQuery));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainerQuery = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelProd = new Krypton.Toolkit.KryptonPanel();
+            this.lblLastInventoryDate = new Krypton.Toolkit.KryptonLabel();
             this.dtp2 = new Krypton.Toolkit.KryptonDateTimePicker();
             this.dtp1 = new Krypton.Toolkit.KryptonDateTimePicker();
             this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
@@ -104,7 +105,6 @@ namespace RUINORERP.UI.ProductEAV
             this.箱规ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.按SKU添加箱规ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.lblLastInventoryDate = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -251,6 +251,14 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanelProd.Size = new System.Drawing.Size(893, 133);
             this.kryptonPanelProd.TabIndex = 160;
             // 
+            // lblLastInventoryDate
+            // 
+            this.lblLastInventoryDate.Location = new System.Drawing.Point(516, 103);
+            this.lblLastInventoryDate.Name = "lblLastInventoryDate";
+            this.lblLastInventoryDate.Size = new System.Drawing.Size(88, 20);
+            this.lblLastInventoryDate.TabIndex = 165;
+            this.lblLastInventoryDate.Values.Text = "最近盘点时间";
+            // 
             // dtp2
             // 
             this.dtp2.Checked = false;
@@ -289,7 +297,7 @@ namespace RUINORERP.UI.ProductEAV
             "小于零"});
             this.cmbStockJudgement.Location = new System.Drawing.Point(609, 6);
             this.cmbStockJudgement.Name = "cmbStockJudgement";
-            this.cmbStockJudgement.Size = new System.Drawing.Size(126, 21);
+            this.cmbStockJudgement.Size = new System.Drawing.Size(260, 21);
             this.cmbStockJudgement.TabIndex = 161;
             // 
             // kryptonLabel9
@@ -302,9 +310,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtName
             // 
-            this.txtName.Location = new System.Drawing.Point(47, 4);
+            this.txtName.Location = new System.Drawing.Point(334, 2);
             this.txtName.Name = "txtName";
-            this.txtName.Size = new System.Drawing.Size(154, 23);
+            this.txtName.Size = new System.Drawing.Size(168, 23);
             this.txtName.TabIndex = 135;
             // 
             // cmbLocation
@@ -313,7 +321,7 @@ namespace RUINORERP.UI.ProductEAV
             this.cmbLocation.IntegralHeight = false;
             this.cmbLocation.Location = new System.Drawing.Point(609, 40);
             this.cmbLocation.Name = "cmbLocation";
-            this.cmbLocation.Size = new System.Drawing.Size(126, 21);
+            this.cmbLocation.Size = new System.Drawing.Size(260, 21);
             this.cmbLocation.TabIndex = 159;
             // 
             // kryptonLabel7
@@ -326,7 +334,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // chkIncludingChild
             // 
-            this.chkIncludingChild.Location = new System.Drawing.Point(206, 110);
+            this.chkIncludingChild.Location = new System.Drawing.Point(212, 110);
             this.chkIncludingChild.Name = "chkIncludingChild";
             this.chkIncludingChild.Size = new System.Drawing.Size(62, 20);
             this.chkIncludingChild.TabIndex = 148;
@@ -334,7 +342,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblcategory_ID
             // 
-            this.lblcategory_ID.Location = new System.Drawing.Point(6, 109);
+            this.lblcategory_ID.Location = new System.Drawing.Point(17, 109);
             this.lblcategory_ID.Name = "lblcategory_ID";
             this.lblcategory_ID.Size = new System.Drawing.Size(36, 20);
             this.lblcategory_ID.TabIndex = 139;
@@ -346,12 +354,12 @@ namespace RUINORERP.UI.ProductEAV
             this.cmbdepartment.IntegralHeight = false;
             this.cmbdepartment.Location = new System.Drawing.Point(609, 69);
             this.cmbdepartment.Name = "cmbdepartment";
-            this.cmbdepartment.Size = new System.Drawing.Size(126, 21);
+            this.cmbdepartment.Size = new System.Drawing.Size(260, 21);
             this.cmbdepartment.TabIndex = 157;
             // 
             // txtShortCode
             // 
-            this.txtShortCode.Location = new System.Drawing.Point(46, 55);
+            this.txtShortCode.Location = new System.Drawing.Point(55, 55);
             this.txtShortCode.Name = "txtShortCode";
             this.txtShortCode.Size = new System.Drawing.Size(155, 23);
             this.txtShortCode.TabIndex = 137;
@@ -374,7 +382,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblName
             // 
-            this.lblName.Location = new System.Drawing.Point(5, 5);
+            this.lblName.Location = new System.Drawing.Point(293, 3);
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(36, 20);
             this.lblName.TabIndex = 134;
@@ -382,7 +390,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonLabel5
             // 
-            this.kryptonLabel5.Location = new System.Drawing.Point(4, 86);
+            this.kryptonLabel5.Location = new System.Drawing.Point(17, 86);
             this.kryptonLabel5.Name = "kryptonLabel5";
             this.kryptonLabel5.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel5.TabIndex = 154;
@@ -399,7 +407,7 @@ namespace RUINORERP.UI.ProductEAV
             // txtcategory_ID
             // 
             this.txtcategory_ID.FormattingEnabled = true;
-            this.txtcategory_ID.Location = new System.Drawing.Point(47, 109);
+            this.txtcategory_ID.Location = new System.Drawing.Point(56, 109);
             this.txtcategory_ID.Name = "txtcategory_ID";
             this.txtcategory_ID.Size = new System.Drawing.Size(154, 20);
             this.txtcategory_ID.TabIndex = 140;
@@ -413,21 +421,21 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtProp
             // 
-            this.txtProp.Location = new System.Drawing.Point(46, 82);
+            this.txtProp.Location = new System.Drawing.Point(55, 82);
             this.txtProp.Name = "txtProp";
             this.txtProp.Size = new System.Drawing.Size(155, 23);
             this.txtProp.TabIndex = 155;
             // 
             // txtSpecifications
             // 
-            this.txtSpecifications.Location = new System.Drawing.Point(46, 29);
+            this.txtSpecifications.Location = new System.Drawing.Point(55, 29);
             this.txtSpecifications.Name = "txtSpecifications";
             this.txtSpecifications.Size = new System.Drawing.Size(155, 23);
             this.txtSpecifications.TabIndex = 144;
             // 
             // lblSpecifications
             // 
-            this.lblSpecifications.Location = new System.Drawing.Point(4, 29);
+            this.lblSpecifications.Location = new System.Drawing.Point(17, 29);
             this.lblSpecifications.Name = "lblSpecifications";
             this.lblSpecifications.Size = new System.Drawing.Size(36, 20);
             this.lblSpecifications.TabIndex = 143;
@@ -444,7 +452,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblType_ID
             // 
-            this.lblType_ID.Location = new System.Drawing.Point(268, 81);
+            this.lblType_ID.Location = new System.Drawing.Point(267, 81);
             this.lblType_ID.Name = "lblType_ID";
             this.lblType_ID.Size = new System.Drawing.Size(62, 20);
             this.lblType_ID.TabIndex = 141;
@@ -452,14 +460,14 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtModel
             // 
-            this.txtModel.Location = new System.Drawing.Point(335, 3);
+            this.txtModel.Location = new System.Drawing.Point(334, 28);
             this.txtModel.Name = "txtModel";
             this.txtModel.Size = new System.Drawing.Size(168, 23);
             this.txtModel.TabIndex = 133;
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(293, 4);
+            this.kryptonLabel3.Location = new System.Drawing.Point(293, 27);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel3.TabIndex = 132;
@@ -474,7 +482,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblNo
             // 
-            this.lblNo.Location = new System.Drawing.Point(293, 30);
+            this.lblNo.Location = new System.Drawing.Point(13, 5);
             this.lblNo.Name = "lblNo";
             this.lblNo.Size = new System.Drawing.Size(36, 20);
             this.lblNo.TabIndex = 132;
@@ -490,9 +498,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtNo
             // 
-            this.txtNo.Location = new System.Drawing.Point(336, 29);
+            this.txtNo.Location = new System.Drawing.Point(56, 4);
             this.txtNo.Name = "txtNo";
-            this.txtNo.Size = new System.Drawing.Size(166, 23);
+            this.txtNo.Size = new System.Drawing.Size(154, 23);
             this.txtNo.TabIndex = 133;
             // 
             // kryptonPanelGroup
@@ -501,21 +509,21 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanelGroup.Controls.Add(this.txt组合名称);
             this.kryptonPanelGroup.Controls.Add(this.kryptonLabel8);
             this.kryptonPanelGroup.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.kryptonPanelGroup.Location = new System.Drawing.Point(0, 129);
+            this.kryptonPanelGroup.Location = new System.Drawing.Point(0, 135);
             this.kryptonPanelGroup.Name = "kryptonPanelGroup";
-            this.kryptonPanelGroup.Size = new System.Drawing.Size(893, 38);
+            this.kryptonPanelGroup.Size = new System.Drawing.Size(893, 32);
             this.kryptonPanelGroup.TabIndex = 161;
             // 
             // txt组合名称
             // 
-            this.txt组合名称.Location = new System.Drawing.Point(80, 12);
+            this.txt组合名称.Location = new System.Drawing.Point(80, 6);
             this.txt组合名称.Name = "txt组合名称";
-            this.txt组合名称.Size = new System.Drawing.Size(188, 23);
+            this.txt组合名称.Size = new System.Drawing.Size(422, 23);
             this.txt组合名称.TabIndex = 137;
             // 
             // kryptonLabel8
             // 
-            this.kryptonLabel8.Location = new System.Drawing.Point(12, 14);
+            this.kryptonLabel8.Location = new System.Drawing.Point(12, 8);
             this.kryptonLabel8.Name = "kryptonLabel8";
             this.kryptonLabel8.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel8.TabIndex = 136;
@@ -523,7 +531,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // btnQueryForGoods
             // 
-            this.btnQueryForGoods.Location = new System.Drawing.Point(71, 13);
+            this.btnQueryForGoods.Location = new System.Drawing.Point(43, 23);
             this.btnQueryForGoods.Name = "btnQueryForGoods";
             this.btnQueryForGoods.Size = new System.Drawing.Size(92, 36);
             this.btnQueryForGoods.TabIndex = 145;
@@ -532,7 +540,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // chk包含父级节点
             // 
-            this.chk包含父级节点.Location = new System.Drawing.Point(62, 122);
+            this.chk包含父级节点.Location = new System.Drawing.Point(60, 97);
             this.chk包含父级节点.Name = "chk包含父级节点";
             this.chk包含父级节点.Size = new System.Drawing.Size(101, 20);
             this.chk包含父级节点.TabIndex = 153;
@@ -541,7 +549,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(32, 72);
+            this.kryptonLabel2.Location = new System.Drawing.Point(13, 137);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel2.TabIndex = 146;
@@ -549,7 +557,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // chkMultiSelect
             // 
-            this.chkMultiSelect.Location = new System.Drawing.Point(62, 96);
+            this.chkMultiSelect.Location = new System.Drawing.Point(60, 71);
             this.chkMultiSelect.Name = "chkMultiSelect";
             this.chkMultiSelect.Size = new System.Drawing.Size(75, 20);
             this.chkMultiSelect.TabIndex = 150;
@@ -563,7 +571,7 @@ namespace RUINORERP.UI.ProductEAV
             0,
             0,
             0});
-            this.txtMaxRows.Location = new System.Drawing.Point(100, 68);
+            this.txtMaxRows.Location = new System.Drawing.Point(81, 135);
             this.txtMaxRows.Maximum = new decimal(new int[] {
             5000,
             0,
@@ -620,8 +628,8 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonDataGridView产品.AllowUserToAddRows = false;
             this.kryptonDataGridView产品.AllowUserToDeleteRows = false;
             this.kryptonDataGridView产品.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.kryptonDataGridView产品.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.kryptonDataGridView产品.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.kryptonDataGridView产品.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -677,9 +685,9 @@ namespace RUINORERP.UI.ProductEAV
             this.columnHeader8,
             this.columnHeader9,
             this.columnHeader10});
-            treeListViewItemCollectionComparer1.Column = 0;
-            treeListViewItemCollectionComparer1.SortOrder = System.Windows.Forms.SortOrder.Ascending;
-            this.treeListView1.Comparer = treeListViewItemCollectionComparer1;
+            treeListViewItemCollectionComparer2.Column = 0;
+            treeListViewItemCollectionComparer2.SortOrder = System.Windows.Forms.SortOrder.Ascending;
+            this.treeListView1.Comparer = treeListViewItemCollectionComparer2;
             this.treeListView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeListView1.GridLines = true;
             this.treeListView1.HideSelection = false;
@@ -819,14 +827,6 @@ namespace RUINORERP.UI.ProductEAV
             this.按SKU添加箱规ToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.按SKU添加箱规ToolStripMenuItem.Text = "按【多属性】添加包装参数";
             this.按SKU添加箱规ToolStripMenuItem.Click += new System.EventHandler(this.按SKU添加箱规ToolStripMenuItem_Click);
-            // 
-            // lblLastInventoryDate
-            // 
-            this.lblLastInventoryDate.Location = new System.Drawing.Point(516, 103);
-            this.lblLastInventoryDate.Name = "lblLastInventoryDate";
-            this.lblLastInventoryDate.Size = new System.Drawing.Size(88, 20);
-            this.lblLastInventoryDate.TabIndex = 165;
-            this.lblLastInventoryDate.Values.Text = "最近盘点时间";
             // 
             // UCProdQuery
             // 

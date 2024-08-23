@@ -2496,6 +2496,11 @@ namespace RUINORERP.UI.MRP.MP
 
         private void kryptonTreeGridViewMaking_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.ColumnIndex == -1)
+            {
+                return;
+            }
+
             Expression<Func<tb_ProduceGoodsRecommendDetail, object>> expSelected = c => c.Selected;
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {

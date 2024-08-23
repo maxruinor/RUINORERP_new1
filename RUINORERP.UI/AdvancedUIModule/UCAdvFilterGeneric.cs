@@ -634,6 +634,10 @@ namespace RUINORERP.UI.AdvancedUIModule
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.ColumnIndex == -1)
+            {
+                return;
+            }
             if (OnSelectDataRow != null)
             {
                 OnSelectDataRow(bindingSourceList.Current);

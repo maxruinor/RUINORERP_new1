@@ -187,6 +187,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                 case "bit":
                                     col.CustomFormat = CustomFormatType.Bool;
                                     break;
+                                case "decimal":
+                                    col.CustomFormat = CustomFormatType.DecimalPrecision;
+                                    break;
                             }
                         }
 

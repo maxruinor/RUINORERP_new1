@@ -127,7 +127,7 @@ namespace RUINORERP.UI.UCSourceGrid
             if (sender.Value == null || sender.Value.IsNullOrEmpty())
             {
                 //清空关联值
-                CurrGridDefine.SetDependTargetValue(null, sender.Position, null, CurrGridDefine[sender.Position.Column].ColName);
+                //CurrGridDefine.SetDependTargetValue(null, sender.Position, null, CurrGridDefine[sender.Position.Column].ColName);
                 return;
             }
             else

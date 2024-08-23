@@ -105,7 +105,7 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         toolStripbtnAdd.Enabled = false;
                     }
-
+                    entity.Is_enabled = true;
                     if (entity.ProdBaseID.HasValue || entity.ProdDetailID.HasValue)
                     {
                         toolStripbtnAdd.Enabled = false;
@@ -471,7 +471,7 @@ namespace RUINORERP.UI.ProductEAV
             //sgh2.SetCol_LimitedConditionsForSelectionRange<tb_BoxRules>(sgd2, t => t.ProdDetailID, f => f.BOM_ID);
 
 
-            listCols2.SetCol_Formula<tb_BoxRules>((a, b, c) => a.Length * b.Width * c.Height, d => d.Volume);
+       
 
             //List<KeyNamePair> keyNamePairs = new List<KeyNamePair>();
             //KeyNamePair keyName = new KeyNamePair();
@@ -489,8 +489,9 @@ namespace RUINORERP.UI.ProductEAV
 
             listCols2.SetCol_RelatedValue<tb_BoxRules>(a => a.QuantityPerBox, b => b.PackingMethod, "每{0}一箱", c => c.QuantityPerBox);
 
+            listCols2.SetCol_Formula<tb_BoxRules>((a, b, c) => a.Length * b.Width * c.Height, d => d.Volume);
 
-            // listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.TaxSubtotalAmount, d => d.UntaxedAmount);
+            //sgh2.SetPointToColumnPairs<tb_CartoonBox, tb_BoxRules>(sgd2, f => f.Volume, t => t.TransactionPrice);
 
             //应该是审核时要处理的逻辑暂时隐藏
             //将数量默认为已出库数量

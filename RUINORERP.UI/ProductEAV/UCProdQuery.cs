@@ -380,6 +380,11 @@ namespace RUINORERP.UI.ProductEAV
 
         private void kryptonDataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.ColumnIndex==-1)
+            {   
+                return;
+            }
+
             //图片特殊处理
             if (kryptonDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
             {
@@ -403,6 +408,12 @@ namespace RUINORERP.UI.ProductEAV
 
         private void btnQueryForGoods_Click(object sender, EventArgs e)
         {
+            Query();
+        }
+
+
+        public override void Query()
+        {
             if (kryptonNavigator1.SelectedPage != null)
             {
                 switch (kryptonNavigator1.SelectedPage.Name)
@@ -420,8 +431,10 @@ namespace RUINORERP.UI.ProductEAV
                         break;
                 }
             }
-
         }
+
+
+
         private void BindingDataWithCustomColumn<View_ProdDetail>(List<View_ProdDetail> list)
         {
             BindingSource bings = new BindingSource();
@@ -715,12 +728,12 @@ namespace RUINORERP.UI.ProductEAV
 
         private async void QueryForm_Load(object sender, EventArgs e)
         {
-            if (UseType==ProdQueryUseType.盘点导入)
+            if (UseType == ProdQueryUseType.盘点导入)
             {
                 lblLastInventoryDate.Visible = true;
                 dtp1.Visible = true;
                 dtp2.Visible = true;
-                kryptonLabel10.Visible= true;
+                kryptonLabel10.Visible = true;
             }
             else
             {
@@ -1191,6 +1204,18 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     if (boxReuleBasis == BoxRuleBasis.Product)
                     {
+                        if (prodDetail.tb_prod.tb_Packings.Count > 0 &&    MessageBox.Show("当前产品有包装信息，是否要进行编辑？", "操作确认", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        {
+                            // 如果用户选择"是"，则进入编辑模式
+                            packing = prodDetail.tb_prod.tb_Packings.FirstOrDefault();
+                            // 这里可以添加进入编辑模式的代码
+                        }
+                        else
+                        {
+                            // 如果用户选择"否"，则可以进行新增操作
+                            // 这里可以添加新增包装信息的代码
+                        }
+
                         //如果是已经有包装信息，则提示后进入编辑模式，如果是确定要添加多个包装信息。请在包装信息管理中添加
                         if (prodDetail.tb_prod.tb_Packings.Count > 0 && MessageBox.Show("当前产品有包装信息，将进入编辑模式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information) == DialogResult.OK)
                         {

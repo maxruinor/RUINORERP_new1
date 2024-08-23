@@ -253,7 +253,6 @@ namespace RUINORERP.UI.PSI.INV
         }
 
         SourceGridDefine sgd = null;
-        //        SourceGridHelper<View_ProdDetail, tb_StocktakeDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_StocktakeDetail>();
         SourceGridHelper sgh = new SourceGridHelper();
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();

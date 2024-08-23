@@ -615,16 +615,6 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
-        private bool editflag;
-
-        /// <summary>
-        /// 是否为编辑 如果为是则true
-        /// </summary>
-        public bool Edited
-        {
-            get { return editflag; }
-            set { editflag = value; }
-        }
 
         public System.Windows.Forms.BindingSource _ListDataSoure = null;
 
@@ -1481,12 +1471,13 @@ namespace RUINORERP.UI.BaseForm
         public List<string> InvisibleCols { get; set; } = new List<string>();
 
 
+
         /// <summary>
         /// 与高级查询执行结果公共使用，如果null时，则执行普通查询？
         /// </summary>
         /// <param name="dto"></param>
             //[MustOverride]
-        public async virtual void Query()
+        public async override void Query()
         {
             if (Edited)
             {
@@ -1621,9 +1612,6 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-
-
-
         /// <summary>
         /// esc退出窗体
         /// </summary>
@@ -1688,12 +1676,6 @@ namespace RUINORERP.UI.BaseForm
                 Form frm = (thisform as Control).Parent.Parent as Form;
                 frm.Close();
             }
-            //如果打开过高级查询 要删除
-            if (AdvPage != null)
-            {
-                MainForm.Instance.kryptonDockingManager1.RemovePage(AdvPage.UniqueName, true);
-                AdvPage.Dispose();
-            }
 
 
             /*
@@ -1729,6 +1711,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
+
 
         protected virtual void Refreshs()
         {

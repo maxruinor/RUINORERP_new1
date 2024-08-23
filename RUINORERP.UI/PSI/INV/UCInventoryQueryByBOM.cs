@@ -162,6 +162,10 @@ namespace RUINORERP.UI.UCSourceGrid
 
         private void kryptonDataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (e.ColumnIndex == -1)
+            {
+                return;
+            }
             //图片特殊处理
             if (kryptonDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
             {

@@ -88,5 +88,37 @@ namespace RUINORERP.UI.UCSourceGrid
             //MultipleChoices = prodQuery.MultipleChoices;
 
         }
+
+        /// <summary>
+        /// esc退出窗体
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="keyData"></param>
+        /// <returns></returns>
+        protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
+        {
+            int WM_KEYDOWN = 256;
+            int WM_SYSKEYDOWN = 260;
+
+            if (msg.Msg == WM_KEYDOWN | msg.Msg == WM_SYSKEYDOWN)
+            {
+                switch (keyData)
+                {
+                    case Keys.Escape:
+                        this.Close();
+                        break;
+                    case Keys.F1:
+
+                        break;
+                    case Keys.Enter:
+                        prodQuery.Query();
+                        break;
+                }
+            }
+            return false;
+        }
+
+
+
     }
 }

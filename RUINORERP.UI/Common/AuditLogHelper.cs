@@ -8,6 +8,7 @@ using RUINORERP.UI.BaseForm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -68,7 +69,15 @@ namespace RUINORERP.UI.Common
                 auditLog.Notes = description;
             }
             auditLog.ActionTime = DateTime.Now;
-            MainForm.Instance.AppContext.Db.Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
+            try
+            {
+                MainForm.Instance.AppContext.Db.Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"审计日志{GetAuditLogProperties(auditLog)}记录失败:{ex.Message}", Global.UILogType.错误);
+            }
+
         }
 
         public void CreateAuditLog<T>(string action, T entity) where T : class
@@ -81,5 +90,34 @@ namespace RUINORERP.UI.Common
 
 
         }
+
+
+        public string GetAuditLogProperties(tb_AuditLogs auditLog)
+        {
+            string rs = string.Empty;
+            if (auditLog == null)
+            {
+                return rs;
+            }
+            PropertyInfo[] properties = auditLog.GetType().GetProperties();
+            StringBuilder sb = new StringBuilder();
+            foreach (PropertyInfo property in properties)
+            {
+                foreach (Attribute attr in property.GetCustomAttributes(true))
+                {
+                    if (attr is SqlSugar.SugarColumn entityAttr)
+                    {
+                        if (null != entityAttr)
+                        {
+                            var value = property.GetValue(auditLog);
+                            sb.Append($"{property.Name}: {value}");
+                        }
+                    }
+                }
+            }
+            rs = sb.ToString();
+            return rs;
+        }
+
     }
 }

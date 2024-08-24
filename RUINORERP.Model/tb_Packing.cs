@@ -282,13 +282,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool? _Is_enabled;
+        private bool _Is_enabled=true;
         /// <summary>
         /// 是否启用
         /// </summary>
         [AdvQueryAttribute(ColName = "Is_enabled",ColDesc = "是否启用")] 
         [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_enabled" ,IsNullable = true,ColumnDescription = "是否启用" )]
-        public bool? Is_enabled
+        public bool Is_enabled
         { 
             get{return _Is_enabled;}
             set{

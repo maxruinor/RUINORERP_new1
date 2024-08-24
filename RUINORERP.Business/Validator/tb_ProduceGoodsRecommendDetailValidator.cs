@@ -41,7 +41,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.RequirementQty).NotNull().WithMessage("请制量:不能为空。");
 //***** 
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.RecommendQty).NotNull().WithMessage("建议量:不能为空。");
- RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
+ RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.RefBillNO).MaximumLength(50).WithMessage("生成单号:不能超过最大长度,50.");
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.RefBillType).NotEmpty().When(x => x.RefBillType.HasValue);
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.RefBillID).NotEmpty().When(x => x.RefBillID.HasValue);

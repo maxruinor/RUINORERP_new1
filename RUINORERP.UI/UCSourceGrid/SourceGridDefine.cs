@@ -313,7 +313,7 @@ namespace RUINORERP.UI.UCSourceGrid
         public ConcurrentDictionary<SourceGridDefineColumnItem, SourceGridDefineColumnItem> PointToColumnPairList { get; set; } = new ConcurrentDictionary<SourceGridDefineColumnItem, SourceGridDefineColumnItem>();
 
         /// <summary>
-        /// 以查询的结果中的列名为起，指定到明细中的列名为止的集合
+        /// 以查询的结果中的列名为key，指定到明细中的列名为value的集合
         /// </summary>
         public ConcurrentDictionary<string, SourceGridDefineColumnItem> QueryItemToColumnPairList { get; set; } = new ConcurrentDictionary<string, SourceGridDefineColumnItem>();
 

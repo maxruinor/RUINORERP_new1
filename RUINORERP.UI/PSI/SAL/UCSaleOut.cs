@@ -244,6 +244,8 @@ namespace RUINORERP.UI.PSI.SAL
 
             var lambdaOrder = Expressionable.Create<tb_SaleOrder>()
              .And(t => t.DataStatus == (int)DataStatus.确认)
+             .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+             .And(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
               .And(t => t.isdeleted == false)
              .ToExpression();//注意 这一句 不能少
             //如果有限制则设置一下 但是注意 不应该在这设置，灵活的应该是在调用层设置

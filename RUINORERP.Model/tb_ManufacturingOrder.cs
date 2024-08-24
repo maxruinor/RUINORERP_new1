@@ -456,10 +456,10 @@ namespace RUINORERP.Model
 
         private string _CloseCaseOpinions;
         /// <summary>
-        /// 备注
+        /// 结案情况
         /// </summary>
-        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "备注")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "备注" )]
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "结案情况")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "结案情况")]
         public string CloseCaseOpinions
         { 
             get{return _CloseCaseOpinions;}
@@ -470,10 +470,10 @@ namespace RUINORERP.Model
 
         private string _Notes;
         /// <summary>
-        /// 结案情况
+        /// 备注
         /// </summary>
-        [AdvQueryAttribute(ColName = "Notes",ColDesc = "结案情况")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=1500,IsNullable = true,ColumnDescription = "结案情况" )]
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=1500,IsNullable = true,ColumnDescription = "备注")]
         public string Notes
         { 
             get{return _Notes;}

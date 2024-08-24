@@ -83,6 +83,16 @@ namespace RUINORERP.Business
                             //inv.LatestStorageTime = System.DateTime.Now;
                             BusinessHelper.Instance.InitEntity(inv);
                         }
+                        if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
+                        {
+                            approvalEntity.ApprovalResults = false;
+                            approvalEntity.ApprovalComments = $"库存为：{inv.Quantity}，拟销售量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                            rmrs.ErrorMsg = approvalEntity.ApprovalComments;
+                            rmrs.Succeeded = false;
+                            return rmrs;
+                        }
+
+
                         //更新在途库存
                         inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
                         BusinessHelper.Instance.EditEntity(inv);

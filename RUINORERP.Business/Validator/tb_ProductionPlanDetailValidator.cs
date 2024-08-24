@@ -34,7 +34,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProductionPlanDetail =>tb_ProductionPlanDetail.Quantity).NotNull().WithMessage("计划数量:不能为空。");
  RuleFor(tb_ProductionPlanDetail =>tb_ProductionPlanDetail.BOM_ID).Must(CheckForeignKeyValue).WithMessage("配方名称:下拉选择值不正确。");
- RuleFor(tb_ProductionPlanDetail =>tb_ProductionPlanDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
+ RuleFor(tb_ProductionPlanDetail =>tb_ProductionPlanDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
 //***** 
  RuleFor(tb_ProductionPlanDetail =>tb_ProductionPlanDetail.CompletedQuantity).NotNull().WithMessage("完成数量:不能为空。");
 //***** 

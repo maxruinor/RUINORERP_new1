@@ -158,7 +158,7 @@ namespace RUINORERP.Model
         /// 摘要
         /// </summary>
         [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=255,IsNullable = true,ColumnDescription = "摘要" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=1000,IsNullable = true,ColumnDescription = "摘要" )]
         public string Summary
         { 
             get{return _Summary;}

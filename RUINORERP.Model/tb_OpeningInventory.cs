@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 期初存货来自期初盘点或业务上首次库存入库
+    /// 期初存货来自期初盘点或业务上首次库存入库 ，主要是他会影响成本。他可以录入成本
     /// </summary>
     [Serializable()]
     [SugarTable("tb_OpeningInventory")]

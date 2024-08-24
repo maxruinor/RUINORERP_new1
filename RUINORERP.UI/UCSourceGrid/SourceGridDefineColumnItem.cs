@@ -15,12 +15,17 @@ namespace RUINORERP.UI.UCSourceGrid
 {
     /// <summary>
     /// 单个列的定义
+    /// 这个列是SourceGrid的，在目前表格控件中，主要是单据明细。再加上公共部分和辅助显示部分。
+    /// 所以标记
     /// </summary>
     [Serializable]
     public class SourceGridDefineColumnItem
     {
-
-
+        /// <summary>
+        /// 代表了主要的、真实的明细数据部分，其命名应该清晰地反映出它的核心地位和实际用途
+        /// 与GuideToTargetColumn 重复了。暂时没有去重构优化
+        /// </summary>
+        public bool IsCoreContent { get; set; } = false;
         /// <summary>
         /// 对某些列的自动列宽特殊设置处理
         /// </summary>

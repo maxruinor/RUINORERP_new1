@@ -210,7 +210,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //LoadDataToGrid(new List<tb_SaleOrderDetail>());
                 sgh.LoadItemDataToGrid<tb_SaleOrderDetail>(grid1, sgd, new List<tb_SaleOrderDetail>(), c => c.ProdDetailID);
             }
-         
+
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
@@ -790,6 +790,8 @@ namespace RUINORERP.UI.PSI.SAL
                 //审核失败 要恢复之前的值
                 command.Undo();
                 MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,原因是：{rmrs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核失败,\r\n 原因是：{rmrs.ErrorMsg},如果无法解决，请联系管理员！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                toolStripbtnReview.Enabled = true;
             }
             return ae;
         }

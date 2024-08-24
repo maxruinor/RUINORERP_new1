@@ -164,18 +164,24 @@ namespace RUINORERP.Business
 
                                 var prodInfo = Detail.tb_proddetail.tb_prod.CNName + Detail.tb_proddetail.tb_prod.Specifications;
 
-                                if (!_appContext.SysConfig.CheckNegativeInventory && child.Quantity < 0)
-                                {
-                                    approvalEntity.ApprovalResults = false;
-                                    approvalEntity.ApprovalComments = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                                    break;
-                                }
+                               
 
 
                                 #region 库存表的更新 这里应该是必需有库存的数据，
                                 tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+
                                 if (inv != null)
                                 {
+                                    if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
+                                    {
+                                        approvalEntity.ApprovalResults = false;
+                                        approvalEntity.ApprovalComments = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                                        rrs.ErrorMsg = approvalEntity.ApprovalComments;
+                                        rrs.Succeeded = false;
+                                        return rrs;
+                                    }
+                                   
+
                                     //更新库存
                                     inv.Quantity = inv.Quantity + child.Quantity;
                                     inv.NotOutQty += child.Quantity;

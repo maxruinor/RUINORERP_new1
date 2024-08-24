@@ -1239,6 +1239,7 @@ namespace RUINORERP.Business
             ManufacturingOrder.Unit_ID = MakingItem.tb_proddetail.tb_prod.Unit_ID;
             ManufacturingOrder.CNName = MakingItem.tb_proddetail.tb_prod.CNName;
             ManufacturingOrder.SKU = MakingItem.tb_proddetail.SKU;
+            ManufacturingOrder.Notes = MakingItem.Summary;
             ManufacturingOrder.Type_ID = MakingItem.tb_proddetail.tb_prod.Type_ID;
 
             ManufacturingOrder.MONO = BizCodeGenerator.Instance.GetBizBillNo(BizType.制令单);

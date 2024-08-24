@@ -420,7 +420,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 switch (CurrGridDefine[sf.TagetCol.ColIndex].CustomFormat)
                 {
-                
+
                     case CustomFormatType.PercentFormat:
 
                         //实际上面转换过一次了。
@@ -561,7 +561,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 switch (CurrGridDefine[sf.TagetCol.ColIndex].CustomFormat)
                 {
-                    
+
                     case CustomFormatType.PercentFormat:
 
                         //实际上面转换过一次了。
@@ -771,6 +771,18 @@ namespace RUINORERP.UI.UCSourceGrid
         }
         public override void OnEditEnded(CellContext sender, EventArgs e)
         {
+            //如果当前行有完整数据时，人为清空关键字段，则清空关联值
+            if (sender.Value == null || sender.Value.IsNullOrEmpty())
+            {
+                //一行数据中包括两个部分：一个是真实明细表中的字段，另一个是产品或其它公共部分。没有保存到数据库。只是参考引用显示作用。
+                //真实明细是可以清空编辑的。公共部分不能清空编辑。清空认为重新输入，所以这里判断是否是公共部分，如果是，则进行清空关联值
+                if (!CurrGridDefine[sender.Position.Column].IsCoreContent)
+                {
+                    //清空关联值
+                    CurrGridDefine.SetDependTargetValue(null, sender.Position, null, CurrGridDefine[sender.Position.Column].ColName);
+                }
+                return;
+            }
             if (sender.Value == null)
             {
                 return;

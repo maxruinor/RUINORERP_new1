@@ -100,6 +100,122 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
 
+
+        /// <summary>
+        /// 提取单据明细列。并且全标记为目标列
+        /// </summary>
+        /// <typeparam name="BillDetail"></typeparam>
+        /// <returns></returns>
+        public List<SourceGridDefineColumnItem> GetGridColumns<BillDetail>()
+        {
+            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            List<SourceGridDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>();
+            listCols.AddRange(cols1);
+            //指定了关键字段ProdDetailID
+            // List<SourceGridDefineColumnItem> cols2 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>(BizKeyTargetCol);
+            //var mb = BizKeyTargetCol.GetMemberInfo();
+            //string keyColName = mb.Name;
+
+            foreach (var item in listCols)
+            {
+                if (typeof(BillDetail).Name == item.BelongingObjectType.Name)
+                {
+                    item.GuideToTargetColumn = true;
+                    item.IsCoreContent = true;
+                }
+                //if (item.ColName == keyColName)
+                //{
+                //    item.IsPrimaryBizKeyColumn = true;
+                //}
+            }
+
+            return listCols;
+        }
+
+        /// <summary>
+        /// 设置要加载显示的列，   指定关键字段ProdDetailID
+        /// </summary>
+        /// <typeparam name="Prod">产品视图实体</typeparam>
+        /// <typeparam name="BillDetail">单据明细</typeparam>
+        /// <param name="TagColsExps">目标列集合在明细部分，可能也同时存在于产品视图公共部分中</param>
+        /// <param name="BizKeyTargetCol">业务主键 一般指产品ID,必需设置，否则会使用没有描述的规则过滤掉</param>
+        /// <param name="ShowSelected">明细中是否需要显示选择一列，如果要显示，默认只是添加的表格中。默认是visble=false。要手动显示</param>
+        /// <returns></returns>
+        public List<SourceGridDefineColumnItem> GetGridColumns<Prod, BillDetail>(Expression<Func<BillDetail, long?>> BizKeyTargetCol, bool ShowSelected)
+        {
+            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            List<SourceGridDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<Prod>();
+            //指定了关键字段ProdDetailID
+            List<SourceGridDefineColumnItem> cols2 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>(BizKeyTargetCol, ShowSelected);
+            listCols.AddRange(cols1);
+            listCols.AddRange(cols2);
+
+            /* 优秀代码学习
+            List<string> RepeatColNames = new List<string>();
+            RepeatColNames = listCols.Select(c => c.ColName).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+
+            //去掉公共部分。只留下单据明细部分
+            foreach (var item in RepeatColNames)
+            {
+                SourceGridDefineColumnItem c = cols1.Where(c => c.ColName == item).FirstOrDefault();
+                cols1.Remove(c);
+            }
+            listCols = new List<SourceGridDefineColumnItem>();
+            listCols.AddRange(cols1);
+            listCols.AddRange(cols2);
+            */
+
+
+            var mb = BizKeyTargetCol.GetMemberInfo();
+            string keyColName = mb.Name;
+
+            foreach (var item in listCols)
+            {
+                if (typeof(BillDetail).Name == item.BelongingObjectType.Name)
+                {
+                    item.GuideToTargetColumn = true;
+                    item.IsCoreContent = true;
+                }
+                if (item.ColName == keyColName)
+                {
+                    item.IsPrimaryBizKeyColumn = true;
+                }
+            }
+
+
+
+            /*
+
+     
+
+            SourceGridDefineColumnItem tagcol = this.DefineColumns.FirstOrDefault(d => d.ColName == key);
+            //设置关联列。以及主要的目标列
+
+            DependColumn TargCol = new DependColumn();
+            TargCol.ColCaption = tagcol.ColCaption;
+            TargCol.ColName = tagcol.ColName;
+            TargCol.IsPrimaryKeyIdentityColumn = true;
+            TargCol.Visible = false;
+
+            DependencyQuery dq = new DependencyQuery();
+            dq.RelatedCols = dq.SetDependencys<Share>();
+            dq.RelatedCols.Add(TargCol);//添加目标列
+
+            dq.SourceList = new List<object>();// ((IEnumerable<dynamic>)list) as List<object>;
+            if (Productlist != null)
+            {
+                for (int i = 0; i < Productlist.Count; i++)
+                {
+                    dq.SourceList.Add(Productlist[i]);
+                }
+            }
+            DependQuery = dq;
+            */
+
+            return listCols;
+        }
+
+
         /// <summary>
         /// 设置要加载显示的列，   指定关键字段ProdDetailID
         /// </summary>
@@ -150,6 +266,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (typeof(BillDetail).Name == item.BelongingObjectType.Name)
                 {
                     item.GuideToTargetColumn = true;
+                    item.IsCoreContent = true;
                 }
                 if (item.ColName == keyColName)
                 {
@@ -186,120 +303,6 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             DependQuery = dq;
             */
-
-            return listCols;
-        }
-
-
-
-        /// <summary>
-        /// 设置要加载显示的列，   指定关键字段ProdDetailID
-        /// </summary>
-        /// <typeparam name="Prod">产品视图实体</typeparam>
-        /// <typeparam name="BillDetail">单据明细</typeparam>
-        /// <param name="TagColsExps">目标列集合在明细部分，可能也同时存在于产品视图公共部分中</param>
-        /// <param name="BizKeyTargetCol">业务主键 一般指产品ID,必需设置，否则会使用没有描述的规则过滤掉</param>
-        /// <param name="ShowSelected">明细中是否需要显示选择一列，如果要显示，默认只是添加的表格中。默认是visble=false。要手动显示</param>
-        /// <returns></returns>
-        public List<SourceGridDefineColumnItem> GetGridColumns<Prod, BillDetail>(Expression<Func<BillDetail, long?>> BizKeyTargetCol, bool ShowSelected)
-        {
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
-            List<SourceGridDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<Prod>();
-            //指定了关键字段ProdDetailID
-            List<SourceGridDefineColumnItem> cols2 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>(BizKeyTargetCol, ShowSelected);
-            listCols.AddRange(cols1);
-            listCols.AddRange(cols2);
-
-            /* 优秀代码学习
-            List<string> RepeatColNames = new List<string>();
-            RepeatColNames = listCols.Select(c => c.ColName).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-
-            //去掉公共部分。只留下单据明细部分
-            foreach (var item in RepeatColNames)
-            {
-                SourceGridDefineColumnItem c = cols1.Where(c => c.ColName == item).FirstOrDefault();
-                cols1.Remove(c);
-            }
-            listCols = new List<SourceGridDefineColumnItem>();
-            listCols.AddRange(cols1);
-            listCols.AddRange(cols2);
-            */
-
-
-            var mb = BizKeyTargetCol.GetMemberInfo();
-            string keyColName = mb.Name;
-
-            foreach (var item in listCols)
-            {
-                if (typeof(BillDetail).Name == item.BelongingObjectType.Name)
-                {
-                    item.GuideToTargetColumn = true;
-                }
-                if (item.ColName == keyColName)
-                {
-                    item.IsPrimaryBizKeyColumn = true;
-                }
-            }
-
-
-
-            /*
-
-     
-
-            SourceGridDefineColumnItem tagcol = this.DefineColumns.FirstOrDefault(d => d.ColName == key);
-            //设置关联列。以及主要的目标列
-
-            DependColumn TargCol = new DependColumn();
-            TargCol.ColCaption = tagcol.ColCaption;
-            TargCol.ColName = tagcol.ColName;
-            TargCol.IsPrimaryKeyIdentityColumn = true;
-            TargCol.Visible = false;
-
-            DependencyQuery dq = new DependencyQuery();
-            dq.RelatedCols = dq.SetDependencys<Share>();
-            dq.RelatedCols.Add(TargCol);//添加目标列
-
-            dq.SourceList = new List<object>();// ((IEnumerable<dynamic>)list) as List<object>;
-            if (Productlist != null)
-            {
-                for (int i = 0; i < Productlist.Count; i++)
-                {
-                    dq.SourceList.Add(Productlist[i]);
-                }
-            }
-            DependQuery = dq;
-            */
-
-            return listCols;
-        }
-
-        /// <summary>
-        /// 提取单据明细列。并且全标记为目标列
-        /// </summary>
-        /// <typeparam name="BillDetail"></typeparam>
-        /// <returns></returns>
-        public List<SourceGridDefineColumnItem> GetGridColumns<BillDetail>()
-        {
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
-            List<SourceGridDefineColumnItem> cols1 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>();
-            listCols.AddRange(cols1);
-            //指定了关键字段ProdDetailID
-            // List<SourceGridDefineColumnItem> cols2 = SourceGridDefine.GetSourceGridDefineColumnItems<BillDetail>(BizKeyTargetCol);
-            //var mb = BizKeyTargetCol.GetMemberInfo();
-            //string keyColName = mb.Name;
-
-            foreach (var item in listCols)
-            {
-                if (typeof(BillDetail).Name == item.BelongingObjectType.Name)
-                {
-                    item.GuideToTargetColumn = true;
-                }
-                //if (item.ColName == keyColName)
-                //{
-                //    item.IsPrimaryBizKeyColumn = true;
-                //}
-            }
 
             return listCols;
         }

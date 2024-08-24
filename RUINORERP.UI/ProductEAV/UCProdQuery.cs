@@ -152,7 +152,7 @@ namespace RUINORERP.UI.ProductEAV
                 string toolTipText = string.Empty;
 
 
-                //toolTip1.SetToolTip(kryptonDataGridView产品.Rows[e.RowIndex]., "当前产品有箱规信息，双击三角形可以查看！");
+                //toolTip1.SetToolTip(kryptonDataGridView产品.Rows[e.RowIndex]., "当前产品有箱规信息，双击行头的图形可以查看！");
                 // 根据行数据设置工具提示文本
                 // 例如，获取行头对应的行数据
                 DataGridViewRow dr = kryptonDataGridView产品.Rows[e.RowIndex];
@@ -162,14 +162,14 @@ namespace RUINORERP.UI.ProductEAV
                 switch (basis)
                 {
                     case BoxRuleBasis.Product:
-                        toolTipText = $"第 {e.RowIndex + 1} 行的产品有箱规信息，双击三角形可以查看！";
+                        toolTipText = $"第 {e.RowIndex + 1} 行的产品有箱规信息，双击行头的图形可以查看！";
                         break;
                     case BoxRuleBasis.Attributes:
-                        toolTipText = $"第 {e.RowIndex + 1} 行的产品有箱规信息，双击三角形可以查看！";
+                        toolTipText = $"第 {e.RowIndex + 1} 行的产品有箱规信息，双击行头的图形可以查看！";
 
                         break;
                     case BoxRuleBasis.Product | BoxRuleBasis.Attributes:
-                        toolTipText = $"第 {e.RowIndex + 1} 行的产品有箱规信息，双击三角形可以查看！";
+                        toolTipText = $"第 {e.RowIndex + 1} 行的产品有箱规信息，双击行头的图形可以查看！";
 
                         break;
                     default:
@@ -380,8 +380,8 @@ namespace RUINORERP.UI.ProductEAV
 
         private void kryptonDataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex==-1)
-            {   
+            if (e.ColumnIndex == -1)
+            {
                 return;
             }
 
@@ -1200,65 +1200,84 @@ namespace RUINORERP.UI.ProductEAV
                 tb_Packing packing = new tb_Packing();
                 packing.Is_enabled = true;
 
-                if (kryptonDataGridView产品.CurrentRow.DataBoundItem is View_ProdDetail prodDetail)
+                if (kryptonDataGridView产品.CurrentRow.DataBoundItem is View_ProdDetail)
                 {
+                    var prodDetail = kryptonDataGridView产品.CurrentRow.DataBoundItem as View_ProdDetail;
                     if (boxReuleBasis == BoxRuleBasis.Product)
                     {
-                        if (prodDetail.tb_prod.tb_Packings.Count > 0 &&    MessageBox.Show("当前产品有包装信息，是否要进行编辑？", "操作确认", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-                        {
-                            // 如果用户选择"是"，则进入编辑模式
-                            packing = prodDetail.tb_prod.tb_Packings.FirstOrDefault();
-                            // 这里可以添加进入编辑模式的代码
-                        }
-                        else
-                        {
-                            // 如果用户选择"否"，则可以进行新增操作
-                            // 这里可以添加新增包装信息的代码
-                        }
-
                         //如果是已经有包装信息，则提示后进入编辑模式，如果是确定要添加多个包装信息。请在包装信息管理中添加
-                        if (prodDetail.tb_prod.tb_Packings.Count > 0 && MessageBox.Show("当前产品有包装信息，将进入编辑模式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information) == DialogResult.OK)
+                        if (prodDetail.tb_prod.tb_Packings.Count > 0  )
                         {
-                            packing = prodDetail.tb_prod.tb_Packings.FirstOrDefault();
+                            DialogResult dialogResult = MessageBox.Show("当前产品有包装信息\r\n如果要编辑请选择【是】，如果要添加请选择【否】", "提示", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
+                            if (dialogResult == DialogResult.Yes)
+                            {
+                                packing = prodDetail.tb_prod.tb_Packings.FirstOrDefault();
+                            }
+                            else if (dialogResult == DialogResult.No)
+                            {
+                                packing = new tb_Packing();
+                            }
+                            else
+                            {
+                                return;
+                            }
                         }
-                        else
-                        {
-                            packing.ProdBaseID = prodDetail.ProdBaseID;
-                            packing.tb_prod = prodDetail.tb_prod;
-
-                        }
+                        packing.ProdBaseID = prodDetail.ProdBaseID;
+                        packing.tb_prod = prodDetail.tb_prod;
                         packing.PackagingName = $"{prodDetail.CNName}的包装情况";
                     }
                     if (boxReuleBasis == BoxRuleBasis.Attributes)
                     {
-                        if (prodDetail.tb_Packing_forSku.Count > 0 && MessageBox.Show("当前产品SKU有包装信息，将进入编辑模式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information) == DialogResult.OK)
+                        if (prodDetail.tb_Packing_forSku.Count > 0)
                         {
-                            packing = prodDetail.tb_Packing_forSku.FirstOrDefault();
+                            DialogResult dialogResult = MessageBox.Show("当前产品SKU有包装信息\r\n如果要编辑请选择【是】，如果要添加请选择【否】", "提示", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
+                            if (dialogResult == DialogResult.Yes)
+                            {
+                                packing = prodDetail.tb_Packing_forSku.FirstOrDefault();
+                            }
+                            else if (dialogResult == DialogResult.No)
+                            {
+                                packing = new tb_Packing();
+                            }
+                            else
+                            {
+                                return;
+                            }
                         }
-                        else
-                        {
-                            packing.ProdDetailID = prodDetail.ProdDetailID;
-                            packing.PackagingName = $"{prodDetail.CNName}中{prodDetail.SKU}的包装情况";
-                            packing.SKU = prodDetail.SKU;
-                            packing.property = prodDetail.prop;
-                        }
+
+                        packing.ProdDetailID = prodDetail.ProdDetailID;
+                        packing.PackagingName = $"{prodDetail.CNName}中{prodDetail.SKU}的包装情况";
+                        packing.SKU = prodDetail.SKU;
+                        packing.property = prodDetail.prop;
                         packing.tb_prod = prodDetail.tb_prod;
                     }
                 }
 
                 if (boxReuleBasis == BoxRuleBasis.Combination)
                 {
-                    if (kryptonDataGridView产品.CurrentRow.DataBoundItem is tb_ProdBundle prodBundle)
+                    if (kryptonDataGridView产品.CurrentRow.DataBoundItem is tb_ProdBundle)
                     {
-                        if (prodBundle.tb_Packings.Count > 0 && MessageBox.Show("当前产品组合有包装信息，将进入编辑模式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information) == DialogResult.OK)
+                        var prodBundle = kryptonDataGridView产品.CurrentRow.DataBoundItem as tb_ProdBundle;
+                        if (prodBundle.tb_Packings.Count > 0 )
                         {
-                            packing = prodBundle.tb_Packings.FirstOrDefault();
+                            DialogResult dialogResult = MessageBox.Show("当前产品组合有包装信息\r\n 如果要编辑请选择【是】，如果要添加请选择【否】", "提示", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
+                            if (dialogResult == DialogResult.Yes)
+                            {
+                                packing = prodBundle.tb_Packings.FirstOrDefault();
+                            }
+                            else if (dialogResult == DialogResult.No)
+                            {
+                                packing = new tb_Packing();
+                            }
+                            else
+                            {
+                                return;
+                            }
                         }
-                        else
-                        {
-                            packing.PackagingName = $"{prodBundle.BundleName}组合的包装情况";
-                            packing.BundleID = prodBundle.BundleID;
-                        }
+                         
+                        packing.PackagingName = $"{prodBundle.BundleName}组合的包装情况";
+                        packing.BundleID = prodBundle.BundleID;
+
                     }
                 }
                 if (RelatedBillMenuInfo != null && packing != null)

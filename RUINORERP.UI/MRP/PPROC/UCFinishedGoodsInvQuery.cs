@@ -109,7 +109,7 @@ namespace RUINORERP.UI.PSI.PUR
 
  
 
-
+        /*
 
         /// <summary>
         /// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
@@ -163,7 +163,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             return ae;
         }
-
+        */
         private void UCFinishedGoodsInvQuery_Load(object sender, EventArgs e)
         {
             _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FinishedGoodsInv, tb_ManufacturingOrder>(a => a.MONo, b => b.MONO);

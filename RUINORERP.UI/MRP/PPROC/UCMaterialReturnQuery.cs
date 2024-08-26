@@ -128,7 +128,7 @@ namespace RUINORERP.UI.MRP.MP
 
 
 
-
+        /*
         /// <summary>
         /// 销售订单审核，审核成功后，库存中的拟销售量增加，同时检查数量和金额，总数量和总金额不能小于明细小计的和
         /// </summary>
@@ -181,7 +181,7 @@ namespace RUINORERP.UI.MRP.MP
 
             return ae;
         }
-
+     
 
         /// <summary>
         /// 销售订单反审
@@ -249,7 +249,7 @@ namespace RUINORERP.UI.MRP.MP
             }
             return true;
         }
-
+           */
 
         public async override Task<bool> CloseCase(List<tb_MaterialReturn> EditEntitys)
         {

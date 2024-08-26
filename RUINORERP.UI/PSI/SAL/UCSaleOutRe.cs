@@ -584,7 +584,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-
+        /*
         protected async override Task<ApprovalEntity> Review()
         {
             if (EditEntity == null)
@@ -627,7 +627,7 @@ namespace RUINORERP.UI.PSI.SAL
             //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
             // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
             tb_SaleOutReController<tb_SaleOutRe> ctr = Startup.GetFromFac<tb_SaleOutReController<tb_SaleOutRe>>();
-            ReturnResults<bool> rs = await ctr.AdjustingAsync(EditEntity, ae);
+            ReturnResults<tb_SaleOutRe> rs = await ctr.ApprovalAsync(EditEntity);
             if (rs.Succeeded)
             {
 
@@ -662,7 +662,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             return ae;
         }
-
+        */
         /*
         /// <summary>
         /// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理

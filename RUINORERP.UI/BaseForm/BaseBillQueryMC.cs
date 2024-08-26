@@ -8,7 +8,6 @@ using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
-using NPOI.SS.Formula.Functions;
 using OfficeOpenXml;
 using RUINOR.Core;
 using RUINORERP.AutoMapper;
@@ -255,15 +254,15 @@ namespace RUINORERP.UI.BaseForm
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
-                        await Review(selectlist);
+                        await Review(selectlist[0]);
                     }
 
                     break;
                 case MenuItemEnums.反审:
                     if (selectlist.Count > 0)
                     {
-                        
-                        await ReReview(selectlist);
+                        //只操作批一行
+                        await ReReview(selectlist[0]);
                     }
                     break;
                 case MenuItemEnums.结案:
@@ -466,28 +465,228 @@ namespace RUINORERP.UI.BaseForm
         /// 暂时只支持一级审核，将来可以设计配置 可选多级审核。并且能看到每级的审核情况
         /// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
         /// </summary>
-        public virtual Task<ApprovalEntity> Review(List<M> EditEntitys)
-        {
-            ApprovalEntity approvalEntity = new ApprovalEntity();
-            // 对 EditEntitys 进行处理，设置 approvalEntity 的相关属性
-            return Task.FromResult(approvalEntity);
+        //public virtual Task<ApprovalEntity> Review(List<M> EditEntitys)
+        //{
+        //    ApprovalEntity ae = new ApprovalEntity();
+        //    return Task.FromResult(ae);
 
-            //return Task.Run(() =>
-            //{
-            //    ApprovalEntity approvalEntity = new ApprovalEntity();
-            //    // 对 EditEntitys 进行处理，设置 approvalEntity 的相关属性
-            //    return approvalEntity;
-            //});
+        //}
+        /// <summary>
+        /// 审核 注意后面还需要加很多业务逻辑。
+        /// 比方出库单，审核就会减少库存修改成本
+        /// （如果有月结动作，则在月结时统计修改成本，更科学，因为如果退单等会影响成本）
+        /// </summary>
+        protected async virtual Task<ApprovalEntity> Review(M EditEntity)
+        {
+            //如果已经审核并且审核通过，则不能再次审核
+            ApprovalEntity ae = new ApprovalEntity();
+            if (EditEntity == null)
+            {
+                return null;
+            }
+            //检查是不是可以正常审核  如果驳回了。就要修改为未审核的情况
+            if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
+            {
+                //反审，要审核过，并且通过了，才能反审。
+                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.未审核
+                    && EditEntity.GetPropertyValue("ApprovalResults") != null
+                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == false
+                    )
+                {
+
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("提示", "【未审核】且结果为否的单据才能审核。");
+                    return ae;
+                }
+            }
+
+
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+
+            CommonUI.frmApproval frm = new CommonUI.frmApproval();
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            ae.BillID = pkid;
+            CommBillData cbd = bcf.GetBillData<M>(EditEntity);
+            ae.BillNo = cbd.BillNo;
+            ae.bizType = cbd.BizType;
+            ae.bizName = cbd.BizName;
+            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            frm.BindData(ae);
+            await Task.Delay(1);
+            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            {
+                Command command = new Command();
+                //缓存当前编辑的对象。如果撤销就回原来的值
+                M oldobj = CloneHelper.DeepCloneObject<M>(EditEntity);
+         
+                command.UndoOperation = delegate ()
+                {
+                    //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                    CloneHelper.SetValues<M>(EditEntity, oldobj);
+                };
+
+
+                //审核了。数据状态要更新为
+                EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+
+                AuditLogHelper.Instance.CreateAuditLog<M>("审核", EditEntity, $"审核结果{ae.ApprovalResults}");
+
+                //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
+                PropertyInfo[] array_property = ae.GetType().GetProperties();
+                {
+                    /* 注意审核时要把这些值给到单据中
+                    entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                    //后面已经修改为
+                    entity.ApprovalResults = approvalEntity.ApprovalResults;
+                    */
+
+                    foreach (var property in array_property)
+                    {
+                        //保存审核结果 将审核中间值给到单据中，是否做循环处理？
+                        //Expression<Func<ApprovalEntity, object>> PNameExp = t => t.ApprovalStatus;
+                        //MemberInfo minfo = PNameExp.GetMemberInfo();
+                        //string propertyName = minfo.Name;
+                        if (ReflectionHelper.ExistPropertyName<M>(property.Name))
+                        {
+                            object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
+                            //if (aeValue.Equals(true))
+                            //{
+                            //    aeValue = 1;
+                            //}
+                            //if (aeValue.Equals(false))
+                            //{
+                            //    aeValue = 0;
+                            //}
+                            ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
+                        }
+                    }
+                }
+
+                ReturnResults<M> rmr = new ReturnResults<M>();
+                BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
+                rmr = await ctr.ApprovalAsync(EditEntity);
+                if (rmr.Succeeded)
+                {
+                    //ToolBarEnabledControl(MenuItemEnums.反审);
+                    Query(QueryDto);
+                    //这里推送到审核，启动工作流
+                    AuditLogHelper.Instance.CreateAuditLog<M>("审核", EditEntity, $"审核结果：{ae.ApprovalResults}");
+                }
+                else
+                {
+                    //审核失败 要恢复之前的值
+                    command.Undo();
+                    //MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
+                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
+                }
+
+            }
+            
+            return ae;
         }
+
+        //protected async virtual Task<ApprovalEntity> ReReview()
+        //{
+        //    await Task.Delay(0);
+        //    return null;
+        //}
+
 
         /// <summary>
         /// 反审
+        /// 系统不支持批量反审，所以这里只支持单条记录。反审本身就是一个特殊情况。需要仔细核对
+        /// 暂时只支持一级审核，将来可以设计配置 可选多级审核。并且能看到每级的审核情况
+        /// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
         /// </summary>
         /// <param name="EditEntitys"></param>
         /// <returns></returns>
-        public virtual Task<bool> ReReview(List<M> EditEntitys)
+        public async virtual Task<ApprovalEntity> ReReview(M EditEntity)
         {
-            return null;
+            if (EditEntity == null)
+            {
+                return null;
+            }
+            ApprovalEntity ae = new ApprovalEntity();
+            #region 审核状态
+            if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
+            {
+                //反审，要审核过，并且通过了，才能反审。
+                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
+                    && EditEntity.GetPropertyValue("ApprovalResults") != null
+                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
+                    )
+                {
+
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审。");
+                    return ae;
+                }
+            }
+
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            ae.BillID = pkid;
+            CommBillData cbd = bcf.GetBillData<M>(EditEntity);
+            ae.BillNo = cbd.BillNo;
+            ae.bizType = cbd.BizType;
+            ae.bizName = cbd.BizName;
+            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            frm.BindData(ae);
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                Command command = new Command();
+                //缓存当前编辑的对象。如果撤销就回原来的值
+                M oldobj = CloneHelper.DeepCloneObject<M>(EditEntity);
+                command.UndoOperation = delegate ()
+                {
+                    //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）
+                    CloneHelper.SetValues<M>(EditEntity, oldobj);
+                };
+
+                //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
+                PropertyInfo[] array_property = ae.GetType().GetProperties();
+                {
+                    foreach (var property in array_property)
+                    {
+                        //保存审核结果 将审核中间值给到单据中，是否做循环处理？
+                        //Expression<Func<ApprovalEntity, object>> PNameExp = t => t.ApprovalStatus;
+                        //MemberInfo minfo = PNameExp.GetMemberInfo();
+                        //string propertyName = minfo.Name;
+                        if (ReflectionHelper.ExistPropertyName<M>(property.Name))
+                        {
+                            object aeValue = ReflectionHelper.GetPropertyValue(ae, property.Name);
+                            ReflectionHelper.SetPropertyValue(EditEntity, property.Name, aeValue);
+                        }
+                    }
+                }
+              
+
+                ReturnResults<M> rmr = new ReturnResults<M>();
+                BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
+                rmr = await ctr.AntiApprovalAsync(EditEntity);
+                if (rmr.Succeeded)
+                {
+                    //ToolBarEnabledControl(MenuItemEnums.反审);
+                    //这里推送到审核，启动工作流
+                    AuditLogHelper.Instance.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalComments}");
+                }
+                else
+                {
+                    //审核失败 要恢复之前的值
+                    command.Undo();
+                    //MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
+                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
+                }
+            }
+            return ae;
+            #endregion
         }
 
 

@@ -715,7 +715,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-
+        /*
         protected async override Task<ApprovalEntity> Review()
         {
             if (EditEntity == null)
@@ -766,7 +766,7 @@ namespace RUINORERP.UI.PSI.SAL
             //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
             // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
             tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFacByName<tb_SaleOrderController<tb_SaleOrder>>(typeof(T).Name + "Controller");
-            ReturnResults<bool> rmrs = await ctr.ApprovalAsync(EditEntity, ae);
+            ReturnResults<bool> rmrs = await ctr.ApprovalAsync(EditEntity);
             if (rmrs.Succeeded)
             {
                 //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
@@ -796,7 +796,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             return ae;
         }
-
+        */
 
 
 

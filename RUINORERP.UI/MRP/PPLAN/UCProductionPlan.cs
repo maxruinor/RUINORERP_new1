@@ -452,7 +452,7 @@ namespace RUINORERP.UI.MRP.MP
             }
         }
 
-
+        /*
         protected async override Task<ApprovalEntity> Review()
         {
             if (EditEntity == null)
@@ -502,7 +502,7 @@ namespace RUINORERP.UI.MRP.MP
             //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
             // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
             tb_ProductionPlanController<tb_ProductionPlan> ctr = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();
-            ReturnResults<bool> rmrs = await ctr.ApprovalAsync(EditEntity, ae);
+            ReturnResults<tb_ProductionPlan> rmrs = await ctr.ApprovalAsync(EditEntity);
             if (rmrs.Succeeded)
             {
                 //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
@@ -531,7 +531,7 @@ namespace RUINORERP.UI.MRP.MP
             }
             return ae;
         }
-
+        */
         /*
         protected override void Print()
         {
@@ -670,7 +670,7 @@ namespace RUINORERP.UI.MRP.MP
         }
          */
 
-
+        /*
         protected async override Task<ApprovalEntity> ReReview()
         {
             ApprovalEntity ae = new ApprovalEntity();
@@ -730,7 +730,7 @@ namespace RUINORERP.UI.MRP.MP
             }
             return ae;
         }
-
+        */
 
         protected async override Task<bool> CloseCaseAsync()
         {

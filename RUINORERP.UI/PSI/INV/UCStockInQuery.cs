@@ -35,7 +35,7 @@ namespace RUINORERP.UI.PSI.INV
             base.tsbtnBatchConversion.Visible = false;
 
         }
-
+        /*
 
         public override Task<bool> ReReview(List<tb_StockIn> EditEntitys)
         {
@@ -43,7 +43,7 @@ namespace RUINORERP.UI.PSI.INV
             return null;
         }
 
-        public async override Task<ApprovalEntity> Review(List<tb_StockIn> EditEntitys)
+        public async override Task<ApprovalEntity> Review(tb_StockIn EditEntity)
         {
             if (EditEntitys == null)
             {
@@ -106,7 +106,7 @@ namespace RUINORERP.UI.PSI.INV
 
             return ae;
         }
-
+        */
 
         public override void BuildColNameDataDictionary()
         {

@@ -38,9 +38,13 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AdjustingInventoryAsync(tb_Stocktake entity, ApprovalEntity approvalEntity)
+
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rmsr = new ReturnResults<bool>();
+            ReturnResults<T> rmsr = new ReturnResults<T>();
+            tb_Stocktake entity = ObjectEntity as tb_Stocktake;
+
+
             try
             {
                 // 开启事务，保证数据一致性
@@ -48,8 +52,7 @@ namespace RUINORERP.Business
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-                if (approvalEntity.ApprovalResults)
-                {
+              
                     if (entity == null)
                     {
                         return rmsr;
@@ -161,16 +164,12 @@ namespace RUINORERP.Business
                         //意思是只是体现了成本？ 还是说 期初时可以录入成本，其它盘点不可以？应该是的。
                     }
 
-                }
-                else
-                {
-
-                }
+          
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-                entity.ApprovalResults = approvalEntity.ApprovalResults;
+               // entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -189,9 +188,9 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error(  "事务回滚" + ex.Message);
                 }
-                rmsr.ErrorMsg = "事务回滚=>" + approvalEntity.bizName + " " + ex.Message;
+                rmsr.ErrorMsg = "事务回滚=>"  + ex.Message;
                 return rmsr;
             }
 
@@ -203,10 +202,10 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             tb_Stocktake entity = ObjectEntity as tb_Stocktake;
-            ReturnResults<bool> rmsr = new ReturnResults<bool>();
+            ReturnResults<T> rmsr = new ReturnResults<T>();
 
             try
             {
@@ -217,7 +216,7 @@ namespace RUINORERP.Business
                 //更新拟销售量减少
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
-             
+
                 foreach (var child in entity.tb_StocktakeDetails)
                 {
                     //先看库存表中是否存在记录。
@@ -332,6 +331,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.CommitTran();
                 //_logger.Info(approvalEntity.bizName + "审核事务成功");
                 rmsr.Succeeded = true;
+                rmsr.ReturnObject = entity as T;
                 return rmsr;
             }
             catch (Exception ex)

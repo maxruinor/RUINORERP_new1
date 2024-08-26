@@ -121,83 +121,82 @@ namespace RUINORERP.Business
 
 
 
-        public async virtual Task<ReturnResults<bool>> ApprovalAsync(tb_PurOrder entity, ApprovalEntity approvalEntity)
+
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            ReturnResults<T> rmrs = new ReturnResults<T>();
+            tb_PurOrder entity = ObjectEntity as tb_PurOrder;
+
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-                if (!approvalEntity.ApprovalResults)
-                {
-                    if (entity == null)
-                    {
-                        return rmrs;
-                    }
 
+                if (entity == null)
+                {
+                    return rmrs;
                 }
-                else
-                {
 
-                    //如果采购订单明细数据来自于请购单，则明细要回写状态为已采购
-                    if (entity.RefBillID.HasValue && entity.RefBillID.Value > 0)
+
+                //如果采购订单明细数据来自于请购单，则明细要回写状态为已采购
+                if (entity.RefBillID.HasValue && entity.RefBillID.Value > 0)
+                {
+                    if (entity.RefBizType == (int)BizType.请购单)
                     {
-                        if (entity.RefBizType == (int)BizType.请购单)
+                        tb_BuyingRequisition buyingRequisition = _appContext.Db.Queryable<tb_BuyingRequisition>()
+                            .Includes(c => c.tb_BuyingRequisitionDetails)
+                            .Where(c => c.PuRequisition_ID == entity.RefBillID).Single();
+                        if (buyingRequisition != null)
                         {
-                            tb_BuyingRequisition buyingRequisition = _appContext.Db.Queryable<tb_BuyingRequisition>()
-                                .Includes(c => c.tb_BuyingRequisitionDetails)
-                                .Where(c => c.PuRequisition_ID == entity.RefBillID).Single();
-                            if (buyingRequisition != null)
+
+                            foreach (var child in entity.tb_PurOrderDetails)
                             {
-
-                                foreach (var child in entity.tb_PurOrderDetails)
+                                var buyItem = buyingRequisition.tb_BuyingRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
+                                if (buyItem != null)//为空则是买的东西不在请购单明细中。
                                 {
-                                    var buyItem = buyingRequisition.tb_BuyingRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
-                                    if (buyItem != null)//为空则是买的东西不在请购单明细中。
-                                    {
-                                        buyItem.Purchased = true;
-                                        buyItem.HasChanged = true;
-                                    }
+                                    buyItem.Purchased = true;
+                                    buyItem.HasChanged = true;
                                 }
-                                await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisitionDetail>(buyingRequisition.tb_BuyingRequisitionDetails).ExecuteCommandAsync();
                             }
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisitionDetail>(buyingRequisition.tb_BuyingRequisitionDetails).ExecuteCommandAsync();
                         }
-                    }
-                    foreach (var child in entity.tb_PurOrderDetails)
-                    {
-                        #region 库存表的更新 这里应该是必需有库存的数据，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                        if (inv == null)
-                        {
-                            inv = new tb_Inventory();
-                            inv.ProdDetailID = child.ProdDetailID;
-                            inv.Location_ID = child.Location_ID;
-                            inv.Quantity = 0;
-                            inv.InitInventory = (int)inv.Quantity;
-                            inv.Notes = "";//后面修改数据库是不需要？
-                            //inv.LatestStorageTime = System.DateTime.Now;
-                            BusinessHelper.Instance.InitEntity(inv);
-                        }
-                        //更新在途库存
-                        inv.On_the_way_Qty = inv.On_the_way_Qty + child.Quantity;
-                        BusinessHelper.Instance.EditEntity(inv);
-                        #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-
-                        }
-
-                        //
                     }
                 }
+                foreach (var child in entity.tb_PurOrderDetails)
+                {
+                    #region 库存表的更新 这里应该是必需有库存的数据，
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    if (inv == null)
+                    {
+                        inv = new tb_Inventory();
+                        inv.ProdDetailID = child.ProdDetailID;
+                        inv.Location_ID = child.Location_ID;
+                        inv.Quantity = 0;
+                        inv.InitInventory = (int)inv.Quantity;
+                        inv.Notes = "";//后面修改数据库是不需要？
+                                       //inv.LatestStorageTime = System.DateTime.Now;
+                        BusinessHelper.Instance.InitEntity(inv);
+                    }
+                    //更新在途库存
+                    inv.On_the_way_Qty = inv.On_the_way_Qty + child.Quantity;
+                    BusinessHelper.Instance.EditEntity(inv);
+                    #endregion
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
+                    {
+
+                    }
+
+                    //
+                }
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                //   entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-                entity.ApprovalResults = approvalEntity.ApprovalResults;
+                //   entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -216,19 +215,19 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error("事务回滚" + ex.Message);
                 }
-                rmrs.ErrorMsg = approvalEntity.bizName + "事务回滚=>" + ex.Message;
+                rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rmrs;
             }
 
         }
 
 
-        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             tb_PurOrder entity = ObjectEntity as tb_PurOrder;
-            ReturnResults<bool> rs = new ReturnResults<bool>();
+            ReturnResults<T> rs = new ReturnResults<T>();
             try
             {
 
@@ -242,7 +241,7 @@ namespace RUINORERP.Business
                     return rs;
                 }
 
-            
+
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
@@ -305,6 +304,7 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.ApproverEntity(entity);
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrder>(entity).ExecuteCommandAsync();
                 _unitOfWorkManage.CommitTran();
+                rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }

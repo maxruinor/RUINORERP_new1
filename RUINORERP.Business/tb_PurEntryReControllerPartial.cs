@@ -149,10 +149,10 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             tb_PurEntryRe entity = ObjectEntity as tb_PurEntryRe;
-            ReturnResults<bool> rs = new ReturnResults<bool>();
+            ReturnResults<T> rs = new ReturnResults<T>();
             rs.Succeeded = false;
             try
             {
@@ -281,6 +281,7 @@ namespace RUINORERP.Business
 
 
                 _unitOfWorkManage.CommitTran();
+                rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }

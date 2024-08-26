@@ -41,9 +41,12 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entitys"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchApproval(List<tb_FinishedGoodsInv> entitys, ApprovalEntity approvalEntity)
+
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rs = new ReturnResults<bool>();
+            tb_FinishedGoodsInv entity = ObjectEntity as tb_FinishedGoodsInv;
+            ReturnResults<T> rs = new ReturnResults<T>();
+
             try
             {
                 // 开启事务，保证数据一致性
@@ -51,214 +54,202 @@ namespace RUINORERP.Business
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-                if (!approvalEntity.ApprovalResults)
+
+
+                //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案
+                tb_ManufacturingOrder manufacturingOrder = null;
+                if (entity.MOID > 0)
                 {
-                    if (entitys == null)
+                    manufacturingOrder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                    .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                    .Includes(b => b.tb_productiondemand, c => c.tb_productionplan, d => d.tb_ProductionPlanDetails)
+                    .Includes(b => b.tb_MaterialRequisitions)
+                   .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails) //找到他名下的所有的缴库信息
+                    .Where(c => c.MOID == entity.MOID)
+                    .Single();
+                }
+
+                //如果入库明细中的产品。不存在于订单中。审核失败。
+                if (!entity.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID))
+                {
+                    rs.Succeeded = false;
+                    _unitOfWorkManage.RollbackTran();
+                    rs.ErrorMsg = $"缴库明细中有不属于当前制令单生产的产品及对应仓库!请检查数据后重试！";
+                    return rs;
+                }
+
+                //更新计划单已交数量，制令单会引用需求分析，需求分析引用计划单
+                if (manufacturingOrder.PDID > 0)
+                {
+
+                    //2024-6-26修改为强引用了。是不是可以优化？
+                    //因为没有强引用 这里主动去查询
+                    tb_ProductionDemand productionDemand = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
+                       .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                       .Includes(a => a.tb_productionplan, b => b.tb_ProductionPlanDetails)
+                       .Where(c => c.PDID == manufacturingOrder.PDID)
+                       .SingleAsync();
+                    foreach (var child in entity.tb_FinishedGoodsInvDetails)
                     {
-                        rs.Succeeded = false;
-                        return rs;
+                        tb_ProductionPlanDetail planDetail = productionDemand.tb_productionplan.tb_ProductionPlanDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID);
+                        if (planDetail != null)
+                        {
+                            planDetail.CompletedQuantity += child.Qty;
+                        }
                     }
+                    //更新制令单已交数量
+                    int jkCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlanDetail>(productionDemand.tb_productionplan.tb_ProductionPlanDetails).ExecuteCommandAsync();
+                    if (jkCounter > 0)
+                    {
+                        if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                        {
+                            _logger.Info(productionDemand.PPNo + $"对应的计划明细中完成数量更新成功===重点代码 看已交数量是否正确");
+                        }
+                    }
+
+                    productionDemand.tb_productionplan.TotalCompletedQuantity = productionDemand.tb_productionplan.tb_ProductionPlanDetails.Sum(c => c.CompletedQuantity);
+                    //如果计划数量等于已完成数量 结案？
+                    if (productionDemand.tb_productionplan.TotalQuantity == productionDemand.tb_productionplan.TotalCompletedQuantity)
+                    {
+                        productionDemand.tb_productionplan.DataStatus = (int)DataStatus.完结;
+                    }
+                    await _unitOfWorkManage.GetDbClient().Updateable(productionDemand.tb_productionplan).UpdateColumns(t => new { t.DataStatus, t.TotalCompletedQuantity }).ExecuteCommandAsync();
+
+
+                }
+
+
+                foreach (var child in entity.tb_FinishedGoodsInvDetails)
+                {
+                    #region 库存表的更新 这里应该是必需有库存的数据，
+                    bool Opening = false;
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    if (inv == null)
+                    {
+                        Opening = true;
+                        inv = new tb_Inventory();
+                        inv.Quantity = inv.Quantity + child.Qty;
+                        inv.InitInventory = (int)inv.Quantity;
+                        inv.Notes = "";//后面修改数据库是不需要？
+                        BusinessHelper.Instance.InitEntity(inv);
+                    }
+                    else
+                    {
+                        inv.Quantity = inv.Quantity + child.Qty;
+                        BusinessHelper.Instance.EditEntity(inv);
+                    }
+                    inv.ProdDetailID = child.ProdDetailID;
+                    inv.Location_ID = child.Location_ID;
+                    inv.Notes = "";//后面修改数据库是不需要？
+                    inv.LatestStorageTime = System.DateTime.Now;
+
+                    //这里减掉在制的数量
+                    inv.MakingQty = inv.MakingQty - child.Qty;
+
+                    // 直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
+                    //平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
+                    //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
+                    //后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
+                    //数据来源可以是多种多样的，例如：
+                    //采购价格：从供应商处购买产品或物品时的价格。
+                    //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
+                    //市场价格：参考市场上类似产品或物品的价格。
+
+                    //TODO:这里需要根据系统设置中的算法计算。
+                    //  CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
+
+                    inv.Inv_Cost = child.UnitCost;//这里需要计算，根据系统设置中的算法计算。
+                                                  // inv.CostFIFO = child.TransactionPrice;
+                                                  // inv.CostMonthlyWA = child.TransactionPrice;
+                                                  // inv.CostMovingWA = child.TransactionPrice;
+                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
+                    inv.LatestStorageTime = System.DateTime.Now;
+
+                    #endregion
+
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
+                    {
+                        if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                        {
+                            _logger.Info(child.ProdDetailID + "==>" + child.property + "缴库时库存更新成功");
+                        }
+
+                        if (Opening)
+                        {
+                            #region 处理期初
+                            //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
+                            tb_OpeningInventory oinv = new tb_OpeningInventory();
+                            oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
+                            oinv.Cost_price = rr.ReturnObject.Inv_Cost;
+                            oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
+                            oinv.InitInvDate = entity.DeliveryDate;
+                            oinv.RefBillID = entity.FG_ID;
+                            oinv.RefNO = entity.DeliveryBillNo;
+                            string BizTypeName = Enum.GetName(typeof(BizType), BizType.缴库单);
+                            oinv.RefBizType = BizTypeName;
+                            oinv.InitQty = 0;
+                            oinv.InitInvDate = System.DateTime.Now;
+                            oinv.Notes = "由缴库时自动生成";
+                            CommBillData cbd = bcf.GetBillData<tb_FinishedGoodsInv>(entity);
+                            //oinv.RefBizType = cbd.BizType;
+                            //TODO 还要完善引用数据
+                            await ctrOPinv.AddReEntityAsync(oinv);
+                            #endregion
+                        }
+                    }
+                }
+
+                //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
+                List<tb_FinishedGoodsInvDetail> detailList = new List<tb_FinishedGoodsInvDetail>();
+                foreach (var item in manufacturingOrder.tb_FinishedGoodsInvs)
+                {
+                    detailList.AddRange(item.tb_FinishedGoodsInvDetails);
+                }
+                //这里与采购订单不一样。采购订单是用明细去比较，这里是回写的是制令单，是主表。
+                string prodName = manufacturingOrder.tb_proddetail.tb_prod.CNName + manufacturingOrder.tb_proddetail.tb_prod.Specifications;
+                //找出所有这个制令单的对应 缴库的数量加总
+                var inQty = detailList.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
+                if (inQty > manufacturingOrder.ManufacturingQty)
+                {
+                    string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量，审核失败！";
+                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _unitOfWorkManage.RollbackTran();
+                    _logger.LogInformation(msg);
+                    return rs;
                 }
                 else
                 {
-                    for (int ii = 0; ii < entitys.Count; ii++)
+                    //当前行累计到交付,只是当前单的。不是以前的。
+                    var RowQty = entity.tb_FinishedGoodsInvDetails.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
+                    manufacturingOrder.QuantityDelivered += RowQty;
+                    //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                    if (manufacturingOrder.QuantityDelivered > detailList.Sum(c => c.Qty))
                     {
+                        throw new Exception($"缴库单：{entity.DeliveryBillNo}审核时，缴库总数量不能大于制令单{manufacturingOrder.MONO}中的生产数量！");
+                    }
 
-                        //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案
-                        tb_ManufacturingOrder manufacturingOrder = null;
-                        if (entitys[ii].MOID > 0)
+                    //制令单已交数量和判断是否结案
+                    if (manufacturingOrder.QuantityDelivered == manufacturingOrder.ManufacturingQty)
+                    {
+                        manufacturingOrder.DataStatus = (int)DataStatus.完结;
+                        manufacturingOrder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{manufacturingOrder.MONO},缴库单审核时，生产数量等于交付数量，自动结案";
+
+                        //修改领料单状态 系统认为制令单已完成时。领料单也会结案
+                        manufacturingOrder.tb_MaterialRequisitions.ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
+
+                        int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(manufacturingOrder.tb_MaterialRequisitions).ExecuteCommandAsync();
+                        if (pomrCounter > 0)
                         {
-                            manufacturingOrder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
-                            .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                            .Includes(b => b.tb_proddetail, c => c.tb_prod)
-                            .Includes(b => b.tb_productiondemand, c => c.tb_productionplan,d=>d.tb_ProductionPlanDetails)
-                            .Includes(b => b.tb_MaterialRequisitions)
-                           .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails) //找到他名下的所有的缴库信息
-                            .Where(c => c.MOID == entitys[ii].MOID)
-                            .Single();
-                        }
-
-                        //如果入库明细中的产品。不存在于订单中。审核失败。
-                        if (!entitys[ii].tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID))
-                        {
-                            rs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rs.ErrorMsg = $"缴库明细中有不属于当前制令单生产的产品及对应仓库!请检查数据后重试！";
-                            return rs;
-                        }
-
-                        //更新计划单已交数量，制令单会引用需求分析，需求分析引用计划单
-                        if (manufacturingOrder.PDID > 0)
-                        {
-
-                            //2024-6-26修改为强引用了。是不是可以优化？
-                            //因为没有强引用 这里主动去查询
-                            tb_ProductionDemand productionDemand = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
-                               .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                               .Includes(a => a.tb_productionplan, b => b.tb_ProductionPlanDetails)
-                               .Where(c => c.PDID == manufacturingOrder.PDID)
-                               .SingleAsync();
-                            foreach (var child in entitys[ii].tb_FinishedGoodsInvDetails)
+                            if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                             {
-                                tb_ProductionPlanDetail planDetail = productionDemand.tb_productionplan.tb_ProductionPlanDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID);
-                                if (planDetail != null)
-                                {
-                                    planDetail.CompletedQuantity += child.Qty;
-                                }
+                                _logger.Info(entity.DeliveryBillNo + "==>" + entity.MONo + $"对应 的所有领料单设置为结案。将不能再发料 更新成功===重点代码 看已交数量是否正确");
                             }
-                            //更新制令单已交数量
-                            int jkCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlanDetail>(productionDemand.tb_productionplan.tb_ProductionPlanDetails).ExecuteCommandAsync();
-                            if (jkCounter > 0)
-                            {
-                                if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                                {
-                                    _logger.Info(productionDemand.PPNo + $"对应的计划明细中完成数量更新成功===重点代码 看已交数量是否正确");
-                                }
-                            }
-
-                            productionDemand.tb_productionplan.TotalCompletedQuantity = productionDemand.tb_productionplan.tb_ProductionPlanDetails.Sum(c => c.CompletedQuantity);
-                            //如果计划数量等于已完成数量 结案？
-                            if (productionDemand.tb_productionplan.TotalQuantity == productionDemand.tb_productionplan.TotalCompletedQuantity)
-                            {
-                                productionDemand.tb_productionplan.DataStatus = (int)DataStatus.完结;
-                            }
-                            await _unitOfWorkManage.GetDbClient().Updateable(productionDemand.tb_productionplan).UpdateColumns(t => new { t.DataStatus, t.TotalCompletedQuantity }).ExecuteCommandAsync();
-
-
                         }
 
 
-                        foreach (var child in entitys[ii].tb_FinishedGoodsInvDetails)
-                        {
-                            #region 库存表的更新 这里应该是必需有库存的数据，
-                            bool Opening = false;
-                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                            if (inv == null)
-                            {
-                                Opening = true;
-                                inv = new tb_Inventory();
-                                inv.Quantity = inv.Quantity + child.Qty;
-                                inv.InitInventory = (int)inv.Quantity;
-                                inv.Notes = "";//后面修改数据库是不需要？
-                                BusinessHelper.Instance.InitEntity(inv);
-                            }
-                            else
-                            {
-                                inv.Quantity = inv.Quantity + child.Qty;
-                                BusinessHelper.Instance.EditEntity(inv);
-                            }
-                            inv.ProdDetailID = child.ProdDetailID;
-                            inv.Location_ID = child.Location_ID;
-                            inv.Notes = "";//后面修改数据库是不需要？
-                            inv.LatestStorageTime = System.DateTime.Now;
 
-                            //这里减掉在制的数量
-                            inv.MakingQty = inv.MakingQty - child.Qty;
-
-                            // 直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                            //平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                            //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                            //后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                            //数据来源可以是多种多样的，例如：
-                            //采购价格：从供应商处购买产品或物品时的价格。
-                            //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                            //市场价格：参考市场上类似产品或物品的价格。
-
-                            //TODO:这里需要根据系统设置中的算法计算。
-                            //  CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
-
-                            inv.Inv_Cost = child.UnitCost;//这里需要计算，根据系统设置中的算法计算。
-                                                          // inv.CostFIFO = child.TransactionPrice;
-                                                          // inv.CostMonthlyWA = child.TransactionPrice;
-                                                          // inv.CostMovingWA = child.TransactionPrice;
-                            inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                            inv.LatestStorageTime = System.DateTime.Now;
-
-                            #endregion
-
-                            ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                            if (rr.Succeeded)
-                            {
-                                if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                                {
-                                    _logger.Info(child.ProdDetailID + "==>" + child.property + "缴库时库存更新成功");
-                                }
-
-                                if (Opening)
-                                {
-                                    #region 处理期初
-                                    //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                                    tb_OpeningInventory oinv = new tb_OpeningInventory();
-                                    oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                                    oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                                    oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                                    oinv.InitInvDate = entitys[ii].DeliveryDate;
-                                    oinv.RefBillID = entitys[ii].FG_ID;
-                                    oinv.RefNO = entitys[ii].DeliveryBillNo;
-                                    string BizTypeName = Enum.GetName(typeof(BizType), BizType.缴库单);
-                                    oinv.RefBizType = BizTypeName;
-                                    oinv.InitQty = 0;
-                                    oinv.InitInvDate = System.DateTime.Now;
-                                    oinv.Notes = "由缴库时自动生成";
-                                    CommBillData cbd = bcf.GetBillData<tb_FinishedGoodsInv>(entitys[ii]);
-                                    //oinv.RefBizType = cbd.BizType;
-                                    //TODO 还要完善引用数据
-                                    await ctrOPinv.AddReEntityAsync(oinv);
-                                    #endregion
-                                }
-                            }
-                        }
-
-                        //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
-                        List<tb_FinishedGoodsInvDetail> detailList = new List<tb_FinishedGoodsInvDetail>();
-                        foreach (var item in manufacturingOrder.tb_FinishedGoodsInvs)
-                        {
-                            detailList.AddRange(item.tb_FinishedGoodsInvDetails);
-                        }
-                        //这里与采购订单不一样。采购订单是用明细去比较，这里是回写的是制令单，是主表。
-                        string prodName = manufacturingOrder.tb_proddetail.tb_prod.CNName + manufacturingOrder.tb_proddetail.tb_prod.Specifications;
-                        //找出所有这个制令单的对应 缴库的数量加总
-                        var inQty = detailList.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
-                        if (inQty > manufacturingOrder.ManufacturingQty)
-                        {
-                            string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
-                            return rs;
-                        }
-                        else
-                        {
-                            //当前行累计到交付,只是当前单的。不是以前的。
-                            var RowQty = entitys[ii].tb_FinishedGoodsInvDetails.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
-                            manufacturingOrder.QuantityDelivered += RowQty;
-                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (manufacturingOrder.QuantityDelivered > detailList.Sum(c => c.Qty))
-                            {
-                                throw new Exception($"缴库单：{entitys[ii].DeliveryBillNo}审核时，缴库总数量不能大于制令单{manufacturingOrder.MONO}中的生产数量！");
-                            }
-
-                            //制令单已交数量和判断是否结案
-                            if (manufacturingOrder.QuantityDelivered == manufacturingOrder.ManufacturingQty)
-                            {
-                                manufacturingOrder.DataStatus = (int)DataStatus.完结;
-                                manufacturingOrder.CloseCaseOpinions = $"缴库单:{entitys[ii].DeliveryBillNo}->制令单:{manufacturingOrder.MONO},缴库单审核时，生产数量等于交付数量，自动结案";
-
-                                //修改领料单状态 系统认为制令单已完成时。领料单也会结案
-                                manufacturingOrder.tb_MaterialRequisitions.ToList().ForEach(c => c.DataStatus = (int)DataStatus.完结);
-
-                                int pomrCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(manufacturingOrder.tb_MaterialRequisitions).ExecuteCommandAsync();
-                                if (pomrCounter > 0)
-                                {
-                                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                                    {
-                                        _logger.Info(entitys[ii].DeliveryBillNo + "==>" + entitys[ii].MONo + $"对应 的所有领料单设置为结案。将不能再发料 更新成功===重点代码 看已交数量是否正确");
-                                    }
-                                }
-
-
-                            }
-                        }
 
                         //更新制令单已交数量和判断是否结案
                         int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(manufacturingOrder).ExecuteCommandAsync();
@@ -266,25 +257,25 @@ namespace RUINORERP.Business
                         {
                             if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                             {
-                                _logger.Info(entitys[ii].DeliveryBillNo + "==>" + entitys[ii].MONo + $"对应 的制令单已交数量 更新成功===重点代码 看已交数量是否正确");
+                                _logger.Info(entity.DeliveryBillNo + "==>" + entity.MONo + $"对应 的制令单已交数量 更新成功===重点代码 看已交数量是否正确");
                             }
                         }
 
                         //这部分是否能提出到上一级公共部分？
-                        entitys[ii].DataStatus = (int)DataStatus.确认;
-                        entitys[ii].ApprovalOpinions = approvalEntity.ApprovalComments;
+                        entity.DataStatus = (int)DataStatus.确认;
+                        //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                         //后面已经修改为
-                        entitys[ii].ApprovalResults = approvalEntity.ApprovalResults;
-                        entitys[ii].ApprovalStatus = (int)ApprovalStatus.已审核;
-                        BusinessHelper.Instance.ApproverEntity(entitys[ii]);
+                        //entity.ApprovalResults = approvalEntity.ApprovalResults;
+                        entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                        BusinessHelper.Instance.ApproverEntity(entity);
                         //只更新指定列
                         // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                        int counter = await _unitOfWorkManage.GetDbClient().Updateable<tb_FinishedGoodsInv>(entitys[ii]).ExecuteCommandAsync();
+                        int counter = await _unitOfWorkManage.GetDbClient().Updateable<tb_FinishedGoodsInv>(entity).ExecuteCommandAsync();
                         if (counter > 0)
                         {
                             if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                             {
-                                _logger.Info(entitys[ii].MONo + "==>" + "状态更新成功");
+                                _logger.Info(entity.MONo + "==>" + "状态更新成功");
                             }
                         }
 
@@ -303,7 +294,7 @@ namespace RUINORERP.Business
                 _logger.Error(ex);
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error("事务回滚" + ex.Message);
                 }
                 rs.Succeeded = false;
                 rs.ErrorMsg = ex.Message;
@@ -319,10 +310,13 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AntiApprovalAsync(tb_FinishedGoodsInv entity)
+
+
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rs = new ReturnResults<bool>();
-            rs.Succeeded = false;
+            tb_FinishedGoodsInv entity = ObjectEntity as tb_FinishedGoodsInv;
+            ReturnResults<T> rs = new ReturnResults<T>();
+
             try
             {
                 //判断是否能反审?
@@ -474,6 +468,7 @@ namespace RUINORERP.Business
                 // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_FinishedGoodsInv>(entity).ExecuteCommandAsync();
                 _unitOfWorkManage.CommitTran();
+                rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }

@@ -83,6 +83,8 @@ namespace RUINORERP.UI.FM
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }
 
+        /*
+
         /// <summary>
         /// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
         /// </summary>
@@ -140,7 +142,7 @@ namespace RUINORERP.UI.FM
 
             return ae;
         }
-
+        */
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法

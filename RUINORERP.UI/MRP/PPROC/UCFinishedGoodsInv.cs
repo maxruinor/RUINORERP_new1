@@ -419,154 +419,152 @@ namespace RUINORERP.UI.PSI.PUR
 
             }
         }
-
-        /// <summary>
-        /// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
-        /// </summary>
-        /// <returns></returns>
-        protected async override Task<ApprovalEntity> Review()
+        /*
+/// <summary>
+/// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
+/// </summary>
+/// <returns></returns>
+protected async override Task<ApprovalEntity> Review()
+{
+    if (EditEntity == null)
+    {
+        return null;
+    }
+    //如果已经审核通过，则不能重复审核
+    if (EditEntity.ApprovalStatus.HasValue)
+    {
+        if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
         {
-            if (EditEntity == null)
+            if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
             {
+                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
                 return null;
             }
-            //如果已经审核通过，则不能重复审核
-            if (EditEntity.ApprovalStatus.HasValue)
-            {
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                {
-                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                    {
-                        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                        return null;
-                    }
-                }
-            }
-
-            Command command = new Command();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_FinishedGoodsInv oldobj = CloneHelper.DeepCloneObject<tb_FinishedGoodsInv>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_FinishedGoodsInv>(EditEntity, oldobj);
-            };
-            ApprovalEntity ae = await base.Review();
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-
-            tb_FinishedGoodsInvController<tb_FinishedGoodsInv> ctr = Startup.GetFromFac<tb_FinishedGoodsInvController<tb_FinishedGoodsInv>>();
-
-            List<tb_FinishedGoodsInv> tb_PurEntries = new List<tb_FinishedGoodsInv>();
-            tb_PurEntries.Add(EditEntity);
-            ReturnResults<bool> rrs = await ctr.BatchApproval(tb_PurEntries, ae);
-            if (rrs.Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.审核);
-                //如果审核结果为不通过时，审核不是灰色。
-                if (!ae.ApprovalResults)
-                {
-                    toolStripbtnReview.Enabled = true;
-                }
-                //如果审核结果为不通过时，审核不是灰色。
-                if (!ae.ApprovalResults)
-                {
-                    toolStripbtnReview.Enabled = true;
-                }
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rrs.ErrorMsg},请联系管理员！", Color.Red);
-                toolStripbtnReview.Enabled = true;
-            }
-
-            return ae;
         }
+    }
+
+    Command command = new Command();
+    //缓存当前编辑的对象。如果撤销就回原来的值
+    tb_FinishedGoodsInv oldobj = CloneHelper.DeepCloneObject<tb_FinishedGoodsInv>(EditEntity);
+    command.UndoOperation = delegate ()
+    {
+        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+        CloneHelper.SetValues<tb_FinishedGoodsInv>(EditEntity, oldobj);
+    };
+    ApprovalEntity ae = await base.Review();
+    if (EditEntity == null)
+    {
+        return null;
+    }
+    if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
+    {
+        return null;
+    }
+    tb_FinishedGoodsInvController<tb_FinishedGoodsInv> ctr = Startup.GetFromFac<tb_FinishedGoodsInvController<tb_FinishedGoodsInv>>();
+    List<tb_FinishedGoodsInv> tb_PurEntries = new List<tb_FinishedGoodsInv>();
+    tb_PurEntries.Add(EditEntity);
+    ReturnResults<tb_FinishedGoodsInv> rrs = await ctr.ApprovalAsync(EditEntity);
+    if (rrs.Succeeded)
+    {
+        //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+        //{
+
+        //}
+        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+        //MainForm.Instance.ecs.AddSendData(od);
 
 
-        /// <summary>
-        /// 反审核
-        /// </summary>
-        protected async override Task<ApprovalEntity> ReReview()
+
+        //审核成功
+        base.ToolBarEnabledControl(MenuItemEnums.审核);
+        //如果审核结果为不通过时，审核不是灰色。
+        if (!ae.ApprovalResults)
         {
-            ApprovalEntity ae = new ApprovalEntity();
-            if (EditEntity == null)
-            {
-                return ae;
-            }
-
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return ae;
-            }
-
-
-            if (EditEntity.tb_FinishedGoodsInvDetails == null || EditEntity.tb_FinishedGoodsInvDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                return ae;
-            }
-
-            Command command = new Command();
-
-            tb_FinishedGoodsInv oldobj = CloneHelper.DeepCloneObject<tb_FinishedGoodsInv>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                CloneHelper.SetValues<tb_FinishedGoodsInv>(EditEntity, oldobj);
-            };
-
-            tb_FinishedGoodsInvController<tb_FinishedGoodsInv> ctr = Startup.GetFromFac<tb_FinishedGoodsInvController<tb_FinishedGoodsInv>>();
-
-            ReturnResults<bool> rs = await ctr.AntiApprovalAsync(EditEntity);
-            if (rs.Succeeded)
-            {
-
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.反审);
-                toolStripbtnReview.Enabled = true;
-
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{EditEntity.DeliveryBillNo}反审失败,{rs.ErrorMsg},请联系管理员！", Color.Red);
-            }
-            return ae;
+            toolStripbtnReview.Enabled = true;
         }
+        //如果审核结果为不通过时，审核不是灰色。
+        if (!ae.ApprovalResults)
+        {
+            toolStripbtnReview.Enabled = true;
+        }
+    }
+    else
+    {
+        //审核失败 要恢复之前的值
+        command.Undo();
+        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rrs.ErrorMsg},请联系管理员！", Color.Red);
+        toolStripbtnReview.Enabled = true;
+    }
+
+    return ae;
+}
 
 
+/// <summary>
+/// 反审核
+/// </summary>
+protected async override Task<ApprovalEntity> ReReview()
+{
+    ApprovalEntity ae = new ApprovalEntity();
+    if (EditEntity == null)
+    {
+        return ae;
+    }
+
+    //反审，要审核过，并且通过了，才能反审。
+    if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
+    {
+        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
+        return ae;
+    }
+
+
+    if (EditEntity.tb_FinishedGoodsInvDetails == null || EditEntity.tb_FinishedGoodsInvDetails.Count == 0)
+    {
+        MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
+        return ae;
+    }
+
+    Command command = new Command();
+
+    tb_FinishedGoodsInv oldobj = CloneHelper.DeepCloneObject<tb_FinishedGoodsInv>(EditEntity);
+    command.UndoOperation = delegate ()
+    {
+        CloneHelper.SetValues<tb_FinishedGoodsInv>(EditEntity, oldobj);
+    };
+
+    tb_FinishedGoodsInvController<tb_FinishedGoodsInv> ctr = Startup.GetFromFac<tb_FinishedGoodsInvController<tb_FinishedGoodsInv>>();
+
+    ReturnResults<bool> rs = await ctr.AntiApprovalAsync(EditEntity);
+    if (rs.Succeeded)
+    {
+
+        //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+        //{
+
+        //}
+        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+        //MainForm.Instance.ecs.AddSendData(od);
+
+        //审核成功
+        base.ToolBarEnabledControl(MenuItemEnums.反审);
+        toolStripbtnReview.Enabled = true;
+
+    }
+    else
+    {
+        //审核失败 要恢复之前的值
+        command.Undo();
+        MainForm.Instance.PrintInfoLog($"{EditEntity.DeliveryBillNo}反审失败,{rs.ErrorMsg},请联系管理员！", Color.Red);
+    }
+    return ae;
+}
+
+*/
 
 
         string orderid = string.Empty;

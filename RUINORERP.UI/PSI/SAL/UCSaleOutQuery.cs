@@ -48,7 +48,7 @@ namespace RUINORERP.UI.PSI.SAL
         public override void SetGridViewDisplayConfig()
         {
             //base.SetRelatedBillCols<tb_SaleOrder>(c => c.SOrderNo, r => r.SaleOrderNo);
-            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_SaleOut,tb_SaleOrder>(c => c.SaleOrderNo, r => r.SOrderNo);
+            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_SaleOut, tb_SaleOrder>(c => c.SaleOrderNo, r => r.SOrderNo);
             base.SetGridViewDisplayConfig();
         }
 
@@ -166,6 +166,7 @@ namespace RUINORERP.UI.PSI.SAL
         //    return PrintData;
         //}
 
+        /*
         /// <summary>
         /// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
         /// </summary>
@@ -218,7 +219,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             return ae;
         }
-
+             */
 
         public async override Task<bool> CloseCase(List<tb_SaleOut> EditEntitys)
         {
@@ -256,7 +257,7 @@ namespace RUINORERP.UI.PSI.SAL
             return true;
         }
 
-
+        /*
         /// <summary>
         /// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理
         /// </summary>
@@ -292,10 +293,10 @@ namespace RUINORERP.UI.PSI.SAL
                     MainForm.Instance.PrintInfoLog($"销售出库单{EditEntitys[i].SaleOutNo}反审失败,{rs.ErrorMsg},请联系管理员！", Color.Red);
                 }
             }
-            
+
             return true;
         }
-
+*/
 
     }
 

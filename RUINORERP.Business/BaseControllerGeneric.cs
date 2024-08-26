@@ -248,15 +248,30 @@ namespace RUINORERP.Business
             //return null;
         }
 
+
+        /// <summary>
+        /// 审核  审核本身就是一个特殊情况。所以不能批量处理
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async virtual Task<ReturnResults<T>> ApprovalAsync(T entity)
+        {
+            throw new Exception("子类要重写ApprovalAsync,请联系管理员");
+            ReturnResults<T> result = new ReturnResults<T>();
+            await Task.Delay(0); // 模拟异步操作
+            return result; // 或者根据实际情况返回值
+        }
+
+
         /// <summary>
         /// 反审核  反审核本身就是一个特殊情况。所以不能批量处理
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AntiApprovalAsync(T entity)
+        public async virtual Task<ReturnResults<T>> AntiApprovalAsync(T entity)
         {
-            throw new Exception("子类要重写AntiApprovalAsync");
-            ReturnResults<bool> result = new ReturnResults<bool>();
+            throw new Exception("子类要重写AntiApprovalAsync,请联系管理员");
+            ReturnResults<T> result = new ReturnResults<T>();
             await Task.Delay(0); // 模拟异步操作
             return result; // 或者根据实际情况返回值
         }

@@ -886,7 +886,7 @@ namespace RUINORERP.UI.MRP.BOM
         }
 
 
- 
+
 
         protected override void AddByCopy()
         {
@@ -1346,6 +1346,18 @@ namespace RUINORERP.UI.MRP.BOM
             kryptonTreeGridViewBOMDetail.ExpandAll();
         }
 
+
+        protected async override Task<ApprovalEntity> Review()
+        {
+            ApprovalEntity ae = await base.Review();
+            if (ae.ApprovalResults)
+            {
+                UIPordBOMHelper.BindToTreeViewNoRootNode(EditEntity.tb_BOM_SDetails, kryptonTreeView1.TreeView);
+            }
+            return ae;
+        }
+
+        /*
         protected async override Task<ApprovalEntity> Review()
         {
             if (EditEntity == null)
@@ -1414,8 +1426,8 @@ namespace RUINORERP.UI.MRP.BOM
 
             return ae;
         }
-
-
+        */
+        /*
         protected async override Task<ApprovalEntity> ReReview()
         {
             ApprovalEntity ae = new ApprovalEntity();
@@ -1473,7 +1485,7 @@ namespace RUINORERP.UI.MRP.BOM
             return ae;
         }
 
-
+        */
         private void kryptonSplitContainer1_Panel1_Paint(object sender, PaintEventArgs e)
         {
 

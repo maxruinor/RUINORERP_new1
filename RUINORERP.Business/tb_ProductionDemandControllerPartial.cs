@@ -43,63 +43,57 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> ApprovalAsync(tb_ProductionDemand entity, ApprovalEntity approvalEntity)
+        /// 
+        
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            ReturnResults<T> rmrs = new ReturnResults<T>();
+            tb_ProductionDemand entity = ObjectEntity as tb_ProductionDemand;
             try
             {
+                if (entity == null)
+                {
+                    return rmrs;
+                }
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                if (!approvalEntity.ApprovalResults)
-                {
-                    if (entity == null)
-                    {
-                        return rmrs;
-                    }
 
-                }
-                else
+
+                //更新计划单中已分析字段,并且要具体到目标产品。计划可能多个成品。但是只能一个一个分析
+                if (entity.tb_productionplan != null)
                 {
 
-                    //更新计划单中已分析字段,并且要具体到目标产品。计划可能多个成品。但是只能一个一个分析
-                    if (entity.tb_productionplan != null)
+                    if (entity.tb_productionplan.tb_ProductionPlanDetails == null)
                     {
-
-                        if (entity.tb_productionplan.tb_ProductionPlanDetails == null)
-                        {
-                            entity.tb_productionplan.tb_ProductionPlanDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlanDetail>()
-                                .Where(c => c.PPID == entity.tb_productionplan.PPID).ToList();
-                        }
-
-
-                        foreach (tb_ProductionDemandTargetDetail tag in entity.tb_ProductionDemandTargetDetails)
-                        {
-                            var planDetail = entity.tb_productionplan.tb_ProductionPlanDetails.FirstOrDefault(c => c.ProdDetailID == tag.ProdDetailID && c.Location_ID == tag.Location_ID);
-                            if (planDetail != null)
-                            {
-                                planDetail.IsAnalyzed = true;
-                                planDetail.AnalyzedQuantity += tag.NeedQuantity;
-                            }
-                        }
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlanDetail>(entity.tb_productionplan.tb_ProductionPlanDetails).ExecuteCommandAsync();
-                        //如果全部分析过，则更新计划单中的分析字段
-                        if (entity.tb_productionplan.tb_ProductionPlanDetails.All(c => c.IsAnalyzed.HasValue && c.IsAnalyzed.Value))
-                        {
-                            entity.tb_productionplan.Analyzed = true;
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlan>(entity.tb_productionplan).ExecuteCommandAsync();
-                        }
-
-
-
+                        entity.tb_productionplan.tb_ProductionPlanDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlanDetail>()
+                            .Where(c => c.PPID == entity.tb_productionplan.PPID).ToList();
                     }
 
 
+                    foreach (tb_ProductionDemandTargetDetail tag in entity.tb_ProductionDemandTargetDetails)
+                    {
+                        var planDetail = entity.tb_productionplan.tb_ProductionPlanDetails.FirstOrDefault(c => c.ProdDetailID == tag.ProdDetailID && c.Location_ID == tag.Location_ID);
+                        if (planDetail != null)
+                        {
+                            planDetail.IsAnalyzed = true;
+                            planDetail.AnalyzedQuantity += tag.NeedQuantity;
+                        }
+                    }
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlanDetail>(entity.tb_productionplan.tb_ProductionPlanDetails).ExecuteCommandAsync();
+                    //如果全部分析过，则更新计划单中的分析字段
+                    if (entity.tb_productionplan.tb_ProductionPlanDetails.All(c => c.IsAnalyzed.HasValue && c.IsAnalyzed.Value))
+                    {
+                        entity.tb_productionplan.Analyzed = true;
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlan>(entity.tb_productionplan).ExecuteCommandAsync();
+                    }
                 }
-                //这部分是否能提出到上一级公共部分？
+
+
+                //这部分是否能提出到                上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-                entity.ApprovalResults = approvalEntity.ApprovalResults;
+                //entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -120,7 +114,7 @@ namespace RUINORERP.Business
             {
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
-                rmrs.ErrorMsg = approvalEntity.bizName + "事务回滚=>" + ex.Message;
+                rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rmrs;
             }
 
@@ -220,11 +214,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             tb_ProductionDemand entity = ObjectEntity as tb_ProductionDemand;
 
-            ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            ReturnResults<T> rmrs = new ReturnResults<T>();
             try
             {
                 // 开启事务，保证数据一致性
@@ -295,6 +289,7 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
+                rmrs.ReturnObject = entity as T;
                 return rmrs;
             }
             catch (Exception ex)

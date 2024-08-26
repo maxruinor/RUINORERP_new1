@@ -291,141 +291,101 @@ namespace RUINORERP.UI.PSI.SAL
         //}
 
 
+        /*
+ /// <summary>
+ /// 销售订单审核，审核成功后，库存中的拟销售量增加，同时检查数量和金额，总数量和总金额不能小于明细小计的和
+ /// </summary>
+ /// <returns></returns>
+ protected async override Task<ApprovalEntity> Review(tb_SaleOrder EditEntity)
+ {
+     if (EditEntity == null)
+     {
+         return null;
+     }
 
-        /// <summary>
-        /// 销售订单审核，审核成功后，库存中的拟销售量增加，同时检查数量和金额，总数量和总金额不能小于明细小计的和
-        /// </summary>
-        /// <returns></returns>
-        public async override Task<ApprovalEntity> Review(List<tb_SaleOrder> EditEntitys)
-        {
-            if (EditEntitys == null)
-            {
-                return null;
-            }
-            //如果已经审核并且通过，则不能重复审核
-            List<tb_SaleOrder> needApprovals = EditEntitys.Where(
-                c => ((c.ApprovalStatus.HasValue
-                && c.ApprovalStatus.Value == (int)ApprovalStatus.已审核
-                && c.ApprovalResults.HasValue && !c.ApprovalResults.Value))
-                || (c.ApprovalStatus.HasValue && c.ApprovalStatus == (int)ApprovalStatus.未审核)
-                ).ToList();
+     //同时检查数量和金额，总数量和总金额不能小于明细小计的和
+     if (EditEntity.TotalQty < EditEntity.tb_SaleOrderDetails.Sum(c => c.Quantity))
+     {
+         MainForm.Instance.PrintInfoLog($"订单：{EditEntity.SOrderNo}:总数量不能小于明细小计之和！");
+         return null;
+     }
 
-            if (needApprovals.Count == 0)
-            {
-                MainForm.Instance.PrintInfoLog($"要审核的数据为：{needApprovals.Count}:请检查数据！");
-                return null;
-            }
+     if (EditEntity.TotalAmount < EditEntity.tb_SaleOrderDetails.Sum(c => c.TransactionPrice * c.Quantity))
+     {
+         MainForm.Instance.PrintInfoLog($"订单：{EditEntity.SOrderNo}:总金额不能小于明细小计之和！");
+         return null;
+     }
+     ApprovalEntity ae =await base.Review(EditEntity);
 
-            //同时检查数量和金额，总数量和总金额不能小于明细小计的和
-            foreach (tb_SaleOrder item in needApprovals)
-            {
-                if (item.TotalQty < item.tb_SaleOrderDetails.Sum(c => c.Quantity))
-                {
-                    MainForm.Instance.PrintInfoLog($"订单：{item.SOrderNo}:总数量不能小于明细小计之和！");
-                    return null;
-                }
-
-                if (item.TotalAmount < item.tb_SaleOrderDetails.Sum(c => c.TransactionPrice * c.Quantity))
-                {
-                    MainForm.Instance.PrintInfoLog($"订单：{item.SOrderNo}:总金额不能小于明细小计之和！");
-                    return null;
-                }
-            }
-
-            ApprovalEntity ae = base.BatchApproval(needApprovals);
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-
-            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-            bool Succeeded = await ctr.BatchApprovalAsync(needApprovals, ae);
-            if (Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-                base.Query(QueryDto);
-            }
-            else
-            {
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
-            }
-
-            return ae;
-        }
+     return ae;
+ }
 
 
-        /// <summary>
-        /// 销售订单反审
-        /// </summary>
-        /// <param name="EditEntitys"></param>
-        /// <returns></returns>
-        public async override Task<bool> ReReview(List<tb_SaleOrder> EditEntitys)
-        {
-            if (EditEntitys == null)
-            {
-                return false;
-            }
-            foreach (tb_SaleOrder EditEntity in EditEntitys)
-            {
-                #region 反审
-                //反审，要审核过，并且通过了，才能反审。
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-                {
-                    MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                    continue;
-                }
+ /// <summary>
+ /// 销售订单反审
+ /// </summary>
+ /// <param name="EditEntitys"></param>
+ /// <returns></returns>
+ public async override Task<bool> ReReview(List<tb_SaleOrder> EditEntitys)
+ {
+     if (EditEntitys == null)
+     {
+         return false;
+     }
+     foreach (tb_SaleOrder EditEntity in EditEntitys)
+     {
+         #region 反审
+         //反审，要审核过，并且通过了，才能反审。
+         if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
+         {
+             MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
+             continue;
+         }
 
 
-                if (EditEntity.tb_SaleOrderDetails == null || EditEntity.tb_SaleOrderDetails.Count == 0)
-                {
-                    MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                    continue;
-                }
+         if (EditEntity.tb_SaleOrderDetails == null || EditEntity.tb_SaleOrderDetails.Count == 0)
+         {
+             MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
+             continue;
+         }
 
-                Command command = new Command();
-                //缓存当前编辑的对象。如果撤销就回原来的值
-                tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
-                command.UndoOperation = delegate ()
-                {
-                    //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                    CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
-                };
+         Command command = new Command();
+         //缓存当前编辑的对象。如果撤销就回原来的值
+         tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
+         command.UndoOperation = delegate ()
+         {
+             //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+             CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
+         };
 
-                tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-      
-                ReturnResults<bool> rr = await ctr.AntiApprovalAsync(EditEntity);
-                if (rr.Succeeded)
-                {
-                    //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                    //{
+         tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
 
-                    //}
-                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                    //MainForm.Instance.ecs.AddSendData(od);
+         ReturnResults<bool> rr = await ctr.AntiApprovalAsync(EditEntity);
+         if (rr.Succeeded)
+         {
+             //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+             //{
 
-                    //审核成功
-                }
-                else
-                {
-                    //审核失败 要恢复之前的值
-                    command.Undo();
-                    MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
-                }
+             //}
+             //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+             //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+             //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+             //MainForm.Instance.ecs.AddSendData(od);
 
-                #endregion
-            }
-            return true;
-        }
+             //审核成功
+         }
+         else
+         {
+             //审核失败 要恢复之前的值
+             command.Undo();
+             MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
+         }
 
+         #endregion
+     }
+     return true;
+ }
+ */
 
         public async override Task<bool> CloseCase(List<tb_SaleOrder> EditEntitys)
         {

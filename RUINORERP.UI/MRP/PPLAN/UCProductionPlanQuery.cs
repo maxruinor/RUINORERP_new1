@@ -129,7 +129,7 @@ namespace RUINORERP.UI.MRP.MP
 
 
 
-
+        /*
 
 
         /// <summary>
@@ -193,7 +193,7 @@ namespace RUINORERP.UI.MRP.MP
 
             return ae;
         }
-
+        */
         /*
 
         /// <summary>

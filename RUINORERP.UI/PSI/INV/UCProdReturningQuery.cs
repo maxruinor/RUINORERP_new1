@@ -40,13 +40,13 @@ namespace RUINORERP.UI.PSI.INV
             _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_ProdReturning, tb_ProdBorrowing>(c => c.BorrowNO, r => r.BorrowNo);
             base.SetGridViewDisplayConfig();
         }
-
+        /*
         public override Task<bool> ReReview(List<tb_ProdReturning> EditEntitys)
         {
             MessageBox.Show("请在单据明细中使用反审功能。");
             return null;
-        }
-
+        }*/
+        /*
         public async override Task<ApprovalEntity> Review(List<tb_ProdReturning> EditEntitys)
         {
             if (EditEntitys == null)
@@ -110,7 +110,7 @@ namespace RUINORERP.UI.PSI.INV
 
             return ae;
         }
-
+        */
 
         public override void BuildColNameDataDictionary()
         {

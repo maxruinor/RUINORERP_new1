@@ -36,7 +36,7 @@ namespace RUINORERP.UI.PSI.INV
 
         }
 
-
+        /*
         public override Task<bool> ReReview(List<tb_ProdMerge> EditEntitys)
         {
             MessageBox.Show("请在单据明细中使用反审功能。");
@@ -92,7 +92,7 @@ namespace RUINORERP.UI.PSI.INV
             return ae;
         }
 
-
+        */
         public override void BuildColNameDataDictionary()
         {
             //固定值也包括枚举值,也可以将没有缓存的提前查询出来给

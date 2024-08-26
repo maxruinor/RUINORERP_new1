@@ -102,147 +102,135 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchApprovalAsync(List<tb_MaterialReturn> entitys, ApprovalEntity approvalEntity)
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rrs = new ReturnResults<bool>();
+            tb_MaterialReturn entity = ObjectEntity as tb_MaterialReturn;
+            ReturnResults<T> rrs = new ReturnResults<T>();
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-                if (!approvalEntity.ApprovalResults)
+
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.确认;
+                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                //后面已经修改为
+                //entity.ApprovalResults = approvalEntity.ApprovalResults;
+
+                #region 审核 通过时
+
+                //先获取到相关发料主子数据
+                if (entity.tb_materialrequisition != null)
                 {
-                    if (entitys == null)
+                    if (entity.tb_materialrequisition.tb_MaterialRequisitionDetails == null)
                     {
-                        return rrs;
+                        entity.tb_materialrequisition.tb_MaterialRequisitionDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisitionDetail>().Where(w => w.MR_ID == entity.MR_ID)
+                         .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                         .ToListAsync();
                     }
                 }
-                else
+
+                //先获取到相关发料主子数据
+                if (entity.tb_materialrequisition.tb_manufacturingorder != null)
                 {
-
-
-                    foreach (var entity in entitys)
+                    if (entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails == null)
                     {
-                        //这部分是否能提出到上一级公共部分？
-                        entity.DataStatus = (int)DataStatus.确认;
-                        entity.ApprovalOpinions = approvalEntity.ApprovalComments;
-                        //后面已经修改为
-                        entity.ApprovalResults = approvalEntity.ApprovalResults;
+                        entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrderDetail>().Where(w => w.MOID == entity.tb_materialrequisition.tb_manufacturingorder.MOID)
+                         .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                         .ToListAsync();
+                    }
+                }
 
-                        #region 审核 通过时
 
-                        //先获取到相关发料主子数据
-                        if (entity.tb_materialrequisition != null)
+                if (entity.ApprovalResults.Value)
+                {
+                    //因为要计算未发数量，所以要更新库存要在最后一步
+                    foreach (var child in entity.tb_MaterialReturnDetails)
+                    {
+                        var Detail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
+
+                        var prodInfo = Detail.tb_proddetail.tb_prod.CNName + Detail.tb_proddetail.tb_prod.Specifications;
+
+
+
+
+                        #region 库存表的更新 这里应该是必需有库存的数据，
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+
+                        if (inv != null)
                         {
-                            if (entity.tb_materialrequisition.tb_MaterialRequisitionDetails == null)
+                            if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
                             {
-                                entity.tb_materialrequisition.tb_MaterialRequisitionDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisitionDetail>().Where(w => w.MR_ID == entity.MR_ID)
-                                 .Includes(b => b.tb_proddetail, c => c.tb_prod)
-                                 .ToListAsync();
+
+                                rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+
+                                rrs.Succeeded = false;
+                                return rrs;
                             }
-                        }
-
-                        //先获取到相关发料主子数据
-                        if (entity.tb_materialrequisition.tb_manufacturingorder != null)
-                        {
-                            if (entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails == null)
-                            {
-                                entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrderDetail>().Where(w => w.MOID == entity.tb_materialrequisition.tb_manufacturingorder.MOID)
-                                 .Includes(b => b.tb_proddetail, c => c.tb_prod)
-                                 .ToListAsync();
-                            }
-                        }
 
 
-                        if (entity.ApprovalResults.Value)
-                        {
-                            //因为要计算未发数量，所以要更新库存要在最后一步
-                            foreach (var child in entity.tb_MaterialReturnDetails)
-                            {
-                                var Detail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
-
-                                var prodInfo = Detail.tb_proddetail.tb_prod.CNName + Detail.tb_proddetail.tb_prod.Specifications;
-
-                               
-
-
-                                #region 库存表的更新 这里应该是必需有库存的数据，
-                                tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-
-                                if (inv != null)
-                                {
-                                    if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
-                                    {
-                                        approvalEntity.ApprovalResults = false;
-                                        approvalEntity.ApprovalComments = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                                        rrs.ErrorMsg = approvalEntity.ApprovalComments;
-                                        rrs.Succeeded = false;
-                                        return rrs;
-                                    }
-                                   
-
-                                    //更新库存
-                                    inv.Quantity = inv.Quantity + child.Quantity;
-                                    inv.NotOutQty += child.Quantity;
-                                    inv.LatestStorageTime = System.DateTime.Now;
-                                    BusinessHelper.Instance.EditEntity(inv);
-                                }
-                                else
-                                {
-                                    throw new Exception($"当前仓库无产品{prodInfo}的库存数据,请联系管理员");
-                                }
-                                // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
-                                //inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
-                                inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                                inv.LatestOutboundTime = System.DateTime.Now;
-                                #endregion
-
-                                ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                                if (rr.Succeeded)
-                                {
-                                    var tb_MaterialRequisitionDetail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
-
-                                    //如果退料数量大于领料数量就不对了
-                                    if (tb_MaterialRequisitionDetail.ActualSentQty < child.Quantity)
-                                    {
-                                        throw new Exception($"{prodInfo}的退回数量不能大于实发数量,请检查后再试");
-                                    }
-                                    tb_MaterialRequisitionDetail.ReturnQty += child.Quantity;
-
-                                    tb_ManufacturingOrderDetail manufacturingOrderDetail = entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
-                                    manufacturingOrderDetail.ActualSentQty -= child.Quantity;
-
-                                    // tb_MaterialRequisitionDetail.ActualSentQty -= child.Quantity; 实发不变。应该是变到 制令单的实发，因为还可能要退了再补进去。做领料单时引用制令单的数量
-                                }
-                            }
-                        }
-
-                        #endregion
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisitionDetail>(entity.tb_materialrequisition.tb_MaterialRequisitionDetails).ExecuteCommandAsync();
-                        entity.tb_materialrequisition.TotalReQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ReturnQty);
-                        
-                        //entity.tb_materialrequisition.TotalSendQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ActualSentQty);
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_materialrequisition).UpdateColumns(t => new { t.TotalReQty }).ExecuteCommandAsync();
-
-                        entity.ApprovalStatus = (int)ApprovalStatus.已审核;
-                        BusinessHelper.Instance.ApproverEntity(entity);
-                        //只更新指定列
-                        int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).ExecuteCommandAsync();
-                        if (last > 0)
-                        {
-                            _logger.LogInformation("审核退料单成功" + entity.BillNo);
+                            //更新库存
+                            inv.Quantity = inv.Quantity + child.Quantity;
+                            inv.NotOutQty += child.Quantity;
+                            inv.LatestStorageTime = System.DateTime.Now;
+                            BusinessHelper.Instance.EditEntity(inv);
                         }
                         else
                         {
-                            _logger.LogInformation("审核退料单失败" + entity.BillNo);
-                            _unitOfWorkManage.RollbackTran();
-                            rrs.Succeeded = false;
-                            return rrs;
+                            throw new Exception($"当前仓库无产品{prodInfo}的库存数据,请联系管理员");
+                        }
+                        // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
+                        //inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
+                        inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
+                        inv.LatestOutboundTime = System.DateTime.Now;
+                        #endregion
+
+                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                        if (rr.Succeeded)
+                        {
+                            var tb_MaterialRequisitionDetail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
+
+                            //如果退料数量大于领料数量就不对了
+                            if (tb_MaterialRequisitionDetail.ActualSentQty < child.Quantity)
+                            {
+                                throw new Exception($"{prodInfo}的退回数量不能大于实发数量,请检查后再试");
+                            }
+                            tb_MaterialRequisitionDetail.ReturnQty += child.Quantity;
+
+                            tb_ManufacturingOrderDetail manufacturingOrderDetail = entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
+                            manufacturingOrderDetail.ActualSentQty -= child.Quantity;
+
+                            // tb_MaterialRequisitionDetail.ActualSentQty -= child.Quantity; 实发不变。应该是变到 制令单的实发，因为还可能要退了再补进去。做领料单时引用制令单的数量
                         }
                     }
                 }
+
+                #endregion
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisitionDetail>(entity.tb_materialrequisition.tb_MaterialRequisitionDetails).ExecuteCommandAsync();
+                entity.tb_materialrequisition.TotalReQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ReturnQty);
+
+                //entity.tb_materialrequisition.TotalSendQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ActualSentQty);
+                await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_materialrequisition).UpdateColumns(t => new { t.TotalReQty }).ExecuteCommandAsync();
+
+                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+                //只更新指定列
+                int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).ExecuteCommandAsync();
+                if (last > 0)
+                {
+                    _logger.LogInformation("审核退料单成功" + entity.BillNo);
+                }
+                else
+                {
+                    _logger.LogInformation("审核退料单失败" + entity.BillNo);
+                    _unitOfWorkManage.RollbackTran();
+                    rrs.Succeeded = false;
+                    return rrs;
+                }
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rrs.Succeeded = true;
@@ -252,10 +240,10 @@ namespace RUINORERP.Business
             {
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
-                rrs.ErrorMsg = approvalEntity.bizName + "事务回滚=>" + ex.Message;
+                rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error("事务回滚" + ex.Message);
                 }
                 return rrs;
             }
@@ -267,9 +255,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AntiApprovalAsync(List<tb_MaterialReturn> entitys)
+
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rs = new ReturnResults<bool>();
+            tb_MaterialReturn entity = ObjectEntity as tb_MaterialReturn;
+            ReturnResults<T> rs = new ReturnResults<T>();
             try
             {
                 // 开启事务，保证数据一致性
@@ -278,92 +268,92 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
-                foreach (tb_MaterialReturn entity in entitys)
+
+                //判断是否能反审?
+                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
                 {
-                    //判断是否能反审?
-                    if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                    {
-                        //return false;
-                        rs.ErrorMsg = "有结案的单据，已经跳过反审";
-                        continue;
-                    }
-
-                    //先获取到相关发料主子数据
-                    if (entity.tb_materialrequisition != null)
-                    {
-                        if (entity.tb_materialrequisition.tb_MaterialRequisitionDetails == null)
-                        {
-                            entity.tb_materialrequisition.tb_MaterialRequisitionDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisitionDetail>().Where(w => w.MR_ID == entity.MR_ID)
-                             .Includes(b => b.tb_proddetail, c => c.tb_prod)
-                             .ToListAsync();
-                        }
-                    }
-
-
-                    foreach (var child in entity.tb_MaterialReturnDetails)
-                    {
-                        //var Detail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
-
-                        //var prodInfo = Detail.tb_proddetail.tb_prod.CNName + Detail.tb_proddetail.tb_prod.Specifications;
-
-
-                        #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                        if (inv == null)
-                        {
-                            inv = new tb_Inventory();
-                            inv.ProdDetailID = child.ProdDetailID;
-                            inv.Location_ID = child.Location_ID;
-                            inv.Quantity = 0;
-                            inv.InitInventory = (int)inv.Quantity;
-                            inv.Notes = "";//后面修改数据库是不需要？
-                                           //inv.LatestStorageTime = System.DateTime.Now;
-                            BusinessHelper.Instance.InitEntity(inv);
-                        }
-                        //更新在途库存
-                        //反审，出库的要加回来，要卖的也要加回来
-                        inv.Quantity = inv.Quantity - child.Quantity;
-                        inv.NotOutQty -= child.Quantity;
-                        inv.LatestOutboundTime = System.DateTime.Now;
-                        BusinessHelper.Instance.EditEntity(inv);
-                        #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-                            //更新领料单明细中退回数量
-                            var tb_MaterialRequisitionDetail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
-
-                            tb_MaterialRequisitionDetail.ReturnQty -= child.Quantity;
-
-                            tb_ManufacturingOrderDetail manufacturingOrderDetail = entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
-                            manufacturingOrderDetail.ActualSentQty += child.Quantity;
-
-                            // tb_MaterialRequisitionDetail.ActualSentQty += child.Quantity;
-                        }
-                    }
-
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
-                    
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisitionDetail>(entity.tb_materialrequisition.tb_MaterialRequisitionDetails).ExecuteCommandAsync();
-                    entity.tb_materialrequisition.TotalReQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ReturnQty);
-                    //entity.tb_materialrequisition.TotalSendQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ActualSentQty);
-                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_materialrequisition).UpdateColumns(t => new { t.TotalReQty }).ExecuteCommandAsync();
-
-                    entity.DataStatus = (int)DataStatus.新建;
-                    entity.ApprovalResults = false;
-                    entity.ApprovalOpinions = $"由{_appContext.CurUserInfo.UserInfo.UserName}反审核";
-                    entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    BusinessHelper.Instance.ApproverEntity(entity);
-
-                    //后面是不是要做一个审核历史记录表？
-
-                    //只更新指定列
-                    // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).ExecuteCommandAsync();
+                    //return false;
+                    rs.ErrorMsg = "有结案的单据，已经跳过反审";
+                    return rs;
                 }
+
+                //先获取到相关发料主子数据
+                if (entity.tb_materialrequisition != null)
+                {
+                    if (entity.tb_materialrequisition.tb_MaterialRequisitionDetails == null)
+                    {
+                        entity.tb_materialrequisition.tb_MaterialRequisitionDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisitionDetail>().Where(w => w.MR_ID == entity.MR_ID)
+                         .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                         .ToListAsync();
+                    }
+                }
+
+
+                foreach (var child in entity.tb_MaterialReturnDetails)
+                {
+                    //var Detail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
+
+                    //var prodInfo = Detail.tb_proddetail.tb_prod.CNName + Detail.tb_proddetail.tb_prod.Specifications;
+
+
+                    #region 库存表的更新 ，
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    if (inv == null)
+                    {
+                        inv = new tb_Inventory();
+                        inv.ProdDetailID = child.ProdDetailID;
+                        inv.Location_ID = child.Location_ID;
+                        inv.Quantity = 0;
+                        inv.InitInventory = (int)inv.Quantity;
+                        inv.Notes = "";//后面修改数据库是不需要？
+                                       //inv.LatestStorageTime = System.DateTime.Now;
+                        BusinessHelper.Instance.InitEntity(inv);
+                    }
+                    //更新在途库存
+                    //反审，出库的要加回来，要卖的也要加回来
+                    inv.Quantity = inv.Quantity - child.Quantity;
+                    inv.NotOutQty -= child.Quantity;
+                    inv.LatestOutboundTime = System.DateTime.Now;
+                    BusinessHelper.Instance.EditEntity(inv);
+                    #endregion
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
+                    {
+                        //更新领料单明细中退回数量
+                        var tb_MaterialRequisitionDetail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
+
+                        tb_MaterialRequisitionDetail.ReturnQty -= child.Quantity;
+
+                        tb_ManufacturingOrderDetail manufacturingOrderDetail = entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
+                        manufacturingOrderDetail.ActualSentQty += child.Quantity;
+
+                        // tb_MaterialRequisitionDetail.ActualSentQty += child.Quantity;
+                    }
+                }
+
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
+
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisitionDetail>(entity.tb_materialrequisition.tb_MaterialRequisitionDetails).ExecuteCommandAsync();
+                entity.tb_materialrequisition.TotalReQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ReturnQty);
+                //entity.tb_materialrequisition.TotalSendQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ActualSentQty);
+                await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_materialrequisition).UpdateColumns(t => new { t.TotalReQty }).ExecuteCommandAsync();
+
+                entity.DataStatus = (int)DataStatus.新建;
+                entity.ApprovalResults = false;
+                entity.ApprovalOpinions = $"由{_appContext.CurUserInfo.UserInfo.UserName}反审核";
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+
+                //后面是不是要做一个审核历史记录表？
+
+                //只更新指定列
+                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).ExecuteCommandAsync();
+
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
+                rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }

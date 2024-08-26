@@ -38,9 +38,9 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> ApprovalAsync(tb_SaleOrder entity, ApprovalEntity approvalEntity)
+        public async virtual Task<ReturnResults<T>> ApprovalAsync(tb_SaleOrder entity, ApprovalEntity approvalEntity)
         {
-            ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            ReturnResults<T> rmrs = new ReturnResults<T>();
             try
             {
                 // 开启事务，保证数据一致性
@@ -118,6 +118,7 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 // _logger.Info(approvalEntity.bizName + "审核事务成功");
+                rmrs.ReturnObject= entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
@@ -399,9 +400,9 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
             try
             {
@@ -474,6 +475,7 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
+                rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
             }
             catch (Exception ex)

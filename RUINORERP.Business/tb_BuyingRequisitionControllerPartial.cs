@@ -96,32 +96,21 @@ namespace RUINORERP.Business
         /// <param name="entity"></param>
         /// <param name="approvalEntity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> ApprovalAsync(tb_BuyingRequisition entity, ApprovalEntity approvalEntity)
+        /// 
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            ReturnResults<T> rmrs = new ReturnResults<T>();
+            tb_BuyingRequisition entity = ObjectEntity as tb_BuyingRequisition;
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-                if (!approvalEntity.ApprovalResults)
-                {
-                    if (entity == null)
-                    {
-                        return rmrs;
-                    }
 
-                }
-                else
-                {
-
-                }
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalComments;
-                //后面已经修改为
-                entity.ApprovalResults = approvalEntity.ApprovalResults;
+
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -130,7 +119,7 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-
+                rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
@@ -138,11 +127,10 @@ namespace RUINORERP.Business
             {
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
-
-                rmrs.ErrorMsg = approvalEntity.bizName + "事务回滚=>" + ex.Message;
+                rmrs.ErrorMsg = ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error("事务回滚" + ex.Message);
                 }
                 return rmrs;
             }
@@ -154,9 +142,9 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rs = new ReturnResults<bool>();
+            ReturnResults<T> rs = new ReturnResults<T>();
             tb_BuyingRequisition entity = ObjectEntity as tb_BuyingRequisition;
             try
             {
@@ -182,6 +170,7 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.ApproverEntity(entity);
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisition>(entity).ExecuteCommandAsync();
                 _unitOfWorkManage.CommitTran();
+                rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }

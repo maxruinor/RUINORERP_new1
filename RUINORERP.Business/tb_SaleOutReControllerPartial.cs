@@ -40,26 +40,24 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AdjustingAsync(tb_SaleOutRe entity, ApprovalEntity approvalEntity)
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rrs = new ReturnResults<bool>();
+            ReturnResults<T> rrs = new ReturnResults<T>();
+            tb_SaleOutRe entity = ObjectEntity as tb_SaleOutRe;
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-                if (!approvalEntity.ApprovalResults)
-                {
+               
                     if (entity == null)
                     {
                         _unitOfWorkManage.RollbackTran();
                         rrs.Succeeded = false;
                         return rrs;
                     }
-                }
-                else
-                {
+               
                     //如果退回单是引用了销售订单来的。则所退产品要在订单出库明细中。
                     if (entity.SaleOut_MainID.HasValue && entity.SaleOut_MainID.Value > 0)
                     {
@@ -305,16 +303,13 @@ namespace RUINORERP.Business
                         }
                     }
 
-                }
+            
                 //更库累计退回数量
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutReDetail>(entity.tb_SaleOutReDetails).ExecuteCommandAsync();
 
-
-
-
-                entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-                entity.ApprovalResults = approvalEntity.ApprovalResults;
+              //  entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.DataStatus = (int)DataStatus.确认;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -322,6 +317,7 @@ namespace RUINORERP.Business
                 // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutRe>(entity).ExecuteCommandAsync();
                 _unitOfWorkManage.CommitTran();
+                rrs.ReturnObject = entity as T;
                 rrs.Succeeded = true;
                 return rrs;
             }
@@ -330,10 +326,10 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 rrs.Succeeded = false;
                 _logger.Error(ex);
-                rrs.ErrorMsg = approvalEntity.bizName + "事务回滚=>" + ex.Message;
+                rrs.ErrorMsg =   "事务回滚=>" + ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error( "事务回滚" + ex.Message);
                 }
                 return rrs;
             }
@@ -346,13 +342,13 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rs = new ReturnResults<bool>();
+        
             tb_SaleOutRe entity = ObjectEntity as tb_SaleOutRe;
 
 
-            ReturnResults<bool> rrs = new ReturnResults<bool>();
+            ReturnResults<T> rrs = new ReturnResults<T>();
             try
             {
                 // 开启事务，保证数据一致性
@@ -559,6 +555,7 @@ namespace RUINORERP.Business
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutRe>(entity).ExecuteCommandAsync();
                 _unitOfWorkManage.CommitTran();
                 rrs.Succeeded = true;
+                rrs.ReturnObject = entity as T;
                 return rrs;
             }
             catch (Exception ex)

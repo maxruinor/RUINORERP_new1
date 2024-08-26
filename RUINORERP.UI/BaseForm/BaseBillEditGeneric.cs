@@ -1296,19 +1296,20 @@ namespace RUINORERP.UI.BaseForm
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
             ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            Command command = new Command();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
             frm.BindData(ae);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<T>(EditEntity, oldobj);
-            };
-
             await Task.Delay(1);
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
+                Command command = new Command();
+                //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
+
+                command.UndoOperation = delegate ()
+                {
+                    //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                    CloneHelper.SetValues<T>(EditEntity, oldobj);
+                };
+
                 //审核了。数据状态要更新为
                 EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
 
@@ -1340,30 +1341,40 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
 
-                /*
                 ReturnResults<T> rmr = new ReturnResults<T>();
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                 // AdjustingInventoryAsync
                 //因为只需要更新主表
-                rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+                rmr = await ctr.ApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
                 {
-                    ToolBarEnabledControl(MenuItemEnums.审核);
                     //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                    //这里推送到审核，启动工作流
+                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                   // rs = true;
+
+                    //审核成功
+                    base.ToolBarEnabledControl(MenuItemEnums.审核);
+                    //如果审核结果为不通过时，审核不是灰色。
+                    if (!ae.ApprovalResults)
+                    {
+                        toolStripbtnReview.Enabled = true;
+                    }
+                    else
+                    {
+
+                        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。");
+                    }
+                    ae.ApprovalResults = true;
+                    AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{ae.ApprovalResults}");
                 }
-                */
-
-            }
-            else
-            {
-
-                //用户退出审核，
-                command.Undo();
+                else
+                {
+                    //审核失败 要恢复之前的值
+                    command.Undo();
+                    ae.ApprovalResults = false;
+                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
+                }
             }
             return ae;
         }
@@ -1386,7 +1397,7 @@ namespace RUINORERP.UI.BaseForm
                     && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )
                 {
-                  
+
                 }
                 else
                 {
@@ -1394,7 +1405,7 @@ namespace RUINORERP.UI.BaseForm
                     return ae;
                 }
             }
-            
+
             BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
             CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -1434,7 +1445,7 @@ namespace RUINORERP.UI.BaseForm
                     CloneHelper.SetValues<T>(EditEntity, oldobj);
                 };
 
-                ReturnResults<bool> rmr = new ReturnResults<bool>();
+                ReturnResults<T> rmr = new ReturnResults<T>();
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                 rmr = await ctr.AntiApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
@@ -1447,7 +1458,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //审核失败 要恢复之前的值
                     command.Undo();
-                    //MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
+                    MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                 }
             }
             return ae;
@@ -1769,7 +1780,7 @@ namespace RUINORERP.UI.BaseForm
                                     };
                                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                                     tb_SaleOrderController<tb_SaleOrder> ctrSO = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                                    ReturnResults<bool> rmrs = await ctrSO.ApprovalAsync(saleOrder, ae);
+                                    ReturnResults<tb_SaleOrder> rmrs = await ctrSO.ApprovalAsync(saleOrder);
                                     if (rmrs.Succeeded)
                                     {
                                         //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
@@ -1811,7 +1822,7 @@ namespace RUINORERP.UI.BaseForm
                                     };
                                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                                     tb_PurOrderController<tb_PurOrder> ctrSO = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-                                    ReturnResults<bool> rmrs = await ctrSO.ApprovalAsync(purOrder, ae);
+                                    ReturnResults<tb_PurOrder> rmrs = await ctrSO.ApprovalAsync(purOrder);
                                     if (rmrs.Succeeded)
                                     {
                                         //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。

@@ -508,153 +508,152 @@ namespace RUINORERP.UI.MRP.MP
             }
         }
 
+        /*
+  protected async override Task<ApprovalEntity> Review()
+  {
+      if (EditEntity == null)
+      {
+          return null;
+      }
 
-        protected async override Task<ApprovalEntity> Review()
-        {
-            if (EditEntity == null)
-            {
-                return null;
-            }
+      //如果已经审核通过，则不能重复审核
+      if (EditEntity.ApprovalStatus.HasValue)
+      {
+          if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+          {
+              if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+              {
+                  MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。", UILogType.警告);
+                  return null;
+              }
+          }
+      }
 
-            //如果已经审核通过，则不能重复审核
-            if (EditEntity.ApprovalStatus.HasValue)
-            {
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                {
-                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                    {
-                        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。", UILogType.警告);
-                        return null;
-                    }
-                }
-            }
+      if (EditEntity.tb_MaterialRequisitionDetails == null || EditEntity.tb_MaterialRequisitionDetails.Count == 0)
+      {
+          MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整产品数量和金额数据。", UILogType.警告);
+          return null;
+      }
 
-            if (EditEntity.tb_MaterialRequisitionDetails == null || EditEntity.tb_MaterialRequisitionDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整产品数量和金额数据。", UILogType.警告);
-                return null;
-            }
+      Command command = new Command();
+      //缓存当前编辑的对象。如果撤销就回原来的值
+      tb_MaterialRequisition oldobj = CloneHelper.DeepCloneObject<tb_MaterialRequisition>(EditEntity);
+      command.UndoOperation = delegate ()
+      {
+          //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+          CloneHelper.SetValues<tb_MaterialRequisition>(EditEntity, oldobj);
+      };
+      ApprovalEntity ae = await base.Review();
+      if (EditEntity == null)
+      {
+          return null;
+      }
+      if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
+      {
+          return null;
+      }
+      //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
+      // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+      //因为只需要更新主表
+      //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+      // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+      tb_MaterialRequisitionController<tb_MaterialRequisition> ctr = Startup.GetFromFac<tb_MaterialRequisitionController<tb_MaterialRequisition>>();
 
-            Command command = new Command();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_MaterialRequisition oldobj = CloneHelper.DeepCloneObject<tb_MaterialRequisition>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_MaterialRequisition>(EditEntity, oldobj);
-            };
-            ApprovalEntity ae = await base.Review();
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-            //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
-            // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            //因为只需要更新主表
-            //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-            // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-            tb_MaterialRequisitionController<tb_MaterialRequisition> ctr = Startup.GetFromFac<tb_MaterialRequisitionController<tb_MaterialRequisition>>();
-            List<tb_MaterialRequisition> entitys = new List<tb_MaterialRequisition>();
-            entitys.Add(EditEntity);
-            ReturnResults<bool> rmrs = await ctr.BatchApprovalAsync(entitys, ae);
-            if (rmrs.Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
+      ReturnResults<tb_MaterialRequisition> rmrs = await ctr.ApprovalAsync(EditEntity);
+      if (rmrs.Succeeded)
+      {
+          //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+          //{
 
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
+          //}
+          //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+          //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+          //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+          //MainForm.Instance.ecs.AddSendData(od);
 
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.审核);
-                //如果审核结果为不通过时，审核不是灰色。
-                if (!ae.ApprovalResults)
-                {
-                    toolStripbtnReview.Enabled = true;
-                }
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,原因是：{rmrs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
-                toolStripbtnReview.Enabled = true;
-                toolStripBtnReverseReview.Enabled = false;
-            }
-            return ae;
-        }
-
+          //审核成功
+          base.ToolBarEnabledControl(MenuItemEnums.审核);
+          //如果审核结果为不通过时，审核不是灰色。
+          if (!ae.ApprovalResults)
+          {
+              toolStripbtnReview.Enabled = true;
+          }
+      }
+      else
+      {
+          //审核失败 要恢复之前的值
+          command.Undo();
+          MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,原因是：{rmrs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+          toolStripbtnReview.Enabled = true;
+          toolStripBtnReverseReview.Enabled = false;
+      }
+      return ae;
+  }
 
 
 
-        protected async override Task<ApprovalEntity> ReReview()
-        {
-            ApprovalEntity ae = new ApprovalEntity();
-            if (EditEntity == null)
-            {
-                return ae;
-            }
 
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return ae;
-            }
+  protected async override Task<ApprovalEntity> ReReview()
+  {
+      ApprovalEntity ae = new ApprovalEntity();
+      if (EditEntity == null)
+      {
+          return ae;
+      }
+
+      //反审，要审核过，并且通过了，才能反审。
+      if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
+      {
+          MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
+          return ae;
+      }
 
 
-            if (EditEntity.tb_MaterialRequisitionDetails == null || EditEntity.tb_MaterialRequisitionDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                return ae;
-            }
+      if (EditEntity.tb_MaterialRequisitionDetails == null || EditEntity.tb_MaterialRequisitionDetails.Count == 0)
+      {
+          MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
+          return ae;
+      }
 
-            Command command = new Command();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_MaterialRequisition oldobj = CloneHelper.DeepCloneObject<tb_MaterialRequisition>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_MaterialRequisition>(EditEntity, oldobj);
-            };
+      Command command = new Command();
+      //缓存当前编辑的对象。如果撤销就回原来的值
+      tb_MaterialRequisition oldobj = CloneHelper.DeepCloneObject<tb_MaterialRequisition>(EditEntity);
+      command.UndoOperation = delegate ()
+      {
+          //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+          CloneHelper.SetValues<tb_MaterialRequisition>(EditEntity, oldobj);
+      };
 
-            tb_MaterialRequisitionController<tb_MaterialRequisition> ctr = Startup.GetFromFac<tb_MaterialRequisitionController<tb_MaterialRequisition>>();
-            List<tb_MaterialRequisition> list = new List<tb_MaterialRequisition>();
-            list.Add(EditEntity);
-            ReturnResults<bool> rrs = await ctr.AntiApprovalAsync(list);
-            if (rrs.Succeeded)
-            {
+      tb_MaterialRequisitionController<tb_MaterialRequisition> ctr = Startup.GetFromFac<tb_MaterialRequisitionController<tb_MaterialRequisition>>();
+      List<tb_MaterialRequisition> list = new List<tb_MaterialRequisition>();
+      list.Add(EditEntity);
+      ReturnResults<bool> rrs = await ctr.AntiApprovalAsync(list);
+      if (rrs.Succeeded)
+      {
 
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
+          //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+          //{
 
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
+          //}
+          //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+          //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+          //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+          //MainForm.Instance.ecs.AddSendData(od);
 
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.反审);
-                toolStripbtnReview.Enabled = true;
+          //审核成功
+          base.ToolBarEnabledControl(MenuItemEnums.反审);
+          toolStripbtnReview.Enabled = true;
 
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{EditEntity.MaterialRequisitionNO}反审失败,请联系管理员！\r\n{rrs.ErrorMsg}", Color.Red);
-            }
-            return ae;
-        }
-
+      }
+      else
+      {
+          //审核失败 要恢复之前的值
+          command.Undo();
+          MainForm.Instance.PrintInfoLog($"{EditEntity.MaterialRequisitionNO}反审失败,请联系管理员！\r\n{rrs.ErrorMsg}", Color.Red);
+      }
+      return ae;
+  }
+  */
 
         protected async override Task<bool> CloseCaseAsync()
         {

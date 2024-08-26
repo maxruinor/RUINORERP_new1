@@ -88,11 +88,11 @@ namespace RUINORERP.UI.PSI.INV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdSplit).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public async  void BindData(tb_ProdSplit entity)
+        public async void BindData(tb_ProdSplit entity)
         {
             if (entity == null)
             {
- 
+
                 return;
             }
             EditEntity = entity;
@@ -111,7 +111,7 @@ namespace RUINORERP.UI.PSI.INV
                 #region
                 BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
                 var vpprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
- 
+
                 txtSpecifications.Text = vpprod.Specifications;
                 entity.property = vpprod.prop;
                 txtBOM_Name.Text = vpprod.CNName;
@@ -135,9 +135,9 @@ namespace RUINORERP.UI.PSI.INV
                 InsertSelectItem<tb_BOM_S>(key, keyname, tlist);
                 bs.DataSource = tlist;
                 ComboBoxHelper.InitDropList(bs, cmbBOM_ID, key, keyname, ComboBoxStyle.DropDown, true);
-            
-  
-           
+
+
+
 
                 #endregion
             }
@@ -230,10 +230,10 @@ namespace RUINORERP.UI.PSI.INV
                     base.ToolBarEnabledControl(MenuItemEnums.修改);
                     if (entity.ProdDetailID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProdSplit>(c => c.ProdDetailID))
                     {
-              
+
                         BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
                         var vpprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
- 
+
                         txtSpecifications.Text = vpprod.Specifications;
                         entity.property = vpprod.prop;
                         txtBOM_Name.Text = vpprod.CNName;
@@ -257,7 +257,7 @@ namespace RUINORERP.UI.PSI.INV
                         InsertSelectItem<tb_BOM_S>(key, keyname, tlist);
                         bs.DataSource = tlist;
                         ComboBoxHelper.InitDropList(bs, cmbBOM_ID, key, keyname, ComboBoxStyle.DropDown, true);
-               
+
                         // 不管选什么都先清空
                         txtBOM_Name.Text = string.Empty;
                         txtBOM_No.Text = string.Empty;
@@ -538,151 +538,150 @@ namespace RUINORERP.UI.PSI.INV
         }
 
 
-
-        protected async override Task<ApprovalEntity> Review()
-        {
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            //如果已经审核通过，则不能重复审核
-            if (EditEntity.ApprovalStatus.HasValue)
-            {
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                {
-                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                    {
-                        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                        return null;
-                    }
-                }
-            }
-
-            Command command = new Command();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_ProdSplit oldobj = CloneHelper.DeepCloneObject<tb_ProdSplit>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_ProdSplit>(EditEntity, oldobj);
-            };
-            ApprovalEntity ae = await base.Review();
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-
-            // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            //因为只需要更新主表
-            //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-            // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-            tb_ProdSplitController<tb_ProdSplit> ctr = Startup.GetFromFac<tb_ProdSplitController<tb_ProdSplit>>();
-            List<tb_ProdSplit> _StockIns = new List<tb_ProdSplit>();
-            _StockIns.Add(EditEntity);
-            ReturnResults<bool> rs = await ctr.AdjustingAsync(_StockIns, ae);
-            if (rs.Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.审核);
-                //如果审核结果为不通过时，审核不是灰色。
-                if (!ae.ApprovalResults)
-                {
-                    toolStripbtnReview.Enabled = true;
-                }
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。");
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rs.ErrorMsg},请联系管理员！", Color.Red);
-            }
-
-            return ae;
-        }
-
         /*
-        protected async override void ReReview()
+protected async override Task<ApprovalEntity> Review()
+{
+    if (EditEntity == null)
+    {
+        return null;
+    }
+    //如果已经审核通过，则不能重复审核
+    if (EditEntity.ApprovalStatus.HasValue)
+    {
+        if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
         {
-            if (EditEntity == null)
+            if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
             {
-                return;
+                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
+                return null;
             }
-            //如果已经审核通过，则不能重复审核
-            if (EditEntity.ApprovalStatus.HasValue)
-            {
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                {
-                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                    {
-                        // MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                        Command command = new Command();
-                        //缓存当前编辑的对象。如果撤销就回原来的值
-                        tb_ProdSplit oldobj = CloneHelper.DeepCloneObject<tb_ProdSplit>(EditEntity);
-                        command.UndoOperation = delegate ()
-                        {
-                            //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                            CloneHelper.SetValues<tb_ProdSplit>(EditEntity, oldobj);
-                        };
-                        ApprovalEntity ae = await base.Review();
-
-                        // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                        //因为只需要更新主表
-                        //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                        // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-                        tb_ProdSplitController<tb_ProdSplit> ctr = Startup.GetFromFac<tb_ProdSplitController<tb_ProdSplit>>();
-                        List<tb_ProdSplit> tb_ProdSplits = new List<tb_ProdSplit>();
-                        tb_ProdSplits.Add(EditEntity);
-
-                        ReturnResults<bool> rs = await ctr.AntiApprovalAsync(tb_ProdSplits);
-                        if (rs.Succeeded)
-                        {
-                            //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                            //{
-
-                            //}
-                            //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                            //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                            //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                            //MainForm.Instance.ecs.AddSendData(od);
-
-                            //审核成功
-                            base.ToolBarEnabledControl(MenuItemEnums.反审);
-                            //如果审核结果为不通过时，审核不是灰色。
-                            if (!ae.ApprovalResults)
-                            {
-                                toolStripbtnReview.Enabled = true;
-                            }
-                            MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}反审成功。");
-                        }
-                        else
-                        {
-                            //审核失败 要恢复之前的值
-                            command.Undo();
-                            MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}反审失败{rs.ErrorMsg},请联系管理员！", Color.Red);
-                        }
-
-                    }
-                }
-            }
-
-
-
         }
-        */
+    }
+
+    Command command = new Command();
+    //缓存当前编辑的对象。如果撤销就回原来的值
+    tb_ProdSplit oldobj = CloneHelper.DeepCloneObject<tb_ProdSplit>(EditEntity);
+    command.UndoOperation = delegate ()
+    {
+        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+        CloneHelper.SetValues<tb_ProdSplit>(EditEntity, oldobj);
+    };
+    ApprovalEntity ae = await base.Review();
+    if (EditEntity == null)
+    {
+        return null;
+    }
+    if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
+    {
+        return null;
+    }
+
+    // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+    //因为只需要更新主表
+    //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+    // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+    tb_ProdSplitController<tb_ProdSplit> ctr = Startup.GetFromFac<tb_ProdSplitController<tb_ProdSplit>>();
+
+    ReturnResults<tb_ProdSplit> rs = await ctr.ApprovalAsync(EditEntity);
+    if (rs.Succeeded)
+    {
+        //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+        //{
+
+        //}
+        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+        //MainForm.Instance.ecs.AddSendData(od);
+
+        //审核成功
+        base.ToolBarEnabledControl(MenuItemEnums.审核);
+        //如果审核结果为不通过时，审核不是灰色。
+        if (!ae.ApprovalResults)
+        {
+            toolStripbtnReview.Enabled = true;
+        }
+        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。");
+    }
+    else
+    {
+        //审核失败 要恢复之前的值
+        command.Undo();
+        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rs.ErrorMsg},请联系管理员！", Color.Red);
+    }
+
+    return ae;
+}
+
+
+protected async override void ReReview()
+{
+    if (EditEntity == null)
+    {
+        return;
+    }
+    //如果已经审核通过，则不能重复审核
+    if (EditEntity.ApprovalStatus.HasValue)
+    {
+        if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
+        {
+            if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+            {
+                // MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
+                Command command = new Command();
+                //缓存当前编辑的对象。如果撤销就回原来的值
+                tb_ProdSplit oldobj = CloneHelper.DeepCloneObject<tb_ProdSplit>(EditEntity);
+                command.UndoOperation = delegate ()
+                {
+                    //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                    CloneHelper.SetValues<tb_ProdSplit>(EditEntity, oldobj);
+                };
+                ApprovalEntity ae = await base.Review();
+
+                // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                //因为只需要更新主表
+                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+                // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+                tb_ProdSplitController<tb_ProdSplit> ctr = Startup.GetFromFac<tb_ProdSplitController<tb_ProdSplit>>();
+                List<tb_ProdSplit> tb_ProdSplits = new List<tb_ProdSplit>();
+                tb_ProdSplits.Add(EditEntity);
+
+                ReturnResults<bool> rs = await ctr.AntiApprovalAsync(tb_ProdSplits);
+                if (rs.Succeeded)
+                {
+                    //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+                    //{
+
+                    //}
+                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                    //MainForm.Instance.ecs.AddSendData(od);
+
+                    //审核成功
+                    base.ToolBarEnabledControl(MenuItemEnums.反审);
+                    //如果审核结果为不通过时，审核不是灰色。
+                    if (!ae.ApprovalResults)
+                    {
+                        toolStripbtnReview.Enabled = true;
+                    }
+                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}反审成功。");
+                }
+                else
+                {
+                    //审核失败 要恢复之前的值
+                    command.Undo();
+                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}反审失败{rs.ErrorMsg},请联系管理员！", Color.Red);
+                }
+
+            }
+        }
+    }
+
+
+
+}
+*/
         private void LoadItemsFromBOM()
         {
 
@@ -770,6 +769,6 @@ namespace RUINORERP.UI.PSI.INV
             }
         }
 
- 
+
     }
 }

@@ -535,7 +535,7 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-
+        /*
         protected async override Task<ApprovalEntity> Review()
         {
             if (EditEntity == null)
@@ -576,7 +576,7 @@ namespace RUINORERP.UI.PSI.PUR
             //因为只需要更新主表
             //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
             // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-            ReturnResults<bool> rmrs = await ctr.ApprovalAsync(EditEntity, ae);
+            ReturnResults<T> rmrs = await ctr.ApprovalAsync(EditEntity);
             if (rmrs.Succeeded)
             {
                 //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
@@ -606,7 +606,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             return ae;
         }
-
+        */
         /*
         protected async override void ReReview()
         {

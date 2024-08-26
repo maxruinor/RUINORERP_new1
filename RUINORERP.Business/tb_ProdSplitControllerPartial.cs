@@ -42,9 +42,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entitys"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AdjustingAsync(List<tb_ProdSplit> entitys, ApprovalEntity approvalEntity)
+
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rs = new ReturnResults<bool>();
+            tb_ProdSplit entity = ObjectEntity as tb_ProdSplit;
+            ReturnResults<T> rs = new ReturnResults<T>();
             try
             {
                 // 开启事务，保证数据一致性
@@ -52,114 +54,104 @@ namespace RUINORERP.Business
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-                if (!approvalEntity.ApprovalResults)
-                {
-                    if (entitys == null)
-                    {
-                        return rs;
-                    }
 
+
+                //减少母件
+                tb_Inventory invMother = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
+                if (invMother != null)
+                {
+                    //更新库存
+                    invMother.Quantity = invMother.Quantity - entity.SplitParentQty;
+                    invMother.LatestOutboundTime = DateTime.Now;
+                    BusinessHelper.Instance.EditEntity(invMother);
                 }
                 else
                 {
-                    foreach (var entity in entitys)
+                    throw new Exception("系统对应的仓库中没有母件库存,请检查数据！ ");
+                }
+                ReturnResults<tb_Inventory> rrm = await ctrinv.SaveOrUpdate(invMother);
+                if (rrm.Succeeded)
+                {
+                    #region 子件增加
+                    foreach (var child in entity.tb_ProdSplitDetails)
                     {
-                        //减少母件
-                        tb_Inventory invMother = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
-                        if (invMother != null)
+                        #region 库存表的更新 这里应该是必需有库存的数据，
+                        //标记是否有期初
+                        bool Opening = false;
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        if (inv != null)
                         {
                             //更新库存
-                            invMother.Quantity = invMother.Quantity - entity.SplitParentQty;
-                            invMother.LatestOutboundTime = DateTime.Now;
-                            BusinessHelper.Instance.EditEntity(invMother);
+                            inv.Quantity = inv.Quantity + child.Qty;
+                            BusinessHelper.Instance.EditEntity(inv);
                         }
                         else
                         {
-                            throw new Exception("系统对应的仓库中没有母件库存,请检查数据！ ");
+                            Opening = true;
+                            inv = new tb_Inventory();
+                            inv.Quantity = inv.Quantity + child.Qty;
+                            inv.InitInventory = (int)inv.Quantity;
+                            inv.Location_ID = child.Location_ID;
+
+                            BusinessHelper.Instance.InitEntity(inv);
                         }
-                        ReturnResults<tb_Inventory> rrm = await ctrinv.SaveOrUpdate(invMother);
-                        if (rrm.Succeeded)
+                        /*
+                      直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
+                     平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
+                     先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
+                     后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
+                     数据来源可以是多种多样的，例如：
+                     采购价格：从供应商处购买产品或物品时的价格。
+                     生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
+                     市场价格：参考市场上类似产品或物品的价格。
+                      */
+                        //计算成本切割时没有指定，则保持之前的。如果后面优化要子件可以指定成本时，这里也可以参与计算
+                        //inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
+                        // 、、inv.CostFIFO = child.Cost;
+                        //、 inv.CostMonthlyWA = child.Cost;
+                        // inv.CostMovingWA = child.Cost;
+                        inv.LatestStorageTime = System.DateTime.Now;
+
+                        #endregion
+                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                        if (rr.Succeeded)
                         {
-                            #region 子件增加
-                            foreach (var child in entity.tb_ProdSplitDetails)
+                            if (Opening)
                             {
-                                #region 库存表的更新 这里应该是必需有库存的数据，
-                                //标记是否有期初
-                                bool Opening = false;
-                                tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                                if (inv != null)
-                                {
-                                    //更新库存
-                                    inv.Quantity = inv.Quantity + child.Qty;
-                                    BusinessHelper.Instance.EditEntity(inv);
-                                }
-                                else
-                                {
-                                    Opening = true;
-                                    inv = new tb_Inventory();
-                                    inv.Quantity = inv.Quantity + child.Qty;
-                                    inv.InitInventory = (int)inv.Quantity;
-                                    inv.Location_ID = child.Location_ID;
-
-                                    BusinessHelper.Instance.InitEntity(inv);
-                                }
-                                /*
-                              直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                             平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                             先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                             后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                             数据来源可以是多种多样的，例如：
-                             采购价格：从供应商处购买产品或物品时的价格。
-                             生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                             市场价格：参考市场上类似产品或物品的价格。
-                              */
-                                //计算成本切割时没有指定，则保持之前的。如果后面优化要子件可以指定成本时，这里也可以参与计算
-                                //inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
-                                // 、、inv.CostFIFO = child.Cost;
-                                //、 inv.CostMonthlyWA = child.Cost;
-                                // inv.CostMovingWA = child.Cost;
-                                inv.LatestStorageTime = System.DateTime.Now;
-
+                                #region 处理期初
+                                //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
+                                tb_OpeningInventory oinv = new tb_OpeningInventory();
+                                oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
+                                oinv.Cost_price = rr.ReturnObject.Inv_Cost;
+                                oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
+                                oinv.InitInvDate = entity.SplitDate;
+                                oinv.RefBillID = entity.SplitID;
+                                oinv.RefNO = entity.SplitNo;
+                                oinv.Notes = entity.SplitNo + "由母件切割得到";//后面修改数据库是不需要？
+                                oinv.InitQty = 0;
+                                oinv.InitInvDate = System.DateTime.Now;
+                                await ctrOPinv.AddReEntityAsync(oinv);
                                 #endregion
-                                ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                                if (rr.Succeeded)
-                                {
-                                    if (Opening)
-                                    {
-                                        #region 处理期初
-                                        //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                                        tb_OpeningInventory oinv = new tb_OpeningInventory();
-                                        oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                                        oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                                        oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                                        oinv.InitInvDate = entity.SplitDate;
-                                        oinv.RefBillID = entity.SplitID;
-                                        oinv.RefNO = entity.SplitNo;
-                                        oinv.Notes = entity.SplitNo + "由母件切割得到";//后面修改数据库是不需要？
-                                        oinv.InitQty = 0;
-                                        oinv.InitInvDate = System.DateTime.Now;
-                                        await ctrOPinv.AddReEntityAsync(oinv);
-                                        #endregion
-                                    }
-                                }
                             }
-                            //这部分是否能提出到上一级公共部分？
-                            entity.DataStatus = (int)DataStatus.确认;
-                            entity.ApprovalOpinions = approvalEntity.ApprovalComments;
-                            //后面已经修改为
-                            entity.ApprovalResults = approvalEntity.ApprovalResults;
-                            entity.ApprovalStatus = (int)ApprovalStatus.已审核;
-                            BusinessHelper.Instance.ApproverEntity(entity);
-                            //只更新指定列
-                            // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_ProdSplit>(entity).ExecuteCommandAsync();
-                            #endregion
                         }
-
-
                     }
-
+                    //这部分是否能提出到上一级公共部分？
+                    entity.DataStatus = (int)DataStatus.确认;
+                   // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                    //后面已经修改为
+                  //  entity.ApprovalResults = approvalEntity.ApprovalResults;
+                    entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                    BusinessHelper.Instance.ApproverEntity(entity);
+                    //只更新指定列
+                    // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_ProdSplit>(entity).ExecuteCommandAsync();
+                    #endregion
                 }
+
+
+
+
+
 
                 //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                 // 注意信息的完整性
@@ -175,7 +167,7 @@ namespace RUINORERP.Business
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error("事务回滚" + ex.Message);
                 }
                 return rs;
             }
@@ -189,10 +181,10 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             tb_ProdSplit entity = ObjectEntity as tb_ProdSplit;
-            ReturnResults<bool> rs = new ReturnResults<bool>();
+            ReturnResults<T> rs = new ReturnResults<T>();
             try
             {
                 // 开启事务，保证数据一致性
@@ -270,6 +262,7 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
+                rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }

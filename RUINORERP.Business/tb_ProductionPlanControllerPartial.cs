@@ -30,27 +30,27 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> ApprovalAsync(tb_ProductionPlan entity, ApprovalEntity approvalEntity)
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            ReturnResults<T> rmrs = new ReturnResults<T>();
+            tb_ProductionPlan entity = ObjectEntity as tb_ProductionPlan;
+
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                if (!approvalEntity.ApprovalResults)
-                {
-                    if (entity == null)
-                    {
-                        return rmrs;
-                    }
 
-                }
-                else
+                if (entity == null)
                 {
-                    //更新在制数量 应该是在生产通知单时更新的，这里暂时不更新
-                    /*
-                     * 
-                     * 在 ERP 系统中，生产计划单的审核会影响多方面的数据，包括但不限于以下这些：
+                    return rmrs;
+                }
+
+
+
+                //更新在制数量 应该是在生产通知单时更新的，这里暂时不更新
+                /*
+                 * 
+                 * 在 ERP 系统中，生产计划单的审核会影响多方面的数据，包括但不限于以下这些：
 生产相关数据：
 计划状态：生产计划单的状态会从待审核变为已审核，明确其当前阶段。
 排程数据：审核通过后可能会影响生产排程，确定具体的生产时间和顺序。
@@ -67,45 +67,45 @@ namespace RUINORERP.Business
 关联订单进度：如果是为了满足特定订单的生产计划，会影响订单的生产进度更新。
 
 
-                    foreach (var child in entity.tb_ProductionPlanDetails)
+                foreach (var child in entity.tb_ProductionPlanDetails)
+                {
+                    #region 库存表的更新 ，
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID);
+                    if (inv == null)
                     {
-                        #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID);
-                        if (inv == null)
+                        inv = new tb_Inventory();
+                        inv.ProdDetailID = child.ProdDetailID;
+                        inv.Location_ID = child.Location_ID;
+                        if (_appContext.SysConfig.CheckNegativeInventory)
                         {
-                            inv = new tb_Inventory();
-                            inv.ProdDetailID = child.ProdDetailID;
-                            inv.Location_ID = child.Location_ID;
-                            if (_appContext.SysConfig.CheckNegativeInventory)
-                            {
-                                inv.Quantity = -child.Quantity;
-                            }
-                            else
-                            {
-                                inv.Quantity = 0;
-                            }
-
-                            inv.InitInventory = (int)inv.Quantity;
-                            inv.Notes = "";//后面修改数据库是不需要？
-                            //inv.LatestStorageTime = System.DateTime.Now;
-                            BusinessHelper.Instance.InitEntity(inv);
+                            inv.Quantity = -child.Quantity;
                         }
-                        //更新在途库存
-                        inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
-                        BusinessHelper.Instance.EditEntity(inv);
-                        #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
+                        else
                         {
-
+                            inv.Quantity = 0;
                         }
-                    }*/
-                }
+
+                        inv.InitInventory = (int)inv.Quantity;
+                        inv.Notes = "";//后面修改数据库是不需要？
+                        //inv.LatestStorageTime = System.DateTime.Now;
+                        BusinessHelper.Instance.InitEntity(inv);
+                    }
+                    //更新在途库存
+                    inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
+                    BusinessHelper.Instance.EditEntity(inv);
+                    #endregion
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
+                    {
+
+                    }
+                }*/
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-                entity.ApprovalResults = approvalEntity.ApprovalResults;
+                // entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -126,10 +126,10 @@ namespace RUINORERP.Business
             {
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
-                rmrs.ErrorMsg = approvalEntity.bizName + "事务回滚=>" + ex.Message;
+                rmrs.ErrorMsg =  "事务回滚=>" + ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error( "事务回滚" + ex.Message);
                 }
                 rmrs.Succeeded = false;
                 return rmrs;
@@ -277,10 +277,10 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             tb_ProductionPlan entity = ObjectEntity as tb_ProductionPlan;
-            ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            ReturnResults<T> rmrs = new ReturnResults<T>();
             try
             {
                 // 开启事务，保证数据一致性
@@ -323,6 +323,7 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
+                rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }

@@ -36,13 +36,13 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-
+        /*
         public override Task<bool> ReReview(List<tb_ProdBundle> EditEntitys)
         {
             MessageBox.Show("请在单据明细中使用反审功能。");
             return null;
         }
-
+        */
      
 
         public override void BuildColNameDataDictionary()
@@ -74,7 +74,7 @@ namespace RUINORERP.UI.ProductEAV
             base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
         }
 
-
+     
         public override void BuildLimitQueryConditions()
         {
             //创建表达式

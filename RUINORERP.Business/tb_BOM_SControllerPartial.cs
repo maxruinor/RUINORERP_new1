@@ -112,8 +112,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<bool> ApproveAsync(tb_BOM_S entity, ApprovalEntity approvalEntity)
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
+            ReturnResults<T> rmrs = new ReturnResults<T>();
+            tb_BOM_S entity = ObjectEntity as tb_BOM_S;
+
             try
             {
                 // 开启事务，保证数据一致性
@@ -121,35 +124,29 @@ namespace RUINORERP.Business
                 tb_ProdDetailController<tb_ProdDetail> ctrDetail = _appContext.GetRequiredService<tb_ProdDetailController<tb_ProdDetail>>();
                 tb_BOM_SController<tb_BOM_S> ctrinv = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-                if (!approvalEntity.ApprovalResults)
-                {
-                    if (entity == null)
-                    {
-                        return false;
-                    }
 
+                if (entity == null)
+                {
+                    return rmrs;
                 }
-                else
-                {
 
-                    //更新产品表回写他的配方号
-                    //entity.tb_proddetail.DataStatus = (int)DataStatus.完结;
-                    //entity.tb_proddetail.MainID = entity.MainID;
-                    //await _appContext.Db.Updateable(entity.tb_proddetail).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
-                    tb_ProdDetail detail = await ctrDetail.BaseQueryByIdAsync(entity.ProdDetailID);
-                    if (detail != null)
-                    {
-                        detail.BOM_ID = entity.BOM_ID;
-                        detail.DataStatus = (int)DataStatus.确认;
-                        await ctrDetail.UpdateAsync(detail);
-                    }
+                //更新产品表回写他的配方号
+                //entity.tb_proddetail.DataStatus = (int)DataStatus.完结;
+                //entity.tb_proddetail.MainID = entity.MainID;
+                //await _appContext.Db.Updateable(entity.tb_proddetail).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+                tb_ProdDetail detail = await ctrDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+                if (detail != null)
+                {
+                    detail.BOM_ID = entity.BOM_ID;
+                    detail.DataStatus = (int)DataStatus.确认;
+                    await ctrDetail.UpdateAsync(detail);
                 }
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-                entity.ApprovalResults = approvalEntity.ApprovalResults;
+                // entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -158,8 +155,9 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                //_logger.LogInformation(approvalEntity.bizName + "审核事务成功");
-                return true;
+                rmrs.ReturnObject = entity as T;
+                rmrs.Succeeded = true;
+                return rmrs;
             }
             catch (Exception ex)
             {
@@ -167,9 +165,9 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error("事务回滚" + ex.Message);
                 }
-                return false;
+                return rmrs;
             }
 
         }
@@ -180,8 +178,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<bool> ReverseApproveAsync(tb_BOM_S entity)
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
+            ReturnResults<T> rs = new ReturnResults<T>();
+            tb_BOM_S entity = ObjectEntity as tb_BOM_S;
+      
             try
             {
                 // 开启事务，保证数据一致性
@@ -217,15 +218,16 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                // _logger.LogInformation(approvalEntity.bizName + "审核事务成功");
-                return true;
+                rs.ReturnObject=entity as T;
+                rs.Succeeded = true;
+                return rs;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
-                // _logger.LogInformation(approvalEntity.bizName + "事务回滚");
-                return false;
+                rs.Succeeded = false;
+                return rs;
             }
 
         }

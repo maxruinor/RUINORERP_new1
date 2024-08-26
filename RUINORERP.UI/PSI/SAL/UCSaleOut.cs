@@ -537,7 +537,7 @@ namespace RUINORERP.UI.PSI.SAL
             //}
 
         }
-
+        /*
         protected async override Task<ApprovalEntity> Review()
         {
             if (EditEntity == null)
@@ -579,9 +579,8 @@ namespace RUINORERP.UI.PSI.SAL
                 return null;
             }
             tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
-            List<tb_SaleOut> entitys = new List<tb_SaleOut>();
-            entitys.Add(EditEntity);
-            ReturnResults<bool> rrs = await ctr.BatchApprovalAsync(entitys, ae);
+       
+            ReturnResults<tb_SaleOut> rrs = await ctr.ApprovalAsync(EditEntity);
             if (rrs.Succeeded)
             {
                 ////销售出库 如果数据来自销售订单。数量相等也一样 在销售订单中 结案。
@@ -617,7 +616,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             return ae;
         }
-
+        */
         /*
         /// <summary>
         /// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理

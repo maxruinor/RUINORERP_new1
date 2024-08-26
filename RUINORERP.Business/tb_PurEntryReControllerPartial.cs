@@ -115,7 +115,7 @@ namespace RUINORERP.Business
                 }
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
                 //后面已经修改为
                 entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;

@@ -675,7 +675,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //ToolBarEnabledControl(MenuItemEnums.反审);
                     //这里推送到审核，启动工作流
-                    AuditLogHelper.Instance.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalComments}");
+                    AuditLogHelper.Instance.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
                 }
                 else
                 {
@@ -721,7 +721,7 @@ namespace RUINORERP.UI.BaseForm
             if (EditEntitys.Count > 1)
             {
                 ae.BillNo = "批量审核";
-                ae.ApprovalComments = "批量审核";
+                ae.ApprovalOpinions = "批量审核";
             }
             else
             {

@@ -86,8 +86,8 @@ namespace RUINORERP.Business
                         if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
                         {
                             approvalEntity.ApprovalResults = false;
-                            approvalEntity.ApprovalComments = $"库存为：{inv.Quantity}，拟销售量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
-                            rmrs.ErrorMsg = approvalEntity.ApprovalComments;
+                            approvalEntity.ApprovalOpinions = $"库存为：{inv.Quantity}，拟销售量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                            rmrs.ErrorMsg = approvalEntity.ApprovalOpinions;
                             rmrs.Succeeded = false;
                             return rmrs;
                         }
@@ -106,7 +106,7 @@ namespace RUINORERP.Business
                 }
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
                 //后面已经修改为
                 entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
@@ -197,7 +197,7 @@ namespace RUINORERP.Business
 
                         //这部分是否能提出到上一级公共部分？
                         entity.DataStatus = (int)DataStatus.确认;
-                        entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                        entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
                         //后面已经修改为
                         entity.ApprovalResults = approvalEntity.ApprovalResults;
                         entity.ApprovalStatus = (int)ApprovalStatus.已审核;

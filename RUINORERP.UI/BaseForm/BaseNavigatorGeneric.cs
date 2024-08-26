@@ -99,6 +99,8 @@ namespace RUINORERP.UI.BaseForm
         public List<NavParts[]> strings = new List<NavParts[]>();
         public virtual List<NavParts[]> AddNavParts()
         {
+            List<NavParts[]> strings = new List<NavParts[]>();
+            strings.Add(new NavParts[] { NavParts.查询结果, NavParts.分组显示 });
             return strings;
         }
 
@@ -130,16 +132,16 @@ namespace RUINORERP.UI.BaseForm
 
             //既然前台指定的查询哪些字段，到时可以配置。这里应该是 除软件删除外的。其他字段不需要
 
-           // List<string> queryConditions = new List<string>();
-          
+            // List<string> queryConditions = new List<string>();
+
             List<M> list = new List<M>();
 
             //提取指定的列名，即条件集合
-           // queryConditions = new List<string>(QueryFilter.QueryFields.Select(t => t.FieldName).ToList());
+            // queryConditions = new List<string>(QueryFilter.QueryFields.Select(t => t.FieldName).ToList());
             int PageNum = 1;
             int PageSize = int.Parse(txtMaxRow.Text);
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, LimitQueryConditions, QueryDto, PageNum, PageSize) as List<M>;
-            list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryFilter,  QueryDto, PageNum, PageSize) as List<M>;
+            list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryFilter, QueryDto, PageNum, PageSize) as List<M>;
 
 
             _UCMasterQuery.bindingSourceMaster.DataSource = list.ToBindingSortCollection();
@@ -319,7 +321,7 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
                     return;
                 }*/
             }
-         
+
             switch (menuItem)
             {
 
@@ -490,7 +492,7 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
         {
 
         }
- 
+
         public void Builder()
         {
             BuildInvisibleCols();
@@ -1008,7 +1010,7 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
             _UCOutlookGridGroupAnalysis.ColDisplayTypes = _UCMasterQuery.ColDisplayTypes;
 
 
-        List<string> masterlist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
+            List<string> masterlist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
             _UCOutlookGridGroupAnalysis.SummaryCols = masterlist;
             _UCOutlookGridGroupAnalysis.InvisibleCols = ExpressionHelper.ExpressionListToStringList(MasterInvisibleCols);
             _UCOutlookGridGroupAnalysis.ColNameDataDictionary = MasterColNameDataDictionary;

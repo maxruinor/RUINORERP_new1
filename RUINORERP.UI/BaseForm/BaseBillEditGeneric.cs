@@ -1452,7 +1452,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     ToolBarEnabledControl(MenuItemEnums.反审);
                     //这里推送到审核，启动工作流
-                    AuditLogHelper.Instance.CreateAuditLog<T>("反审", EditEntity, $"反审原因{ae.ApprovalComments}");
+                    AuditLogHelper.Instance.CreateAuditLog<T>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");
                 }
                 else
                 {
@@ -1760,7 +1760,7 @@ namespace RUINORERP.UI.BaseForm
                         BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
                         cbd = bcf.GetBillData<T>(EditEntity as T);
                         ApprovalEntity ae = new ApprovalEntity();
-                        ae.ApprovalComments = "自动审核";
+                        ae.ApprovalOpinions = "自动审核";
                         ae.ApprovalResults = true;
                         ae.ApprovalStatus = (int)ApprovalStatus.已审核;
 

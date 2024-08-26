@@ -25,7 +25,7 @@ namespace RUINORERP.Model
         /// <summary>
         /// 审批意见Comments批注
         /// </summary>
-        public string ApprovalComments { get; set; }
+        public string ApprovalOpinions { get; set; }
 
         /// <summary>
         /// 用于结案情况说明
@@ -68,7 +68,7 @@ namespace RUINORERP.Model
             AppendPropertyIfNotEmpty(stringBuilder, "bizName", bizName);
             AppendPropertyIfNotEmpty(stringBuilder, "bizType", bizType.ToString());
             AppendPropertyIfNotEmpty(stringBuilder, "BillNo", BillNo);
-            AppendPropertyIfNotEmpty(stringBuilder, "ApprovalComments", ApprovalComments);
+            AppendPropertyIfNotEmpty(stringBuilder, "ApprovalOpinions", ApprovalOpinions);
             AppendPropertyIfNotEmpty(stringBuilder, "CloseCaseOpinions", CloseCaseOpinions);
             AppendPropertyIfNotEmpty(stringBuilder, "To", To);
             AppendPropertyIfNotEmpty(stringBuilder, "From", From);

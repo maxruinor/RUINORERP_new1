@@ -68,7 +68,7 @@ namespace RUINORERP.UI.CommonUI
             DataBindingHelper.BindData4TextBox<ApprovalEntity>(entity, t => t.bizName, txtBillType, BindDataType4TextBox.Text, false);
             txtBillType.ReadOnly = true;
             entity.ApprovalResults = true;
-            DataBindingHelper.BindData4TextBox<ApprovalEntity>(entity, t => t.ApprovalComments, txtOpinion, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<ApprovalEntity>(entity, t => t.ApprovalOpinions, txtOpinion, BindDataType4TextBox.Text, false);
             errorProviderForAllInput.DataSource = entity;
         }
 

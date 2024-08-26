@@ -81,10 +81,10 @@ namespace RUINORERP.Model
 
         private long _Unit_ID;
         /// <summary>
-        /// 单位
+        /// 套装单位
         /// </summary>
-        [AdvQueryAttribute(ColName = "Unit_ID",ColDesc = "单位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Unit_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "单位" )]
+        [AdvQueryAttribute(ColName = "Unit_ID",ColDesc = "套装单位")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Unit_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "套装单位")]
         [FKRelationAttribute("tb_Unit","Unit_ID")]
         public long Unit_ID
         { 

@@ -468,6 +468,10 @@ namespace RUINORERP.UI.UserCenter
 
         private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, NodeParameter nodeParameter)
         {
+            if (QueryDto==null)
+            {
+                return;
+            }
             //查询条件给值前先将条件清空
             foreach (var item in nodeParameter.queryFilter.QueryFields)
             {

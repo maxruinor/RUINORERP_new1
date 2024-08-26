@@ -51,13 +51,23 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.最大行数 = new System.Windows.Forms.ToolStripLabel();
             this.txtMaxRow = new System.Windows.Forms.ToolStripTextBox();
-            this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonPanelMainBig = new Krypton.Toolkit.KryptonPanel();
             this.kryptonDockableWorkspaceQuery = new Krypton.Docking.KryptonDockableWorkspace();
+            this.kryptonHeaderGroupTop = new Krypton.Toolkit.KryptonHeaderGroup();
+            this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
+            this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
+            this.groupLine1 = new WinLib.Line.GroupLine();
             this.kryptonDockingManagerQuery = new Krypton.Docking.KryptonDockingManager();
             this.BaseToolStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).BeginInit();
+            this.kryptonPanelMainBig.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
+            this.kryptonHeaderGroupTop.Panel.SuspendLayout();
+            this.kryptonHeaderGroupTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).BeginInit();
             this.kryptonPanelQuery.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).BeginInit();
             this.SuspendLayout();
             // 
             // BaseToolStrip
@@ -242,19 +252,19 @@
             // 
             // txtMaxRow
             // 
-            this.txtMaxRow.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
             this.txtMaxRow.Name = "txtMaxRow";
             this.txtMaxRow.Size = new System.Drawing.Size(100, 25);
             this.txtMaxRow.Text = "200";
             // 
-            // kryptonPanelQuery
+            // kryptonPanelMainBig
             // 
-            this.kryptonPanelQuery.Controls.Add(this.kryptonDockableWorkspaceQuery);
-            this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanelQuery.Location = new System.Drawing.Point(0, 25);
-            this.kryptonPanelQuery.Name = "kryptonPanelQuery";
-            this.kryptonPanelQuery.Size = new System.Drawing.Size(1110, 696);
-            this.kryptonPanelQuery.TabIndex = 4;
+            this.kryptonPanelMainBig.Controls.Add(this.kryptonDockableWorkspaceQuery);
+            this.kryptonPanelMainBig.Controls.Add(this.kryptonHeaderGroupTop);
+            this.kryptonPanelMainBig.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelMainBig.Location = new System.Drawing.Point(0, 25);
+            this.kryptonPanelMainBig.Name = "kryptonPanelMainBig";
+            this.kryptonPanelMainBig.Size = new System.Drawing.Size(1110, 696);
+            this.kryptonPanelMainBig.TabIndex = 4;
             // 
             // kryptonDockableWorkspaceQuery
             // 
@@ -264,7 +274,7 @@
             | Krypton.Workspace.CompactFlags.PromoteLeafs)));
             this.kryptonDockableWorkspaceQuery.ContainerBackStyle = Krypton.Toolkit.PaletteBackStyle.PanelClient;
             this.kryptonDockableWorkspaceQuery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonDockableWorkspaceQuery.Location = new System.Drawing.Point(0, 0);
+            this.kryptonDockableWorkspaceQuery.Location = new System.Drawing.Point(0, 145);
             this.kryptonDockableWorkspaceQuery.Name = "kryptonDockableWorkspaceQuery";
             // 
             // 
@@ -273,10 +283,52 @@
             this.kryptonDockableWorkspaceQuery.Root.WorkspaceControl = this.kryptonDockableWorkspaceQuery;
             this.kryptonDockableWorkspaceQuery.SeparatorStyle = Krypton.Toolkit.SeparatorStyle.LowProfile;
             this.kryptonDockableWorkspaceQuery.ShowMaximizeButton = false;
-            this.kryptonDockableWorkspaceQuery.Size = new System.Drawing.Size(1110, 696);
+            this.kryptonDockableWorkspaceQuery.Size = new System.Drawing.Size(1110, 551);
             this.kryptonDockableWorkspaceQuery.SplitterWidth = 5;
             this.kryptonDockableWorkspaceQuery.TabIndex = 0;
             this.kryptonDockableWorkspaceQuery.TabStop = true;
+            // 
+            // kryptonHeaderGroupTop
+            // 
+            this.kryptonHeaderGroupTop.AutoSize = true;
+            this.kryptonHeaderGroupTop.ButtonSpecs.Add(this.buttonSpecHeaderGroup1);
+            this.kryptonHeaderGroupTop.Dock = System.Windows.Forms.DockStyle.Top;
+            this.kryptonHeaderGroupTop.HeaderVisibleSecondary = false;
+            this.kryptonHeaderGroupTop.Location = new System.Drawing.Point(0, 0);
+            this.kryptonHeaderGroupTop.Name = "kryptonHeaderGroupTop";
+            // 
+            // kryptonHeaderGroupTop.Panel
+            // 
+            this.kryptonHeaderGroupTop.Panel.Controls.Add(this.kryptonPanelQuery);
+            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(1110, 145);
+            this.kryptonHeaderGroupTop.StateCommon.HeaderPrimary.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
+            | Krypton.Toolkit.PaletteDrawBorders.Left) 
+            | Krypton.Toolkit.PaletteDrawBorders.Right)));
+            this.kryptonHeaderGroupTop.TabIndex = 2;
+            this.kryptonHeaderGroupTop.ValuesPrimary.Heading = "";
+            this.kryptonHeaderGroupTop.ValuesPrimary.Image = global::RUINORERP.UI.Properties.Resources.searcher1;
+            // 
+            // buttonSpecHeaderGroup1
+            // 
+            this.buttonSpecHeaderGroup1.Type = Krypton.Toolkit.PaletteButtonSpecStyle.ArrowUp;
+            this.buttonSpecHeaderGroup1.UniqueName = "6c9eda2b76ae4d0eb4649936669149f4";
+            // 
+            // kryptonPanelQuery
+            // 
+            this.kryptonPanelQuery.Controls.Add(this.groupLine1);
+            this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Top;
+            this.kryptonPanelQuery.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanelQuery.Name = "kryptonPanelQuery";
+            this.kryptonPanelQuery.Size = new System.Drawing.Size(1108, 119);
+            this.kryptonPanelQuery.TabIndex = 1;
+            // 
+            // groupLine1
+            // 
+            this.groupLine1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupLine1.Location = new System.Drawing.Point(0, 118);
+            this.groupLine1.Name = "groupLine1";
+            this.groupLine1.Size = new System.Drawing.Size(1108, 1);
+            this.groupLine1.TabIndex = 2;
             // 
             // kryptonDockingManagerQuery
             // 
@@ -286,16 +338,23 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.kryptonPanelQuery);
+            this.Controls.Add(this.kryptonPanelMainBig);
             this.Controls.Add(this.BaseToolStrip);
             this.Name = "BaseBillQueryMC";
             this.Size = new System.Drawing.Size(1110, 721);
             this.Load += new System.EventHandler(this.BaseBillQueryMC_Load);
             this.BaseToolStrip.ResumeLayout(false);
             this.BaseToolStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).EndInit();
+            this.kryptonPanelMainBig.ResumeLayout(false);
+            this.kryptonPanelMainBig.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).EndInit();
+            this.kryptonHeaderGroupTop.Panel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).EndInit();
+            this.kryptonHeaderGroupTop.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).EndInit();
             this.kryptonPanelQuery.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -312,7 +371,7 @@
         private System.Windows.Forms.ToolStripButton toolStripButton12;
         private System.Windows.Forms.ToolStripDropDownButton toolStripbtnFunction;
         private System.Windows.Forms.ToolStripMenuItem 复制性新增ToolStripMenuItem;
-        public Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
+        public Krypton.Toolkit.KryptonPanel kryptonPanelMainBig;
         public Krypton.Docking.KryptonDockableWorkspace kryptonDockableWorkspaceQuery;
         public Krypton.Docking.KryptonDockingManager kryptonDockingManagerQuery;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
@@ -328,5 +387,9 @@
         public System.Windows.Forms.ToolStripButton toolStripButton结案;
         public System.Windows.Forms.ToolStripTextBox txtMaxRow;
         public System.Windows.Forms.ToolStripButton toolStripbtnProperty;
+        private Krypton.Toolkit.KryptonHeaderGroup kryptonHeaderGroupTop;
+        private Krypton.Toolkit.ButtonSpecHeaderGroup buttonSpecHeaderGroup1;
+        internal Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
+        private WinLib.Line.GroupLine groupLine1;
     }
 }

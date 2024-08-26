@@ -337,14 +337,12 @@ namespace RUINORERP.UI.UControls
             AllowUserToOrderColumns = UseCustomColumnDisplay;
             customizeGrid.targetDataGridView = this;
 
-
-
             //运行时，直接判断属性是否设置。如果没有就提示
             //或者在数据变动时提示
             //合并 设置右键菜单 只执行一次
             if (!setContextMenu)
             {
-                SetContextMenu();
+                SetContextMenu(this.ContextMenuStrip);
                 setContextMenu = true;
             }
 
@@ -732,6 +730,7 @@ namespace RUINORERP.UI.UControls
 
         /// <summary>
         /// 重写右键菜单 为了合并
+        /// 如果使用内置的菜单则这里设置时就要合并处理
         /// </summary>
         public override ContextMenuStrip ContextMenuStrip
         {
@@ -741,6 +740,7 @@ namespace RUINORERP.UI.UControls
                 //if (_ContextMenuStrip==null)
                 //{
                 _ContextMenuStrip = value;
+
                 //}
                 //else
                 //{
@@ -919,7 +919,7 @@ namespace RUINORERP.UI.UControls
 
 
         private bool setContextMenu = false;
-        private void SetContextMenu()
+        public void SetContextMenu(ContextMenuStrip _contextMenuStrip)
         {
             //初始化右键菜单
             _cMenus.BackColor = Color.FromArgb(192, 255, 255);
@@ -936,7 +936,7 @@ namespace RUINORERP.UI.UControls
                 {
                     ContextClickList = new List<EventHandler>();
                 }
-
+                ContextClickList.Clear();
                 ContextClickList.Add(NewSumDataGridView_批量修改列值);
                 ContextClickList.Add(NewSumDataGridView_复制单元数据);
                 ContextClickList.Add(NewSumDataGridView_导出excel);
@@ -948,6 +948,7 @@ namespace RUINORERP.UI.UControls
                 {
                     _ContextMenucCnfigurator = new List<ContextMenuController>();
                 }
+                _ContextMenucCnfigurator.Clear();
                 //只是初始化不重复添加
                 if (_ContextMenucCnfigurator.Count == 0 && GetIsDesignMode())
                 {
@@ -1012,10 +1013,13 @@ namespace RUINORERP.UI.UControls
                 }
             }
 
-            //意思是如果设置过了。就不重复设置
+
+
+
+            //意思是如果本身设置过了。就不重复设置
             if (this.ContextMenuStrip != null)
             {
-                if (Use是否使用内置右键功能)
+                if (_cMenus.Items.Count > 0)
                 {
                     this.ContextMenuStrip.Tag = true;
                     ToolStripSeparator tss = new ToolStripSeparator();
@@ -1027,6 +1031,8 @@ namespace RUINORERP.UI.UControls
                     //这里同级添加
                     this.ContextMenuStrip.Items.AddRange(ts);
                 }
+
+
             }
             else
             {

@@ -521,7 +521,7 @@ namespace RUINORERP.UI.BaseForm
                 Command command = new Command();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 M oldobj = CloneHelper.DeepCloneObject<M>(EditEntity);
-         
+
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
@@ -584,7 +584,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
             }
-            
+
             return ae;
         }
 
@@ -666,7 +666,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                 }
-              
+
 
                 ReturnResults<M> rmr = new ReturnResults<M>();
                 BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
@@ -842,7 +842,20 @@ namespace RUINORERP.UI.BaseForm
             frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
             if (frmMenu.ShowDialog() == DialogResult.OK)
             {
-                LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
+                if (!this.DesignMode)
+                {
+                    MenuPersonalization personalization = new MenuPersonalization();
+                    UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
+                    if (personalization != null)
+                    {
+                        decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
+                        QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
+                    }
+                    else
+                    {
+                        QueryDtoProxy = LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
+                    }
+                }
             }
         }
         /// <summary>
@@ -883,7 +896,7 @@ namespace RUINORERP.UI.BaseForm
                         //因为查询UI生成时。自动 转换成代理类如：tb_SaleOutProxy，并且时间是区间型式,将起为null即可
                         QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
 
-                        if (_UCBillQueryCondition.kryptonPanelQuery.Controls.Find(item.FieldName, true)[0] is UCAdvDateTimerPickerGroup timerPickerGroup)
+                        if (kryptonPanelQuery.Controls.Find(item.FieldName, true)[0] is UCAdvDateTimerPickerGroup timerPickerGroup)
                         {
                             timerPickerGroup.dtp1.Checked = false;
                             timerPickerGroup.dtp2.Checked = false;
@@ -1196,29 +1209,44 @@ namespace RUINORERP.UI.BaseForm
         KryptonCheckBox cbbatch = new KryptonCheckBox();
         private void BaseBillQueryMC_Load(object sender, EventArgs e)
         {
+         
             if (this.DesignMode)
             {
                 return;
             }
-            Builder();
-            this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-            if (this.CurMenuInfo == null)
+            else
             {
-                MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
-                return;
-            }
+                Builder();
+                this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
+                if (this.CurMenuInfo == null)
+                {
+                    MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
+                    return;
+                }
 
+                MenuPersonalization personalization = new MenuPersonalization();
+                UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
+                if (personalization != null)
+                {
+                    decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
+                    QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
+                }
+                else
+                {
+                    QueryDtoProxy = LoadQueryConditionToUI(4);
+                }
+
+            }
+           
             // Setup docking functionality
             ws = kryptonDockingManagerQuery.ManageWorkspace(kryptonDockableWorkspaceQuery);
-            kryptonDockingManagerQuery.ManageControl(kryptonPanelQuery, ws);
+            kryptonDockingManagerQuery.ManageControl(kryptonPanelMainBig, ws);
             kryptonDockingManagerQuery.ManageFloating(MainForm.Instance);
-
 
             //创建面板并加入
             KryptonPageCollection Kpages = new KryptonPageCollection();
             if (Kpages.Count == 0)
             {
-                Kpages.Add(QueryCondition());
                 Kpages.Add(ChildQuery());
                 Kpages.Add(MasterQuery());
                 if (this.ChildRelatedEntityType != null)
@@ -1363,6 +1391,13 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
+
+        private BaseEntity _queryDto = new BaseEntity();
+
+        public BaseEntity QueryDto { get => _queryDto; set => _queryDto = value; }
+
+      
+
         private void _UCBillMasterQuery_OnSelectDataRow(object entity)
         {
             if (entity == null)
@@ -1418,43 +1453,40 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        private UCQueryCondition _UCBillQueryCondition;
+        // private UCQueryCondition _UCBillQueryCondition;
 
         /// <summary>
         /// 构建查询条件
         /// </summary>
         /// <returns></returns>
-        private KryptonPage QueryCondition()
-        {
-            _UCBillQueryCondition = new UCQueryCondition();
-            _UCBillQueryCondition.entityType = typeof(M);
-            if (!this.DesignMode)
-            {
-                MenuPersonalization personalization = new MenuPersonalization();
-                UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-                if (personalization != null)
-                {
-                    decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                    QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
-                }
-                else
-                {
-                    QueryDtoProxy = LoadQueryConditionToUI(4);
-                }
-            }
-            //QueryDtoProxy = LoadQueryConditionToUI(4);
-            KryptonPage page = NewPage("查询条件", 1, _UCBillQueryCondition);
-            // Document pages cannot be docked or auto hidden
-            page.ClearFlags(KryptonPageFlags.DockingAllowClose);
-            page.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
-            page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
-            return page;
-        }
+        //private KryptonPage QueryCondition()
+        //{
+        //    _UCBillQueryCondition = new UCQueryCondition();
+        //    _UCBillQueryCondition.entityType = typeof(M);
+        //    if (!this.DesignMode)
+        //    {
+        //        MenuPersonalization personalization = new MenuPersonalization();
+        //        UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
+        //        if (personalization != null)
+        //        {
+        //            decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
+        //            QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
+        //        }
+        //        else
+        //        {
+        //            QueryDtoProxy = LoadQueryConditionToUI(4);
+        //        }
+        //    }
+        //    //QueryDtoProxy = LoadQueryConditionToUI(4);
+        //    KryptonPage page = NewPage("查询条件", 1, _UCBillQueryCondition);
+        //    // Document pages cannot be docked or auto hidden
+        //    page.ClearFlags(KryptonPageFlags.DockingAllowClose);
+        //    page.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
+        //    page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
+        //    return page;
+        //}
 
 
-        private BaseEntity _queryDto = new BaseEntity();
-
-        public BaseEntity QueryDto { get => _queryDto; set => _queryDto = value; }
 
         /// <summary>
         /// 生成查询条件，并返回查询条件代理实体参数
@@ -1462,7 +1494,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="useLike">true：默认不是模糊查询</param>
         internal override object LoadQueryConditionToUI(decimal QueryConditionShowColQty)
         {
-            Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = _UCBillQueryCondition.kryptonPanelQuery;
+            Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = kryptonPanelQuery;
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
             UIQueryHelper<M> uIQueryHelper = new UIQueryHelper<M>();
@@ -1471,14 +1503,12 @@ namespace RUINORERP.UI.BaseForm
             kryptonPanel条件生成容器.Visible = false;
             kryptonPanel条件生成容器.Controls.Clear();
             kryptonPanel条件生成容器.SuspendLayout();
-
-            //QueryDto = uIQueryHelper.SetQueryUI(true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
             QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;
             return QueryDto;
         }
-
+        
 
         /// <summary>
         /// 主表要统计的列

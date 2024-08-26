@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbUnit = new Krypton.Toolkit.KryptonComboBox();
             this.btnSelectedImageFiles = new Krypton.Toolkit.KryptonButton();
             this.kryptonPictureBox1 = new Krypton.Toolkit.KryptonPictureBox();
             this.txtWeight = new Krypton.Toolkit.KryptonTextBox();
@@ -54,8 +56,6 @@
             this.grid1 = new SourceGrid.Grid();
             this.txtMergeSourceTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.lblMergeSourceTotalQty = new Krypton.Toolkit.KryptonLabel();
-            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
-            this.cmbUnit = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -64,6 +64,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbUnit)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).BeginInit();
@@ -71,7 +72,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbUnit)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -114,6 +114,23 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
             this.kryptonSplitContainer1.SplitterDistance = 210;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // kryptonLabel3
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(48, 75);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel3.TabIndex = 160;
+            this.kryptonLabel3.Values.Text = "套装单位";
+            // 
+            // cmbUnit
+            // 
+            this.cmbUnit.DropDownWidth = 100;
+            this.cmbUnit.IntegralHeight = false;
+            this.cmbUnit.Location = new System.Drawing.Point(121, 73);
+            this.cmbUnit.Name = "cmbUnit";
+            this.cmbUnit.Size = new System.Drawing.Size(239, 21);
+            this.cmbUnit.TabIndex = 161;
             // 
             // btnSelectedImageFiles
             // 
@@ -343,24 +360,6 @@
             this.lblMergeSourceTotalQty.TabIndex = 149;
             this.lblMergeSourceTotalQty.Values.Text = "子件总数量";
             // 
-            // kryptonLabel3
-            // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(48, 75);
-            this.kryptonLabel3.Name = "kryptonLabel3";
-            this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel3.TabIndex = 160;
-            this.kryptonLabel3.Values.Text = "套装单位";
-            // 
-            // cmbUnit
-            // 
-            this.cmbUnit.DropDownWidth = 100;
-            this.cmbUnit.Enabled = false;
-            this.cmbUnit.IntegralHeight = false;
-            this.cmbUnit.Location = new System.Drawing.Point(121, 73);
-            this.cmbUnit.Name = "cmbUnit";
-            this.cmbUnit.Size = new System.Drawing.Size(239, 21);
-            this.cmbUnit.TabIndex = 161;
-            // 
             // UCProdBundle
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -379,6 +378,7 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbUnit)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).EndInit();
             this.kryptonSplitContainer2.Panel1.ResumeLayout(false);
@@ -387,7 +387,6 @@
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbUnit)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -100,11 +100,11 @@ namespace RUINORERP.UI.ProductEAV
             string colName2 = expr2.GetMemberInfo().Name;
             ColNameDataDictionary.TryAdd(colName1, kvlist1);
             kryptonNavigator1.SelectedPageChanged += KryptonNavigator1_SelectedPageChanged;
-            kryptonDataGridView产品.CellPainting += KryptonDataGridView产品_CellPainting;
-            kryptonDataGridView产品.CellMouseMove += KryptonDataGridView产品_CellMouseMove;
-            kryptonDataGridView产品.CustomRowNo = true;
-            kryptonDataGridView产品.ShowCellToolTips = true;
-            kryptonDataGridView产品.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+            newSumDataGridView产品.CellPainting += KryptonDataGridView产品_CellPainting;
+            newSumDataGridView产品.CellMouseMove += KryptonDataGridView产品_CellMouseMove;
+            newSumDataGridView产品.CustomRowNo = true;
+            newSumDataGridView产品.ShowCellToolTips = true;
+            newSumDataGridView产品.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             // 初始化Timer
             timer.Interval = 1000;
             timer.Tick += new EventHandler(timer_Tick);
@@ -125,7 +125,7 @@ namespace RUINORERP.UI.ProductEAV
             }
             else
             {
-                toolTip1.Hide(kryptonDataGridView产品);
+                toolTip1.Hide(newSumDataGridView产品);
             }
         }
 
@@ -142,12 +142,12 @@ namespace RUINORERP.UI.ProductEAV
                 timer.Stop();
                 timer.Start();
 
-                kryptonDataGridView产品.Rows[e.RowIndex].HeaderCell.ToolTipText = $"这是第 {e.RowIndex + 1} 行的提示信息";
-                kryptonDataGridView产品.Rows[e.RowIndex].HeaderCell.Value = "00";
+                newSumDataGridView产品.Rows[e.RowIndex].HeaderCell.ToolTipText = $"这是第 {e.RowIndex + 1} 行的提示信息";
+                newSumDataGridView产品.Rows[e.RowIndex].HeaderCell.Value = "00";
 
                 // 计算三角形的中心点坐标，整体下移7个像素
-                int x = (kryptonDataGridView产品.Rows[e.RowIndex].HeaderCell.ContentBounds.Left + kryptonDataGridView产品.Rows[e.RowIndex].HeaderCell.ContentBounds.Width / 2);
-                int y = kryptonDataGridView产品.Rows[e.RowIndex].HeaderCell.ContentBounds.Top + 7; // 顶点在上方，整体下移7个像素
+                int x = (newSumDataGridView产品.Rows[e.RowIndex].HeaderCell.ContentBounds.Left + newSumDataGridView产品.Rows[e.RowIndex].HeaderCell.ContentBounds.Width / 2);
+                int y = newSumDataGridView产品.Rows[e.RowIndex].HeaderCell.ContentBounds.Top + 7; // 顶点在上方，整体下移7个像素
 
                 string toolTipText = string.Empty;
 
@@ -155,7 +155,7 @@ namespace RUINORERP.UI.ProductEAV
                 //toolTip1.SetToolTip(kryptonDataGridView产品.Rows[e.RowIndex]., "当前产品有箱规信息，双击行头的图形可以查看！");
                 // 根据行数据设置工具提示文本
                 // 例如，获取行头对应的行数据
-                DataGridViewRow dr = kryptonDataGridView产品.Rows[e.RowIndex];
+                DataGridViewRow dr = newSumDataGridView产品.Rows[e.RowIndex];
                 tb_Packing tb_Packing = null;
                 BoxRuleBasis basis = GDIHelper.Instance.CheckForBoxSpecBasis(dr, out tb_Packing);
                 // 绘制图案
@@ -177,7 +177,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 if (!string.IsNullOrEmpty(toolTipText))
                 {
-                    toolTip1.Show(toolTipText, kryptonDataGridView产品, new Point(x, y));
+                    toolTip1.Show(toolTipText, newSumDataGridView产品, new Point(x, y));
                 }
 
                 // 如果需要，也可以根据单元格的数据来定制提示文本 kryptonDataGridView产品.Rows[e.RowIndex].Cells["YourColumnName"].Value.ToString() +
@@ -188,7 +188,7 @@ namespace RUINORERP.UI.ProductEAV
                 // 鼠标不在行头，停止计时器，隐藏工具提示
                 isMouseOverHeader = false;
                 timer.Stop();
-                toolTip1.Hide(kryptonDataGridView产品);
+                toolTip1.Hide(newSumDataGridView产品);
             }
 
         }
@@ -212,7 +212,7 @@ namespace RUINORERP.UI.ProductEAV
                     TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
                 // 检查是否需要标记的行
                 // 例如，检查行的数据是否有箱规信息
-                DataGridViewRow dr = kryptonDataGridView产品.Rows[e.RowIndex];
+                DataGridViewRow dr = newSumDataGridView产品.Rows[e.RowIndex];
                 tb_Packing tb_Packing = null;
                 BoxRuleBasis basis = GDIHelper.Instance.CheckForBoxSpecBasis(dr, out tb_Packing);
                 // 绘制图案
@@ -299,7 +299,7 @@ namespace RUINORERP.UI.ProductEAV
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
-            if (!kryptonDataGridView产品.Columns[e.ColumnIndex].Visible)
+            if (!newSumDataGridView产品.Columns[e.ColumnIndex].Visible)
             {
                 return;
             }
@@ -309,7 +309,7 @@ namespace RUINORERP.UI.ProductEAV
                 return;
             }
             //固定字典值显示
-            string colDbName = kryptonDataGridView产品.Columns[e.ColumnIndex].Name;
+            string colDbName = newSumDataGridView产品.Columns[e.ColumnIndex].Name;
             if (ColNameDataDictionary.ContainsKey(colDbName))
             {
                 List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
@@ -337,7 +337,7 @@ namespace RUINORERP.UI.ProductEAV
             }
 
             //图片特殊处理
-            if (kryptonDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
+            if (newSumDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
             {
                 if (e.Value != null)
                 {
@@ -386,11 +386,11 @@ namespace RUINORERP.UI.ProductEAV
             }
 
             //图片特殊处理
-            if (kryptonDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
+            if (newSumDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
             {
-                if (kryptonDataGridView产品.CurrentCell.Value != null)
+                if (newSumDataGridView产品.CurrentCell.Value != null)
                 {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])kryptonDataGridView产品.CurrentCell.Value);
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])newSumDataGridView产品.CurrentCell.Value);
                     Image image = Image.FromStream(buf, true);
                     if (image != null)
                     {
@@ -450,22 +450,22 @@ namespace RUINORERP.UI.ProductEAV
             // freColumnName
             // freColumnName. = cds.Keys.ToArray();
 
-            kryptonDataGridView产品.DataSource = null;
+            newSumDataGridView产品.DataSource = null;
 
-            kryptonDataGridView产品.ColumnCount = freColumnName.Length + 1;
-            kryptonDataGridView产品.RowHeadersVisible = false;
+            newSumDataGridView产品.ColumnCount = freColumnName.Length + 1;
+            newSumDataGridView产品.RowHeadersVisible = false;
             for (int i = 0; i < freColumnName.Length; i++)
             {
-                kryptonDataGridView产品.Columns[i].Name = freColumnName[i];
-                kryptonDataGridView产品.Columns[i].DataPropertyName = freColumnName[i];
-                kryptonDataGridView产品.Columns[i].HeaderText = freColumnName[i]; //显示名称
+                newSumDataGridView产品.Columns[i].Name = freColumnName[i];
+                newSumDataGridView产品.Columns[i].DataPropertyName = freColumnName[i];
+                newSumDataGridView产品.Columns[i].HeaderText = freColumnName[i]; //显示名称
             }
-            kryptonDataGridView产品.Columns[freColumnName.Length - 1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            kryptonDataGridView产品.Dock = DockStyle.Fill;
+            newSumDataGridView产品.Columns[freColumnName.Length - 1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            newSumDataGridView产品.Dock = DockStyle.Fill;
             // panel2.Controls.Add(dataGridView);
-            kryptonDataGridView产品.Rows?.Clear();
-            kryptonDataGridView产品.DataSource = bings;
-            kryptonDataGridView产品.ColumnHeadersVisible = true;
+            newSumDataGridView产品.Rows?.Clear();
+            newSumDataGridView产品.DataSource = bings;
+            newSumDataGridView产品.ColumnHeadersVisible = true;
             //kryptonDataGridView1.DataSource = prodCtrol.Query(sb.ToString());
             //  kryptonDataGridView1.ColumnDisplayControl(UIHelper.GetFieldNameList<View_ProdDetail>());
 
@@ -478,18 +478,23 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         internal void InitListData()
         {
-            kryptonDataGridView产品.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            newSumDataGridView产品.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             FieldNameList1 = UIHelper.GetFieldNameColList(typeof(View_ProdDetail));
-            kryptonDataGridView产品.XmlFileName = "QueryFormGeneric_" + typeof(View_ProdDetail).Name;
-            kryptonDataGridView产品.FieldNameList = FieldNameList1;
-            kryptonDataGridView产品.DataSource = null;
+            newSumDataGridView产品.XmlFileName = "QueryFormGeneric_" + typeof(View_ProdDetail).Name;
+            newSumDataGridView产品.FieldNameList = FieldNameList1;
+            newSumDataGridView产品.DataSource = null;
             bindingSourceProdDetail.DataSource = new List<View_ProdDetail>();
-            kryptonDataGridView产品.DataSource = bindingSourceProdDetail;
-            //if (MultipleChoices)
-            //{
-            //    kryptonDataGridView1.ColumnDisplayControl(cds, true);
-            //    kryptonDataGridView1.Columns["Selected"].HeaderCell.ContextMenuStrip = SetContextMenuStripForSelect();
-            //}
+            newSumDataGridView产品.DataSource = bindingSourceProdDetail;
+
+
+            newSumDataGridView产品组合.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            FieldNameList1 = UIHelper.GetFieldNameColList(typeof(tb_ProdBundle));
+            newSumDataGridView产品组合.XmlFileName = "QueryFormGenericGroup_" + typeof(tb_ProdBundle).Name;
+            newSumDataGridView产品组合.FieldNameList = FieldNameList1;
+            newSumDataGridView产品组合.DataSource = null;
+            bindingSourceGroup.DataSource = new List<tb_ProdBundle>();
+            newSumDataGridView产品组合.DataSource = bindingSourceGroup;
+
         }
 
         private Expression<Func<View_ProdDetail, bool>> GetQueryExp()
@@ -521,6 +526,10 @@ namespace RUINORERP.UI.ProductEAV
            .AndIF(cmbStockJudgement.SelectedItem != null && cmbStockJudgement.SelectedItem.ToString() == "小于零", w => w.Quantity.HasValue && w.Quantity.Value < 0)
            .AndIF(UseType == ProdQueryUseType.盘点导入 && dtp1.Checked && dtp1.Value != null, w => w.LastInventoryDate.Value >= dtp1.Value)
            .AndIF(UseType == ProdQueryUseType.盘点导入 && dtp1.Checked && dtp2.Value != null, w => w.LastInventoryDate.Value <= dtp2.Value)
+           .And(w => w.产品启用.Value == chkProd_enabled.Checked)
+           .And(w => w.产品可用.Value == chkProd_available.Checked)
+           .And(w => w.SKU启用.Value == chksku_enabled.Checked)
+           .And(w => w.SKU可用.Value == chksku_available.Checked)
            .ToExpression();
             return exp;
         }
@@ -533,7 +542,6 @@ namespace RUINORERP.UI.ProductEAV
             View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
             int maxrow = int.Parse(txtMaxRows.Value.ToString());
             var list = dc.BaseQueryByWhereTop(GetQueryExp(), maxrow);
-
             bindingSourceProdDetail.DataSource = list.ToBindingSortCollection();
         }
 
@@ -639,6 +647,8 @@ namespace RUINORERP.UI.ProductEAV
             tb_ProdBundleController<tb_ProdBundle> dc = Startup.GetFromFac<tb_ProdBundleController<tb_ProdBundle>>();
             int maxrow = int.Parse(txtMaxRows.Value.ToString());
             Expression<Func<tb_ProdBundle, bool>> exp = Expressionable.Create<tb_ProdBundle>() //创建表达式
+            .And(w => w.Is_enabled == chkProdBundle_enabled.Checked)
+           .And(w => w.Is_available == chkProdBundle_available.Checked)
            .AndIF(txt组合名称.Text.Trim().Length > 0, w => w.BundleName.Contains(txt组合名称.Text.Trim()))
             .ToExpression();
             var list = dc.BaseQueryByWhereTop(exp, maxrow);
@@ -673,7 +683,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void QueryForm_全不选(object sender, EventArgs e)
         {
-            foreach (DataGridViewRow dr in kryptonDataGridView产品.Rows)
+            foreach (DataGridViewRow dr in newSumDataGridView产品.Rows)
             {
                 dr.Cells["Selected"].Value = false;
                 dr.Cells["Selected"].Selected = false;
@@ -684,7 +694,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void QueryForm_全选(object sender, EventArgs e)
         {
-            foreach (DataGridViewRow dr in kryptonDataGridView产品.Rows)
+            foreach (DataGridViewRow dr in newSumDataGridView产品.Rows)
             {
                 dr.Cells["Selected"].Value = true;
                 dr.Cells["Selected"].Selected = true;
@@ -743,10 +753,23 @@ namespace RUINORERP.UI.ProductEAV
                 kryptonLabel10.Visible = false;
             }
 
+            chksku_available.Checked = true;
+            chksku_enabled.Checked = true;
+            chkProd_available.Checked = true;
+            chkProd_enabled.Checked = true;
+
+
+            chkProdBundle_available.Checked = true;
+            chkProdBundle_enabled.Checked = true;
+
             kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.Hide;
             chkMultiSelect.Checked = MultipleChoices;
-            kryptonDataGridView产品.MultiSelect = MultipleChoices;
-            kryptonDataGridView产品.UseSelectedColumn = MultipleChoices;
+            newSumDataGridView产品.MultiSelect = MultipleChoices;
+            newSumDataGridView产品.UseSelectedColumn = MultipleChoices;
+
+            newSumDataGridView产品组合.MultiSelect = MultipleChoices;
+            newSumDataGridView产品组合.UseSelectedColumn = MultipleChoices;
+
             List<tb_ProdCategories> list = new List<tb_ProdCategories>(0);
             tb_ProdCategoriesController<tb_ProdCategories> mca = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
             list = await mca.QueryAsync();
@@ -793,8 +816,10 @@ namespace RUINORERP.UI.ProductEAV
                 kryptonPanelGroup.Visible = false;
                 kryptonPanelProd.Visible = true;
                 kryptonPanelProd.Dock = DockStyle.Fill;
-                kryptonDataGridView产品.ContextMenuStrip = contextMenuStrip1;
-                kryptonTreeGridView产品组合.ContextMenuStrip = null;
+                //kryptonDataGridView产品.ContextMenuStrip = contextMenuStrip1;
+                newSumDataGridView产品.Use是否使用内置右键功能 = true;
+                newSumDataGridView产品.SetContextMenu(contextMenuStrip1);
+                newSumDataGridView产品组合.ContextMenuStrip = null;
 
             }
             if (kryptonNavigator1.SelectedPage == kryptonPage产品组合)
@@ -802,8 +827,8 @@ namespace RUINORERP.UI.ProductEAV
                 kryptonPanelGroup.Visible = true;
                 kryptonPanelProd.Visible = false;
                 kryptonPanelGroup.Dock = DockStyle.Fill;
-                kryptonDataGridView产品.ContextMenuStrip = null;
-                kryptonTreeGridView产品组合.ContextMenuStrip = contextMenuStrip1;
+                newSumDataGridView产品.ContextMenuStrip = null;
+                newSumDataGridView产品组合.ContextMenuStrip = contextMenuStrip1;
             }
 
             if (kryptonNavigator1.SelectedPage != null)
@@ -833,7 +858,7 @@ namespace RUINORERP.UI.ProductEAV
             View_ProdDetail entity = QueryObject as View_ProdDetail;
             if (entity == null)
             {
- 
+
                 return;
             }
 
@@ -873,7 +898,7 @@ namespace RUINORERP.UI.ProductEAV
             if (e.ColumnIndex < 0 && e.RowIndex >= 0)
             {
                 // 例如，检查行的数据是否有箱规信息
-                DataGridViewRow dr = kryptonDataGridView产品.Rows[e.RowIndex];
+                DataGridViewRow dr = newSumDataGridView产品.Rows[e.RowIndex];
 
                 tb_Packing tb_Packing = null;
                 BoxRuleBasis basis = GDIHelper.Instance.CheckForBoxSpecBasis(dr, out tb_Packing);
@@ -890,7 +915,7 @@ namespace RUINORERP.UI.ProductEAV
                     //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
                     menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, tb_Packing);
                     //隐藏提示信息
-                    toolTip1.Hide(kryptonDataGridView产品);
+                    toolTip1.Hide(newSumDataGridView产品);
                 }
             }
 
@@ -898,11 +923,10 @@ namespace RUINORERP.UI.ProductEAV
             {
                 return;
             }
-            if (kryptonDataGridView产品.CurrentRow != null && !chkMultiSelect.Checked)
+            if (newSumDataGridView产品.CurrentRow != null && !chkMultiSelect.Checked)
             {
                 GetQueryResults();
             }
-
         }
 
 
@@ -914,13 +938,12 @@ namespace RUINORERP.UI.ProductEAV
         private void GetQueryResults()
         {
             QueryObjects.Clear();
-            kryptonDataGridView产品.EndEdit();
-            if (kryptonDataGridView产品.SelectedRows != null)
+            newSumDataGridView产品.EndEdit();
+            if (newSumDataGridView产品.SelectedRows != null)
             {
-
                 if (MultipleChoices)
                 {
-                    foreach (DataGridViewRow dr in kryptonDataGridView产品.Rows)
+                    foreach (DataGridViewRow dr in newSumDataGridView产品.Rows)
                     {
                         if (!(dr.DataBoundItem is View_ProdDetail))
                         {
@@ -935,7 +958,7 @@ namespace RUINORERP.UI.ProductEAV
                 else
                 {
                     #region
-                    foreach (DataGridViewRow dr in kryptonDataGridView产品.SelectedRows)
+                    foreach (DataGridViewRow dr in newSumDataGridView产品.SelectedRows)
                     {
                         if (!(dr.DataBoundItem is View_ProdDetail))
                         {
@@ -980,6 +1003,134 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
+        /// <summary>
+        /// 多选
+        /// </summary>
+        private void GetQueryGroupResults()
+        {
+            QueryObjects.Clear();
+            newSumDataGridView产品组合.EndEdit();
+            if (newSumDataGridView产品组合.SelectedRows != null)
+            {
+                if (MultipleChoices)
+                {
+                    foreach (DataGridViewRow dr in newSumDataGridView产品组合.Rows)
+                    {
+                        if (!(dr.DataBoundItem is tb_ProdBundle))
+                        {
+                            MessageBox.Show("TODO:请调试这里");
+                        }
+                        if (MultipleChoices && (bool)dr.Cells["Selected"].Value)
+                        {
+                            tb_ProdBundle bundle = (tb_ProdBundle)dr.DataBoundItem as tb_ProdBundle;
+                            View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
+
+                            List<View_ProdDetail> details = new List<View_ProdDetail>();
+                            // Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+                            // .And(c => c.ProdDetailID == bundle.ProdDetailID)
+                            //.ToExpression();
+                            // int maxrow = int.Parse(txtMaxRows.Value.ToString());
+                            // var list = dc.BaseQueryByWhereTop(GetQueryExp(), maxrow);
+
+
+
+                            var _detail_ids = bundle.tb_ProdBundleDetails.Select(x => new { x.ProdDetailID }).ToList();
+                            List<long> longids = new List<long>();
+                            foreach (var item in _detail_ids)
+                            {
+                                if (!longids.Contains(item.ProdDetailID))
+                                {
+                                    longids.Add(item.ProdDetailID);
+                                }
+                            }
+
+                            details = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_ProdDetail>()
+                            .Where(m => longids.ToArray().Contains(m.ProdDetailID)).ToList();
+
+                            foreach (var item in details)
+                            {
+                                QueryObjects.Add((View_ProdDetail)item);
+                            }
+
+                        }
+                    }
+                }
+                else
+                {
+                    #region
+                    foreach (DataGridViewRow dr in newSumDataGridView产品组合.SelectedRows)
+                    {
+                        if (!(dr.DataBoundItem is tb_ProdBundle))
+                        {
+                            MessageBox.Show("TODO:请调试这里");
+                        }
+                        tb_ProdBundle bundle = (tb_ProdBundle)dr.DataBoundItem as tb_ProdBundle;
+                        View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
+
+                        List<View_ProdDetail> details = new List<View_ProdDetail>();
+                        // Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+                        // .And(c => c.ProdDetailID == bundle.ProdDetailID)
+                        //.ToExpression();
+                        // int maxrow = int.Parse(txtMaxRows.Value.ToString());
+                        // var list = dc.BaseQueryByWhereTop(GetQueryExp(), maxrow);
+
+
+
+                        var _detail_ids = bundle.tb_ProdBundleDetails.Select(x => new { x.ProdDetailID }).ToList();
+                        List<long> longids = new List<long>();
+                        foreach (var item in _detail_ids)
+                        {
+                            if (!longids.Contains(item.ProdDetailID))
+                            {
+                                longids.Add(item.ProdDetailID);
+                            }
+                        }
+
+                        details = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_ProdDetail>()
+                        .Where(m => longids.ToArray().Contains(m.ProdDetailID)).ToList();
+
+                        foreach (var item in details)
+                        {
+                            QueryObjects.Add((View_ProdDetail)item);
+                        }
+
+                    }
+                    #endregion
+                }
+
+
+                if (QueryObjects.Count > 0)
+                {
+                    if (!string.IsNullOrEmpty(QueryField))
+                    {
+                        QueryValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(QueryObjects[0], QueryField).ToString();
+                    }
+                }
+
+                //退出
+                Form frm = (this as Control).Parent.Parent as Form;
+                if (frm == null)
+                {
+                    return;
+                }
+                frm.DialogResult = DialogResult.OK;
+                frm.Close();
+                return;
+            }
+            else
+            {
+                //退出
+                Form frm = (this as Control).Parent.Parent as Form;
+                if (frm == null)
+                {
+                    return;
+                }
+                frm.DialogResult = DialogResult.OK;
+                frm.Close();
+                return;
+            }
+
+        }
 
         /// <summary>
         /// 多选
@@ -1073,6 +1224,7 @@ namespace RUINORERP.UI.ProductEAV
                         GetQueryResults();
                         break;
                     case "kryptonPage产品组合":
+                        GetQueryGroupResults();
                         break;
                     case "kryptonBOM":
                         GetQueryBOMResults();
@@ -1096,7 +1248,7 @@ namespace RUINORERP.UI.ProductEAV
         private void chkMultiSelect_CheckedChanged(object sender, EventArgs e)
         {
             MultipleChoices = chkMultiSelect.Checked;
-            kryptonDataGridView产品.UseSelectedColumn = MultipleChoices;
+            newSumDataGridView产品.UseSelectedColumn = MultipleChoices;
         }
 
         private void treeListView1_BeforeExpand(object sender, TreeListViewCancelEventArgs e)
@@ -1190,7 +1342,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             //暂时的思路 是用 纵向库存跟踪的存储过程，查出来后再将进出明细和最后结余分别总计对比。不同的就有问题。
-            if (kryptonDataGridView产品.CurrentRow != null)
+            if (newSumDataGridView产品.CurrentRow != null)
             {
                 tb_MenuInfo RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_Packing).Name && m.ClassPath.Contains("RUINORERP.UI.ProductEAV.UCPacking")).FirstOrDefault();
                 if (RelatedBillMenuInfo == null)
@@ -1200,13 +1352,13 @@ namespace RUINORERP.UI.ProductEAV
                 tb_Packing packing = new tb_Packing();
                 packing.Is_enabled = true;
 
-                if (kryptonDataGridView产品.CurrentRow.DataBoundItem is View_ProdDetail)
+                if (newSumDataGridView产品.CurrentRow.DataBoundItem is View_ProdDetail)
                 {
-                    var prodDetail = kryptonDataGridView产品.CurrentRow.DataBoundItem as View_ProdDetail;
+                    var prodDetail = newSumDataGridView产品.CurrentRow.DataBoundItem as View_ProdDetail;
                     if (boxReuleBasis == BoxRuleBasis.Product)
                     {
                         //如果是已经有包装信息，则提示后进入编辑模式，如果是确定要添加多个包装信息。请在包装信息管理中添加
-                        if (prodDetail.tb_prod.tb_Packings.Count > 0  )
+                        if (prodDetail.tb_prod.tb_Packings.Count > 0)
                         {
                             DialogResult dialogResult = MessageBox.Show("当前产品有包装信息\r\n如果要编辑请选择【是】，如果要添加请选择【否】", "提示", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
                             if (dialogResult == DialogResult.Yes)
@@ -1255,10 +1407,10 @@ namespace RUINORERP.UI.ProductEAV
 
                 if (boxReuleBasis == BoxRuleBasis.Combination)
                 {
-                    if (kryptonDataGridView产品.CurrentRow.DataBoundItem is tb_ProdBundle)
+                    if (newSumDataGridView产品.CurrentRow.DataBoundItem is tb_ProdBundle)
                     {
-                        var prodBundle = kryptonDataGridView产品.CurrentRow.DataBoundItem as tb_ProdBundle;
-                        if (prodBundle.tb_Packings.Count > 0 )
+                        var prodBundle = newSumDataGridView产品.CurrentRow.DataBoundItem as tb_ProdBundle;
+                        if (prodBundle.tb_Packings.Count > 0)
                         {
                             DialogResult dialogResult = MessageBox.Show("当前产品组合有包装信息\r\n 如果要编辑请选择【是】，如果要添加请选择【否】", "提示", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
                             if (dialogResult == DialogResult.Yes)
@@ -1274,7 +1426,7 @@ namespace RUINORERP.UI.ProductEAV
                                 return;
                             }
                         }
-                         
+
                         packing.PackagingName = $"{prodBundle.BundleName}组合的包装情况";
                         packing.BundleID = prodBundle.BundleID;
 
@@ -1313,6 +1465,129 @@ namespace RUINORERP.UI.ProductEAV
                        }
                 */
             }
+        }
+
+        private void newSumDataGridView产品组合_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+            //如果双击的是行头，则是否要弹出箱规信息呢？
+            // 检查是否是行头
+            if (e.ColumnIndex < 0 && e.RowIndex >= 0)
+            {
+                // 例如，检查行的数据是否有箱规信息
+                DataGridViewRow dr = newSumDataGridView产品组合.Rows[e.RowIndex];
+
+                tb_Packing tb_Packing = null;
+                BoxRuleBasis basis = GDIHelper.Instance.CheckForBoxSpecBasis(dr, out tb_Packing);
+
+                MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                // 例如，检查行的数据是否有包装信息
+                tb_MenuInfo RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_Packing).Name && m.ClassPath.Contains("RUINORERP.UI.ProductEAV.UCPacking")).FirstOrDefault();
+                if (RelatedBillMenuInfo == null)
+                {
+                    MessageBox.Show("请确认您拥有包装信息编辑权限");
+                }
+                if (RelatedBillMenuInfo != null && basis != BoxRuleBasis.None)
+                {
+                    //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
+                    menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, tb_Packing);
+                    //隐藏提示信息
+                    toolTip1.Hide(newSumDataGridView产品组合);
+                }
+            }
+
+            if (this.Parent.Name != "kryptonPanelQuery")
+            {
+                return;
+            }
+            if (newSumDataGridView产品组合.CurrentRow != null && !chkMultiSelect.Checked)
+            {
+                GetQueryGroupResults();
+            }
+
+        }
+
+        private void newSumDataGridView产品组合_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex == -1)
+            {
+                return;
+            }
+
+            //图片特殊处理
+            if (newSumDataGridView产品组合.Columns[e.ColumnIndex].Name == "BundleImage")
+            {
+                if (newSumDataGridView产品组合.CurrentCell.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])newSumDataGridView产品组合.CurrentCell.Value);
+                    Image image = Image.FromStream(buf, true);
+                    if (image != null)
+                    {
+                        frmShowImage frmShow = new frmShowImage();
+                        frmShow.kryptonPictureBox1.Image = image;
+                        frmShow.ShowDialog();
+                    }
+                }
+            }
+        }
+
+        private void newSumDataGridView产品组合_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
+            if (!newSumDataGridView产品组合.Columns[e.ColumnIndex].Visible)
+            {
+                return;
+            }
+            if (e.Value == null)
+            {
+                e.Value = "";
+                return;
+            }
+            //固定字典值显示
+            string colDbName = newSumDataGridView产品组合.Columns[e.ColumnIndex].Name;
+            if (ColNameDataDictionary.ContainsKey(colDbName))
+            {
+                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
+                //意思是通过列名找，再通过值找到对应的文本
+                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
+                if (kvlist != null)
+                {
+                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
+                    if (kv.Value != null)
+                    {
+                        e.Value = kv.Value;
+                        return;
+                    }
+
+                }
+            }
+
+
+
+            //动态字典值显示
+            string colName = UIHelper.ShowGridColumnsNameValue<tb_Prod>(colDbName, e.Value);
+            if (!string.IsNullOrEmpty(colName))
+            {
+                e.Value = colName;
+            }
+
+            //图片特殊处理
+            if (newSumDataGridView产品组合.Columns[e.ColumnIndex].Name == "BundleImage")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    if (image != null)
+                    {
+                        //缩略图 这里用缓存 ?
+                        Image thumbnailthumbnail = this.thumbnail(image, 100, 100);
+                        e.Value = thumbnailthumbnail;
+                    }
+
+                }
+            }
+
         }
     }
 }

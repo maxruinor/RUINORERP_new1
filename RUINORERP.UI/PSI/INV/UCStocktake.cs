@@ -122,7 +122,7 @@ namespace RUINORERP.UI.PSI.INV
         {
             if (entity == null)
             {
- 
+
                 return;
             }
 
@@ -345,7 +345,11 @@ namespace RUINORERP.UI.PSI.INV
             //  listCols.SetCol_Formula<tb_StocktakeDetail>((a, b, c) => (a.CarryinglQty * b.CarryinglQty * c.CarryinglQty), F => F.CarryinglQty);
             listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CheckQty);
             listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CarryinglQty);
+            listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.DiffQty);
 
+            listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.DiffSubtotalAmount);
+            listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CheckSubtotalAmount);
+            listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CarryingSubtotalAmount);
 
             // DoSomething((x, y) => rowObj.CheckQty - rowObj.CarryinglQty);
 

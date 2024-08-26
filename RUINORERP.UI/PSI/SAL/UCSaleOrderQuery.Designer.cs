@@ -28,14 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).BeginInit();
-            this.kryptonPanelQuery.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).BeginInit();
+            this.kryptonPanelMainBig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanelQuery
             // 
-            this.kryptonPanelQuery.Size = new System.Drawing.Size(1083, 800);
+            this.kryptonPanelMainBig.Size = new System.Drawing.Size(1083, 800);
             // 
             // kryptonDockableWorkspaceQuery
             // 
@@ -56,8 +56,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "UCSaleOrderQuery";
             this.Size = new System.Drawing.Size(1083, 825);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).EndInit();
-            this.kryptonPanelQuery.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).EndInit();
+            this.kryptonPanelMainBig.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

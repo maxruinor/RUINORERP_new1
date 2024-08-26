@@ -495,39 +495,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool? _Is_available;
 
-
-        /// <summary>
-        /// 是否可用
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Is_available", ColDesc = "是否可用")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Is_available", IsNullable = true, ColumnDescription = "是否可用")]
-        [Display(Name = "是否可用")]
-        public bool? Is_available
-        {
-            get { return _Is_available; }            set
-            {                SetProperty(ref _Is_available, value);
-            }
-        }
-
-        private bool? _Is_enabled;
-
-
-        /// <summary>
-        /// 是否启用
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Is_enabled", ColDesc = "是否启用")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Is_enabled", IsNullable = true, ColumnDescription = "是否启用")]
-        [Display(Name = "是否启用")]
-        public bool? Is_enabled
-        {
-            get { return _Is_enabled; }            set
-            {                SetProperty(ref _Is_enabled, value);
-            }
-        }
 
         private string _Notes;
 
@@ -753,6 +721,108 @@ namespace RUINORERP.Model
         }
 
 
+        private bool? _Is_available;
+
+
+        /// <summary>
+        /// 是否可用
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "Is_available", ColDesc = "是否可用")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Is_available", IsNullable = true, ColumnDescription = "是否可用")]
+        [Display(Name = "是否可用")]
+        public bool? Is_available
+        {
+            get { return _Is_available; }            set
+            {                SetProperty(ref _Is_available, value);
+            }
+        }
+
+        private bool? _Is_enabled;
+
+
+        /// <summary>
+        /// 是否启用
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "Is_enabled", ColDesc = "是否启用")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Is_enabled", IsNullable = true, ColumnDescription = "是否启用")]
+        [Display(Name = "是否启用")]
+        public bool? Is_enabled
+        {
+            get { return _Is_enabled; }            set
+            {                SetProperty(ref _Is_enabled, value);
+            }
+        }
+
+
+        private bool? _产品可用;
+
+
+        /// <summary>
+        /// 产品可用
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "Is_available", ColDesc = "产品可用")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "产品可用", IsNullable = true, ColumnDescription = "产品可用")]
+        [Display(Name = "产品可用")]
+        public bool? 产品可用
+        {
+            get { return _产品可用; }            set
+            {                SetProperty(ref _产品可用, value);
+            }
+        }
+
+        private bool? _产品启用;
+
+
+        /// <summary>
+        /// 产品启用
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "产品启用", ColDesc = "产品启用")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "产品启用", IsNullable = true, ColumnDescription = "产品启用")]
+        [Display(Name = "产品启用")]
+        public bool? 产品启用
+        {
+            get { return _产品启用; }            set
+            {                SetProperty(ref _产品启用, value);
+            }
+        }
+
+        private bool? _SKU可用;
+
+
+        /// <summary>
+        /// 产品可用
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "Is_available", ColDesc = "SKU可用")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "SKU可用", IsNullable = true, ColumnDescription = "SKU可用")]
+        [Display(Name = "SKU可用")]
+        public bool? SKU可用
+        {
+            get { return _SKU可用; }            set
+            {                SetProperty(ref _SKU可用, value);
+            }
+        }
+
+        private bool? _SKU启用;
+
+
+        /// <summary>
+        /// 产品启用
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "SKU启用", ColDesc = "SKU启用")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "SKU启用", IsNullable = true, ColumnDescription = "SKU启用")]
+        [Display(Name = "SKU启用")]
+        public bool? SKU启用
+        {
+            get { return _SKU启用; }            set
+            {                SetProperty(ref _SKU启用, value);
+            }
+        }
 
         #region 扩展属性
 

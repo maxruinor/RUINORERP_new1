@@ -1611,7 +1611,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-
+        /*
         /// <summary>
         /// esc退出窗体
         /// </summary>
@@ -1657,6 +1657,7 @@ namespace RUINORERP.UI.BaseForm
             return base.ProcessCmdKey(ref msg, keyData);
 
         }
+     */
         private void CloseTheForm(object thisform)
         {
             KryptonWorkspaceCell cell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
@@ -1694,7 +1695,7 @@ namespace RUINORERP.UI.BaseForm
                }
            }
            */
-        }
+    }    
         protected virtual void Exit(object thisform)
         {
             if (!Edited)
@@ -1711,7 +1712,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
-
+   
 
         protected virtual void Refreshs()
         {

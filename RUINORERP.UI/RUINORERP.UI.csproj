@@ -556,12 +556,6 @@
     <Compile Include="BaseForm\BaseListWithTree.Designer.cs">
       <DependentUpon>BaseListWithTree.cs</DependentUpon>
     </Compile>
-    <Compile Include="BaseForm\BaseMasterQueryWithCondition.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="BaseForm\BaseMasterQueryWithCondition.Designer.cs">
-      <DependentUpon>BaseMasterQueryWithCondition.cs</DependentUpon>
-    </Compile>
     <Compile Include="BaseForm\BaseNavigator.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2069,9 +2063,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\BaseListWithTree.resx">
       <DependentUpon>BaseListWithTree.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="BaseForm\BaseMasterQueryWithCondition.resx">
-      <DependentUpon>BaseMasterQueryWithCondition.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BaseForm\BaseNavigator.resx">
       <DependentUpon>BaseNavigator.cs</DependentUpon>

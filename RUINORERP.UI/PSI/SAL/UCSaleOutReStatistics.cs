@@ -23,7 +23,7 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售退回统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.销售退回统计)]
-    public partial class UCSaleOutReStatistics : BaseMasterQueryWithCondition<View_SaleOutReItems>
+    public partial class UCSaleOutReStatistics : BaseNavigatorGeneric<View_SaleOutReItems, View_SaleOutReItems>
     {
         public UCSaleOutReStatistics()
         {
@@ -38,21 +38,21 @@ namespace RUINORERP.UI.PSI.SAL
         private void UCSaleOutStatistics_Load(object sender, EventArgs e)
         {
             //这个应该是一个组 多个表
-            // base._UCBillMasterQuery.ColDisplayType = typeof(tb_Prod);
-            base._UCBillMasterQuery.ColDisplayTypes = new List<Type>();
+            // base._UCMasterQuery.ColDisplayType = typeof(tb_Prod);
+            base._UCMasterQuery.ColDisplayTypes = new List<Type>();
 
             //不能在上面的构造函数里面初始化
-            base._UCBillMasterQuery.GridRelated.SetRelatedInfo<View_SaleOutReItems, tb_SaleOut>(c => c.SaleOut_NO, r => r.SaleOutNo);
-            base._UCBillMasterQuery.GridRelated.SetRelatedInfo<View_SaleOutReItems, tb_SaleOutRe>(c => c.ReturnNo, r => r.ReturnNo);
+            base._UCMasterQuery.GridRelated.SetRelatedInfo<View_SaleOutReItems, tb_SaleOut>(c => c.SaleOut_NO, r => r.SaleOutNo);
+            base._UCMasterQuery.GridRelated.SetRelatedInfo<View_SaleOutReItems, tb_SaleOutRe>(c => c.ReturnNo, r => r.ReturnNo);
             //是否能通过一两个主表，通过 外键去找多级关联的表？
-            base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail));
-            base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
-            base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOutRe));
-            base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOutReDetail));
-            base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_Unit));
-            base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_ProdCategories));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOutRe));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOutReDetail));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Unit));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProdCategories));
 
-            base._UCBillOutlookGridAnalysis.ColDisplayTypes = base._UCBillMasterQuery.ColDisplayTypes;
+            base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
         }
 
         public override void BuildColNameDataDictionary()
@@ -81,7 +81,7 @@ namespace RUINORERP.UI.PSI.SAL
         public override void BuildQueryCondition()
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_SaleOutReItems).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
+            QueryFilter = baseProcessor.GetQueryFilter();
 
         }
 

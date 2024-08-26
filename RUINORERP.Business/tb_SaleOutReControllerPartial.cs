@@ -346,8 +346,12 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AntiAdjustingAsync(tb_SaleOutRe entity)
+        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
         {
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            tb_SaleOutRe entity = ObjectEntity as tb_SaleOutRe;
+
+
             ReturnResults<bool> rrs = new ReturnResults<bool>();
             try
             {

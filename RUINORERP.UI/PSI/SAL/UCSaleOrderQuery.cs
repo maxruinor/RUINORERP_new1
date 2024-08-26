@@ -399,9 +399,8 @@ namespace RUINORERP.UI.PSI.SAL
                 };
 
                 tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                List<tb_SaleOrder> list = new List<tb_SaleOrder>();
-                list.Add(EditEntity);
-                ReturnResults<bool> rr = await ctr.AntiApprovalAsync(list);
+      
+                ReturnResults<bool> rr = await ctr.AntiApprovalAsync(EditEntity);
                 if (rr.Succeeded)
                 {
                     //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))

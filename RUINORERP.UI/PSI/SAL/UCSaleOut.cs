@@ -74,7 +74,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             if (entity == null)
             {
-                MainForm.Instance.uclog.AddLog("实体不能为空", UILogType.警告);
+ 
                 return;
             }
 
@@ -618,6 +618,7 @@ namespace RUINORERP.UI.PSI.SAL
             return ae;
         }
 
+        /*
         /// <summary>
         /// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理
         /// </summary>
@@ -678,7 +679,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
         }
-
+        */
 
 
         string saleorderid = string.Empty;

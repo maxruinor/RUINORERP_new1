@@ -49,21 +49,15 @@ namespace RUINORERP.Model
         }
 
 
-        /// <summary>
-        /// 审批状态
-        /// </summary>
-        public int ApprovalStatus
-        {
-            // get { return (int)RUINORERP.Global.ApprovalStatus.已审核; }
-            get; set;
-        }
+        private int _ApprovalStatus = (int)RUINORERP.Global.ApprovalStatus.未审核;
 
-        /// <summary>
-        /// 审批结果
-        /// </summary>
-        //public ApprovalResults ApprovalResults { get; set; }
+        public int ApprovalStatus { get => _ApprovalStatus; set => _ApprovalStatus = value; }
 
-        public bool ApprovalResults { get; set; }
+ 
+
+        private bool _ApprovalResults = false;
+
+        public bool ApprovalResults { get => _ApprovalResults; set => _ApprovalResults = value; }
 
 
         public override string ToString()

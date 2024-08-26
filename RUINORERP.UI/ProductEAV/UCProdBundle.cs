@@ -82,7 +82,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             if (entity == null)
             {
-                MainForm.Instance.uclog.AddLog("实体不能为空", UILogType.警告);
+ 
                 return;
             }
             EditEntity = entity;
@@ -379,7 +379,7 @@ namespace RUINORERP.UI.ProductEAV
             return ae;
         }
 
-
+        /*
         protected async override void ReReview()
         {
             if (EditEntity == null)
@@ -447,7 +447,7 @@ namespace RUINORERP.UI.ProductEAV
 
 
         }
-
+        */
 
         List<tb_ProdBundleDetail> details = new List<tb_ProdBundleDetail>();
         protected async override void Save()

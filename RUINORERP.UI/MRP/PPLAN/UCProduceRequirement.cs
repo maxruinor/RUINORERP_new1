@@ -97,7 +97,6 @@ namespace RUINORERP.UI.MRP.MP
             tb_ProductionDemand entity = entityPara as tb_ProductionDemand;
             if (entity == null)
             {
-                MainForm.Instance.uclog.AddLog("实体不能为空", UILogType.警告);
                 return;
             }
 
@@ -744,7 +743,7 @@ namespace RUINORERP.UI.MRP.MP
 
         private void SghPur_OnCalculateColumnValue(object rowObj, SourceGridDefine griddefine, SourceGrid.Position Position)
         {
-            if (rowObj==null)
+            if (rowObj == null)
             {
                 return;
             }
@@ -1053,6 +1052,8 @@ namespace RUINORERP.UI.MRP.MP
                 }
             }
 
+            Save(); //有可能出现 自制品还没有生成。就已经审核了。所以先保存。如果不保存一下。自制品就没 有保存生成ID，后面调用会出错。无法保存制令单
+
             if (EditEntity.tb_ProductionDemandDetails == null || EditEntity.tb_ProductionDemandDetails.Count == 0)
             {
                 MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整产品数量和金额数据。", UILogType.警告);
@@ -1101,6 +1102,11 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     toolStripbtnReview.Enabled = true;
                 }
+                //
+                if (EditEntity.ApprovalResults.Value)
+                {
+
+                }
             }
             else
             {
@@ -1113,18 +1119,19 @@ namespace RUINORERP.UI.MRP.MP
 
 
 
-        protected async override void ReReview()
+        protected async override Task<ApprovalEntity> ReReview()
         {
+            ApprovalEntity ae = new ApprovalEntity();
             if (EditEntity == null)
             {
-                return;
+                return ae;
             }
 
             //反审，要审核过，并且通过了，才能反审。
             if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
             {
                 MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return;
+                return ae;
             }
 
 
@@ -1144,9 +1151,7 @@ namespace RUINORERP.UI.MRP.MP
             };
 
             tb_ProductionDemandController<tb_ProductionDemand> ctr = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
-            List<tb_ProductionDemand> list = new List<tb_ProductionDemand>();
-            list.Add(EditEntity);
-            ReturnResults<bool> rmrs = await ctr.AntiApprovalAsync(list);
+            ReturnResults<bool> rmrs = await ctr.AntiApprovalAsync(EditEntity);
             if (rmrs.Succeeded)
             {
 
@@ -1162,7 +1167,7 @@ namespace RUINORERP.UI.MRP.MP
                 //审核成功
                 base.ToolBarEnabledControl(MenuItemEnums.反审);
                 toolStripbtnReview.Enabled = true;
-
+          
             }
             else
             {
@@ -1170,7 +1175,7 @@ namespace RUINORERP.UI.MRP.MP
                 command.Undo();
                 MainForm.Instance.PrintInfoLog($"{EditEntity.PDNo}反审失败{rmrs.ErrorMsg},请联系管理员！", Color.Red);
             }
-
+            return ae;
         }
 
 
@@ -2236,7 +2241,7 @@ namespace RUINORERP.UI.MRP.MP
                 else
                 {
                     tb_ProduceGoodsRecommendDetail target = MakingItems.FirstOrDefault();
-                    bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID && c.ProdDetailID == target.ProdDetailID && c.PDCID==target.PDCID);
+                    bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID);
                     if (IsCreatectrMO)
                     {
                         MainForm.Instance.uclog.AddLog($"当前单据的制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成", UILogType.警告);
@@ -2253,7 +2258,7 @@ namespace RUINORERP.UI.MRP.MP
                 bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID);
                 if (IsCreatectrMO)
                 {
-                    MainForm.Instance.uclog.AddLog($"当前单据的制成品建议中，当前选中目标行产品已经生成过制令单，无法重复生成",UILogType.警告);
+                    MainForm.Instance.uclog.AddLog($"当前单据的制成品建议中，当前选中目标行产品已经生成过制令单，无法重复生成", UILogType.警告);
                     btnCreatePurRequisition.Enabled = false;
                     return;
                 }

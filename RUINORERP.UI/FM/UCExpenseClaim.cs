@@ -71,7 +71,6 @@ namespace RUINORERP.UI.FM
         {
             if (entity == null)
             {
-                MainForm.Instance.uclog.AddLog("实体不能为空", UILogType.警告);
                 return;
             }
             EditEntity = entity;

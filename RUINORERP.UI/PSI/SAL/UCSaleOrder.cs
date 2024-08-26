@@ -134,7 +134,7 @@ namespace RUINORERP.UI.PSI.SAL
             tb_SaleOrder entity = entityPara as tb_SaleOrder;
             if (entity == null)
             {
-                MainForm.Instance.uclog.AddLog("实体不能为空", UILogType.警告);
+ 
                 return;
             }
 
@@ -761,10 +761,11 @@ namespace RUINORERP.UI.PSI.SAL
             }
             //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
             // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+            //BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             //因为只需要更新主表
             //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
             // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFacByName<tb_SaleOrderController<tb_SaleOrder>>(typeof(T).Name + "Controller");
             ReturnResults<bool> rmrs = await ctr.ApprovalAsync(EditEntity, ae);
             if (rmrs.Succeeded)
             {
@@ -952,10 +953,9 @@ namespace RUINORERP.UI.PSI.SAL
         }
          */
 
-
+      /*
         protected async override void ReReview()
         {
-            if (EditEntity == null)
             {
                 return;
             }
@@ -1013,7 +1013,7 @@ namespace RUINORERP.UI.PSI.SAL
 
         }
 
-
+        */
         protected async override Task<bool> CloseCaseAsync()
         {
             if (EditEntity == null)

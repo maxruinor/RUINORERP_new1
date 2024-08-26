@@ -224,8 +224,10 @@ namespace RUINORERP.Business
 
         }
 
-        public async virtual Task<ReturnResults<bool>> AntiApprovalAsync(tb_PurOrder entity)
+
+        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
         {
+            tb_PurOrder entity = ObjectEntity as tb_PurOrder;
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -237,14 +239,10 @@ namespace RUINORERP.Business
 
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的采购入库单，不能反审核  ";
                     rs.Succeeded = false;
-
-                }
-
-                //判断是否能反审?
-                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                {
                     return rs;
                 }
+
+            
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();

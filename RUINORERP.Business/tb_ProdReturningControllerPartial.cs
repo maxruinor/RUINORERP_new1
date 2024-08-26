@@ -265,8 +265,9 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AntiApprovalAsync(List<tb_ProdReturning> entitys)
+      public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
         {
+            tb_ProdReturning entity = ObjectEntity as tb_ProdReturning;
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -274,12 +275,8 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-                foreach (var entity in entitys)
-                {
-                    if (entity == null)
-                    {
-                        continue;
-                    }
+                
+                  
 
                     //这部分是否能提出到上一级公共部分？
                     entity.DataStatus = (int)DataStatus.新建;
@@ -390,7 +387,7 @@ namespace RUINORERP.Business
                     // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
                     await _unitOfWorkManage.GetDbClient().Updateable<tb_ProdReturning>(entity).ExecuteCommandAsync();
                     //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                }
+               
 
 
                 // 注意信息的完整性

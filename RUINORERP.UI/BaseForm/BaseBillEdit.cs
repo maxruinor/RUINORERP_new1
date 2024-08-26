@@ -490,9 +490,10 @@ namespace RUINORERP.UI.BaseForm
             return null;
         }
 
-        protected virtual void ReReview()
+        protected async virtual Task<ApprovalEntity> ReReview()
         {
-
+            await Task.Delay(0);
+            return null;
         }
         protected virtual void Property()
         {

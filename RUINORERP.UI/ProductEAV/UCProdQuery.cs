@@ -833,7 +833,7 @@ namespace RUINORERP.UI.ProductEAV
             View_ProdDetail entity = QueryObject as View_ProdDetail;
             if (entity == null)
             {
-                MainForm.Instance.uclog.AddLog("实体不能为空", UILogType.警告);
+ 
                 return;
             }
 

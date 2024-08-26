@@ -84,7 +84,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             if (entity == null)
             {
-                MainForm.Instance.uclog.AddLog("实体不能为空", UILogType.警告);
+ 
                 return;
             }
             EditEntity = entity;
@@ -607,7 +607,7 @@ namespace RUINORERP.UI.PSI.PUR
             return ae;
         }
 
-
+        /*
         protected async override void ReReview()
         {
             if (EditEntity == null)
@@ -663,7 +663,7 @@ namespace RUINORERP.UI.PSI.PUR
             }
 
         }
-
+        */
 
         /// <summary>
         /// 结案

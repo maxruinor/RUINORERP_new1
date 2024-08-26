@@ -277,51 +277,49 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AntiApprovalAsync(List<tb_ProductionPlan> entitys)
+        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
         {
+            tb_ProductionPlan entity = ObjectEntity as tb_ProductionPlan;
             ReturnResults<bool> rmrs = new ReturnResults<bool>();
             try
             {
-
-
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
-                foreach (tb_ProductionPlan entity in entitys)
+
+                //判断是否能反审?
+                if (entity.tb_ProductionDemands != null
+                    && (entity.tb_ProductionDemands.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_ProductionDemands.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
-                    //判断是否能反审?
-                    if (entity.tb_ProductionDemands != null
-                        && (entity.tb_ProductionDemands.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_ProductionDemands.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
-                    {
 
-                        rmrs.ErrorMsg = "存在已确认或已完结，或已审核的需求单，不能反审核  ";
-                        rmrs.Succeeded = false;
-                      return  rmrs;
-                    }
-
-                    //判断是否能反审?
-                    if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                    {
-                        rmrs.ErrorMsg = "计划单非确认或非完结，不能反审核  ";
-                        rmrs.Succeeded = false;
-                        return rmrs;
-                    }
-
-                    //这部分是否能提出到上一级公共部分？
-                    entity.DataStatus = (int)DataStatus.新建;
-                    entity.ApprovalResults = false;
-                    entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    BusinessHelper.Instance.ApproverEntity(entity);
-
-                    //后面是不是要做一个审核历史记录表？
-
-                    //只更新指定列
-                    // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlan>(entity).ExecuteCommandAsync();
+                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的需求单，不能反审核  ";
+                    rmrs.Succeeded = false;
+                    return rmrs;
                 }
+
+                //判断是否能反审?
+                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
+                {
+                    rmrs.ErrorMsg = "计划单非确认或非完结，不能反审核  ";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.新建;
+                entity.ApprovalResults = false;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+
+                //后面是不是要做一个审核历史记录表？
+
+                //只更新指定列
+                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlan>(entity).ExecuteCommandAsync();
+
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();

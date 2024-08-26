@@ -220,76 +220,77 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AntiApprovalAsync(List<tb_ProductionDemand> entitys)
+        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
         {
+            tb_ProductionDemand entity = ObjectEntity as tb_ProductionDemand;
+
             ReturnResults<bool> rmrs = new ReturnResults<bool>();
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                foreach (tb_ProductionDemand entity in entitys)
+
+                //判断是否能反审?
+                if (entity.tb_ManufacturingOrders != null
+                    && (entity.tb_ManufacturingOrders.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_ManufacturingOrders.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
-                    //判断是否能反审?
-                    if (entity.tb_ManufacturingOrders != null
-                        && (entity.tb_ManufacturingOrders.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_ManufacturingOrders.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
-                    {
 
-                        rmrs.ErrorMsg = "存在已确认或已完结，或已审核的制令单，不能反审核  ";
-                        rmrs.Succeeded = false;
-                        return rmrs;
-                    }
-
-                    //判断是否能反审?
-                    if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                    {
-                        rmrs.ErrorMsg = "计划单非确认或非完结，不能反审核  ";
-                        rmrs.Succeeded = false;
-                        return rmrs;
-                    }
-
-
-                    //更新在制数量 应该是在生产通知单时更新的，这里暂时不更新
-                    //更新计划单中已分析字段,并且要具体到目标产品。计划可能多个成品。但是只能一个一个分析
-                    if (entity.tb_productionplan != null)
-                    {
-                        if (entity.tb_productionplan.tb_ProductionPlanDetails == null)
-                        {
-                            entity.tb_productionplan.tb_ProductionPlanDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlanDetail>()
-                                .Where(c => c.PPID == entity.tb_productionplan.PPID).ToList();
-                        }
-
-                        foreach (tb_ProductionDemandTargetDetail tag in entity.tb_ProductionDemandTargetDetails)
-                        {
-                            var planDetail = entity.tb_productionplan.tb_ProductionPlanDetails.FirstOrDefault(c => c.ProdDetailID == tag.ProdDetailID && c.Location_ID == tag.Location_ID);
-                            if (planDetail != null)
-                            {
-                                planDetail.IsAnalyzed = false;
-                                planDetail.AnalyzedQuantity -= tag.NeedQuantity;
-                            }
-                        }
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlanDetail>(entity.tb_productionplan.tb_ProductionPlanDetails).ExecuteCommandAsync();
-                        //如果全部分析过，则更新计划单中的分析字段,都 有值，但是有一个为假，则为假。
-                        if (entity.tb_productionplan.tb_ProductionPlanDetails.All(c => c.IsAnalyzed.HasValue)
-                            && entity.tb_productionplan.tb_ProductionPlanDetails.Any(c => c.IsAnalyzed == false))
-                        {
-                            entity.tb_productionplan.Analyzed = false;
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlan>(entity.tb_productionplan).ExecuteCommandAsync();
-                        }
-                    }
-
-
-                    //这部分是否能提出到上一级公共部分？
-                    entity.DataStatus = (int)DataStatus.新建;
-                    entity.ApprovalResults = false;
-                    entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    BusinessHelper.Instance.ApproverEntity(entity);
-
-                    //后面是不是要做一个审核历史记录表？
-
-                    //只更新指定列
-
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionDemand>(entity).ExecuteCommandAsync();
+                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的制令单，不能反审核  ";
+                    rmrs.Succeeded = false;
+                    return rmrs;
                 }
+
+                //判断是否能反审?
+                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
+                {
+                    rmrs.ErrorMsg = "计划单非确认或非完结，不能反审核  ";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+
+                //更新在制数量 应该是在生产通知单时更新的，这里暂时不更新
+                //更新计划单中已分析字段,并且要具体到目标产品。计划可能多个成品。但是只能一个一个分析
+                if (entity.tb_productionplan != null)
+                {
+                    if (entity.tb_productionplan.tb_ProductionPlanDetails == null)
+                    {
+                        entity.tb_productionplan.tb_ProductionPlanDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlanDetail>()
+                            .Where(c => c.PPID == entity.tb_productionplan.PPID).ToList();
+                    }
+
+                    foreach (tb_ProductionDemandTargetDetail tag in entity.tb_ProductionDemandTargetDetails)
+                    {
+                        var planDetail = entity.tb_productionplan.tb_ProductionPlanDetails.FirstOrDefault(c => c.ProdDetailID == tag.ProdDetailID && c.Location_ID == tag.Location_ID);
+                        if (planDetail != null)
+                        {
+                            planDetail.IsAnalyzed = false;
+                            planDetail.AnalyzedQuantity -= tag.NeedQuantity;
+                        }
+                    }
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlanDetail>(entity.tb_productionplan.tb_ProductionPlanDetails).ExecuteCommandAsync();
+                    //如果全部分析过，则更新计划单中的分析字段,都 有值，但是有一个为假，则为假。
+                    if (entity.tb_productionplan.tb_ProductionPlanDetails.All(c => c.IsAnalyzed.HasValue)
+                        && entity.tb_productionplan.tb_ProductionPlanDetails.Any(c => c.IsAnalyzed == false))
+                    {
+                        entity.tb_productionplan.Analyzed = false;
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlan>(entity.tb_productionplan).ExecuteCommandAsync();
+                    }
+                }
+
+
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.新建;
+                entity.ApprovalResults = false;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+
+                //后面是不是要做一个审核历史记录表？
+
+                //只更新指定列
+
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionDemand>(entity).ExecuteCommandAsync();
+
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
@@ -1135,9 +1136,9 @@ namespace RUINORERP.Business
                 {
                     tb_BOM_SDetail child_bomDetail = bom.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == MODetail.ProdDetailID);
                     //损耗量，影响领料数量？
-               
-                        MODetail.WastageQty = MODetail.ShouldSendQty * child_bomDetail.LossRate;
-                 
+
+                    MODetail.WastageQty = MODetail.ShouldSendQty * child_bomDetail.LossRate;
+
                 }
 
                 //两统计在一起发料
@@ -1418,9 +1419,9 @@ namespace RUINORERP.Business
                 //库存有的才发？要回写，这个时间无法知道实发。从领料中审核时写回?
                 mItemGoods.ActualSentQty = 0;
                 //损耗量，影响领料数量？
-              
-                    mItemGoods.WastageQty = mItemGoods.ShouldSendQty * child_bomDetail.LossRate;
-              
+
+                mItemGoods.WastageQty = mItemGoods.ShouldSendQty * child_bomDetail.LossRate;
+
                 mItemGoods.CurrentIinventory = cureentQty;
                 // 没有bom就为空。反之 要么自制，要么外发
                 mItemGoods.IsExternalProduce = null;
@@ -1472,7 +1473,7 @@ namespace RUINORERP.Business
                 if (MediumBomInfo != null)
                 {
                     //中间有BOM的制成品,只在子循环中引用
-                    
+
                     mItemGoods.CurrentIinventory = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Quantity);
 
                     //找下一级的材料。当前级就不需要。否则将当前级认为是中间半成品。要提供数量
@@ -1493,9 +1494,9 @@ namespace RUINORERP.Business
                         //中间件也当原，料发应该发的数量，用量*他上级的需求量
                         tb_BOM_SDetail child_bomDetail = MakingItemBom.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == mItem.ProdDetailID);
                         //损耗量，影响领料数量？
-                      
-                            mItemGoods.WastageQty = mItemGoods.ShouldSendQty * child_bomDetail.LossRate;
-                     
+
+                        mItemGoods.WastageQty = mItemGoods.ShouldSendQty * child_bomDetail.LossRate;
+
                         //按自制品建议来的。这里与净毛需求无关，
                         //请制量，因为只有中间件是一层一行。所以直接就是上面传过来的makingitem
                         mItemGoods.ShouldSendQty = MakingItem.RequirementQty * child_bomDetail.UsedQty;
@@ -1509,9 +1510,9 @@ namespace RUINORERP.Business
                 {
                     //直接就是下级的原料
                     //损耗量，影响领料数量？
-                
-                        mItemGoods.WastageQty = mItemGoods.ShouldSendQty * mItem.LossRate;
-                   
+
+                    mItemGoods.WastageQty = mItemGoods.ShouldSendQty * mItem.LossRate;
+
                     //中间件，直接就是上级的请制量作为标准*用量
                     mItemGoods.ShouldSendQty = MakingItem.RequirementQty * mItem.UsedQty;
                     mItemGoods.CurrentIinventory = mItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Quantity);

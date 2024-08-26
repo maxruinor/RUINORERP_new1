@@ -155,7 +155,7 @@ namespace RUINORERP.Business
 
                             foreach (var child in entity.tb_SaleOutDetails)
                             {
-                                
+
 
                                 #region 库存表的更新 这里应该是必需有库存的数据，
                                 tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
@@ -378,9 +378,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AntiApprovalAsync(tb_SaleOut entity)
+        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<bool> rs = new ReturnResults<bool>();
+            tb_SaleOut entity = ObjectEntity as tb_SaleOut;
+
             try
             {
                 // 开启事务，保证数据一致性

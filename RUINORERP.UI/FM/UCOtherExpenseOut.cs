@@ -77,7 +77,6 @@ namespace RUINORERP.UI.FM
         {
             if (entity == null)
             {
-                MainForm.Instance.uclog.AddLog("实体不能为空", UILogType.警告);
                 return;
             }
             EditEntity = entity;
@@ -440,25 +439,26 @@ namespace RUINORERP.UI.FM
 
 
 
-        protected async override void ReReview()
+        protected async override Task<ApprovalEntity> ReReview()
         {
+            ApprovalEntity ae = new ApprovalEntity();
             if (EditEntity == null)
             {
-                return;
+                return ae;
             }
 
             //反审，要审核过，并且通过了，才能反审。
             if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
             {
                 MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return;
+                return ae;
             }
 
 
             if (EditEntity.tb_FM_OtherExpenseDetails == null || EditEntity.tb_FM_OtherExpenseDetails.Count == 0)
             {
                 MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整金额。", UILogType.警告);
-                return;
+                return ae;
             }
 
             Command command = new Command();
@@ -497,7 +497,7 @@ namespace RUINORERP.UI.FM
                 command.Undo();
                 MainForm.Instance.PrintInfoLog($"{EditEntity.ExpenseNo}反审失败,请联系管理员！", Color.Red);
             }
-
+            return ae;
         }
 
 

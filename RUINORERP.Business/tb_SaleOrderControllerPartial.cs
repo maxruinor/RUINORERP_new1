@@ -399,9 +399,10 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> AntiApprovalAsync(List<tb_SaleOrder> entitys)
+        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<bool> rmrs = new ReturnResults<bool>();
+            tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
             try
             {
                 // 开启事务，保证数据一致性
@@ -410,66 +411,65 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
-                foreach (tb_SaleOrder entity in entitys)
+
+
+                //判断是否能反审?
+                if (entity.tb_SaleOuts != null
+                    && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
 
-                    //判断是否能反审?
-                    if (entity.tb_SaleOuts != null
-                        && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
-                    {
-
-                        rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核  ";
-                        rmrs.Succeeded = false;
-                        return rmrs;
-                    }
-
-
-                    //判断是否能反审?
-                    if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                    {
-
-                        rmrs.ErrorMsg = "只能反审核已确认,并且有审核结果的订单 ";
-                        rmrs.Succeeded = false;
-                        return rmrs;
-                    }
-                    foreach (var child in entity.tb_SaleOrderDetails)
-                    {
-                        #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                        if (inv == null)
-                        {
-                            inv = new tb_Inventory();
-                            inv.ProdDetailID = child.ProdDetailID;
-                            inv.Location_ID = child.Location_ID;
-                            inv.Quantity = 0;
-                            inv.InitInventory = (int)inv.Quantity;
-                            inv.Notes = "";//后面修改数据库是不需要？
-                                           //inv.LatestStorageTime = System.DateTime.Now;
-                            BusinessHelper.Instance.InitEntity(inv);
-                        }
-                        //更新在途库存
-                        inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
-                        BusinessHelper.Instance.EditEntity(inv);
-                        #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-
-                        }
-                    }
-
-                    //这部分是否能提出到上一级公共部分？
-                    entity.DataStatus = (int)DataStatus.新建;
-                    entity.ApprovalResults = false;
-                    entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    BusinessHelper.Instance.ApproverEntity(entity);
-
-                    //后面是不是要做一个审核历史记录表？
-
-                    //只更新指定列
-                    // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).ExecuteCommandAsync();
+                    rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核  ";
+                    rmrs.Succeeded = false;
+                    return rmrs;
                 }
+
+
+                //判断是否能反审?
+                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
+                {
+
+                    rmrs.ErrorMsg = "只能反审核已确认,并且有审核结果的订单 ";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+                foreach (var child in entity.tb_SaleOrderDetails)
+                {
+                    #region 库存表的更新 ，
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    if (inv == null)
+                    {
+                        inv = new tb_Inventory();
+                        inv.ProdDetailID = child.ProdDetailID;
+                        inv.Location_ID = child.Location_ID;
+                        inv.Quantity = 0;
+                        inv.InitInventory = (int)inv.Quantity;
+                        inv.Notes = "";//后面修改数据库是不需要？
+                                       //inv.LatestStorageTime = System.DateTime.Now;
+                        BusinessHelper.Instance.InitEntity(inv);
+                    }
+                    //更新在途库存
+                    inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
+                    BusinessHelper.Instance.EditEntity(inv);
+                    #endregion
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
+                    {
+
+                    }
+                }
+
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.新建;
+                entity.ApprovalResults = false;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+
+                //后面是不是要做一个审核历史记录表？
+
+                //只更新指定列
+                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).ExecuteCommandAsync();
+
 
 
                 // 注意信息的完整性

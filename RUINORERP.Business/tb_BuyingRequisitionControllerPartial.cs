@@ -82,7 +82,7 @@ namespace RUINORERP.Business
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
                 rs.ErrorMsg = ex.Message;
-     
+
                 rs.Succeeded = false;
                 return rs;
             }
@@ -115,7 +115,7 @@ namespace RUINORERP.Business
                 }
                 else
                 {
-                   
+
                 }
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -127,10 +127,10 @@ namespace RUINORERP.Business
                 //只更新指定列
                 // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisition>(entity).ExecuteCommandAsync();
-            
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
- 
+
                 rmrs.Succeeded = true;
                 return rmrs;
             }
@@ -138,7 +138,7 @@ namespace RUINORERP.Business
             {
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
- 
+
                 rmrs.ErrorMsg = approvalEntity.bizName + "事务回滚=>" + ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
@@ -154,14 +154,16 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<bool> AntiApprovalAsync(tb_BuyingRequisition entity)
+        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
         {
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            tb_BuyingRequisition entity = ObjectEntity as tb_BuyingRequisition;
             try
             {
                 //判断是否能反审?
                 if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
                 {
-                    return false;
+                    return rs;
                 }
 
                 // 开启事务，保证数据一致性
@@ -170,7 +172,7 @@ namespace RUINORERP.Business
 
                 foreach (var child in entity.tb_BuyingRequisitionDetails)
                 {
-                   
+
                 }
 
                 //这部分是否能提出到上一级公共部分？
@@ -180,15 +182,15 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.ApproverEntity(entity);
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisition>(entity).ExecuteCommandAsync();
                 _unitOfWorkManage.CommitTran();
-                return true;
+                rs.Succeeded = true;
+                return rs;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
-
-                //rsms.ErrorMsg = "事务回滚=>" + ex.Message;
-                return false;
+                rs.ErrorMsg = ex.Message;
+                return rs;
             }
 
         }
@@ -206,7 +208,7 @@ namespace RUINORERP.Business
             return list as List<T>;
         }
 
- 
+
 
     }
 

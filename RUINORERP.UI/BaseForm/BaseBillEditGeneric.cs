@@ -1214,7 +1214,7 @@ namespace RUINORERP.UI.BaseForm
                     await Review();
                     break;
                 case MenuItemEnums.反审:
-                    ReReview();
+                    await ReReview();
                     break;
                 case MenuItemEnums.结案:
                     await CloseCaseAsync();
@@ -1361,6 +1361,7 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
+
                 //用户退出审核，
                 command.Undo();
             }
@@ -1370,11 +1371,12 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 反审核 与审核相反
         /// </summary>
-        protected async override void ReReview()
+        protected async override Task<ApprovalEntity> ReReview()
         {
+            ApprovalEntity ae = new ApprovalEntity();
             if (EditEntity == null)
             {
-                return;
+                return ae;
             }
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
@@ -1384,17 +1386,25 @@ namespace RUINORERP.UI.BaseForm
                     && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )
                 {
-                    MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                    return;
+                  
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审。");
+                    return ae;
                 }
             }
-
-            //EditEntity
-            CommonUI.frmApproval frm = new CommonUI.frmApproval();
+            
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
+            CommBillData cbd = bcf.GetBillData<T>(EditEntity);
+            ae.BillNo = cbd.BillNo;
+            ae.bizType = cbd.BizType;
+            ae.bizName = cbd.BizName;
+            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
             frm.BindData(ae);
             if (frm.ShowDialog() == DialogResult.OK)
             {
@@ -1414,17 +1424,33 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                 }
-                ReturnResults<T> rmr = new ReturnResults<T>();
+
+                Command command = new Command();
+                //缓存当前编辑的对象。如果撤销就回原来的值
+                T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
+                command.UndoOperation = delegate ()
+                {
+                    //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）
+                    CloneHelper.SetValues<T>(EditEntity, oldobj);
+                };
+
+                ReturnResults<bool> rmr = new ReturnResults<bool>();
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                //因为只需要更新主表
-                rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+                rmr = await ctr.AntiApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
                 {
                     ToolBarEnabledControl(MenuItemEnums.反审);
                     //这里推送到审核，启动工作流
+                    AuditLogHelper.Instance.CreateAuditLog<T>("反审", EditEntity, $"反审原因{ae.ApprovalComments}");
+                }
+                else
+                {
+                    //审核失败 要恢复之前的值
+                    command.Undo();
+                    //MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
                 }
             }
+            return ae;
         }
 
 

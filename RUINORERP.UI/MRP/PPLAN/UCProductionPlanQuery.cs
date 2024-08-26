@@ -194,6 +194,7 @@ namespace RUINORERP.UI.MRP.MP
             return ae;
         }
 
+        /*
 
         /// <summary>
         /// 销售订单反审
@@ -261,7 +262,7 @@ namespace RUINORERP.UI.MRP.MP
             }
             return true;
         }
-
+        */
 
         public async override Task<bool> CloseCase(List<tb_ProductionPlan> EditEntitys)
         {

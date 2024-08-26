@@ -229,9 +229,8 @@ namespace RUINORERP.UI.MRP.MP
                 };
 
                 tb_ProductionDemandController<tb_ProductionDemand> ctr = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
-                List<tb_ProductionDemand> list = new List<tb_ProductionDemand>();
-                list.Add(EditEntity);
-                ReturnResults<bool> Succeeded = await ctr.AntiApprovalAsync(list);
+               
+                ReturnResults<bool> Succeeded = await ctr.AntiApprovalAsync(EditEntity);
                 if (Succeeded.Succeeded)
                 {
 

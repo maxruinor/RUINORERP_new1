@@ -60,7 +60,7 @@ namespace RUINORERP.Business
 
                     foreach (var child in entity.tb_StockOutDetails)
                     {
-                         
+
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                         if (inv != null)
@@ -141,8 +141,10 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<bool> AntiApprovalAsync(List<tb_StockOut> entitys)
+        public async override Task<ReturnResults<bool>> AntiApprovalAsync(T ObjectEntity)
         {
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            tb_StockOut entity = ObjectEntity as tb_StockOut;
             try
             {
                 // 开启事务，保证数据一致性
@@ -151,14 +153,7 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
-                foreach (tb_StockOut entity in entitys)
-                {
-                    //判断是否能反审?
-                    if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                    {
-                        //return false;
-                        continue;
-                    }
+          
                     foreach (var child in entity.tb_StockOutDetails)
                     {
                         #region 库存表的更新 ，
@@ -202,20 +197,20 @@ namespace RUINORERP.Business
                     //只更新指定列
                     // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
                     await _unitOfWorkManage.GetDbClient().Updateable<tb_StockOut>(entity).ExecuteCommandAsync();
-                }
+                
 
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 //  _logger.Info(approvalEntity.bizName + "审核事务成功");
-                return true;
+                return rs;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
                 //  _logger.Error(approvalEntity.bizName + "事务回滚");
-                return false;
+                return rs;
             }
 
         }

@@ -165,7 +165,7 @@ namespace RUINORERP.UI
                                 ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
                                 await serverAuthorizer.LongRunningOperationAsync(ecs, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
                                 // LoginServerByEasyClient(userName, password);
-                                UITools.SuperSleep(2000);
+                                UITools.SuperSleep(1000);
                                 if (ecs.LoginStatus)
                                 {
 

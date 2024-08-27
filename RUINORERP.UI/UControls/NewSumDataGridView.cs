@@ -15,7 +15,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Windows.Forms;
- 
+
 
 namespace RUINORERP.UI.UControls
 {
@@ -246,7 +246,7 @@ namespace RUINORERP.UI.UControls
         // public delegate void EventHandler(object sender, EventArgs e);
         //public static Dictionary<ContextMenuController, EventHandler> ClickActionList = new Dictionary<ContextMenuController, EventHandler>();
 
-        private ContextMenuStrip _cMenus = new ContextMenuStrip();
+
         private Panel _panel = new Panel();
 
         /// <summary>
@@ -344,8 +344,7 @@ namespace RUINORERP.UI.UControls
             //合并 设置右键菜单 只执行一次
             if (!setContextMenu)
             {
-                SetContextMenu(this.ContextMenuStrip);
-                setContextMenu = true;
+                this.ContextMenuStrip = GetContextMenu();
             }
 
         }
@@ -926,17 +925,39 @@ namespace RUINORERP.UI.UControls
         /// 设置右键菜单，但是对不对参数进行设置。因为是引用的，会改变值
         /// </summary>
         /// <param name="_contextMenuStrip"></param>
-        public void SetContextMenu(ContextMenuStrip _contextMenuStrip)
+        public ContextMenuStrip GetContextMenu(ContextMenuStrip _contextMenuStrip = null)
         {
-            // 创建一个新的ContextMenuStrip实例，用于存储合并后的菜单项
-            ContextMenuStrip mergedMenu = new ContextMenuStrip();
+            // 创建一个全新的右键菜单副本
+            ContextMenuStrip newContextMenuStrip = new ContextMenuStrip();
 
             //初始化右键菜单
-            _cMenus.BackColor = Color.FromArgb(192, 255, 255);
+            // 初始化内置右键菜单
+            ContextMenuStrip internalMenu = new ContextMenuStrip();
+            internalMenu.BackColor = Color.FromArgb(192, 255, 255);
 
             //如果需要通过设计时对属性值修改。
             //则不能在这个构造函数中操作。因为这时属性值不能获取
-            _cMenus.Items.Clear();
+            internalMenu.Items.Clear();
+
+            // 合并传入的菜单和内置菜单
+            if (_contextMenuStrip != null)
+            {
+                //外面菜单有设置则加一个分隔符
+                if (_contextMenuStrip.Items.Count > 0)
+                {
+                    ToolStripSeparator MyTss = new ToolStripSeparator();
+                    _contextMenuStrip.Items.Add(MyTss);
+                }
+
+                ToolStripItem[] ts = new ToolStripItem[_contextMenuStrip.Items.Count];
+                _contextMenuStrip.Items.CopyTo(ts, 0);
+
+                internalMenu.Items.AddRange(ts);
+
+               
+            }
+          
+
             //或者也可以指定内置哪些生效 合并外面的？
             if (Use是否使用内置右键功能)
             {
@@ -987,7 +1008,7 @@ namespace RUINORERP.UI.UControls
                     if (item.IsSeparator)
                     {
                         ToolStripSeparator ts1 = new ToolStripSeparator();
-                        _cMenus.Items.Add(ts1);
+                        internalMenu.Items.Add(ts1);
                     }
                     else
                     {
@@ -1009,7 +1030,7 @@ namespace RUINORERP.UI.UControls
                         {
                             ehh = 删除选中行;
                         }
-                        _cMenus.Items.Add(item.MenuText, null, ehh);
+                        internalMenu.Items.Add(item.MenuText, null, ehh);
                     }
                 }
             }
@@ -1019,47 +1040,14 @@ namespace RUINORERP.UI.UControls
                 if (删除选中行 != null)
                 {
                     ContextMenuController cmc = new ContextMenuController("【删除选中行】", true, false, "删除选中行");
-                    _cMenus.Items.Add(cmc.MenuText, null, 删除选中行);
+                    internalMenu.Items.Add(cmc.MenuText, null, 删除选中行);
                 }
             }
-            //意思是如果本身设置过了。就不重复设置
-            if (_contextMenuStrip != null)
-            {
-                //如果公共有则分开一下
-                if (_cMenus.Items.Count > 0)
-                {
-                    ToolStripSeparator MyTss = new ToolStripSeparator();
-                    _cMenus.Items.Add(MyTss);
-                }
-                
-                // 将传入的菜单项复制到新的mergedMenu中
-                foreach (ToolStripItem item in _contextMenuStrip.Items)
-                {
-                    if (item is System.Windows.Forms.ToolStripSeparator)
-                    {
 
-                    }
-                    ToolStripMenuItem newItem = new ToolStripMenuItem(item.Text);
-                    
-                    //mergedMenu.Items.Add(item.co);
-                }
-
-                //合并外面的
-                ToolStripItem[] ts = new ToolStripItem[_contextMenuStrip.Items.Count];
-                _contextMenuStrip.Items.CopyTo(ts, 0);
-
-                _cMenus.Items.AddRange(ts);
-
-                mergedMenu = _cMenus;
-                //只给公共内置的
-                ContextMenuStrip = mergedMenu;
-            }
-            else
-            {
-                //只给公共内置的
-                ContextMenuStrip = _cMenus;
-            }
-
+            newContextMenuStrip = internalMenu;
+            // 设置最终的右键菜单
+            ContextMenuStrip = newContextMenuStrip;
+            return newContextMenuStrip;
             /*
 
             //意思是如果本身设置过了。就不重复设置

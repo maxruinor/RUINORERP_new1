@@ -126,6 +126,7 @@ namespace RUINORERP.Business.Security
 
         /// <summary>
         /// 获取角色中属性的责任人独占是否启用
+        /// 如果这个角色中启用了，则客户资料中勾选了专属责任人的，只能本人能查到数据
         /// </summary>
         /// <param name="context"></param>
         /// <returns>启用为真</returns>

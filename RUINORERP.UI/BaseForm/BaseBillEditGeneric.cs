@@ -1313,7 +1313,7 @@ namespace RUINORERP.UI.BaseForm
                 //审核了。数据状态要更新为
                 EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
 
-                AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults}");
+
 
 
                 //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
@@ -1372,6 +1372,7 @@ namespace RUINORERP.UI.BaseForm
                     //审核失败 要恢复之前的值
                     command.Undo();
                     ae.ApprovalResults = false;
+                    AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults},{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                 }
             }
@@ -1457,6 +1458,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //审核失败 要恢复之前的值
                     command.Undo();
+                    AuditLogHelper.Instance.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                 }
             }

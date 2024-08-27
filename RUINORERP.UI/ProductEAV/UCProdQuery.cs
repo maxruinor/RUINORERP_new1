@@ -776,6 +776,10 @@ namespace RUINORERP.UI.ProductEAV
             DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, cmbdepartment);
             DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v => v.Name, cmbLocation);
             InitListData();
+   
+            ContextMenuStrip newContextMenuStrip = newSumDataGridView产品.GetContextMenu(contextMenuStrip1);
+            newSumDataGridView产品.ContextMenuStrip = newContextMenuStrip;
+            newSumDataGridView产品组合.ContextMenuStrip = newContextMenuStrip;
 
             //默认指定一个仓库主仓库
             if (LocationID > 0)
@@ -815,9 +819,9 @@ namespace RUINORERP.UI.ProductEAV
                 kryptonPanelProd.Visible = true;
                 kryptonPanelProd.Dock = DockStyle.Fill;
                 //kryptonDataGridView产品.ContextMenuStrip = contextMenuStrip1;
-                newSumDataGridView产品.Use是否使用内置右键功能 = true;
-                newSumDataGridView产品.SetContextMenu(contextMenuStrip1);
-                newSumDataGridView产品组合.ContextMenuStrip = null;
+                //newSumDataGridView产品.Use是否使用内置右键功能 = true;
+                //newSumDataGridView产品.SetContextMenu(contextMenuStrip1);
+                //newSumDataGridView产品组合.ContextMenuStrip = null;
 
             }
             if (kryptonNavigator1.SelectedPage == kryptonPage产品组合)
@@ -825,8 +829,8 @@ namespace RUINORERP.UI.ProductEAV
                 kryptonPanelGroup.Visible = true;
                 kryptonPanelProd.Visible = false;
                 kryptonPanelGroup.Dock = DockStyle.Fill;
-                newSumDataGridView产品.ContextMenuStrip = null;
-                newSumDataGridView产品组合.ContextMenuStrip = contextMenuStrip1;
+                //newSumDataGridView产品.ContextMenuStrip = null;
+                //newSumDataGridView产品组合.ContextMenuStrip = contextMenuStrip1;
             }
 
             if (kryptonNavigator1.SelectedPage != null)

@@ -293,7 +293,7 @@ namespace RUINORERP.UI
             timer1.Start();
             tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
             List<tb_Company> company = await companyController.QueryAsync();
-            Version = "2024-08-27";
+            Version = "2024-08-27-1";
             if (company != null)
             {
                 this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + Version;
@@ -756,7 +756,7 @@ namespace RUINORERP.UI
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
-                    MainForm.Instance.AppContext.Db.Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
+                    MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
                 }
 
             }

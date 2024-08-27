@@ -178,6 +178,7 @@ namespace RUINORERP.Business
                 //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
+                rmsr.ReturnObject = entity as T;
                 //_logger.Info(approvalEntity.bizName + "审核事务成功");
                 rmsr.Succeeded = true;
                 return rmsr;

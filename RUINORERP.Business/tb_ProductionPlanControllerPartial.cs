@@ -120,6 +120,7 @@ namespace RUINORERP.Business
                 //await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlan>(entity).ExecuteCommandAsync();
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
+                rmrs.ReturnObject = entity as T;
                 return rmrs;
             }
             catch (Exception ex)

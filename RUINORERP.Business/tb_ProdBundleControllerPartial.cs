@@ -74,6 +74,7 @@ namespace RUINORERP.Business
                 //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
+                rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }

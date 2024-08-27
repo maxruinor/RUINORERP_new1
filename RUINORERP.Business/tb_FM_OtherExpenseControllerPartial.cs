@@ -68,6 +68,7 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
+                rrs.ReturnObject = entity as T;
                 rrs.Succeeded = true;
                 return rrs;
             }

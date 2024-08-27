@@ -46,7 +46,6 @@ namespace RUINORERP.Business
         {
             tb_FinishedGoodsInv entity = ObjectEntity as tb_FinishedGoodsInv;
             ReturnResults<T> rs = new ReturnResults<T>();
-
             try
             {
                 // 开启事务，保证数据一致性
@@ -90,32 +89,52 @@ namespace RUINORERP.Business
                        .Includes(a => a.tb_productionplan, b => b.tb_ProductionPlanDetails)
                        .Where(c => c.PDID == manufacturingOrder.PDID)
                        .SingleAsync();
+
+
+                    //标记一下，如果计划单明细有变化，则更新计划单明细
+                    bool PlanDetailHasChanged = false;
+
                     foreach (var child in entity.tb_FinishedGoodsInvDetails)
                     {
                         tb_ProductionPlanDetail planDetail = productionDemand.tb_productionplan.tb_ProductionPlanDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID);
                         if (planDetail != null)
                         {
                             planDetail.CompletedQuantity += child.Qty;
+                            PlanDetailHasChanged = true;
                         }
                     }
-                    //更新制令单已交数量
-                    int jkCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlanDetail>(productionDemand.tb_productionplan.tb_ProductionPlanDetails).ExecuteCommandAsync();
-                    if (jkCounter > 0)
+                    if (PlanDetailHasChanged)
                     {
-                        if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                        //更新计划单已交数量
+                        int jkCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlanDetail>(productionDemand.tb_productionplan.tb_ProductionPlanDetails).ExecuteCommandAsync();
+                        if (jkCounter > 0)
                         {
-                            _logger.Info(productionDemand.PPNo + $"对应的计划明细中完成数量更新成功===重点代码 看已交数量是否正确");
+                            if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                            {
+                                _logger.Info(productionDemand.PPNo + $"对应的计划明细中完成数量更新成功===重点代码 看已交数量是否正确");
+                            }
                         }
                     }
 
-                    productionDemand.tb_productionplan.TotalCompletedQuantity = productionDemand.tb_productionplan.tb_ProductionPlanDetails.Sum(c => c.CompletedQuantity);
+                    //标记一下，如果计划单有变化，则更新计划单
+                    bool PlanHasChanged = false;
+                    int totalPlanCompletedQuantity = productionDemand.tb_productionplan.tb_ProductionPlanDetails.Sum(c => c.CompletedQuantity);
+                    if (totalPlanCompletedQuantity != productionDemand.tb_productionplan.TotalCompletedQuantity)
+                    {
+                        productionDemand.tb_productionplan.TotalCompletedQuantity = totalPlanCompletedQuantity;
+                        PlanHasChanged = true;
+                    }
+
                     //如果计划数量等于已完成数量 结案？
                     if (productionDemand.tb_productionplan.TotalQuantity == productionDemand.tb_productionplan.TotalCompletedQuantity)
                     {
                         productionDemand.tb_productionplan.DataStatus = (int)DataStatus.完结;
+                        PlanHasChanged = true;
                     }
-                    await _unitOfWorkManage.GetDbClient().Updateable(productionDemand.tb_productionplan).UpdateColumns(t => new { t.DataStatus, t.TotalCompletedQuantity }).ExecuteCommandAsync();
-
+                    if (PlanHasChanged)
+                    {
+                        await _unitOfWorkManage.GetDbClient().Updateable(productionDemand.tb_productionplan).UpdateColumns(t => new { t.DataStatus, t.TotalCompletedQuantity }).ExecuteCommandAsync();
+                    }
 
                 }
 
@@ -247,41 +266,35 @@ namespace RUINORERP.Business
                                 _logger.Info(entity.DeliveryBillNo + "==>" + entity.MONo + $"对应 的所有领料单设置为结案。将不能再发料 更新成功===重点代码 看已交数量是否正确");
                             }
                         }
-
-
-
-
-                        //更新制令单已交数量和判断是否结案
-                        int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(manufacturingOrder).ExecuteCommandAsync();
-                        if (poCounter > 0)
-                        {
-                            if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                            {
-                                _logger.Info(entity.DeliveryBillNo + "==>" + entity.MONo + $"对应 的制令单已交数量 更新成功===重点代码 看已交数量是否正确");
-                            }
-                        }
-
-                        //这部分是否能提出到上一级公共部分？
-                        entity.DataStatus = (int)DataStatus.确认;
-                        //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
-                        //后面已经修改为
-                        //entity.ApprovalResults = approvalEntity.ApprovalResults;
-                        entity.ApprovalStatus = (int)ApprovalStatus.已审核;
-                        BusinessHelper.Instance.ApproverEntity(entity);
-                        //只更新指定列
-                        // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                        int counter = await _unitOfWorkManage.GetDbClient().Updateable<tb_FinishedGoodsInv>(entity).ExecuteCommandAsync();
-                        if (counter > 0)
-                        {
-                            if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                            {
-                                _logger.Info(entity.MONo + "==>" + "状态更新成功");
-                            }
-                        }
-
-
                     }
                 }
+
+
+                //更新制令单已交数量和判断是否结案
+                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(manufacturingOrder).ExecuteCommandAsync();
+                if (poCounter > 0)
+                {
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                    {
+                        _logger.Info(entity.DeliveryBillNo + "==>" + entity.MONo + $"对应 的制令单已交数量 更新成功===重点代码 看已交数量是否正确");
+                    }
+                }
+
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.确认;
+                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+                //只更新指定列
+                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
+                int counter = await _unitOfWorkManage.GetDbClient().Updateable<tb_FinishedGoodsInv>(entity).ExecuteCommandAsync();
+                if (counter > 0)
+                {
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                    {
+                        _logger.Info(entity.DeliveryBillNo + "==>" + "缴库单的状态更新成功");
+                    }
+                }
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rs.ReturnObject = entity as T;

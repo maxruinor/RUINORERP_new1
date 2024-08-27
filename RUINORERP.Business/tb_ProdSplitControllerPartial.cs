@@ -157,6 +157,7 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rs.Succeeded = true;
+                rs.ReturnObject = entity as T;
                 return rs;
             }
             catch (Exception ex)

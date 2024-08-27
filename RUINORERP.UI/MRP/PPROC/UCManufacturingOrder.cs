@@ -132,6 +132,7 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.SKU, txtSKU, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.CustomerPartNo, txtCustomerPartNo, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.Specifications, txtSpec, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.QuantityDelivered, txtQuantityDelivered, BindDataType4TextBox.Qty, false);
             txtQuantityDelivered.ReadOnly = true;
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ManufacturingQty, txtManufacturingQty, BindDataType4TextBox.Qty, false);

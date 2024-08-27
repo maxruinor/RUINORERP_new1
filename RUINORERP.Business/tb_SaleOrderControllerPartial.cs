@@ -38,9 +38,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<T>> ApprovalAsync(tb_SaleOrder entity, ApprovalEntity approvalEntity)
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
+            tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
+
             try
             {
                 // 开启事务，保证数据一致性
@@ -48,67 +50,58 @@ namespace RUINORERP.Business
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-                if (!approvalEntity.ApprovalResults)
+
+                //更新拟销售量
+
+                foreach (var child in entity.tb_SaleOrderDetails)
                 {
-                    if (entity == null)
+                    #region 库存表的更新 ，
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    if (inv == null)
                     {
+                        inv = new tb_Inventory();
+                        inv.ProdDetailID = child.ProdDetailID;
+                        inv.Location_ID = child.Location_ID;
+                        //if (_appContext.SysConfig.CheckNegativeInventory)
+                        //{
+                        //    inv.Quantity = -child.Quantity;
+                        //}
+                        //else
+                        //{
+                        inv.Quantity = 0;
+                        //}
+
+                        inv.InitInventory = (int)inv.Quantity;
+                        inv.Notes = "";//后面修改数据库是不需要？
+                                       //inv.LatestStorageTime = System.DateTime.Now;
+                        BusinessHelper.Instance.InitEntity(inv);
+                    }
+                    //订单只是警告。可以继续
+                    /*
+                    if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
+                    {
+                        rmrs.ErrorMsg = $"库存为：{inv.Quantity}，拟销售量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                        rmrs.Succeeded = false;
                         return rmrs;
                     }
+                    */
 
-                }
-                else
-                {
-                    //更新拟销售量
-
-                    foreach (var child in entity.tb_SaleOrderDetails)
+                    //更新在途库存
+                    inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
+                    BusinessHelper.Instance.EditEntity(inv);
+                    #endregion
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
                     {
-                        #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                        if (inv == null)
-                        {
-                            inv = new tb_Inventory();
-                            inv.ProdDetailID = child.ProdDetailID;
-                            inv.Location_ID = child.Location_ID;
-                            //if (_appContext.SysConfig.CheckNegativeInventory)
-                            //{
-                            //    inv.Quantity = -child.Quantity;
-                            //}
-                            //else
-                            //{
-                            inv.Quantity = 0;
-                            //}
 
-                            inv.InitInventory = (int)inv.Quantity;
-                            inv.Notes = "";//后面修改数据库是不需要？
-                            //inv.LatestStorageTime = System.DateTime.Now;
-                            BusinessHelper.Instance.InitEntity(inv);
-                        }
-                        if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
-                        {
-                            approvalEntity.ApprovalResults = false;
-                            approvalEntity.ApprovalOpinions = $"库存为：{inv.Quantity}，拟销售量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
-                            rmrs.ErrorMsg = approvalEntity.ApprovalOpinions;
-                            rmrs.Succeeded = false;
-                            return rmrs;
-                        }
-
-
-                        //更新在途库存
-                        inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
-                        BusinessHelper.Instance.EditEntity(inv);
-                        #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-
-                        }
                     }
                 }
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
+                // entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
                 //后面已经修改为
-                entity.ApprovalResults = approvalEntity.ApprovalResults;
+                //  entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -118,7 +111,7 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 // _logger.Info(approvalEntity.bizName + "审核事务成功");
-                rmrs.ReturnObject= entity as T;
+                rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
@@ -128,9 +121,9 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error("事务回滚" + ex.Message);
                 }
-                rmrs.ErrorMsg = approvalEntity.bizName + "事务回滚=>" + ex.Message;
+                rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
                 return rmrs;
             }

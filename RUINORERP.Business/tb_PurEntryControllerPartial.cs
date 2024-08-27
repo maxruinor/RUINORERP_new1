@@ -65,6 +65,11 @@ namespace RUINORERP.Business
                      .Where(c => c.PurOrder_ID == entity.PurOrder_ID)
                      .Single();
 
+                if (entity.tb_purorder == null)
+                {
+                    rs.ErrorMsg = $"没有找到对应的采购订单!请检查数据后重试！";
+                    return rs;
+                }
 
                 //如果入库明细中的产品。不存在于订单中。审核失败。
                 foreach (var child in entity.tb_PurEntryDetails)
@@ -265,9 +270,9 @@ namespace RUINORERP.Business
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-              //  entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                //  entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-              //  entity.ApprovalResults = approvalEntity.ApprovalResults;
+                //  entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列

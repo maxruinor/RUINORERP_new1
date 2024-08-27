@@ -131,8 +131,12 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<bool> AntiApprovalAsync(List<tb_ProdBorrowing> entitys)
+
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
+            ReturnResults<T> rsms = new ReturnResults<T>();
+            tb_ProdBorrowing entity = ObjectEntity as tb_ProdBorrowing;
+
             try
             {
                 // 开启事务，保证数据一致性
@@ -141,42 +145,41 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
-                foreach (tb_ProdBorrowing entity in entitys)
-                {
-                    //判断是否能反审?
-                    if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                    {
-                        //return false;
-                        continue;
-                    }
-                    foreach (var child in entity.tb_ProdBorrowingDetails)
-                    {
-                        #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                        if (inv == null)
-                        {
-                            inv = new tb_Inventory();
-                            inv.ProdDetailID = child.ProdDetailID;
-                            inv.Location_ID = child.Location_ID;
-                            inv.Quantity = 0;
-                            inv.InitInventory = (int)inv.Quantity;
-                            inv.Notes = "";//后面修改数据库是不需要？
-                                           //inv.LatestStorageTime = System.DateTime.Now;
-                            BusinessHelper.Instance.InitEntity(inv);
-                        }
-                        //更新在途库存
-                        //反审，出库的要加回来，要卖的也要加回来
-                        inv.Quantity = inv.Quantity + child.Qty;
-                        //最后出库时间要改回来，这里没有处理
-                        //inv.LatestStorageTime
-                        BusinessHelper.Instance.EditEntity(inv);
-                        #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
 
-                        }
+                //判断是否能反审?
+                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
+                {
+                    //return false;
+                    return rsms;
+                }
+                foreach (var child in entity.tb_ProdBorrowingDetails)
+                {
+                    #region 库存表的更新 ，
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    if (inv == null)
+                    {
+                        inv = new tb_Inventory();
+                        inv.ProdDetailID = child.ProdDetailID;
+                        inv.Location_ID = child.Location_ID;
+                        inv.Quantity = 0;
+                        inv.InitInventory = (int)inv.Quantity;
+                        inv.Notes = "";//后面修改数据库是不需要？
+                                       //inv.LatestStorageTime = System.DateTime.Now;
+                        BusinessHelper.Instance.InitEntity(inv);
                     }
+                    //更新在途库存
+                    //反审，出库的要加回来，要卖的也要加回来
+                    inv.Quantity = inv.Quantity + child.Qty;
+                    //最后出库时间要改回来，这里没有处理
+                    //inv.LatestStorageTime
+                    BusinessHelper.Instance.EditEntity(inv);
+                    #endregion
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
+                    {
+
+                    }
+
 
 
                     //==
@@ -198,14 +201,16 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 //  _logger.Info(approvalEntity.bizName + "审核事务成功");
-                return true;
+                rsms.ReturnObject = entity as T;
+                rsms.Succeeded = true;
+                return rsms;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
                 //  _logger.Error(approvalEntity.bizName + "事务回滚");
-                return false;
+                return rsms;
             }
 
         }

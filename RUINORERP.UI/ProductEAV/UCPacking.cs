@@ -236,7 +236,7 @@ namespace RUINORERP.UI.ProductEAV
 
 
                 var lambdaProdProdDetail = Expressionable.Create<View_ProdDetail>()
-                        .And(t => t.Is_enabled == true)
+                        .And(t => t.产品可用 == true)
                         .ToExpression();
                 BaseProcessor baseProcessorProdDetail = Startup.GetFromFacByName<BaseProcessor>(typeof(View_ProdDetail).Name + "Processor");
                 QueryFilter queryFilterProdDetail = baseProcessorProdDetail.GetQueryFilter();

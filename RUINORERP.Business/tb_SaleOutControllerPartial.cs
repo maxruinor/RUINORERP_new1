@@ -160,7 +160,8 @@ namespace RUINORERP.Business
                             if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
                             {
 
-                                rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                               // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                                rrs.ErrorMsg = $"库存为：{inv.Quantity}，拟销售量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
                                 rrs.Succeeded = false;
                                 return rrs;
                             }

@@ -38,86 +38,86 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> ApprovalAsync(tb_PurEntryRe entity, ApprovalEntity approvalEntity)
+
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<bool> rs = new ReturnResults<bool>();
-            rs.Succeeded = false;
+            tb_PurEntryRe entity = ObjectEntity as tb_PurEntryRe;
+            ReturnResults<T> rs = new ReturnResults<T>();
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-                if (approvalEntity.ApprovalResults)
+
+                if (entity == null)
                 {
-                    if (entity == null)
-                    {
-                        return rs;
-                    }
-
-                    foreach (var child in entity.tb_PurEntryReDetails)
-                    {
-                        #region 库存表的更新 这里应该是必需有库存的数据，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                        if (inv != null)
-                        {
-                            //更新库存
-                            inv.Quantity = inv.Quantity - child.Quantity;
-                            BusinessHelper.Instance.EditEntity(inv);
-                        }
-                        /*
-                      直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                     平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                     先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                     后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                     数据来源可以是多种多样的，例如：
-                     采购价格：从供应商处购买产品或物品时的价格。
-                     生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                     市场价格：参考市场上类似产品或物品的价格。
-                      */
-                        // inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
-                        inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                        inv.LatestStorageTime = System.DateTime.Now;
-                        #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-
-                        }
-                    }
-
-                    //入库退回 写回入库单明细,审核用加，
-                    if (entity.tb_purentry != null)
-                    {
-                        if (entity.tb_purentry.tb_PurEntryDetails == null)
-                        {
-                            entity.tb_purentry.tb_PurEntryDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>().Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToList();
-                        }
-
-                        foreach (var child in entity.tb_purentry.tb_PurEntryDetails)
-                        {
-                            tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails.Where(c => c.ProdDetailID == child.ProdDetailID).FirstOrDefault();
-                            if (entryDetail == null)
-                            {
-                                continue;
-                            }
-                            child.ReturnedQty += entryDetail.Quantity;
-                            //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
-                            if (child.ReturnedQty > entity.tb_purentry.tb_purorder.TotalQty)
-                            {
-                                throw new Exception("退回数量不能大于订单数量！");
-                            }
-                        }
-                        //更新已退回数量
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryDetail>(entity.tb_purentry.tb_PurEntryDetails).ExecuteCommandAsync();
-                    }
-
+                    return rs;
                 }
+
+                foreach (var child in entity.tb_PurEntryReDetails)
+                {
+                    #region 库存表的更新 这里应该是必需有库存的数据，
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    if (inv != null)
+                    {
+                        //更新库存
+                        inv.Quantity = inv.Quantity - child.Quantity;
+                        BusinessHelper.Instance.EditEntity(inv);
+                    }
+                    /*
+                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
+                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
+                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
+                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
+                 数据来源可以是多种多样的，例如：
+                 采购价格：从供应商处购买产品或物品时的价格。
+                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
+                 市场价格：参考市场上类似产品或物品的价格。
+                  */
+                    // inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
+                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
+                    inv.LatestStorageTime = System.DateTime.Now;
+                    #endregion
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
+                    {
+
+                    }
+                }
+
+                //入库退回 写回入库单明细,审核用加，
+                if (entity.tb_purentry != null)
+                {
+                    if (entity.tb_purentry.tb_PurEntryDetails == null)
+                    {
+                        entity.tb_purentry.tb_PurEntryDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryDetail>().Where(c => c.PurEntryID == entity.tb_purentry.PurEntryID).ToList();
+                    }
+
+                    foreach (var child in entity.tb_purentry.tb_PurEntryDetails)
+                    {
+                        tb_PurEntryReDetail entryDetail = entity.tb_PurEntryReDetails.Where(c => c.ProdDetailID == child.ProdDetailID).FirstOrDefault();
+                        if (entryDetail == null)
+                        {
+                            continue;
+                        }
+                        child.ReturnedQty += entryDetail.Quantity;
+                        //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
+                        if (child.ReturnedQty > entity.tb_purentry.tb_purorder.TotalQty)
+                        {
+                            throw new Exception("退回数量不能大于订单数量！");
+                        }
+                    }
+                    //更新已退回数量
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryDetail>(entity.tb_purentry.tb_PurEntryDetails).ExecuteCommandAsync();
+                }
+
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
+                // entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
                 //后面已经修改为
-                entity.ApprovalResults = approvalEntity.ApprovalResults;
+                // entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -134,7 +134,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
-                    _logger.Error(approvalEntity.ToString() + "事务回滚" + ex.Message);
+                    _logger.Error("事务回滚" + ex.Message);
                 }
                 rs.ErrorMsg = ex.Message;
                 return rs;
@@ -156,7 +156,7 @@ namespace RUINORERP.Business
             rs.Succeeded = false;
             try
             {
-           
+
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();

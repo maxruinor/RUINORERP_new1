@@ -13,6 +13,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
+using RUINORERP.Model.Models;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Report;
@@ -45,7 +46,11 @@ namespace RUINORERP.UI.BaseForm
     /// <typeparam name="C">Child表类型-单表时可以传主表</typeparam>
     public partial class BaseNavigatorGeneric<M, C> : BaseNavigator where M : class
     {
-
+        /// <summary>
+        /// 从工作台点击过来的时候，这个保存初始化时的查询参数
+        ///  这个可用可不用。
+        /// </summary>
+        public object QueryDtoProxy { get; set; }
         /// <summary>
         /// 传入的是M,即主表类型的实体数据 
         /// </summary>
@@ -458,8 +463,30 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
             //RptDesignForm frm = new RptDesignForm();
             //frm.ReportTemplateFile = "SOB.frx";
             //frm.ShowDialog();
+            MenuPersonalizedSettings();
         }
-
+        protected virtual void MenuPersonalizedSettings()
+        {
+            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
+            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
+            if (frmMenu.ShowDialog() == DialogResult.OK)
+            {
+                if (!this.DesignMode)
+                {
+                    MenuPersonalization personalization = new MenuPersonalization();
+                    UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
+                    if (personalization != null)
+                    {
+                        decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
+                        QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
+                    }
+                    else
+                    {
+                        QueryDtoProxy = LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
+                    }
+                }
+            }
+        }
         public virtual void BuildLimitQueryConditions()
         {
 
@@ -644,12 +671,25 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
             kryptonWorkspace1.Root.Children.Clear();
             Builder();
             //添加查询条件
-            LoadQueryConditionToUI(kryptonPanelQuery);
+
+
+
             this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
             if (this.CurMenuInfo == null)
             {
                 MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                 return;
+            }
+            MenuPersonalization personalization = new MenuPersonalization();
+            UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
+            if (personalization != null)
+            {
+                decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
+                QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
+            }
+            else
+            {
+                QueryDtoProxy = LoadQueryConditionToUI(4);
             }
 
 
@@ -818,23 +858,24 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
 
         /// <summary>
         /// 默认不是模糊查询
+        /// 这个实际可以优化到基类统一起来。只要是有查询条件生成的情况下的都可以用
         /// </summary>
         /// <param name="useLike"></param>
-        public void LoadQueryConditionToUI(Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器)
+        public object LoadQueryConditionToUI(decimal QueryConditionShowColQty)
         {
+            Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = kryptonPanelQuery;
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
             UIQueryHelper<M> uIQueryHelper = new UIQueryHelper<M>();
             uIQueryHelper.ReladtedEntityType = ReladtedEntityType;
-            kryptonPanel条件生成容器.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance
-    | System.Reflection.BindingFlags.NonPublic).SetValue(kryptonPanel条件生成容器, true, null);
+            kryptonPanel条件生成容器.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(kryptonPanel条件生成容器, true, null);
             kryptonPanel条件生成容器.Visible = false;
             kryptonPanel条件生成容器.Controls.Clear();
             kryptonPanel条件生成容器.SuspendLayout();
-            //QueryDto = uIQueryHelper.SetQueryUI(true, kryptonPanel条件生成容器, QueryFilter, 4);
-            QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryFilter, 4);
+            QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryFilter, QueryConditionShowColQty);
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;
+            return QueryDto;
         }
 
 

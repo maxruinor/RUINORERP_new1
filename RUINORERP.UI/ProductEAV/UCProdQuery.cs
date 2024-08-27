@@ -506,8 +506,6 @@ namespace RUINORERP.UI.ProductEAV
                 cateids = categoriesController.GetChildids(long.Parse(txtcategory_ID.TreeView.SelectedNode.Name));
             }
             Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-            .And(c => c.Is_enabled == true)
-            .And(c => c.Is_available == true)
            .AndIF(txtName.Text.Trim().Length > 0, w => w.CNName.Contains(txtName.Text.Trim()))
            .AndIF(txtModel.Text.Trim().Length > 0, w => w.Model.Contains(txtModel.Text.Trim()))
            .AndIF(txtType_ID.SelectedValue != null && txtType_ID.SelectedValue.ToString() != "-1", w => w.Type_ID == long.Parse(txtType_ID.SelectedValue.ToString()))
@@ -852,6 +850,7 @@ namespace RUINORERP.UI.ProductEAV
 
         /// <summary>
         /// 这里字段是用来可以主动设置查询条件的
+        /// 其它 的实际是可以不设置
         /// </summary>
         public void BindData()
         {
@@ -869,6 +868,10 @@ namespace RUINORERP.UI.ProductEAV
             DataBindingHelper.BindData4TextBox<View_ProdDetail>(entity, t => t.ShortCode, txtShortCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<View_ProdDetail>(entity, t => t.Model, txtModel, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<View_ProdDetail>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text, false);
+            //DataBindingHelper.BindData4CheckBox<View_ProdDetail>(entity, t => t.SKU可用, chksku_available, false);
+            //DataBindingHelper.BindData4CheckBox<View_ProdDetail>(entity, t => t.SKU启用, chksku_enabled, false);
+            //DataBindingHelper.BindData4CheckBox<View_ProdDetail>(entity, t => t.产品可用, chkProd_available, false);
+            //DataBindingHelper.BindData4CheckBox<View_ProdDetail>(entity, t => t.产品启用, chkProd_enabled, false);
 
             //errorProviderForAllInput.DataSource = entity;
             //errorProviderForAllInput.ContainerControl = this;
@@ -1591,3 +1594,4 @@ namespace RUINORERP.UI.ProductEAV
         }
     }
 }
+

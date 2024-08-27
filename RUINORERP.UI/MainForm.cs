@@ -293,7 +293,7 @@ namespace RUINORERP.UI
             timer1.Start();
             tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
             List<tb_Company> company = await companyController.QueryAsync();
-            Version = "2024-08-22";
+            Version = "2024-08-27";
             if (company != null)
             {
                 this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + Version;
@@ -749,8 +749,10 @@ namespace RUINORERP.UI
                     }
                     this.cmbRoles.SelectedIndexChanged += new System.EventHandler(this.cmbRoles_SelectedIndexChanged);
                 }
-                MainForm.Instance.logger.LogInformation("成功登陆服务器");
-                MainForm.Instance.uclog.AddLog("成功登陆服务器");
+
+                //MainForm.Instance.logger.LogInformation("成功登陆服务器");
+                //记入审计日志
+                AuditLogHelper.Instance.CreateAuditLog("登陆", "成功登陆服务器");
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
@@ -777,6 +779,7 @@ namespace RUINORERP.UI
             {
                 ecs.LoginSuccessed = false;
                 this.SystemOperatorState.Text = "登出";
+                AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
                 MainForm.Instance.AppContext.Db.Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntity();
                 ClearData();

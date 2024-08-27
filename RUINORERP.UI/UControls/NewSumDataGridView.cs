@@ -1,5 +1,6 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
 using Krypton.Toolkit;
+using NPOI.Util;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.UI.Common;
@@ -14,6 +15,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Windows.Forms;
+ 
 
 namespace RUINORERP.UI.UControls
 {
@@ -919,8 +921,16 @@ namespace RUINORERP.UI.UControls
 
 
         private bool setContextMenu = false;
+
+        /// <summary>
+        /// 设置右键菜单，但是对不对参数进行设置。因为是引用的，会改变值
+        /// </summary>
+        /// <param name="_contextMenuStrip"></param>
         public void SetContextMenu(ContextMenuStrip _contextMenuStrip)
         {
+            // 创建一个新的ContextMenuStrip实例，用于存储合并后的菜单项
+            ContextMenuStrip mergedMenu = new ContextMenuStrip();
+
             //初始化右键菜单
             _cMenus.BackColor = Color.FromArgb(192, 255, 255);
 
@@ -1012,9 +1022,45 @@ namespace RUINORERP.UI.UControls
                     _cMenus.Items.Add(cmc.MenuText, null, 删除选中行);
                 }
             }
+            //意思是如果本身设置过了。就不重复设置
+            if (_contextMenuStrip != null)
+            {
+                //如果公共有则分开一下
+                if (_cMenus.Items.Count > 0)
+                {
+                    ToolStripSeparator MyTss = new ToolStripSeparator();
+                    _cMenus.Items.Add(MyTss);
+                }
+                
+                // 将传入的菜单项复制到新的mergedMenu中
+                foreach (ToolStripItem item in _contextMenuStrip.Items)
+                {
+                    if (item is System.Windows.Forms.ToolStripSeparator)
+                    {
 
+                    }
+                    ToolStripMenuItem newItem = new ToolStripMenuItem(item.Text);
+                    
+                    //mergedMenu.Items.Add(item.co);
+                }
 
+                //合并外面的
+                ToolStripItem[] ts = new ToolStripItem[_contextMenuStrip.Items.Count];
+                _contextMenuStrip.Items.CopyTo(ts, 0);
 
+                _cMenus.Items.AddRange(ts);
+
+                mergedMenu = _cMenus;
+                //只给公共内置的
+                ContextMenuStrip = mergedMenu;
+            }
+            else
+            {
+                //只给公共内置的
+                ContextMenuStrip = _cMenus;
+            }
+
+            /*
 
             //意思是如果本身设置过了。就不重复设置
             if (this.ContextMenuStrip != null)
@@ -1031,14 +1077,15 @@ namespace RUINORERP.UI.UControls
                     //这里同级添加
                     this.ContextMenuStrip.Items.AddRange(ts);
                 }
-
-
             }
             else
             {
+
+              
+
                 ContextMenuStrip = _cMenus;
             }
-
+            */
         }
 
 

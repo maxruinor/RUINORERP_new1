@@ -44,6 +44,7 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.最大行数 = new System.Windows.Forms.ToolStripLabel();
             this.txtMaxRow = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.BaseToolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -58,6 +59,7 @@
             this.toolStripSeparator1,
             this.toolStripBtnExport,
             this.toolStripButton12,
+            this.toolStripbtnProperty,
             this.toolStripbtnFunction,
             this.toolStripSeparator3,
             this.最大行数,
@@ -170,6 +172,14 @@
             this.txtMaxRow.Size = new System.Drawing.Size(100, 25);
             this.txtMaxRow.Text = "200";
             // 
+            // toolStripbtnProperty
+            // 
+            this.toolStripbtnProperty.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnProperty.Image")));
+            this.toolStripbtnProperty.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnProperty.Name = "toolStripbtnProperty";
+            this.toolStripbtnProperty.Size = new System.Drawing.Size(53, 22);
+            this.toolStripbtnProperty.Text = "属性";
+            // 
             // BaseNavigator
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -200,5 +210,6 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         public System.Windows.Forms.ToolStripSplitButton toolStripSplitButtonPrint;
+        public System.Windows.Forms.ToolStripButton toolStripbtnProperty;
     }
 }

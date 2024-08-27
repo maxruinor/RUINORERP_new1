@@ -1385,6 +1385,12 @@
     <Compile Include="PSI\INV\UCProdReturning.Designer.cs">
       <DependentUpon>UCProdReturning.cs</DependentUpon>
     </Compile>
+    <Compile Include="PSI\INV\UCProdBorrowingStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdBorrowingStatistics.Designer.cs">
+      <DependentUpon>UCProdBorrowingStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="PSI\INV\UCStockIn.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2437,6 +2443,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCProdReturning.resx">
       <DependentUpon>UCProdReturning.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCProdBorrowingStatistics.resx">
+      <DependentUpon>UCProdBorrowingStatistics.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCStockIn.resx">
       <DependentUpon>UCStockIn.cs</DependentUpon>

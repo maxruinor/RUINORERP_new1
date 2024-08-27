@@ -721,40 +721,7 @@ namespace RUINORERP.Model
         }
 
 
-        private bool? _Is_available;
-
-
-        /// <summary>
-        /// 是否可用
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Is_available", ColDesc = "是否可用")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Is_available", IsNullable = true, ColumnDescription = "是否可用")]
-        [Display(Name = "是否可用")]
-        public bool? Is_available
-        {
-            get { return _Is_available; }            set
-            {                SetProperty(ref _Is_available, value);
-            }
-        }
-
-        private bool? _Is_enabled;
-
-
-        /// <summary>
-        /// 是否启用
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Is_enabled", ColDesc = "是否启用")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Is_enabled", IsNullable = true, ColumnDescription = "是否启用")]
-        [Display(Name = "是否启用")]
-        public bool? Is_enabled
-        {
-            get { return _Is_enabled; }            set
-            {                SetProperty(ref _Is_enabled, value);
-            }
-        }
-
+        
 
         private bool? _产品可用;
 

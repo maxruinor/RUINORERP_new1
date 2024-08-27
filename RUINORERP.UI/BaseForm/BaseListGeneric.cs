@@ -961,7 +961,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         MainForm.Instance.logger.LogInformation($"删除:{typeof(T).Name}，主键值：{PKValue.ToString()} ");
                     }
-
+                    AuditLogHelper.Instance.CreateAuditLog("删除", CurMenuInfo.CaptionCN);
                     //提示服务器开启推送工作流
                     OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                     MainForm.Instance.ecs.AddSendData(beatDataDel);
@@ -1594,6 +1594,9 @@ namespace RUINORERP.UI.BaseForm
                             //提示服务器开启推送工作流
                             OriginalData beatData = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                             MainForm.Instance.ecs.AddSendData(beatData);
+                            //审计日志
+                            AuditLogHelper.Instance.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
+                          //  AuditLogHelper.Instance.CreateAuditLog<T>("保存", rr.ReturnObject);
 
                         }
                         //tb_Unit Entity = await ctr.AddReEntityAsync(entity);
@@ -1695,7 +1698,7 @@ namespace RUINORERP.UI.BaseForm
                }
            }
            */
-    }    
+        }
         protected virtual void Exit(object thisform)
         {
             if (!Edited)
@@ -1712,7 +1715,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
-   
+
 
         protected virtual void Refreshs()
         {

@@ -37,14 +37,14 @@
             this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelQuery.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelQuery.Name = "kryptonPanelQuery";
-            this.kryptonPanelQuery.Size = new System.Drawing.Size(1004, 730);
+            this.kryptonPanelQuery.Size = new System.Drawing.Size(1127, 758);
             this.kryptonPanelQuery.TabIndex = 1;
             // 
             // QueryFormGeneric
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1004, 730);
+            this.ClientSize = new System.Drawing.Size(1127, 758);
             this.Controls.Add(this.kryptonPanelQuery);
             this.Name = "QueryFormGeneric";
             this.Text = "QueryFormGeneric";

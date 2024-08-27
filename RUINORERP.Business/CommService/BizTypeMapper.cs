@@ -20,8 +20,15 @@ namespace RUINORERP.Business.CommService
         {
             mapping = new Dictionary<BizType, Type>();
 
+            //mapping.Add(BizType.产品档案, typeof(View_ProdDetail));
+
             mapping.Add(BizType.产品档案, typeof(View_ProdDetail));
             // 手动添加枚举值与表名的对应关系
+
+
+
+
+
             mapping.Add(BizType.BOM物料清单, typeof(tb_BOM_S));
             mapping.Add(BizType.销售订单, typeof(tb_SaleOrder));
             mapping.Add(BizType.销售出库单, typeof(tb_SaleOut));

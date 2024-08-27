@@ -37,6 +37,7 @@ using NPOI.SS.Formula.Functions;
 using RUINORERP.Model.CommonModel;
 using SourceGrid;
 using RUINORERP.Business.CommService;
+using NPOI.POIFS.Properties;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -134,7 +135,7 @@ namespace RUINORERP.UI.PSI.SAL
             tb_SaleOrder entity = entityPara as tb_SaleOrder;
             if (entity == null)
             {
- 
+
                 return;
             }
 
@@ -634,6 +635,27 @@ namespace RUINORERP.UI.PSI.SAL
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
+
+                //订单只是警告。可以继续
+
+                if (!MainForm.Instance.AppContext.SysConfig.CheckNegativeInventory)
+                {
+                    foreach (var item in details)
+                    {
+                        var detail = list.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
+                        if (detail != null)
+                        {
+                            if ((detail.Quantity - item.Quantity) < 0)
+                            {
+                                if (MessageBox.Show($"产品{detail.SKU},{detail.CNName},{detail.prop}的库存不足\r\n实际数量为：{detail.Quantity} ，拟销数量为： {item.Quantity}，是否继续保存？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
+                                {
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 EditEntity.tb_SaleOrderDetails = details;
                 //var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 //if (aa.Count > 1)
@@ -953,67 +975,67 @@ namespace RUINORERP.UI.PSI.SAL
         }
          */
 
-      /*
-        protected async override void ReReview()
-        {
-            {
-                return;
-            }
+        /*
+          protected async override void ReReview()
+          {
+              {
+                  return;
+              }
 
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return;
-            }
+              //反审，要审核过，并且通过了，才能反审。
+              if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
+              {
+                  MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
+                  return;
+              }
 
 
-            if (EditEntity.tb_SaleOrderDetails == null || EditEntity.tb_SaleOrderDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                return;
-            }
+              if (EditEntity.tb_SaleOrderDetails == null || EditEntity.tb_SaleOrderDetails.Count == 0)
+              {
+                  MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
+                  return;
+              }
 
-            Command command = new Command();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
-            };
+              Command command = new Command();
+              //缓存当前编辑的对象。如果撤销就回原来的值
+              tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
+              command.UndoOperation = delegate ()
+              {
+                  //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
+                  CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
+              };
 
-            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-            List<tb_SaleOrder> list = new List<tb_SaleOrder>();
-            list.Add(EditEntity);
-            ReturnResults<bool> rr = await ctr.AntiApprovalAsync(list);
-            if (rr.Succeeded)
-            {
+              tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+              List<tb_SaleOrder> list = new List<tb_SaleOrder>();
+              list.Add(EditEntity);
+              ReturnResults<bool> rr = await ctr.AntiApprovalAsync(list);
+              if (rr.Succeeded)
+              {
 
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
+                  //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+                  //{
 
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
+                  //}
+                  //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                  //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                  //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                  //MainForm.Instance.ecs.AddSendData(od);
 
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.反审);
-                toolStripbtnReview.Enabled = true;
+                  //审核成功
+                  base.ToolBarEnabledControl(MenuItemEnums.反审);
+                  toolStripbtnReview.Enabled = true;
 
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
-            }
+              }
+              else
+              {
+                  //审核失败 要恢复之前的值
+                  command.Undo();
+                  MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}反审失败{rr.ErrorMsg},请联系管理员！", Color.Red);
+              }
 
-        }
+          }
 
-        */
+          */
         protected async override Task<bool> CloseCaseAsync()
         {
             if (EditEntity == null)

@@ -33,7 +33,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer2 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
+            System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer1 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCProdQuery));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
@@ -203,7 +203,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonSplitContainerQuery
             // 
-            this.kryptonSplitContainerQuery.Cursor = System.Windows.Forms.Cursors.VSplit;
+            this.kryptonSplitContainerQuery.Cursor = System.Windows.Forms.Cursors.Default;
             this.kryptonSplitContainerQuery.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonSplitContainerQuery.Location = new System.Drawing.Point(0, 0);
             this.kryptonSplitContainerQuery.Name = "kryptonSplitContainerQuery";
@@ -613,7 +613,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // chkProdBundle_enabled
             // 
-            this.chkProdBundle_enabled.Location = new System.Drawing.Point(576, 5);
+            this.chkProdBundle_enabled.Location = new System.Drawing.Point(650, 8);
             this.chkProdBundle_enabled.Name = "chkProdBundle_enabled";
             this.chkProdBundle_enabled.Size = new System.Drawing.Size(19, 13);
             this.chkProdBundle_enabled.TabIndex = 140;
@@ -621,7 +621,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonLabel14
             // 
-            this.kryptonLabel14.Location = new System.Drawing.Point(697, 3);
+            this.kryptonLabel14.Location = new System.Drawing.Point(700, 6);
             this.kryptonLabel14.Name = "kryptonLabel14";
             this.kryptonLabel14.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel14.TabIndex = 139;
@@ -629,7 +629,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonLabel15
             // 
-            this.kryptonLabel15.Location = new System.Drawing.Point(508, 3);
+            this.kryptonLabel15.Location = new System.Drawing.Point(585, 6);
             this.kryptonLabel15.Name = "kryptonLabel15";
             this.kryptonLabel15.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel15.TabIndex = 138;
@@ -725,7 +725,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage产品,
             this.kryptonBOM,
             this.kryptonPage产品组合});
-            this.kryptonNavigator1.SelectedIndex = 2;
+            this.kryptonNavigator1.SelectedIndex = 1;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1118, 448);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -786,7 +786,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonBOM.LastVisibleSet = true;
             this.kryptonBOM.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonBOM.Name = "kryptonBOM";
-            this.kryptonBOM.Size = new System.Drawing.Size(1070, 421);
+            this.kryptonBOM.Size = new System.Drawing.Size(1116, 421);
             this.kryptonBOM.Text = "BOM";
             this.kryptonBOM.ToolTipTitle = "Page ToolTip";
             this.kryptonBOM.UniqueName = "6FBE127FB8EF4FCAC1976C4AE1CB7B7D";
@@ -806,9 +806,9 @@ namespace RUINORERP.UI.ProductEAV
             this.columnHeader8,
             this.columnHeader9,
             this.columnHeader10});
-            treeListViewItemCollectionComparer2.Column = 0;
-            treeListViewItemCollectionComparer2.SortOrder = System.Windows.Forms.SortOrder.Ascending;
-            this.treeListView1.Comparer = treeListViewItemCollectionComparer2;
+            treeListViewItemCollectionComparer1.Column = 0;
+            treeListViewItemCollectionComparer1.SortOrder = System.Windows.Forms.SortOrder.Ascending;
+            this.treeListView1.Comparer = treeListViewItemCollectionComparer1;
             this.treeListView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeListView1.GridLines = true;
             this.treeListView1.HideSelection = false;
@@ -816,7 +816,7 @@ namespace RUINORERP.UI.ProductEAV
             this.treeListView1.Location = new System.Drawing.Point(0, 0);
             this.treeListView1.Name = "treeListView1";
             this.treeListView1.ShowItemToolTips = true;
-            this.treeListView1.Size = new System.Drawing.Size(1070, 421);
+            this.treeListView1.Size = new System.Drawing.Size(1116, 421);
             this.treeListView1.SmallImageList = this.imageList1;
             this.treeListView1.TabIndex = 1;
             this.treeListView1.UseCompatibleStateImageBehavior = false;
@@ -928,7 +928,7 @@ namespace RUINORERP.UI.ProductEAV
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(508, 15);
+            this.btnCancel.Location = new System.Drawing.Point(579, 14);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 5;
@@ -937,7 +937,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(335, 15);
+            this.btnOk.Location = new System.Drawing.Point(406, 14);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 4;

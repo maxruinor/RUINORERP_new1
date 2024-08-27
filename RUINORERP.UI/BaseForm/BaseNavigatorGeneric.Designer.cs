@@ -29,14 +29,18 @@
         private void InitializeComponent()
         {
             this.kryptonPanelMain = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonGroup中间 = new Krypton.Toolkit.KryptonGroup();
             this.kryptonWorkspace1 = new Krypton.Workspace.KryptonWorkspace();
             this.kryptonHeaderGroupTop = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
-            this.kryptonGroup中间 = new Krypton.Toolkit.KryptonGroup();
             this.groupLine1 = new WinLib.Line.GroupLine();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).BeginInit();
             this.kryptonPanelMain.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup中间)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup中间.Panel)).BeginInit();
+            this.kryptonGroup中间.Panel.SuspendLayout();
+            this.kryptonGroup中间.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonWorkspace1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
@@ -44,10 +48,6 @@
             this.kryptonHeaderGroupTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).BeginInit();
             this.kryptonPanelQuery.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup中间)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup中间.Panel)).BeginInit();
-            this.kryptonGroup中间.Panel.SuspendLayout();
-            this.kryptonGroup中间.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonPanelMain
@@ -59,6 +59,18 @@
             this.kryptonPanelMain.Name = "kryptonPanelMain";
             this.kryptonPanelMain.Size = new System.Drawing.Size(934, 688);
             this.kryptonPanelMain.TabIndex = 7;
+            // 
+            // kryptonGroup中间
+            // 
+            this.kryptonGroup中间.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonGroup中间.Location = new System.Drawing.Point(0, 145);
+            this.kryptonGroup中间.Name = "kryptonGroup中间";
+            // 
+            // kryptonGroup中间.Panel
+            // 
+            this.kryptonGroup中间.Panel.Controls.Add(this.kryptonWorkspace1);
+            this.kryptonGroup中间.Size = new System.Drawing.Size(934, 543);
+            this.kryptonGroup中间.TabIndex = 2;
             // 
             // kryptonWorkspace1
             // 
@@ -116,18 +128,6 @@
             this.kryptonPanelQuery.Size = new System.Drawing.Size(932, 119);
             this.kryptonPanelQuery.TabIndex = 1;
             // 
-            // kryptonGroup中间
-            // 
-            this.kryptonGroup中间.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonGroup中间.Location = new System.Drawing.Point(0, 145);
-            this.kryptonGroup中间.Name = "kryptonGroup中间";
-            // 
-            // kryptonGroup中间.Panel
-            // 
-            this.kryptonGroup中间.Panel.Controls.Add(this.kryptonWorkspace1);
-            this.kryptonGroup中间.Size = new System.Drawing.Size(934, 543);
-            this.kryptonGroup中间.TabIndex = 2;
-            // 
             // groupLine1
             // 
             this.groupLine1.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -148,6 +148,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).EndInit();
             this.kryptonPanelMain.ResumeLayout(false);
             this.kryptonPanelMain.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup中间.Panel)).EndInit();
+            this.kryptonGroup中间.Panel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup中间)).EndInit();
+            this.kryptonGroup中间.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonWorkspace1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).EndInit();
             this.kryptonHeaderGroupTop.Panel.ResumeLayout(false);
@@ -155,10 +159,6 @@
             this.kryptonHeaderGroupTop.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).EndInit();
             this.kryptonPanelQuery.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup中间.Panel)).EndInit();
-            this.kryptonGroup中间.Panel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup中间)).EndInit();
-            this.kryptonGroup中间.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 

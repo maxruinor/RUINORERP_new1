@@ -74,7 +74,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             if (entity == null)
             {
- 
+
                 return;
             }
 
@@ -193,16 +193,16 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 //显示 打印状态 如果是草稿状态 不显示打印
-                if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
+                if ((DataStatus)entity.DataStatus != DataStatus.草稿)
                 {
                     toolStripbtnPrint.Enabled = true;
-                    if (EditEntity.PrintStatus == 0)
+                    if (entity.PrintStatus == 0)
                     {
                         lblPrintStatus.Text = "未打印";
                     }
                     else
                     {
-                        lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
+                        lblPrintStatus.Text = $"打印{entity.PrintStatus}次";
                     }
 
                 }
@@ -390,11 +390,11 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="entity"></param>
 
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalAmount);
 
@@ -415,7 +415,7 @@ namespace RUINORERP.UI.PSI.SAL
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
 
                 //var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
@@ -429,18 +429,18 @@ namespace RUINORERP.UI.PSI.SAL
                 if (EditEntity.tb_SaleOutDetails == null || EditEntity.tb_SaleOutDetails.Count == 0)
                 {
                     MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                    return;
+                    return false;
                 }
 
 
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_SaleOutDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
                 //二选中，验证机制还没有弄好。先这里处理
@@ -463,30 +463,21 @@ namespace RUINORERP.UI.PSI.SAL
                 if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
-
-                if (EditEntity.SaleOut_MainID > 0)
+                ReturnMainSubResults<tb_SaleOut> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SaleOutNo}。");
+                    return SaveResult.Succeeded;
                 }
                 else
                 {
-
-                    ReturnMainSubResults<tb_SaleOut> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        //lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
-
             }
+            return false;
         }
 
 

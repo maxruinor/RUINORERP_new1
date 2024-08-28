@@ -76,7 +76,7 @@ namespace RUINORERP.UI.MRP.MP
             tb_MaterialRequisition entity = entityPara as tb_MaterialRequisition;
             if (entity == null)
             {
- 
+
                 return;
             }
 
@@ -415,11 +415,11 @@ namespace RUINORERP.UI.MRP.MP
         /// </summary>
         /// <param name="entity"></param>
 
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalQuantity);
 
@@ -438,7 +438,7 @@ namespace RUINORERP.UI.MRP.MP
                 if (detailentity.Sum(c => c.ActualSentQty) == 0)
                 {
                     MessageBox.Show("明细总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    return false;
                 }
 
                 EditEntity.TotalSendQty = details.Sum(c => c.ActualSentQty);
@@ -447,26 +447,26 @@ namespace RUINORERP.UI.MRP.MP
                 if (EditEntity.TotalSendQty != detailentity.Sum(c => c.ActualSentQty) || EditEntity.TotalReQty != detailentity.Sum(c => c.ReturnQty))
                 {
                     MessageBox.Show($"单据总数量{EditEntity.TotalSendQty}和明细实发总数量{detailentity.Sum(c => c.ActualSentQty)}不相同，请检查后再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    return false;
                 }
                 //如果没有有效的明细。直接提示
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    return false;
                 }
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
                 for (int i = 0; i < details.Count; i++)
                 {
                     if (details[i].ActualSentQty <= 0)
                     {
                         System.Windows.Forms.MessageBox.Show("明细中实发数量，不能小于或等于零!，请修改或删除该行数据再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return;
+                        return false;
                     }
                 }
 
@@ -474,38 +474,31 @@ namespace RUINORERP.UI.MRP.MP
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_MaterialRequisitionDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
-                EditEntity.tb_MaterialRequisitionDetails = details;
+          
                 if (EditEntity.ApprovalStatus == null)
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
 
-                if (EditEntity.MR_ID > 0)
+                ReturnMainSubResults<tb_MaterialRequisition> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.MaterialRequisitionNO}。");
                 }
                 else
                 {
-                    ReturnMainSubResults<tb_MaterialRequisition> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.MaterialRequisitionNO}。");
-                    }
-                    else
-                    {
-                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                    }
+                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
                 }
-
+                return SaveResult.Succeeded;
             }
+            return false;
         }
 
         /*

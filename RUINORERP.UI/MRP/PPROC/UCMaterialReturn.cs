@@ -74,7 +74,7 @@ namespace RUINORERP.UI.MRP.MP
             tb_MaterialReturn entity = entityPara as tb_MaterialReturn;
             if (entity == null)
             {
- 
+
                 return;
             }
 
@@ -366,7 +366,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
                 EditEntity.TotalAmount = details.Sum(c => c.Price * c.Quantity);
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCostAmount= details.Sum(c => c.Cost * c.Quantity);
+                EditEntity.TotalCostAmount = details.Sum(c => c.Cost * c.Quantity);
             }
             catch (Exception ex)
             {
@@ -382,11 +382,11 @@ namespace RUINORERP.UI.MRP.MP
         /// </summary>
         /// <param name="entity"></param>
 
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalQty);
 
@@ -416,50 +416,45 @@ namespace RUINORERP.UI.MRP.MP
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    return false;
                 }
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
                 EditEntity.tb_MaterialReturnDetails = details;
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_MaterialReturnDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
-                EditEntity.tb_MaterialReturnDetails = details;
+        
                 if (EditEntity.ApprovalStatus == null)
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
 
-                if (EditEntity.MRE_ID > 0)
+
+                ReturnMainSubResults<tb_MaterialReturn> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.MaterialRequisitionNO}。");
                 }
                 else
                 {
-                    ReturnMainSubResults<tb_MaterialReturn> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BillNo}。");
-                    }
-                    else
-                    {
-                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
-
+                return SaveResult.Succeeded;
             }
+            return false;
         }
         /*
 
@@ -841,7 +836,7 @@ protected override void Print()
                 {
                     entity.CustomerVendor_ID = SourceBill.CustomerVendor_ID.Value;
                 }
-       
+
                 //if (SourceBill.PreStartDate.HasValue)
                 //{
                 //    entity.DeliveryDate = SourceBill.DeliveryDate.Value;

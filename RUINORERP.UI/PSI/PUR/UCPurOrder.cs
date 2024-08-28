@@ -84,7 +84,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             if (entity == null)
             {
- 
+
                 return;
             }
             EditEntity = entity;
@@ -313,8 +313,8 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0 && d.Quantity != 0 && d.SubtotalAmount != 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.TransactionPrice);//-->成交价是结果列
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0 && d.Discount != 0, (a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);//-->成交价是结果列
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.Discount != 0 && d.UnitPrice != 0 && d.TransactionPrice != 0, (a, b) => a.TransactionPrice / b.UnitPrice, c => c.Discount);//-->成交价是结果列
-          
-       
+
+
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.prop, t => t.property);
 
@@ -448,11 +448,11 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         List<tb_PurOrderDetail> details = new List<tb_PurOrderDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalAmount);
             bindingSourceSub.EndEdit();
@@ -466,7 +466,7 @@ namespace RUINORERP.UI.PSI.PUR
                 if (details.Count == 0)
                 {
                     System.Windows.Forms.MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 if (EditEntity.ApprovalStatus == null)
                 {
@@ -491,11 +491,11 @@ namespace RUINORERP.UI.PSI.PUR
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_PurOrderDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
 
@@ -503,38 +503,25 @@ namespace RUINORERP.UI.PSI.PUR
                 if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
-
-
-
-                if (EditEntity.PurOrder_ID > 0)
+                ReturnMainSubResults<tb_PurOrder> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PurOrderNo}。");
                 }
                 else
                 {
-                    ReturnMainSubResults<tb_PurOrder> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        // lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog($"保存失败,{SaveResult.ErrorMsg}。");
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
-
-
+                return SaveResult.Succeeded;
             }
-
-
-
+            return false;
         }
 
         tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
+
         /*
         protected async override Task<ApprovalEntity> Review()
         {

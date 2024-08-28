@@ -87,7 +87,7 @@ namespace RUINORERP.UI.PSI.INV
         {
             if (entity == null)
             {
- 
+
                 return;
             }
             EditEntity = entity;
@@ -95,7 +95,7 @@ namespace RUINORERP.UI.PSI.INV
             {
                 entity.PrimaryKeyID = entity.MainID;
                 entity.ActionStatus = ActionStatus.加载;
-              //  entity.DataStatus = (int)DataStatus.确认;
+                //  entity.DataStatus = (int)DataStatus.确认;
                 //如果审核了，审核要灰色
             }
             else
@@ -108,7 +108,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
             }
             DataBindingHelper.BindData4Cmb<tb_OutInStockType>(entity, k => k.Type_ID, v => v.TypeName, cmbType_ID, c => c.OutIn == false);
-         
+
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_StockOut>(entity, t => t.BillNo, txtBillNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_StockOut>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Qty, false);
@@ -176,7 +176,7 @@ namespace RUINORERP.UI.PSI.INV
             queryFilterC.FilterLimitExpressions.Add(lambda);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-            
+
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
                 base.InitRequiredToControl(new tb_StockOutValidator(), kryptonPanelMainInfo.Controls);
@@ -228,7 +228,7 @@ namespace RUINORERP.UI.PSI.INV
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridData = EditEntity;
             listCols.SetCol_Summary<tb_StockOutDetail>(c => c.Qty);
-           
+
 
             listCols.SetCol_Formula<tb_StockOutDetail>((a, b) => a.Cost * b.Qty, c => c.SubtotalCostAmount);
             listCols.SetCol_Formula<tb_StockOutDetail>((a, b) => a.Price * b.Qty, c => c.SubtotalPirceAmount);
@@ -240,9 +240,9 @@ namespace RUINORERP.UI.PSI.INV
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StockOutDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StockOutDetail>(sgd, f => f.Standard_Price, t => t.Price);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StockOutDetail>(sgd, f => f.prop, t => t.property);
- 
 
-           
+
+
 
             //应该只提供一个结构
             List<tb_StockOutDetail> lines = new List<tb_StockOutDetail>();
@@ -317,11 +317,11 @@ namespace RUINORERP.UI.PSI.INV
         }
 
         List<tb_StockOutDetail> details = new List<tb_StockOutDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalQty);
             bindingSourceSub.EndEdit();
@@ -335,53 +335,48 @@ namespace RUINORERP.UI.PSI.INV
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Qty);
                 EditEntity.tb_StockOutDetails = details;
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_StockOutDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
                 if (EditEntity.TotalQty != details.Sum(c => c.Qty))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
-                if (EditEntity.MainID > 0)
+
+  
+                ReturnMainSubResults<tb_StockOut> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BillNo}。");
                 }
                 else
                 {
-                    EditEntity.tb_StockOutDetails = details;
-                    ReturnMainSubResults<tb_StockOut> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        //lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
-               
+                return SaveResult.Succeeded;
             }
-
-
-
+            return false;
         }
 
 

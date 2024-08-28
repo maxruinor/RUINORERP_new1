@@ -66,7 +66,7 @@ namespace RUINORERP.UI.PSI.INV
             lblPrintStatus.Text = "";
             lblReview.Text = "";
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-            
+
             DataBindingHelper.InitDataToCmb<tb_OutInStockType>(k => k.Type_ID, v => v.TypeName, cmbType_ID, c => c.OutIn == true);
         }
         /// <summary>
@@ -81,7 +81,7 @@ namespace RUINORERP.UI.PSI.INV
         {
             if (entity == null)
             {
- 
+
                 return;
             }
             EditEntity = entity;
@@ -103,7 +103,7 @@ namespace RUINORERP.UI.PSI.INV
             }
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-            
+
             DataBindingHelper.BindData4Cmb<tb_OutInStockType>(entity, k => k.Type_ID, v => v.TypeName, cmbType_ID, c => c.OutIn == true);
 
 
@@ -163,8 +163,8 @@ namespace RUINORERP.UI.PSI.INV
 
             //创建表达式
             var lambda = Expressionable.Create<tb_CustomerVendor>()
-                           // .And(t => t.IsCustomer == true)
-                          //ndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            // .And(t => t.IsCustomer == true)
+                            //ndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
                             .ToExpression();//注意 这一句 不能少
 
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
@@ -193,7 +193,7 @@ namespace RUINORERP.UI.PSI.INV
             grid1.Selection.EnableMultiSelection = false;
 
 
-            List<SourceGridDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_StockInDetail>(c => c.ProdDetailID,false);
+            List<SourceGridDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_StockInDetail>(c => c.ProdDetailID, false);
 
             listCols.SetCol_NeverVisible<tb_StockInDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_StockInDetail>(c => c.Sub_ID);
@@ -233,9 +233,9 @@ namespace RUINORERP.UI.PSI.INV
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StockInDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StockInDetail>(sgd, f => f.Standard_Price, t => t.Price);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StockInDetail>(sgd, f => f.prop, t => t.property);
- 
 
-          
+
+
             //应该只提供一个结构
             List<tb_StockInDetail> lines = new List<tb_StockInDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
@@ -311,11 +311,11 @@ namespace RUINORERP.UI.PSI.INV
 
 
         List<tb_StockInDetail> details = new List<tb_StockInDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalQty);
             bindingSourceSub.EndEdit();
@@ -324,12 +324,13 @@ namespace RUINORERP.UI.PSI.INV
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
-                //details = details.Where(t => t.ProdDetailID > 0).ToList();
+                EditEntity.TotalQty = details.Sum(c => c.Qty);
+                EditEntity.tb_StockInDetails = details;
                 //如果没有有效的明细。直接提示
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 //二选中，验证机制还没有弄好。先这里处理
                 if (EditEntity.CustomerVendor_ID == 0 || EditEntity.CustomerVendor_ID == -1)
@@ -345,54 +346,48 @@ namespace RUINORERP.UI.PSI.INV
                 if (aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
-                EditEntity.TotalQty = details.Sum(c => c.Qty);
-                EditEntity.tb_StockInDetails = details;
+    
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_StockInDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
                 if (EditEntity.TotalQty != details.Sum(c => c.Qty))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
-                if (EditEntity.MainID > 0)
+
+      
+                ReturnMainSubResults<tb_StockIn> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    return SaveResult.Succeeded;
                 }
                 else
                 {
-                    EditEntity.tb_StockInDetails = details;
-                    ReturnMainSubResults<tb_StockIn> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        //lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
-
             }
 
-
-
+            return false;
         }
 
 
         /*
-   protected async override Task<ApprovalEntity> Review()
-   {
+    protected async override Task<ApprovalEntity> Review()
+    {
        if (EditEntity == null)
        {
            return null;
@@ -463,11 +458,11 @@ namespace RUINORERP.UI.PSI.INV
        }
 
        return ae;
-   }
+    }
 
 
-   protected async override void ReReview()
-   {
+    protected async override void ReReview()
+    {
        if (EditEntity == null)
        {
            return;
@@ -532,9 +527,9 @@ namespace RUINORERP.UI.PSI.INV
 
 
 
-   }
+    }
 
-   */
+    */
         private void cmbType_ID_SelectedIndexChanged(object sender, EventArgs e)
         {
 

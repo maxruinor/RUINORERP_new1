@@ -78,7 +78,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             if (entity == null)
             {
-  
+
                 return;
             }
             EditEntity = entity;
@@ -96,12 +96,12 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 entity.DeliveryBillNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.缴库单);
                 entity.DeliveryDate = System.DateTime.Now;
-               
+
             }
 
 
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.DeliveryBillNo, txtDeliveryBillNo, BindDataType4TextBox.Text, false);
-             
+
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
@@ -116,7 +116,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalProductionCost.ToString(), txtTotalProductionCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalMaterialCost.ToString(), txtTotalMaterialCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
-            
+
             //DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
@@ -330,7 +330,7 @@ namespace RUINORERP.UI.PSI.PUR
                     return;
                 }
                 EditEntity.TotalMaterialCost = details.Sum(c => c.MaterialCost * c.Qty);
-                
+
 
             }
             catch (Exception ex)
@@ -343,11 +343,11 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         List<tb_FinishedGoodsInvDetail> details = new List<tb_FinishedGoodsInvDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             // var eer = errorProviderForAllInput.GetError(txtto);
             bindingSourceSub.EndEdit();
@@ -361,7 +361,7 @@ namespace RUINORERP.UI.PSI.PUR
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 //var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 //if (aa.Count > 0)
@@ -374,7 +374,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
 
                 //if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
@@ -397,27 +397,25 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (!base.Validator<tb_FinishedGoodsInvDetail>(details))
                 {
-                    return;
+                    return false;
                 }
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
-                if (EditEntity.FG_ID > 0)
+
+                ReturnMainSubResults<tb_FinishedGoodsInv> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.DeliveryBillNo}。");
                 }
                 else
                 {
-                    EditEntity.tb_FinishedGoodsInvDetails = details;
-                    ReturnMainSubResults<tb_FinishedGoodsInv> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-
-                    }
+                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
                 }
-
+                return SaveResult.Succeeded;
             }
+            return false;
+
         }
         /*
 /// <summary>
@@ -580,8 +578,8 @@ protected async override Task<ApprovalEntity> ReReview()
             }
             var SourceBill = bsa.Tag as tb_ManufacturingOrder;
             SourceBill = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
-               // .Includes(c => c.tb_MaterialRequisitions, b => b.tb_MaterialRequisitionDetails)
-               // .Includes(c => c.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails)
+                // .Includes(c => c.tb_MaterialRequisitions, b => b.tb_MaterialRequisitionDetails)
+                // .Includes(c => c.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails)
                 .Where(c => c.MOID == MainID && c.DataStatus == (int)DataStatus.确认)
             .SingleAsync();
             //新增时才可以转单
@@ -625,11 +623,11 @@ protected async override Task<ApprovalEntity> ReReview()
                 NewDetails.Add(NewDetail);
                 entity.tb_FinishedGoodsInvDetails = NewDetails;
 
-                 //entity.PurOrder_ID = purorder.PurOrder_ID;
-                 //entity.PurOrder_NO = purorder.PurOrderNo;
-                 //entity.TotalAmount = NewDetails.Sum(c => c.SubtotalAmount);
-                 //entity.tot = NewDetails.Sum(c => c.Quantity);
-                 //entity.ActualAmount = entity.ShippingCost + entity.TotalAmount;
+                //entity.PurOrder_ID = purorder.PurOrder_ID;
+                //entity.PurOrder_NO = purorder.PurOrderNo;
+                //entity.TotalAmount = NewDetails.Sum(c => c.SubtotalAmount);
+                //entity.tot = NewDetails.Sum(c => c.Quantity);
+                //entity.ActualAmount = entity.ShippingCost + entity.TotalAmount;
 
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -641,7 +639,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 entity.ActionStatus = ActionStatus.新增;
                 if (entity.MOID > 0)
                 {
-                   entity.CustomerVendor_ID = entity.CustomerVendor_ID;
+                    entity.CustomerVendor_ID = entity.CustomerVendor_ID;
                     entity.DepartmentID = entity.DepartmentID;
                 }
                 BusinessHelper.Instance.InitEntity(entity);

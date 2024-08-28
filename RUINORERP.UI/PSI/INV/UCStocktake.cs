@@ -580,11 +580,11 @@ namespace RUINORERP.UI.PSI.INV
         List<tb_StocktakeDetail> details = new List<tb_StocktakeDetail>();
 
 
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtDiffAmount);
 
@@ -602,7 +602,7 @@ namespace RUINORERP.UI.PSI.INV
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
@@ -614,116 +614,110 @@ namespace RUINORERP.UI.PSI.INV
                     {
                         MainForm.Instance.uclog.AddLog($"明细中，SKU{prod.SKU},{prod.CNName}\r\n相同的产品不能多行录入:盘点单号:{EditEntity.CheckNo},产品ID:{aa.ToString()}");
                     }
-                    return;
+                    return false;
                 }
 
 
-                EditEntity.tb_StocktakeDetails = details;
+
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
 
                 if (!base.Validator<tb_StocktakeDetail>(details))
                 {
-                    return;
+                    return false;
                 }
-
-
-
+                EditEntity.tb_StocktakeDetails = details;
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
 
                 //  EditEntity.DataStatus = ApprovalStatus.未审核.ToString();
 
-
-                if (EditEntity.MainID > 0)
+                ReturnMainSubResults<tb_Stocktake> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.CheckNo}。");
                 }
                 else
                 {
-                    ReturnMainSubResults<tb_Stocktake> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-
-                        //lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
-
+                return SaveResult.Succeeded;
             }
-
-
-            /*
-            if (_EditEntity.actionStatus == ActionStatus.修改)
-            {
-                //产品ID有值才算有效值
-                details = detailentity.Where(t => t.ProdDetailID.HasValue).ToList();
-                details = details.Where(t => t.ProdDetailID.Value > 0).ToList();
-                //如果没有有效的明细。直接提示
-                if (details.Count == 0)
-                {
-                    MessageBox.Show("请录入有效明细记录！");
-                    return;
-                }
-
-                //前后比较是否变化
-                ComPareResult result = UITools.ComPare(oldOjb, details);
-                if (!result.IsEqual)
-                {
-                    //把差集删除
-                    //https://www.cnblogs.com/nuomibaibai/p/17043541.html
-                    //string [] dogs = animals.Select(x=>x.dog).ToArray();
-                    //差集 简化为明细ID的差，得到被删除的IDS
-                    List<long> oldids = oldOjb.Select(id => id.SubID).ToList();
-                    List<long> newids = details.Select(id => id.SubID).ToList();
-                    List<long> chaji = oldids.Except<long>(newids).ToList();
-                    List<object> olist = new List<object>();
-                    chaji.ForEach(i => olist.Add(i));
-                    //await soc.DeleteAsyncForDetail(olist.ToArray());
-                }
-                else
-                {
-                    if (EditEntity.actionStatus == ActionStatus.无操作)
-                    {
-                        EditEntity.actionStatus = ActionStatus.修改;
-                    }
-                }
-                //然后再写保存逻辑
-
-
-
-                //计算总金额
-                //decimal? totalMoney = details.Sum(r => r.quantity * r.price);
-                //_EditEntity.TotalAmount = totalMoney.Value;
-                //_EditEntity.tb_sales_order_details = details;
-                //设置目标ID成功后就行头写上编号？
-                //   表格中的验证提示
-                //   其他输入条码验证
-                bool vd = base.ShowInvalidMessage(ctrMain.Validator(_EditEntity));
-                if (!vd)
-                {
-                    return;
-                }
-                ReturnMainSubResults<tb_Stocktake> rmr = new ReturnMainSubResults<tb_Stocktake>();
-                rmr = await soc.BaseSaveOrUpdateWithChild<tb_Stocktake>(_EditEntity);
-
-                //_EditEntity = await soc.AddAsync(_EditEntity, details);
-                //_EditEntity = await soc.AddAsync(_EditEntity);
-                lblReview.Text = _EditEntity.status;
-            }
-            */
-
-            //  base.Save();
+            return false;
         }
 
 
         /*
-protected async override Task<ApprovalEntity> Review()
-{
+        if (_EditEntity.actionStatus == ActionStatus.修改)
+        {
+            //产品ID有值才算有效值
+            details = detailentity.Where(t => t.ProdDetailID.HasValue).ToList();
+            details = details.Where(t => t.ProdDetailID.Value > 0).ToList();
+            //如果没有有效的明细。直接提示
+            if (details.Count == 0)
+            {
+                MessageBox.Show("请录入有效明细记录！");
+                return;
+            }
+
+            //前后比较是否变化
+            ComPareResult result = UITools.ComPare(oldOjb, details);
+            if (!result.IsEqual)
+            {
+                //把差集删除
+                //https://www.cnblogs.com/nuomibaibai/p/17043541.html
+                //string [] dogs = animals.Select(x=>x.dog).ToArray();
+                //差集 简化为明细ID的差，得到被删除的IDS
+                List<long> oldids = oldOjb.Select(id => id.SubID).ToList();
+                List<long> newids = details.Select(id => id.SubID).ToList();
+                List<long> chaji = oldids.Except<long>(newids).ToList();
+                List<object> olist = new List<object>();
+                chaji.ForEach(i => olist.Add(i));
+                //await soc.DeleteAsyncForDetail(olist.ToArray());
+            }
+            else
+            {
+                if (EditEntity.actionStatus == ActionStatus.无操作)
+                {
+                    EditEntity.actionStatus = ActionStatus.修改;
+                }
+            }
+            //然后再写保存逻辑
+
+
+
+            //计算总金额
+            //decimal? totalMoney = details.Sum(r => r.quantity * r.price);
+            //_EditEntity.TotalAmount = totalMoney.Value;
+            //_EditEntity.tb_sales_order_details = details;
+            //设置目标ID成功后就行头写上编号？
+            //   表格中的验证提示
+            //   其他输入条码验证
+            bool vd = base.ShowInvalidMessage(ctrMain.Validator(_EditEntity));
+            if (!vd)
+            {
+                return;
+            }
+            ReturnMainSubResults<tb_Stocktake> rmr = new ReturnMainSubResults<tb_Stocktake>();
+            rmr = await soc.BaseSaveOrUpdateWithChild<tb_Stocktake>(_EditEntity);
+
+            //_EditEntity = await soc.AddAsync(_EditEntity, details);
+            //_EditEntity = await soc.AddAsync(_EditEntity);
+            lblReview.Text = _EditEntity.status;
+        }
+        */
+
+        //  base.Save();
+
+
+
+        /*
+    protected async override Task<ApprovalEntity> Review()
+    {
     if (EditEntity == null)
     {
         return null;
@@ -811,14 +805,14 @@ protected async override Task<ApprovalEntity> Review()
     }
 
     return ae;
-}
+    }
 
 
-/// <summary>
-/// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理
-/// </summary>
-protected async override Task<ApprovalEntity> ReReview()
-{
+    /// <summary>
+    /// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理
+    /// </summary>
+    protected async override Task<ApprovalEntity> ReReview()
+    {
     ApprovalEntity ae = new ApprovalEntity();
     if (EditEntity == null)
     {
@@ -873,8 +867,8 @@ protected async override Task<ApprovalEntity> ReReview()
         MainForm.Instance.PrintInfoLog($"盘点单{EditEntity.CheckNo}反审失败,{rrs.ErrorMsg},请联系管理员！", Color.Red);
     }
     return ae;
-}
-*/
+    }
+    */
         private void btnImportCheckProd_Click(object sender, EventArgs e)
         {
             if (EditEntity == null)

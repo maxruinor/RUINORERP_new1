@@ -39,6 +39,7 @@ using AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.UI.PSI.SAL;
 using EnumsNET;
+using RUINORERP.UI.ToolForm;
 
 
 namespace RUINORERP.UI.PSI.PUR
@@ -84,7 +85,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             if (entity == null)
             {
- 
+
                 return;
             }
             EditEntity = entity;
@@ -115,7 +116,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ActualAmount.ToString(), txtActualAmount, BindDataType4TextBox.Money, false);
 
             DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.BillDate, dtpBillDate, false);
-            
+
             DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.ReturnDate, dtpReturnDate, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
@@ -346,11 +347,11 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         List<tb_PurEntryReDetail> details = new List<tb_PurEntryReDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalQty);
             bindingSourceSub.EndEdit();
@@ -364,53 +365,52 @@ namespace RUINORERP.UI.PSI.PUR
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
                 EditEntity.tb_PurEntryReDetails = details;
+
+           
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_PurEntryReDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
                 if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
-                if (EditEntity.PurEntryRe_ID > 0)
+
+                ReturnMainSubResults<tb_PurEntryRe> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PurEntryRENo}。");
                 }
                 else
                 {
-                    EditEntity.tb_PurEntryReDetails = details;
-                    ReturnMainSubResults<tb_PurEntryRe> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        //lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
 
+                return SaveResult.Succeeded;
             }
 
-
+            return false;
 
         }
 

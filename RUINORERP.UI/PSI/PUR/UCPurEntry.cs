@@ -79,7 +79,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             if (entity == null)
             {
- 
+
                 return;
             }
             EditEntity = entity;
@@ -265,11 +265,11 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.prop, t => t.property);
 
 
-          
+
 
             //应该只提供一个结构
             List<tb_PurEntryDetail> lines = new List<tb_PurEntryDetail>();
-            bindingSourceSub.DataSource = lines;  
+            bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
             Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
          .AndIF(true, w => w.CNName.Length > 0)
@@ -341,11 +341,11 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         List<tb_PurEntryDetail> details = new List<tb_PurEntryDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalQty);
             bindingSourceSub.EndEdit();
@@ -359,7 +359,7 @@ namespace RUINORERP.UI.PSI.PUR
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 //var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 //if (aa.Count > 0)
@@ -367,18 +367,17 @@ namespace RUINORERP.UI.PSI.PUR
                 //    System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 //    return;
                 //}
-
                 EditEntity.tb_PurEntryDetails = details;
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
 
                 if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
                 if (_purorder != null)
@@ -388,34 +387,32 @@ namespace RUINORERP.UI.PSI.PUR
                     {
                         MainForm.Instance.uclog.AddLog("入库总数量不可能大于订单数量，请检查数据是否正确！PurOrderNo:" + _purorder.PurOrderNo, UILogType.错误);
                         MessageBox.Show("入库总数量不可能大于订单数量，请检查数据是否正确！");
-                        return;
+                        return false;
                     }
                 }
 
-
                 if (!base.Validator<tb_PurEntryDetail>(details))
                 {
-                    return;
+                    return false;
                 }
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
-                if (EditEntity.PurEntryID > 0)
+
+          
+                ReturnMainSubResults<tb_PurEntry> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PurEntryNo}。");
                 }
                 else
                 {
-                    EditEntity.tb_PurEntryDetails = details;
-                    ReturnMainSubResults<tb_PurEntry> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
-
+                return SaveResult.Succeeded;
             }
+            return false;
         }
         /*
    /// <summary>

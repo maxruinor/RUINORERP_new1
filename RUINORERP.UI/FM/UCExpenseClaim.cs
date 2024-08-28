@@ -36,6 +36,7 @@ using RUINOR.Core;
 using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using Krypton.Toolkit;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.FM
 {
@@ -262,11 +263,11 @@ namespace RUINORERP.UI.FM
         }
 
         List<tb_FM_ExpenseClaimDetail> details = new List<tb_FM_ExpenseClaimDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtClaimlAmount);
             bindingSourceSub.EndEdit();
@@ -280,38 +281,24 @@ namespace RUINORERP.UI.FM
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 EditEntity.tb_FM_ExpenseClaimDetails = details;
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_FM_ExpenseClaimDetail>(details))
                 {
-                    return;
+                    return false;
                 }
-
-
-                //设置目标ID成功后就行头写上编号？
-                //   表格中的验证提示
-                //   其他输入条码验证
-                if (EditEntity.ClaimMainID > 0)
-                {
-                    //更新式
-                    await base.Save(EditEntity);
-                }
-                else
-                {
-                    EditEntity.tb_FM_ExpenseClaimDetails = details;
-                    ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-
-                    }
-                }
-
+                ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = await base.Save(EditEntity);
+                return SaveResult.Succeeded;
+            }
+            else
+            {
+                return false;
             }
         }
 

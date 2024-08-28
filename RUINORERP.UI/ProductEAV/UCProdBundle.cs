@@ -78,11 +78,11 @@ namespace RUINORERP.UI.ProductEAV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdBundle).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public  void BindData(tb_ProdBundle entity)
+        public void BindData(tb_ProdBundle entity)
         {
             if (entity == null)
             {
- 
+
                 return;
             }
             EditEntity = entity;
@@ -452,11 +452,11 @@ namespace RUINORERP.UI.ProductEAV
    */
 
         List<tb_ProdBundleDetail> details = new List<tb_ProdBundleDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtMergeSourceTotalQty);
             bindingSourceSub.EndEdit();
@@ -470,7 +470,7 @@ namespace RUINORERP.UI.ProductEAV
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 //二选中，验证机制还没有弄好。先这里处理
                 //if (EditEntity.CustomerVendor_ID == 0 || EditEntity.CustomerVendor_ID == -1)
@@ -488,43 +488,33 @@ namespace RUINORERP.UI.ProductEAV
                 if (aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
                 //EditEntity.MergeSourceTotalQty = details.Sum(c => c.Qty);
                 EditEntity.tb_ProdBundleDetails = details;
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_ProdBundleDetail>(details))
                 {
-                    return;
+                    return false;
                 }
-
-
-
-                //设置目标ID成功后就行头写上编号？
-                //   表格中的验证提示
-                //   其他输入条码验证
-                if (EditEntity.BundleID > 0)
+ 
+                ReturnMainSubResults<tb_ProdBundle> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BundleName}。");
                 }
                 else
                 {
-                    EditEntity.tb_ProdBundleDetails = details;
-                    ReturnMainSubResults<tb_ProdBundle> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        //lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
-
+                return SaveResult.Succeeded;
             }
-
-
+            return false;
 
         }
 

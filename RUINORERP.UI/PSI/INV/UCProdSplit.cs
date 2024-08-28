@@ -452,11 +452,11 @@ namespace RUINORERP.UI.PSI.INV
 
 
         List<tb_ProdSplitDetail> details = new List<tb_ProdSplitDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtSplitChildTotalQty);
             bindingSourceSub.EndEdit();
@@ -465,16 +465,18 @@ namespace RUINORERP.UI.PSI.INV
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
+                EditEntity.SplitChildTotalQty = details.Sum(c => c.Qty);
+                EditEntity.tb_ProdSplitDetails = details;
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 //如果没有有效的明细。直接提示
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 //二选中，验证机制还没有弄好。先这里处理
                 //if (EditEntity.CustomerVendor_ID == 0 || EditEntity.CustomerVendor_ID == -1)
@@ -490,57 +492,56 @@ namespace RUINORERP.UI.PSI.INV
                 if (details.Any(c => c.ProdDetailID == EditEntity.ProdDetailID))
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，不能有和母件相同的数据!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
-                EditEntity.SplitChildTotalQty = details.Sum(c => c.Qty);
-                EditEntity.tb_ProdSplitDetails = details;
+ 
 
                 if (!base.Validator<tb_ProdSplitDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
                 if (EditEntity.SplitChildTotalQty != details.Sum(c => c.Qty))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
-                if (EditEntity.SplitID > 0)
+
+      
+                ReturnMainSubResults<tb_ProdSplit> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SplitNo}。");
                 }
                 else
                 {
-                    EditEntity.tb_ProdSplitDetails = details;
-                    ReturnMainSubResults<tb_ProdSplit> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        //lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
+                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
                 }
 
+                return SaveResult.Succeeded;
             }
-
-
-
+            return false;
         }
 
 
+
+
+
+
         /*
-protected async override Task<ApprovalEntity> Review()
-{
+    protected async override Task<ApprovalEntity> Review()
+    {
     if (EditEntity == null)
     {
         return null;
@@ -611,11 +612,11 @@ protected async override Task<ApprovalEntity> Review()
     }
 
     return ae;
-}
+    }
 
 
-protected async override void ReReview()
-{
+    protected async override void ReReview()
+    {
     if (EditEntity == null)
     {
         return;
@@ -680,8 +681,8 @@ protected async override void ReReview()
 
 
 
-}
-*/
+    }
+    */
         private void LoadItemsFromBOM()
         {
 

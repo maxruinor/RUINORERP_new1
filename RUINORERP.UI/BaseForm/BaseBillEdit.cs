@@ -506,9 +506,14 @@ namespace RUINORERP.UI.BaseForm
 
         //errorProviderForAllInput 引用这个控件。使用在保存时直接触发所有控件的验证来更新数据源
         private bool hasError = false;
-        protected virtual void Save()
-        {
 
+        /// <summary>
+        /// 验证控件UI层次
+        /// </summary>
+        protected virtual async Task<bool> Save()
+        {
+            await Task.Delay(1);  
+            return false;
             //   errorProviderForAllInput.Clear();
         }
 

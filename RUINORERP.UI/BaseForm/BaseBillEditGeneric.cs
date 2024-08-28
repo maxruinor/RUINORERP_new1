@@ -45,6 +45,7 @@ using ExCSS;
 using RUINORERP.Business.CommService;
 using OfficeOpenXml.FormulaParsing.Excel.Functions;
 using MySqlX.XDevAPI.Common;
+using RUINORERP.Business.Security;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -1191,7 +1192,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.保存:
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-                    Save();
+                    await Save();
                     break;
                 case MenuItemEnums.提交:
                     //操作前将数据收集
@@ -1624,11 +1625,12 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 ToolBarEnabledControl(MenuItemEnums.保存);
-                MainForm.Instance.uclog.AddLog("保存成功");
+                MainForm.Instance.uclog.AddLog("更新式保存成功");
+                AuditLogHelper.Instance.CreateAuditLog<T>("更新式保存成功", rmr.ReturnObject);
             }
             else
             {
-                MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
+                MainForm.Instance.uclog.AddLog("更新式保存成功失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
             }
             return rmr;
         }
@@ -1737,6 +1739,11 @@ namespace RUINORERP.UI.BaseForm
                 if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
                 {
                     toolStripbtnSubmit.Enabled = false;
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                    {
+                        MainForm.Instance.logger.Error("提交时,单据已经是【完结】或【确认】状态");
+                    }
+                    return;
                 }
                 else
                 {
@@ -1860,28 +1867,31 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-
-                if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+                bool rs = await this.Save();
+                if (rs)
                 {
-                    ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
+                    if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
+                    {
+                        ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
+                    }
+                    //先保存再提交
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                    {
+                        MainForm.Instance.logger.Error("提交时,单据没有保存,将状态修改为提交状态后直接保存了。");
+                    }
+                    ReturnResults<T> rmr = new ReturnResults<T>();
+                    BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                    rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+                    if (rmr.Succeeded)
+                    {
+                        ToolBarEnabledControl(MenuItemEnums.提交);
+                        //这里推送到审核，启动工作流 后面优化
+                        // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
+                        // MainForm.Instance.ecs.AddSendData(od);
+                    }
                 }
-                //先保存再提交
-                Save();
-                //ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
-                //BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                //rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-                //if (rmr.Succeeded)
-                //{
-                //    // ToolBarEnabledControl(MenuItemEnums.提交);
-                //    ToolBarEnabledControl(EditEntity);
-                //    //这里推送到审核，启动工作流 后面优化
-                //    // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
-                //    // MainForm.Instance.ecs.AddSendData(od);
-                //}
+
             }
-
-
-
         }
 
 
@@ -1996,6 +2006,10 @@ namespace RUINORERP.UI.BaseForm
                             BaseEntity pkentity = (editEntity as T) as BaseEntity;
                             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                             editEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+                            if (editEntity == null)
+                            {
+                                editEntity = Activator.CreateInstance<T>();
+                            }
                             bindingSourceSub.Clear();
                             OnBindDataToUIEvent(EditEntity);
                             //if (pkentity.PrimaryKeyID > 0)
@@ -2031,6 +2045,10 @@ namespace RUINORERP.UI.BaseForm
                                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                                 editEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
                                 bindingSourceSub.Clear();
+                                if (editEntity == null)
+                                {
+                                    editEntity = Activator.CreateInstance<T>();
+                                }
                                 OnBindDataToUIEvent(EditEntity);
                                 //if (pkentity.PrimaryKeyID > 0)
                                 //{

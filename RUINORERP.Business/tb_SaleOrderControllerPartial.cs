@@ -363,10 +363,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
                 //出错后，取消生成的ID等值
                 command.Undo();
                 _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
                 //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
                 // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;

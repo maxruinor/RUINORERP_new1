@@ -90,7 +90,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             if (entity == null)
             {
- 
+
                 return;
             }
             EditEntity = entity;
@@ -349,11 +349,11 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         List<tb_BuyingRequisitionDetail> details = new List<tb_BuyingRequisitionDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalQty);
             bindingSourceSub.EndEdit();
@@ -367,7 +367,7 @@ namespace RUINORERP.UI.PSI.PUR
                 if (details.Count == 0)
                 {
                     System.Windows.Forms.MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 if (EditEntity.ApprovalStatus == null)
                 {
@@ -386,17 +386,17 @@ namespace RUINORERP.UI.PSI.PUR
                 if (aa.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_BuyingRequisitionDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
 
@@ -404,33 +404,21 @@ namespace RUINORERP.UI.PSI.PUR
                 if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
-
-
-
-                if (EditEntity.PuRequisition_ID > 0)
+                ReturnMainSubResults<tb_BuyingRequisition> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PuRequisitionNo}。");
                 }
                 else
                 {
-                    ReturnMainSubResults<tb_BuyingRequisition> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        // lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog($"保存失败,{SaveResult.ErrorMsg}。");
-                    }
+                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
                 }
-
-
+                return SaveResult.Succeeded;
             }
-
+            return false;
 
 
         }
@@ -646,7 +634,7 @@ namespace RUINORERP.UI.PSI.PUR
         string orderid = string.Empty;
 
 
-        private  void LoadRefBillData(long? _RefBillID)
+        private void LoadRefBillData(long? _RefBillID)
         {
             ButtonSpecAny bsa = (txtRefBillID as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
             if (bsa == null)
@@ -834,7 +822,7 @@ namespace RUINORERP.UI.PSI.PUR
                 tb_PurOrderDetail orderDetail = mapper.Map<tb_PurOrderDetail>(details[i]);
                 if (details[i].Purchased.HasValue && details[i].Purchased == true)
                 {
-                   continue; //已经采购的忽略
+                    continue; //已经采购的忽略
                 }
                 NewDetails.Add(orderDetail);
             }

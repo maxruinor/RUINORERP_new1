@@ -1242,11 +1242,11 @@ namespace RUINORERP.UI.MRP.BOM
 
 
         List<tb_BOM_SDetail> details = new List<tb_BOM_SDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             // var eer = errorProviderForAllInput.GetError(txtTotalQty);
             bindingSourceSub.EndEdit();
@@ -1260,7 +1260,7 @@ namespace RUINORERP.UI.MRP.BOM
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
 
                 //副产出暂时不做。为了不验证给一行空值，验证后清除掉
@@ -1272,41 +1272,42 @@ namespace RUINORERP.UI.MRP.BOM
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_BOM_SDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
                 //BOM子件中不能包含目标母件本身。
                 if (details.Any(c => c.ProdDetailID == EditEntity.ProdDetailID))
                 {
                     MessageBox.Show("BOM子件中不能包含目标母件本身。请检查数据后再保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    return false;
                 }
 
 
                 EditEntity.tb_BOM_SDetailSecondaries.Clear();
-
-                //设置目标ID成功后就行头写上编号？
-                //   表格中的验证提示
-                //   其他输入条码验证
-
-                EditEntity.tb_BOM_SDetails = details;
+         
                 tb_BOM_SController<tb_BOM_S> ctr = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
                 ReturnMainSubResults<tb_BOM_S> SaveResult = await ctr.SaveOrUpdateWithChild<tb_BOM_S>(EditEntity); //await base.Save(EditEntity);
                 if (SaveResult.Succeeded)
                 {
                     base.ToolBarEnabledControl(EditEntity);
                     base.ToolBarEnabledControl(MenuItemEnums.保存);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BOM_No}。");
                 }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                }
+                return SaveResult.Succeeded;
             }
             else
             {
                 MessageBox.Show("加载状态的BOM，无法更新保存数据，请先修改数据后再保存！");
             }
-
+            return false;
 
         }
 

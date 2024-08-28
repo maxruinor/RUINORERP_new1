@@ -80,7 +80,7 @@ namespace RUINORERP.UI.PSI.INV
         {
             if (entity == null)
             {
- 
+
                 return;
             }
             EditEntity = entity;
@@ -333,11 +333,11 @@ namespace RUINORERP.UI.PSI.INV
 
 
         List<tb_ProdReturningDetail> details = new List<tb_ProdReturningDetail>();
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             var eer = errorProviderForAllInput.GetError(txtTotalQty);
             bindingSourceSub.EndEdit();
@@ -351,7 +351,7 @@ namespace RUINORERP.UI.PSI.INV
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
-                    return;
+                    return false;
                 }
                 //二选中，验证机制还没有弄好。先这里处理
                 if (EditEntity.CustomerVendor_ID == 0 || EditEntity.CustomerVendor_ID == -1)
@@ -367,53 +367,43 @@ namespace RUINORERP.UI.PSI.INV
                 if (aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Qty);
                 if (EditEntity.TotalQty == 0)
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量不能为零!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
                 EditEntity.tb_ProdReturningDetails = details;
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_ProdReturningDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
                 if (EditEntity.TotalQty != details.Sum(c => c.Qty))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
-
-                //设置目标ID成功后就行头写上编号？
-                //   表格中的验证提示
-                //   其他输入条码验证
-                if (EditEntity.ReturnID > 0)
+ 
+                ReturnMainSubResults<tb_ProdReturning> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ReturnNo}。");
+                    return SaveResult.Succeeded;
                 }
                 else
                 {
-                    EditEntity.tb_ProdReturningDetails = details;
-                    ReturnMainSubResults<tb_ProdReturning> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        //lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    }
+                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
                 }
-
             }
-
-
-
+            return false;
         }
 
         /*

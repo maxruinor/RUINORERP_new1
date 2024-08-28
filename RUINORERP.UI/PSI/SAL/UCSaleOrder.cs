@@ -566,12 +566,12 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="entity"></param>
 
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
 
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
 
             if (EditEntity.PlatformOrderNo != null)
@@ -589,7 +589,7 @@ namespace RUINORERP.UI.PSI.SAL
                     string empName = UIHelper.ShowGridColumnsNameValue(typeof(tb_SaleOrder), "Employee_ID", saleOrder.Employee_ID);
                     if (MessageBox.Show($"系统检测到相同平台单号的订单，订单号是：{saleOrder.SOrderNo},业务员是{empName}\r\n确定继续保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
                     {
-                        return;
+                        return false;
                     }
                 }
 
@@ -622,18 +622,18 @@ namespace RUINORERP.UI.PSI.SAL
                 if (EditEntity.TotalQty == 0 || detailentity.Sum(c => c.Quantity) == 0)
                 {
                     MessageBox.Show("单据及明细总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    return false;
                 }
                 if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     MessageBox.Show($"单据总数量{EditEntity.TotalQty}和明细总数量{detailentity.Sum(c => c.Quantity)}不相同，请检查后再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    return false;
                 }
                 //如果没有有效的明细。直接提示
                 if (details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    return false;
                 }
 
                 //订单只是警告。可以继续
@@ -649,7 +649,7 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 if (MessageBox.Show($"产品{detail.SKU},{detail.CNName},{detail.prop}的库存不足\r\n实际数量为：{detail.Quantity} ，拟销数量为： {item.Quantity}，是否继续保存？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
                                 {
-                                    return;
+                                    return false;
                                 }
                             }
                         }
@@ -672,11 +672,11 @@ namespace RUINORERP.UI.PSI.SAL
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_SaleOrderDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
 
@@ -688,7 +688,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     if (MessageBox.Show(this, "订单总金额数据为零\r\n你确定吗? ", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
                     {
-                        return;
+                        return false;
                     }
                 }
                 if (EditEntity.SOrder_ID > 0)
@@ -702,10 +702,12 @@ namespace RUINORERP.UI.PSI.SAL
                             if (UpdateResult.Succeeded)
                             {
                                 MainForm.Instance.PrintInfoLog($"更新成功，{EditEntity.SOrderNo}。");
+                                return true;
                             }
                             else
                             {
                                 MainForm.Instance.PrintInfoLog($"更新失败，{UpdateResult.ErrorMsg}。", Color.Red);
+                                return false;
                             }
                         }
                         else
@@ -717,9 +719,17 @@ namespace RUINORERP.UI.PSI.SAL
                     else
                     {
                         //更新式  要先删除前面的数据相关的数据
-                        await base.Save(EditEntity);
+                        ReturnMainSubResults<tb_SaleOrder> SaveResult = await base.Save(EditEntity);
+                        if (SaveResult.Succeeded)
+                        {
+                            MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
+                            return SaveResult.Succeeded;
+                        }
+                        else
+                        {
+                            MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                        }
                     }
-
                 }
                 else
                 {
@@ -727,14 +737,15 @@ namespace RUINORERP.UI.PSI.SAL
                     if (SaveResult.Succeeded)
                     {
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
+                        return SaveResult.Succeeded;
                     }
                     else
                     {
                         MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
                     }
                 }
-
             }
+            return false;
         }
 
         /*

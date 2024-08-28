@@ -938,6 +938,14 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
             _UCMasterQuery.SummaryCols = masterlist;
             _UCMasterQuery.InvisibleCols = ExpressionHelper.ExpressionListToStringList(MasterInvisibleCols);
+
+            //一般主单的主键不用显示 这里统一处理？
+            string PKColName = BaseUIHelper.GetEntityPrimaryKey<M>();
+            if (!_UCMasterQuery.InvisibleCols.Contains(PKColName))
+            {
+                _UCMasterQuery.InvisibleCols.Add(PKColName);
+            }
+
             _UCMasterQuery.ColNameDataDictionary = MasterColNameDataDictionary;
             _UCMasterQuery.ColDisplayTypes = MasterColDisplayTypes;
             KryptonPage page = NewPage(NavParts.查询结果.ToString(), 1, _UCMasterQuery);

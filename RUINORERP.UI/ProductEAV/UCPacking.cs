@@ -83,7 +83,7 @@ namespace RUINORERP.UI.ProductEAV
             tb_Packing entity = entityPara as tb_Packing;
             if (entity == null)
             {
- 
+
                 return;
             }
 
@@ -440,7 +440,7 @@ namespace RUINORERP.UI.ProductEAV
 
             listCols2.SetCol_AutoSizeMode<tb_BoxRules>(c => c.Volume, SourceGrid.AutoSizeMode.EnableAutoSize);
             listCols2.SetCol_AutoSizeMode<tb_BoxRules>(c => c.GrossWeight, SourceGrid.AutoSizeMode.EnableAutoSizeView);
-            listCols2.SetCol_AutoSizeMode<tb_BoxRules>(c => c.NetWeight, SourceGrid.AutoSizeMode.EnableAutoSizeView );
+            listCols2.SetCol_AutoSizeMode<tb_BoxRules>(c => c.NetWeight, SourceGrid.AutoSizeMode.EnableAutoSizeView);
             listCols2.SetCol_AutoSizeMode<tb_BoxRules>(c => c.BoxRuleName, SourceGrid.AutoSizeMode.EnableAutoSizeView);
 
             ControlChildColumnsInvisible(listCols2);
@@ -471,7 +471,7 @@ namespace RUINORERP.UI.ProductEAV
             //sgh2.SetCol_LimitedConditionsForSelectionRange<tb_BoxRules>(sgd2, t => t.ProdDetailID, f => f.BOM_ID);
 
 
-       
+
 
             //List<KeyNamePair> keyNamePairs = new List<KeyNamePair>();
             //KeyNamePair keyName = new KeyNamePair();
@@ -614,11 +614,11 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         /// <param name="entity"></param>
 
-        protected async override void Save()
+        protected async override Task<bool> Save()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
             //var eer = errorProviderForAllInput.GetError(txtTotalQuantity);
 
@@ -639,7 +639,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     if (MessageBox.Show("你确定不录入包装清单数据吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
                     {
-                        return;
+                        return false;
                     }
 
                 }
@@ -648,7 +648,7 @@ namespace RUINORERP.UI.ProductEAV
                     if (detailentity.Sum(c => c.Quantity) == 0)
                     {
                         MessageBox.Show("明细总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
+                        return false;
                     }
                 }
 
@@ -656,7 +656,7 @@ namespace RUINORERP.UI.ProductEAV
                 if (aa.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("包装清单中，相同的产品不能多行录入，请增加数量!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
 
                 //====
@@ -668,46 +668,38 @@ namespace RUINORERP.UI.ProductEAV
                 if (bb.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("箱规信息中，相同的箱子不能有多个箱规!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
+                    return false;
                 }
-
+                EditEntity.tb_PackingDetails = details;
+                EditEntity.tb_BoxRuleses = boxrules;
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
                 {
-                    return;
+                    return false;
                 }
                 if (!base.Validator<tb_PackingDetail>(details))
                 {
-                    return;
+                    return false;
                 }
 
                 //     RuleFor(tb_BoxRules =>tb_BoxRules.Pack_ID).Must(CheckForeignKeyValue).WithMessage("包装信息:下拉选择值不正确。"); 这个不能要
                 if (!base.Validator<tb_BoxRules>(boxrules))
                 {
-                    return;
+                    return false;
                 }
-                EditEntity.tb_PackingDetails = details;
-                EditEntity.tb_BoxRuleses = boxrules;
 
-                if (EditEntity.Pack_ID > 0)
+                ReturnMainSubResults<tb_Packing> SaveResult = await base.Save(EditEntity);
+                if (SaveResult.Succeeded)
                 {
-                    //更新式
-                    await base.Save(EditEntity);
+                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PackagingName}。");
                 }
                 else
                 {
-                    ReturnMainSubResults<tb_Packing> SaveResult = await base.Save(EditEntity);
-                    if (SaveResult.Succeeded)
-                    {
-                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PackagingName}。");
-                    }
-                    else
-                    {
-                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                    }
+                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
                 }
-
+                return SaveResult.Succeeded;
             }
+            return false;
         }
 
 

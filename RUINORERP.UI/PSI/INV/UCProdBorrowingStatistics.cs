@@ -21,13 +21,13 @@ namespace RUINORERP.UI.PSI.INV
 {
 
     [MenuAttrAssemblyInfo("借出单统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.借出单统计)]
-    public partial class UCProdBorrowingStatistics : BaseNavigatorGeneric<View_PurEntryItems, View_PurEntryItems>
+    public partial class UCProdBorrowingStatistics : BaseNavigatorGeneric<View_ProdBorrowing, View_ProdBorrowing>
     {
         public UCProdBorrowingStatistics()
         {
             InitializeComponent();
             //生成查询条件的相关实体 视图时要指定
-            ReladtedEntityType = typeof(View_PurEntryItems);
+            ReladtedEntityType = typeof(View_ProdBorrowing);
         }
 
         public override List<NavParts[]> AddNavParts()
@@ -42,8 +42,8 @@ namespace RUINORERP.UI.PSI.INV
         private void UCPurEntryStatistics_Load(object sender, EventArgs e)
         {
 
-            base._UCMasterQuery.GridRelated.SetRelatedInfo<View_PurEntryItems, tb_PurOrder>(c => c.PurOrder_NO, r => r.PurOrderNo);
-            base._UCMasterQuery.GridRelated.SetRelatedInfo<View_PurEntryItems, tb_PurEntry>(c => c.PurEntryNo, r => r.PurEntryNo);
+            base._UCMasterQuery.GridRelated.SetRelatedInfo<View_ProdBorrowing, tb_ProdBorrowing>(c => c.BorrowNo, r => r.BorrowNo);
+            //base._UCMasterQuery.GridRelated.SetRelatedInfo<View_ProdBorrowing, tb_ProdReturning>(c => c.BorrowNo, r => r.ReturnNo);
             ////这个应该是一个组 多个表
             //base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail)); 
             ////是否能通过一两个主表，通过 外键去找多级关联的表？
@@ -74,7 +74,7 @@ namespace RUINORERP.UI.PSI.INV
         public override void BuildLimitQueryConditions()
         {
             //创建表达式
-            var lambda = Expressionable.Create<View_PurEntryItems>()
+            var lambda = Expressionable.Create<View_ProdBorrowing>()
                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                             //.And(t => t.isdeleted == false)
@@ -90,22 +90,23 @@ namespace RUINORERP.UI.PSI.INV
         /// </summary>
         public override void BuildQueryCondition()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_PurEntryItems).Name + "Processor");
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_ProdBorrowing).Name + "Processor");
             QueryFilter = baseProcessor.GetQueryFilter();
         }
 
         public override void BuildSummaryCols()
         {
-            base.MasterSummaryCols.Add(c => c.Quantity);
-            base.MasterSummaryCols.Add(c => c.SubtotalAmount);
+            base.MasterSummaryCols.Add(c => c.Qty);
+            base.MasterSummaryCols.Add(c => c.ReQty);
         }
 
         public override void BuildInvisibleCols()
         {
             base.MasterInvisibleCols.Add(c => c.PrimaryKeyID);
+            base.MasterInvisibleCols.Add(c => c.BorrowID);
         }
 
-
+        /*
         //根据客户生成对帐单 数据模式是 客户信息为主，明细为子表
 
         public override async void Print(RptMode rptMode)
@@ -114,7 +115,7 @@ namespace RUINORERP.UI.PSI.INV
             PurEntryStatementByCV statementByCV = new PurEntryStatementByCV();
 
 
-            List<View_PurEntryItems> selectlist = GetSelectResult();
+            List<View_ProdBorrowing> selectlist = GetSelectResult();
             if (selectlist.Count == 0)
             {
                 MessageBox.Show("没有需要打印的数据，请将客户作为查询条件查询出结果后再打印。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -123,12 +124,12 @@ namespace RUINORERP.UI.PSI.INV
             //配置还是当前类，菜单这块定义的
             if (_PrintConfig == null || _PrintConfig.tb_PrintTemplates == null)
             {
-                _PrintConfig = PrintHelper<View_PurEntryItems>.GetPrintConfig<View_PurEntryItems>();
+                _PrintConfig = PrintHelper<View_ProdBorrowing>.GetPrintConfig<View_ProdBorrowing>();
             }
 
 
             tb_CustomerVendor customerVendor = new tb_CustomerVendor();
-            var dto = QueryDto as View_PurEntryItems;
+            var dto = QueryDto as View_ProdBorrowing;
             if (!dto.CustomerVendor_ID.HasValue)
             {
                 MessageBox.Show("缺少客户信息，请将客户作为查询统计的条件。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -140,13 +141,13 @@ namespace RUINORERP.UI.PSI.INV
                 statementByCV.CustomerVendor = customerVendor;
                 statementByCV.PurEntryItems = selectlist;
             }
-            bool rs = PrintHelper<View_PurEntryItems>.PrintCustomData<PurEntryStatementByCV>(statementByCV, rptMode, _PrintConfig);
+            bool rs = PrintHelper<View_ProdBorrowing>.PrintCustomData<PurEntryStatementByCV>(statementByCV, rptMode, _PrintConfig);
             if (rs)
             {
                 toolStripSplitButtonPrint.Enabled = false;
             }
         }
 
-
+        */
     }
 }

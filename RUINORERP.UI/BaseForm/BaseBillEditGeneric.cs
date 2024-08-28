@@ -1751,9 +1751,10 @@ namespace RUINORERP.UI.BaseForm
                     {
                         ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
                     }
-                    ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
+                    ReturnResults<T> rmr = new ReturnResults<T>();
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                    rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+                    //rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+                    rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
@@ -1885,6 +1886,7 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
+                        AuditLogHelper.Instance.CreateAuditLog<T>("先保存再提交", rmr.ReturnObject);
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                         // MainForm.Instance.ecs.AddSendData(od);

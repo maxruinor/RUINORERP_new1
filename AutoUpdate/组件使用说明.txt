@@ -51,3 +51,7 @@ AutoUpdate.exe 单上可以自我更新。解压如果包括这个。会导致�
 https://blog.csdn.net/yueliangge910101/article/details/109365354?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-109365354-blog-107756810.pc_relevant_antiscanv3&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-109365354-blog-107756810.pc_relevant_antiscanv3&utm_relevant_index=2
 
 是不是要提供版本选择的功能。优先最新。但是也可以选择稳定版本
+
+
+创建以版本号为文件夹。保存5个版本？
+首先要旧文件是不是复制过来了。

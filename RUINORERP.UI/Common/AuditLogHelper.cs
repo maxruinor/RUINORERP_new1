@@ -44,26 +44,32 @@ namespace RUINORERP.UI.Common
         }
         public void CreateAuditLog<T>(string action, T entity, string description) where T : class
         {
-            //将操作记录保存到数据库中
 
-            BizTypeMapper mapper = new BizTypeMapper();
-            //var BizTypeText = mapper.GetBizType(typeof(T).Name).ToString();
-            var BizType = mapper.GetBizType(typeof(T).Name);
-
-            BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
-            CommBillData cbd = bcf.GetBillData<T>(entity);
             //将操作记录保存到数据库中
             tb_AuditLogs auditLog = new tb_AuditLogs();
             auditLog.UserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
             auditLog.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
             auditLog.ActionType = action;
-            auditLog.ObjectType = (int)BizType;
 
-            //string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            //long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-            //auditLog.ObjectId = pkid;
-            auditLog.ObjectId = cbd.BillID;
-            auditLog.ObjectNo = cbd.BillNo;
+            BizTypeMapper mapper = new BizTypeMapper();
+            //var BizTypeText = mapper.GetBizType(typeof(T).Name).ToString();
+            var BizType = mapper.GetBizType(typeof(T).Name);
+            try
+            {
+                BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
+                CommBillData cbd = bcf.GetBillData<T>(entity);
+                auditLog.ObjectType = (int)BizType;
+                //string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                //long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+                //auditLog.ObjectId = pkid;
+                auditLog.ObjectId = cbd.BillID;
+                auditLog.ObjectNo = cbd.BillNo;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"审计日志保存记录时失败:{ex.Message}", Global.UILogType.错误);
+            }
+
             if (description.IsNotEmptyOrNull())
             {
                 auditLog.Notes = description;

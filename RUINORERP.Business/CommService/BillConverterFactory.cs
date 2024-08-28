@@ -292,7 +292,7 @@ namespace RUINORERP.Business.CommService
                     //cbd.BillNo = PurEntryStatistics.BillNo;
                     break;
                 default:
-                    throw new Exception($"未实现的业务类型处理: {bizType}");
+                    throw new Exception($"GetBillData未实现的业务类型处理: {bizType}");
 
             }
             cbd.BizName = bizType.ObjToString();

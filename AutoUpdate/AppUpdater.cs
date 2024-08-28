@@ -130,7 +130,7 @@ namespace AutoUpdate
         /// </summary>
         /// <param name="serverXmlFile"></param>
         /// <param name="localXmlFile"></param>
-        /// <param name="updateFileList"></param>
+        /// <param name="updateFileList">要更新的集合</param>
         /// <returns></returns>
         public int CheckForUpdate(string serverXmlFile, string localXmlFile, out Hashtable updateFileList)
         {
@@ -149,6 +149,7 @@ namespace AutoUpdate
             int k = 0;
             for (int i = 0; i < newNodeList.Count; i++)
             {
+                //这里多定义了一个维度，下面只用到了两个维度，其实可以不用定义的
                 string[] fileList = new string[3];
 
                 string newFileName = newNodeList.Item(i).Attributes["Name"].Value.Trim();
@@ -357,13 +358,15 @@ version1 和 version2 的所有修订号都可以存储在 32 位整数 中
         */
 
         /// <summary>
-        /// 返回下载更新文件的临时目录
+        /// 下载服务器的配置更新文件的到临时目录
         /// </summary>
         /// <returns></returns>
         public void DownAutoUpdateFile(string downpath)
         {
             if (!System.IO.Directory.Exists(downpath))
                 System.IO.Directory.CreateDirectory(downpath);
+
+            //本地保存旧版本的xml文件
             string serverXmlFile = System.IO.Path.Combine(downpath, "AutoUpdaterList.xml");
 
             WebResponse response = null;

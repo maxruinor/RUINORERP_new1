@@ -26,9 +26,6 @@ namespace RUINORERP.Business.CommService
             // 手动添加枚举值与表名的对应关系
 
 
-
-
-
             mapping.Add(BizType.BOM物料清单, typeof(tb_BOM_S));
             mapping.Add(BizType.销售订单, typeof(tb_SaleOrder));
             mapping.Add(BizType.销售出库单, typeof(tb_SaleOut));
@@ -46,7 +43,6 @@ namespace RUINORERP.Business.CommService
             mapping.Add(BizType.其他费用收入, typeof(tb_FM_OtherExpense));
             mapping.Add(BizType.请购单, typeof(tb_BuyingRequisition));
             mapping.Add(BizType.制令单, typeof(tb_ManufacturingOrder));
-
             mapping.Add(BizType.生产计划单, typeof(tb_ProductionPlan));
             mapping.Add(BizType.生产领料单, typeof(tb_MaterialRequisition));
             mapping.Add(BizType.生产退料单, typeof(tb_MaterialReturn));
@@ -57,6 +53,7 @@ namespace RUINORERP.Business.CommService
             mapping.Add(BizType.产品组合单, typeof(tb_ProdMerge));
             mapping.Add(BizType.产品分割单, typeof(tb_ProdSplit));
             mapping.Add(BizType.套装组合, typeof(tb_ProdBundle));
+            mapping.Add(BizType.包装信息, typeof(tb_Packing));
 
             //mapping.Add(BizType.退料单, typeof(tb_Return));
 
@@ -89,7 +86,6 @@ namespace RUINORERP.Business.CommService
             {
                 //throw new ArgumentException("无效的表名", nameof(tableName));
                 // throw;
-
                 return BizType.默认数据;
             }
             return bizType;

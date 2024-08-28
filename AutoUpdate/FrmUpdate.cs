@@ -12,6 +12,9 @@ using System.Diagnostics;
 using System.Reflection;
 using System.IO.Compression;
 using AutoUpdate;
+using System.Net.NetworkInformation;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace AutoUpdate
 {
@@ -111,6 +114,7 @@ namespace AutoUpdate
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -236,7 +240,6 @@ namespace AutoUpdate
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.linkLabel1);
             this.panel2.Controls.Add(this.label4);
             this.panel2.Controls.Add(this.label3);
             this.panel2.Controls.Add(this.label2);
@@ -250,12 +253,12 @@ namespace AutoUpdate
             // 
             // linkLabel1
             // 
-            this.linkLabel1.Location = new System.Drawing.Point(128, 211);
+            this.linkLabel1.Location = new System.Drawing.Point(16, -10);
             this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(152, 23);
+            this.linkLabel1.Size = new System.Drawing.Size(98, 18);
             this.linkLabel1.TabIndex = 12;
             this.linkLabel1.TabStop = true;
-            this.linkLabel1.Text = "http://www.fookong.com";
+            this.linkLabel1.Text = "http://www.maxruinor.com";
             this.linkLabel1.Visible = false;
             this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
@@ -265,7 +268,7 @@ namespace AutoUpdate
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(100, 16);
             this.label4.TabIndex = 13;
-            this.label4.Text = "FK软件";
+            this.label4.Text = "MAXRUINOR软件";
             this.label4.Visible = false;
             // 
             // label3
@@ -306,6 +309,7 @@ namespace AutoUpdate
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.linkLabel1);
             this.groupBox4.Location = new System.Drawing.Point(0, 32);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(280, 8);
@@ -338,11 +342,12 @@ namespace AutoUpdate
             this.MinimizeBox = false;
             this.Name = "FrmUpdate";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "自动更新 2.0.0.5";
+            this.Text = "自动更新 2.0.0.6";
             this.Load += new System.EventHandler(this.FrmUpdate_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
+            this.groupBox4.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -360,7 +365,13 @@ namespace AutoUpdate
         string mainAppExe = "";
 
 
+
         public string currentexeName = Assembly.GetExecutingAssembly().ManifestModule.ToString();
+
+
+        ///保存更新文件列表，key:为当前执行文件的目录及文件名，value为更新的对应版本的目录及文件名
+        private List<KeyValuePair<string, string>> filesList = new List<KeyValuePair<string, string>>();
+
         private void FrmUpdate_Load(object sender, System.EventArgs e)
         {
 
@@ -430,6 +441,7 @@ namespace AutoUpdate
             //获取更新文件列表
             //Hashtable htUpdateFile = new Hashtable();
 
+
             serverXmlFile = tempUpdatePath + "\\AutoUpdaterList.xml";
             if (!File.Exists(serverXmlFile))
             {
@@ -437,9 +449,11 @@ namespace AutoUpdate
             }
 
             //availableUpdate = appUpdater.CheckForUpdate(serverXmlFile, localXmlFile, out htUpdateFile);
+
+            //比较两个文件配置差异。下载更新文件
             availableUpdate = appUpdater.CheckForUpdate(serverXmlFile, localXmlFile, out htUpdateFile);
 
-
+            //找到了差异的文件集合显示的UI中，等待用户点击下一步
             if (availableUpdate > 0)
             {
                 for (int i = 0; i < htUpdateFile.Count; i++)
@@ -509,16 +523,18 @@ namespace AutoUpdate
                 this.Close();
                 this.Dispose();
             }
-
         }
 
+        /// <summary>
+        /// 下载更新文件 并且保存到了临时文件夹中
+        /// 临时文件夹：以版本号为区别命名了by watson 2024-08-28
+        /// </summary>
         private void DownUpdateFile()
         {
             this.Cursor = Cursors.WaitCursor;
             try
             {
-
-
+                //下载更新前 杀掉主程序进程
                 mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
                 Process[] allProcess = Process.GetProcesses();
                 foreach (Process p in allProcess)
@@ -529,7 +545,7 @@ namespace AutoUpdate
                         for (int i = 0; i < p.Threads.Count; i++)
                             p.Threads[i].Dispose();
                         p.Kill();
-                        Thread.Sleep(200);
+                        Thread.Sleep(500);
                         isRun = true;
                         //break;
                     }
@@ -538,6 +554,13 @@ namespace AutoUpdate
                 for (int i = 0; i < this.lvUpdateList.Items.Count; i++)
                 {
                     string UpdateFile = lvUpdateList.Items[i].Text.Trim();
+                    //取版本号。后面当目录用
+                    string VerNo = string.Empty;
+                    ListViewItem listViewItem = lvUpdateList.Items[i];
+                    if (listViewItem.SubItems.Count > 1)
+                    {
+                        VerNo = listViewItem.SubItems[1].Text.Trim();
+                    }
                     try
                     {
                         string updateFileUrl = updateUrl + lvUpdateList.Items[i].Text.Trim();
@@ -584,7 +607,8 @@ namespace AutoUpdate
                             }
                         }
 
-                        string tempPath = tempUpdatePath + UpdateFile;
+                        string tempPath = tempUpdatePath + "\\" + VerNo + "\\" + UpdateFile;
+                        filesList.Add(new KeyValuePair<string, string>(AppDomain.CurrentDomain.BaseDirectory + UpdateFile, tempPath));
                         CreateDirtory(tempPath);
                         FileStream fs = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write);
                         fs.Write(bufferbyte, 0, bufferbyte.Length);
@@ -728,19 +752,49 @@ namespace AutoUpdate
 
             try
             {
-                //下载完成后，copy文件
-                CopyFile(tempUpdatePath, Directory.GetCurrentDirectory());
-                System.IO.Directory.Delete(tempUpdatePath, true);
+                //下载完成后，copy文件 ,将下载到临时文件夹中的最新的文件复制到应用程序目录中生效再启动
+                //CopyFile(tempUpdatePath, Directory.GetCurrentDirectory());
+                //System.IO.Directory.Delete(tempUpdatePath, true);
+                foreach (var item in filesList)
+                {
+                    CopyFile(Path.GetDirectoryName(item.Value), Path.GetDirectoryName(item.Key));
+                }
+
+
+                #region 为了实现版本回滚只保留5个版本
+                List<string> versions = new List<string>();
+                // 获取所有子文件夹的路径
+                string[] subDirectories = Directory.GetDirectories(tempUpdatePath);
+                foreach (var subdir in subDirectories)
+                {
+                    string verDir = Path.GetFileName(subdir);
+                    versions.Add(verDir);
+                }
+
+                if (versions.Count > 0)
+                {
+                    //删除最旧的版本
+                    // 对版本号进行排序
+                    versions.Sort();
+                    int deleteCount = versions.Count - 5;
+                    // 移除最小的 保留最新的5个
+                    versions = versions.Take(deleteCount).ToList();
+
+                    // 输出排序并移除多余的版本号后的列表
+                    foreach (var version in versions)
+                    {
+                        System.IO.Directory.Delete(tempUpdatePath + version, true);
+                    }
+                }
+                #endregion
+
+
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message.ToString());
             }
-
-
-
-            IsMainAppRun();
-            Process.Start(mainAppExe);
+            StartEntryPointExe();
             mainResult = 0;
             this.Close();
             this.Dispose();
@@ -1083,7 +1137,9 @@ namespace AutoUpdate
 
         }
 
-
+        /// <summary>
+        /// 无介面更新的调用方法。但是没有使用。因为要优化
+        /// </summary>
         public void ApplyApp()
         {
             //如果下载下来的文件有自己，则重命名
@@ -1116,10 +1172,12 @@ namespace AutoUpdate
         /// </summary>
         public void StartEntryPointExe()
         {
+
             if (string.IsNullOrEmpty(mainAppExe))
             {
                 mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
             }
+            IsMainAppRun();
             //return;
             if (System.IO.File.Exists(mainAppExe))
             {
@@ -1129,9 +1187,12 @@ namespace AutoUpdate
             {
                 MessageBox.Show("系统找不到指定文件的路径：" + mainAppExe, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            IsMainAppRun();
+
             //MessageBox.Show(mainAppExe);
-            Process.Start(mainAppExe);
+            // 要传递给程序的参数
+            string arguments = tempUpdatePath; // 替换为实际的参数
+            ProcessStartInfo startInfo = new ProcessStartInfo(mainAppExe, arguments);
+            Process.Start(startInfo);
             mainResult = 0;
         }
         #endregion

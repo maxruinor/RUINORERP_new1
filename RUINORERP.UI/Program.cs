@@ -371,8 +371,19 @@ namespace RUINORERP.UI
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
+            // 如果需要处理命令行参数，可以在这里进行
+            // 例如，打印所有参数
+            if (args.Length > 0)
+            {
+                Console.WriteLine("接收到的命令行参数如下：");
+                foreach (var arg in args)
+                {
+                    Console.WriteLine(arg);
+                }
+            }
+
             try
             {
                 PreCheckMustOverrideBaseClassAttribute.CheckAll(Assembly.GetExecutingAssembly());
@@ -520,7 +531,7 @@ namespace RUINORERP.UI
                     */
                     #region  启动工作流主机
 
-                   
+
                     #region WF批量注册
 
                     IWorkflowRegistry _workflowRegistry = Startup.GetFromFac<IWorkflowRegistry>();
@@ -553,7 +564,7 @@ namespace RUINORERP.UI
                     }
 
                     #endregion
-                 
+
                     var host = Startup.GetFromFac<IWorkflowHost>();
                     host.OnStepError += Host_OnStepError;
 

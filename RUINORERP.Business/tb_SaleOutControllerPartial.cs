@@ -162,6 +162,7 @@ namespace RUINORERP.Business
 
                                // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
                                 rrs.ErrorMsg = $"库存为：{inv.Quantity}，拟销售量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                                _unitOfWorkManage.RollbackTran();
                                 rrs.Succeeded = false;
                                 return rrs;
                             }
@@ -358,8 +359,8 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {

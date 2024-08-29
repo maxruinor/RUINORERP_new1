@@ -22,7 +22,7 @@ namespace RUINORERP.UI.Report
 {
     /// <summary>
     /// 每个打印业务都是来自于菜单的按钮
-    /// 
+    /// 菜单对应的是一个表 一个实体。一个实体对应一个业务类型
     /// </summary>
     public partial class RptPrintConfig : KryptonForm
     {

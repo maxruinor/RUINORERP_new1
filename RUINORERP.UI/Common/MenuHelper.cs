@@ -392,7 +392,7 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="pr"></param>
         /// <param name="entity">如果是执行打开单据时，则传的是单据信息，如果是查询是，则是查询条件</param>
-        public void ExecuteEvents(tb_MenuInfo pr, object entity, NodeParameter nodeParameter = null)
+        public async void ExecuteEvents(tb_MenuInfo pr, object entity, NodeParameter nodeParameter = null)
         {
             if (pr == null)
             {
@@ -491,7 +491,15 @@ namespace RUINORERP.UI.Common
                         //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
                         if (page.Controls[0] is BaseBillEdit billEdit)
                         {
-                            billEdit.LoadDataToUI(entity);
+                            //billEdit.LoadDataToUI(entity);
+                            // 延迟后在 UI 线程上执行 BindData
+                            await Task.Delay(500);
+                            billEdit.Invoke(new Action(() => billEdit.LoadDataToUI(entity)));
+                            /* LoadDataToUI只能在UI线程中调用，所以需要使用Task.Run来切换到UI线程
+                            await Task.Delay(1000); // 2000 表示2秒，单位为毫秒
+
+                            // 延迟完成后执行 BindData 方法
+                            await Task.Run(() => billEdit.LoadDataToUI(entity));*/
                         }
 
                         //传实体进去,具体在窗体那边判断    单据实体数据传入加载用

@@ -605,7 +605,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // chkProdBundle_available
             // 
-            this.chkProdBundle_available.Location = new System.Drawing.Point(765, 8);
+            this.chkProdBundle_available.Location = new System.Drawing.Point(866, 8);
             this.chkProdBundle_available.Name = "chkProdBundle_available";
             this.chkProdBundle_available.Size = new System.Drawing.Size(19, 13);
             this.chkProdBundle_available.TabIndex = 141;
@@ -613,7 +613,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // chkProdBundle_enabled
             // 
-            this.chkProdBundle_enabled.Location = new System.Drawing.Point(650, 8);
+            this.chkProdBundle_enabled.Location = new System.Drawing.Point(751, 8);
             this.chkProdBundle_enabled.Name = "chkProdBundle_enabled";
             this.chkProdBundle_enabled.Size = new System.Drawing.Size(19, 13);
             this.chkProdBundle_enabled.TabIndex = 140;
@@ -621,7 +621,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonLabel14
             // 
-            this.kryptonLabel14.Location = new System.Drawing.Point(700, 6);
+            this.kryptonLabel14.Location = new System.Drawing.Point(801, 6);
             this.kryptonLabel14.Name = "kryptonLabel14";
             this.kryptonLabel14.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel14.TabIndex = 139;
@@ -629,7 +629,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonLabel15
             // 
-            this.kryptonLabel15.Location = new System.Drawing.Point(585, 6);
+            this.kryptonLabel15.Location = new System.Drawing.Point(686, 6);
             this.kryptonLabel15.Name = "kryptonLabel15";
             this.kryptonLabel15.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel15.TabIndex = 138;

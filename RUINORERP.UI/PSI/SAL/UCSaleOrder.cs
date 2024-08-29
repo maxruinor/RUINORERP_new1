@@ -38,6 +38,7 @@ using RUINORERP.Model.CommonModel;
 using SourceGrid;
 using RUINORERP.Business.CommService;
 using NPOI.POIFS.Properties;
+using System.Diagnostics;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -338,6 +339,8 @@ namespace RUINORERP.UI.PSI.SAL
         List<View_ProdDetail> list = new List<View_ProdDetail>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
+            var sw = new Stopwatch();
+            sw.Start();
             //InitDataTocmbbox();
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
@@ -472,7 +475,8 @@ namespace RUINORERP.UI.PSI.SAL
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
-
+            sw.Stop();
+            MainForm.Instance.uclog.AddLog("加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
         }
 
         private void Sgh_OnLoadRelevantFields(object _View_ProdDetail, object rowObj, SourceGridDefine griddefine, Position Position)

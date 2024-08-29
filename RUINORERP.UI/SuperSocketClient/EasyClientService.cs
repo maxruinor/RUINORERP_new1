@@ -17,7 +17,6 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.UI.Common;
 using System.Windows.Forms;
 using RUINORERP.UI.IM;
-using LightTalkChatBox;
 using System.Diagnostics;
 using SourceLibrary.Security;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;

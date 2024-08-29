@@ -1163,12 +1163,6 @@
     <Compile Include="frmTest.Designer.cs">
       <DependentUpon>frmTest.cs</DependentUpon>
     </Compile>
-    <Compile Include="IM\Form1.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="IM\Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </Compile>
     <Compile Include="IM\FormMoveState.cs" />
     <Compile Include="IM\NotificationBox.cs">
       <SubType>Form</SubType>
@@ -2340,9 +2334,6 @@
     <EmbeddedResource Include="frmTest.resx">
       <DependentUpon>frmTest.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="IM\Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="IM\NotificationBox.resx">
       <DependentUpon>NotificationBox.cs</DependentUpon>
     </EmbeddedResource>
@@ -2805,14 +2796,6 @@
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
       <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
       <Name>HLH.Lib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LightTalkChatBox\LightTalkChatBox\LightTalkChatBox.csproj">
-      <Project>{2b53b023-f715-4ff0-ac73-33321f4de09c}</Project>
-      <Name>LightTalkChatBox</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\LightTalkChatBubble\LightTalkChatBubble\LightTalkChatBubble.csproj">
-      <Project>{b247bd26-975d-4e7e-a1de-e4e8a5c70f8f}</Project>
-      <Name>LightTalkChatBubble</Name>
     </ProjectReference>
     <ProjectReference Include="..\Netron.Core\Netron.Core.csproj">
       <Project>{96aebbee-4203-45f3-bcf5-7b73bf256bda}</Project>

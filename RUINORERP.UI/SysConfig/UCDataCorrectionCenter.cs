@@ -36,6 +36,9 @@ using Org.BouncyCastle.Math.Field;
 using RUINORERP.UI.PSI.PUR;
 using FastReport.DevComponents.DotNetBar.Controls;
 using RUINORERP.UI.SS;
+using System.Management.Instrumentation;
+using RUINORERP.Business.CommService;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -69,9 +72,17 @@ namespace RUINORERP.UI.SysConfig
                 {
                     tb_MenuInfoController<tb_MenuInfo> ctrMenuInfo = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
                     List<tb_MenuInfo> menuInfos = ctrMenuInfo.Query();
+
+                    tb_PrintTemplateController<tb_PrintTemplate> ctrPrintTemplate = Startup.GetFromFac<tb_PrintTemplateController<tb_PrintTemplate>>();
+                    List<tb_PrintTemplate> PrintTemplates = ctrPrintTemplate.Query();
+
+                    tb_PrintConfigController<tb_PrintConfig> ctrPrintConfig = Startup.GetFromFac<tb_PrintConfigController<tb_PrintConfig>>();
+                    List<tb_PrintConfig> PrintConfigs = ctrPrintConfig.Query();
+
+
                     for (int i = 0; i < menuInfos.Count; i++)
                     {
-                        if (menuInfos[i].MenuName == "生产需求分析查询")
+                        if (menuInfos[i].MenuName == "借出单")
                         {
 
                         }
@@ -82,19 +93,17 @@ namespace RUINORERP.UI.SysConfig
                             int oldid = menuInfos[i].BizType.Value;
 
                             //新值来自枚举值硬编码
-                            #region 取新值
+                            #region 取新值后对比旧值，不一样的就更新到菜单表中
 
                             // 获取当前正在执行的程序集
                             Assembly currentAssembly = Assembly.GetExecutingAssembly();
-
                             // 已知类的全名（包括命名空间）
                             string className = menuInfos[i].ClassPath;
-
                             // 获取类型对象
                             Type type = currentAssembly.GetType(className);
-
                             if (type != null)
                             {
+                                #region 从最基础的窗体类中获取枚举值 如果与旧值不一样则更新
                                 // 使用 Activator 创建类的实例
                                 object instance = Activator.CreateInstance(type);
                                 var descType = typeof(MenuAttrAssemblyInfo);
@@ -130,22 +139,57 @@ namespace RUINORERP.UI.SysConfig
                                 }
                                 else
                                 {
-                                    richTextBoxLog.AppendText($"{menuInfos[i].MenuName}=>{menuInfos[i].BizType} ==========不应该是===={(BizType)menuInfos[i].BizType.Value}=======应该是{newid}" + "\r\n");
+                                    richTextBoxLog.AppendText($"菜单信息：{menuInfos[i].MenuName}=>{menuInfos[i].BizType} ==========不应该是===={(BizType)menuInfos[i].BizType.Value}=======应该是{newid}" + "\r\n");
                                     if (!chkTestMode.Checked)
                                     {
                                         menuInfos[i].BizType = newid;
                                         await ctrMenuInfo.UpdateMenuInfo(menuInfos[i]);
                                     }
                                 }
+                                #endregion
+
+                                #region 打印配置和打印模板中也用了这个BizType 
+                                /*TODO: 打印模板与业务类型和名称无关。只是通过配置ID来关联的*/
+                                var printconfig = PrintConfigs.FirstOrDefault(p => p.BizName == menuInfos[i].MenuName);
+                                if (printconfig != null && printconfig.BizType != newid)
+                                {
+                                    richTextBoxLog.AppendText($"打印配置：{printconfig.BizName}=>{printconfig.BizType} ==========不应该是===={(BizType)printconfig.BizType}=======应该是{newid}" + "\r\n");
+                                    printconfig.BizType = newid;
+                                    if (!chkTestMode.Checked)
+                                    {
+                                        await ctrPrintConfig.UpdateAsync(printconfig);
+                                    }
+
+                                    if (printconfig.tb_PrintTemplates != null && printconfig.tb_PrintTemplates.Count > 0)
+                                    {
+                                        var reportTemplate = printconfig.tb_PrintTemplates.FirstOrDefault(c => c.BizName == menuInfos[i].MenuName);
+                                        if (reportTemplate != null && reportTemplate.BizType != newid)
+                                        {
+                                            richTextBoxLog.AppendText($"打印模板：{reportTemplate.BizName}=>{reportTemplate.BizType} ==========不应该是===={(BizType)reportTemplate.BizType.Value}=======应该是{newid}" + "\r\n");
+                                            reportTemplate.BizType = newid;
+                                            if (!chkTestMode.Checked)
+                                            {
+                                                await ctrPrintTemplate.UpdateAsync(reportTemplate);
+                                            }
+
+                                        }
+                                    }
+
+
+                                }
+
+
+                                #endregion
 
 
                             }
                             else
                             {
-                                Console.WriteLine("类型未找到");
+                                MessageBox.Show($"{className}类型未找到,请确认菜单{menuInfos[i].MenuName}配置是否正确。");
                             }
 
                             #endregion
+
 
 
                         }

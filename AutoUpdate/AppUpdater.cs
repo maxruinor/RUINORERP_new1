@@ -366,7 +366,7 @@ version1 和 version2 的所有修订号都可以存储在 32 位整数 中
             if (!System.IO.Directory.Exists(downpath))
                 System.IO.Directory.CreateDirectory(downpath);
 
-            //本地保存旧版本的xml文件
+            //保存  从服务器下载的版本配置xml文件
             string serverXmlFile = System.IO.Path.Combine(downpath, "AutoUpdaterList.xml");
 
             WebResponse response = null;

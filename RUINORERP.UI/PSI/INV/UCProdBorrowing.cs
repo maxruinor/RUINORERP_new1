@@ -39,6 +39,7 @@ using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
+using System.Diagnostics;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -67,7 +68,7 @@ namespace RUINORERP.UI.PSI.INV
         {
             lblPrintStatus.Text = "";
             lblReview.Text = "";
-            DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            //DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
 
 
         }
@@ -190,9 +191,10 @@ namespace RUINORERP.UI.PSI.INV
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
-        private void UCStockOut_Load(object sender, System.EventArgs e)
+        private async void UCStockOut_Load(object sender, System.EventArgs e)
         {
-
+            var sw = new Stopwatch();
+            sw.Start();
             InitDataTocmbbox();
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
@@ -251,7 +253,7 @@ namespace RUINORERP.UI.PSI.INV
               .ToExpression();//注意 这一句 不能少
                               // StringBuilder sb = new StringBuilder();
             /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list = dc.BaseQueryByWhere(exp);
+            list =await dc.BaseQueryByWhereAsync(exp);
 
             sgd.SetDependencyObject<ProductSharePart, tb_ProdBorrowingDetail>(list);
 
@@ -259,6 +261,8 @@ namespace RUINORERP.UI.PSI.INV
             sgh.InitGrid(grid1, sgd, true, nameof(tb_ProdBorrowingDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
+            sw.Stop();
+            MainForm.Instance.uclog.AddLog("加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
         {

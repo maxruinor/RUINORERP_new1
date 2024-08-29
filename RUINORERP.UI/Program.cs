@@ -28,6 +28,7 @@ using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINORERP.Business;
 using WorkflowCore.Services;
 using RUINORERP.WF.BizOperation;
+using RUINORERP.Common.Extensions;
 
 
 namespace RUINORERP.UI
@@ -381,6 +382,7 @@ namespace RUINORERP.UI
                 foreach (var arg in args)
                 {
                     Console.WriteLine(arg);
+                    //MessageBox.Show(arg);
                 }
             }
 

@@ -2133,8 +2133,11 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString() || item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
                     {
-                        MessageBox.Show("没有审核的数据无法打印");
-                        return;
+                        if (MessageBox.Show("没有审核的数据无法打印,你确定要打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                        {
+                            return;
+                        }
+
                     }
                 }
             }

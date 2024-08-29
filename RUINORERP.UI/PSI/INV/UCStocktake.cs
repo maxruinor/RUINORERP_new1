@@ -617,7 +617,7 @@ namespace RUINORERP.UI.PSI.INV
                     return false;
                 }
 
-
+                EditEntity.tb_StocktakeDetails = details;
 
                 //没有经验通过下面先不计算
                 if (!base.Validator(EditEntity))
@@ -629,7 +629,7 @@ namespace RUINORERP.UI.PSI.INV
                 {
                     return false;
                 }
-                EditEntity.tb_StocktakeDetails = details;
+         
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证

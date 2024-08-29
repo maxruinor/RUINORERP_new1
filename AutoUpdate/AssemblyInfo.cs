@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyTitle("自动更新工具")]
 [assembly: AssemblyDescription("支持gzip,7z格式")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("FK")]
+[assembly: AssemblyCompany("MAXRUINOR")]
 [assembly: AssemblyProduct("")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]

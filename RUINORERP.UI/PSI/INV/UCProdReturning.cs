@@ -38,6 +38,9 @@ using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using Krypton.Toolkit;
+using System.Diagnostics;
+using NPOI.SS.Formula.Functions;
+using Netron.GraphLib;
 
 
 namespace RUINORERP.UI.PSI.INV
@@ -56,6 +59,7 @@ namespace RUINORERP.UI.PSI.INV
         }
         internal override void LoadDataToUI(object Entity)
         {
+         
             BindData(Entity as tb_ProdReturning);
         }
 
@@ -78,11 +82,14 @@ namespace RUINORERP.UI.PSI.INV
         }
         public void BindData(tb_ProdReturning entity)
         {
+           
             if (entity == null)
             {
 
                 return;
             }
+            var sw = new Stopwatch();
+            sw.Start();
             EditEntity = entity;
             if (entity.ReturnID > 0)
             {
@@ -194,7 +201,10 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.InitFilterForControlByExp<tb_ProdBorrowing>(entity, txtBorrowNO, c => c.BorrowNo, queryFilter);
 
             ToolBarEnabledControl(entity);
-
+ 
+  
+            sw.Stop();
+            MainForm.Instance.uclog.AddLog("Binding加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
         }
 
         SourceGridDefine sgd = null;
@@ -203,8 +213,9 @@ namespace RUINORERP.UI.PSI.INV
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
 
-        private void UCStockIn_Load(object sender, EventArgs e)
+        private async void UCStockIn_Load(object sender, EventArgs e)
         {
+            var sw = new Stopwatch();
             // list = dc.Query();
             //DevAge.ComponentModel.IBoundList bd = list.ToBindingSortCollection<View_ProdDetail>()  ;//new DevAge.ComponentModel.BoundDataView(mView);
             // grid1.DataSource = list.ToBindingSortCollection<View_ProdDetail>() as DevAge.ComponentModel.IBoundList;// new DevAge.ComponentModel.BoundDataView(list.ToDataTable().DefaultView); 
@@ -242,7 +253,7 @@ namespace RUINORERP.UI.PSI.INV
             }
             */
             sgd = new SourceGridDefine(grid1, listCols, true);
-
+            sgd.GridData = EditEntity;
             //要放到初始化sgd后面
             listCols.SetCol_Summary<tb_ProdReturningDetail>(c => c.Qty);
 
@@ -269,13 +280,20 @@ namespace RUINORERP.UI.PSI.INV
                 .ToExpression();//注意 这一句 不能少
                                 // StringBuilder sb = new StringBuilder();
             /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list = dc.BaseQueryByWhere(exp);
+            /// 
+
+            sw.Start();
+             list = await dc.BaseQueryByWhereAsync(exp);
+            sw.Stop();
+            MainForm.Instance.uclog.AddLog("Load加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
+
             sgd.SetDependencyObject<ProductSharePart, tb_ProdReturningDetail>(list);
 
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_ProdReturningDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
+ 
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
         {
@@ -391,7 +409,7 @@ namespace RUINORERP.UI.PSI.INV
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
- 
+
                 ReturnMainSubResults<tb_ProdReturning> SaveResult = await base.Save(EditEntity);
                 if (SaveResult.Succeeded)
                 {

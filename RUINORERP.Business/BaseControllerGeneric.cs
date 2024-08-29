@@ -1160,8 +1160,8 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public async virtual Task<List<T>> BaseQueryByWhereAsync(Expression<Func<T, bool>> exp)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
-            querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp);
+            // var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp);
             return await querySqlQueryable.ToListAsync();
             // throw new Exception("子类要重写BaseQueryByAdvancedNavAsync");
         }
@@ -1173,11 +1173,14 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public virtual List<T> BaseQueryByWhere(Expression<Func<T, bool>> exp)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
-            querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp);
+            //  var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp);
             return querySqlQueryable.ToList();
             // throw new Exception("子类要重写BaseQueryByAdvancedNavAsync");
         }
+
+
+
 
 
         /// <summary>

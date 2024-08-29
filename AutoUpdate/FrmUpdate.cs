@@ -103,13 +103,13 @@ namespace AutoUpdate
             this.btnNext = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.btnFinish = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
@@ -251,17 +251,6 @@ namespace AutoUpdate
             this.panel2.Size = new System.Drawing.Size(387, 303);
             this.panel2.TabIndex = 5;
             // 
-            // linkLabel1
-            // 
-            this.linkLabel1.Location = new System.Drawing.Point(16, -10);
-            this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(98, 18);
-            this.linkLabel1.TabIndex = 12;
-            this.linkLabel1.TabStop = true;
-            this.linkLabel1.Text = "http://www.maxruinor.com";
-            this.linkLabel1.Visible = false;
-            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
-            // 
             // label4
             // 
             this.label4.Location = new System.Drawing.Point(144, 184);
@@ -316,6 +305,17 @@ namespace AutoUpdate
             this.groupBox4.TabIndex = 1;
             this.groupBox4.TabStop = false;
             // 
+            // linkLabel1
+            // 
+            this.linkLabel1.Location = new System.Drawing.Point(16, -10);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(98, 18);
+            this.linkLabel1.TabIndex = 12;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "http://www.maxruinor.com";
+            this.linkLabel1.Visible = false;
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            // 
             // btnFinish
             // 
             this.btnFinish.Location = new System.Drawing.Point(136, 264);
@@ -342,7 +342,7 @@ namespace AutoUpdate
             this.MinimizeBox = false;
             this.Name = "FrmUpdate";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "自动更新 2.0.0.6";
+            this.Text = "自动更新 2.0.0.8";
             this.Load += new System.EventHandler(this.FrmUpdate_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
@@ -372,6 +372,10 @@ namespace AutoUpdate
         ///保存更新文件列表，key:为当前执行文件的目录及文件名，value为更新的对应版本的目录及文件名
         private List<KeyValuePair<string, string>> filesList = new List<KeyValuePair<string, string>>();
 
+        private List<string> versionDirList = new List<string>();
+
+        string localXmlFile = Application.StartupPath + "\\AutoUpdaterList.xml";
+        string serverXmlFile = string.Empty;
         private void FrmUpdate_Load(object sender, System.EventArgs e)
         {
 
@@ -386,12 +390,7 @@ namespace AutoUpdate
 
             panel2.Visible = false;
             btnFinish.Visible = false;
-            linkLabel1.Visible = false
-                ;
-            string localXmlFile = Application.StartupPath + "\\AutoUpdaterList.xml";
-            string serverXmlFile = string.Empty;
-
-
+            linkLabel1.Visible = false;
             try
             {
                 //从本地读取更新配置文件信息
@@ -440,9 +439,7 @@ namespace AutoUpdate
 
             //获取更新文件列表
             //Hashtable htUpdateFile = new Hashtable();
-
-
-            serverXmlFile = tempUpdatePath + "\\AutoUpdaterList.xml";
+            serverXmlFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
             if (!File.Exists(serverXmlFile))
             {
                 return;
@@ -608,7 +605,15 @@ namespace AutoUpdate
                         }
 
                         string tempPath = tempUpdatePath + "\\" + VerNo + "\\" + UpdateFile;
+
                         filesList.Add(new KeyValuePair<string, string>(AppDomain.CurrentDomain.BaseDirectory + UpdateFile, tempPath));
+
+                        //添加对应的版本目录
+                        if (!versionDirList.Contains(VerNo))
+                        {
+                            versionDirList.Add(VerNo);
+                        }
+
                         CreateDirtory(tempPath);
                         FileStream fs = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write);
                         fs.Write(bufferbyte, 0, bufferbyte.Length);
@@ -651,7 +656,12 @@ namespace AutoUpdate
             }
         }
 
-        //复制文件;
+
+        /// <summary>
+        /// 复制文件  将版本号下面的文件 全部
+        /// </summary>
+        /// <param name="sourcePath"></param>
+        /// <param name="objPath"></param>
         public void CopyFile(string sourcePath, string objPath)
         {
             //			char[] split = @"\".ToCharArray();
@@ -666,7 +676,7 @@ namespace AutoUpdate
                 {
                     #region 复制文件
                     //前面处理了自己更新自己，这时如果是自己则不处理
-                    if (files[i] == sourcePath + currentexeName)
+                    if (files[i] == sourcePath + @"\" + currentexeName)
                     {
                         continue;
                     }
@@ -737,29 +747,17 @@ namespace AutoUpdate
         //点击完成复制更新文件到应用程序目录
         private void btnFinish_Click(object sender, System.EventArgs e)
         {
-            //如果下载下来的文件有自己autoUpdate，则重命名 自动更新程序的自我更新
-            if (System.IO.File.Exists(System.IO.Path.Combine(tempUpdatePath, currentexeName)))
-            {
-                string filename = Assembly.GetExecutingAssembly().Location;
-                if (System.IO.File.Exists(filename + ".delete"))
-                {
-                    System.IO.File.Delete(filename + ".delete");
-                }
-                File.Move(filename, filename + ".delete");                    // 1
-                File.Copy(System.IO.Path.Combine(tempUpdatePath, currentexeName), filename);                // 2
-                // Application.Restart();
-            }
-
             try
             {
                 //下载完成后，copy文件 ,将下载到临时文件夹中的最新的文件复制到应用程序目录中生效再启动
                 //CopyFile(tempUpdatePath, Directory.GetCurrentDirectory());
                 //System.IO.Directory.Delete(tempUpdatePath, true);
-                foreach (var item in filesList)
-                {
-                    CopyFile(Path.GetDirectoryName(item.Value), Path.GetDirectoryName(item.Key));
-                }
 
+
+                for (int i = 0; i < versionDirList.Count; i++)
+                {
+                    CopyFile((tempUpdatePath + versionDirList[i]), Directory.GetCurrentDirectory());
+                }
 
                 #region 为了实现版本回滚只保留5个版本
                 List<string> versions = new List<string>();
@@ -794,7 +792,49 @@ namespace AutoUpdate
             {
                 MessageBox.Show(ex.Message.ToString());
             }
-            StartEntryPointExe();
+
+
+
+            //如果下载下来的文件有自己autoUpdate，则重命名 自动更新程序的自我更新，最后处理。前面的要排除
+            //在主程序中处理自我更新。实际是A->B    B->A
+            string autoupdatePath = string.Empty;
+            var autoupdate = filesList.Where(c => c.Key.Contains(currentexeName)).FirstOrDefault();
+            if (autoupdate.Key != null)
+            {
+                autoupdatePath = autoupdate.Key + "|" + autoupdate.Value;
+                string filename = Assembly.GetExecutingAssembly().Location;
+                if (System.IO.File.Exists(filename + ".delete"))
+                {
+                    System.IO.File.Delete(filename + ".delete");
+                }
+                File.Move(filename, filename + ".delete");
+                File.Copy(autoupdate.Value, filename);
+                //ProcessStartInfo p = new ProcessStartInfo();
+                //p.FileName = "AutoUpdateSelf.exe";
+                //p.Arguments = autoupdatePath;
+                //p.WindowStyle = ProcessWindowStyle.Hidden;
+                //Process.Start(p);
+            }
+
+
+            /*
+            if (System.IO.File.Exists(System.IO.Path.Combine(tempUpdatePath, currentexeName)))
+            {
+                string filename = Assembly.GetExecutingAssembly().Location;
+                if (System.IO.File.Exists(filename + ".delete"))
+                {
+                    System.IO.File.Delete(filename + ".delete");
+                }
+                File.Move(filename, filename + ".delete");                
+                File.Copy(System.IO.Path.Combine(tempUpdatePath, currentexeName), filename);              
+                // Application.Restart();
+            }
+            */
+
+            //全部更新完成后。配置文件也要更新过来
+            File.Copy(serverXmlFile, localXmlFile, true);
+            autoupdatePath = "你好！";
+            StartEntryPointExe(autoupdatePath);
             mainResult = 0;
             this.Close();
             this.Dispose();
@@ -1170,7 +1210,7 @@ namespace AutoUpdate
         /// <summary>
         /// 为了想无介面更新 暂时还没有完成。无介面是不是需要显示进度到调用的程序中呢？
         /// </summary>
-        public void StartEntryPointExe()
+        public void StartEntryPointExe(params string[] args)
         {
 
             if (string.IsNullOrEmpty(mainAppExe))
@@ -1190,7 +1230,12 @@ namespace AutoUpdate
 
             //MessageBox.Show(mainAppExe);
             // 要传递给程序的参数
-            string arguments = tempUpdatePath; // 替换为实际的参数
+
+
+            string arguments = tempUpdatePath;
+            // 将数组转换为以"|"分隔的字符串
+            arguments = String.Join("|", args);
+
             ProcessStartInfo startInfo = new ProcessStartInfo(mainAppExe, arguments);
             Process.Start(startInfo);
             mainResult = 0;

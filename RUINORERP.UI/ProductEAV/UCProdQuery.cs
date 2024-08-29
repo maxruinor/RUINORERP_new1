@@ -44,6 +44,8 @@ namespace RUINORERP.UI.ProductEAV
 
         /*
          目前这个是用于一个公用的查询模板，对于一些特殊情况下的调用。用枚举类型来区别一下。
+        公共查询入口 ，将来可以扩展为多个查询入口，如我的收藏产品，我的产品，我的供应商产品等
+        主要返回是产品列表，或者产品ID列表，同时像套装组合时也要返回组合的一个信息，这时套装tab页要显示需要的套装。并返回套装信息和套数。
          */
 
         public ProdQueryUseType UseType = ProdQueryUseType.None;
@@ -776,7 +778,7 @@ namespace RUINORERP.UI.ProductEAV
             DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, cmbdepartment);
             DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v => v.Name, cmbLocation);
             InitListData();
-   
+
             ContextMenuStrip newContextMenuStrip = newSumDataGridView产品.GetContextMenu(contextMenuStrip1);
             newSumDataGridView产品.ContextMenuStrip = newContextMenuStrip;
             newSumDataGridView产品组合.ContextMenuStrip = newContextMenuStrip;

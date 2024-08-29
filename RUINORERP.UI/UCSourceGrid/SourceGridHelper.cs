@@ -343,7 +343,8 @@ namespace RUINORERP.UI.UCSourceGrid
                 //默认10行数据中，还要加上列头一行，如果有统计 最后也算一行。所以算12行
                 for (int r = 0; r < needAddrows; r++)
                 {
-                    this.InsertRow(grid1, sgdefine, true);
+                     this.InsertRow(grid1, sgdefine, true);
+                   // AddRow(grid1, sgdefine, true);
                 }
             }
 
@@ -523,11 +524,9 @@ namespace RUINORERP.UI.UCSourceGrid
 
             #endregion
 
-
             //var detailItems = ((IEnumerable<dynamic>)_details).ToList();
             int i = 1;
             InsertItemData<C>(grid1, sgdefine, _details, BizKeyTargetColExp, i, true);
-
         }
 
 
@@ -935,6 +934,11 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             int row = grid.Rows.Count - 1;
             int AddRowIndex = row + 1;
+            if (AddRowIndex <= 0)
+            {
+                //AddRowIndex = 1;
+                //这行也不行。实际原因是表格加载会慢，所以会先加载，然后插入行，不然会报错
+            }
             //if (define.HasSummaryRow)
             //{
             //    AddRowIndex = AddRowIndex - 2;
@@ -955,6 +959,12 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 AddRowIndex = AddRowIndex - 1;
             }
+            if (AddRowIndex == -1)
+            {
+               // AddRowIndex = 0;
+                //这行也不行。实际原因是表格加载会慢，所以会先加载，然后插入行，不然会报错
+            }
+
             AddRows(AddRowIndex, grid, define, RowReadonly);
         }
 

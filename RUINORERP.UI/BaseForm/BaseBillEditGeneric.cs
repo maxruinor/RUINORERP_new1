@@ -46,6 +46,8 @@ using RUINORERP.Business.CommService;
 using OfficeOpenXml.FormulaParsing.Excel.Functions;
 using MySqlX.XDevAPI.Common;
 using RUINORERP.Business.Security;
+using RUINORERP.UI.CommonUI;
+using ImageHelper = RUINORERP.UI.Common.ImageHelper;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -1487,6 +1489,39 @@ namespace RUINORERP.UI.BaseForm
             ToolBarEnabledControl(MenuItemEnums.取消);
             bindingSourceSub.CancelEdit();
 
+        }
+
+
+        protected override void Property()
+        {
+            frmFormProperty frm = new frmFormProperty();
+            frm.MenuInfo = CurMenuInfo;
+            frm.OnSaveToXml += Frm_OnSaveToXml;
+            frm.OnFromToXml += Frm_OnFromToXml;
+            frm.Entity = EditEntity as T;
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                //保存属性
+                ToolBarEnabledControl(MenuItemEnums.属性);
+                EditEntity = frm.Entity as T;
+                //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
+            }
+            base.Property();
+        }
+
+        private void Frm_OnFromToXml(frmFormProperty frm)
+        {
+            frm.DeserializeFromXML<T>();
+        }
+
+        private void Frm_OnSaveToXml(frmFormProperty frm, object Obj)
+        {
+            //ProductSharePart psp = new ProductSharePart();
+            //psp.CNName = "asdfa";
+            //psp.Images = ImageHelper.imageToByteArray(Properties.Resources.add);
+            //frm.SerializeToXML<ProductSharePart>(psp as ProductSharePart);
+
+            frm.SerializeToXML<T>(Obj as T);
         }
 
         protected override void Add()

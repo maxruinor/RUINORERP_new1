@@ -1430,7 +1430,7 @@ namespace RUINORERP.UI.BaseForm
         {
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
-            UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
+            //UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
             kryptonPanel条件生成容器.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(kryptonPanel条件生成容器, true, null);
             kryptonPanel条件生成容器.Visible = false;
             kryptonPanel条件生成容器.Controls.Clear();

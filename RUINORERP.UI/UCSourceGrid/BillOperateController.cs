@@ -735,6 +735,15 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 sender.Cell.View = CurrGridDefine.ViewNormalMoney;
             }
+            else if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.Image)
+            {
+                // sender.Cell.View = CurrGridDefine.ImagesViewModel;
+                //如果有图片值才设置，不然还是和其它一样
+                if (sender.Value != null)
+                {
+                    sender.Cell.View = new SourceGrid.Cells.Views.SingleImage();
+                }
+            }
             else
             {
                 sender.Cell.View = CurrGridDefine.ViewNormal;

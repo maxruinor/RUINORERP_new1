@@ -1,8 +1,10 @@
 ﻿using RUINORERP.Common.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Windows.Forms;
 
 namespace RUINORERP.Common.Helper
 {
@@ -323,7 +325,7 @@ namespace RUINORERP.Common.Helper
         {
             try
             {
-                if (obj==null)
+                if (obj == null)
                 {
                     return;
 
@@ -338,16 +340,63 @@ namespace RUINORERP.Common.Helper
 
                 string PropertyName = property.Name;
 
-                string PropertyValue = aobj_propertyvalue == null ? string.Empty : aobj_propertyvalue.ToString();
+                //object PropertyValue = aobj_propertyvalue == null ? string.Empty : aobj_propertyvalue;
+                object PropertyValue = aobj_propertyvalue;
 
                 if (property.PropertyType.IsEnum) //属性类型是否表示枚举
                 {
-                    object enumName = Enum.ToObject(property.PropertyType, int.Parse(PropertyValue));
+                    object enumName = Enum.ToObject(property.PropertyType, int.Parse(PropertyValue.ToString()));
                     t.GetProperty(as_propertyname).SetValue(obj, enumName, null); //获取枚举值，设置属性值
+                }
+                else if (property.PropertyType.IsArray && property.PropertyType.Name.ToLower() == "byte[]")
+                {
+                    if (PropertyValue == null)
+                    {
+                        return;
+                    }
+                    //MessageBox.Show(PropertyValue.GetType().Name);
+                    if (PropertyValue.GetType().Name == "Bitmap")
+                    {
+                        property.SetValue(obj, ImageHelper.ConvertImageToByteEx(PropertyValue as Bitmap));
+                    }
+                    else if (PropertyValue.GetType().Name == "Image")
+                    {
+                        property.SetValue(obj, ImageHelper.ConvertImageToByteEx(PropertyValue as Image));
+                    }
+                    else
+                    {
+                        property.SetValue(obj, PropertyValue);
+                    }
+
+                }
+                else if (property.PropertyType.Name.ToLower() == "datetime")
+                {
+                    property.SetValue(obj, PropertyValue);
+                }
+                else if (property.PropertyType.Name.ToLower() == "string")
+                {
+                    PropertyValue = PropertyValue == null ? string.Empty : PropertyValue;
+                    property.SetValue(obj, PropertyValue);
                 }
                 else if (!property.PropertyType.IsGenericType)
                 {
-                    property.SetValue(obj, string.IsNullOrEmpty(PropertyValue) ? null : Convert.ChangeType(PropertyValue, property.PropertyType));
+                    if (PropertyValue == null)
+                    {
+                        property.SetValue(obj, Activator.CreateInstance(property.PropertyType));
+                    }
+                    else
+                    {
+                        try
+                        {
+                            // 尝试转换类型
+                            property.SetValue(obj, Convert.ChangeType(PropertyValue, property.PropertyType));
+                        }
+                        catch (Exception exC)
+                        {
+                            property.SetValue(obj, Activator.CreateInstance(property.PropertyType));
+                            //Console.WriteLine($"类型转换失败: {ex.Message}");
+                        }
+                    }
                 }
                 else
                 {
@@ -355,7 +404,17 @@ namespace RUINORERP.Common.Helper
                     Type genericTypeDefinition = property.PropertyType.GetGenericTypeDefinition();
                     if (genericTypeDefinition == typeof(Nullable<>))
                     {
-                        property.SetValue(obj, string.IsNullOrEmpty(PropertyValue) ? null : Convert.ChangeType(PropertyValue, Nullable.GetUnderlyingType(property.PropertyType)));
+                        //Nullable<>类型时，判断是否有值，有值则进行转换，没有则赋值为null
+                        if (PropertyValue == null || PropertyValue.ToString() == "")
+                        {
+                            property.SetValue(obj, null);
+                        }
+                        else
+                        {
+
+                            property.SetValue(obj, Convert.ChangeType(PropertyValue, Nullable.GetUnderlyingType(property.PropertyType)));
+                        }
+
                     }
                 }
 

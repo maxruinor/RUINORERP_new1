@@ -209,13 +209,13 @@ namespace DevAge.Drawing.VisualElements
 
         protected virtual void OnDrawContent(GraphicsCache graphics, RectangleF area)
         {
-            //In this case the elements are drawed one over the another
+            //在这种情况下，元素是一个接一个地绘制的
             if (ElementsDrawMode == ElementsDrawMode.Covering)
             {
                 foreach (IVisualElement element in GetElements())
                     element.Draw(graphics, area);
             }
-            //In this case the elements are drawed considering an alignment
+            //在这种情况下，元素是在考虑对齐的情况下绘制的
             else if (ElementsDrawMode == ElementsDrawMode.Align)
             {
                 using (MeasureHelper measure = new MeasureHelper(graphics))

@@ -197,6 +197,22 @@ namespace RUINORERP.Model
             }
         }
 
+        private byte[] _EvidenceImage;
+        /// <summary>
+        /// 产品图
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EvidenceImage", ColDesc = "凭证图")]
+        [SugarColumn(ColumnDataType = "image", SqlParameterDbType = "Binary", ColumnName = "EvidenceImage", Length = 2147483647, IsNullable = true, ColumnDescription = "凭证图")]
+        public byte[] EvidenceImage
+        {
+            get { return _EvidenceImage; }
+            set
+            {
+                SetProperty(ref _EvidenceImage, value);
+            }
+        }
+
+
         private bool _IncludeTax= false;
         /// <summary>
         /// 含税

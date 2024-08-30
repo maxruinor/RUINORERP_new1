@@ -608,11 +608,11 @@ namespace RUINORERP.UI.PSI.INV
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (aa.Count > 0)
                 {
-                    var prod = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID.ToString() == aa.ToString());
+                    var prod = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID.ToString() == aa[0].ToString());
                     System.Windows.Forms.MessageBox.Show($"明细中，SKU{prod.SKU},{prod.CNName}\r\n相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                     {
-                        MainForm.Instance.uclog.AddLog($"明细中，SKU{prod.SKU},{prod.CNName}\r\n相同的产品不能多行录入:盘点单号:{EditEntity.CheckNo},产品ID:{aa.ToString()}");
+                        MainForm.Instance.uclog.AddLog($"明细中，SKU{prod.SKU},{prod.CNName}相同的产品不能多行录入:盘点单号:{EditEntity.CheckNo},产品ID:{aa[0].ToString()}");
                     }
                     return false;
                 }
@@ -629,7 +629,7 @@ namespace RUINORERP.UI.PSI.INV
                 {
                     return false;
                 }
-         
+
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证

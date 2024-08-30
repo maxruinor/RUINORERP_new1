@@ -457,7 +457,7 @@ namespace RUINORERP.UI.MRP.MP
             //需求日期，默认加5天
             listColsTarget.SetCol_DefaultValue<tb_ProductionDemandTargetDetail>(c => c.RequirementDate, DateTime.Now.AddDays(5).ToString("yyyy-MM-dd"));
 
-            listColsTarget.SetCol_DefaultHide<ProductSharePart>(c => c.Image);
+            listColsTarget.SetCol_DefaultHide<ProductSharePart>(c => c.Images);
             listColsTarget.SetCol_DefaultHide<ProductSharePart>(c => c.Brand);
             listColsTarget.SetCol_DefaultHide<ProductSharePart>(c => c.BarCode);
             listColsTarget.SetCol_DefaultHide<ProductSharePart>(c => c.ShortCode);
@@ -998,7 +998,7 @@ namespace RUINORERP.UI.MRP.MP
                     {
                         return false;
                     }
-                   
+
                 }
 
                 #endregion

@@ -466,7 +466,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
 
-            UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
+           // UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
 
             PanelForQuery.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance
 | System.Reflection.BindingFlags.NonPublic).SetValue(PanelForQuery, true, null);

@@ -30,6 +30,8 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelMainInfo = new Krypton.Toolkit.KryptonPanel();
+            this.txtReason = new Krypton.Toolkit.KryptonTextBox();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
@@ -56,8 +58,11 @@
             this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.lblTotalCost = new Krypton.Toolkit.KryptonLabel();
-            this.txtReason = new Krypton.Toolkit.KryptonTextBox();
-            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
+            this.chkBysupplier = new Krypton.Toolkit.KryptonCheckBox();
+            this.kryptonHeaderGroupTop = new Krypton.Toolkit.KryptonHeaderGroup();
+            this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
+            this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
+            this.groupLine1 = new WinLib.Line.GroupLine();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -76,13 +81,19 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
+            this.kryptonHeaderGroupTop.Panel.SuspendLayout();
+            this.kryptonHeaderGroupTop.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).BeginInit();
+            this.kryptonPanelQuery.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
             // 
             this.kryptonSplitContainer1.Cursor = System.Windows.Forms.Cursors.Default;
             this.kryptonSplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonSplitContainer1.Location = new System.Drawing.Point(0, 25);
+            this.kryptonSplitContainer1.Location = new System.Drawing.Point(0, 0);
             this.kryptonSplitContainer1.Name = "kryptonSplitContainer1";
             this.kryptonSplitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -93,12 +104,13 @@
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainer2);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1095, 760);
-            this.kryptonSplitContainer1.SplitterDistance = 253;
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1095, 785);
+            this.kryptonSplitContainer1.SplitterDistance = 353;
             this.kryptonSplitContainer1.TabIndex = 4;
             // 
             // kryptonPanelMainInfo
             // 
+            this.kryptonPanelMainInfo.Controls.Add(this.chkBysupplier);
             this.kryptonPanelMainInfo.Controls.Add(this.txtReason);
             this.kryptonPanelMainInfo.Controls.Add(this.kryptonLabel2);
             this.kryptonPanelMainInfo.Controls.Add(this.lblDataStatus);
@@ -122,8 +134,24 @@
             this.kryptonPanelMainInfo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelMainInfo.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelMainInfo.Name = "kryptonPanelMainInfo";
-            this.kryptonPanelMainInfo.Size = new System.Drawing.Size(1095, 253);
+            this.kryptonPanelMainInfo.Size = new System.Drawing.Size(1095, 353);
             this.kryptonPanelMainInfo.TabIndex = 87;
+            // 
+            // txtReason
+            // 
+            this.txtReason.Location = new System.Drawing.Point(79, 126);
+            this.txtReason.Multiline = true;
+            this.txtReason.Name = "txtReason";
+            this.txtReason.Size = new System.Drawing.Size(637, 51);
+            this.txtReason.TabIndex = 103;
+            // 
+            // kryptonLabel2
+            // 
+            this.kryptonLabel2.Location = new System.Drawing.Point(13, 126);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel2.TabIndex = 102;
+            this.kryptonLabel2.Values.Text = "借出原因";
             // 
             // lblDataStatus
             // 
@@ -221,7 +249,7 @@
             // 
             // dtpOut_date
             // 
-            this.dtpOut_date.Location = new System.Drawing.Point(831, 56);
+            this.dtpOut_date.Location = new System.Drawing.Point(709, 50);
             this.dtpOut_date.Name = "dtpOut_date";
             this.dtpOut_date.ShowCheckBox = true;
             this.dtpOut_date.Size = new System.Drawing.Size(140, 21);
@@ -229,7 +257,7 @@
             // 
             // lblDueDate
             // 
-            this.lblDueDate.Location = new System.Drawing.Point(520, 58);
+            this.lblDueDate.Location = new System.Drawing.Point(643, 85);
             this.lblDueDate.Name = "lblDueDate";
             this.lblDueDate.Size = new System.Drawing.Size(62, 20);
             this.lblDueDate.TabIndex = 59;
@@ -237,7 +265,7 @@
             // 
             // dtpBill_Date
             // 
-            this.dtpBill_Date.Location = new System.Drawing.Point(586, 57);
+            this.dtpBill_Date.Location = new System.Drawing.Point(709, 84);
             this.dtpBill_Date.Name = "dtpBill_Date";
             this.dtpBill_Date.ShowCheckBox = true;
             this.dtpBill_Date.Size = new System.Drawing.Size(140, 21);
@@ -256,7 +284,7 @@
             // 
             // lblOut_date
             // 
-            this.lblOut_date.Location = new System.Drawing.Point(763, 57);
+            this.lblOut_date.Location = new System.Drawing.Point(641, 51);
             this.lblOut_date.Name = "lblOut_date";
             this.lblOut_date.Size = new System.Drawing.Size(62, 20);
             this.lblOut_date.TabIndex = 61;
@@ -293,14 +321,9 @@
             // 
             // kryptonSplitContainer2.Panel2
             // 
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalQty);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.kryptonLabel1);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalCost);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalAmount);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalCost);
-            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1095, 502);
-            this.kryptonSplitContainer2.SplitterDistance = 394;
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.kryptonHeaderGroupTop);
+            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1095, 427);
+            this.kryptonSplitContainer2.SplitterDistance = 333;
             this.kryptonSplitContainer2.TabIndex = 1;
             // 
             // grid1
@@ -312,21 +335,21 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1095, 394);
+            this.grid1.Size = new System.Drawing.Size(1095, 333);
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
             // txtTotalQty
             // 
-            this.txtTotalQty.Location = new System.Drawing.Point(161, 18);
+            this.txtTotalQty.Location = new System.Drawing.Point(274, 29);
             this.txtTotalQty.Name = "txtTotalQty";
             this.txtTotalQty.Size = new System.Drawing.Size(100, 23);
             this.txtTotalQty.TabIndex = 59;
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(88, 18);
+            this.kryptonLabel1.Location = new System.Drawing.Point(201, 29);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(49, 20);
             this.kryptonLabel1.TabIndex = 60;
@@ -334,21 +357,21 @@
             // 
             // txtTotalCost
             // 
-            this.txtTotalCost.Location = new System.Drawing.Point(388, 18);
+            this.txtTotalCost.Location = new System.Drawing.Point(501, 29);
             this.txtTotalCost.Name = "txtTotalCost";
             this.txtTotalCost.Size = new System.Drawing.Size(100, 23);
             this.txtTotalCost.TabIndex = 56;
             // 
             // txtTotalAmount
             // 
-            this.txtTotalAmount.Location = new System.Drawing.Point(595, 18);
+            this.txtTotalAmount.Location = new System.Drawing.Point(708, 29);
             this.txtTotalAmount.Name = "txtTotalAmount";
             this.txtTotalAmount.Size = new System.Drawing.Size(100, 23);
             this.txtTotalAmount.TabIndex = 57;
             // 
             // lblTotalAmount
             // 
-            this.lblTotalAmount.Location = new System.Drawing.Point(522, 18);
+            this.lblTotalAmount.Location = new System.Drawing.Point(635, 29);
             this.lblTotalAmount.Name = "lblTotalAmount";
             this.lblTotalAmount.Size = new System.Drawing.Size(49, 20);
             this.lblTotalAmount.TabIndex = 58;
@@ -356,27 +379,66 @@
             // 
             // lblTotalCost
             // 
-            this.lblTotalCost.Location = new System.Drawing.Point(315, 18);
+            this.lblTotalCost.Location = new System.Drawing.Point(428, 29);
             this.lblTotalCost.Name = "lblTotalCost";
             this.lblTotalCost.Size = new System.Drawing.Size(49, 20);
             this.lblTotalCost.TabIndex = 55;
             this.lblTotalCost.Values.Text = "总成本";
             // 
-            // txtReason
+            // chkBysupplier
             // 
-            this.txtReason.Location = new System.Drawing.Point(79, 126);
-            this.txtReason.Multiline = true;
-            this.txtReason.Name = "txtReason";
-            this.txtReason.Size = new System.Drawing.Size(637, 51);
-            this.txtReason.TabIndex = 103;
+            this.chkBysupplier.Location = new System.Drawing.Point(499, 59);
+            this.chkBysupplier.Name = "chkBysupplier";
+            this.chkBysupplier.Size = new System.Drawing.Size(62, 20);
+            this.chkBysupplier.TabIndex = 141;
+            this.chkBysupplier.Values.Text = "供应商";
             // 
-            // kryptonLabel2
+            // kryptonHeaderGroupTop
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(13, 126);
-            this.kryptonLabel2.Name = "kryptonLabel2";
-            this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel2.TabIndex = 102;
-            this.kryptonLabel2.Values.Text = "借出原因";
+            this.kryptonHeaderGroupTop.AutoSize = true;
+            this.kryptonHeaderGroupTop.ButtonSpecs.Add(this.buttonSpecHeaderGroup1);
+            this.kryptonHeaderGroupTop.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonHeaderGroupTop.HeaderVisibleSecondary = false;
+            this.kryptonHeaderGroupTop.Location = new System.Drawing.Point(0, 0);
+            this.kryptonHeaderGroupTop.Name = "kryptonHeaderGroupTop";
+            // 
+            // kryptonHeaderGroupTop.Panel
+            // 
+            this.kryptonHeaderGroupTop.Panel.Controls.Add(this.kryptonPanelQuery);
+            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(1095, 89);
+            this.kryptonHeaderGroupTop.StateCommon.HeaderPrimary.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
+            | Krypton.Toolkit.PaletteDrawBorders.Left) 
+            | Krypton.Toolkit.PaletteDrawBorders.Right)));
+            this.kryptonHeaderGroupTop.TabIndex = 2;
+            this.kryptonHeaderGroupTop.ValuesPrimary.Heading = "";
+            // 
+            // buttonSpecHeaderGroup1
+            // 
+            this.buttonSpecHeaderGroup1.Type = Krypton.Toolkit.PaletteButtonSpecStyle.ArrowUp;
+            this.buttonSpecHeaderGroup1.UniqueName = "6c9eda2b76ae4d0eb4649936669149f4";
+            // 
+            // kryptonPanelQuery
+            // 
+            this.kryptonPanelQuery.Controls.Add(this.txtTotalQty);
+            this.kryptonPanelQuery.Controls.Add(this.groupLine1);
+            this.kryptonPanelQuery.Controls.Add(this.txtTotalAmount);
+            this.kryptonPanelQuery.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanelQuery.Controls.Add(this.lblTotalCost);
+            this.kryptonPanelQuery.Controls.Add(this.lblTotalAmount);
+            this.kryptonPanelQuery.Controls.Add(this.txtTotalCost);
+            this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelQuery.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanelQuery.Name = "kryptonPanelQuery";
+            this.kryptonPanelQuery.Size = new System.Drawing.Size(1093, 68);
+            this.kryptonPanelQuery.TabIndex = 1;
+            // 
+            // groupLine1
+            // 
+            this.groupLine1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupLine1.Location = new System.Drawing.Point(0, 67);
+            this.groupLine1.Name = "groupLine1";
+            this.groupLine1.Size = new System.Drawing.Size(1093, 1);
+            this.groupLine1.TabIndex = 2;
             // 
             // UCProdBorrowing
             // 
@@ -407,6 +469,13 @@
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).EndInit();
+            this.kryptonHeaderGroupTop.Panel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).EndInit();
+            this.kryptonHeaderGroupTop.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).EndInit();
+            this.kryptonPanelQuery.ResumeLayout(false);
+            this.kryptonPanelQuery.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -444,5 +513,10 @@
         private Krypton.Toolkit.KryptonLabel lblApprovalOpinions;
         private Krypton.Toolkit.KryptonTextBox txtReason;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
+        private Krypton.Toolkit.KryptonCheckBox chkBysupplier;
+        private Krypton.Toolkit.KryptonHeaderGroup kryptonHeaderGroupTop;
+        private Krypton.Toolkit.ButtonSpecHeaderGroup buttonSpecHeaderGroup1;
+        internal Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
+        private WinLib.Line.GroupLine groupLine1;
     }
 }

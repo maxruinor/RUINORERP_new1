@@ -96,6 +96,7 @@ namespace RUINORERP.UI.ProductEAV
             this.newSumDataGridView产品 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonBOM = new Krypton.Navigator.KryptonPage();
             this.treeListView1 = new System.Windows.Forms.TreeListView();
+            this.columnHeaderSKU = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -118,6 +119,7 @@ namespace RUINORERP.UI.ProductEAV
             this.箱规ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.按SKU添加箱规ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.columnHeader型号 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -739,7 +741,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage产品.LastVisibleSet = true;
             this.kryptonPage产品.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPage产品.Name = "kryptonPage产品";
-            this.kryptonPage产品.Size = new System.Drawing.Size(1070, 421);
+            this.kryptonPage产品.Size = new System.Drawing.Size(1116, 421);
             this.kryptonPage产品.Text = "产品";
             this.kryptonPage产品.ToolTipTitle = "Page ToolTip";
             this.kryptonPage产品.UniqueName = "8E44BECED7CC43E6DCBBD12911C38C48";
@@ -765,7 +767,7 @@ namespace RUINORERP.UI.ProductEAV
             this.newSumDataGridView产品.ReadOnly = true;
             this.newSumDataGridView产品.RowTemplate.Height = 23;
             this.newSumDataGridView产品.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.newSumDataGridView产品.Size = new System.Drawing.Size(1070, 421);
+            this.newSumDataGridView产品.Size = new System.Drawing.Size(1116, 421);
             this.newSumDataGridView产品.SumColumns = null;
             this.newSumDataGridView产品.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.newSumDataGridView产品.SumRowCellFormat = "N2";
@@ -797,7 +799,9 @@ namespace RUINORERP.UI.ProductEAV
             this.treeListView1.CheckBoxes = System.Windows.Forms.CheckBoxesTypes.Recursive;
             this.treeListView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
+            this.columnHeaderSKU,
             this.columnHeader2,
+            this.columnHeader型号,
             this.columnHeader3,
             this.columnHeader4,
             this.columnHeader5,
@@ -824,6 +828,11 @@ namespace RUINORERP.UI.ProductEAV
             this.treeListView1.BeforeCollapse += new System.Windows.Forms.TreeListViewCancelEventHandler(this.treeListView1_BeforeCollapse);
             this.treeListView1.DoubleClick += new System.EventHandler(this.treeListView1_DoubleClick);
             // 
+            // columnHeaderSKU
+            // 
+            this.columnHeaderSKU.Text = "SKU";
+            this.columnHeaderSKU.Width = 102;
+            // 
             // columnHeader1
             // 
             this.columnHeader1.Text = "名称";
@@ -832,12 +841,12 @@ namespace RUINORERP.UI.ProductEAV
             // columnHeader2
             // 
             this.columnHeader2.Text = "属性";
-            this.columnHeader2.Width = 100;
+            this.columnHeader2.Width = 109;
             // 
             // columnHeader3
             // 
             this.columnHeader3.Text = "规格";
-            this.columnHeader3.Width = 100;
+            this.columnHeader3.Width = 111;
             // 
             // columnHeader4
             // 
@@ -966,6 +975,10 @@ namespace RUINORERP.UI.ProductEAV
             this.按SKU添加箱规ToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.按SKU添加箱规ToolStripMenuItem.Text = "按【多属性】添加包装参数";
             this.按SKU添加箱规ToolStripMenuItem.Click += new System.EventHandler(this.按SKU添加箱规ToolStripMenuItem_Click);
+            // 
+            // columnHeader型号
+            // 
+            this.columnHeader型号.Text = "型号";
             // 
             // UCProdQuery
             // 
@@ -1109,5 +1122,7 @@ namespace RUINORERP.UI.ProductEAV
         private Krypton.Toolkit.KryptonCheckBox chkProdBundle_enabled;
         private UControls.NewSumDataGridView newSumDataGridView产品组合;
         private Krypton.Toolkit.KryptonCheckBox chkProdBundle_available;
+        private ColumnHeader columnHeaderSKU;
+        private ColumnHeader columnHeader型号;
     }
 }

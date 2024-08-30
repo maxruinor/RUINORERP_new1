@@ -797,9 +797,9 @@ namespace RUINORERP.UI.AdvancedUIModule
                             var attrBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "时间起", newProName1, AdvQueryProcessType.datetimeRange });
                             var attrBuilder2 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "时间止", newProName2, AdvQueryProcessType.datetimeRange });
                             //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newProp1 = AddProperty(tb, newProName1);
+                            PropertyBuilder newProp1 = AddProperty(tb, newProName1, typeof(DateTime?));//起始时间是可以选空的，实际如果不可空的话，要调试到这里看什么情况
                             //动态属性要提前创建生成，后面要实体化传入控件
-                            PropertyBuilder newProp2 = AddProperty(tb, newProName2);
+                            PropertyBuilder newProp2 = AddProperty(tb, newProName2, typeof(DateTime?));
                             newProp1.SetCustomAttribute(attrBuilder1);
                             newProp2.SetCustomAttribute(attrBuilder2);
                             break;

@@ -45,7 +45,6 @@ namespace RUINORERP.Common.Helper
                 }
             }
             return bt;
-
         }
 
 
@@ -92,7 +91,28 @@ namespace RUINORERP.Common.Helper
             stream.Close();
             return temp;
         }
+        public static byte[] ConvertBitmapToByteEx(Bitmap src)
+        {
+            if (src == null)
+            {
+                throw new ArgumentNullException(nameof(src));
+            }
 
+            Rectangle rect = new Rectangle(0, 0, src.Width, src.Height);
+            Bitmap bmp = new Bitmap(rect.Width, rect.Height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            Graphics gs = Graphics.FromImage(bmp);
+            Rectangle rr = new Rectangle(0, 0, rect.Width, rect.Height);
+            gs.DrawImage(src, rr, rect, GraphicsUnit.Pixel);
+            gs.Dispose();
+
+            MemoryStream stream = new MemoryStream();
+            bmp.Save(stream, ImageFormat.Bmp);
+            stream.Position = 0;
+
+            byte[] temp = stream.ToArray(); // 使用 ToArray 而不是 GetBuffer
+            stream.Close();
+            return temp;
+        }
 
         ///============================================================2023
         /// <summary>

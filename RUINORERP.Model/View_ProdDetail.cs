@@ -83,6 +83,22 @@ namespace RUINORERP.Model
             {                SetProperty(ref _CNName, value);
             }
         }
+        private string _SKU;
+
+
+        /// <summary>
+        /// SKU码
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "SKU", ColDesc = "SKU码")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SKU", Length = 80, IsNullable = true, ColumnDescription = "SKU码")]
+        [Display(Name = "SKU码")]
+        public string SKU
+        {
+            get { return _SKU; }            set
+            {                SetProperty(ref _SKU, value);
+            }
+        }
 
         private string _Specifications;
 
@@ -652,22 +668,6 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _SKU;
-
-
-        /// <summary>
-        /// SKU码
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "SKU", ColDesc = "SKU码")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SKU", Length = 80, IsNullable = true, ColumnDescription = "SKU码")]
-        [Display(Name = "SKU码")]
-        public string SKU
-        {
-            get { return _SKU; }            set
-            {                SetProperty(ref _SKU, value);
-            }
-        }
 
         private decimal? _Wholesale_Price;
 

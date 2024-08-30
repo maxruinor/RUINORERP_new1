@@ -1012,6 +1012,12 @@
     <Compile Include="BusinessFlow\FlowDesign.Designer.cs">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </Compile>
+    <Compile Include="CommonUI\frmFormProperty.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonUI\frmFormProperty.Designer.cs">
+      <DependentUpon>frmFormProperty.cs</DependentUpon>
+    </Compile>
     <Compile Include="CommonUI\frmReApproval.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2282,6 +2288,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BusinessFlow\FlowDesign.resx">
       <DependentUpon>FlowDesign.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CommonUI\frmFormProperty.resx">
+      <DependentUpon>frmFormProperty.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmReApproval.resx">
       <DependentUpon>frmReApproval.cs</DependentUpon>

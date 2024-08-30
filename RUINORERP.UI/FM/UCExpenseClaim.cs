@@ -298,6 +298,7 @@ namespace RUINORERP.UI.FM
             }
             else
             {
+                MainForm.Instance.uclog.AddLog("加载状态下无法保存");
                 return false;
             }
         }

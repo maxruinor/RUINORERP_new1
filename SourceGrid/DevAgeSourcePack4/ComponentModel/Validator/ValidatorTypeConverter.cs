@@ -58,6 +58,7 @@ namespace DevAge.ComponentModel.Validator
 
         /// <summary>
         /// Fired when converting a object to the value specified. Called from method ObjectToValue and IsValidObject
+        /// 将对象转换为指定值时触发。从方法ObjectToValue和IsValidObject调用
         /// </summary>
         /// <param name="e"></param>
         protected override void OnConvertingObjectToValue(ConvertingObjectEventArgs e)
@@ -94,6 +95,8 @@ namespace DevAge.ComponentModel.Validator
             {
                 // For some reason string converter does not allow converting from
                 // double to string. So here is just override with simple if statemenet
+                //出于某种原因，字符串转换器不允许从
+                //double转换为string。所以这里只是用简单的if statemenet重写
                 if (m_TypeConverter is StringConverter)
                     e.Value = SourceGridConvert.To<string>(e.Value);
                 else
@@ -122,7 +125,7 @@ namespace DevAge.ComponentModel.Validator
             }
             else if (e.DestinationType == typeof(string) && IsStringConversionSupported() == false)
             {
-                throw new ApplicationException("String conversion not supported for this type of Validator.");
+                throw new ApplicationException("此类型的验证器不支持字符串转换。");
             }
             else if (m_TypeConverter != null)
             {

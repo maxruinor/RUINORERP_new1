@@ -1,4 +1,5 @@
-﻿using RUINORERP.Global.CustomAttribute;
+﻿using Newtonsoft.Json;
+using RUINORERP.Global.CustomAttribute;
 using SqlSugar;
 using System;
 using System.Collections.Concurrent;
@@ -6,13 +7,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace RUINORERP.Model.Dto
 {
     /// <summary>
     /// 产品共用部分，用于动态合并，体现于明细中表格中
     /// </summary>
-    public class ProductSharePart
+    [Serializable]
+    public class ProductSharePart //: BaseEntity, ICloneable
     {
 
         public ProductSharePart()
@@ -58,7 +61,7 @@ namespace RUINORERP.Model.Dto
         [SugarColumn(ColumnName = "prop", Length = 500, IsNullable = true, ColumnDescription = "属性")]
         [ReadOnly(true)]
         public string prop { get; set; }
-        
+
         /// <summary>
         /// 型号
         /// </summary>
@@ -82,7 +85,7 @@ namespace RUINORERP.Model.Dto
         [ReadOnly(true)]
         [FKRelationAttribute("tb_ProductType", "Type_ID")]
         public long? Type_ID { get; set; }
-         
+
 
         /// <summary>
         /// 单位
@@ -119,9 +122,11 @@ namespace RUINORERP.Model.Dto
         /// <summary>
         /// 产品图片
         /// </summary>
-        [SugarColumn(ColumnName = "Image", Length = 2147483647, IsNullable = true, ColumnDescription = "产品图片")]
+        [SugarColumn(ColumnDataType = "image", ColumnName = "Images", Length = 2147483647, IsNullable = true, ColumnDescription = "产品图片")]
         [ReadOnly(true)]
-        public byte[] Image { get; set; }
+        [XmlIgnore]
+        [JsonIgnore]
+        public byte[] Images { get; set; }
 
 
         /// <summary>

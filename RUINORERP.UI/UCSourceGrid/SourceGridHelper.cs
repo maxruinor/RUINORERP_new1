@@ -343,8 +343,8 @@ namespace RUINORERP.UI.UCSourceGrid
                 //默认10行数据中，还要加上列头一行，如果有统计 最后也算一行。所以算12行
                 for (int r = 0; r < needAddrows; r++)
                 {
-                     this.InsertRow(grid1, sgdefine, true);
-                   // AddRow(grid1, sgdefine, true);
+                    this.InsertRow(grid1, sgdefine, true);
+                    // AddRow(grid1, sgdefine, true);
                 }
             }
 
@@ -961,7 +961,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             if (AddRowIndex == -1)
             {
-               // AddRowIndex = 0;
+                // AddRowIndex = 0;
                 //这行也不行。实际原因是表格加载会慢，所以会先加载，然后插入行，不然会报错
             }
 
@@ -1078,13 +1078,16 @@ namespace RUINORERP.UI.UCSourceGrid
                         case "System.Guid":
                             break;
                         case "System.Decimal":
+                            c = new SourceGrid.Cells.Cell(null);
+                            //c = new SourceGrid.Cells.Cell(0, typeof(decimal));
+                            //c = new SourceGrid.Cells.Cell(88.2M);
                             break;
                         case "System.Int16":
                         case "System.Int32":
                         case "System.Int64":
                             break;
                         case "System.Byte[]":
-                            c = new SourceGrid.Cells.Image(null);
+                            // c = new SourceGrid.Cells.Image(null);新加行时 不用要图片，这个图片列，好像是背景。会相同
                             break;
                         case "System.Boolean":
                             c = new SourceGrid.Cells.CheckBox(null, true);
@@ -1155,8 +1158,12 @@ namespace RUINORERP.UI.UCSourceGrid
                     }
                     #endregion
                     */
-
-                    if (define[i].CustomFormat == CustomFormatType.CurrencyFormat)
+                    if (newcolType.FullName == "System.Byte[]")
+                    {
+                        //  c.View = define.ImagesViewModel;
+                        c.View = define.ViewNormal;
+                    }
+                    else if (define[i].CustomFormat == CustomFormatType.CurrencyFormat)
                     {
                         c.View = define.ViewNormalMoney;
                     }
@@ -1619,7 +1626,10 @@ namespace RUINORERP.UI.UCSourceGrid
                             _editor = new EditorRichTextInput(typeof(string));
                         }
                         break;
-
+                    case "image":
+                        _editor = new SourceGrid.Cells.Editors.ImagePicker();
+                        // new SourceGrid.Cells.Image(null);
+                        break;
                     case "bit":
                         _editor = new SourceGrid.Cells.Editors.CheckBox(typeof(bool));
                         if (pi.PropertyType.Name == "Nullable`1")
@@ -2725,6 +2735,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     System.Drawing.Image temp = RUINORERP.Common.Helper.ImageHelper.ConvertByteToImg(newValue as Byte[]);
                     processContext.Value = temp;
+                    processContext.Cell.View = new SourceGrid.Cells.Views.SingleImage(temp);
                     continue;
                 }
                 if ((!object.Equals(processContext.Value, newValue)) || isbatch)

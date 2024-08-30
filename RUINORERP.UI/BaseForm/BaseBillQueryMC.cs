@@ -1497,7 +1497,7 @@ namespace RUINORERP.UI.BaseForm
             Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = kryptonPanelQuery;
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
-            UIQueryHelper<M> uIQueryHelper = new UIQueryHelper<M>();
+            //UIQueryHelper<M> uIQueryHelper = new UIQueryHelper<M>();
             kryptonPanel条件生成容器.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance
             | System.Reflection.BindingFlags.NonPublic).SetValue(kryptonPanel条件生成容器, true, null);
             kryptonPanel条件生成容器.Visible = false;

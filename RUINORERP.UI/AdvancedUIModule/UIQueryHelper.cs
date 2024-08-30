@@ -38,8 +38,10 @@ namespace RUINORERP.UI.AdvancedUIModule
 {
     /// <summary>
     /// 本来T是用查询querydto，但是他无法查到外键信息
+    /// UIGenerateHelper代替了他
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    [Obsolete]
     public class UIQueryHelper<T> where T : class
     {
 

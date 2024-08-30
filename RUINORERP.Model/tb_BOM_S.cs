@@ -14,6 +14,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Collections.Concurrent;
 using RUINORERP.Global.CustomAttribute;
+using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace RUINORERP.Model
 {
@@ -701,6 +703,8 @@ return rs;
 
 
         #region 字段描述对应列表
+
+
         private ConcurrentDictionary<string, string> fieldNameList;
 
 
@@ -710,6 +714,8 @@ return rs;
         [Description("列名中文描述"), Category("自定属性")]
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
+        [XmlIgnore]
+        [JsonIgnore]
         public override ConcurrentDictionary<string, string> FieldNameList
         {
             get

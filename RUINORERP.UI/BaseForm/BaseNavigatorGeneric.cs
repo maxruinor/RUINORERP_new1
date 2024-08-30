@@ -866,8 +866,8 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
             Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = kryptonPanelQuery;
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
-            UIQueryHelper<M> uIQueryHelper = new UIQueryHelper<M>();
-            uIQueryHelper.ReladtedEntityType = ReladtedEntityType;
+           // UIQueryHelper<M> uIQueryHelper = new UIQueryHelper<M>();
+           // uIQueryHelper.ReladtedEntityType = ReladtedEntityType;
             kryptonPanel条件生成容器.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(kryptonPanel条件生成容器, true, null);
             kryptonPanel条件生成容器.Visible = false;
             kryptonPanel条件生成容器.Controls.Clear();

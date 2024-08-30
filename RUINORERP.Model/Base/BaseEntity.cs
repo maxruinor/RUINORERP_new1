@@ -1,4 +1,5 @@
 ﻿
+using Newtonsoft.Json;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model.Base;
@@ -11,6 +12,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace RUINORERP.Model
 {
@@ -177,6 +179,8 @@ namespace RUINORERP.Model
         [Description("列名中文描述"), Category("自定属性")]
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
+        [JsonIgnore]
+        [XmlIgnore]
         public virtual ConcurrentDictionary<string, string> FieldNameList
         {
             get

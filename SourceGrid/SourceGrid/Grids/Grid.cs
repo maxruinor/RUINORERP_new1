@@ -622,11 +622,10 @@ namespace SourceGrid
         protected override void OnRangePaint(RangePaintEventArgs e)
         {
             mDrawnRange.Clear();
-
             base.OnRangePaint(e);
         }
 
-        protected override void PaintCell(DevAge.Drawing.GraphicsCache graphics, CellContext cellContext, RectangleF drawRectangle)
+        protected override void PaintCell( DevAge.Drawing.GraphicsCache graphics, CellContext cellContext, RectangleF drawRectangle)
         {
             Range cellRange = PositionToCellRange(cellContext.Position);
             if (cellRange.ColumnsCount == 1 && cellRange.RowsCount == 1)

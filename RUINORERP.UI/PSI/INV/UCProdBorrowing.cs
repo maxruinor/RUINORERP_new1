@@ -40,6 +40,7 @@ using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using System.Diagnostics;
+using Netron.GraphLib;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -166,17 +167,38 @@ namespace RUINORERP.UI.PSI.INV
                 }
             };
 
-            //创建表达式
-            var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsCustomer == true)
-                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
-                            .ToExpression();//注意 这一句 不能少
+            if (chkBysupplier.Checked)
+            {
+                //创建表达式
+                var lambdaSupplier = Expressionable.Create<tb_CustomerVendor>()
+                                .And(t => t.IsVendor == true)
+                                .AndIF(AuthorizeController.GetExclusiveLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                                .ToExpression();//注意 这一句 不能少
 
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-            queryFilterC.FilterLimitExpressions.Add(lambda);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+                QueryFilter queryFilterSupplier = baseProcessor.GetQueryFilter();
+                queryFilterSupplier.FilterLimitExpressions.Add(lambdaSupplier);
+                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(EditEntity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterSupplier.GetFilterExpression<tb_CustomerVendor>(), true);
+                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(EditEntity, cmbCustomerVendor_ID, c => c.CVName, queryFilterSupplier);
+            }
+            else
+            {
+                //创建表达式
+                var lambda = Expressionable.Create<tb_CustomerVendor>()
+                                .And(t => t.IsCustomer == true)
+                                .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !AppContext.IsSuperUser, t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                                .ToExpression();//注意 这一句 不能少
+
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+                queryFilterC.FilterLimitExpressions.Add(lambda);
+                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+
+
+            }
+
+
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
@@ -253,7 +275,7 @@ namespace RUINORERP.UI.PSI.INV
               .ToExpression();//注意 这一句 不能少
                               // StringBuilder sb = new StringBuilder();
             /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list =await dc.BaseQueryByWhereAsync(exp);
+            list = await dc.BaseQueryByWhereAsync(exp);
 
             sgd.SetDependencyObject<ProductSharePart, tb_ProdBorrowingDetail>(list);
 
@@ -370,7 +392,7 @@ namespace RUINORERP.UI.PSI.INV
                     return false;
                 }
 
-        
+
                 ReturnMainSubResults<tb_ProdBorrowing> SaveResult = await base.Save(EditEntity);
                 if (SaveResult.Succeeded)
                 {
@@ -385,7 +407,6 @@ namespace RUINORERP.UI.PSI.INV
             }
             return false;
         }
-
 
         /*
         protected async override Task<ApprovalEntity> Review()

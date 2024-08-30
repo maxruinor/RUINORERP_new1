@@ -1,4 +1,5 @@
-﻿using FastReport.DevComponents.Editors;
+﻿using DevAge.Drawing;
+using FastReport.DevComponents.Editors;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global.CustomAttribute;
@@ -190,6 +191,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                 case "decimal":
                                     col.CustomFormat = CustomFormatType.DecimalPrecision;
                                     break;
+                                case "image":
+                                    col.CustomFormat = CustomFormatType.Image;
+                                    break;
                             }
                         }
 
@@ -223,6 +227,15 @@ namespace RUINORERP.UI.UCSourceGrid
 
         #region 全局背景色设置
 
+        SourceGrid.Cells.Views.SingleImage _ImagesViewModel = new SourceGrid.Cells.Views.SingleImage();
+        /// <summary>
+        /// 临时用于图片列
+        /// </summary>
+        public SourceGrid.Cells.Views.SingleImage ImagesViewModel
+        {
+            get => _ImagesViewModel;
+            set => _ImagesViewModel = value;
+        }
         /// <summary>
         /// 全局隔行显示背景色(货币列右对齐显示文字使用）
         /// </summary>
@@ -270,12 +283,12 @@ namespace RUINORERP.UI.UCSourceGrid
             CellBackColorAlternate viewNormal = new CellBackColorAlternate(Color.White, Color.LightCyan);
             viewNormal.Border = cellBorder;
             this.viewNormal = viewNormal;
-            this.viewNormal.Name="viewNormal";
-        
+            this.viewNormal.Name = "viewNormal";
+
             viewNormal.Border = cellBorder;
             this.viewNormalMoney = new CellBackColorAlternate(Color.White, Color.LightCyan);
             this.viewNormalMoney.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleRight;
-            this.viewNormalMoney.Name="viewNormalMoney";
+            this.viewNormalMoney.Name = "viewNormalMoney";
             #endregion
 
 
@@ -948,7 +961,10 @@ namespace RUINORERP.UI.UCSourceGrid
             set { mSecondBackground = value; }
         }
 
-    
+        protected override void OnDrawContent(GraphicsCache graphics, RectangleF area)
+        {
+            base.OnDrawContent(graphics, area);
+        }
 
         protected override void PrepareView(SourceGrid.CellContext context)
         {
@@ -1026,6 +1042,10 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         Bool,
 
+        /// <summary>
+        /// 图片
+        /// </summary>
+        Image,
     }
 
 }

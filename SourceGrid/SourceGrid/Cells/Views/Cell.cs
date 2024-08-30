@@ -2,59 +2,70 @@ using System;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using DevAge.Drawing;
+
 
 namespace SourceGrid.Cells.Views
 {
-	/// <summary>
-	/// Class to manage the visual aspect of a cell. This class can be shared beetween multiple cells.
-	/// </summary>
-	[Serializable]
-	public class Cell : ViewBase
-	{
-		/// <summary>
-		/// Represents a default Model
-		/// </summary>
-		public readonly static Cell Default = new Cell();
+    /// <summary>
+    /// Class to manage the visual aspect of a cell. This class can be shared beetween multiple cells.
+    /// </summary>
+    [Serializable]
+    public class Cell : ViewBase
+    {
+        /// <summary>
+        /// Represents a default Model
+        /// </summary>
+        public readonly static Cell Default = new Cell();
 
-		#region Constructors
+        #region Constructors
 
-		/// <summary>
-		/// Use default setting and construct a read and write VisualProperties
-		/// </summary>
-		public Cell()
-		{
+        /// <summary>
+        /// Use default setting and construct a read and write VisualProperties
+        /// </summary>
+        public Cell()
+        {
             ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Align;
-		}
+        }
 
-		/// <summary>
-		/// Copy constructor.  This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
-		/// </summary>
-		/// <param name="p_Source"></param>
-		public Cell(Cell p_Source):base(p_Source)
-		{
+        /// <summary>
+        /// Copy constructor.  This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
+        /// </summary>
+        /// <param name="p_Source"></param>
+        public Cell(Cell p_Source) : base(p_Source)
+        {
             ElementImage = (DevAge.Drawing.VisualElements.IImage)p_Source.ElementImage.Clone();
             ElementText = (DevAge.Drawing.VisualElements.IText)p_Source.ElementText.Clone();
-		}
-		#endregion
+        }
+        #endregion
 
-		#region Clone
-		/// <summary>
-		/// Clone this object. This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
-		/// </summary>
-		/// <returns></returns>
-		public override object Clone()
-		{
-			return new Cell(this);
-		}
-		#endregion
+        #region Clone
+        /// <summary>
+        /// Clone this object. This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
+        /// </summary>
+        /// <returns></returns>
+        public override object Clone()
+        {
+            return new Cell(this);
+        }
+        #endregion
 
         #region Visual elements
 
         protected override IEnumerable<DevAge.Drawing.VisualElements.IVisualElement> GetElements()
         {
+
             if (ElementImage != null)
                 yield return ElementImage;
 
+            if (this.GetType() == typeof(SourceGrid.Cells.Image))
+            {
+
+            }
+            if (this.ImageStretch)
+            {
+
+            }
             if (ElementText != null)
                 yield return ElementText;
         }
@@ -66,12 +77,51 @@ namespace SourceGrid.Cells.Views
             PrepareVisualElementText(context);
 
             //start by watson 2024-1-11
-            if (context.Value==null)
+            if (context.Value == null)
             {
                 return;
             }
-            //end by watson
-            PrepareVisualElementImage(context);
+            /*
+            //显示图片  要是图片列才处理
+            if (context.Cell is SourceGrid.Cells.Image || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
+            {
+                //end by watson 2024-08-28 TODO:
+                PrepareVisualElementImage(context);
+
+                //Read the image
+                System.Drawing.Image img = null;
+
+                if (context.Value != null && context.Value is byte[])
+                {
+                    // 使用 MemoryStream 从字节数组创建流
+                    using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
+                    {
+                        // 从流中创建 Image 对象
+                        img = System.Drawing.Image.FromStream(stream);
+                        if (img != null)
+                        {
+                            // context.Cell = new SourceGrid.Cells.Image(img);
+                            //context.Cell.View = new SourceGrid.Cells.Views.SingleImage(img);
+                        }
+                    }
+
+                }
+            }
+            */
+        }
+
+        protected override void OnDraw(GraphicsCache graphics, RectangleF area)
+        {
+            base.OnDraw(graphics, area);
+        }
+
+        protected override void OnDrawContent(GraphicsCache graphics, RectangleF area)
+        {
+            base.OnDrawContent(graphics, area);
+        }
+        protected override void OnDrawBackground(GraphicsCache graphics, RectangleF area)
+        {
+            base.OnDrawBackground(graphics, area);
         }
 
         private DevAge.Drawing.VisualElements.IText mElementText = new DevAge.Drawing.VisualElements.TextGDI();
@@ -86,8 +136,8 @@ namespace SourceGrid.Cells.Views
         }
 
         /// <summary>
-        /// Apply to the VisualElement specified the Image properties of the current View.
-        /// Derived class can call this method to apply the settings to custom VisualElement.
+        ///将当前视图的图像属性应用于指定的VisualElement。
+        ///派生类可以调用此方法将设置应用于自定义VisualElement。
         /// </summary>
         protected virtual void PrepareVisualElementText(CellContext context)
         {
@@ -131,8 +181,8 @@ namespace SourceGrid.Cells.Views
 
         private DevAge.Drawing.VisualElements.IImage mElementImage = new DevAge.Drawing.VisualElements.Image();
         /// <summary>
-        /// Gets or sets the IImage visual element used to draw the cell image.
-        /// Default is DevAge.Drawing.VisualElements.Image
+        ///获取或设置用于绘制单元格图像的IImage视觉元素。
+        ///默认设置为DevAge。绘图。视觉元素。图片
         /// </summary>
         public DevAge.Drawing.VisualElements.IImage ElementImage
         {
@@ -141,8 +191,8 @@ namespace SourceGrid.Cells.Views
         }
 
         /// <summary>
-        /// Apply to the VisualElement specified the Image properties of the current View.
-        /// Derived class can call this method to apply the settings to custom VisualElement.
+        ///将当前视图的图像属性应用于指定的VisualElement。
+        ///派生类可以调用此方法将设置应用于自定义VisualElement。
         /// </summary>
         protected virtual void PrepareVisualElementImage(CellContext context)
         {
@@ -154,10 +204,11 @@ namespace SourceGrid.Cells.Views
             if (imgModel != null)
                 img = imgModel.GetImage(context);
             ElementImage.Value = img;
+            //context.Value = img;
             //ElementImage.AnchorArea = AnchorArea.HasBottom
         }
-        #endregion  
-	}
+        #endregion
+    }
 
 
 }

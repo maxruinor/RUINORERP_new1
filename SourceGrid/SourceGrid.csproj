@@ -338,6 +338,7 @@
     <Compile Include="SourceGrid\Cells\Editors\EditorBase.cs" />
     <Compile Include="SourceGrid\Cells\Editors\EditorControlBase.cs" />
     <Compile Include="SourceGrid\Cells\Editors\Factory.cs" />
+    <Compile Include="SourceGrid\Cells\Editors\ImagePicker.cs" />
     <Compile Include="SourceGrid\Cells\Editors\NumericUpDown.cs" />
     <Compile Include="SourceGrid\Cells\Editors\RichTextBox.cs" />
     <Compile Include="SourceGrid\Cells\Editors\CheckBox.cs" />
@@ -454,7 +455,6 @@
     <None Include="DevAge.Windows.Forms\Res\right.cur" />
     <None Include="DevAge.Windows.Forms\Res\SortDown.ico" />
     <None Include="DevAge.Windows.Forms\Res\SortUp.ico" />
-    <None Include="DevAgeSourcePack4\ComponentModel\Validator\ValidatorDiagram.cd" />
     <EmbeddedResource Include="DevAge.Windows.Forms\Windows\Forms\frmPictureViewer.resx">
       <DependentUpon>frmPictureViewer.cs</DependentUpon>
     </EmbeddedResource>

@@ -4,6 +4,7 @@ namespace SourceGrid.Cells.Controllers
 {
 	/// <summary>
 	/// Summary description for FullColumnSelection.
+	/// ÅÅ³ıÔÚÍâµÄ
 	/// </summary>
 	public class FullColumnSelection : ControllerBase
 	{

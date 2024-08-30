@@ -2,6 +2,12 @@ using System;
 using System.Windows.Forms;
 using System.ComponentModel;
 using System.Drawing.Design;
+using System.IO;
+using System.Drawing.Imaging;
+using System.ComponentModel.Design.Serialization;
+using System.Reflection;
+using System.Collections.Generic;
+
 
 
 namespace SourceGrid.Cells.Editors
@@ -23,7 +29,7 @@ namespace SourceGrid.Cells.Editors
         }
         #endregion
 
-        /*
+
         #region 添加了右键菜单
         public bool Use是否使用内置右键功能 { get; private set; } = true;
 
@@ -158,11 +164,12 @@ namespace SourceGrid.Cells.Editors
 
         private void ContextMenu_查看大图(object sender, EventArgs e)
         {
-            MessageBox.Show("查看大图");
+            DevAge.Windows.Forms.frmPictureViewer frm = new DevAge.Windows.Forms.frmPictureViewer();
+            frm.ShowDialog();
         }
         #endregion
 
-        */
+
 
         #region Edit Control
         /// <summary>

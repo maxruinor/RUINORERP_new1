@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace SourceGrid.DevAge.Windows.Forms.Windows.Forms
+namespace DevAge.Windows.Forms
 {
     public partial class frmPictureViewer : Form
     {

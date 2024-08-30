@@ -1,5 +1,5 @@
+using DevAge.Drawing;
 using System;
-using System.Drawing;
 
 namespace SourceGrid.Cells.Views
 {
@@ -10,7 +10,7 @@ namespace SourceGrid.Cells.Views
 	public interface IView : ICloneable
 	{
 		#region Format
-		Font Font
+		System.Drawing.Font Font
 		{
 			get;
 			set;
@@ -20,7 +20,7 @@ namespace SourceGrid.Cells.Views
 		/// </summary>
 		/// <param name="grid"></param>
 		/// <returns></returns>
-		Font GetDrawingFont(GridVirtual grid);
+		System.Drawing.Font GetDrawingFont(GridVirtual grid);
 
 		/// <summary>
 		/// Word Wrap.
@@ -34,7 +34,8 @@ namespace SourceGrid.Cells.Views
 		/// <summary>
 		/// Text Alignment.
 		/// </summary>
-		DevAge.Drawing.ContentAlignment TextAlignment
+		ContentAlignment TextAlignment
+
 		{
 			get;
 			set;
@@ -44,7 +45,7 @@ namespace SourceGrid.Cells.Views
 		/// <summary>
         /// The normal border of a cell. Usually it is an instance of a DevAge.Drawing.RectangleBorder structure
 		/// </summary>
-		DevAge.Drawing.IBorder Border
+		IBorder Border
 		{
 			get;
 			set;
@@ -53,7 +54,7 @@ namespace SourceGrid.Cells.Views
 		/// <summary>
 		/// The BackColor of a cell
 		/// </summary>
-		Color BackColor
+		System.Drawing.Color BackColor
 		{
 			get;
 			set;
@@ -61,7 +62,7 @@ namespace SourceGrid.Cells.Views
 		/// <summary>
 		/// The ForeColor of a cell
 		/// </summary>
-		Color ForeColor
+		System.Drawing.Color ForeColor
 		{
 			get;
 			set;
@@ -75,7 +76,7 @@ namespace SourceGrid.Cells.Views
         /// <param name="graphics">Paint arguments</param>
         /// <param name="rectangle">Rectangle where draw the current cell</param>
 		void DrawCell(CellContext cellContext,
-			DevAge.Drawing.GraphicsCache graphics, 
+			GraphicsCache graphics, 
 			System.Drawing.RectangleF rectangle);
 
 
@@ -85,7 +86,7 @@ namespace SourceGrid.Cells.Views
 		/// <param name="cellContext"></param>
 		/// <param name="maxLayoutArea">SizeF structure that specifies the maximum layout area for the text. If width or height are zero the value is set to a default maximum value.</param>
 		/// <returns></returns>
-		Size Measure(CellContext cellContext,
-									Size maxLayoutArea);
+		System.Drawing.Size Measure(CellContext cellContext,
+									System.Drawing.Size maxLayoutArea);
 	}
 }

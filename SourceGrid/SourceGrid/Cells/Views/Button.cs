@@ -1,3 +1,5 @@
+using DevAge.Drawing;
+using DevAge.Drawing.VisualElements;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -27,7 +29,7 @@ namespace SourceGrid.Cells.Views
 		/// </summary>
 		public Button()
 		{
-            Background = new DevAge.Drawing.VisualElements.ButtonThemed();
+            Background = new ButtonThemed();
 		}
 
 		/// <summary>
@@ -36,7 +38,7 @@ namespace SourceGrid.Cells.Views
 		/// <param name="p_Source"></param>
 		public Button(Button p_Source):base(p_Source)
 		{
-            Background = (DevAge.Drawing.VisualElements.IButton)p_Source.Background.Clone();
+            Background = (IButton)p_Source.Background.Clone();
 		}
 		#endregion
 
@@ -53,9 +55,9 @@ namespace SourceGrid.Cells.Views
 
         #region Visual Elements
 
-        public new DevAge.Drawing.VisualElements.IButton Background
+        public new IButton Background
         {
-            get { return (DevAge.Drawing.VisualElements.IButton)base.Background; }
+            get { return (IButton)base.Background; }
             set { base.Background = value; }
         }
 
@@ -64,13 +66,13 @@ namespace SourceGrid.Cells.Views
             base.PrepareView(context);
 
             if (context.CellRange.Contains(context.Grid.MouseDownPosition))
-                Background.Style = DevAge.Drawing.ButtonStyle.Pressed;
+                Background.Style = ButtonStyle.Pressed;
             else if (context.CellRange.Contains(context.Grid.MouseCellPosition))
-                Background.Style = DevAge.Drawing.ButtonStyle.Hot;
+                Background.Style = ButtonStyle.Hot;
             else if (context.CellRange.Contains(context.Grid.Selection.ActivePosition))
-                Background.Style = DevAge.Drawing.ButtonStyle.Focus;
+                Background.Style = ButtonStyle.Focus;
             else
-                Background.Style = DevAge.Drawing.ButtonStyle.Normal;
+                Background.Style = ButtonStyle.Normal;
         }
         #endregion
 	}

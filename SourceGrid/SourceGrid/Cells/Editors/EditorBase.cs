@@ -1,3 +1,4 @@
+using DevAge.ComponentModel.Validator;
 using System;
 using System.Windows.Forms;
 
@@ -7,8 +8,9 @@ namespace SourceGrid.Cells.Editors
     /// Represents the base class of a DataModel. This DataModel support conversion but doesn't provide any user interface editor.
     /// </summary>
     [System.ComponentModel.ToolboxItem(false)]
-    public class EditorBase : DevAge.ComponentModel.Validator.ValidatorTypeConverter
+    public class EditorBase : ValidatorTypeConverter
     {
+        
         #region Constructor
         /// <summary>
         /// Construct a Model. Based on the Type specified the constructor populate StringEditor property

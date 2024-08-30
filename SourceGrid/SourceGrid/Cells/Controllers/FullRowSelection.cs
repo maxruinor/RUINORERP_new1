@@ -3,10 +3,10 @@ using System.Drawing;
 
 namespace SourceGrid.Cells.Controllers
 {
-	/// <summary>
-	/// Summary description for FullRowSelection.
-	/// </summary>
-	public class FullRowSelection : ControllerBase
+    /// <summary>
+    /// Summary description for FullRowSelection.ÅÅ³ýÔÚÍâµÄ
+    /// </summary>
+    public class FullRowSelection : ControllerBase
 	{
 		/// <summary>
 		/// Default controller to select all the row

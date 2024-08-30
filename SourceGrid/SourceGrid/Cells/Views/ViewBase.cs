@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Collections;
 using System.Windows.Forms;
 using DevAge.Drawing;
+using DevAge.Drawing.VisualElements;
 
 namespace SourceGrid.Cells.Views
 {
@@ -10,7 +11,7 @@ namespace SourceGrid.Cells.Views
 	/// Base abstract class to manage the visual aspect of a cell. This class can be shared beetween multiple cells.
 	/// </summary>
 	[Serializable]
-    public abstract class ViewBase : DevAge.Drawing.VisualElements.ContainerBase, IView
+    public abstract class ViewBase : ContainerBase, IView
 	{
         /// <summary>
         /// A default RectangleBorder instance with a 1 pixed LightGray border on bottom and right side
@@ -249,7 +250,7 @@ namespace SourceGrid.Cells.Views
         /// <summary>
         /// Background of the cell. Usually it is an instance of BackgroundSolid
         /// </summary>
-        public new DevAge.Drawing.VisualElements.IVisualElement Background
+        public new IVisualElement Background
         {
             get { return base.Background; }
             set { base.Background = value; }

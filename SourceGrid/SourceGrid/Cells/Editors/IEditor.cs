@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace SourceGrid3.Cells.Editors
+namespace SourceGrid.Cells.Editors
 {
 	/// <summary>
 	/// Class used for editing operation, string conversion and value formatting. Can be assigned to the Editor property of a cell.

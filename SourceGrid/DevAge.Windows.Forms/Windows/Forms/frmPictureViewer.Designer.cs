@@ -1,4 +1,4 @@
-﻿namespace SourceGrid.DevAge.Windows.Forms.Windows.Forms
+﻿namespace DevAge.Windows.Forms
 {
     partial class frmPictureViewer
     {

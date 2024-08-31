@@ -125,13 +125,14 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+        
                 _unitOfWorkManage.RollbackTran();
                 rmrs.ErrorMsg =  "事务回滚=>" + ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
                     _logger.Error( "事务回滚" + ex.Message);
                 }
+                _logger.Error(ex);
                 rmrs.Succeeded = false;
                 return rmrs;
             }
@@ -249,8 +250,8 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;
@@ -297,6 +298,7 @@ namespace RUINORERP.Business
                 {
 
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的需求单，不能反审核  ";
+                    _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -305,6 +307,7 @@ namespace RUINORERP.Business
                 if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
                 {
                     rmrs.ErrorMsg = "计划单非确认或非完结，不能反审核  ";
+                    _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }

@@ -609,6 +609,7 @@ namespace RUINORERP.UI.Report
         /// <returns></returns>
         private static tb_PrintConfig GetPrintConfig(CommBillData cbd)
         {
+
             BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
             tb_PrintConfig printConfig = MainForm.Instance.AppContext.Db.Queryable<tb_PrintConfig>()
                 .Includes(t => t.tb_PrintTemplates)

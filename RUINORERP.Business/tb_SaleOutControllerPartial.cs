@@ -82,8 +82,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+           
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;
@@ -339,7 +340,7 @@ namespace RUINORERP.Business
                     int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
                     if (last > 0)
                     {
-                        _logger.LogInformation("审核销售出库单成功" + entity.SaleOutNo);
+                        
                     }
                     else
                     {
@@ -395,6 +396,7 @@ namespace RUINORERP.Business
                 {
 
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的销售退回单，不能反审核  ";
+                    _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -404,6 +406,7 @@ namespace RUINORERP.Business
                 {
                     //return false;
                     rs.ErrorMsg = "有结案的单据，已经跳过反审";
+                    _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -561,9 +564,8 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
-
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;

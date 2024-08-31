@@ -123,7 +123,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_ProdDetailController<tb_ProdDetail> ctrDetail = _appContext.GetRequiredService<tb_ProdDetailController<tb_ProdDetail>>();
                 tb_BOM_SController<tb_BOM_S> ctrinv = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+              //  BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
                 if (entity == null)
                 {
@@ -161,7 +161,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+               
                 _unitOfWorkManage.RollbackTran();
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
@@ -224,8 +224,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+          
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.Succeeded = false;
                 return rs;
             }

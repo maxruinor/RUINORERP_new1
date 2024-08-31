@@ -37,7 +37,7 @@ namespace RUINORERP.Business.CommService
             _appContext = appContext;
         }
 
-        public  List<T> GetBindSource<T>(string tableName) where T : class
+        public List<T> GetBindSource<T>(string tableName) where T : class
         {
             BaseController<T> bdc = _appContext.GetRequiredServiceByName<BaseController<T>>(typeof(T).Name + "Controller");
             BaseProcessor baseProcessor = _appContext.GetRequiredServiceByName<BaseProcessor>(tableName + "Processor");
@@ -45,10 +45,10 @@ namespace RUINORERP.Business.CommService
             queryFilter.FilterLimitExpressions.Clear();//缓存清除限制条件,比方员工离职：被禁用的，实际他原来录的数据，还是可以用的。也能显示他的名字。
             ISugarQueryable<T> querySqlQueryable;
             querySqlQueryable = (ISugarQueryable<T>)bdc.BaseGetISugarQueryable(false, queryFilter, null);
-            return  querySqlQueryable.ToList() as List<T>;
+            return querySqlQueryable.ToList() as List<T>;
         }
 
- 
+
 
         public List<T> GetBindSource<T>(string tableName, Expression<Func<T, bool>> expCondition)
         {
@@ -96,14 +96,13 @@ namespace RUINORERP.Business.CommService
 
                     // 注意信息的完整性
                     _unitOfWorkManage.CommitTran();
-                    _logger.Error("事务成功");
+ 
                     rs = true;
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex);
                     _unitOfWorkManage.RollbackTran();
-                    _logger.Error("事务回滚");
+                    _logger.Error(ex, "事务回滚");
                 }
             }
             else

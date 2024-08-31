@@ -31,7 +31,7 @@ namespace RUINORERP.UI.PSI.SAL
             //生成查询条件的相关实体 是不是也一个组，主子表呢？
             ReladtedEntityType = typeof(View_SaleOrderItems);
             base.WithOutlook = true;
-            
+
         }
         private void UCSaleOrderStatistics_Load(object sender, EventArgs e)
         {
@@ -49,11 +49,12 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOrderDetail));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProdCategories));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Unit));
-            base. _UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
+            base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
+            base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_SaleOrderItems, tb_SaleOrder>(c => c.SOrderNo, r => r.SOrderNo);
         }
         public override void BuildColNameDataDictionary()
         {
-           
+
         }
 
         public override void BuildLimitQueryConditions()
@@ -62,7 +63,7 @@ namespace RUINORERP.UI.PSI.SAL
             var lambda = Expressionable.Create<View_SaleOrderItems>()
                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
-                           // .And(t => t.isdeleted == false)
+                            // .And(t => t.isdeleted == false)
 
                             //.And(t => t.Is_enabled == true)
 
@@ -91,6 +92,6 @@ namespace RUINORERP.UI.PSI.SAL
             base.MasterInvisibleCols.Add(c => c.PrimaryKeyID);
         }
 
-       
+
     }
 }

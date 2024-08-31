@@ -74,8 +74,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+         
                 _unitOfWorkManage.RollbackTran();
+          
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
                     _logger.Error("事务回滚" + ex.Message);
@@ -122,8 +123,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+              
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 _logger.Error("tb_FM_OtherExpense" + "事务回滚");
                 rrs.ErrorMsg = ex.Message;
                 rrs.Succeeded = false;

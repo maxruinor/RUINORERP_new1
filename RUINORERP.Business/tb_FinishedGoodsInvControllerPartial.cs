@@ -72,8 +72,8 @@ namespace RUINORERP.Business
                 //如果入库明细中的产品。不存在于订单中。审核失败。
                 if (!entity.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID))
                 {
-                    rs.Succeeded = false;
                     _unitOfWorkManage.RollbackTran();
+                    rs.Succeeded = false;
                     rs.ErrorMsg = $"缴库明细中有不属于当前制令单生产的产品及对应仓库!请检查数据后重试！";
                     return rs;
                 }
@@ -305,7 +305,6 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
                     _logger.Error("事务回滚" + ex.Message);
@@ -488,8 +487,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+             
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 return rs;
             }

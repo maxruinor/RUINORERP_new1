@@ -60,9 +60,9 @@ namespace RUINORERP.UI.PSI.PUR
             
 
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
-
-            _UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_PurOrderItems, tb_SaleOrder>(c => c.SOrder_ID, r => r.SOrder_ID);
-
+ 
+            base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_PurOrderItems, tb_PurOrder>(c => c.PurOrderNo, r => r.PurOrder_ID);
+            base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_PurOrderItems, tb_SaleOrder>(c => c.SOrder_ID, r => r.SOrder_ID);
         }
         public override void BuildColNameDataDictionary()
         {

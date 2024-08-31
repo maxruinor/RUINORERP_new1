@@ -129,7 +129,7 @@ namespace RUINORERP.UI.PSI.PUR
         {   
             base._UCMasterQuery.GridRelated.SetRelatedInfo<View_PurEntryItems, tb_PurEntry>(c => c.PurEntryNo, r => r.PurEntryNo);
             base._UCMasterQuery.GridRelated.SetRelatedInfo<View_PurEntryItems, tb_PurOrder>(c => c.PurOrder_NO, r => r.PurOrderNo);
-            
+
 
             ////这个应该是一个组 多个表
             //base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail));
@@ -142,6 +142,8 @@ namespace RUINORERP.UI.PSI.PUR
             //base._UCBillOutlookGridAnalysis.ColDisplayTypes = base._UCBillMasterQuery.ColDisplayTypes;
             //base._UCMasterQuery.newSumDataGridViewMaster.Use是否使用内置右键功能 = false;
             //base._UCMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = contextMenuStrip1;
+            base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_PurEntryItems, tb_PurEntry>(c => c.PurEntryNo, r => r.PurEntryNo);
+            base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_PurEntryItems, tb_PurOrder>(c => c.PurOrder_NO, r => r.PurOrderNo);
         }
     }
 }

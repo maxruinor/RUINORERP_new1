@@ -545,8 +545,11 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (kryptonOutlookGrid1.CurrentRow.Tag is BaseEntity entity)
                 {
-                    //特殊情况处理 当前行的业务类型：销售出库  库存盘点 对应一个集合，再用原来的方法来处理
-                    GridRelated.GuideToForm(kryptonOutlookGrid1.Columns[e.ColumnIndex].Name, entity);
+                     
+                        //特殊情况处理 当前行的业务类型：销售出库  库存盘点 对应一个集合，再用原来的方法来处理
+                        GridRelated.GuideToForm(kryptonOutlookGrid1.Columns[e.ColumnIndex].Name, entity);
+                     
+                   
                 }
             }
         }

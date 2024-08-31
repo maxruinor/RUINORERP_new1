@@ -107,9 +107,9 @@ namespace RUINORERP.Business.LogicaService
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error(ex);
+             
                     _unitOfWorkManage.RollbackTran();
-                    _logger.Error("事务回滚");
+                    _logger.Error(ex, "事务回滚");
                 }
             }
             else

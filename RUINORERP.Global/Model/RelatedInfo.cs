@@ -51,7 +51,11 @@ namespace RUINORERP.Global.Model
         }
 
         public string SourceTableName { get; set; }
-        public string TargetTableName { get; set; }
+
+        /// <summary>
+        /// 目标的实体表名 可以手动指定。也可能是来自于源表中的某字段的内容。所以将目标表名设置为一个key value ,如果指向表时value可以为空
+        /// </summary>
+        public KeyNamePair TargetTableName { get; set; }
 
         /// <summary>
         /// 不是真正的主键 。但是也是唯一性的查询条件，比方单号

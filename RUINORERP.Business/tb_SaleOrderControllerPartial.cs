@@ -117,8 +117,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+           
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
                     _logger.Error("事务回滚" + ex.Message);
@@ -413,6 +414,7 @@ namespace RUINORERP.Business
                 {
 
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核  ";
+                    _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -423,6 +425,7 @@ namespace RUINORERP.Business
                 {
 
                     rmrs.ErrorMsg = "只能反审核已确认,并且有审核结果的订单 ";
+                    _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
@@ -473,8 +476,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 BizTypeMapper mapper = new BizTypeMapper();
                 rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
@@ -501,6 +505,7 @@ namespace RUINORERP.Business
                 {
 
                     rmrs.ErrorMsg = "只能更新已审核且通过的订单";
+                    _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
                 }

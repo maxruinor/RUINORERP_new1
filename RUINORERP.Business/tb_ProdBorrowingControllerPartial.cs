@@ -114,8 +114,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+           
                 _unitOfWorkManage.RollbackTran();
+
+                _logger.Error(ex);
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
                     _logger.Error("事务回滚" + ex.Message);
@@ -208,8 +210,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+              
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //  _logger.Error(approvalEntity.bizName + "事务回滚");
                 return rsms;
             }

@@ -76,8 +76,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+                
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;
@@ -326,8 +327,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+            
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
@@ -365,6 +367,7 @@ namespace RUINORERP.Business
                 {
 
                     rs.ErrorMsg = "对应的制令单下存在已确认或已完结，或已审核的缴库单，不能反审核  ";
+                    _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -521,8 +524,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+             
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;

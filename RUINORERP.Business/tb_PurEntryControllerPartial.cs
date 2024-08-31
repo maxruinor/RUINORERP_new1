@@ -345,6 +345,7 @@ namespace RUINORERP.Business
                 {
 
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的采购入库退回单，不能反审核  ";
+                    _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
                 }
 
@@ -557,8 +558,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+            
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 return rs;
             }

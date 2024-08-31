@@ -337,9 +337,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+         
                 _unitOfWorkManage.RollbackTran();
                 rmsr.ErrorMsg = ex.Message;
+                _logger.Error(ex);
                 //  _logger.Error(approvalEntity.bizName + "事务回滚");
                 return rmsr;
             }

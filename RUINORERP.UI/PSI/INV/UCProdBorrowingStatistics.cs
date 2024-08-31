@@ -55,6 +55,7 @@ namespace RUINORERP.UI.PSI.INV
             //base._UCBillOutlookGridAnalysis.ColDisplayTypes = base._UCBillMasterQuery.ColDisplayTypes;
             //base._UCMasterQuery.newSumDataGridViewMaster.Use是否使用内置右键功能 = false;
             //base._UCMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = contextMenuStrip1;
+            base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_ProdBorrowing, tb_ProdBorrowing>(c => c.BorrowNo, r => r.BorrowNo);
         }
 
 

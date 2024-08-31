@@ -110,8 +110,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+ 
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;
@@ -212,13 +213,14 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+          
                 _unitOfWorkManage.RollbackTran();
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                 {
                     _logger.Error("事务回滚" + ex.Message);
                 }
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
+                _logger.Error(ex);
                 return rmrs;
             }
 
@@ -238,6 +240,7 @@ namespace RUINORERP.Business
                 {
 
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的采购入库单，不能反审核  ";
+                    _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -311,9 +314,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+        
                 _unitOfWorkManage.RollbackTran();
-
+                _logger.Error(ex);
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rs;
             }

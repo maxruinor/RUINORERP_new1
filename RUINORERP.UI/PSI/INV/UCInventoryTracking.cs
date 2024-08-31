@@ -24,6 +24,9 @@ using System.Collections;
 using System.Linq.Expressions;
 using AutoMapper.Internal;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Business.CommService;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Global.Model;
 
 
 namespace RUINORERP.UI.PSI.INV
@@ -107,7 +110,34 @@ namespace RUINORERP.UI.PSI.INV
             KryptonPage page1 = kryptonWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == NavParts.结果分析1.ToString());
             page1.Text = "纵向库存跟踪";
 
+            base._UCOutlookGridAnalysis1.GridRelated.ComplexType = true;
+            base._UCOutlookGridAnalysis1.GridRelated.ComplexTargtetField = "业务类型";
+            var mappings = new Dictionary<string, string>
+        {
+            { "采购入库", "tb_PurEntry" },
+            { "采购退回", "tb_PurEntryRe" },
+            { "销售出库", "tb_SaleOut" },
+            { "销售退回", "tb_SaleOutRe" },
+            { "退货翻新领用", "tb_SaleOutReRefurbishedMaterials" },
+            { "借出", "tb_ProdBorrowing" },
+            { "归还", "tb_ProdReturning" },
+            { "其它出库", "tb_StockOut" },
+            { "其它入库", "tb_StockIN" },
+            { "库存盘点", "tb_Stocktake" },
+            { "领料单", "tb_MaterialRequisition" },
+            { "退料单", "tb_MaterialReturn" },
+            { "缴库", "tb_FinishedGoodsInv" }
+        };
+            foreach (KeyValuePair<string, string> item in mappings)
+            {
+                //取编号为条件，目标表为在kv
+                KeyNamePair keyNamePair = new KeyNamePair(item.Key, item.Value);
+                base._UCOutlookGridAnalysis1.GridRelated.SetRelatedInfo<Proc_InventoryTracking>(c => c.单据编号, keyNamePair);
+            }
+
         }
+
+
 
 
         public override void BuildSummaryCols()
@@ -170,7 +200,7 @@ namespace RUINORERP.UI.PSI.INV
                     // var ageP = new SugarParameter("@age", null, true);//设置为output
                     //var list = db.Ado.UseStoredProcedure().SqlQuery<Class1>("sp_school", nameP, ageP);//返回List
                     var list = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_InventoryTracking>("Proc_InventoryTracking", Location_ID, ProdDetailID);//返回List
-                    if (list.Where(c => c.经营历程 == "进出明细" ).Sum(c => c.数量) != list.Where(c => c.经营历程 == "最后结余").Sum(c => c.数量))
+                    if (list.Where(c => c.经营历程 == "进出明细").Sum(c => c.数量) != list.Where(c => c.经营历程 == "最后结余").Sum(c => c.数量))
                     {
                         //异常的行，背景色标识为红黄色。
                         // 设置指定行（这里假设设置第一行）的背景颜色为红黄色

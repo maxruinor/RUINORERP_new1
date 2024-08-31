@@ -79,10 +79,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+        
                 _unitOfWorkManage.RollbackTran();
                 rs.ErrorMsg = ex.Message;
-
+                _logger.Error(ex);
                 rs.Succeeded = false;
                 return rs;
             }
@@ -125,7 +125,6 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
                 rmrs.ErrorMsg = ex.Message;
                 if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))

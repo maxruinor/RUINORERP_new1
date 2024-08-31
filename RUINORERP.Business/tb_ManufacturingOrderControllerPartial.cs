@@ -120,8 +120,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+              
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;
@@ -168,6 +169,7 @@ namespace RUINORERP.Business
                 {
 
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的领料单，不能反审核  ";
+                    _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -177,6 +179,7 @@ namespace RUINORERP.Business
                 if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
                 {
                     rs.ErrorMsg = "计划单非确认或非完结，不能反审核  ";
+                    _unitOfWorkManage.RollbackTran();
                     rs.Succeeded = false;
                     return rs;
                 }
@@ -262,8 +265,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+             
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.Succeeded = false;
                 BizTypeMapper mapper = new BizTypeMapper();
                 rs.ErrorMsg = mapper.GetBizType(typeof(tb_ManufacturingOrder)).ToString() + "事务回滚=>" + ex.Message;
@@ -435,8 +439,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+                
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 _logger.Error("事务回滚");
                 return rs;

@@ -88,7 +88,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public List<Type> ChildColDisplayTypes { get; set; } = new List<Type>();
 
-
+       
 
         /// <summary>
         /// 设置列显示相关的类型

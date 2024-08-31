@@ -85,9 +85,9 @@ namespace RUINORERP.Business.CommService
                 //    _logger.Error($"业务类型未配置: {menuInfo.MenuName}");
                 //    return cbd;
                 //}
-         
+
                 cbd.BizType = bizType;
-                
+
             }
             //if (Entity == null)
             //{
@@ -122,6 +122,11 @@ namespace RUINORERP.Business.CommService
 
                 case BizType.销售订单:
                     var saleOrder = Entity as tb_SaleOrder;
+                    if (saleOrder == null)
+                    {
+                        //这种情况是默认给到了销售订单 因为是枚举第一个。-1没有起到作用。
+                        return cbd;
+                    }
                     cbd.BillNo = saleOrder.SOrderNo;
                     cbd.BillID = saleOrder.SOrder_ID;
                     break;
@@ -260,6 +265,11 @@ namespace RUINORERP.Business.CommService
                     cbd.BillID = ProdBundle.BundleID;
                     cbd.BillNo = ProdBundle.BundleName;
                     break;
+                case BizType.包装信息:
+                    var Packing = Entity as tb_Packing;
+                    cbd.BillID = Packing.Pack_ID;
+                    cbd.BillNo = Packing.PackagingName;
+                    break;
                 /*
             case BizType.托外加工单:
                 var Return = Entity as tb_Return;
@@ -291,8 +301,11 @@ namespace RUINORERP.Business.CommService
                     //cbd.BillID = PurEntryStatistics.MainID;
                     //cbd.BillNo = PurEntryStatistics.BillNo;
                     break;
+                case BizType.无对应数据:
                 default:
-                    throw new Exception($"GetBillData未实现的业务类型处理: {bizType}");
+                    _logger.LogError($"GetBillData未实现的业务类型处理: {bizType}");
+                    return cbd; ;
+                    //throw new Exception($"GetBillData未实现的业务类型处理: {bizType}");
 
             }
             cbd.BizName = bizType.ObjToString();

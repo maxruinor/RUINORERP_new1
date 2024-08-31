@@ -53,6 +53,8 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProdCategories));
 
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
+            base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_SaleOutReItems, tb_SaleOutRe>(c => c.ReturnNo, r => r.ReturnNo);
+            base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_SaleOutReItems, tb_SaleOut>(c => c.SaleOut_NO, r => r.SaleOutNo);
         }
 
         public override void BuildColNameDataDictionary()

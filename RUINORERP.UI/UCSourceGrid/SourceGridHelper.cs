@@ -1,6 +1,7 @@
 ﻿using DevAge.ComponentModel.Converter;
 using DevAge.Drawing;
 using DevAge.Windows.Forms;
+using FastReport.DevComponents.DotNetBar;
 using FastReport.Utils;
 using NPOI.SS.Formula.Functions;
 
@@ -647,25 +648,25 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         if (griddefine[c].CustomFormat == CustomFormatType.CurrencyFormat)
                         {
-                            totalText = string.Format("{0:C}", 0);
-
-
+                          //  totalText = string.Format("{0:C}", 0);
+                            grid[grid.Rows.Count - 1, c] = new SourceGrid.Cells.Cell(totalText, typeof(decimal));
+                            grid[grid.Rows.Count - 1, c].Value = 0;
+                            grid[grid.Rows.Count - 1, c].DisplayText = string.Format("{0:C}", 0);
+                        }
+                        else if (1 == 1)
+                        {
+                           //这里显示格式化可以根据字段定义如果为int 或有小数
+                            grid[grid.Rows.Count - 1, c] = new SourceGrid.Cells.Cell(0, typeof(int));
+                            grid[grid.Rows.Count - 1, c].Value = 0;
+                            grid[grid.Rows.Count - 1, c].DisplayText = string.Format("{0:##}", 0);
                         }
                         else
                         {
-                            totalText = string.Format("{0:##}", 0); //这里显示格式化可以根据字段定义如果为int 或有小数
+                            grid[grid.Rows.Count - 1, c] = new SourceGrid.Cells.Cell(totalText, typeof(string));
                         }
+
                     }
 
-                    if (griddefine[c].Summary)
-                    {
-
-                        grid[grid.Rows.Count - 1, c] = new SourceGrid.Cells.Cell(totalText, typeof(string));
-                    }
-                    else
-                    {
-                        // grid[grid.Rows.Count - 1, c] = new SourceGrid.Cells.Cell(totalText, typeof(string));
-                    }
                     grid[grid.Rows.Count - 1, c].Editor = null;//总计行都无法编辑
 
                 }
@@ -753,7 +754,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         /// <param name="grid"></param>
         /// <param name="griddefine">索引</param>
-        public void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, string customColumnsXMLFileName)
+        private void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, string customColumnsXMLFileName)
         {
             //启动时默认无选中
             grid.Selection.FocusStyle = SourceGrid.FocusStyle.None;

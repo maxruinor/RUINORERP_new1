@@ -331,9 +331,9 @@ namespace RUINORERP.UI.UCSourceGrid
                 //https://www.cnblogs.com/zhangxiaoxia/p/15429877.html
                 if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.CurrencyFormat)
                 {
-                    CurrGridDefine.grid[CurrGridDefine.grid.RowsCount - 1, sender.Position.Column].DisplayText = string.Format("{0:C}", totalTemp);
-                    CurrGridDefine.grid[CurrGridDefine.grid.RowsCount - 1, sender.Position.Column].Value = string.Format("{0:C}", totalTemp); //这样才显示了货币符号
-                }
+                    CurrGridDefine.grid[CurrGridDefine.grid.RowsCount - 1, sender.Position.Column].DisplayText = string.Format("{0:C}", totalTemp);//这样才显示了货币符号
+                    //CurrGridDefine.grid[CurrGridDefine.grid.RowsCount - 1, sender.Position.Column].Value = string.Format("{0:C}", totalTemp); //这样才显示了货币符号
+                } 
 
             }
             #endregion

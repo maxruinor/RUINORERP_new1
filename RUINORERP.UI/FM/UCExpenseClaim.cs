@@ -180,7 +180,7 @@ namespace RUINORERP.UI.FM
 
             listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.ClaimMainID);
             listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.ClaimSubID);
-
+            listCols.SetCol_DefaultValue<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, 0.00M);
 
 
             //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
@@ -251,6 +251,7 @@ namespace RUINORERP.UI.FM
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.ClaimlAmount = details.Sum(c => c.TotalAmount);
                 EditEntity.ApprovedAmount = EditEntity.ClaimlAmount;
+                EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
             }
             catch (Exception ex)
             {

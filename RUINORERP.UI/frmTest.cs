@@ -263,8 +263,8 @@ namespace RUINORERP.UI
             //SourceGridHelper<tb_ProdDetail, tb_OpeningInventory> sgh = new SourceGridHelper<tb_ProdDetail, tb_OpeningInventory>();
             SourceGridHelper sgh = new SourceGridHelper();
             SourceGridDefine sgd = new SourceGridDefine(grid2, listCols, true);
-            sgh.InitGrid(grid2, sgd, "frmtest");
-
+           // sgh.InitGrid(grid2, sgd, "frmtest");
+            sgh.InitGrid(grid2, sgd, true, "frmtest");
             grid2.SelectionMode = SourceGrid.GridSelectionMode.Row;
             for (int r = 1; r < 30; r++)
             {

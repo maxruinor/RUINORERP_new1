@@ -269,7 +269,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _UntaxedAmount;
+        private decimal _UntaxedAmount=0;
         /// <summary>
         /// 未税本位币
         /// </summary>

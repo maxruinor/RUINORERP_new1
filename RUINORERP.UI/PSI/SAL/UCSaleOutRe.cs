@@ -490,7 +490,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="entity"></param>
 
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -512,7 +512,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 1)
+                if (NeedValidated && aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
@@ -531,7 +531,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //产品ID有值才算有效值
                 LastRefurbishedMaterials = RefurbishedMaterials.Where(t => t.ProdDetailID > 0).ToList();
                 var bb = LastRefurbishedMaterials.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (bb.Count > 1)
+                if (NeedValidated && bb.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("翻新物料明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
@@ -540,40 +540,43 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.tb_SaleOutReRefurbishedMaterialsDetails = LastRefurbishedMaterials;
 
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_SaleOutReDetail>(details))
+                if (NeedValidated && !base.Validator<tb_SaleOutReDetail>(details))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_SaleOutReRefurbishedMaterialsDetail>(LastRefurbishedMaterials))
+                if (NeedValidated && !base.Validator<tb_SaleOutReRefurbishedMaterialsDetail>(LastRefurbishedMaterials))
                 {
                     return false;
                 }
-                if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
+                if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
 
                 //计算总金额
-                if (!EditEntity.RefundOnly && (EditEntity.TotalQty == 0 || details.Sum(c => c.Quantity) == 0 || EditEntity.TotalAmount == 0))
+                if (NeedValidated && (!EditEntity.RefundOnly && (EditEntity.TotalQty == 0 || details.Sum(c => c.Quantity) == 0 || EditEntity.TotalAmount == 0)))
                 {
                     System.Windows.Forms.MessageBox.Show(" 退回总数量和金额不能为零，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
 
-                ReturnMainSubResults<tb_SaleOutRe> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+                ReturnMainSubResults<tb_SaleOutRe> SaveResult = new ReturnMainSubResults<tb_SaleOutRe>();
+                if (NeedValidated)
                 {
-                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ReturnNo}。");
-                }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ReturnNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
                 return SaveResult.Succeeded;
             }

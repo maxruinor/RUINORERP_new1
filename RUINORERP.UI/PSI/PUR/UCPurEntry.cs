@@ -341,7 +341,7 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         List<tb_PurEntryDetail> details = new List<tb_PurEntryDetail>();
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -356,7 +356,7 @@ namespace RUINORERP.UI.PSI.PUR
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
@@ -369,12 +369,12 @@ namespace RUINORERP.UI.PSI.PUR
                 //}
                 EditEntity.tb_PurEntryDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
 
-                if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
+                if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
@@ -391,7 +391,7 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
 
-                if (!base.Validator<tb_PurEntryDetail>(details))
+                if (NeedValidated && !base.Validator<tb_PurEntryDetail>(details))
                 {
                     return false;
                 }
@@ -399,17 +399,20 @@ namespace RUINORERP.UI.PSI.PUR
                 //   表格中的验证提示
                 //   其他输入条码验证
 
-          
-                ReturnMainSubResults<tb_PurEntry> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+                ReturnMainSubResults<tb_PurEntry> SaveResult = new ReturnMainSubResults<tb_PurEntry>();
+                if (NeedValidated)
                 {
-                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PurEntryNo}。");
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PurEntryNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}，请重试;或联系管理员。", Color.Red);
+                    }
                 }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
-                }
+
                 return SaveResult.Succeeded;
             }
             return false;

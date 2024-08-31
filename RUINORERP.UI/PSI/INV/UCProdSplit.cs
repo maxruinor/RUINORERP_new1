@@ -452,7 +452,7 @@ namespace RUINORERP.UI.PSI.INV
 
 
         List<tb_ProdSplitDetail> details = new List<tb_ProdSplitDetail>();
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -468,12 +468,12 @@ namespace RUINORERP.UI.PSI.INV
                 EditEntity.SplitChildTotalQty = details.Sum(c => c.Qty);
                 EditEntity.tb_ProdSplitDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (NeedValidated && details.Count == 0 && NeedValidated)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
@@ -489,26 +489,26 @@ namespace RUINORERP.UI.PSI.INV
                     EditEntity.Employee_ID = null;
                 }
                 //如果明细包含主表中的母件时。不允许保存
-                if (details.Any(c => c.ProdDetailID == EditEntity.ProdDetailID))
+                if (NeedValidated && details.Any(c => c.ProdDetailID == EditEntity.ProdDetailID))
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，不能有和母件相同的数据!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 1)
+                if (NeedValidated && aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
- 
 
-                if (!base.Validator<tb_ProdSplitDetail>(details))
+
+                if (NeedValidated && !base.Validator<tb_ProdSplitDetail>(details))
                 {
                     return false;
                 }
 
-                if (EditEntity.SplitChildTotalQty != details.Sum(c => c.Qty))
+                if (NeedValidated && EditEntity.SplitChildTotalQty != details.Sum(c => c.Qty))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
@@ -517,18 +517,21 @@ namespace RUINORERP.UI.PSI.INV
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
-
-      
-                ReturnMainSubResults<tb_ProdSplit> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+          
+                ReturnMainSubResults<tb_ProdSplit> SaveResult = new ReturnMainSubResults<tb_ProdSplit>();
+                if (NeedValidated)
                 {
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SplitNo}。");
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SplitNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}，请重试;或联系管理员。", Color.Red);
+                    }
                 }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                }
-
+           
                 return SaveResult.Succeeded;
             }
             return false;

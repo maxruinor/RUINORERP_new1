@@ -442,7 +442,7 @@ namespace RUINORERP.UI.MRP.MP
         /// <summary>
         /// 制作令明细中是可以存在相同产品的并且数量不同，会在领料单中合并
         /// </summary>
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -469,7 +469,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (details.Count == 0 && NeedValidated)
                 {
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;

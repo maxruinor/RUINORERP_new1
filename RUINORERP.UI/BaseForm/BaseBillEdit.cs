@@ -303,7 +303,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         internal void ToolBarEnabledControl(object entity)
         {
-            if (entity== null)
+            if (entity == null)
             {
                 return;
             }
@@ -513,10 +513,11 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 验证控件UI层次
+        ///<param name="NeedValidated">是否需要验证，缓存保存不要验证，正常时要</param>
         /// </summary>
-        protected virtual async Task<bool> Save()
+        protected virtual async Task<bool> Save(bool NeedValidated)
         {
-            await Task.Delay(1);  
+            await Task.Delay(1);
             return false;
             //   errorProviderForAllInput.Clear();
         }

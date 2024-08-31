@@ -872,7 +872,7 @@ namespace RUINORERP.UI.MRP.MP
         /// </summary>
         /// <param name="entity"></param>
 
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {

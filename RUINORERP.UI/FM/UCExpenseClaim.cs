@@ -264,7 +264,7 @@ namespace RUINORERP.UI.FM
         }
 
         List<tb_FM_ExpenseClaimDetail> details = new List<tb_FM_ExpenseClaimDetail>();
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -279,22 +279,36 @@ namespace RUINORERP.UI.FM
                 details = detailentity.Where(t => t.TotalAmount > 0).ToList();
                 //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
                 EditEntity.tb_FM_ExpenseClaimDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_FM_ExpenseClaimDetail>(details))
+                if (NeedValidated && !base.Validator<tb_FM_ExpenseClaimDetail>(details))
                 {
                     return false;
                 }
-                ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = await base.Save(EditEntity);
+              
+     
+                ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
+                if (NeedValidated)
+                {
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ClaimNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
+                }
                 return SaveResult.Succeeded;
             }
             else

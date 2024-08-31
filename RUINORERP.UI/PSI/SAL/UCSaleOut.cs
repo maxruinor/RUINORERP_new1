@@ -390,7 +390,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="entity"></param>
 
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -412,7 +412,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (details.Count == 0 && NeedValidated)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;

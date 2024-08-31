@@ -84,7 +84,6 @@ namespace RUINORERP.UI.CommonUI
             if (OnSaveToXml != null)
             {
                 OnSaveToXml(this, Entity);
-
             }
         }
 
@@ -99,7 +98,10 @@ namespace RUINORERP.UI.CommonUI
                 System.IO.Directory.CreateDirectory(fi.Directory.FullName);
             }
             //SerializationHelper.Serialize(entity, PathwithFileName, false);
-            string json = JsonConvert.SerializeObject(entity);
+            string json = JsonConvert.SerializeObject(entity, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+            });
             File.WriteAllText(PathwithFileName, json);
         }
 
@@ -114,9 +116,9 @@ namespace RUINORERP.UI.CommonUI
             }
             if (System.IO.File.Exists(PathwithFileName))
             {
-              //  Entity = SerializationHelper.Deserialize(PathwithFileName, false) as T;
+                //  Entity = SerializationHelper.Deserialize(PathwithFileName, false) as T;
                 string json = File.ReadAllText(PathwithFileName);
-                Entity= JsonConvert.DeserializeObject<T>(json) as T;
+                Entity = JsonConvert.DeserializeObject<T>(json) as T;
             }
             return Entity as T;
         }

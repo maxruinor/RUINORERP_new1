@@ -296,7 +296,7 @@ namespace RUINORERP.UI.FM
         }
 
         List<tb_FM_OtherExpenseDetail> details = new List<tb_FM_OtherExpenseDetail>();
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -311,23 +311,23 @@ namespace RUINORERP.UI.FM
                 details = detailentity.Where(t => t.TotalAmount > 0).ToList();
                 //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (NeedValidated && details.Count == 0 && NeedValidated)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
                 EditEntity.tb_FM_OtherExpenseDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_FM_OtherExpenseDetail>(details))
+                if (NeedValidated && !base.Validator<tb_FM_OtherExpenseDetail>(details))
                 {
                     return false;
                 }
                 //必需选一个
-                if (!rdb支出.Checked && !rdb收入.Checked)
+                if (NeedValidated && (!rdb支出.Checked && !rdb收入.Checked))
                 {
                     MessageBox.Show("收入和支出必需选其一！");
                     return false;
@@ -335,17 +335,22 @@ namespace RUINORERP.UI.FM
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TotalAmount);
       
-                ReturnMainSubResults<tb_FM_OtherExpense> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+                 
+                ReturnMainSubResults<tb_FM_OtherExpense> SaveResult = new ReturnMainSubResults<tb_FM_OtherExpense>();
+                if (NeedValidated)
                 {
-                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ExpenseNo}。");
-                }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ExpenseNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
                 return SaveResult.Succeeded;
+              
             }
             return false;
         }

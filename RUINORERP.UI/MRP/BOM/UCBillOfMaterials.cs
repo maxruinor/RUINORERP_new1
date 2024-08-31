@@ -1242,7 +1242,7 @@ namespace RUINORERP.UI.MRP.BOM
 
 
         List<tb_BOM_SDetail> details = new List<tb_BOM_SDetail>();
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -1257,7 +1257,7 @@ namespace RUINORERP.UI.MRP.BOM
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
 
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (details.Count == 0 && NeedValidated)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;

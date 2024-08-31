@@ -46,7 +46,7 @@ namespace RUINORERP.UI.PSI.INV
     /// 实现各种情况下的盘点工作 2023-10-12
     /// </summary>
     [MenuAttrAssemblyInfo("盘点作业", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.盘点单)]
-    public partial class UCStocktake : BaseBillEditGeneric<tb_Stocktake, tb_StocktakeQueryDto>
+    public partial class UCStocktake : BaseBillEditGeneric<tb_Stocktake, tb_StocktakeDetail>
     {
         public UCStocktake()
         {
@@ -580,7 +580,7 @@ namespace RUINORERP.UI.PSI.INV
         List<tb_StocktakeDetail> details = new List<tb_StocktakeDetail>();
 
 
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -599,14 +599,14 @@ namespace RUINORERP.UI.PSI.INV
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 0)
+                if (NeedValidated && aa.Count > 0)
                 {
                     var prod = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID.ToString() == aa[0].ToString());
                     System.Windows.Forms.MessageBox.Show($"明细中，SKU{prod.SKU},{prod.CNName}\r\n相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -620,12 +620,12 @@ namespace RUINORERP.UI.PSI.INV
                 EditEntity.tb_StocktakeDetails = details;
 
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
 
-                if (!base.Validator<tb_StocktakeDetail>(details))
+                if (NeedValidated && !base.Validator<tb_StocktakeDetail>(details))
                 {
                     return false;
                 }
@@ -636,15 +636,21 @@ namespace RUINORERP.UI.PSI.INV
 
                 //  EditEntity.DataStatus = ApprovalStatus.未审核.ToString();
 
-                ReturnMainSubResults<tb_Stocktake> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+
+                ReturnMainSubResults<tb_Stocktake> SaveResult = new ReturnMainSubResults<tb_Stocktake>();
+                if (NeedValidated)
                 {
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.CheckNo}。");
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.CheckNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
-                }
+
                 return SaveResult.Succeeded;
             }
             return false;

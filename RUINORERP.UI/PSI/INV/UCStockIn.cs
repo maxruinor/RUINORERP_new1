@@ -311,7 +311,7 @@ namespace RUINORERP.UI.PSI.INV
 
 
         List<tb_StockInDetail> details = new List<tb_StockInDetail>();
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -327,7 +327,7 @@ namespace RUINORERP.UI.PSI.INV
                 EditEntity.TotalQty = details.Sum(c => c.Qty);
                 EditEntity.tb_StockInDetails = details;
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
@@ -343,42 +343,43 @@ namespace RUINORERP.UI.PSI.INV
                     EditEntity.Employee_ID = null;
                 }
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 1)
+                if (NeedValidated && aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
-    
+
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_StockInDetail>(details))
+                if (NeedValidated && !base.Validator<tb_StockInDetail>(details))
                 {
                     return false;
                 }
 
-                if (EditEntity.TotalQty != details.Sum(c => c.Qty))
+                if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Qty))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
 
-                //设置目标ID成功后就行头写上编号？
-                //   表格中的验证提示
-                //   其他输入条码验证
+                ReturnMainSubResults<tb_StockIn> SaveResult = new ReturnMainSubResults<tb_StockIn>();
+                if (NeedValidated)
+                {
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BillNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}，请重试;或联系管理员。", Color.Red);
+                    }
+                }
 
-      
-                ReturnMainSubResults<tb_StockIn> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
-                {
-                    return SaveResult.Succeeded;
-                }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
-                }
+                return SaveResult.Succeeded;
             }
 
             return false;

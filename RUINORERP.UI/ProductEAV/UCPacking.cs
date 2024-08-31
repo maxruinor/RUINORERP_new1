@@ -614,7 +614,7 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         /// <param name="entity"></param>
 
-        protected async override Task<bool> Save()
+        protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
@@ -635,7 +635,7 @@ namespace RUINORERP.UI.ProductEAV
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0)
+                if (details.Count == 0 && NeedValidated)
                 {
                     if (MessageBox.Show("你确定不录入包装清单数据吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
                     {

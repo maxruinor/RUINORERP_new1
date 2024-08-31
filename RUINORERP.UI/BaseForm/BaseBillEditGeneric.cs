@@ -1197,7 +1197,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.保存:
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-                    await Save();
+                    await Save(true);
                     break;
                 case MenuItemEnums.提交:
                     //操作前将数据收集
@@ -1521,15 +1521,11 @@ namespace RUINORERP.UI.BaseForm
             MainForm.Instance.uclog.AddLog("成功加载上次的数据。");
         }
 
-        private void Frm_OnSaveToXml(frmFormProperty frm, object Obj)
+        private async void Frm_OnSaveToXml(frmFormProperty frm, object Obj)
         {
-            //ProductSharePart psp = new ProductSharePart();
-            //psp.CNName = "asdfa";
-            //psp.Images = ImageHelper.imageToByteArray(Properties.Resources.add);
-            //frm.Serialize<ProductSharePart>(psp as ProductSharePart);
-
-            frm.Serialize<T>(Obj as T);
-            MainForm.Instance.uclog.AddLog("缓存数据保存成功。");
+            //bool rs = await Save(false);
+            //frm.Serialize<T>(Obj as T);
+            bool result = await AutoSaveDataAsync();
         }
 
         protected override void Add()
@@ -1911,7 +1907,7 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                bool rs = await this.Save();
+                bool rs = await this.Save(true);
                 if (rs)
                 {
                     if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
@@ -2216,14 +2212,31 @@ namespace RUINORERP.UI.BaseForm
             timerAutoSave.Start();
         }
 
-        private void timerAutoSave_Tick(object sender, EventArgs e)
+        private async void timerAutoSave_Tick(object sender, EventArgs e)
         {
             //自动保存的时间秒数  30秒
-            if (MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime > 30000 && !MainForm.Instance.AppContext.IsOnline)
+            if (MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime > 30000 && MainForm.Instance.AppContext.IsOnline)
+            {
+                bool result = await AutoSaveDataAsync();
+                if (!result)
+                {
+                    //如果保存失败，则停止自动保存？
+                    timerAutoSave.Stop();
+                }
+            }
+        }
+
+
+
+        private async Task<bool> AutoSaveDataAsync()
+        {
+            bool result = false;
+            try
             {
                 if (EditEntity != null)
                 {
                     #region 自动保存单据数据  后面优化可以多个单?限制5个？
+                    await Save(false);
                     string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data_", CurMenuInfo.CaptionCN);
                     System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
                     //判断目录是否存在
@@ -2231,12 +2244,34 @@ namespace RUINORERP.UI.BaseForm
                     {
                         System.IO.Directory.CreateDirectory(fi.Directory.FullName);
                     }
-                    string json = JsonConvert.SerializeObject(EditEntity);
+                    string json = JsonConvert.SerializeObject(EditEntity,
+                        new JsonSerializerSettings
+                        {
+                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                        });
+
+
+                    /*
+                     var settings = new JsonSerializerSettings
+{
+    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+    NullValueHandling = NullValueHandling.Ignore
+};
+
+string jsonString = JsonConvert.SerializeObject(myObject, settings);
+                     */
+
+
                     File.WriteAllText(PathwithFileName, json);
                     MainForm.Instance.uclog.AddLog("缓存数据保存成功。");
                     #endregion
                 }
             }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "缓存数据保存时出错");
+            }
+            return result;
         }
     }
 }

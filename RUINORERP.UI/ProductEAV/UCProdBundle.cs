@@ -467,7 +467,7 @@ namespace RUINORERP.UI.ProductEAV
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0 && NeedValidated)
+                if (NeedValidated && details.Count == 0 && NeedValidated)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
@@ -485,7 +485,7 @@ namespace RUINORERP.UI.ProductEAV
                 //如果明细包含主表中的母件时。不允许保存
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 1)
+                if (NeedValidated && aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
@@ -493,24 +493,28 @@ namespace RUINORERP.UI.ProductEAV
                 //EditEntity.MergeSourceTotalQty = details.Sum(c => c.Qty);
                 EditEntity.tb_ProdBundleDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_ProdBundleDetail>(details))
+                if (NeedValidated && !base.Validator<tb_ProdBundleDetail>(details))
                 {
                     return false;
                 }
  
-                ReturnMainSubResults<tb_ProdBundle> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+        
+                ReturnMainSubResults<tb_ProdBundle> SaveResult = new ReturnMainSubResults<tb_ProdBundle>();
+                if (NeedValidated)
                 {
-                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BundleName}。");
-                }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BundleName}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
                 return SaveResult.Succeeded;
             }

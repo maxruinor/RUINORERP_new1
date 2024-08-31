@@ -635,7 +635,7 @@ namespace RUINORERP.UI.ProductEAV
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0 && NeedValidated)
+                if (NeedValidated && details.Count == 0)
                 {
                     if (MessageBox.Show("你确定不录入包装清单数据吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
                     {
@@ -645,7 +645,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 else
                 {
-                    if (detailentity.Sum(c => c.Quantity) == 0)
+                    if (NeedValidated && detailentity.Sum(c => c.Quantity) == 0)
                     {
                         MessageBox.Show("明细总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;
@@ -653,7 +653,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 0)
+                if (NeedValidated && aa.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("包装清单中，相同的产品不能多行录入，请增加数量!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
@@ -665,7 +665,7 @@ namespace RUINORERP.UI.ProductEAV
 
                 //一种箱子时只有一种箱规
                 var bb = boxrules.Select(c => c.CartonID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (bb.Count > 0)
+                if (NeedValidated && bb.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("箱规信息中，相同的箱子不能有多个箱规!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
@@ -673,29 +673,33 @@ namespace RUINORERP.UI.ProductEAV
                 EditEntity.tb_PackingDetails = details;
                 EditEntity.tb_BoxRuleses = boxrules;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_PackingDetail>(details))
+                if (NeedValidated && !base.Validator<tb_PackingDetail>(details))
                 {
                     return false;
                 }
 
                 //     RuleFor(tb_BoxRules =>tb_BoxRules.Pack_ID).Must(CheckForeignKeyValue).WithMessage("包装信息:下拉选择值不正确。"); 这个不能要
-                if (!base.Validator<tb_BoxRules>(boxrules))
+                if (NeedValidated && !base.Validator<tb_BoxRules>(boxrules))
                 {
                     return false;
                 }
-
-                ReturnMainSubResults<tb_Packing> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+               
+                ReturnMainSubResults<tb_Packing> SaveResult = new ReturnMainSubResults<tb_Packing>();
+                if (NeedValidated)
                 {
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PackagingName}。");
-                }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PackagingName}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
                 return SaveResult.Succeeded;
             }

@@ -392,24 +392,24 @@ namespace RUINORERP.UI.MRP.MP
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
 
-                if (EditEntity.TotalQuantity == 0 || detailentity.Sum(c => c.Quantity) == 0)
+                if (NeedValidated && (EditEntity.TotalQuantity == 0 || detailentity.Sum(c => c.Quantity) == 0))
                 {
                     MessageBox.Show("单据及明细总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
-                if (EditEntity.TotalQuantity != detailentity.Sum(c => c.Quantity))
+                if (NeedValidated && EditEntity.TotalQuantity != detailentity.Sum(c => c.Quantity))
                 {
                     MessageBox.Show($"单据总数量{EditEntity.TotalQuantity}和明细总数量{detailentity.Sum(c => c.Quantity)}不相同，请检查后再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0 && NeedValidated)
+                if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 1)
+                if (NeedValidated && aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
@@ -417,11 +417,11 @@ namespace RUINORERP.UI.MRP.MP
              
                 EditEntity.tb_ProductionPlanDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_ProductionPlanDetail>(details))
+                if (NeedValidated && !base.Validator<tb_ProductionPlanDetail>(details))
                 {
                     return false;
                 }
@@ -432,16 +432,20 @@ namespace RUINORERP.UI.MRP.MP
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
 
-                ReturnMainSubResults<tb_ProductionPlan> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+           
+                ReturnMainSubResults<tb_ProductionPlan> SaveResult = new ReturnMainSubResults<tb_ProductionPlan>();
+                if (NeedValidated)
                 {
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PPNo}。");
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PPNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                }
-
                 return SaveResult.Succeeded;
             }
             return false;

@@ -412,7 +412,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0 && NeedValidated)
+                if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
@@ -434,11 +434,11 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_SaleOutDetail>(details))
+                if (NeedValidated && !base.Validator<tb_SaleOutDetail>(details))
                 {
                     return false;
                 }
@@ -460,22 +460,27 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
+                if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))
                 {
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
 
-                ReturnMainSubResults<tb_SaleOut> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+         
+                ReturnMainSubResults<tb_SaleOut> SaveResult = new ReturnMainSubResults<tb_SaleOut>();
+                if (NeedValidated)
                 {
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SaleOutNo}。");
-                    return SaveResult.Succeeded;
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SaleOutNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
-                }
+                return SaveResult.Succeeded;
             }
             return false;
         }

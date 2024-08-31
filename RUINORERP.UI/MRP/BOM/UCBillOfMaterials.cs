@@ -1257,7 +1257,7 @@ namespace RUINORERP.UI.MRP.BOM
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
 
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0 && NeedValidated)
+                if (NeedValidated && details.Count == 0 && NeedValidated)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
@@ -1270,17 +1270,17 @@ namespace RUINORERP.UI.MRP.BOM
 
                 EditEntity.tb_BOM_SDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_BOM_SDetail>(details))
+                if (NeedValidated && !base.Validator<tb_BOM_SDetail>(details))
                 {
                     return false;
                 }
 
                 //BOM子件中不能包含目标母件本身。
-                if (details.Any(c => c.ProdDetailID == EditEntity.ProdDetailID))
+                if (NeedValidated && details.Any(c => c.ProdDetailID == EditEntity.ProdDetailID))
                 {
                     MessageBox.Show("BOM子件中不能包含目标母件本身。请检查数据后再保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
@@ -1290,16 +1290,20 @@ namespace RUINORERP.UI.MRP.BOM
                 EditEntity.tb_BOM_SDetailSecondaries.Clear();
          
                 tb_BOM_SController<tb_BOM_S> ctr = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
-                ReturnMainSubResults<tb_BOM_S> SaveResult = await ctr.SaveOrUpdateWithChild<tb_BOM_S>(EditEntity); //await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+                ReturnMainSubResults<tb_BOM_S> SaveResult = new ReturnMainSubResults<tb_BOM_S>();
+                if (NeedValidated)
                 {
-                    base.ToolBarEnabledControl(EditEntity);
-                    base.ToolBarEnabledControl(MenuItemEnums.保存);
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BOM_No}。");
-                }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    SaveResult = await ctr.SaveOrUpdateWithChild<tb_BOM_S>(EditEntity); //await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        base.ToolBarEnabledControl(EditEntity);
+                        base.ToolBarEnabledControl(MenuItemEnums.保存);
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BOM_No}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
                 return SaveResult.Succeeded;
             }

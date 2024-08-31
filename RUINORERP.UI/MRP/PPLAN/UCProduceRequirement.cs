@@ -887,7 +887,7 @@ namespace RUINORERP.UI.MRP.MP
             {
 
                 //没有通过主表验证，下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
@@ -897,19 +897,19 @@ namespace RUINORERP.UI.MRP.MP
                 //产品ID有值才算有效值
                 TargetDetails = targetDetailsTemp.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (TargetDetails.Count == 0)
+                if (NeedValidated && TargetDetails.Count == 0)
                 {
                     MessageBox.Show("请录入有效的分析目标明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
                 var aa = TargetDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 0)
+                if (NeedValidated && aa.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("分析目标明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
 
-                if (!base.Validator<tb_ProductionDemandTargetDetail>(TargetDetails))
+                if (NeedValidated && !base.Validator<tb_ProductionDemandTargetDetail>(TargetDetails))
                 {
                     return false;
                 }
@@ -921,16 +921,16 @@ namespace RUINORERP.UI.MRP.MP
                 #region  库存不足 可以为空？ 或者只保存库存不足的数据？还是全部保存呢？  暂时全部保存
 
                 List<tb_ProductionDemandDetail> StockLessDetailsTemp = EditEntity.tb_ProductionDemandDetails;
-                if (StockLessDetailsTemp != null)
+                if (NeedValidated && StockLessDetailsTemp != null)
                 {
                     StockLessDetails = StockLessDetailsTemp.Where(t => t.ProdDetailID > 0).ToList();
                     EditEntity.tb_ProductionDemandDetails = StockLessDetails;
                     //没有经验通过下面先不计算
-                    if (!base.Validator(EditEntity))
+                    if (NeedValidated && !base.Validator(EditEntity))
                     {
                         return false;
                     }
-                    if (!base.Validator<tb_ProductionDemandDetail>(StockLessDetails))
+                    if (NeedValidated && !base.Validator<tb_ProductionDemandDetail>(StockLessDetails))
                     {
                         return false;
                     }
@@ -950,18 +950,18 @@ namespace RUINORERP.UI.MRP.MP
                 //    return;
                 //}
                 var pur = PurDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (pur.Count > 0)
+                if (NeedValidated && pur.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("采购建议中，相同的产品不能多行录入\r\n，库位或需求日期不一致要拆分为两个需求分析单!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
                 EditEntity.tb_PurGoodsRecommendDetails = PurDetails;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_PurGoodsRecommendDetail>(PurDetails))
+                if (NeedValidated && !base.Validator<tb_PurGoodsRecommendDetail>(PurDetails))
                 {
                     return false;
                 }
@@ -990,11 +990,11 @@ namespace RUINORERP.UI.MRP.MP
                     //}
                     EditEntity.tb_ProduceGoodsRecommendDetails = MakingDetails;
                     //没有经验通过下面先不计算
-                    if (!base.Validator(EditEntity))
+                    if (NeedValidated && !base.Validator(EditEntity))
                     {
                         return false;
                     }
-                    if (!base.Validator<tb_ProduceGoodsRecommendDetail>(MakingDetails))
+                    if (NeedValidated && !base.Validator<tb_ProduceGoodsRecommendDetail>(MakingDetails))
                     {
                         return false;
                     }
@@ -1008,18 +1008,22 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
-
-                ReturnMainSubResults<tb_ProductionDemand> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+                
+                ReturnMainSubResults<tb_ProductionDemand> SaveResult = new ReturnMainSubResults<tb_ProductionDemand>();
+                if (NeedValidated)
                 {
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PDNo}。");
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PDNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                }
-
                 return SaveResult.Succeeded;
+          
             }
             return false;
         }

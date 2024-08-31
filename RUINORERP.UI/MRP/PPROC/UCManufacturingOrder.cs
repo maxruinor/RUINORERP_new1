@@ -462,31 +462,31 @@ namespace RUINORERP.UI.MRP.MP
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
 
-                if (EditEntity.ManufacturingQty == 0 || detailentity.Sum(c => c.ShouldSendQty) == 0)
+                if (NeedValidated && (EditEntity.ManufacturingQty == 0 || detailentity.Sum(c => c.ShouldSendQty) == 0))
                 {
                     MessageBox.Show("生产数量或明细应发数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
 
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0 && NeedValidated)
+                if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 1)
+                if (NeedValidated && aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
                 EditEntity.tb_ManufacturingOrderDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_ManufacturingOrderDetail>(details))
+                if (NeedValidated && !base.Validator<tb_ManufacturingOrderDetail>(details))
                 {
                     return false;
                 }
@@ -495,18 +495,22 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
-
-
-                ReturnMainSubResults<tb_ManufacturingOrder> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+   
+                ReturnMainSubResults<tb_ManufacturingOrder> SaveResult = new ReturnMainSubResults<tb_ManufacturingOrder>();
+                if (NeedValidated)
                 {
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.MONO}。");
-                }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.MONO}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
                 return SaveResult.Succeeded;
+
             }
             return false;
         }

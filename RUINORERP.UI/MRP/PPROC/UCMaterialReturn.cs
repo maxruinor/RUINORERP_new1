@@ -413,24 +413,24 @@ namespace RUINORERP.UI.MRP.MP
                 //    return;
                 //}
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0 && NeedValidated)
+                if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (aa.Count > 1)
+                if (NeedValidated && aa.Count > 1)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
                 EditEntity.tb_MaterialReturnDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
-                if (!base.Validator<tb_MaterialReturnDetail>(details))
+                if (NeedValidated && !base.Validator<tb_MaterialReturnDetail>(details))
                 {
                     return false;
                 }
@@ -441,16 +441,19 @@ namespace RUINORERP.UI.MRP.MP
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
 
-
-                ReturnMainSubResults<tb_MaterialReturn> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+ 
+                ReturnMainSubResults<tb_MaterialReturn> SaveResult = new ReturnMainSubResults<tb_MaterialReturn>();
+                if (NeedValidated)
                 {
-                    lblReview.Text = ((ApprovalStatus)EditEntity.ApprovalStatus).ToString();
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.MaterialRequisitionNO}。");
-                }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + SaveResult.ErrorMsg, UILogType.错误);
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.MaterialRequisitionNO}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
                 return SaveResult.Succeeded;
             }

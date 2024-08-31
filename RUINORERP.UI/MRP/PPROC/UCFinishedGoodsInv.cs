@@ -358,7 +358,7 @@ namespace RUINORERP.UI.PSI.PUR
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (details.Count == 0 && NeedValidated)
+                if (NeedValidated && details.Count == 0 && NeedValidated)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
@@ -372,7 +372,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 EditEntity.tb_FinishedGoodsInvDetails = details;
                 //没有经验通过下面先不计算
-                if (!base.Validator(EditEntity))
+                if (NeedValidated && !base.Validator(EditEntity))
                 {
                     return false;
                 }
@@ -395,7 +395,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //}
 
 
-                if (!base.Validator<tb_FinishedGoodsInvDetail>(details))
+                if (NeedValidated && !base.Validator<tb_FinishedGoodsInvDetail>(details))
                 {
                     return false;
                 }
@@ -403,16 +403,22 @@ namespace RUINORERP.UI.PSI.PUR
                 //   表格中的验证提示
                 //   其他输入条码验证
 
-                ReturnMainSubResults<tb_FinishedGoodsInv> SaveResult = await base.Save(EditEntity);
-                if (SaveResult.Succeeded)
+                
+                ReturnMainSubResults<tb_FinishedGoodsInv> SaveResult = new ReturnMainSubResults<tb_FinishedGoodsInv>();
+                if (NeedValidated)
                 {
-                    MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.DeliveryBillNo}。");
-                }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    SaveResult = await base.Save(EditEntity);
+                    if (SaveResult.Succeeded)
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.DeliveryBillNo}。");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                    }
                 }
                 return SaveResult.Succeeded;
+           
             }
             return false;
 

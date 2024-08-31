@@ -242,6 +242,26 @@ namespace RUINORERP.Model
             }
         }
 
+
+        private string _进出方向;
+
+
+        /// <summary>
+        /// 进出方向
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "进出方向", ColDesc = "进出方向")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "进出方向",  Length = 10, IsNullable = false, ColumnDescription = "进出方向")]
+        [Display(Name = "")]
+        public string 进出方向
+        {
+            get { return _进出方向; }
+            set
+            {
+                SetProperty(ref _进出方向, value);
+            }
+        }
+
         private DateTime? _日期;
 
 

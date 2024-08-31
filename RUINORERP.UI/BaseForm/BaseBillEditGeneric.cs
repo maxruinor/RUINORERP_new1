@@ -2214,16 +2214,23 @@ namespace RUINORERP.UI.BaseForm
 
         private async void timerAutoSave_Tick(object sender, EventArgs e)
         {
-            //自动保存的时间秒数  30秒
-            if (MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime > 30000 && MainForm.Instance.AppContext.IsOnline)
+            if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
-                bool result = await AutoSaveDataAsync();
-                if (!result)
+                if (!this.DesignMode)
                 {
-                    //如果保存失败，则停止自动保存？
-                    timerAutoSave.Stop();
+                    //自动保存的时间秒数  30秒
+                    if (MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime > 30000 && MainForm.Instance.AppContext.IsOnline)
+                    {
+                        bool result = await AutoSaveDataAsync();
+                        if (!result)
+                        {
+                            //如果保存失败，则停止自动保存？
+                            timerAutoSave.Stop();
+                        }
+                    }
                 }
             }
+           
         }
 
 

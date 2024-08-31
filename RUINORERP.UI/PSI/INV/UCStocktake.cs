@@ -44,6 +44,8 @@ namespace RUINORERP.UI.PSI.INV
 {
     /// <summary>
     /// 实现各种情况下的盘点工作 2023-10-12
+    /// 思路更改，期初表 存在的意义少了。
+    /// 盘点时如果选择期初，成本强制显示出来，并且必须输入。其它的方式。不显示成本也不用必须输入。
     /// </summary>
     [MenuAttrAssemblyInfo("盘点作业", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.盘点单)]
     public partial class UCStocktake : BaseBillEditGeneric<tb_Stocktake, tb_StocktakeDetail>

@@ -145,6 +145,15 @@ namespace AULWriter
         private void btnProduce_Click(object sender, EventArgs e)
         {
             WriterAUList(true);
+            try
+            {
+                saveConfigToFile();
+                MessageBox.Show("配置保存成功");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("配置保存失败:" + ex.Message);
+            }
             return;
             //建立新线程
 

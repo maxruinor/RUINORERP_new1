@@ -39,7 +39,7 @@ namespace RUINORERP.UI.PSI.INV
             ReladtedEntityType = typeof(View_Inventory);
 
             #region 准备枚举值在列表中显示
-           
+
 
             System.Linq.Expressions.Expression<Func<tb_Prod, int?>> expr;
             expr = (p) => p.SourceType;
@@ -48,7 +48,7 @@ namespace RUINORERP.UI.PSI.INV
             #endregion
 
 
-            
+
 
             txtMaxRow.Text = "100";
             //base.RelatedBillEditCol = (c => c.PurEntryNo);
@@ -106,7 +106,7 @@ namespace RUINORERP.UI.PSI.INV
 
             KryptonPage page1 = kryptonWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == NavParts.结果分析1.ToString());
             page1.Text = "纵向库存跟踪";
-   
+
         }
 
 
@@ -142,24 +142,24 @@ namespace RUINORERP.UI.PSI.INV
                     _UCOutlookGridAnalysis1.ColDisplayTypes.Add(typeof(Proc_InventoryTracking));
                     _UCOutlookGridAnalysis1.ColDisplayTypes.Add(typeof(tb_Location));
 
-                    
-                   // _UCOutlookGridAnalysis2.GridRelated.SetRelatedInfo<View_Inventory, tb_BOM_S>(c => c.BOM_ID, r => r.BOM_ID);
+
+                    // _UCOutlookGridAnalysis2.GridRelated.SetRelatedInfo<View_Inventory, tb_BOM_S>(c => c.BOM_ID, r => r.BOM_ID);
 
                     _UCOutlookGridAnalysis1.LoadDataToGrid<Proc_InventoryTracking>(list);
                     kryptonWorkspace1.ActivePage = kryptonWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == NavParts.结果分析1.ToString());
-       
+
                 }
             }
 
         }
 
-     
+
 
         private void 库存异常检测ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //进出加起来不等于期末的
             int ErrorCounter = 0;
-            //暂时的思路 是用 纵向库存跟踪的存储过程，查出来后再将进出明细和最后结余分别总计对比。不同的就有问题。
+            //暂时的思路 是用 纵向库存跟踪的存储过程，查出来后再将进出明细(排除期初数据)和最后结余分别总计对比。不同的就有问题。
             foreach (DataGridViewRow dr in base._UCMasterQuery.newSumDataGridViewMaster.SelectedRows)
             {
                 if (dr.DataBoundItem is View_Inventory view_Inventory)
@@ -170,11 +170,12 @@ namespace RUINORERP.UI.PSI.INV
                     // var ageP = new SugarParameter("@age", null, true);//设置为output
                     //var list = db.Ado.UseStoredProcedure().SqlQuery<Class1>("sp_school", nameP, ageP);//返回List
                     var list = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_InventoryTracking>("Proc_InventoryTracking", Location_ID, ProdDetailID);//返回List
-                    if (list.Where(c => c.经营历程 == "进出明细").Sum(c => c.数量) != list.Where(c => c.经营历程 == "最后结余").Sum(c => c.数量))
+                    if (list.Where(c => c.经营历程 == "进出明细" ).Sum(c => c.数量) != list.Where(c => c.经营历程 == "最后结余").Sum(c => c.数量))
                     {
                         //异常的行，背景色标识为红黄色。
                         // 设置指定行（这里假设设置第一行）的背景颜色为红黄色
                         dr.DefaultCellStyle.BackColor = Color.FromArgb(255, 64, 0);
+                        dr.Cells[2].Style.ForeColor = Color.WhiteSmoke;
                         ErrorCounter++;
                     }
                 }

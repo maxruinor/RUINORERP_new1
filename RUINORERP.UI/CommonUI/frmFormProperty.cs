@@ -1,8 +1,10 @@
 ﻿using HLH.Lib.Helper;
 using Netron.GraphLib;
 using Netron.Xeon;
+using Newtonsoft.Json;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.Model.Dto;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.UControls;
@@ -82,11 +84,12 @@ namespace RUINORERP.UI.CommonUI
             if (OnSaveToXml != null)
             {
                 OnSaveToXml(this, Entity);
+
             }
         }
 
 
-        public void SerializeToXML<T>(T entity)
+        public void Serialize<T>(T entity)
         {
             string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data_", MenuInfo.CaptionCN);
             System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
@@ -95,12 +98,13 @@ namespace RUINORERP.UI.CommonUI
             {
                 System.IO.Directory.CreateDirectory(fi.Directory.FullName);
             }
-            SerializationHelper.Serialize(entity, PathwithFileName, false);
+            //SerializationHelper.Serialize(entity, PathwithFileName, false);
+            string json = JsonConvert.SerializeObject(entity);
+            File.WriteAllText(PathwithFileName, json);
         }
 
-        public void DeserializeFromXML<T>() where T : class
+        public T Deserialize<T>() where T : class
         {
-             
             string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data_", MenuInfo.CaptionCN);
             System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
             //判断目录是否存在
@@ -110,8 +114,11 @@ namespace RUINORERP.UI.CommonUI
             }
             if (System.IO.File.Exists(PathwithFileName))
             {
-                Entity=SerializationHelper.Deserialize(PathwithFileName, false) as T;
+              //  Entity = SerializationHelper.Deserialize(PathwithFileName, false) as T;
+                string json = File.ReadAllText(PathwithFileName);
+                Entity= JsonConvert.DeserializeObject<T>(json) as T;
             }
+            return Entity as T;
         }
 
 

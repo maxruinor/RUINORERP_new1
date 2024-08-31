@@ -303,6 +303,10 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         internal void ToolBarEnabledControl(object entity)
         {
+            if (entity== null)
+            {
+                return;
+            }
             //可以修改
             if (entity.ContainsProperty(typeof(DataStatus).Name))
             {

@@ -10,6 +10,7 @@ namespace RUINORERP.Global.CustomAttribute
     /// 标记实体字段中的外键关联性
     /// 主要应用于 可以通过这个找到对应的外键表名，字段ID名 字段名称
     /// </summary>
+    [Serializable]
     [AttributeUsage(AttributeTargets.Property, Inherited = true)]
     public class FKRelationAttribute : Attribute
     {

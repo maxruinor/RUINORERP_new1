@@ -1511,7 +1511,11 @@ namespace RUINORERP.UI.BaseForm
 
         private void Frm_OnFromToXml(frmFormProperty frm)
         {
-            frm.DeserializeFromXML<T>();
+            frm.Deserialize<T>();
+            EditEntity = frm.Entity as T;
+            // BindData(EditEntity as BaseEntity);
+            OnBindDataToUIEvent(EditEntity);
+            MainForm.Instance.uclog.AddLog("成功加载上次的数据。");
         }
 
         private void Frm_OnSaveToXml(frmFormProperty frm, object Obj)
@@ -1519,9 +1523,10 @@ namespace RUINORERP.UI.BaseForm
             //ProductSharePart psp = new ProductSharePart();
             //psp.CNName = "asdfa";
             //psp.Images = ImageHelper.imageToByteArray(Properties.Resources.add);
-            //frm.SerializeToXML<ProductSharePart>(psp as ProductSharePart);
+            //frm.Serialize<ProductSharePart>(psp as ProductSharePart);
 
-            frm.SerializeToXML<T>(Obj as T);
+            frm.Serialize<T>(Obj as T);
+            MainForm.Instance.uclog.AddLog("缓存数据保存成功。");
         }
 
         protected override void Add()

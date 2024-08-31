@@ -9,6 +9,7 @@ namespace RUINORERP.Global
     /// <summary>
     /// 所有自动生成的查询条件都在这里能找到对应的类型，后面会根据类型进行处理
     /// </summary>
+    [Serializable]
     public enum AdvQueryProcessType
     {
         /// <summary>

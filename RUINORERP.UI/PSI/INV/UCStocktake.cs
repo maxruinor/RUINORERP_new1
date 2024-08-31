@@ -117,9 +117,9 @@ namespace RUINORERP.UI.PSI.INV
             //};
         }
 
-
-        public void BindData(tb_Stocktake entity)
+        public override void BindData(BaseEntity _BaseEntity)
         {
+            tb_Stocktake entity = _BaseEntity as tb_Stocktake;
             if (entity == null)
             {
 

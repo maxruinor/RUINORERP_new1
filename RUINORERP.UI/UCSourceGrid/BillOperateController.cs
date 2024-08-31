@@ -333,7 +333,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     CurrGridDefine.grid[CurrGridDefine.grid.RowsCount - 1, sender.Position.Column].DisplayText = string.Format("{0:C}", totalTemp);//这样才显示了货币符号
                     //CurrGridDefine.grid[CurrGridDefine.grid.RowsCount - 1, sender.Position.Column].Value = string.Format("{0:C}", totalTemp); //这样才显示了货币符号
-                } 
+                }
 
             }
             #endregion
@@ -742,6 +742,10 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (sender.Value != null)
                 {
                     sender.Cell.View = new SourceGrid.Cells.Views.SingleImage();
+                }
+                else
+                {
+                    sender.Cell.View = CurrGridDefine.ViewNormal;
                 }
             }
             else

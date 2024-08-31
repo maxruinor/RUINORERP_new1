@@ -9,6 +9,7 @@ namespace RUINORERP.Global.CustomAttribute
     /// <summary>
     /// 动态添加的扩展属性标记
     /// </summary>
+    [Serializable]
     [AttributeUsage(AttributeTargets.Property, Inherited = true)]
     public class AdvExtQueryAttribute : Attribute
     {
@@ -37,6 +38,7 @@ namespace RUINORERP.Global.CustomAttribute
     /// <summary>
     /// 查询字段
     /// </summary>
+    [Serializable]
     [AttributeUsage(AttributeTargets.Property, Inherited = true)]
     public class AdvQueryAttribute : Attribute
     {

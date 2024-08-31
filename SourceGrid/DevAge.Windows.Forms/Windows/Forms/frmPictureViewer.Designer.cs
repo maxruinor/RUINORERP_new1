@@ -34,6 +34,7 @@
             // 
             // PictureBoxViewer
             // 
+            this.PictureBoxViewer.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.PictureBoxViewer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.PictureBoxViewer.Location = new System.Drawing.Point(0, 0);
             this.PictureBoxViewer.Name = "PictureBoxViewer";
@@ -46,9 +47,13 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(732, 698);
             this.Controls.Add(this.PictureBoxViewer);
+            this.DoubleBuffered = true;
+            this.MinimizeBox = false;
             this.Name = "frmPictureViewer";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "frmPictureViewer";
             ((System.ComponentModel.ISupportInitialize)(this.PictureBoxViewer)).EndInit();
             this.ResumeLayout(false);

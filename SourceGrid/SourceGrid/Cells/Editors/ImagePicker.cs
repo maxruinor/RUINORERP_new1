@@ -10,6 +10,7 @@ using System.Collections.Generic;
 
 
 
+
 namespace SourceGrid.Cells.Editors
 {
     /// <summary>
@@ -29,6 +30,7 @@ namespace SourceGrid.Cells.Editors
         }
         #endregion
 
+        public System.Drawing.Image PickerImage { get; set; }
 
         #region 添加了右键菜单
         public bool Use是否使用内置右键功能 { get; private set; } = true;
@@ -164,8 +166,15 @@ namespace SourceGrid.Cells.Editors
 
         private void ContextMenu_查看大图(object sender, EventArgs e)
         {
-            DevAge.Windows.Forms.frmPictureViewer frm = new DevAge.Windows.Forms.frmPictureViewer();
-            frm.ShowDialog();
+            if (PickerImage != null)
+            {
+                DevAge.Windows.Forms.frmPictureViewer frm = new DevAge.Windows.Forms.frmPictureViewer();
+
+
+                frm.PictureBoxViewer.Image = PickerImage;
+                frm.ShowDialog();
+            }
+
         }
         #endregion
 
@@ -181,7 +190,7 @@ namespace SourceGrid.Cells.Editors
             DevAge.Windows.Forms.TextBoxUITypeEditor editor = new DevAge.Windows.Forms.TextBoxUITypeEditor();
             editor.BorderStyle = DevAge.Drawing.BorderStyle.None;
             editor.Validator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
-            //editor.ContextMenuStrip = GetContextMenu();
+            editor.ContextMenuStrip = GetContextMenu();
 
             return editor;
         }
@@ -228,7 +237,7 @@ namespace SourceGrid.Cells.Editors
                     MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     // 将压缩后的图片转换为 byte[] 数组
                     byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
-
+                    PickerImage = img;
                     // 在这里将 compressedImageBytes 保存到数据库中
                     return compressedImageBytes;
                     // DevAge.ComponentModel.Validator.ValidatorTypeConverter imageValidator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
@@ -241,7 +250,7 @@ namespace SourceGrid.Cells.Editors
                     return imageValidator.ValueToObject(val, typeof(byte[]));
                 }
                 #endregion
-
+             
 
                 //Stranamente questo codice in caso di ico va in eccezione!
                 //				System.Drawing.Image img = (System.Drawing.Image)val;
@@ -253,7 +262,15 @@ namespace SourceGrid.Cells.Editors
                 //				}
             }
             else if (val is byte[])
+            {
+                byte[] bytes = Control.Value as byte[];
+                using (MemoryStream ms = new MemoryStream(bytes))
+                {
+                    ms.Write(bytes, 0, bytes.Length);
+                    PickerImage = System.Drawing.Image.FromStream(ms, true);
+                }
                 return val;
+            }
             else
                 throw new SourceGridException("Invalid edited value, expected byte[] or Image");
         }

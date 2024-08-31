@@ -293,7 +293,7 @@ namespace RUINORERP.UI
             timer1.Start();
             tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
             List<tb_Company> company = await companyController.QueryAsync();
-            Version = "2024-08-30-1";
+            Version = "2024-08-31-1";
             if (company != null)
             {
                 this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + Version;
@@ -1834,7 +1834,7 @@ namespace RUINORERP.UI
         [DllImport("user32.dll")]
         static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
         /// <summary>
-        /// 取得最后一次输入时间
+        /// 取得最后一次输入时间 ms(毫秒)
         /// </summary>
         /// <returns></returns>
         public static long GetLastInputTime()

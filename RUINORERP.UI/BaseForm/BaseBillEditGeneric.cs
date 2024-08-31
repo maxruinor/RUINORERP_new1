@@ -48,6 +48,9 @@ using MySqlX.XDevAPI.Common;
 using RUINORERP.Business.Security;
 using RUINORERP.UI.CommonUI;
 using ImageHelper = RUINORERP.UI.Common.ImageHelper;
+using Netron.GraphLib;
+using Newtonsoft.Json;
+using RUINORERP.UI.SS;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -2210,7 +2213,30 @@ namespace RUINORERP.UI.BaseForm
 
         private void BaseBillEditGeneric_Load(object sender, EventArgs e)
         {
+            timerAutoSave.Start();
+        }
 
+        private void timerAutoSave_Tick(object sender, EventArgs e)
+        {
+            //自动保存的时间秒数  30秒
+            if (MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime > 30000 && !MainForm.Instance.AppContext.IsOnline)
+            {
+                if (EditEntity != null)
+                {
+                    #region 自动保存单据数据  后面优化可以多个单?限制5个？
+                    string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data_", CurMenuInfo.CaptionCN);
+                    System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
+                    //判断目录是否存在
+                    if (!System.IO.Directory.Exists(fi.Directory.FullName))
+                    {
+                        System.IO.Directory.CreateDirectory(fi.Directory.FullName);
+                    }
+                    string json = JsonConvert.SerializeObject(EditEntity);
+                    File.WriteAllText(PathwithFileName, json);
+                    MainForm.Instance.uclog.AddLog("缓存数据保存成功。");
+                    #endregion
+                }
+            }
         }
     }
 }

@@ -28,6 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            this.timerAutoSave = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             this.SuspendLayout();
@@ -36,6 +38,11 @@
             // 
             this.errorProviderForAllInput.BlinkRate = 1000;
             this.errorProviderForAllInput.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
+            // 
+            // timerAutoSave
+            // 
+            this.timerAutoSave.Interval = 1000;
+            this.timerAutoSave.Tick += new System.EventHandler(this.timerAutoSave_Tick);
             // 
             // BaseBillEditGeneric
             // 
@@ -52,5 +59,7 @@
         }
 
         #endregion
+
+        private System.Windows.Forms.Timer timerAutoSave;
     }
 }

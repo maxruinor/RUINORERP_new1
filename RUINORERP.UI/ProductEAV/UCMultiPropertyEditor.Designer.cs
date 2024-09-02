@@ -142,8 +142,8 @@
             // kryptonSplitContainer生成组合.Panel2
             // 
             this.kryptonSplitContainer生成组合.Panel2.Controls.Add(this.flowLayoutPanel1);
-            this.kryptonSplitContainer生成组合.Size = new System.Drawing.Size(966, 149);
-            this.kryptonSplitContainer生成组合.SplitterDistance = 56;
+            this.kryptonSplitContainer生成组合.Size = new System.Drawing.Size(966, 271);
+            this.kryptonSplitContainer生成组合.SplitterDistance = 101;
             this.kryptonSplitContainer生成组合.TabIndex = 135;
             // 
             // btnClear
@@ -189,16 +189,15 @@
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(966, 88);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(966, 165);
             this.flowLayoutPanel1.TabIndex = 0;
             // 
             // listView属性显示
             // 
-            this.listView属性显示.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listView属性显示.HideSelection = false;
             this.listView属性显示.Location = new System.Drawing.Point(3, 3);
             this.listView属性显示.Name = "listView属性显示";
-            this.listView属性显示.Size = new System.Drawing.Size(960, 0);
+            this.listView属性显示.Size = new System.Drawing.Size(960, 159);
             this.listView属性显示.TabIndex = 1;
             this.listView属性显示.UseCompatibleStateImageBehavior = false;
             // 
@@ -206,7 +205,7 @@
             // 
             this.kryptonGroupBoxListView.CaptionVisible = false;
             this.kryptonGroupBoxListView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonGroupBoxListView.Location = new System.Drawing.Point(3, 9);
+            this.kryptonGroupBoxListView.Location = new System.Drawing.Point(3, 168);
             this.kryptonGroupBoxListView.Name = "kryptonGroupBoxListView";
             this.kryptonGroupBoxListView.Size = new System.Drawing.Size(777, 0);
             this.kryptonGroupBoxListView.TabIndex = 5;
@@ -240,6 +239,7 @@
             this.dataGridViewProd.UseSelectedColumn = false;
             this.dataGridViewProd.Use是否使用内置右键功能 = false;
             this.dataGridViewProd.XmlFileName = "";
+            this.dataGridViewProd.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView1_CellFormatting);
             this.dataGridViewProd.DoubleClick += new System.EventHandler(this.dataGridViewProd_DoubleClick);
             // 
             // btnCancel
@@ -484,7 +484,7 @@
             // 
             this.kryptonSplitContainer下.Panel2.Controls.Add(this.kryptonPanel3);
             this.kryptonSplitContainer下.Size = new System.Drawing.Size(966, 564);
-            this.kryptonSplitContainer下.SplitterDistance = 149;
+            this.kryptonSplitContainer下.SplitterDistance = 271;
             this.kryptonSplitContainer下.TabIndex = 139;
             // 
             // kryptonPanel3
@@ -494,7 +494,7 @@
             this.kryptonPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel3.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel3.Name = "kryptonPanel3";
-            this.kryptonPanel3.Size = new System.Drawing.Size(966, 410);
+            this.kryptonPanel3.Size = new System.Drawing.Size(966, 288);
             this.kryptonPanel3.TabIndex = 2;
             // 
             // grid1
@@ -506,7 +506,7 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(966, 409);
+            this.grid1.Size = new System.Drawing.Size(966, 287);
             this.grid1.TabIndex = 3;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
@@ -514,7 +514,7 @@
             // groupLine5
             // 
             this.groupLine5.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine5.Location = new System.Drawing.Point(0, 409);
+            this.groupLine5.Location = new System.Drawing.Point(0, 287);
             this.groupLine5.Name = "groupLine5";
             this.groupLine5.Size = new System.Drawing.Size(966, 1);
             this.groupLine5.TabIndex = 2;
@@ -550,7 +550,7 @@
             // 
             this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 26);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             // 
             // UCMultiPropertyEditor
             // 

@@ -33,6 +33,39 @@ namespace RUINORERP.Business
 
     public partial class tb_FM_ExpenseClaimController<T> : BaseController<T> where T : class
     {
+        public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
+        {
+            ReturnResults<T> rmrs = new ReturnResults<T>();
+            tb_FM_ExpenseClaim entity = ObjectEntity as tb_FM_ExpenseClaim;
+
+
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                entity.DataStatus = (int)DataStatus.草稿;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+                //只更新指定列
+                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ExpenseClaim>(entity).ExecuteCommandAsync();
+                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+                // 注意信息的完整性
+                _unitOfWorkManage.CommitTran();
+                rmrs.Succeeded = true;
+                rmrs.ReturnObject = entity as T;
+           
+                return rmrs;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex, "事务回滚");
+                rmrs.ErrorMsg = ex.Message;
+                return rmrs;
+            }
+
+        }
 
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
@@ -44,23 +77,17 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-               // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
-                //后面已经修改为
-             //   entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ExpenseClaim>(entity).ExecuteCommandAsync();
-                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
-               // _logger.Info(approvalEntity.bizName + "审核事务成功");
                 return rmrs;
             }
             catch (Exception ex)

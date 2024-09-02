@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:49:17
+// 时间：09/02/2024 18:57:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 系统配置表
     /// </summary>
     [Serializable()]
+    [Description("tb_SystemConfig")]
     [SugarTable("tb_SystemConfig")]
     public partial class tb_SystemConfig: BaseEntity, ICloneable
     {
@@ -120,33 +121,31 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _IsDebug = false;
-        /// <summary>
-        /// 调试模式
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsDebug", ColDesc = "调试模式")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsDebug", IsNullable = false, ColumnDescription = "调试模式")]
-        public bool IsDebug
-        {
-            get { return _IsDebug; }
-            set
-            {
-                SetProperty(ref _IsDebug, value);
-            }
-        }
-
-
         private bool _ShowDebugInfo= false;
         /// <summary>
         /// 显示调试信息
         /// </summary>
         [AdvQueryAttribute(ColName = "ShowDebugInfo",ColDesc = "显示调试信息")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ShowDebugInfo" ,IsNullable = false,ColumnDescription = "显示调试信息")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ShowDebugInfo" ,IsNullable = false,ColumnDescription = "显示调试信息" )]
         public bool ShowDebugInfo
         { 
             get{return _ShowDebugInfo;}
             set{
             SetProperty(ref _ShowDebugInfo, value);
+            }
+        }
+
+        private bool _OwnershipControl= false;
+        /// <summary>
+        /// 数据归属控制
+        /// </summary>
+        [AdvQueryAttribute(ColName = "OwnershipControl",ColDesc = "数据归属控制")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "OwnershipControl" ,IsNullable = false,ColumnDescription = "数据归属控制" )]
+        public bool OwnershipControl
+        { 
+            get{return _OwnershipControl;}
+            set{
+            SetProperty(ref _OwnershipControl, value);
             }
         }
 
@@ -197,7 +196,7 @@ namespace RUINORERP.Model
         /// 金额精度自动补零
         /// </summary>
         [AdvQueryAttribute(ColName = "CurrencyDataPrecisionAutoAddZero",ColDesc = "金额精度自动补零")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "CurrencyDataPrecisionAutoAddZero" ,IsNullable = true,ColumnDescription = "金额精度自动补零")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "CurrencyDataPrecisionAutoAddZero" ,IsNullable = false,ColumnDescription = "金额精度自动补零" )]
         public bool CurrencyDataPrecisionAutoAddZero
         { 
             get{return _CurrencyDataPrecisionAutoAddZero;}
@@ -211,7 +210,7 @@ namespace RUINORERP.Model
         /// 是否启用条码
         /// </summary>
         [AdvQueryAttribute(ColName = "UseBarCode",ColDesc = "是否启用条码")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "UseBarCode" ,IsNullable = false,ColumnDescription = "是否启用条码")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "UseBarCode" ,IsNullable = false,ColumnDescription = "是否启用条码" )]
         public bool UseBarCode
         { 
             get{return _UseBarCode;}
@@ -220,83 +219,89 @@ namespace RUINORERP.Model
             }
         }
 
-
-        private bool _QueryPageLayoutCustomize = false;
+        private bool _QueryPageLayoutCustomize;
         /// <summary>
-        /// 采购业务范围限制
+        /// 查询页布局自定义
         /// </summary>
-        [AdvQueryAttribute(ColName = "QueryPageLayoutCustomize", ColDesc = "查询页布局自定义")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "QueryPageLayoutCustomize", IsNullable = false, ColumnDescription = "查询页布局自定义")]
+        [AdvQueryAttribute(ColName = "QueryPageLayoutCustomize",ColDesc = "查询页布局自定义")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "QueryPageLayoutCustomize" ,IsNullable = false,ColumnDescription = "查询页布局自定义" )]
         public bool QueryPageLayoutCustomize
-        {
-            get { return _QueryPageLayoutCustomize; }
-            set
-            {
-                SetProperty(ref _QueryPageLayoutCustomize, value);
+        { 
+            get{return _QueryPageLayoutCustomize;}
+            set{
+            SetProperty(ref _QueryPageLayoutCustomize, value);
             }
         }
 
-        private bool _QueryGridColCustomize = false;
-        /// <summary>
-        /// 查询表格列自定义
-        /// </summary>
-        [AdvQueryAttribute(ColName = "QueryGridColCustomize", ColDesc = "查询表格列自定义")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "QueryGridColCustomize", IsNullable = false, ColumnDescription = "查询表格列自定义")]
-        public bool QueryGridColCustomize
-        {
-            get { return _QueryGridColCustomize; }
-            set
-            {
-                SetProperty(ref _QueryGridColCustomize, value);
-            }
-        }
-
-
-        private bool _BillGridColCustomize = false;
-        /// <summary>
-        /// 查询表格列自定义
-        /// </summary>
-        [AdvQueryAttribute(ColName = "BillGridColCustomize", ColDesc = "查询表格列自定义")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "BillGridColCustomize", IsNullable = false, ColumnDescription = "查询表格列自定义")]
-        public bool BillGridColCustomize
-        {
-            get { return _BillGridColCustomize; }
-            set
-            {
-                SetProperty(ref _BillGridColCustomize, value);
-            }
-        }
-
-        private decimal _AutoApprovedSaleOrderAmount = ((0));
+        private decimal _AutoApprovedSaleOrderAmount;
         /// <summary>
         /// 自动审核销售订单金额
         /// </summary>
-        [AdvQueryAttribute(ColName = "AutoApprovedSaleOrderAmount", ColDesc = "自动审核销售订单金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "AutoApprovedSaleOrderAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "自动审核销售订单金额")]
+        [AdvQueryAttribute(ColName = "AutoApprovedSaleOrderAmount",ColDesc = "自动审核销售订单金额")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedSaleOrderAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "自动审核销售订单金额" )]
         public decimal AutoApprovedSaleOrderAmount
-        {
-            get { return _AutoApprovedSaleOrderAmount; }
-            set
-            {
-                SetProperty(ref _AutoApprovedSaleOrderAmount, value);
+        { 
+            get{return _AutoApprovedSaleOrderAmount;}
+            set{
+            SetProperty(ref _AutoApprovedSaleOrderAmount, value);
             }
         }
-        private decimal _AutoApprovedPurOrderAmount = ((0));
+
+        private decimal _AutoApprovedPurOrderAmount;
         /// <summary>
         /// 自动审核采购订单金额
         /// </summary>
-        [AdvQueryAttribute(ColName = "AutoApprovedPurOrderAmount", ColDesc = "自动审核采购订单金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "AutoApprovedPurOrderAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "自动审核采购订单金额")]
+        [AdvQueryAttribute(ColName = "AutoApprovedPurOrderAmount",ColDesc = "自动审核采购订单金额")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedPurOrderAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "自动审核采购订单金额" )]
         public decimal AutoApprovedPurOrderAmount
-        {
-            get { return _AutoApprovedPurOrderAmount; }
-            set
-            {
-                SetProperty(ref _AutoApprovedPurOrderAmount, value);
+        { 
+            get{return _AutoApprovedPurOrderAmount;}
+            set{
+            SetProperty(ref _AutoApprovedPurOrderAmount, value);
             }
         }
 
+        private bool _QueryGridColCustomize;
+        /// <summary>
+        /// 查询表格列自定义
+        /// </summary>
+        [AdvQueryAttribute(ColName = "QueryGridColCustomize",ColDesc = "查询表格列自定义")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "QueryGridColCustomize" ,IsNullable = false,ColumnDescription = "查询表格列自定义" )]
+        public bool QueryGridColCustomize
+        { 
+            get{return _QueryGridColCustomize;}
+            set{
+            SetProperty(ref _QueryGridColCustomize, value);
+            }
+        }
 
+        private bool _BillGridColCustomize;
+        /// <summary>
+        /// 单据表格列自定义
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BillGridColCustomize",ColDesc = "单据表格列自定义")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "BillGridColCustomize" ,IsNullable = false,ColumnDescription = "单据表格列自定义" )]
+        public bool BillGridColCustomize
+        { 
+            get{return _BillGridColCustomize;}
+            set{
+            SetProperty(ref _BillGridColCustomize, value);
+            }
+        }
+
+        private bool _IsDebug;
+        /// <summary>
+        /// 调试模式
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsDebug",ColDesc = "调试模式")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsDebug" ,IsNullable = false,ColumnDescription = "调试模式" )]
+        public bool IsDebug
+        { 
+            get{return _IsDebug;}
+            set{
+            SetProperty(ref _IsDebug, value);
+            }
+        }
 
         #endregion
 
@@ -308,8 +313,8 @@ namespace RUINORERP.Model
 
 
 
-        //如果为false,则不可以。
-        private bool PK_FK_ID_Check()
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;

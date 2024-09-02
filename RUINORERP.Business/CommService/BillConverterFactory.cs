@@ -270,6 +270,11 @@ namespace RUINORERP.Business.CommService
                     cbd.BillID = Packing.Pack_ID;
                     cbd.BillNo = Packing.PackagingName;
                     break;
+                case BizType.费用报销单:
+                    var FM_ExpenseClaim = Entity as tb_FM_ExpenseClaim;
+                    cbd.BillID = FM_ExpenseClaim.ClaimMainID;
+                    cbd.BillNo = FM_ExpenseClaim.ClaimNo;
+                    break;
                 /*
             case BizType.托外加工单:
                 var Return = Entity as tb_Return;

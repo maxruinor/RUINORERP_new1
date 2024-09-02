@@ -35,6 +35,7 @@
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.chk创建角色属性 = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonGroupBox角色属性 = new Krypton.Toolkit.KryptonGroupBox();
+            this.chkDataBoardUnits = new RUINOR.WinFormsUI.ChkComboBox.CheckBoxComboBox();
             this.kryptonLabel5 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
             this.chk启用责任人独占 = new Krypton.Toolkit.KryptonCheckBox();
@@ -66,7 +67,8 @@
             this.txtRoleName = new Krypton.Toolkit.KryptonTextBox();
             this.lblDesc = new Krypton.Toolkit.KryptonLabel();
             this.txtDesc = new Krypton.Toolkit.KryptonTextBox();
-            this.chkDataBoardUnits = new RUINOR.WinFormsUI.ChkComboBox.CheckBoxComboBox();
+            this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
+            this.chkOwnershipControl = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -126,6 +128,8 @@
             // 
             // kryptonGroupBox角色属性.Panel
             // 
+            this.kryptonGroupBox角色属性.Panel.Controls.Add(this.kryptonLabel9);
+            this.kryptonGroupBox角色属性.Panel.Controls.Add(this.chkOwnershipControl);
             this.kryptonGroupBox角色属性.Panel.Controls.Add(this.chkDataBoardUnits);
             this.kryptonGroupBox角色属性.Panel.Controls.Add(this.kryptonLabel5);
             this.kryptonGroupBox角色属性.Panel.Controls.Add(this.kryptonLabel4);
@@ -158,6 +162,18 @@
             this.kryptonGroupBox角色属性.TabIndex = 9;
             this.kryptonGroupBox角色属性.Values.Description = "如为空则默认为系统级设置，且只作用于第一个角色组";
             this.kryptonGroupBox角色属性.Values.Heading = "角色属性";
+            // 
+            // chkDataBoardUnits
+            // 
+            checkBoxProperties1.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.chkDataBoardUnits.CheckBoxProperties = checkBoxProperties1;
+            this.chkDataBoardUnits.DisplayMemberSingleItem = "";
+            this.chkDataBoardUnits.FormattingEnabled = true;
+            this.chkDataBoardUnits.Location = new System.Drawing.Point(153, 150);
+            this.chkDataBoardUnits.MultiChoiceResults = ((System.Collections.Generic.List<object>)(resources.GetObject("chkDataBoardUnits.MultiChoiceResults")));
+            this.chkDataBoardUnits.Name = "chkDataBoardUnits";
+            this.chkDataBoardUnits.Size = new System.Drawing.Size(497, 20);
+            this.chkDataBoardUnits.TabIndex = 38;
             // 
             // kryptonLabel5
             // 
@@ -405,17 +421,21 @@
             this.txtDesc.Size = new System.Drawing.Size(494, 53);
             this.txtDesc.TabIndex = 6;
             // 
-            // chkDataBoardUnits
+            // kryptonLabel9
             // 
-            checkBoxProperties1.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.chkDataBoardUnits.CheckBoxProperties = checkBoxProperties1;
-            this.chkDataBoardUnits.DisplayMemberSingleItem = "";
-            this.chkDataBoardUnits.FormattingEnabled = true;
-            this.chkDataBoardUnits.Location = new System.Drawing.Point(153, 150);
-            this.chkDataBoardUnits.MultiChoiceResults = ((System.Collections.Generic.List<object>)(resources.GetObject("chkDataBoardUnits.MultiChoiceResults")));
-            this.chkDataBoardUnits.Name = "chkDataBoardUnits";
-            this.chkDataBoardUnits.Size = new System.Drawing.Size(497, 20);
-            this.chkDataBoardUnits.TabIndex = 38;
+            this.kryptonLabel9.Location = new System.Drawing.Point(540, 116);
+            this.kryptonLabel9.Name = "kryptonLabel9";
+            this.kryptonLabel9.Size = new System.Drawing.Size(88, 20);
+            this.kryptonLabel9.TabIndex = 189;
+            this.kryptonLabel9.Values.Text = "数据归属控制";
+            // 
+            // chkOwnershipControl
+            // 
+            this.chkOwnershipControl.Location = new System.Drawing.Point(631, 120);
+            this.chkOwnershipControl.Name = "chkOwnershipControl";
+            this.chkOwnershipControl.Size = new System.Drawing.Size(19, 13);
+            this.chkOwnershipControl.TabIndex = 190;
+            this.chkOwnershipControl.Values.Text = "";
             // 
             // UCRoleInfoEdit
             // 
@@ -476,5 +496,7 @@
         private Krypton.Toolkit.KryptonCheckBox chk启用责任人独占;
         private Krypton.Toolkit.KryptonLabel kryptonLabel5;
         private RUINOR.WinFormsUI.ChkComboBox.CheckBoxComboBox chkDataBoardUnits;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel9;
+        private Krypton.Toolkit.KryptonCheckBox chkOwnershipControl;
     }
 }

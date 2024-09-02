@@ -19,6 +19,7 @@ using RUINORERP.UI.UserCenter.DataParts;
 using RUINORERP.Common.Extensions;
 using System.Collections;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using Netron.GraphLib;
 
 namespace RUINORERP.UI.BI
 {
@@ -127,7 +128,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<tb_RolePropertyConfig>(propertyConfig, t => t.QueryPageLayoutCustomize, chkQueryPageLayoutCustomize, false);
             DataBindingHelper.BindData4CheckBox<tb_RolePropertyConfig>(propertyConfig, t => t.QueryGridColCustomize, chkQueryGridColCustomize, false);
             DataBindingHelper.BindData4CheckBox<tb_RolePropertyConfig>(propertyConfig, t => t.BillGridColCustomize, chkBillGridColCustomize, false);
-
+            DataBindingHelper.BindData4CheckBox<tb_RolePropertyConfig>(propertyConfig, t => t.OwnershipControl, chkOwnershipControl, false);
             //DataBindingHelper.InitDataToCmbChkWithCondition<tb_RolePropertyConfig>(propertyConfig, t => t.DataBoardUnits, chkDataBoardUnits, BindDataType4TextBox.Text, false);
             #region chkDataBoardUnits 绑定
             chkDataBoardUnits.Items.Clear();

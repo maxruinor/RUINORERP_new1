@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/25/2024 12:31:34
+// 时间：09/02/2024 19:07:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -146,6 +146,20 @@ namespace RUINORERP.Model
             get{return _ShowDebugInfo;}
             set{
             SetProperty(ref _ShowDebugInfo, value);
+            }
+        }
+
+        private bool _OwnershipControl= false;
+        /// <summary>
+        /// 数据归属控制
+        /// </summary>
+        [AdvQueryAttribute(ColName = "OwnershipControl",ColDesc = "数据归属控制")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "OwnershipControl" ,IsNullable = false,ColumnDescription = "数据归属控制" )]
+        public bool OwnershipControl
+        { 
+            get{return _OwnershipControl;}
+            set{
+            SetProperty(ref _OwnershipControl, value);
             }
         }
 

@@ -99,6 +99,29 @@ namespace RUINORERP.Business.Security
         }
 
 
+
+        /// <summary>
+        /// 获取角色的数据归属控制权，如果为真时则只能看到自己负责的数据
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns>不限制返回false</returns>
+        public static bool GetOwnershipControl(ApplicationContext context)
+        {
+            if (context.IsSuperUser)
+            {
+                return false;
+            }
+            //如果对应的权限组没有配置，则使用系统级的默认值
+            if (context.rolePropertyConfig == null)
+            {
+                return context.SysConfig.OwnershipControl;
+            }
+            else
+            {
+                return context.rolePropertyConfig.OwnershipControl;
+            }
+        }
+
         /// <summary>
         /// 获取角色的采购范围限制GetPurchsaeBizLimitedAuthorization
         /// </summary>

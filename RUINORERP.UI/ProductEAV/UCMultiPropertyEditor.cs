@@ -62,6 +62,8 @@ namespace RUINORERP.UI.ProductEAV
 
         private void UCMultiPropertyEditor_Load(object sender, EventArgs e)
         {
+            prodpropValueList = mcPropertyValue.Query();
+            prodpropList = mcProperty.Query();
             //DataBindingHelper.BindData4CmbByEnumData<tb_Prod>(entity, k => k.PropertyType, cmbPropertyType);
             DataBindingHelper.InitDataToCmb<tb_ProdProperty>(p => p.Property_ID, t => t.PropertyName, cmb属性);
             dataGridViewProd.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -71,7 +73,7 @@ namespace RUINORERP.UI.ProductEAV
             dataGridViewProd.DataSource = null;
             bindingSourcProperty.DataSource = new List<tb_Prod>();
             dataGridViewProd.DataSource = bindingSourcProperty;
-
+                  
             LoadGrid1();
         }
 
@@ -173,7 +175,10 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
         }
+        List<tb_ProdProperty> prodpropList = new List<tb_ProdProperty>();
         List<tb_ProdPropertyValue> prodpropValueList = new List<tb_ProdPropertyValue>();
+        tb_ProdPropertyController<tb_ProdProperty> mcProperty = Startup.GetFromFac<tb_ProdPropertyController<tb_ProdProperty>>();
+        tb_ProdPropertyValueController<tb_ProdPropertyValue> mcPropertyValue = Startup.GetFromFac<tb_ProdPropertyValueController<tb_ProdPropertyValue>>();
 
         private ConcurrentDictionary<string, string> propertyEavList = new ConcurrentDictionary<string, string>();
 
@@ -567,15 +572,14 @@ namespace RUINORERP.UI.ProductEAV
                     propertyEavList.TryAdd(ppv.Property_ID.ToString(), names);
                 }
             }
-            if (grid1.Rows.Count == 0)
-            {
-               // BindToSkulistGrid(new List<Eav_ProdDetails>());
+         
+                // BindToSkulistGrid(new List<Eav_ProdDetails>());
 
                 if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
                 {
                     sgh1.LoadItemDataToGrid<tb_ProdDetail>(grid1, sgd1, EditEntity.tb_ProdDetails, c => c.ProdDetailID);
                 }
-            }
+           
 
 
             #endregion
@@ -591,7 +595,7 @@ namespace RUINORERP.UI.ProductEAV
             AttrGoups.Clear();
             propertyEavList.Clear();
             //contextMenuStrip1.Items.Clear();
-             
+
             #region 单属性
 
             //ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));// EnumHelper.GetEnumByString<ProductAttributeType>(cmbPropertyType.SelectedItem.ToString());
@@ -626,11 +630,62 @@ namespace RUINORERP.UI.ProductEAV
             #endregion
         }
 
+        private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
+            if (!dataGridViewProd.Columns[e.ColumnIndex].Visible)
+            {
+                return;
+            }
+            if (e.Value == null)
+            {
+                e.Value = "";
+                return;
+            }
+            //固定字典值显示
+            string colDbName = dataGridViewProd.Columns[e.ColumnIndex].Name;
+
+            //动态字典值显示
+            string colName = UIHelper.ShowGridColumnsNameValue<tb_Prod>(colDbName, e.Value);
+            if (!string.IsNullOrEmpty(colName))
+            {
+                e.Value = colName;
+            }
+
+            //图片特殊处理
+            if (dataGridViewProd.Columns[e.ColumnIndex].Name == "Images")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    if (image != null)
+                    {
+                        //缩略图 这里用缓存 ?
+                      //  Image thumbnailthumbnail = this.thumbnail(image, 100, 100);
+                       // e.Value = thumbnailthumbnail;
+                    }
+
+                }
+            }
+
+            //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
+
+        }
+
+
         private void dataGridViewProd_DoubleClick(object sender, EventArgs e)
         {
-            if (dataGridViewProd.SelectedRows.Count > 0)
+            if (dataGridViewProd.CurrentRow != null)
             {
                 EditEntity = dataGridViewProd.CurrentRow.DataBoundItem as tb_Prod;
+                if (EditEntity != null)
+                {
+                    if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
+                    {
+                        sgh1.LoadItemDataToGrid<tb_ProdDetail>(grid1, sgd1, EditEntity.tb_ProdDetails, c => c.ProdDetailID);
+                    }
+                }
             }
 
         }

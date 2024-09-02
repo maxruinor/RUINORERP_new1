@@ -65,6 +65,8 @@
             this.chkDepartBizLimited = new Krypton.Toolkit.KryptonCheckBox();
             this.lblPurchsaeBizLimited = new Krypton.Toolkit.KryptonLabel();
             this.chkPurchsaeBizLimited = new Krypton.Toolkit.KryptonCheckBox();
+            this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
+            this.chkOwnershipControl = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -73,6 +75,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel9);
+            this.kryptonPanel1.Controls.Add(this.chkOwnershipControl);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel8);
             this.kryptonPanel1.Controls.Add(this.chkIsDebug);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel7);
@@ -408,6 +412,22 @@
             this.chkPurchsaeBizLimited.TabIndex = 19;
             this.chkPurchsaeBizLimited.Values.Text = "";
             // 
+            // kryptonLabel9
+            // 
+            this.kryptonLabel9.Location = new System.Drawing.Point(96, 140);
+            this.kryptonLabel9.Name = "kryptonLabel9";
+            this.kryptonLabel9.Size = new System.Drawing.Size(88, 20);
+            this.kryptonLabel9.TabIndex = 187;
+            this.kryptonLabel9.Values.Text = "数据归属控制";
+            // 
+            // chkOwnershipControl
+            // 
+            this.chkOwnershipControl.Location = new System.Drawing.Point(184, 144);
+            this.chkOwnershipControl.Name = "chkOwnershipControl";
+            this.chkOwnershipControl.Size = new System.Drawing.Size(19, 13);
+            this.chkOwnershipControl.TabIndex = 188;
+            this.chkOwnershipControl.Values.Text = "";
+            // 
             // UCSystemConfigEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -465,5 +485,7 @@
         private Krypton.Toolkit.KryptonTextBox txtAutoApprovedSaleOrderAmount;
         private Krypton.Toolkit.KryptonLabel kryptonLabel8;
         private Krypton.Toolkit.KryptonCheckBox chkIsDebug;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel9;
+        private Krypton.Toolkit.KryptonCheckBox chkOwnershipControl;
     }
 }

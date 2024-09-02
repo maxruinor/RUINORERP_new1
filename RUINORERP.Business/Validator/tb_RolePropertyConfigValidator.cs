@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/25/2024 12:31:34
+// 时间：09/02/2024 19:07:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -37,7 +37,7 @@ namespace RUINORERP.Business
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.CostCalculationMethod).NotNull().WithMessage("成本方式:不能为空。");
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.DataBoardUnits).MaximumLength(250).WithMessage(":不能超过最大长度,250.");
        	
-           	
+           	        
      }
 
 

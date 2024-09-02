@@ -37,8 +37,9 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.CurrencyDataPrecisionAutoAddZero, chkAutoAddZero, false);
 
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.CheckNegativeInventory, chkCheckNegativeInventory, false);
-            //有默认值
 
+            //有默认值
+            DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.OwnershipControl, chkOwnershipControl, false);
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.ShowDebugInfo, chkShowDebugInfo, false);
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.IsDebug, chkIsDebug, false);
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.SaleBizLimited, chkSaleBizLimited, false);

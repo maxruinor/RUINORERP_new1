@@ -76,11 +76,7 @@ namespace RUINORERP.Business
             {
          
                 _unitOfWorkManage.RollbackTran();
-          
-                if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                {
-                    _logger.Error("事务回滚" + ex.Message);
-                }
+                _logger.Error(ex, "事务回滚");
                 rrs.ErrorMsg = ex.Message;
                 rrs.Succeeded = false;
                 return rrs;

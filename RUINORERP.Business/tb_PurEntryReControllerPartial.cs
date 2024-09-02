@@ -133,10 +133,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                {
-                    _logger.Error("事务回滚" + ex.Message);
-                }
+                _logger.Error(ex, "事务回滚");
                 rs.ErrorMsg = ex.Message;
                 return rs;
             }

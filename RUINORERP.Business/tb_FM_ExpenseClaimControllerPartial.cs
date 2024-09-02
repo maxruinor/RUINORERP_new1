@@ -65,12 +65,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+                
                 _unitOfWorkManage.RollbackTran();
-                if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                {
-                    _logger.Error( "事务回滚" + ex.Message);
-                }
+                _logger.Error(ex, "事务回滚");
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }

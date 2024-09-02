@@ -161,13 +161,10 @@ namespace RUINORERP.Business
             {
        
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
+               
                 rs.Succeeded = false;
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
-                if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                {
-                    _logger.Error("事务回滚" + ex.Message);
-                }
+                _logger.Error(ex, "事务回滚");
                 return rs;
             }
 

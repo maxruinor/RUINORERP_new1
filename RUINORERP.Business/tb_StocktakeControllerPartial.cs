@@ -187,10 +187,9 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-                if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                {
-                    _logger.Error(  "事务回滚" + ex.Message);
-                }
+             
+                    _logger.Error(ex,  "事务回滚");
+             
                 rmsr.ErrorMsg = "事务回滚=>"  + ex.Message;
                 return rmsr;
             }
@@ -330,7 +329,7 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                //_logger.Info(approvalEntity.bizName + "审核事务成功");
+               
                 rmsr.Succeeded = true;
                 rmsr.ReturnObject = entity as T;
                 return rmsr;
@@ -340,8 +339,8 @@ namespace RUINORERP.Business
          
                 _unitOfWorkManage.RollbackTran();
                 rmsr.ErrorMsg = ex.Message;
-                _logger.Error(ex);
-                //  _logger.Error(approvalEntity.bizName + "事务回滚");
+                _logger.Error(ex ,"事务回滚");
+                //  _logger.Error(approvalEntity.bizName +);
                 return rmsr;
             }
 

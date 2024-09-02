@@ -1312,6 +1312,12 @@
       <DependentUpon>frmSelectClassNo.cs</DependentUpon>
     </Compile>
     <Compile Include="ProductEAV\PermutationAndCombination.cs" />
+    <Compile Include="ProductEAV\UCMultiPropertyEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ProductEAV\UCMultiPropertyEditor.Designer.cs">
+      <DependentUpon>UCMultiPropertyEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="ProductEAV\UCProdBundle.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2411,6 +2417,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\frmSelectClassNo.resx">
       <DependentUpon>frmSelectClassNo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProductEAV\UCMultiPropertyEditor.resx">
+      <DependentUpon>UCMultiPropertyEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\UCProdBundle.resx">
       <DependentUpon>UCProdBundle.cs</DependentUpon>

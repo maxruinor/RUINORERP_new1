@@ -107,7 +107,7 @@ namespace RUINORERP.UI.ProductEAV
             this.txtCustomsCode = new Krypton.Toolkit.KryptonTextBox();
             this.lblTag = new Krypton.Toolkit.KryptonLabel();
             this.txtTag = new Krypton.Toolkit.KryptonTextBox();
-            this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonSplitContainerBig = new Krypton.Toolkit.KryptonSplitContainer();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.openFileDialog4Img = new System.Windows.Forms.OpenFileDialog();
@@ -164,12 +164,12 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).BeginInit();
             this.kryptonPanel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
-            this.kryptonSplitContainer1.Panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
-            this.kryptonSplitContainer1.Panel2.SuspendLayout();
-            this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerBig)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerBig.Panel1)).BeginInit();
+            this.kryptonSplitContainerBig.Panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerBig.Panel2)).BeginInit();
+            this.kryptonSplitContainerBig.Panel2.SuspendLayout();
+            this.kryptonSplitContainerBig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).BeginInit();
             this.SuspendLayout();
             // 
@@ -200,7 +200,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage3,
             this.kryptonPageImage,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 2;
+            this.kryptonNavigator1.SelectedIndex = 0;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1024, 603);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -947,25 +947,25 @@ namespace RUINORERP.UI.ProductEAV
             this.txtTag.Size = new System.Drawing.Size(648, 20);
             this.txtTag.TabIndex = 86;
             // 
-            // kryptonSplitContainer1
+            // kryptonSplitContainerBig
             // 
-            this.kryptonSplitContainer1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.kryptonSplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonSplitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.kryptonSplitContainer1.Name = "kryptonSplitContainer1";
-            this.kryptonSplitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.kryptonSplitContainerBig.Cursor = System.Windows.Forms.Cursors.Default;
+            this.kryptonSplitContainerBig.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonSplitContainerBig.Location = new System.Drawing.Point(0, 0);
+            this.kryptonSplitContainerBig.Name = "kryptonSplitContainerBig";
+            this.kryptonSplitContainerBig.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
-            // kryptonSplitContainer1.Panel1
+            // kryptonSplitContainerBig.Panel1
             // 
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonNavigator1);
+            this.kryptonSplitContainerBig.Panel1.Controls.Add(this.kryptonNavigator1);
             // 
-            // kryptonSplitContainer1.Panel2
+            // kryptonSplitContainerBig.Panel2
             // 
-            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnCancel);
-            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnOk);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1024, 678);
-            this.kryptonSplitContainer1.SplitterDistance = 603;
-            this.kryptonSplitContainer1.TabIndex = 1;
+            this.kryptonSplitContainerBig.Panel2.Controls.Add(this.btnCancel);
+            this.kryptonSplitContainerBig.Panel2.Controls.Add(this.btnOk);
+            this.kryptonSplitContainerBig.Size = new System.Drawing.Size(1024, 678);
+            this.kryptonSplitContainerBig.SplitterDistance = 603;
+            this.kryptonSplitContainerBig.TabIndex = 1;
             // 
             // btnCancel
             // 
@@ -1001,7 +1001,7 @@ namespace RUINORERP.UI.ProductEAV
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1024, 678);
-            this.Controls.Add(this.kryptonSplitContainer1);
+            this.Controls.Add(this.kryptonSplitContainerBig);
             this.Name = "frmProductEdit";
             this.Load += new System.EventHandler(this.UCProductEdit_Load);
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
@@ -1058,12 +1058,12 @@ namespace RUINORERP.UI.ProductEAV
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).EndInit();
             this.kryptonPanel2.ResumeLayout(false);
             this.kryptonPanel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).EndInit();
-            this.kryptonSplitContainer1.Panel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).EndInit();
-            this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
-            this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerBig.Panel1)).EndInit();
+            this.kryptonSplitContainerBig.Panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerBig.Panel2)).EndInit();
+            this.kryptonSplitContainerBig.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerBig)).EndInit();
+            this.kryptonSplitContainerBig.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).EndInit();
             this.ResumeLayout(false);
 
@@ -1080,7 +1080,7 @@ namespace RUINORERP.UI.ProductEAV
         private Krypton.Toolkit.KryptonLabel lblNotes;
         private Krypton.Toolkit.KryptonLabel lblis_enabled;
         private Krypton.Toolkit.KryptonPanel kryptonPanel2;
-        private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
+        private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainerBig;
         private Krypton.Toolkit.KryptonButton btnCancel;
         private Krypton.Toolkit.KryptonButton btnOk;
         private Krypton.Toolkit.KryptonLabel lblNo;

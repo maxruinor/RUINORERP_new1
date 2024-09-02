@@ -96,9 +96,10 @@ namespace RUINORERP.UI.ProductEAV
             this.newSumDataGridView产品 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonBOM = new Krypton.Navigator.KryptonPage();
             this.treeListView1 = new System.Windows.Forms.TreeListView();
-            this.columnHeaderSKU = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeaderSKU = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader型号 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -119,7 +120,6 @@ namespace RUINORERP.UI.ProductEAV
             this.箱规ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.按SKU添加箱规ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.columnHeader型号 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -654,7 +654,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // btnQueryForGoods
             // 
-            this.btnQueryForGoods.Location = new System.Drawing.Point(43, 23);
+            this.btnQueryForGoods.Location = new System.Drawing.Point(60, 23);
             this.btnQueryForGoods.Name = "btnQueryForGoods";
             this.btnQueryForGoods.Size = new System.Drawing.Size(92, 36);
             this.btnQueryForGoods.TabIndex = 145;
@@ -828,20 +828,24 @@ namespace RUINORERP.UI.ProductEAV
             this.treeListView1.BeforeCollapse += new System.Windows.Forms.TreeListViewCancelEventHandler(this.treeListView1_BeforeCollapse);
             this.treeListView1.DoubleClick += new System.EventHandler(this.treeListView1_DoubleClick);
             // 
-            // columnHeaderSKU
-            // 
-            this.columnHeaderSKU.Text = "SKU";
-            this.columnHeaderSKU.Width = 102;
-            // 
             // columnHeader1
             // 
             this.columnHeader1.Text = "名称";
             this.columnHeader1.Width = 200;
             // 
+            // columnHeaderSKU
+            // 
+            this.columnHeaderSKU.Text = "SKU";
+            this.columnHeaderSKU.Width = 102;
+            // 
             // columnHeader2
             // 
             this.columnHeader2.Text = "属性";
             this.columnHeader2.Width = 109;
+            // 
+            // columnHeader型号
+            // 
+            this.columnHeader型号.Text = "型号";
             // 
             // columnHeader3
             // 
@@ -975,10 +979,6 @@ namespace RUINORERP.UI.ProductEAV
             this.按SKU添加箱规ToolStripMenuItem.Size = new System.Drawing.Size(230, 22);
             this.按SKU添加箱规ToolStripMenuItem.Text = "按【多属性】添加包装参数";
             this.按SKU添加箱规ToolStripMenuItem.Click += new System.EventHandler(this.按SKU添加箱规ToolStripMenuItem_Click);
-            // 
-            // columnHeader型号
-            // 
-            this.columnHeader型号.Text = "型号";
             // 
             // UCProdQuery
             // 

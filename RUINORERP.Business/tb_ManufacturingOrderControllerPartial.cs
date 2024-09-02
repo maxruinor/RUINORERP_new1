@@ -434,16 +434,16 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.CommitTran();
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
-                _logger.Info("审核事务成功");
+                //_logger.Info("审核事务成功");
                 return rs;
             }
             catch (Exception ex)
             {
                 
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
-                _logger.Error("事务回滚");
+                _logger.Error(ex, "事务回滚" + ex.Message);
+                
                 return rs;
             }
         }

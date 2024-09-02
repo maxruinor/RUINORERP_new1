@@ -169,7 +169,7 @@ namespace RUINORERP.Business.Security
 
 
         /// <summary>
-        /// 
+        /// 显示调试信息，如果错误信息会一直记录，不用判断。这个只是select语句的调试信息  etc
         /// </summary>
         /// <param name="context"></param>
         /// <returns>true才显示</returns>

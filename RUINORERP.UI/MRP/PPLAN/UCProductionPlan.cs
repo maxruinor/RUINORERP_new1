@@ -97,7 +97,11 @@ namespace RUINORERP.UI.MRP.MP
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     entity.PlanDate = System.DateTime.Now;
                     entity.RequirementDate = System.DateTime.Now.AddDays(10);//这是不是一个平均时间。将来可以根据数据优化？
-
+                    if (entity.tb_ProductionPlanDetails != null && entity.tb_ProductionPlanDetails.Count > 0)
+                    {
+                        entity.tb_ProductionPlanDetails.ForEach(c => c.PPID = 0);
+                        entity.tb_ProductionPlanDetails.ForEach(c => c.PPCID = 0);
+                    }
                 }
             }
 

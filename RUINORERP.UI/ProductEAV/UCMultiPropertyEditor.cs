@@ -14,11 +14,16 @@ using System.Windows.Forms;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.UI.Common;
 using System.Collections.Concurrent;
+using RUINORERP.UI.UCSourceGrid;
+using RUINORERP.Model.Dto;
+using RUINORERP.UI.BaseForm;
+using Netron.GraphLib;
+using RUINORERP.Global;
 namespace RUINORERP.UI.ProductEAV
 {
 
     [MenuAttrAssemblyInfo("多属性编辑", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
-    public partial class UCMultiPropertyEditor : UserControl
+    public partial class UCMultiPropertyEditor : UCBaseClass
     {
         public UCMultiPropertyEditor()
         {
@@ -45,15 +50,589 @@ namespace RUINORERP.UI.ProductEAV
             bindingSourcProperty.DataSource = list.ToBindingSortCollection();
         }
         ConcurrentDictionary<string, KeyValuePair<string, bool>> FieldNameList1;
+
+
+        SourceGridDefine sgd1 = null;
+        SourceGridHelper sgh1 = new SourceGridHelper();
+
+        //设计关联列和目标列
+        View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
+        List<View_ProdDetail> list = new List<View_ProdDetail>();
+        List<SourceGridDefineColumnItem> listCols1 = new List<SourceGridDefineColumnItem>();
+
         private void UCMultiPropertyEditor_Load(object sender, EventArgs e)
         {
-            dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            //DataBindingHelper.BindData4CmbByEnumData<tb_Prod>(entity, k => k.PropertyType, cmbPropertyType);
+            DataBindingHelper.InitDataToCmb<tb_ProdProperty>(p => p.Property_ID, t => t.PropertyName, cmb属性);
+            dataGridViewProd.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             FieldNameList1 = UIHelper.GetFieldNameColList(typeof(tb_Prod));
-            dataGridView1.XmlFileName = "UCMultiPropertyEditor_" + typeof(tb_Prod).Name;
-            dataGridView1.FieldNameList = FieldNameList1;
-            dataGridView1.DataSource = null;
+            dataGridViewProd.XmlFileName = "UCMultiPropertyEditor_" + typeof(tb_Prod).Name;
+            dataGridViewProd.FieldNameList = FieldNameList1;
+            dataGridViewProd.DataSource = null;
             bindingSourcProperty.DataSource = new List<tb_Prod>();
-            dataGridView1.DataSource = bindingSourcProperty;
+            dataGridViewProd.DataSource = bindingSourcProperty;
+
+            LoadGrid1();
+        }
+
+        //当前编辑的品
+        tb_Prod EditEntity;
+
+        private void LoadGrid1()
+        { ///显示列表对应的中文
+            //base.FieldNameList = UIHelper.GetFieldNameList<tb_ProdDetail>();
+
+
+            grid1.BorderStyle = BorderStyle.FixedSingle;
+            grid1.Selection.EnableMultiSelection = false;
+
+
+
+            //指定了关键字段ProdDetailID
+            listCols1 = sgh1.GetGridColumns<ProductSharePart, tb_ProdDetail>(c => c.ProdDetailID, false);
+
+            listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
+            listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
+            listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.ProdDetailID);
+            //listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Discount_Price);
+            //listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Discount_Price);
+            //listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Discount_Price);
+            //listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Discount_Price);
+            listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Created_at);
+            listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Created_by);
+            listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Modified_at);
+            listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Modified_by);
+            listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+
+            if (!MainForm.Instance.AppContext.SysConfig.UseBarCode)
+            {
+                listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
+            }
+            // ControlChildColumnsInvisible(listCols1);
+
+
+            //如果库位为只读  暂时只会显示 ID
+            //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
+
+
+            sgd1 = new SourceGridDefine(grid1, listCols1, true);
+            //  sgd1.GridData = EditEntity;
+
+
+
+
+            if (CurMenuInfo.tb_P4Fields != null)
+            {
+                foreach (var item in CurMenuInfo.tb_P4Fields.Where(p => p.tb_fieldinfo.IsChild && !p.IsVisble))
+                {
+                    //listCols.SetCol_NeverVisible(item.tb_fieldinfo.FieldName);
+                    listCols1.SetCol_NeverVisible(item.tb_fieldinfo.FieldName, typeof(tb_ProdDetail));
+                }
+
+            }
+            /*
+            //具体审核权限的人才显示
+            if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
+            {
+
+            }*/
+
+
+            //sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_ProdDetail>(sgd, f => f.BOM_ID, t => t.BOM_ID);
+
+
+            //应该只提供一个结构
+            List<tb_ProdDetail> lines = new List<tb_ProdDetail>();
+            bindingSourceGrid.DataSource = lines;
+            sgd1.BindingSourceLines = bindingSourceGrid;
+
+            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+               .AndIF(true, w => w.CNName.Length > 0)
+              // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
+              .ToExpression();//注意 这一句 不能少
+                              // StringBuilder sb = new StringBuilder();
+            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
+            list = dc.BaseQueryByWhere(exp);
+            sgd1.SetDependencyObject<ProductSharePart, tb_ProdDetail>(list);
+
+            sgd1.HasRowHeader = true;
+            sgh1.InitGrid(grid1, sgd1, true, nameof(tb_ProdDetail));
+        }
+        //定义两个值，为了计算listview的高宽，高是属性的倍数 假设一个属性一行 是50px，有三组则x3
+        //宽取每组属性中值的最多个数,的字长，一个字算20px?
+        int PropertyCounter = 0;
+        private void cmb属性_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cmb属性.SelectedItem is tb_ProdProperty)
+            {
+                tb_ProdProperty ppv = cmb属性.SelectedItem as tb_ProdProperty;
+                if (!listView属性显示.Groups.Cast<ListViewGroup>().Any(i => i.Header == ppv.PropertyName.Trim()))
+                {
+                    btnAddProperty.Enabled = true;
+                }
+            }
+        }
+        List<tb_ProdPropertyValue> prodpropValueList = new List<tb_ProdPropertyValue>();
+
+        private ConcurrentDictionary<string, string> propertyEavList = new ConcurrentDictionary<string, string>();
+
+        /// <summary>
+        /// 保存属性及对应选中的值
+        /// </summary>
+        public ConcurrentDictionary<string, string> PropertyEavList { get => propertyEavList; set => propertyEavList = value; }
+        /// <summary>
+        /// 属性原始组合队列
+        /// </summary>
+        public List<KeyValuePair<long, string[]>> AttrGoups { get => _attrGoups; set => _attrGoups = value; }
+
+        private List<KeyValuePair<long, string[]>> _attrGoups = new List<KeyValuePair<long, string[]>>();
+
+
+        private void btnAddProperty_Click(object sender, EventArgs e)
+        {
+            if (cmb属性.SelectedItem == null)
+            {
+                return;
+            }
+            if (cmb属性.SelectedItem is tb_ProdProperty)
+            {
+                tb_ProdProperty ppv = cmb属性.SelectedItem as tb_ProdProperty;
+                if (ppv.Property_ID == -1)
+                {
+                    return;
+                }
+
+                listView属性显示.ItemCheck -= listView属性显示_ItemCheck;
+                AddProdProperty(ppv, prodpropValueList);
+                listView属性显示.ItemCheck += listView属性显示_ItemCheck;
+                PropertyCounter = listView属性显示.Groups.Count;
+                //PropertyValueMaxCounter=prodpropValueList.Where(w=>w.)
+                ControlBtn(ProductAttributeType.可配置多属性);
+                btnAddProperty.Enabled = false;
+            }
+
+            AttrGoups = GetAttrGoups(listView属性显示);
+            CreateSKUList();
+        }
+        /// <summary>
+        /// 将listview的UI值转为属性组
+        /// </summary>
+        /// <param name="lv"></param>
+        /// <returns></returns>
+        private List<KeyValuePair<long, string[]>> GetAttrGoups(ListView lv)
+        {
+            List<KeyValuePair<long, string[]>> attrGoups = new List<KeyValuePair<long, string[]>>();
+            foreach (ListViewGroup g in lv.Groups)
+            {
+                tb_ProdProperty pp = g.Tag as tb_ProdProperty;
+                long key = pp.Property_ID;
+                string values = string.Empty;
+                foreach (ListViewItem lvitem in g.Items)
+                {
+                    if (lvitem.Checked)
+                    {
+                        values += lvitem.Text + ",";
+                    }
+
+                }
+                values = values.TrimEnd(',');
+                if (values.Trim().Length == 0)
+                {
+                    continue;
+                }
+                KeyValuePair<long, string[]> kvp = new KeyValuePair<long, string[]>(key, values.Split(','));
+                List<KeyValuePair<long, string[]>> exitkvps = attrGoups.Where(t => t.Key == key).ToList();
+                if (exitkvps.Count == 0)
+                {
+                    attrGoups.Add(kvp);
+                }
+                else
+                {
+
+                    KeyValuePair<long, string[]> kvpf = exitkvps.FirstOrDefault();
+                    attrGoups.Remove(kvpf);
+                    attrGoups.Add(kvp);
+
+                }
+            }
+            return attrGoups;
+        }
+
+        private void CreateSKUList()
+        {
+            List<Eav_ProdDetails> propGroups = new List<Eav_ProdDetails>();
+            if (bindingSourceGrid.DataSource is List<Eav_ProdDetails>)
+            {
+                propGroups = bindingSourceGrid.DataSource as List<Eav_ProdDetails>;
+            }
+
+            //如果存在则更新，
+            // List<string> rs = ArrayCombination.Combination4Table(para);
+            //目前在数据库端控制属性值表中的名称不能重复。再通过对应的值名找对应的属性值ID和属性ID
+            List<string> newMix = ArrayCombination.Combination4Table(AttrGoups);
+            ////Intersect 交集，Except 差集，Union 并集 Distinct去重 如果是值类型可以直接用，如果是引用类型则要重写 
+            //参考凯旋游戏中的 差集合等处理再加上排序
+            //按组合先后排序？
+            List<string> oldMix = new List<string>();
+            foreach (Eav_ProdDetails epd in propGroups)
+            {
+                oldMix.Add(epd.GroupName);
+            }
+
+            var Item交集 = newMix.Intersect(oldMix);// 交集
+            //如果交集没有，则认为新的，与旧的完全不一样。把旧的全删除
+            if (Item交集.Count() == 0)
+            {
+                foreach (var old in oldMix)
+                {
+                    //更新删除
+                    Eav_ProdDetails ep = propGroups.Cast<Eav_ProdDetails>().FirstOrDefault(w => w.GroupName == old.Trim());
+                    bindingSourceGrid.Remove(ep);
+                    //将删除的sku行 暂时加入一个临时列表中
+                    // removeSkuList.Add(ep);
+                }
+                //添加新的
+                foreach (var newItem in newMix)
+                {
+                    Eav_ProdDetails ppg = new Eav_ProdDetails();
+                    ppg.GroupName = newItem;
+                    ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                    if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
+                    {
+                        //补码
+                        ppg.BarCode = BizCodeGenerator.Instance.GetBarCode(ppg.SKU, EditEntity.CNName.Substring(0).ToCharArray()[0]);
+                    }
+                    bindingSourceGrid.Add(ppg);
+                }
+            }
+            else
+            {
+                //如果组合少了，则删除？
+                if (newMix.Count < oldMix.Count)
+                {
+                    var Item差集 = oldMix.Except(newMix);
+                    foreach (var item in Item差集)
+                    {
+                        //更新删除
+                        Eav_ProdDetails ep = propGroups.Cast<Eav_ProdDetails>().FirstOrDefault(w => w.GroupName == item.Trim());
+                        bindingSourceGrid.Remove(ep);
+                        //将删除的sku行 暂时加入一个临时列表中
+                        // removeSkuList.Add(ep);
+                    }
+                }
+                else
+                {
+                    var Item差集 = newMix.Except(oldMix);
+                    foreach (var item in Item差集)
+                    {
+                        Eav_ProdDetails ppg = new Eav_ProdDetails();
+                        ppg.GroupName = item;
+                        ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                        bindingSourceGrid.Add(ppg);
+
+                    }
+                }
+
+            }
+        }
+
+
+        private void ControlBtn(ProductAttributeType pat)
+        {
+            switch (pat)
+            {
+                case ProductAttributeType.单属性:
+                    cmb属性.Enabled = false;
+                    btnAddProperty.Enabled = false;
+                    btnClear.Enabled = false;
+                    kryptonGroupBoxListView.Visible = false;
+                    listView属性显示.Width = flowLayoutPanel1.Width;
+                    listView属性显示.Height = flowLayoutPanel1.Height;
+
+                    break;
+                case ProductAttributeType.可配置多属性:
+                    cmb属性.Enabled = true;
+                    btnAddProperty.Enabled = true;
+                    btnClear.Enabled = true;
+                    kryptonGroupBoxListView.Visible = true;
+
+                    grid1.Visible = true;
+                    listView属性显示.Height = 80 * PropertyCounter;
+                    kryptonGroupBoxListView.Height = listView属性显示.Height;
+                    kryptonGroupBoxListView.Width = listView属性显示.Width;
+
+
+                    grid1.Width = flowLayoutPanel1.Width;
+                    grid1.Height = flowLayoutPanel1.Height - kryptonGroupBoxListView.Height;
+
+
+                    break;
+                case ProductAttributeType.捆绑:
+                    break;
+                case ProductAttributeType.虚拟:
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
+        private void listView属性显示_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            #region 思路 与GetAttrGoups(listView属性显示) 不一样，因为选择状态问题
+
+            //attrGoups
+            ListView lv = sender as ListView;
+            if (lv.Items[e.Index].Tag is tb_ProdPropertyValue)
+            {
+                //tb_ProdPropertyValue ci = lv.Items[e.Index].Tag as tb_ProdPropertyValue;
+                CheckState nv = e.NewValue;
+                if (lv.Items[e.Index].Group.Tag is tb_ProdProperty)
+                {
+                    tb_ProdProperty tpp = lv.Items[e.Index].Group.Tag as tb_ProdProperty;
+                    //先找到这个属性组
+                    List<KeyValuePair<long, string[]>> exitkvps = AttrGoups.Where(t => t.Key == tpp.Property_ID).ToList();
+                    if (exitkvps.Count > 0)
+                    {
+                        #region
+
+                        List<string> text = exitkvps[0].Value.ToList();
+                        if (nv == CheckState.Checked)//添加
+                        {
+                            if (!text.Contains(lv.Items[e.Index].Text))
+                            {
+                                text.Add(lv.Items[e.Index].Text);
+                                //联动下拉
+                            }
+                        }
+                        else//取消
+                        {
+                            text.Remove(lv.Items[e.Index].Text);
+                            //联动下拉
+                            #region
+
+                            #endregion
+                        }
+                        KeyValuePair<long, string[]> kvp = new KeyValuePair<long, string[]>(tpp.Property_ID, text.ToArray());
+                        AttrGoups.Remove(exitkvps[0]);
+                        AttrGoups.Add(kvp);
+                        #endregion
+                    }
+                    else
+                    {
+                        //不存在这个情况
+                    }
+
+
+                }
+            }
+
+            #endregion
+
+
+            //编辑时的添加
+            if (listView属性显示.Enabled)
+            {
+                CreateSKUList();
+            }
+        }
+
+
+        /// <summary>    
+        /// 添加右键菜单项   
+        /// </summary>    
+        /// <param name="text">要显示的文字，如果为 - 则显示为分割线</param>    
+        /// <param name="cms">要添加到的子菜单集合</param>    
+        /// <param name="callback">点击时触发的事件</param>    
+        /// <returns>生成的子菜单，如果为分隔条则返回null</returns>    
+        ToolStripMenuItem AddContextMenu(string text, ToolStripItemCollection cms, EventHandler callback)
+        {
+            if (text == "-")
+            {
+                ToolStripSeparator tsp = new ToolStripSeparator();
+                cms.Add(tsp);
+
+                return null;
+            }
+            else if (!string.IsNullOrEmpty(text))
+            {
+                ToolStripMenuItem tsmi = new ToolStripMenuItem(text);// Image.FromFile("图标路径"));
+                tsmi.Name = text;
+                if (callback != null)
+                {
+                    tsmi.Click += callback;
+                }
+                cms.Add(tsmi);
+
+                tsmi.Font = new Font("Arial", 9, FontStyle.Regular); //字体设置   
+                                                                     //tsmi.Image = Image.FromFile("图标路径"); //菜单图标设置   
+
+                return tsmi;
+            }
+            return null;
+        }
+        /// <summary>   
+        /// 菜单事件   
+        /// </summary>   
+        void menuClicked(object sender, EventArgs e)
+        {
+            ToolStripMenuItem stripItem = (ToolStripMenuItem)sender;
+            tb_ProdProperty tpp = stripItem.Tag as tb_ProdProperty;
+            bool isAll = false;
+            if (stripItem.Text.Contains("全选"))
+            {
+                isAll = true;
+            }
+            foreach (ListViewGroup g in listView属性显示.Groups)
+            {
+                tb_ProdProperty pp = g.Tag as tb_ProdProperty;
+                if (pp.Property_ID == tpp.Property_ID)
+                {
+                    foreach (ListViewItem lvitem in g.Items)
+                    {
+
+                        if (lvitem.Checked != isAll)
+                        {
+                            lvitem.Checked = isAll;
+                        }
+
+                    }
+                    break;
+                }
+            }
+
+        }
+        /// <summary>
+        /// 添加产品特性
+        /// </summary>
+        private void AddProdProperty(tb_ProdProperty ppv, List<tb_ProdPropertyValue> listOptionValue)
+        {
+            #region 新增修改式
+            listView属性显示.Visible = true;
+            listView属性显示.CheckBoxes = true;
+
+            listView属性显示.ShowGroups = true;  //记得要设置ShowGroups属性为true（默认是false），否则显示不出分组
+            listView属性显示.View = View.LargeIcon;
+            ImageList imgList = new ImageList();
+            imgList.ImageSize = new Size(1, 25);
+            listView属性显示.SmallImageList = imgList;
+
+            //create goups
+            ListViewGroup lvg = new ListViewGroup();  //创建男生分组
+            lvg.Header = ppv.PropertyName;  //设置组的标题。
+            lvg.Name = ppv.Property_ID.ToString();
+            lvg.Tag = ppv;
+            lvg.HeaderAlignment = HorizontalAlignment.Left;   //设置组标题文本的对齐方式。（默认为Left）
+
+            if (!contextMenuStrip1.Items.ContainsKey("【" + ppv.PropertyName + "】全选"))
+            {
+                //加入分割线 美观一下
+                if (contextMenuStrip1.Items.Count > 0)
+                {
+                    AddContextMenu("-", contextMenuStrip1.Items, menuClicked);
+                    //属性都多了，之前的值全是不需要的
+                    bindingSourceGrid.Clear();
+                }
+                //添加菜单   
+                var yes = AddContextMenu("【" + ppv.PropertyName + "】全选", contextMenuStrip1.Items, menuClicked);
+                yes.Tag = ppv;
+                var no = AddContextMenu("【" + ppv.PropertyName + "】全不选", contextMenuStrip1.Items, menuClicked);
+                no.Tag = ppv;
+            }
+
+            if (!listView属性显示.Groups.Cast<ListViewGroup>().Any(i => i.Header == ppv.PropertyName.Trim()))
+            {
+                listView属性显示.Groups.Add(lvg);
+                string keys = string.Empty;
+                string names = string.Empty;
+                foreach (var item in listOptionValue.Where(w => w.Property_ID == ppv.Property_ID).ToList())
+                {
+                    keys += item.PropertyValueID + ",";
+                    names += item.PropertyValueName + ",";
+                    ListViewItem lvi = new ListViewItem();
+                    // lvi.ImageIndex = i;
+                    lvi.Name = item.PropertyValueID.ToString();
+                    lvi.Tag = item;
+                    lvi.Text = item.PropertyValueName;
+                    lvi.Checked = true;
+                    lvi.ForeColor = Color.Blue;  //设置行颜色
+                    lvg.Items.Add(lvi);   //分组添加子项
+                    listView属性显示.Items.Add(lvi);
+                }
+                keys = keys.Trim(',');
+                names = names.Trim(',');
+                if (!string.IsNullOrEmpty(names))
+                {
+                    propertyEavList.TryAdd(ppv.Property_ID.ToString(), names);
+                }
+            }
+            if (grid1.Rows.Count == 0)
+            {
+               // BindToSkulistGrid(new List<Eav_ProdDetails>());
+
+                if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
+                {
+                    sgh1.LoadItemDataToGrid<tb_ProdDetail>(grid1, sgd1, EditEntity.tb_ProdDetails, c => c.ProdDetailID);
+                }
+            }
+
+
+            #endregion
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            listView属性显示.Items.Clear();
+            listView属性显示.Groups.Clear();
+            listView属性显示.Clear();
+
+            bindingSourceGrid.Clear();
+            AttrGoups.Clear();
+            propertyEavList.Clear();
+            //contextMenuStrip1.Items.Clear();
+             
+            #region 单属性
+
+            //ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));// EnumHelper.GetEnumByString<ProductAttributeType>(cmbPropertyType.SelectedItem.ToString());
+            //switch (pt)
+            //{
+            //    case ProductAttributeType.单属性:
+            //        if (cmb属性.SelectedItem == null)
+            //        {
+            //            //添加单属性时的SKU
+            //            #region
+            //            btnAddProperty.Enabled = false;
+
+            //            //UCSKUlist ucskulist = new UCSKUlist();
+
+            //            //tableLayoutPanel1.Controls.Remove(ucskulist);
+            //            #endregion
+            //        }
+            //        break;
+            //    case ProductAttributeType.可配置多属性:
+            //        btnAddProperty.Enabled = true;
+            //        break;
+            //    case ProductAttributeType.捆绑:
+            //        break;
+            //    case ProductAttributeType.虚拟:
+            //        break;
+            //    default:
+            //        break;
+            //}
+
+            //// tableLayoutPanel1.Controls.Remove(ucskulist);
+
+            #endregion
+        }
+
+        private void dataGridViewProd_DoubleClick(object sender, EventArgs e)
+        {
+            if (dataGridViewProd.SelectedRows.Count > 0)
+            {
+                EditEntity = dataGridViewProd.CurrentRow.DataBoundItem as tb_Prod;
+            }
+
         }
     }
 }

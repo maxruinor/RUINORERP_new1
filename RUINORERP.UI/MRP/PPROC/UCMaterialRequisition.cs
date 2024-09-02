@@ -99,6 +99,11 @@ namespace RUINORERP.UI.MRP.MP
                     }
                     entity.DeliveryDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                    if (entity.tb_MaterialRequisitionDetails != null && entity.tb_MaterialRequisitionDetails.Count > 0)
+                    {
+                        entity.tb_MaterialRequisitionDetails.ForEach(c => c.MR_ID = 0);
+                        entity.tb_MaterialRequisitionDetails.ForEach(c => c.Detail_ID = 0);
+                    }
                 }
             }
 

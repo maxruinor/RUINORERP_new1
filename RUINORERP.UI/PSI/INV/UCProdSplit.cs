@@ -148,7 +148,11 @@ namespace RUINORERP.UI.PSI.INV
                 entity.SplitNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品分割单);
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 entity.SplitDate = System.DateTime.Now;
-
+                if (entity.tb_ProdSplitDetails != null && entity.tb_ProdSplitDetails.Count > 0)
+                {
+                    entity.tb_ProdSplitDetails.ForEach(c => c.SplitID = 0);
+                    entity.tb_ProdSplitDetails.ForEach(c => c.SplitSub_ID = 0);
+                }
             }
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);

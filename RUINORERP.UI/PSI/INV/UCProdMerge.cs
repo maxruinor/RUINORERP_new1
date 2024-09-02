@@ -134,7 +134,11 @@ namespace RUINORERP.UI.PSI.INV
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 entity.MergeNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品组合单);
                 entity.MergeDate = System.DateTime.Now;
-
+                if (entity.tb_ProdMergeDetails != null && entity.tb_ProdMergeDetails.Count > 0)
+                {
+                    entity.tb_ProdMergeDetails.ForEach(c => c.MergeID = 0);
+                    entity.tb_ProdMergeDetails.ForEach(c => c.MergeSub_ID = 0);
+                }
             }
 
 

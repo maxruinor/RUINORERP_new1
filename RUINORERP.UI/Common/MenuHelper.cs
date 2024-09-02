@@ -11,8 +11,10 @@ using Autofac;
 using Krypton.Navigator;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
 using RUINORERP.Business;
 using RUINORERP.Business.Processor;
+using RUINORERP.Common.Helper;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.PSI.SAL;
@@ -467,6 +469,13 @@ namespace RUINORERP.UI.Common
                                 if (pr.BIBaseForm.Contains("BaseBillQueryMC"))
                                 {
                                     var menu = Startup.GetFromFacByName<BaseQuery>(pr.FormName);
+                                    page = NewPage(pr.CaptionCN, 1, menu);
+                                }
+                                else
+                                if (pr.BIBaseForm.Contains("UCBaseClass"))
+                                {
+                                    var menu = Startup.GetFromFacByName<UCBaseClass>(pr.FormName);
+                                    menu.CurMenuInfo = pr;
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else

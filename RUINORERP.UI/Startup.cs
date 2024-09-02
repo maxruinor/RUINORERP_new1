@@ -306,7 +306,7 @@ public IHost CslaDIPortBackup()
             #endregion
 
             ConfigureServices(Services);
-           
+
             //注册当前程序集的所有类成员
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
                 .AsImplementedInterfaces().AsSelf();
@@ -401,7 +401,7 @@ public IHost CslaDIPortBackup()
                 //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
                 logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", conn, Program.AppContextData));
             });
-            
+
             // by watson 2024-6-28
 
             //注入工作单元
@@ -623,12 +623,12 @@ public IHost CslaDIPortBackup()
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<KryptonForm>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
                         }
-
                         if (type.BaseType.Name.Contains("BaseListGeneric"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseUControl>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
                         }
+
                         if (type.BaseType.Name.Contains("BaseBillQueryMC"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseQuery>(type.Name)
@@ -674,10 +674,16 @@ public IHost CslaDIPortBackup()
                     }
                     else
                     {
+                        //上面是泛型，这里处理非泛型
                         if (type.BaseType.Name.Contains("KryptonForm"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<KryptonForm>(type.Name)
                              .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
+                        }
+                        else if (type.BaseType.Name.Contains("UCBaseClass"))
+                        {
+                            _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<UCBaseClass>(type.Name)
+                          .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
                         }
                         else
                         {

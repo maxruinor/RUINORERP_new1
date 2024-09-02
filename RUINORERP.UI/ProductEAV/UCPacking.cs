@@ -111,7 +111,16 @@ namespace RUINORERP.UI.ProductEAV
                         toolStripbtnAdd.Enabled = false;
                         entity.Unit_ID = entity.tb_prod.Unit_ID;
                     }
-
+                    if (entity.tb_PackingDetails != null && entity.tb_PackingDetails.Count > 0)
+                    {
+                        entity.tb_PackingDetails.ForEach(c => c.Pack_ID = 0);
+                        entity.tb_PackingDetails.ForEach(c => c.PackDetail_ID = 0);
+                    }
+                    if (entity.tb_BoxRuleses != null && entity.tb_BoxRuleses.Count > 0)
+                    {
+                        entity.tb_BoxRuleses.ForEach(c => c.Pack_ID = 0);
+                        entity.tb_BoxRuleses.ForEach(c => c.BoxRules_ID = 0);
+                    }
                 }
             }
 

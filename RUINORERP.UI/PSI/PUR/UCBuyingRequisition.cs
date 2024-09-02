@@ -108,6 +108,11 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.PuRequisitionNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.请购单);
                 entity.ApplicationDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                if (entity.tb_BuyingRequisitionDetails != null && entity.tb_BuyingRequisitionDetails.Count > 0)
+                {
+                    entity.tb_BuyingRequisitionDetails.ForEach(c => c.PuRequisition_ID = 0);
+                    entity.tb_BuyingRequisitionDetails.ForEach(c => c.PuRequisition_ChildID = 0);
+                }
             }
 
 

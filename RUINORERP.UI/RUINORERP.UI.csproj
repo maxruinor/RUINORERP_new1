@@ -598,6 +598,12 @@
     <Compile Include="BaseForm\frmBaseEditList.Designer.cs">
       <DependentUpon>frmBaseEditList.cs</DependentUpon>
     </Compile>
+    <Compile Include="BaseForm\UCBaseClass.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BaseForm\UCBaseClass.Designer.cs">
+      <DependentUpon>UCBaseClass.cs</DependentUpon>
+    </Compile>
     <Compile Include="BaseForm\UCBaseQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>

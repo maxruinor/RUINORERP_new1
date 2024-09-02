@@ -734,6 +734,11 @@ namespace RUINORERP.UI.MRP.BOM
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
                 entity.Effective_at = System.DateTime.Now;
+                if (entity.tb_BOM_SDetails != null && entity.tb_BOM_SDetails.Count > 0)
+                {
+                    entity.tb_BOM_SDetails.ForEach(c => c.BOM_ID = 0);
+                    entity.tb_BOM_SDetails.ForEach(c => c.SubID = 0);
+                }
             }
 
             /*****/

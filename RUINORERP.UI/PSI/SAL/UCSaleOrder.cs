@@ -39,6 +39,7 @@ using SourceGrid;
 using RUINORERP.Business.CommService;
 using NPOI.POIFS.Properties;
 using System.Diagnostics;
+using RUINORERP.Common.Extensions;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -156,7 +157,11 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.SOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售订单);
                     entity.SaleDate = System.DateTime.Now;
                     entity.IsFromPlatform = true;//默认 平台单为真
-                    //entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                    if (entity.tb_SaleOrderDetails != null && entity.tb_SaleOrderDetails.Count > 0)
+                    {
+                        entity.tb_SaleOrderDetails.ForEach(c => c.SOrder_ID = 0);
+                        entity.tb_SaleOrderDetails.ForEach(c => c.SaleOrderDetail_ID = 0);
+                    }
                 }
             }
 
@@ -741,7 +746,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 else
                 {
-                    
+
                     ReturnMainSubResults<tb_SaleOrder> SaveResult = new ReturnMainSubResults<tb_SaleOrder>();
                     if (NeedValidated)
                     {

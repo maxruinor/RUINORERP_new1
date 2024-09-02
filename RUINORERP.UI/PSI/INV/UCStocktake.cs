@@ -149,6 +149,12 @@ namespace RUINORERP.UI.PSI.INV
 
                     entity.CheckMode = (int)CheckMode.一般盘点;
                     entity.Adjust_Type = (int)Adjust_Type.全部;
+
+                    if (entity.tb_StocktakeDetails != null && entity.tb_StocktakeDetails.Count > 0)
+                    {
+                        entity.tb_StocktakeDetails.ForEach(c => c.MainID = 0);
+                        entity.tb_StocktakeDetails.ForEach(c => c.SubID = 0);
+                    }
                 }
 
 

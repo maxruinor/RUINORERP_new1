@@ -103,9 +103,12 @@ namespace RUINORERP.UI.PSI.INV
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.归还单);
-
                 entity.ReturnDate = System.DateTime.Now;
-
+                if (entity.tb_ProdReturningDetails != null && entity.tb_ProdReturningDetails.Count > 0)
+                {
+                    entity.tb_ProdReturningDetails.ForEach(c => c.ReturnID = 0);
+                    entity.tb_ProdReturningDetails.ForEach(c => c.ReturnSub_ID = 0);
+                }
             }
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);

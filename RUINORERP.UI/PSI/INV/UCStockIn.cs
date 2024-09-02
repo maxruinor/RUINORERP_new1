@@ -100,6 +100,11 @@ namespace RUINORERP.UI.PSI.INV
 
                 entity.Bill_Date = System.DateTime.Now;
                 entity.Enter_Date = System.DateTime.Now;
+                if (entity.tb_StockInDetails != null && entity.tb_StockInDetails.Count > 0)
+                {
+                    entity.tb_StockInDetails.ForEach(c => c.MainID = 0);
+                    entity.tb_StockInDetails.ForEach(c => c.Sub_ID = 0);
+                }
             }
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);

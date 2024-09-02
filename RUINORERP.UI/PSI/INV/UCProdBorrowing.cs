@@ -109,6 +109,11 @@ namespace RUINORERP.UI.PSI.INV
                 entity.DueDate = System.DateTime.Now.AddDays(30);//最长时间为30天
                 entity.Out_date = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                if (entity.tb_ProdBorrowingDetails != null && entity.tb_ProdBorrowingDetails.Count > 0)
+                {
+                    entity.tb_ProdBorrowingDetails.ForEach(c => c.BorrowID = 0);
+                    entity.tb_ProdBorrowingDetails.ForEach(c => c.BorrowDetaill_ID = 0);
+                }
             }
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);

@@ -97,6 +97,11 @@ namespace RUINORERP.UI.MRP.MP
                     }
                     entity.ReturnDate = System.DateTime.Now;
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                    if (entity.tb_MaterialReturnDetails != null && entity.tb_MaterialReturnDetails.Count > 0)
+                    {
+                        entity.tb_MaterialReturnDetails.ForEach(c => c.MRE_ID = 0);
+                        entity.tb_MaterialReturnDetails.ForEach(c => c.Sub_ID = 0);
+                    }
                 }
             }
 

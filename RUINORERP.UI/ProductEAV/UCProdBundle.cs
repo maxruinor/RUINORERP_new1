@@ -96,6 +96,11 @@ namespace RUINORERP.UI.ProductEAV
             else
             {
                 entity.ActionStatus = ActionStatus.新增;
+                if (entity.tb_ProdBundleDetails != null && entity.tb_ProdBundleDetails.Count > 0)
+                {
+                    entity.tb_ProdBundleDetails.ForEach(c => c.BundleID = 0);
+                    entity.tb_ProdBundleDetails.ForEach(c => c.BundleChildID = 0);
+                }
             }
 
 

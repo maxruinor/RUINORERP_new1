@@ -94,7 +94,11 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
                     entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售退回单);
-                    //entity.OutDate = System.DateTime.Now;
+                    if (entity.tb_SaleOutReDetails != null && entity.tb_SaleOutReDetails.Count > 0)
+                    {
+                        entity.tb_SaleOutReDetails.ForEach(c => c.SaleOutRe_ID = 0);
+                        entity.tb_SaleOutReDetails.ForEach(c => c.SOutReturnDetail_ID = 0);
+                    }
 
                 }
 

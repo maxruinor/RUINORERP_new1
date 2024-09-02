@@ -98,6 +98,11 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.PurEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购入库单);
                 entity.EntryDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                if (entity.tb_PurEntryDetails != null && entity.tb_PurEntryDetails.Count > 0)
+                {
+                    entity.tb_PurEntryDetails.ForEach(c => c.PurEntryID = 0);
+                    entity.tb_PurEntryDetails.ForEach(c => c.PurEntryDetail_ID = 0);
+                }
             }
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, t => t.PurEntryNo, txtPurEntryNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurOrder>(entity, t => t.ShippingCost.ToString(), txtShippingCost, BindDataType4TextBox.Money, false);

@@ -96,33 +96,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _SecondItemName;
-        /// <summary>
-        /// 副产名称
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SecondItemName",ColDesc = "副产名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SecondItemName" ,Length=200,IsNullable = true,ColumnDescription = "副产名称" )]
-        public string SecondItemName
-        { 
-            get{return _SecondItemName;}
-            set{
-            SetProperty(ref _SecondItemName, value);
-            }
-        }
 
-        private string _SecondItemSpec;
-        /// <summary>
-        /// 副产规格
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SecondItemSpec",ColDesc = "副产规格")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SecondItemSpec" ,Length=200,IsNullable = true,ColumnDescription = "副产规格" )]
-        public string SecondItemSpec
-        { 
-            get{return _SecondItemSpec;}
-            set{
-            SetProperty(ref _SecondItemSpec, value);
-            }
-        }
 
         private string _property;
         /// <summary>

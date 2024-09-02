@@ -93,8 +93,11 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.DataStatus = (int)DataStatus.草稿;
                     entity.OutDate = System.DateTime.Now;
                     entity.SaleOutNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.销售出库单);
-                    //entity.OutDate = System.DateTime.Now;
-
+                    if (entity.tb_SaleOutDetails != null && entity.tb_SaleOutDetails.Count > 0)
+                    {
+                        entity.tb_SaleOutDetails.ForEach(c => c.SaleOut_MainID = 0);
+                        entity.tb_SaleOutDetails.ForEach(c => c.SaleOutDetail_ID = 0);
+                    }
 
                 }
 

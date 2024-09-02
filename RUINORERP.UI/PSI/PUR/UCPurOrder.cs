@@ -102,6 +102,11 @@ namespace RUINORERP.UI.PSI.PUR
                 entity.PurOrderNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购订单);
                 entity.PurDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                if (entity.tb_PurOrderDetails != null && entity.tb_PurOrderDetails.Count > 0)
+                {
+                    entity.tb_PurOrderDetails.ForEach(c => c.PurOrder_ID = 0);
+                    entity.tb_PurOrderDetails.ForEach(c => c.PurOrder_ChildID = 0);
+                }
             }
 
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsVendor == true);

@@ -815,7 +815,11 @@ namespace RUINORERP.UI.ProductEAV
                 //_EditEntity.ShortCode = maxid.ToString().PadLeft(4, '0');//推荐
                 //助记码要在类目选择后生成，要有规律
                 // 在类目属性选择后
-
+                if (_EditEntity.tb_ProdDetails != null && _EditEntity.tb_ProdDetails.Count > 0)
+                {
+                    _EditEntity.tb_ProdDetails.ForEach(c => c.ProdBaseID = 0);
+                    _EditEntity.tb_ProdDetails.ForEach(c => c.ProdDetailID = 0);
+                }
             }
             else
             {
@@ -831,7 +835,7 @@ namespace RUINORERP.UI.ProductEAV
             txtcategory_ID.DataBindings.Add(parent_categorie);
 
             #endregion
-
+            
             DataBindingHelper.BindData4CmbByEnum<tb_Prod>(entity, k => k.SourceType, typeof(GoodsSource), cmbSourceType, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ProductNo, txtNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ShortCode, txtShortCode, BindDataType4TextBox.Text, false);
@@ -1332,10 +1336,7 @@ namespace RUINORERP.UI.ProductEAV
 
             }
             return;
-            #region
-
-
-            #endregion
+         
 
         }
 

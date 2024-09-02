@@ -118,6 +118,27 @@ namespace RUINORERP.UI.MRP.MP
                         entity.PDNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.生产需求分析);
                     }
                     entity.AnalysisDate = System.DateTime.Now;
+                    if (entity.tb_ProductionDemandDetails != null && entity.tb_ProductionDemandDetails.Count > 0)
+                    {
+                        entity.tb_ProductionDemandDetails.ForEach(c => c.PDID = 0);
+                        entity.tb_ProductionDemandDetails.ForEach(c => c.PDCID = 0);
+                    }
+                    if (entity.tb_ProduceGoodsRecommendDetails != null && entity.tb_ProduceGoodsRecommendDetails.Count > 0)
+                    {
+                        entity.tb_ProduceGoodsRecommendDetails.ForEach(c => c.PDID = 0);
+                        entity.tb_ProduceGoodsRecommendDetails.ForEach(c => c.PDCID = 0);
+                    }
+                    if (entity.tb_ProductionDemandTargetDetails != null && entity.tb_ProductionDemandTargetDetails.Count > 0)
+                    {
+                        entity.tb_ProductionDemandTargetDetails.ForEach(c => c.PDID = 0);
+                        entity.tb_ProductionDemandTargetDetails.ForEach(c => c.PDTCID = 0);
+                    }
+
+                    if (entity.tb_PurGoodsRecommendDetails != null && entity.tb_PurGoodsRecommendDetails.Count > 0)
+                    {
+                        entity.tb_PurGoodsRecommendDetails.ForEach(c => c.PDID = 0);
+                        entity.tb_PurGoodsRecommendDetails.ForEach(c => c.PGRCID = 0);
+                    }
                 }
             }
 

@@ -1576,16 +1576,32 @@ namespace RUINORERP.UI.BaseForm
 
         protected override void AddByCopy()
         {
-
             if (OnBindDataToUIEvent != null)
             {
                 bindingSourceSub.Clear();
-                OnBindDataToUIEvent(EditEntity);
-            }
-            // BindData(_EditEntity);
-            ToolBarEnabledControl(MenuItemEnums.新增);
-            //bindingSourceEdit.CancelEdit();
 
+                T NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
+                NewEditEntity = EditEntity.DeepClone();
+                //复制性新增 时  PK要清空，单据编号类的
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                if (pkid > 0)
+                {
+                    NewEditEntity.SetPropertyValue(PKCol, 0);
+                }
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(ApprovalStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(NewEditEntity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
+                }
+                //设置为审核状态为否
+                if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+                {
+                    NewEditEntity.SetPropertyValue("ApprovalResults", false);
+                }
+                OnBindDataToUIEvent(NewEditEntity);
+            }
+           
+            ToolBarEnabledControl(MenuItemEnums.新增);
         }
 
         protected override void Clear(SourceGridDefine sgd)
@@ -2236,7 +2252,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
-           
+
         }
 
 

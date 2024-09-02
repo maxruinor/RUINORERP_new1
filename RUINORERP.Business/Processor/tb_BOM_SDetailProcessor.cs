@@ -43,11 +43,9 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.ProdDetailID, typeof(View_ProdDetail));
             queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.BOM_ID);
             queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.SKU);
-            queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.Type_ID);
+           // queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.Type_ID);
             queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.Unit_ID);
             queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.property);
-            queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.SubItemName);
-            queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.SubItemSpec);
             queryFilter.SetQueryField<tb_BOM_SDetail>(c => c.Substitute);
             return queryFilter;
         }

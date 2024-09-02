@@ -1540,6 +1540,12 @@ namespace RUINORERP.UI.BaseForm
                 OnBindDataToUIEvent(EditEntity);
             }
             // BindData(_EditEntity);
+
+            if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
+            {
+                ReflectionHelper.SetPropertyValue(EditEntity, typeof(ActionStatus).Name, (int)ActionStatus.新增);
+            }
+
             ToolBarEnabledControl(MenuItemEnums.新增);
             //bindingSourceEdit.CancelEdit();
 

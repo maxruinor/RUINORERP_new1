@@ -486,7 +486,7 @@ namespace RUINORERP.Business
         public virtual async Task<List<tb_BOM_S>> QueryByNavAsync()
         {
             List<tb_BOM_S> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>()
-                               .Includes(t => t.tb_producttype)
+                             //  .Includes(t => t.tb_producttype)
                                .Includes(t => t.tb_files)
                                .Includes(t => t.tb_department)
                                .Includes(t => t.tb_proddetail)
@@ -518,7 +518,7 @@ namespace RUINORERP.Business
         public virtual async Task<List<tb_BOM_S>> QueryByNavAsync(Expression<Func<tb_BOM_S, bool>> exp)
         {
             List<tb_BOM_S> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>().Where(exp)
-                               .Includes(t => t.tb_producttype)
+                              // .Includes(t => t.tb_producttype)
                                .Includes(t => t.tb_files)
                                .Includes(t => t.tb_department)
                                .Includes(t => t.tb_proddetail)
@@ -550,7 +550,7 @@ namespace RUINORERP.Business
         public virtual List<tb_BOM_S> QueryByNav(Expression<Func<tb_BOM_S, bool>> exp)
         {
             List<tb_BOM_S> list = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>().Where(exp)
-                            .Includes(t => t.tb_producttype)
+                          //  .Includes(t => t.tb_producttype)
                             .Includes(t => t.tb_files)
                             .Includes(t => t.tb_department)
                             .Includes(t => t.tb_proddetail)
@@ -601,7 +601,7 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_BOM_S entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>().Where(w => w.BOM_ID == (long)id)
-                             .Includes(t => t.tb_producttype)
+                           //  .Includes(t => t.tb_producttype)
                             .Includes(t => t.tb_files)
                             .Includes(t => t.tb_department)
                             .Includes(t => t.tb_proddetail)

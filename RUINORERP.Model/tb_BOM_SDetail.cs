@@ -98,50 +98,50 @@ namespace RUINORERP.Model
                 SetProperty(ref _BOM_ID, value);
             }
         }
-        private string _SubItemName;
-        /// <summary>
-        /// 子件名称
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubItemName", ColDesc = "子件名称")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SubItemName", Length = 200, IsNullable = true, ColumnDescription = "子件名称")]
-        public string SubItemName
-        {
-            get { return _SubItemName; }
-            set
-            {
-                SetProperty(ref _SubItemName, value);
-            }
-        }
+        //private string _SubItemName;
+        ///// <summary>
+        ///// 子件名称
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "SubItemName", ColDesc = "子件名称")]
+        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SubItemName", Length = 200, IsNullable = true, ColumnDescription = "子件名称")]
+        //public string SubItemName
+        //{
+        //    get { return _SubItemName; }
+        //    set
+        //    {
+        //        SetProperty(ref _SubItemName, value);
+        //    }
+        //}
 
-        private string _SubItemSpec;
-        /// <summary>
-        /// 子件规格
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubItemSpec", ColDesc = "子件规格")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SubItemSpec", Length = 1000, IsNullable = true, ColumnDescription = "子件规格")]
-        public string SubItemSpec
-        {
-            get { return _SubItemSpec; }
-            set
-            {
-                SetProperty(ref _SubItemSpec, value);
-            }
-        }
-        private long _Type_ID;
-        /// <summary>
-        /// 类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Type_ID", ColDesc = "类型")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Type_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "类型")]
-        [FKRelationAttribute("tb_ProductType", "Type_ID")]
-        public long Type_ID
-        {
-            get { return _Type_ID; }
-            set
-            {
-                SetProperty(ref _Type_ID, value);
-            }
-        }
+        //private string _SubItemSpec;
+        ///// <summary>
+        ///// 子件规格
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "SubItemSpec", ColDesc = "子件规格")]
+        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "SubItemSpec", Length = 1000, IsNullable = true, ColumnDescription = "子件规格")]
+        //public string SubItemSpec
+        //{
+        //    get { return _SubItemSpec; }
+        //    set
+        //    {
+        //        SetProperty(ref _SubItemSpec, value);
+        //    }
+        //}
+        //private long _Type_ID;
+        ///// <summary>
+        ///// 类型
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "Type_ID", ColDesc = "类型")]
+        //[SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Type_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "类型")]
+        //[FKRelationAttribute("tb_ProductType", "Type_ID")]
+        //public long Type_ID
+        //{
+        //    get { return _Type_ID; }
+        //    set
+        //    {
+        //        SetProperty(ref _Type_ID, value);
+        //    }
+        //}
 
         private string _property;
         /// <summary>
@@ -510,10 +510,10 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
-        public virtual tb_ProductType tb_producttype { get; set; }
+        //[SugarColumn(IsIgnore = true)]
+        ////[Browsable(false)]
+        //[Navigate(NavigateType.OneToOne, nameof(Type_ID))]
+        //public virtual tb_ProductType tb_producttype { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]

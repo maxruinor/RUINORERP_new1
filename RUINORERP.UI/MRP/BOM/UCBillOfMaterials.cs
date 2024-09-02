@@ -46,6 +46,8 @@ using OfficeOpenXml.Style;
 using NPOI.SS.Util;
 using log4net.Core;
 using NPOI.SS.Formula.Functions;
+using Netron.GraphLib;
+using FileInfo = System.IO.FileInfo;
 
 
 namespace RUINORERP.UI.MRP.BOM
@@ -690,6 +692,7 @@ namespace RUINORERP.UI.MRP.BOM
             //DataBindingHelper.InitDataToCmb<tb_Files>(k => k.Doc_ID, v => v.FileName, cmbDoc_ID);
             //DataBindingHelper.InitDataToCmb<tb_BOMConfigHistory>(k => k.BOM_S_VERID, v => v.VerNo, cmbBOM_S_VERID);
             //DataBindingHelper.InitDataToCmb<tb_OutInStockType>(k => k.Type_ID, v => v.TypeName, cmbType_ID, c => c.OutIn == true);
+            DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v => v.TypeName, cmbType);
             txtSpec.Enabled = false;
             txtProp.Enabled = false;
         }
@@ -719,12 +722,15 @@ namespace RUINORERP.UI.MRP.BOM
                 if (entity.ProdDetailID > 0)
                 {
                     txtProdDetailID.Text = entity.SKU.ToString();
+                    txtSpec.Text = entity.view_ProdDetail.Specifications;
+                    txtProp.Text = entity.view_ProdDetail.prop;
+                    cmbType.SelectedValue = entity.view_ProdDetail.Type_ID;
+
                     BindToTree(entity);
                 }
             }
             else
             {
-                entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
                 entity.Effective_at = System.DateTime.Now;
@@ -734,11 +740,8 @@ namespace RUINORERP.UI.MRP.BOM
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.TotalMaterialQty, txtTotalMaterialQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.BOM_Name, txtBOM_Name, BindDataType4TextBox.Text, false);
-
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.property, txtProp, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.Specifications, txtSpec, BindDataType4TextBox.Text, false);
 
-            DataBindingHelper.BindData4Cmb<tb_ProductType>(entity, k => k.Type_ID, v => v.TypeName, cmbType);
             DataBindingHelper.BindData4Cmb<tb_Files>(entity, k => k.Doc_ID, v => v.FileName, cmbDoc_ID);
             DataBindingHelper.BindData4Cmb<tb_BOMConfigHistory>(entity, k => k.BOM_S_VERID, v => v.VerNo, cmbBOM_S_VERID);
             DataBindingHelper.BindData4DataTime<tb_BOM_S>(entity, t => t.Effective_at, dtpEffective_at, false);
@@ -826,11 +829,14 @@ namespace RUINORERP.UI.MRP.BOM
                                     {
                                         if (txtProdDetailID.ButtonSpecs[0].Tag is View_ProdDetail vp)
                                         {
-                                            entity.Specifications = vp.Specifications;
+                                            // DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.Specifications, txtSpec, BindDataType4TextBox.Text, false);
+                                            txtSpec.Text = vp.Specifications;
+                                            // entity.Specifications = vp.Specifications;
+
                                             entity.property = vp.prop;
                                             entity.BOM_Name = vp.CNName + "-" + vp.prop;
                                             entity.SKU = vp.SKU;
-                                            entity.Type_ID = vp.Type_ID;
+                                            cmbType.SelectedValue = vp.Type_ID;
                                         }
                                     }
                                 }
@@ -850,11 +856,13 @@ namespace RUINORERP.UI.MRP.BOM
                     {
                         if (txtProdDetailID.ButtonSpecs[0].Tag is View_ProdDetail vp)
                         {
-                            entity.Specifications = vp.Specifications;
+                            //entity.Specifications = vp.Specifications;
+                            txtSpec.Text = vp.Specifications;
                             entity.property = vp.prop;
                             entity.BOM_Name = vp.CNName + "-" + vp.prop;
                             entity.SKU = vp.SKU;
-                            entity.Type_ID = vp.Type_ID;
+                            //entity.Type_ID = vp.Type_ID;
+                            cmbType.SelectedValue = vp.Type_ID;
                         }
                     }
                     //if (entity.CustomerVendor_ID.HasValue && entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
@@ -917,10 +925,11 @@ namespace RUINORERP.UI.MRP.BOM
             BOM_Level = 1;
             tb_BOM_SController<tb_BOM_S> ctrBOM = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
             /// var bom = await ctrBOM.BaseQueryByIdNavAsync(entity.MainID);
-            var bom = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_BOM_S>()
+            tb_BOM_S bom = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_BOM_S>()
             .RightJoin<tb_ProdDetail>((a, b) => a.ProdDetailID == b.ProdDetailID)
              .Includes(b => b.tb_proddetail, c => c.tb_prod, d => d.tb_producttype)
-            .Includes(a => a.tb_producttype)
+             // .Includes(a => a.tb_producttype)
+             .Includes(a => a.view_ProdDetail)
             .Includes(a => a.tb_BOM_SDetails)
             .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
             .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
@@ -944,8 +953,8 @@ namespace RUINORERP.UI.MRP.BOM
                                                 ////一定会有值
                                                 //tb_BOM_S bOM_S = listboms.Where(c => c.ProdDetailID == row.ProdDetailID).FirstOrDefault();
                                                 //itemRow.SubItems[0].Tag = bOM_S;
-            itemRow.SubItems.Add(bom.Specifications);
-            string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", bom.Type_ID);
+            itemRow.SubItems.Add(bom.view_ProdDetail.Specifications);
+            string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", bom.view_ProdDetail.Type_ID);
 
             itemRow.SubItems.Add(prodType);
             itemRow.SubItems.Add("产出量:" + bom.OutputQty.ToString());
@@ -964,11 +973,12 @@ namespace RUINORERP.UI.MRP.BOM
                 foreach (var BOM_SDetail in bOM_S.tb_BOM_SDetails)
                 {
 
-                    TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.SubItemName, 0);
+                    TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdDetail.CNName, 0);
                     itemSub.Tag = bOM_S;
                     itemSub.SubItems.Add(BOM_SDetail.property);//subitems只是从属于itemRow的子项。目前是四列
-                    itemSub.SubItems.Add(BOM_SDetail.SubItemSpec);
-                    string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.Type_ID);
+                    itemSub.SubItems.Add(BOM_SDetail.SKU);//subitems只是从属于itemRow的子项。目前是四列
+                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Specifications);
+                    string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdDetail.Type_ID);
                     itemSub.SubItems.Add(prodType);
                     itemSub.SubItems.Add(BOM_SDetail.UsedQty.ToString());
 
@@ -977,10 +987,10 @@ namespace RUINORERP.UI.MRP.BOM
                     var bomsub = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_BOM_S>()
                    //.RightJoin<tb_ProdDetail>((a, b) => a.ProdDetailID == b.ProdDetailID)
                    // .Includes(b => b.tb_proddetail, c => c.tb_prod, d => d.tb_producttype)
-                   //.Includes(a => a.tb_producttype)
+                   .Includes(a => a.view_ProdDetail)
                    .Includes(a => a.tb_BOM_SDetails)  //查出他的子级是不是BOM并且带出他的子项
                                                       //.Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
-                                                      //.Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
+                    .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
                    .Where(a => a.ProdDetailID == BOM_SDetail.ProdDetailID)
                    .ToList();
                     if (bomsub.Count > 0)
@@ -1095,10 +1105,10 @@ namespace RUINORERP.UI.MRP.BOM
             sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Inv_Cost, t => t.MaterialCost);
 
             //冗余名称和规格
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.CNName, t => t.SubItemName);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Specifications, t => t.SubItemSpec);
+            //  sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.CNName, t => t.SubItemName);
+            //  sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Specifications, t => t.SubItemSpec);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.prop, t => t.property);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Type_ID, t => t.Type_ID);
+            //sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Type_ID, t => t.Type_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Unit_ID, t => t.Unit_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.SKU, t => t.SKU);
 
@@ -1288,7 +1298,7 @@ namespace RUINORERP.UI.MRP.BOM
 
 
                 EditEntity.tb_BOM_SDetailSecondaries.Clear();
-         
+
                 tb_BOM_SController<tb_BOM_S> ctr = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
                 ReturnMainSubResults<tb_BOM_S> SaveResult = new ReturnMainSubResults<tb_BOM_S>();
                 if (NeedValidated)
@@ -1307,10 +1317,7 @@ namespace RUINORERP.UI.MRP.BOM
                 }
                 return SaveResult.Succeeded;
             }
-            else
-            {
-                MessageBox.Show("加载状态的BOM，无法更新保存数据，请先修改数据后再保存！");
-            }
+
             return false;
 
         }

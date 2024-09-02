@@ -31,7 +31,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 标准物料表BOM明细-要适当冗余
     /// </summary>
-    public partial class tb_BOM_SDetailController<T>:BaseController<T> where T : class
+    public partial class tb_BOM_SDetailController<T> : BaseController<T> where T : class
     {
 
         /// <summary>
@@ -42,7 +42,8 @@ namespace RUINORERP.Business
         {
             List<tb_BOM_SDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(exp)
 
-                            .Includes(t => t.tb_producttype)
+                           // .Includes(t => t.tb_producttype)
+                           .Includes(t => t.view_ProdDetail)
                             .Includes(t => t.tb_unit)
                             .Includes(t => t.tb_unit_conversion)
                             .Includes(t => t.tb_bom_s)

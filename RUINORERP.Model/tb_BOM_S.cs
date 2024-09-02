@@ -169,34 +169,34 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _Specifications;
-        /// <summary>
-        /// 规格
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Specifications",ColDesc = "规格")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Specifications" ,Length=200,IsNullable = true,ColumnDescription = "规格" )]
-        public string Specifications
-        { 
-            get{return _Specifications;}
-            set{
-            SetProperty(ref _Specifications, value);
-            }
-        }
+        //private string _Specifications;
+        ///// <summary>
+        ///// 规格
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "Specifications",ColDesc = "规格")] 
+        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Specifications" ,Length=200,IsNullable = true,ColumnDescription = "规格" )]
+        //public string Specifications
+        //{ 
+        //    get{return _Specifications;}
+        //    set{
+        //    SetProperty(ref _Specifications, value);
+        //    }
+        //}
 
-        private long? _Type_ID;
-        /// <summary>
-        /// 产品类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "产品类型")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "产品类型" )]
-        [FKRelationAttribute("tb_ProductType","Type_ID")]
-        public long? Type_ID
-        { 
-            get{return _Type_ID;}
-            set{
-            SetProperty(ref _Type_ID, value);
-            }
-        }
+        //private long? _Type_ID;
+        ///// <summary>
+        ///// 产品类型
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "Type_ID",ColDesc = "产品类型")] 
+        //[SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "产品类型" )]
+        //[FKRelationAttribute("tb_ProductType","Type_ID")]
+        //public long? Type_ID
+        //{ 
+        //    get{return _Type_ID;}
+        //    set{
+        //    SetProperty(ref _Type_ID, value);
+        //    }
+        //}
 
         private DateTime _Effective_at;
         /// <summary>
@@ -594,10 +594,10 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
-        public virtual tb_ProductType tb_producttype { get; set; }
+        //[SugarColumn(IsIgnore = true)]
+        ////[Browsable(false)]
+        //[Navigate(NavigateType.OneToOne, nameof(Type_ID))]
+        //public virtual tb_ProductType tb_producttype { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
@@ -613,6 +613,11 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
+        public virtual View_ProdDetail view_ProdDetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]

@@ -242,7 +242,7 @@ namespace RUINORERP.Business
                                         .Includes(a => a.tb_BOM_SDetails)
                                         .Includes(a => a.tb_BOM_SDetailSecondaries)
                                         .Includes(a => a.tb_files)
-                                        .Includes(a => a.tb_producttype)
+                                        .Includes(a => a.view_ProdDetail)
                                         .Includes(a => a.tb_ProductionDemandDetails)
                                         .Includes(a => a.tb_ProduceGoodsRecommendDetails)
                                         .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用

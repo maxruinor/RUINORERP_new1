@@ -462,7 +462,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_BOM_SDetail>> QueryByNavAsync()
         {
             List<tb_BOM_SDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                               .Includes(t => t.tb_producttype )
+                             //  .Includes(t => t.tb_producttype )
                                .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_unit_conversion )
                                .Includes(t => t.tb_bom_s )
@@ -487,7 +487,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_BOM_SDetail>> QueryByNavAsync(Expression<Func<tb_BOM_SDetail, bool>> exp)
         {
             List<tb_BOM_SDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(exp)
-                               .Includes(t => t.tb_producttype )
+                            //  .Includes(t => t.tb_producttype )
                                .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_unit_conversion )
                                .Includes(t => t.tb_bom_s )
@@ -512,7 +512,7 @@ namespace RUINORERP.Business
          public virtual List<tb_BOM_SDetail> QueryByNav(Expression<Func<tb_BOM_SDetail, bool>> exp)
         {
             List<tb_BOM_SDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(exp)
-                            .Includes(t => t.tb_producttype )
+                          //  .Includes(t => t.tb_producttype )
                             .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_unit_conversion )
                             .Includes(t => t.tb_bom_s )
@@ -554,7 +554,7 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_BOM_SDetail entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(w => w.SubID == (long)id)
-                             .Includes(t => t.tb_producttype )
+                            // .Includes(t => t.tb_producttype )
                             .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_unit_conversion )
                             .Includes(t => t.tb_bom_s )

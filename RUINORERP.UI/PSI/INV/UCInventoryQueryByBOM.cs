@@ -324,7 +324,7 @@ namespace RUINORERP.UI.UCSourceGrid
             List<long> allIds = listDetails.Select(c => c.ProdDetailID).ToList();
             var listboms = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_BOM_S>()
                     .RightJoin<tb_ProdDetail>((a, b) => a.ProdDetailID == b.ProdDetailID)
-                    .Includes(a => a.tb_producttype)
+                    //.Includes(a => a.tb_producttype)
                     .Includes(a => a.tb_BOM_SDetails)
                     .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
                     .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
@@ -362,11 +362,11 @@ namespace RUINORERP.UI.UCSourceGrid
                 listViewItem.ImageIndex = 1;//如果有配方，则图标不一样
                 foreach (var BOM_SDetail in bOM_S.tb_BOM_SDetails)
                 {
-                    TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.SubItemName, 0);
+                    TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdDetail.CNName, 0);
                     itemSub.Tag = BOM_SDetail.view_ProdDetail;
                     itemSub.SubItems.Add(BOM_SDetail.property);//subitems只是从属于itemRow的子项。目前是四列
-                    itemSub.SubItems.Add(BOM_SDetail.SubItemSpec);
-                    string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.Type_ID);
+                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Specifications);
+                    string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdDetail.Type_ID);
                     itemSub.SubItems.Add(prodType);
                     if (BOM_SDetail.view_ProdDetail != null)
                     {

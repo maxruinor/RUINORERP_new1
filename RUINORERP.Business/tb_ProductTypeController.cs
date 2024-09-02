@@ -246,8 +246,8 @@ namespace RUINORERP.Business
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProductType>(entity as tb_ProductType)
                         .Include(m => m.tb_Prods)
-                    .Include(m => m.tb_BOM_Ss)
-                    .Include(m => m.tb_BOM_SDetails)
+                   // .Include(m => m.tb_BOM_Ss)
+                 //   .Include(m => m.tb_BOM_SDetails)
                     .ExecuteCommandAsync();
          
         }
@@ -255,8 +255,8 @@ namespace RUINORERP.Business
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProductType>(entity as tb_ProductType)
                 .Include(m => m.tb_Prods)
-                .Include(m => m.tb_BOM_Ss)
-                .Include(m => m.tb_BOM_SDetails)
+             //   .Include(m => m.tb_BOM_Ss)
+              //  .Include(m => m.tb_BOM_SDetails)
                         .ExecuteCommandAsync();
         }
         
@@ -290,8 +290,8 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>()
                                 .Includes(m => m.tb_Prods)
-                        .Includes(m => m.tb_BOM_Ss)
-                        .Includes(m => m.tb_BOM_SDetails)
+                      //  .Includes(m => m.tb_BOM_Ss)
+                      //  .Includes(m => m.tb_BOM_SDetails)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -302,8 +302,8 @@ namespace RUINORERP.Business
             tb_ProductType entity = model as tb_ProductType;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProductType>(m => m.Type_ID== entity.Type_ID)
                                 .Include(m => m.tb_Prods)
-                        .Include(m => m.tb_BOM_Ss)
-                        .Include(m => m.tb_BOM_SDetails)
+                       // .Include(m => m.tb_BOM_Ss)
+                    //    .Include(m => m.tb_BOM_SDetails)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -467,8 +467,8 @@ namespace RUINORERP.Business
         {
             List<tb_ProductType> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>()
                                             .Includes(t => t.tb_Prods )
-                                .Includes(t => t.tb_BOM_Ss )
-                                .Includes(t => t.tb_BOM_SDetails )
+                               // .Includes(t => t.tb_BOM_Ss )
+                            ///    .Includes(t => t.tb_BOM_SDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -489,8 +489,8 @@ namespace RUINORERP.Business
         {
             List<tb_ProductType> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>().Where(exp)
                                             .Includes(t => t.tb_Prods )
-                                .Includes(t => t.tb_BOM_Ss )
-                                .Includes(t => t.tb_BOM_SDetails )
+                              //  .Includes(t => t.tb_BOM_Ss )
+                              //  .Includes(t => t.tb_BOM_SDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -511,8 +511,8 @@ namespace RUINORERP.Business
         {
             List<tb_ProductType> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>().Where(exp)
                                         .Includes(t => t.tb_Prods )
-                            .Includes(t => t.tb_BOM_Ss )
-                            .Includes(t => t.tb_BOM_SDetails )
+                          //  .Includes(t => t.tb_BOM_Ss )
+                          //  .Includes(t => t.tb_BOM_SDetails )
                         .ToList();
             
             foreach (var item in list)
@@ -550,8 +550,8 @@ namespace RUINORERP.Business
         {
             tb_ProductType entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>().Where(w => w.Type_ID == (long)id)
                                          .Includes(t => t.tb_Prods )
-                            .Includes(t => t.tb_BOM_Ss )
-                            .Includes(t => t.tb_BOM_SDetails )
+                          //  .Includes(t => t.tb_BOM_Ss )
+                          //  .Includes(t => t.tb_BOM_SDetails )
                         .FirstAsync();
             if(entity!=null)
             {

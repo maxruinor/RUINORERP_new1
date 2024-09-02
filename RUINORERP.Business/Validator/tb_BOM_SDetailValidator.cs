@@ -28,10 +28,9 @@ namespace RUINORERP.Business
       RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品详情:下拉选择值不正确。");
 //***** 
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.BOM_ID).NotNull().WithMessage("对应BOM:不能为空。");
- RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Type_ID).Must(CheckForeignKeyValue).WithMessage("类型:下拉选择值不正确。");
+ //RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Type_ID).Must(CheckForeignKeyValue).WithMessage("类型:下拉选择值不正确。");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
- RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.SubItemName).MaximumLength(100).WithMessage("子件名称:不能超过最大长度,100.");
- RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.SubItemSpec).MaximumLength(500).WithMessage("子件规格:不能超过最大长度,500.");
+ 
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Remarks).MaximumLength(100).WithMessage("备注说明:不能超过最大长度,100.");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Unit_ID).Must(CheckForeignKeyValue).WithMessage("单位:下拉选择值不正确。");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.UnitConversion_ID).Must(CheckForeignKeyValueCanNull).WithMessage("单位换算:下拉选择值不正确。");

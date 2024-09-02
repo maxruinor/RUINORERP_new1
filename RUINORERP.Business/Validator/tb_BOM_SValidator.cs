@@ -38,9 +38,9 @@ namespace RUINORERP.Business
  RuleFor(tb_BOM_S =>tb_BOM_S.Doc_ID).NotEmpty().When(x => x.Doc_ID.HasValue);
  RuleFor(tb_BOM_S =>tb_BOM_S.BOM_S_VERID).Must(CheckForeignKeyValueCanNull).WithMessage("版本号:下拉选择值不正确。");
  RuleFor(tb_BOM_S =>tb_BOM_S.BOM_S_VERID).NotEmpty().When(x => x.BOM_S_VERID.HasValue);
- RuleFor(tb_BOM_S =>tb_BOM_S.Specifications).MaximumLength(100).WithMessage("规格:不能超过最大长度,100.");
- RuleFor(tb_BOM_S =>tb_BOM_S.Type_ID).Must(CheckForeignKeyValueCanNull).WithMessage("产品类型:下拉选择值不正确。");
- RuleFor(tb_BOM_S =>tb_BOM_S.Type_ID).NotEmpty().When(x => x.Type_ID.HasValue);
+ 
+ //RuleFor(tb_BOM_S =>tb_BOM_S.Type_ID).Must(CheckForeignKeyValueCanNull).WithMessage("产品类型:下拉选择值不正确。");
+ //RuleFor(tb_BOM_S =>tb_BOM_S.Type_ID).NotEmpty().When(x => x.Type_ID.HasValue);
  RuleFor(x => x.ManufacturingCost).PrecisionScale(19,4,true).WithMessage("自产制造费用:小数位不能超过4。");
  RuleFor(x => x.OutManuCost).PrecisionScale(19,4,true).WithMessage("外发费用:小数位不能超过4。");
  RuleFor(x => x.TotalMaterialCost).PrecisionScale(19,4,true).WithMessage("总物料费用:小数位不能超过4。");

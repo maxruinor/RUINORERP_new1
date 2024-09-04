@@ -78,8 +78,8 @@ namespace RUINOR.WinFormsUI.Demo
             tileListView.AddGroup("Group 2");
             tileListView.AddItemToGroup("Group 2", "Item 3", true);
             tileListView.AddItemToGroup("Group 2", "Item 4", false);
-           
 
+            tileListView.UpdateUI();
             
              
         }

@@ -19,24 +19,19 @@ namespace RUINOR.WinFormsUI.TileListView
             this.Controls.Clear();
         }
 
-        public FlowLayoutPanel ListViewFlowLayoutPanel { get; set; }
         public TileListView()
         {
             this.Dock = DockStyle.Fill;
-            
+
         }
 
         private List<TileGroup> groups = new List<TileGroup>();
 
-       
 
         public void AddGroup(string title)
         {
             var group = new TileGroup(title);
             groups.Add(group);
-            // 刷新 UI 界面
-            this.Invalidate(); // 请求重绘控件
-            this.PerformLayout(); // 强制执行布局逻辑
         }
 
         public void AddItemToGroup(string groupTitle, string text, bool isChecked)
@@ -49,16 +44,22 @@ namespace RUINOR.WinFormsUI.TileListView
                 {
                     Height = 20,
                     Text = text,
-                    Checked = isChecked
+                    Checked = isChecked,
+                    //AutoSize = true,
+                    //Anchor = AnchorStyles.Left | AnchorStyles.Top,
+                    //Margin = new Padding(0, 0, 0, 0),
+                    //TextAlign = ContentAlignment.MiddleLeft,
+                    //FlatStyle = FlatStyle.Flat,
+                    //BackColor = Color.AliceBlue
                 };
                 group.Items.Add(item);
-
-            
-
-                // 刷新 UI 界面
-                this.Invalidate(); // 请求重绘控件
-                this.PerformLayout(); // 强制执行布局逻辑
             }
+        }
+        public void UpdateUI()
+        {
+            // 刷新 UI 界面
+            this.Invalidate(); // 请求重绘控件
+            this.PerformLayout(); // 强制执行布局逻辑
         }
 
         protected override void OnResize(EventArgs e)
@@ -71,20 +72,6 @@ namespace RUINOR.WinFormsUI.TileListView
         {
             base.OnLayout(e);
             int y = 0;
-            //if (ListViewFlowLayoutPanel == null)
-            //{
-            //    this.ListViewFlowLayoutPanel = new FlowLayoutPanel
-            //    {
-            //        FlowDirection = FlowDirection.LeftToRight,
-            //        AutoSize = true,
-            //        AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            //        WrapContents = true,
-            //        Dock = DockStyle.Fill,
-            //        Anchor = AnchorStyles.Top | AnchorStyles.Left
-            //    };
-            //    this.Controls.Add(ListViewFlowLayoutPanel);
-            //}
-            
 
             foreach (var group in groups)
             {
@@ -93,20 +80,20 @@ namespace RUINOR.WinFormsUI.TileListView
                     group.GroupBox = new GroupBox
                     {
                         Text = group.GroupTitle,
-                       // AutoSize = true,
+                        AutoSize = true,
                         // Dock = DockStyle.Fill, // 或者根据需要设置为 Fill
-                       AutoSizeMode = AutoSizeMode.GrowOnly,
-                        Width = this.Width-30,
-                        Height =  200, // Adjust height based on item count
+                        AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                        Width = this.Width - 30, // 固定宽度，减去一些边距
+                                                 // Height =  200, // Adjust height based on item count
                         Top = y,
-                       Padding = new Padding(20),
+
                         Left = 10,
-                        
+                        Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
                     };
 
                     // this.Controls.Add(group.GroupBox);
 
-                    
+
                     this.Controls.Add(group.GroupBox);
                     group.GroupFlowLayoutPanel = new FlowLayoutPanel
                     {
@@ -115,14 +102,22 @@ namespace RUINOR.WinFormsUI.TileListView
                         AutoSizeMode = AutoSizeMode.GrowAndShrink,
                         WrapContents = true,
                         Dock = DockStyle.Fill,
-                       Anchor = AnchorStyles.Top | AnchorStyles.Left 
+                        Padding = new Padding(20),
+                        BackColor = Color.LightGray,
+                        Anchor = AnchorStyles.Top | AnchorStyles.Left
                     };
                     group.GroupBox.Controls.Add(group.GroupFlowLayoutPanel);
                 }
+                //if (group.GroupFlowLayoutPanel != null)
+                //{
+                //    group.GroupFlowLayoutPanel.Controls.Add(item);
+                //}
                 foreach (var item in group.Items)
                 {
                     group.GroupFlowLayoutPanel.Controls.Add(item);
                 }
+                group.GroupBox.Height = group.GroupFlowLayoutPanel.GetPreferredSize(new Size(group.GroupBox.Width, 0)).Height + group.GroupBox.Padding.Vertical;
+
                 group.GroupBox.BringToFront();
                 y += group.GroupBox.Height;
             }
@@ -132,7 +127,7 @@ namespace RUINOR.WinFormsUI.TileListView
 
     [Serializable]
 
-public class TileItem : UserControl
+    public class TileItem : UserControl
     {
         private Label label;
         private CheckBox checkBox;

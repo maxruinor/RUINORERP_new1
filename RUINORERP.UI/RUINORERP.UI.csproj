@@ -2789,6 +2789,7 @@
     <None Include="ResourceFile\Help.png" />
     <None Include="ResourceFile\Help0.png" />
     <None Include="ResourceFile\US_Dollar.png" />
+    <None Include="Resources\WF.minus.ico" />
     <Content Include="ruinor.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

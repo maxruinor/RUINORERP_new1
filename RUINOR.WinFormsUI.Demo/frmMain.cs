@@ -64,24 +64,24 @@ namespace RUINOR.WinFormsUI.Demo
 
         private void btnTest平铺chk_Click(object sender, EventArgs e)
         {
-           
+
             tileListView.Clear();
-            tileListView.AddGroup("颜色");
+            tileListView.AddGroup("1", "颜色");
             for (int i = 0; i < 15; i++)
             {
                 //tileListView.AddItemToGroup("颜色", i + "Item属",true);
-                tileListView.AddItemToGroup("颜色", i + "Item属性值很长呢？ ", true);
+                tileListView.AddItemToGroup("1", i + "Item属性值很长呢？ ", true);
             }
 
-            tileListView.AddItemToGroup("颜色", "Item 2", false);
+            tileListView.AddItemToGroup("1", "Item 2", false);
 
-            tileListView.AddGroup("Group 2");
-            tileListView.AddItemToGroup("Group 2", "Item 3", true);
-            tileListView.AddItemToGroup("Group 2", "Item 4", false);
+            tileListView.AddGroup("2","Group 2");
+            tileListView.AddItemToGroup("2","Group 2", true);
+            tileListView.AddItemToGroup("2","Group 2",  false);
 
             tileListView.UpdateUI();
-            
-             
+
+
         }
     }
 }

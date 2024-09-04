@@ -70,6 +70,8 @@ namespace RUINORERP.Business
             RuleFor(tb_SaleOrder => tb_SaleOrder.RefBillID).NotEmpty().When(x => x.RefBillID.HasValue);
             RuleFor(tb_SaleOrder => tb_SaleOrder.RefNO).MaximumLength(25).WithMessage("引用单号:不能超过最大长度,25.");
             RuleFor(tb_SaleOrder => tb_SaleOrder.RefBizType).NotEmpty().When(x => x.RefBizType.HasValue);
+            Initialize();
+
 
             //long
             //SOrder_ID

@@ -26,7 +26,13 @@ namespace RUINOR.WinFormsUI
 	]
     public class TreeGridNode : DataGridViewRow//, IComponent
     {
-		internal TreeGridView _grid;
+		string  _nodeName;
+
+		//唯一
+        public string NodeName { get => _nodeName; set => _nodeName = value; }
+
+
+        internal TreeGridView _grid;
 		internal TreeGridNode _parent;
 		internal TreeGridNodeCollection _owner;
         internal bool IsExpanded;
@@ -507,6 +513,8 @@ namespace RUINOR.WinFormsUI
 				this.site = value;
 			}
 		}
+
+
 
         private void UpdateChildNodes(TreeGridNode node)
         {

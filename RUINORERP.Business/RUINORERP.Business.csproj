@@ -43,7 +43,6 @@
     <Compile Remove="tb_sales_orderController.cs" />
     <Compile Remove="tb_sales_orderControllerPartial.cs" />
     <Compile Remove="tb_sales_order_detailController.cs" />
-    <Compile Remove="Validator\BaseValidatorGeneric.cs" />
     <Compile Remove="Validator\tb_ProdBaseValidator.cs" />
     <Compile Remove="Validator\tb_ProductCategoriesValidator.cs" />
     <Compile Remove="Validator\tb_Product_BaseValidator.cs" />

@@ -15,9 +15,22 @@ namespace RUINOR.WinFormsUI.TileListView
     {
         public void Clear()
         {
+            groups.ForEach(g => g.Items.Clear());
             groups.Clear();
             this.Controls.Clear();
         }
+
+
+        public void SetItemChecked(string _GroupID, string ItemText, bool isChecked)
+        {
+            //加载属性值时，勾选对应的属性值
+            var group = Groups.FirstOrDefault(c => c.GroupID == _GroupID);
+            if (group != null)
+            {
+                group.Items.FirstOrDefault(c => c.Text == ItemText).Checked = true;
+            }
+        }
+
 
         public TileListView()
         {
@@ -25,35 +38,49 @@ namespace RUINOR.WinFormsUI.TileListView
 
         }
 
+
+
         private List<TileGroup> groups = new List<TileGroup>();
 
 
-        public void AddGroup(string title)
+
+        public TileGroup[] Groups
         {
-            var group = new TileGroup(title);
+            get { return groups.ToArray(); }
+        }
+        public TileGroup AddGroup(string _GroupID, string title)
+        {
+            var group = new TileGroup(_GroupID, title);
             groups.Add(group);
+            return group;
         }
 
-        public void AddItemToGroup(string groupTitle, string text, bool isChecked)
+
+        public CheckBox AddItemToGroup(string _GroupID, string ItemText, bool isChecked, string chkName = "chk", object tag = null)
         {
-            var group = groups.Find(g => g.GroupTitle == groupTitle);
+            CheckBox checkBox = null;
+            var group = groups.Find(g => g.GroupID == _GroupID);
             if (group != null)
             {
                 // var item = new TileItem(text, isChecked);
                 var item = new CheckBox
                 {
-                    Height = 20,
-                    Text = text,
+                    Name = chkName,
+                    Height = 18,
+                    Text = ItemText,
                     Checked = isChecked,
+                    Tag = tag,
                     //AutoSize = true,
                     //Anchor = AnchorStyles.Left | AnchorStyles.Top,
-                    //Margin = new Padding(0, 0, 0, 0),
+                    Margin = new Padding(0, 0, 0, 0),
                     //TextAlign = ContentAlignment.MiddleLeft,
                     //FlatStyle = FlatStyle.Flat,
                     //BackColor = Color.AliceBlue
                 };
+                checkBox = item;
                 group.Items.Add(item);
             }
+            return checkBox;
         }
         public void UpdateUI()
         {
@@ -86,7 +113,7 @@ namespace RUINOR.WinFormsUI.TileListView
                         Width = this.Width - 30, // 固定宽度，减去一些边距
                                                  // Height =  200, // Adjust height based on item count
                         Top = y,
-
+                        //BackColor = Color.LightSkyBlue,
                         Left = 10,
                         Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
                     };
@@ -102,8 +129,8 @@ namespace RUINOR.WinFormsUI.TileListView
                         AutoSizeMode = AutoSizeMode.GrowAndShrink,
                         WrapContents = true,
                         Dock = DockStyle.Fill,
-                        Padding = new Padding(20),
-                        BackColor = Color.LightGray,
+                        Padding = new Padding(5, 0, 5, 15),
+                        // BackColor = Color.LightBlue,
                         Anchor = AnchorStyles.Top | AnchorStyles.Left
                     };
                     group.GroupBox.Controls.Add(group.GroupFlowLayoutPanel);
@@ -149,7 +176,7 @@ namespace RUINOR.WinFormsUI.TileListView
 
             this.Controls.Add(checkBox);
             //this.Controls.Add(label);
-            this.BackColor = Color.MistyRose;
+            //this.BackColor = Color.MistyRose;
             // 调整大小以适应文本
             ResizeToFitText();
         }
@@ -181,10 +208,35 @@ namespace RUINOR.WinFormsUI.TileListView
     [Serializable]
     public class TileGroup
     {
+        /// <summary>
+        /// 名称唯一标识
+        /// </summary>
+        public string GroupID { get; set; }
         public string GroupTitle { get; set; }
+        // 属性用于保存业务数据，类型为 object 以提供灵活性
+        public object BusinessData { get; set; }
+        // 示例方法，用于设置业务数据
+        public void SetBusinessData(object data)
+        {
+            BusinessData = data;
+        }
+
+        // 示例方法，用于获取业务数据
+        public object GetBusinessData()
+        {
+            return BusinessData;
+        }
+
         public List<CheckBox> Items { get; } = new List<CheckBox>();
         public GroupBox GroupBox { get; set; }
         public FlowLayoutPanel GroupFlowLayoutPanel { get; set; }
+
+
+        public TileGroup(string _GroupID, string title)
+        {
+            GroupID = _GroupID;
+            GroupTitle = title;
+        }
 
         public TileGroup(string title)
         {

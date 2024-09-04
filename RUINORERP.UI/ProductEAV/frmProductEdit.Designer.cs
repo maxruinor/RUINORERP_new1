@@ -82,11 +82,11 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.cmbPropertyType = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.kryptonGroupBoxListView = new Krypton.Toolkit.KryptonGroupBox();
-            this.listView1 = new System.Windows.Forms.ListView();
-            this.kryptonGroupBoxDataGridView = new Krypton.Toolkit.KryptonGroupBox();
+            this.kryptonSplitContainer多属性 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.listView1 = new RUINOR.WinFormsUI.TileListView.TileListView();
+            this.kryptonPanelDetailGrid = new Krypton.Toolkit.KryptonPanel();
             this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.groupLine2 = new WinLib.Line.GroupLine();
             this.kryptonPageImage = new Krypton.Navigator.KryptonPage();
             this.kryptonPanelImage = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
@@ -139,15 +139,14 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonSplitContainer3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmb属性)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPropertyType)).BeginInit();
-            this.flowLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxListView)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxListView.Panel)).BeginInit();
-            this.kryptonGroupBoxListView.Panel.SuspendLayout();
-            this.kryptonGroupBoxListView.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxDataGridView)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxDataGridView.Panel)).BeginInit();
-            this.kryptonGroupBoxDataGridView.Panel.SuspendLayout();
-            this.kryptonGroupBoxDataGridView.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer多属性)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer多属性.Panel1)).BeginInit();
+            this.kryptonSplitContainer多属性.Panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer多属性.Panel2)).BeginInit();
+            this.kryptonSplitContainer多属性.Panel2.SuspendLayout();
+            this.kryptonSplitContainer多属性.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelDetailGrid)).BeginInit();
+            this.kryptonPanelDetailGrid.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageImage)).BeginInit();
             this.kryptonPageImage.SuspendLayout();
@@ -200,8 +199,8 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage3,
             this.kryptonPageImage,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 1;
-            this.kryptonNavigator1.Size = new System.Drawing.Size(1024, 603);
+            this.kryptonNavigator1.SelectedIndex = 0;
+            this.kryptonNavigator1.Size = new System.Drawing.Size(1024, 614);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
             this.kryptonNavigator1.SelectedPageChanged += new System.EventHandler(this.kryptonNavigator1_SelectedPageChanged);
@@ -214,7 +213,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPageMain.LastVisibleSet = true;
             this.kryptonPageMain.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPageMain.Name = "kryptonPageMain";
-            this.kryptonPageMain.Size = new System.Drawing.Size(1022, 572);
+            this.kryptonPageMain.Size = new System.Drawing.Size(1022, 583);
             this.kryptonPageMain.StateNormal.Tab.Border.Color1 = System.Drawing.Color.White;
             this.kryptonPageMain.StateNormal.Tab.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
             | Krypton.Toolkit.PaletteDrawBorders.Left) 
@@ -267,7 +266,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(1022, 572);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1022, 583);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // cmbSourceType
@@ -579,7 +578,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage3.LastVisibleSet = true;
             this.kryptonPage3.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPage3.Name = "kryptonPage3";
-            this.kryptonPage3.Size = new System.Drawing.Size(1022, 572);
+            this.kryptonPage3.Size = new System.Drawing.Size(1022, 583);
             this.kryptonPage3.Text = "属性配置";
             this.kryptonPage3.ToolTipTitle = "Page ToolTip";
             this.kryptonPage3.UniqueName = "4005A0325384478A20BFEBB7440319BD";
@@ -590,7 +589,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel3.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel3.Name = "kryptonPanel3";
-            this.kryptonPanel3.Size = new System.Drawing.Size(1022, 572);
+            this.kryptonPanel3.Size = new System.Drawing.Size(1022, 583);
             this.kryptonPanel3.TabIndex = 1;
             // 
             // kryptonSplitContainer3
@@ -612,9 +611,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonSplitContainer3.Panel2
             // 
-            this.kryptonSplitContainer3.Panel2.Controls.Add(this.flowLayoutPanel1);
-            this.kryptonSplitContainer3.Size = new System.Drawing.Size(1022, 572);
-            this.kryptonSplitContainer3.SplitterDistance = 60;
+            this.kryptonSplitContainer3.Panel2.Controls.Add(this.kryptonSplitContainer多属性);
+            this.kryptonSplitContainer3.Size = new System.Drawing.Size(1022, 583);
+            this.kryptonSplitContainer3.SplitterDistance = 61;
             this.kryptonSplitContainer3.TabIndex = 134;
             // 
             // btnClear
@@ -671,50 +670,43 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonLabel2.TabIndex = 137;
             this.kryptonLabel2.Values.Text = "属性类型";
             // 
-            // flowLayoutPanel1
+            // kryptonSplitContainer多属性
             // 
-            this.flowLayoutPanel1.Controls.Add(this.kryptonGroupBoxListView);
-            this.flowLayoutPanel1.Controls.Add(this.kryptonGroupBoxDataGridView);
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(1022, 507);
-            this.flowLayoutPanel1.TabIndex = 0;
+            this.kryptonSplitContainer多属性.Cursor = System.Windows.Forms.Cursors.Default;
+            this.kryptonSplitContainer多属性.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonSplitContainer多属性.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.kryptonSplitContainer多属性.Location = new System.Drawing.Point(0, 0);
+            this.kryptonSplitContainer多属性.Name = "kryptonSplitContainer多属性";
+            this.kryptonSplitContainer多属性.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
-            // kryptonGroupBoxListView
+            // kryptonSplitContainer多属性.Panel1
             // 
-            this.kryptonGroupBoxListView.CaptionVisible = false;
-            this.kryptonGroupBoxListView.Location = new System.Drawing.Point(3, 3);
-            this.kryptonGroupBoxListView.Name = "kryptonGroupBoxListView";
+            this.kryptonSplitContainer多属性.Panel1.Controls.Add(this.listView1);
             // 
-            // kryptonGroupBoxListView.Panel
+            // kryptonSplitContainer多属性.Panel2
             // 
-            this.kryptonGroupBoxListView.Panel.Controls.Add(this.listView1);
-            this.kryptonGroupBoxListView.Size = new System.Drawing.Size(758, 263);
-            this.kryptonGroupBoxListView.TabIndex = 5;
-            this.kryptonGroupBoxListView.Values.Heading = "属性选项";
+            this.kryptonSplitContainer多属性.Panel2.Controls.Add(this.kryptonPanelDetailGrid);
+            this.kryptonSplitContainer多属性.Size = new System.Drawing.Size(1022, 517);
+            this.kryptonSplitContainer多属性.SplitterDistance = 173;
+            this.kryptonSplitContainer多属性.TabIndex = 2;
             // 
             // listView1
             // 
-            this.listView1.HideSelection = false;
+            this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listView1.Location = new System.Drawing.Point(0, 0);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(751, 241);
-            this.listView1.TabIndex = 1;
-            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.Size = new System.Drawing.Size(1022, 173);
+            this.listView1.TabIndex = 2;
             // 
-            // kryptonGroupBoxDataGridView
+            // kryptonPanelDetailGrid
             // 
-            this.kryptonGroupBoxDataGridView.CaptionVisible = false;
-            this.kryptonGroupBoxDataGridView.Location = new System.Drawing.Point(3, 272);
-            this.kryptonGroupBoxDataGridView.Name = "kryptonGroupBoxDataGridView";
-            // 
-            // kryptonGroupBoxDataGridView.Panel
-            // 
-            this.kryptonGroupBoxDataGridView.Panel.Controls.Add(this.dataGridView1);
-            this.kryptonGroupBoxDataGridView.Size = new System.Drawing.Size(758, 220);
-            this.kryptonGroupBoxDataGridView.TabIndex = 6;
-            this.kryptonGroupBoxDataGridView.Values.Heading = "SKU详情";
+            this.kryptonPanelDetailGrid.Controls.Add(this.dataGridView1);
+            this.kryptonPanelDetailGrid.Controls.Add(this.groupLine2);
+            this.kryptonPanelDetailGrid.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelDetailGrid.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanelDetailGrid.Name = "kryptonPanelDetailGrid";
+            this.kryptonPanelDetailGrid.Size = new System.Drawing.Size(1022, 339);
+            this.kryptonPanelDetailGrid.TabIndex = 2;
             // 
             // dataGridView1
             // 
@@ -735,7 +727,7 @@ namespace RUINORERP.UI.ProductEAV
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(754, 216);
+            this.dataGridView1.Size = new System.Drawing.Size(1022, 339);
             this.dataGridView1.SumColumns = null;
             this.dataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.dataGridView1.SumRowCellFormat = "N2";
@@ -748,6 +740,14 @@ namespace RUINORERP.UI.ProductEAV
             this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView1_CellFormatting);
             this.dataGridView1.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.dataGridView1_CellPainting);
             this.dataGridView1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView1_DataError);
+            // 
+            // groupLine2
+            // 
+            this.groupLine2.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupLine2.Location = new System.Drawing.Point(0, 338);
+            this.groupLine2.Name = "groupLine2";
+            this.groupLine2.Size = new System.Drawing.Size(1022, 1);
+            this.groupLine2.TabIndex = 2;
             // 
             // kryptonPageImage
             // 
@@ -964,12 +964,12 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonSplitContainerBig.Panel2.Controls.Add(this.btnCancel);
             this.kryptonSplitContainerBig.Panel2.Controls.Add(this.btnOk);
             this.kryptonSplitContainerBig.Size = new System.Drawing.Size(1024, 678);
-            this.kryptonSplitContainerBig.SplitterDistance = 603;
+            this.kryptonSplitContainerBig.SplitterDistance = 614;
             this.kryptonSplitContainerBig.TabIndex = 1;
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(550, 22);
+            this.btnCancel.Location = new System.Drawing.Point(509, 18);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 3;
@@ -978,7 +978,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(432, 22);
+            this.btnOk.Location = new System.Drawing.Point(352, 18);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 2;
@@ -1032,15 +1032,14 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonSplitContainer3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.cmb属性)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPropertyType)).EndInit();
-            this.flowLayoutPanel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxListView.Panel)).EndInit();
-            this.kryptonGroupBoxListView.Panel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxListView)).EndInit();
-            this.kryptonGroupBoxListView.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxDataGridView.Panel)).EndInit();
-            this.kryptonGroupBoxDataGridView.Panel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxDataGridView)).EndInit();
-            this.kryptonGroupBoxDataGridView.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer多属性.Panel1)).EndInit();
+            this.kryptonSplitContainer多属性.Panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer多属性.Panel2)).EndInit();
+            this.kryptonSplitContainer多属性.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer多属性)).EndInit();
+            this.kryptonSplitContainer多属性.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelDetailGrid)).EndInit();
+            this.kryptonPanelDetailGrid.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageImage)).EndInit();
             this.kryptonPageImage.ResumeLayout(false);
@@ -1124,11 +1123,7 @@ namespace RUINORERP.UI.ProductEAV
         private Krypton.Toolkit.KryptonButton btnClear;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         internal UControls.NewSumDataGridView dataGridView1;
-        internal System.Windows.Forms.ListView listView1;
         internal System.Windows.Forms.BindingSource bindingSourceList;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
-        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxListView;
-        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxDataGridView;
         private Krypton.Toolkit.KryptonLabel lblModel;
         private Krypton.Toolkit.KryptonTextBox txtModel;
         private Krypton.Toolkit.KryptonLabel lblSalePublish;
@@ -1151,5 +1146,9 @@ namespace RUINORERP.UI.ProductEAV
         private Krypton.Toolkit.KryptonLabel lblENName;
         private Krypton.Toolkit.KryptonTextBox txtENName;
         private Krypton.Toolkit.KryptonComboBox cmbSourceType;
+        private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer多属性;
+        internal Krypton.Toolkit.KryptonPanel kryptonPanelDetailGrid;
+        private WinLib.Line.GroupLine groupLine2;
+        private RUINOR.WinFormsUI.TileListView.TileListView listView1;
     }
 }

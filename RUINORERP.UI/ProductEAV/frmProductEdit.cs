@@ -32,6 +32,7 @@ using NPOI.SS.Formula.Functions;
 using SqlSugar;
 using RUINORERP.Business.Processor;
 using Netron.GraphLib;
+using RUINOR.WinFormsUI.TileListView;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -106,7 +107,7 @@ namespace RUINORERP.UI.ProductEAV
                 kryptonPageImage.ClearFlags(KryptonPageFlags.All);
                 //this.OnShowHelp += FrmProductEdit_OnShowHelp;
                 categorylist = mca.Query();
-                prodpropValueList = mcPropertyValue.Query();
+                prodpropValueList = mcPropertyValue.QueryByNav(c => true);
                 prodpropList = mcProperty.Query();
                 // this.bindingSourceList.ListChanged += BindingSourceList_ListChanged;
                 InitListData();
@@ -196,7 +197,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void UCProductEdit_Load(object sender, EventArgs e)
         {
-            flowLayoutPanel1.AutoScroll = true;
+            //flowLayoutPanel1.AutoScroll = true;
             UIProdCateHelper.BindToTreeViewNoRootNode(categorylist, txtcategory_ID.TreeView);
             // AddTopPage();
             // Do not allow the document pages to be closed or made auto hidden/docked
@@ -899,6 +900,7 @@ namespace RUINORERP.UI.ProductEAV
             }
             base.BindData(entity);
             LoadBaseInfoSKUList(_EditEntity);
+            listView1.UpdateUI();
             Task task_2 = Task.Run(task_Help);
             //task_2.Wait();  //注释打开则等待task_2延时，注释掉则不等待
 
@@ -948,8 +950,9 @@ namespace RUINORERP.UI.ProductEAV
                 //编辑多属性时才需要编辑
                 if (_EditEntity.tb_Prod_Attr_Relations.Count > 1)
                 {
-                    listView1.ItemCheck -= ListView1_ItemCheck;
-                    listView1.ItemCheck += ListView1_ItemCheck;
+                    //listView1.ItemCheck -= ListView1_ItemCheck;
+                    // listView1.ItemCheck += ListView1_ItemCheck;
+
                     AttrGoups = GetAttrGoups(listView1);
                 }
 
@@ -1148,8 +1151,7 @@ namespace RUINORERP.UI.ProductEAV
                         if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ProdBaseID == 0)
                         {
                             bindingSourceList.Clear();
-                            listView1.Visible = false;
-                            listView1.ShowGroups = true;  //记得要设置ShowGroups属性为true（默认是false），否则显示不出分组
+                            //listView1.ShowGroups = true;  //记得要设置ShowGroups属性为true（默认是false），否则显示不出分组
 
                             if (dataGridView1.Rows.Count == 0)
                             {
@@ -1177,8 +1179,8 @@ namespace RUINORERP.UI.ProductEAV
                         cmb属性.Enabled = true;
                         btnAddProperty.Enabled = true;
                         bindingSourceList.Clear();
-                        listView1.ItemCheck -= ListView1_ItemCheck;
-                        listView1.ItemCheck += ListView1_ItemCheck;
+                        // listView1.ItemCheck -= ListView1_ItemCheck;
+                        //  listView1.ItemCheck += ListView1_ItemCheck;
                         //绑定对应的选项及其值
                         DataBindingHelper.InitDataToCmb<tb_ProdProperty>(p => p.Property_ID, t => t.PropertyName, cmb属性);
                         cmb属性.SelectedIndex = -1;
@@ -1210,9 +1212,7 @@ namespace RUINORERP.UI.ProductEAV
                     cmb属性.Enabled = false;
                     btnAddProperty.Enabled = false;
                     btnClear.Enabled = false;
-                    kryptonGroupBoxListView.Visible = false;
-                    kryptonGroupBoxDataGridView.Width = flowLayoutPanel1.Width;
-                    kryptonGroupBoxDataGridView.Height = flowLayoutPanel1.Height;
+
                     if (action == ActionStatus.加载)
                     {
 
@@ -1222,16 +1222,13 @@ namespace RUINORERP.UI.ProductEAV
                     cmb属性.Enabled = true;
                     btnAddProperty.Enabled = true;
                     btnClear.Enabled = true;
-                    kryptonGroupBoxListView.Visible = true;
 
-                    kryptonGroupBoxDataGridView.Visible = true;
-                    listView1.Height = 80 * PropertyCounter;
-                    kryptonGroupBoxListView.Height = listView1.Height;
-                    kryptonGroupBoxListView.Width = listView1.Width;
+                    //  listView1.Height = 80 * PropertyCounter;
 
 
-                    kryptonGroupBoxDataGridView.Width = flowLayoutPanel1.Width;
-                    kryptonGroupBoxDataGridView.Height = flowLayoutPanel1.Height - kryptonGroupBoxListView.Height;
+
+                    //  kryptonGroupBoxDataGridView.Width = flowLayoutPanel1.Width;
+                    //  kryptonGroupBoxDataGridView.Height = flowLayoutPanel1.Height - kryptonGroupBoxListView.Height;
 
                     if (action == ActionStatus.加载)
                     {
@@ -1272,7 +1269,7 @@ namespace RUINORERP.UI.ProductEAV
             var attrs = relations.GroupBy(e => e.Property_ID);
             int propertyCounter = attrs.ToList().Count;
             listView1.Clear();
-            listView1.CheckBoxes = true;
+
             if (propertyCounter == 1)
             {
                 // listView1.ItemCheck += ListView1_ItemCheck;
@@ -1284,7 +1281,6 @@ namespace RUINORERP.UI.ProductEAV
                 //listView1.ItemCheck += ListView1_ItemCheck;
                 MainForm.Instance.uclog.AddLog("消息", tips);
             }
-            listView1.ShowGroups = true;  //记得要设置ShowGroups属性为true（默认是false），否则显示不出分组
 
             //显示属性  加载勾选框
             #region 属性UI处理
@@ -1334,7 +1330,7 @@ namespace RUINORERP.UI.ProductEAV
             if (cmb属性.SelectedItem is tb_ProdProperty)
             {
                 tb_ProdProperty ppv = cmb属性.SelectedItem as tb_ProdProperty;
-                if (!listView1.Groups.Cast<ListViewGroup>().Any(i => i.Header == ppv.PropertyName.Trim()))
+                if (!listView1.Groups.Cast<TileGroup>().Any(i => i.GroupID == ppv.Property_ID.ToString().Trim()))
                 {
                     btnAddProperty.Enabled = true;
                 }
@@ -1373,10 +1369,11 @@ namespace RUINORERP.UI.ProductEAV
                     return;
                 }
 
-                listView1.ItemCheck -= ListView1_ItemCheck;
+                // listView1.ItemCheck -= ListView1_ItemCheck;
                 AddProdProperty(ppv, prodpropValueList);
-                listView1.ItemCheck += ListView1_ItemCheck;
-                PropertyCounter = listView1.Groups.Count;
+                listView1.UpdateUI();
+                // listView1.ItemCheck += ListView1_ItemCheck;
+                PropertyCounter = listView1.Groups.Length;
                 //PropertyValueMaxCounter=prodpropValueList.Where(w=>w.)
                 ControlBtn(ProductAttributeType.可配置多属性, EditEntity.ActionStatus);
                 btnAddProperty.Enabled = false;
@@ -1398,11 +1395,6 @@ namespace RUINORERP.UI.ProductEAV
             #region 新增修改式
             tb_ProdProperty pp = ppv;
             //create goups
-            ListViewGroup lvg = new ListViewGroup();  //创建男生分组
-            lvg.Header = pp.PropertyName;  //设置组的标题。
-            lvg.Name = pp.Property_ID.ToString();
-            lvg.Tag = pp;
-            lvg.HeaderAlignment = HorizontalAlignment.Left;   //设置组标题文本的对齐方式。（默认为Left）
 
             if (!contextMenuStrip1.Items.ContainsKey("【" + pp.PropertyName + "】全选") && propertyCounter == 1)
             {
@@ -1421,9 +1413,11 @@ namespace RUINORERP.UI.ProductEAV
             }
 
 
-            if (!listView1.Groups.Cast<ListViewGroup>().Any(i => i.Header == pp.PropertyName.Trim()))
+            if (!listView1.Groups.Cast<TileGroup>().Any(i => i.GroupID == pp.Property_ID.ToString().Trim()))
             {
-                listView1.Groups.Add(lvg);
+
+                TileGroup tileGroup = listView1.AddGroup(ppv.Property_ID.ToString(), ppv.PropertyName.Trim());
+                tileGroup.BusinessData = ppv;
                 //KeyValuePair<string, string> kv = new KeyValuePair<string, string>();
                 string keys = string.Empty;
                 string names = string.Empty;
@@ -1431,17 +1425,12 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     keys += item.PropertyValueID + ",";
                     names += item.PropertyValueName + ",";
-                    ListViewItem lvi = new ListViewItem();
-                    // lvi.ImageIndex = i;
-                    lvi.Name = item.PropertyValueID.ToString();
-                    lvi.Tag = item;
-                    lvi.Text = item.PropertyValueName;
-                    lvi.Checked = oneGroup.Exists(v => v.PropertyValueID == item.PropertyValueID);
-                    //lvi.Checked = true;
 
-                    lvi.ForeColor = Color.Blue;  //设置行颜色
-                    lvg.Items.Add(lvi);   //分组添加子项
-                    listView1.Items.Add(lvi);
+
+                    bool isChecked = oneGroup.Exists(v => v.PropertyValueID == item.PropertyValueID);
+                    CheckBox checkBox = listView1.AddItemToGroup(ppv.Property_ID.ToString(), item.PropertyValueName, isChecked, item.PropertyValueID.ToString(), item);
+                    checkBox.CheckStateChanged += CheckBox_CheckStateChanged;
+
                 }
                 keys = keys.Trim(',');
                 names = names.Trim(',');
@@ -1676,6 +1665,7 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
+        /*
         /// <summary>
         /// 添加产品特性
         /// </summary>
@@ -1748,8 +1738,118 @@ namespace RUINORERP.UI.ProductEAV
 
             #endregion
         }
+        */
+
+        /// <summary>
+        /// 添加产品特性
+        /// </summary>
+        private void AddProdProperty(tb_ProdProperty ppv, List<tb_ProdPropertyValue> listOptionValue)
+        {
+            #region 新增修改式
+
+            //create goups
+            //ListViewGroup lvg = new ListViewGroup();  //创建男生分组
+            //lvg.Header = ppv.PropertyName;  //设置组的标题。
+            //lvg.Name = ppv.Property_ID.ToString();
+            //lvg.Tag = ppv;
+            //lvg.HeaderAlignment = HorizontalAlignment.Left;   //设置组标题文本的对齐方式。（默认为Left）
+
+            if (!contextMenuStrip1.Items.ContainsKey("【" + ppv.PropertyName + "】全选"))
+            {
+                //加入分割线 美观一下
+                if (contextMenuStrip1.Items.Count > 0)
+                {
+                    AddContextMenu("-", contextMenuStrip1.Items, menuClicked);
+                    //属性都多了，之前的值全是不需要的
+                    bindingSourceList.Clear();
+                }
+                //添加菜单   
+                var yes = AddContextMenu("【" + ppv.PropertyName + "】全选", contextMenuStrip1.Items, menuClicked);
+                yes.Tag = ppv;
+                var no = AddContextMenu("【" + ppv.PropertyName + "】全不选", contextMenuStrip1.Items, menuClicked);
+                no.Tag = ppv;
+            }
+
+            if (!listView1.Groups.Cast<TileGroup>().Any(i => i.GroupID == ppv.Property_ID.ToString().Trim()))
+            {
+                TileGroup tileGroup = listView1.AddGroup(ppv.Property_ID.ToString(), ppv.PropertyName.Trim());
+                tileGroup.BusinessData = ppv;
+
+                string keys = string.Empty;
+                string names = string.Empty;
+                foreach (var item in listOptionValue.Where(w => w.Property_ID == ppv.Property_ID).ToList())
+                {
+                    keys += item.PropertyValueID + ",";
+                    names += item.PropertyValueName + ",";
+                    CheckBox checkBox = listView1.AddItemToGroup(ppv.Property_ID.ToString(), item.PropertyValueName, false, item.PropertyValueID.ToString(), item);
+                    checkBox.CheckStateChanged += CheckBox_CheckStateChanged;
+                }
+                keys = keys.Trim(',');
+                names = names.Trim(',');
+                if (!string.IsNullOrEmpty(names))
+                {
+                    propertyEavList.TryAdd(ppv.Property_ID.ToString(), names);
+                }
+            }
+            if (dataGridView1.Rows.Count == 0)
+            {
+                BindToSkulistGrid(new List<Eav_ProdDetails>());
+            }
 
 
+            #endregion
+        }
+
+        private void CheckBox_CheckStateChanged(object sender, EventArgs e)
+        {
+            #region 思路 与GetAttrGoups(listView1) 不一样，因为选择状态问题
+            CheckBox cb = sender as CheckBox;
+            if (cb.Tag is tb_ProdPropertyValue ppv)
+            {
+                tb_ProdProperty tpp = ppv.tb_prodproperty;
+                //先找到这个属性组
+                List<KeyValuePair<long, string[]>> exitkvps = AttrGoups.Where(t => t.Key == tpp.Property_ID).ToList();
+                if (exitkvps.Count > 0)
+                {
+                    #region
+
+                    List<string> text = exitkvps[0].Value.ToList();
+                    if (cb.CheckState == CheckState.Checked)//添加
+                    {
+                        if (!text.Contains(cb.Text))
+                        {
+                            text.Add(cb.Text);
+                            //联动下拉
+                        }
+                    }
+                    else//取消
+                    {
+                        text.Remove(cb.Text);
+                        //联动下拉
+                        #region
+
+                        #endregion
+                    }
+                    KeyValuePair<long, string[]> kvp = new KeyValuePair<long, string[]>(tpp.Property_ID, text.ToArray());
+                    AttrGoups.Remove(exitkvps[0]);
+                    AttrGoups.Add(kvp);
+                    #endregion
+                }
+                else
+                {
+                    //不存在这个情况
+                }
+
+
+            }
+            #endregion
+
+            //编辑时的添加
+            if (listView1.Enabled)
+            {
+                CreateSKUList();
+            }
+        }
 
         private void ListView1_ItemCheck(object sender, ItemCheckEventArgs e)
         {
@@ -1825,7 +1925,7 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-
+        /*
         /// <summary>
         /// 将listview的UI值转为属性组
         /// </summary>
@@ -1840,6 +1940,51 @@ namespace RUINORERP.UI.ProductEAV
                 long key = pp.Property_ID;
                 string values = string.Empty;
                 foreach (ListViewItem lvitem in g.Items)
+                {
+                    if (lvitem.Checked)
+                    {
+                        values += lvitem.Text + ",";
+                    }
+
+                }
+                values = values.TrimEnd(',');
+                if (values.Trim().Length == 0)
+                {
+                    continue;
+                }
+                KeyValuePair<long, string[]> kvp = new KeyValuePair<long, string[]>(key, values.Split(','));
+                List<KeyValuePair<long, string[]>> exitkvps = attrGoups.Where(t => t.Key == key).ToList();
+                if (exitkvps.Count == 0)
+                {
+                    attrGoups.Add(kvp);
+                }
+                else
+                {
+
+                    KeyValuePair<long, string[]> kvpf = exitkvps.FirstOrDefault();
+                    attrGoups.Remove(kvpf);
+                    attrGoups.Add(kvp);
+
+                }
+            }
+            return attrGoups;
+        }
+        */
+
+        /// <summary>
+        /// 将listview的UI值转为属性组
+        /// </summary>
+        /// <param name="lv"></param>
+        /// <returns></returns>
+        private List<KeyValuePair<long, string[]>> GetAttrGoups(TileListView lv)
+        {
+            List<KeyValuePair<long, string[]>> attrGoups = new List<KeyValuePair<long, string[]>>();
+            foreach (TileGroup g in lv.Groups)
+            {
+                tb_ProdProperty pp = g.BusinessData as tb_ProdProperty;
+                long key = pp.Property_ID;
+                string values = string.Empty;
+                foreach (CheckBox lvitem in g.Items)
                 {
                     if (lvitem.Checked)
                     {
@@ -1893,7 +2038,7 @@ namespace RUINORERP.UI.ProductEAV
             }
 
             var Item交集 = newMix.Intersect(oldMix);// 交集
-            //如果交集没有，则认为新的，与旧的完全不一样。把旧的全删除
+                                                  //如果交集没有，则认为新的，与旧的完全不一样。把旧的全删除
             if (Item交集.Count() == 0)
             {
                 foreach (var old in oldMix)
@@ -1963,10 +2108,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            listView1.Items.Clear();
-            listView1.Groups.Clear();
             listView1.Clear();
-
             bindingSourceList.Clear();
             AttrGoups.Clear();
             propertyEavList.Clear();
@@ -2019,7 +2161,7 @@ namespace RUINORERP.UI.ProductEAV
         #region 右键菜单的动态添加   
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
         {
-            if (listView1.Groups.Count == 0) //有选中项时才会弹出右键菜单   
+            if (listView1.Groups.Length == 0) //有选中项时才会弹出右键菜单   
             {
                 e.Cancel = true;
                 return;
@@ -2070,12 +2212,12 @@ namespace RUINORERP.UI.ProductEAV
             {
                 isAll = true;
             }
-            foreach (ListViewGroup g in listView1.Groups)
+            foreach (TileGroup g in listView1.Groups)
             {
-                tb_ProdProperty pp = g.Tag as tb_ProdProperty;
+                tb_ProdProperty pp = g.BusinessData as tb_ProdProperty;
                 if (pp.Property_ID == tpp.Property_ID)
                 {
-                    foreach (ListViewItem lvitem in g.Items)
+                    foreach (CheckBox lvitem in g.Items)
                     {
 
                         if (lvitem.Checked != isAll)

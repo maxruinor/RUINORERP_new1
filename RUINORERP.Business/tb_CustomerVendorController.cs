@@ -48,9 +48,6 @@ namespace RUINORERP.Business
            _tb_CustomerVendorServices = tb_CustomerVendorServices;
             _appContext = appContext;
         }
-      
-        
-        
         
          public ValidationResult Validator(tb_CustomerVendor info)
         {

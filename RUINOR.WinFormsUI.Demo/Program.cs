@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINOR.WinFormsUI.Demo.TreeGridView;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,6 +18,10 @@ namespace RUINOR.WinFormsUI.Demo
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new frmMain());
+            Application.Run(new RUINOR.WinFormsUI.TreeViewColumns.TreeViewColumnsDemo.Form1());
+            Application.Run(new RUINOR.WinFormsUI.Demo.TreeGridView.Form1());
+            
+            Application.Run(new TryTreeListView.TryTreeListView());
         }
     }
 }

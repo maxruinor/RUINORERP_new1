@@ -53,16 +53,9 @@ namespace RUINORERP.Business
             RuleFor(x => x.SubtotalTaxAmount).PrecisionScale(19, 4, true).WithMessage("税额:小数位不能超过4。");
             RuleFor(x => x.Gift).Equal(true).When(c => c.SubtotalTransAmount == 0).WithMessage("成交小计为零时，必须为赠品。");
             RuleFor(x => x.UnitPrice).GreaterThan(0).When(c => c.TransactionPrice > 0).WithMessage("成交价大于零时，单价必须大于零。");
-
+            //Initialize();
         }
-
-
-
-
-
-
-
-
+  
         private bool CheckForeignKeyValue(long ForeignKeyID)
         {
             bool rs = true;

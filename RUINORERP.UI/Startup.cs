@@ -1018,6 +1018,11 @@ public IHost CslaDIPortBackup()
             //2023-12-22用名称注册验证器
             List<KeyValuePair<string, Type>> ValidatorGenericlist = new List<KeyValuePair<string, Type>>();
 
+
+            //2024-9-04用名称注册验证器  新加了一个基类
+            List<KeyValuePair<string, Type>> NewBaseValidatorGenericlist = new List<KeyValuePair<string, Type>>();
+
+
             List<Type> IOCTypes = new List<Type>();
 
 
@@ -1039,7 +1044,6 @@ public IHost CslaDIPortBackup()
                     //单独处理这个类
                     builder.RegisterType(tempTypes[i]).Named("QueryFilter", typeof(QueryFilter))
                  .AsImplementedInterfaces().AsSelf()
-
                  .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
                  .InstancePerDependency();
 
@@ -1047,7 +1051,6 @@ public IHost CslaDIPortBackup()
                   .AsImplementedInterfaces().AsSelf()
                   .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
                   .InstancePerDependency();
-
                 }
 
                 if (tempTypes[i].Name.Contains("UseCsla"))
@@ -1077,15 +1080,27 @@ public IHost CslaDIPortBackup()
                     //泛型名称有一个尾巴，这里处理掉，但是总体要保持不能同时拥有同名的 泛型 和非泛型控制类
                     //否则就是调用解析时用加小尾巴
                     BaseControllerGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
-                    //BaseControllerGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name, tempTypes[i]));
                 }
 
-                if (tempTypes[i].BaseType.Name.Contains("Validator") && tempTypes[i].BaseType.IsGenericType)
+                if (tempTypes[i].BaseType.Name.Contains("AbstractValidator")
+                    && !tempTypes[i].Name.Contains("BaseValidatorGeneric")
+                    && !tempTypes[i].BaseType.Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
                 {
                     //泛型名称有一个尾巴，这里处理掉，但是总体要保持不能同时拥有同名的 泛型 和非泛型控制类
                     //否则就是调用解析时用加小尾巴
                     ValidatorGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
-                    //BaseControllerGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name, tempTypes[i]));
+                }
+
+                //基类本身
+                if (tempTypes[i].Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
+                {
+                     builder.RegisterGeneric(typeof(BaseValidatorGeneric<>));
+                     builder.RegisterGeneric(typeof(AbstractValidator<>)); 
+                }
+                //子类
+                if (tempTypes[i].BaseType.Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
+                {
+                    NewBaseValidatorGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
                 }
 
                 /*
@@ -1140,7 +1155,6 @@ public IHost CslaDIPortBackup()
                 .AsImplementedInterfaces().AsSelf()
                 .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
                 .InstancePerDependency()
-
                 .EnableInterfaceInterceptors();
                 //  .InterceptedBy(registerType.ToArray()); //以什么类型拦截
             }
@@ -1171,6 +1185,16 @@ public IHost CslaDIPortBackup()
                   .PropertiesAutowired()
                  .InstancePerDependency();
             }
+            //用名称注册泛型
+            foreach (var item in NewBaseValidatorGenericlist)
+            {
+                builder.RegisterType(item.Value)
+               .AsImplementedInterfaces().AsSelf()
+                  .SingleInstance()
+                  .PropertiesAutowired()
+                 .InstancePerDependency();
+            }
+
 
             //如果多次注册以后最后准
             //https://blog.csdn.net/weixin_30778805/article/details/97148925

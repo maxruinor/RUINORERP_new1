@@ -20,7 +20,7 @@ using System.Drawing.Design;
 namespace RUINOR.WinFormsUI
 {
 	/// <summary>
-	/// Summary description for TreeGridView.
+	/// Summary description for TreeGridView.by watson
 	/// </summary>
     [System.ComponentModel.DesignerCategory("code"),
     Designer(typeof(System.Windows.Forms.Design.ControlDesigner)),

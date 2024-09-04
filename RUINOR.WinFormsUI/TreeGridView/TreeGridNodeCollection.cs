@@ -13,35 +13,35 @@ using System.Text;
 
 namespace RUINOR.WinFormsUI
 {
-	public class TreeGridNodeCollection : System.Collections.Generic.IList<TreeGridNode>, System.Collections.IList
-	{
-		internal System.Collections.Generic.List<TreeGridNode> _list;
-		internal TreeGridNode _owner;
-		internal TreeGridNodeCollection(TreeGridNode owner)
-		{
-			this._owner = owner;
-			this._list = new List<TreeGridNode>();
-		}
+    public class TreeGridNodeCollection : System.Collections.Generic.IList<TreeGridNode>, System.Collections.IList
+    {
+        internal System.Collections.Generic.List<TreeGridNode> _list;
+        internal TreeGridNode _owner;
+        internal TreeGridNodeCollection(TreeGridNode owner)
+        {
+            this._owner = owner;
+            this._list = new List<TreeGridNode>();
+        }
 
-		#region Public Members
-		public void Add(TreeGridNode item)
-		{
-			// The row needs to exist in the child collection before the parent is notified.
-			item._grid = this._owner._grid;
+        #region Public Members
+        public void Add(TreeGridNode item)
+        {
+            // The row needs to exist in the child collection before the parent is notified.
+            item._grid = this._owner._grid;
 
             bool hadChildren = this._owner.HasChildren;
-			item._owner = this;
+            item._owner = this;
 
-			this._list.Add(item);
+            this._list.Add(item);
 
-			this._owner.AddChildNode(item);
+            this._owner.AddChildNode(item);
 
             // if the owner didn't have children but now does (asserted) and it is sited update it
             if (!hadChildren && this._owner.IsSited)
             {
                 this._owner._grid.InvalidateRow(this._owner.RowIndex);
             }
-		}
+        }
 
         public TreeGridNode Add(string text)
         {
@@ -52,6 +52,7 @@ namespace RUINOR.WinFormsUI
             return node;
         }
 
+ 
         public TreeGridNode Add(params object[] values)
         {
             TreeGridNode node = new TreeGridNode();
@@ -59,7 +60,7 @@ namespace RUINOR.WinFormsUI
 
             int cell = 0;
 
-            if (values.Length > node.Cells.Count )
+            if (values.Length > node.Cells.Count)
                 throw new ArgumentOutOfRangeException("values");
 
             foreach (object o in values)
@@ -82,66 +83,66 @@ namespace RUINOR.WinFormsUI
         }
 
         public bool Remove(TreeGridNode item)
-		{
-			// The parent is notified first then the row is removed from the child collection.
-			this._owner.RemoveChildNode(item);
-			item._grid = null;
-			return this._list.Remove(item);
-		}
+        {
+            // The parent is notified first then the row is removed from the child collection.
+            this._owner.RemoveChildNode(item);
+            item._grid = null;
+            return this._list.Remove(item);
+        }
 
         public void RemoveAt(int index)
-		{
-			TreeGridNode row = this._list[index];
+        {
+            TreeGridNode row = this._list[index];
 
-			// The parent is notified first then the row is removed from the child collection.
-			this._owner.RemoveChildNode(row);
-			row._grid = null;
-			this._list.RemoveAt(index);
-		}
+            // The parent is notified first then the row is removed from the child collection.
+            this._owner.RemoveChildNode(row);
+            row._grid = null;
+            this._list.RemoveAt(index);
+        }
 
         public void Clear()
-		{
-			// The parent is notified first then the row is removed from the child collection.
-			this._owner.ClearNodes();
-			this._list.Clear();
-		}
+        {
+            // The parent is notified first then the row is removed from the child collection.
+            this._owner.ClearNodes();
+            this._list.Clear();
+        }
 
         public int IndexOf(TreeGridNode item)
         {
             return this._list.IndexOf(item);
         }
 
-		public TreeGridNode this[int index]
-		{
-			get
-			{
-				return this._list[index];
-			}
-			set
-			{
-				throw new Exception("The method or operation is not implemented.");
-			}
-		}
+        public TreeGridNode this[int index]
+        {
+            get
+            {
+                return this._list[index];
+            }
+            set
+            {
+                throw new Exception("The method or operation is not implemented.");
+            }
+        }
 
-		public bool Contains(TreeGridNode item)
-		{
-			return this._list.Contains(item);
-		}
+        public bool Contains(TreeGridNode item)
+        {
+            return this._list.Contains(item);
+        }
 
-		public void CopyTo(TreeGridNode[] array, int arrayIndex)
-		{
-			throw new Exception("The method or operation is not implemented.");
-		}
+        public void CopyTo(TreeGridNode[] array, int arrayIndex)
+        {
+            throw new Exception("The method or operation is not implemented.");
+        }
 
-		public int Count
-		{
-			get{ return this._list.Count; }
-		}
+        public int Count
+        {
+            get { return this._list.Count; }
+        }
 
         public bool IsReadOnly
-		{
-			get{ return false; }
-		}
+        {
+            get { return false; }
+        }
         #endregion
 
         #region IList Interface
@@ -170,14 +171,14 @@ namespace RUINOR.WinFormsUI
         }
 
         bool System.Collections.IList.IsReadOnly
-		{
-			get { return this.IsReadOnly;}
-		}
+        {
+            get { return this.IsReadOnly; }
+        }
 
-		bool System.Collections.IList.IsFixedSize
-		{
-			get { return false; }
-		}
+        bool System.Collections.IList.IsFixedSize
+        {
+            get { return false; }
+        }
 
         int System.Collections.IList.IndexOf(object item)
         {
@@ -214,39 +215,39 @@ namespace RUINOR.WinFormsUI
 
 
 
-		#region IEnumerable<ExpandableRow> Members
+        #region IEnumerable<ExpandableRow> Members
 
-		public IEnumerator<TreeGridNode> GetEnumerator()
-		{
-			return this._list.GetEnumerator();
-		}
+        public IEnumerator<TreeGridNode> GetEnumerator()
+        {
+            return this._list.GetEnumerator();
+        }
 
-		#endregion
+        #endregion
 
 
-		#region IEnumerable Members
+        #region IEnumerable Members
 
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return this.GetEnumerator();
-		}
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
 
-		#endregion
-		#endregion
+        #endregion
+        #endregion
 
-		#region ICollection Members
+        #region ICollection Members
 
-		bool System.Collections.ICollection.IsSynchronized
-		{
-			get { throw new Exception("The method or operation is not implemented."); }
-		}
+        bool System.Collections.ICollection.IsSynchronized
+        {
+            get { throw new Exception("The method or operation is not implemented."); }
+        }
 
-		object System.Collections.ICollection.SyncRoot
-		{
-			get { throw new Exception("The method or operation is not implemented."); }
-		}
+        object System.Collections.ICollection.SyncRoot
+        {
+            get { throw new Exception("The method or operation is not implemented."); }
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 
 }

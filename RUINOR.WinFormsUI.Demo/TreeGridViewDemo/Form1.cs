@@ -167,8 +167,8 @@ namespace RUINOR.WinFormsUI.Demo.TreeGridView
             node.DefaultCellStyle.Font = boldFont;
             
         }
-
-
+        
+        
         internal class AttachmentColumnHeader : DataGridViewColumnHeaderCell
         {
             public Image _image;

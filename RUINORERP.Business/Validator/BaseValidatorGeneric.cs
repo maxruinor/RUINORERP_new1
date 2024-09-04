@@ -7,11 +7,21 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Business
 {
-    public class BaseValidatorGeneric<T> :AbstractValidator<T> where T : class 
+    public abstract class BaseValidatorGeneric<T> : AbstractValidator<T> where T : class
     {
-        public BaseValidatorGeneric()
+        protected BaseValidatorGeneric()
         {
-
+                
         }
+        public abstract void Initialize();
+
+        ///// <summary>
+        ///// 为了实现个性化验证，可以在子类中重写此方法
+        ///// </summary>
+        //public virtual void Initialize()
+        //{
+
+        //}
+
     }
 }

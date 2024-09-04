@@ -117,7 +117,6 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-           
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, "事务回滚");
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;

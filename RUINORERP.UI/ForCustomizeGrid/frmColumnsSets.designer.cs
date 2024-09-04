@@ -31,11 +31,14 @@
             this.listView1 = new System.Windows.Forms.ListView();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkAll = new Krypton.Toolkit.KryptonCheckBox();
             this.SuspendLayout();
             // 
             // listView1
             // 
             this.listView1.CheckBoxes = true;
+            this.listView1.HideSelection = false;
             this.listView1.Location = new System.Drawing.Point(-3, -2);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
@@ -46,7 +49,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(67, 435);
+            this.btnOk.Location = new System.Drawing.Point(112, 435);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(84, 35);
             this.btnOk.TabIndex = 5;
@@ -65,6 +68,24 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btn_cancel_Click);
             // 
+            // chkReverseSelection
+            // 
+            this.chkReverseSelection.Location = new System.Drawing.Point(54, 434);
+            this.chkReverseSelection.Name = "chkReverseSelection";
+            this.chkReverseSelection.Size = new System.Drawing.Size(49, 20);
+            this.chkReverseSelection.TabIndex = 10;
+            this.chkReverseSelection.Values.Text = "反选";
+            this.chkReverseSelection.CheckedChanged += new System.EventHandler(this.chkReverseSelection_CheckedChanged);
+            // 
+            // chkAll
+            // 
+            this.chkAll.Location = new System.Drawing.Point(3, 434);
+            this.chkAll.Name = "chkAll";
+            this.chkAll.Size = new System.Drawing.Size(49, 20);
+            this.chkAll.TabIndex = 9;
+            this.chkAll.Values.Text = "全选";
+            this.chkAll.CheckedChanged += new System.EventHandler(this.chkAll_CheckedChanged);
+            // 
             // frmColumnsSets
             // 
             this.AcceptButton = this.btnOk;
@@ -72,6 +93,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(379, 480);
+            this.Controls.Add(this.chkReverseSelection);
+            this.Controls.Add(this.chkAll);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.listView1);
@@ -80,6 +103,7 @@
             this.Text = "自定义列显示";
             this.Load += new System.EventHandler(this.frmColumnsSets_Load);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -88,5 +112,7 @@
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Button btnCancel;
+        private Krypton.Toolkit.KryptonCheckBox chkReverseSelection;
+        private Krypton.Toolkit.KryptonCheckBox chkAll;
     }
 }

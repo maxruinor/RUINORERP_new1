@@ -814,12 +814,17 @@ namespace RUINORERP.UI.ProductEAV
                 _EditEntity.ProductNo = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ProductNo);
                 //_EditEntity.ShortCode = maxid.ToString().PadLeft(4, '0');//推荐
                 //助记码要在类目选择后生成，要有规律
+                //详情直接清空，因为是新增 ，属性这块不清楚。后面再优化：TODO:
+                _EditEntity.tb_ProdDetails = new List<tb_ProdDetail>();
+                _EditEntity.PropertyType = 1;// cmbPropertyType   1为单属性
+                _EditEntity.tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>();
                 // 在类目属性选择后
-                if (_EditEntity.tb_ProdDetails != null && _EditEntity.tb_ProdDetails.Count > 0)
-                {
-                    _EditEntity.tb_ProdDetails.ForEach(c => c.ProdBaseID = 0);
-                    _EditEntity.tb_ProdDetails.ForEach(c => c.ProdDetailID = 0);
-                }
+                //if (_EditEntity.tb_ProdDetails != null && _EditEntity.tb_ProdDetails.Count > 0)
+                //{
+                //    _EditEntity.tb_ProdDetails.ForEach(c => c.ProdBaseID = 0);
+                //    _EditEntity.tb_ProdDetails.ForEach(c => c.ProdDetailID = 0);
+                //    //_EditEntity.tb_ProdDetails.ForEach(c => c.SKU = 0);
+                //}
             }
             else
             {
@@ -835,7 +840,7 @@ namespace RUINORERP.UI.ProductEAV
             txtcategory_ID.DataBindings.Add(parent_categorie);
 
             #endregion
-            
+
             DataBindingHelper.BindData4CmbByEnum<tb_Prod>(entity, k => k.SourceType, typeof(GoodsSource), cmbSourceType, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ProductNo, txtNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ShortCode, txtShortCode, BindDataType4TextBox.Text, false);
@@ -1140,7 +1145,7 @@ namespace RUINORERP.UI.ProductEAV
                     case ProductAttributeType.单属性:
                         ControlBtn(pt, EditEntity.ActionStatus);
                         #region 新增修改式
-                        if (EditEntity.ActionStatus == ActionStatus.新增)
+                        if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ProdBaseID == 0)
                         {
                             bindingSourceList.Clear();
                             listView1.Visible = false;
@@ -1250,7 +1255,7 @@ namespace RUINORERP.UI.ProductEAV
         private void LoadBaseInfoSKUList(tb_Prod entityProdBase)
         {
             List<tb_Prod_Attr_Relation> relations = entityProdBase.tb_Prod_Attr_Relations;
-            if (relations == null)
+            if (relations == null || relations.Count == 0)
             {
                 //正常数据都不会为空
                 return;
@@ -1336,7 +1341,7 @@ namespace RUINORERP.UI.ProductEAV
 
             }
             return;
-         
+
 
         }
 

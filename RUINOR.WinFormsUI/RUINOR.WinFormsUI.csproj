@@ -325,6 +325,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="StatePersistence.cs" />
+    <Compile Include="TileListView\TileListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TreeGridView\TreeGridCell.cs" />
     <Compile Include="TreeGridView\TreeGridEvents.cs" />
     <Compile Include="TreeGridView\TreeGridNode.cs" />

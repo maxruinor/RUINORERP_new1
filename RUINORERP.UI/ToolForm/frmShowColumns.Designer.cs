@@ -29,11 +29,11 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
-            this.chkListBox = new Krypton.Toolkit.KryptonCheckedListBox();
+            this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.chkAll = new Krypton.Toolkit.KryptonCheckBox();
-            this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
+            this.listView1 = new System.Windows.Forms.ListView();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -52,7 +52,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkListBox);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.listView1);
             // 
             // kryptonSplitContainer1.Panel2
             // 
@@ -64,13 +64,14 @@
             this.kryptonSplitContainer1.SplitterDistance = 411;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
-            // chkListBox
+            // chkReverseSelection
             // 
-            this.chkListBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chkListBox.Location = new System.Drawing.Point(0, 0);
-            this.chkListBox.Name = "chkListBox";
-            this.chkListBox.Size = new System.Drawing.Size(381, 411);
-            this.chkListBox.TabIndex = 0;
+            this.chkReverseSelection.Location = new System.Drawing.Point(67, 3);
+            this.chkReverseSelection.Name = "chkReverseSelection";
+            this.chkReverseSelection.Size = new System.Drawing.Size(49, 20);
+            this.chkReverseSelection.TabIndex = 8;
+            this.chkReverseSelection.Values.Text = "反选";
+            this.chkReverseSelection.CheckedChanged += new System.EventHandler(this.chkReverseSelection_CheckedChanged);
             // 
             // btnCancel
             // 
@@ -95,19 +96,23 @@
             // 
             this.chkAll.Location = new System.Drawing.Point(13, 2);
             this.chkAll.Name = "chkAll";
-            this.chkAll.Size = new System.Drawing.Size(48, 20);
+            this.chkAll.Size = new System.Drawing.Size(49, 20);
             this.chkAll.TabIndex = 1;
             this.chkAll.Values.Text = "全选";
             this.chkAll.CheckedChanged += new System.EventHandler(this.chkAll_CheckedChanged);
             // 
-            // chkReverseSelection
+            // listView1
             // 
-            this.chkReverseSelection.Location = new System.Drawing.Point(67, 3);
-            this.chkReverseSelection.Name = "chkReverseSelection";
-            this.chkReverseSelection.Size = new System.Drawing.Size(48, 20);
-            this.chkReverseSelection.TabIndex = 8;
-            this.chkReverseSelection.Values.Text = "反选";
-            this.chkReverseSelection.CheckedChanged += new System.EventHandler(this.chkReverseSelection_CheckedChanged);
+            this.listView1.CheckBoxes = true;
+            this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listView1.HideSelection = false;
+            this.listView1.Location = new System.Drawing.Point(0, 0);
+            this.listView1.MultiSelect = false;
+            this.listView1.Name = "listView1";
+            this.listView1.Size = new System.Drawing.Size(381, 411);
+            this.listView1.TabIndex = 1;
+            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.View = System.Windows.Forms.View.Details;
             // 
             // frmShowColumns
             // 
@@ -135,10 +140,10 @@
         #endregion
 
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
-        private Krypton.Toolkit.KryptonCheckedListBox chkListBox;
         private Krypton.Toolkit.KryptonCheckBox chkAll;
         private Krypton.Toolkit.KryptonButton btnCancel;
         private Krypton.Toolkit.KryptonButton btnOk;
         private Krypton.Toolkit.KryptonCheckBox chkReverseSelection;
+        private System.Windows.Forms.ListView listView1;
     }
 }

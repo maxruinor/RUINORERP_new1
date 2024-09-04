@@ -169,6 +169,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
         frmShowColumns frm = new frmShowColumns();
+         
         private void SiCustom_Click(object sender, EventArgs e)
         {
             frm.XmlFileName = _xmlfileName;

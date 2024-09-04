@@ -437,19 +437,38 @@ namespace RUINORERP.UI.UCSourceGrid
                                         //如果这个列指定和目标，也要设置一下 ，但是这里是加载。都已经保存在数据库了。不需要？
                                         SetCellValue(dc, pt, v_prod, true);
                                     }
-
-                                    //如果是与值不一样的名称显示，这种情况。1）行rowdata中已经是真正的数据。
-                                    //如果有编辑器的也区分了。所以这里可以把值改为显示名称
-                                    currContext.DisplayText = ShowFKColumnText(dc, cellvalue, sgdefine);
-                                    if (!string.IsNullOrEmpty(currContext.DisplayText))
+                                    //如果是产品图片时，显示出来
+                                    if (dc.CustomFormat == CustomFormatType.Image)
                                     {
-                                        currContext.Value = currContext.DisplayText;
+                                        currContext.DisplayText = "";
+                                        if (cellvalue != null)
+                                        {
+                                            currContext.Cell.View = new SourceGrid.Cells.Views.SingleImage();
+                                            currContext.Value = cellvalue;
+                                        }
+                                        else
+                                        {
+                                            currContext.Cell.View = sgdefine.ViewNormal;
+                                        }
+                                        currContext.Tag = v_prod;
                                     }
                                     else
                                     {
-                                        currContext.Value = cellvalue;
+                                        //如果是与值不一样的名称显示，这种情况。1）行rowdata中已经是真正的数据。
+                                        //如果有编辑器的也区分了。所以这里可以把值改为显示名称
+                                        currContext.DisplayText = ShowFKColumnText(dc, cellvalue, sgdefine);
+                                        if (!string.IsNullOrEmpty(currContext.DisplayText))
+                                        {
+                                            currContext.Value = currContext.DisplayText;
+                                        }
+                                        else
+                                        {
+                                            currContext.Value = cellvalue;
+                                        }
+                                        currContext.Cell.View = sgdefine.ViewNormal;
+                                        currContext.Tag = v_prod;
                                     }
-                                    currContext.Tag = v_prod;
+
 
                                 }
 
@@ -500,6 +519,10 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.Position pt = new SourceGrid.Position(r, dc.ColIndex);
                     SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
                     currContext.Value = null;
+                    if (dc.CustomFormat == CustomFormatType.Image)
+                    {
+                        currContext.Cell.View = sgdefine.ViewNormal;
+                    }
                     if (dc.ColName == "Selected")
                     {
                         grid1[pt] = new SourceGrid.Cells.Cell("");
@@ -648,14 +671,14 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         if (griddefine[c].CustomFormat == CustomFormatType.CurrencyFormat)
                         {
-                          //  totalText = string.Format("{0:C}", 0);
+                            //  totalText = string.Format("{0:C}", 0);
                             grid[grid.Rows.Count - 1, c] = new SourceGrid.Cells.Cell(totalText, typeof(decimal));
                             grid[grid.Rows.Count - 1, c].Value = 0;
                             grid[grid.Rows.Count - 1, c].DisplayText = string.Format("{0:C}", 0);
                         }
                         else if (1 == 1)
                         {
-                           //这里显示格式化可以根据字段定义如果为int 或有小数
+                            //这里显示格式化可以根据字段定义如果为int 或有小数
                             grid[grid.Rows.Count - 1, c] = new SourceGrid.Cells.Cell(0, typeof(int));
                             grid[grid.Rows.Count - 1, c].Value = 0;
                             grid[grid.Rows.Count - 1, c].DisplayText = string.Format("{0:##}", 0);
@@ -753,7 +776,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 定义了表格，
         /// </summary>
         /// <param name="grid"></param>
-        /// <param name="griddefine">索引</param>
+        /// <param name="griddefine">索引,这个决定了顺序</param>
         private void InitGrid(SourceGrid.Grid grid, SourceGridDefine griddefine, string customColumnsXMLFileName)
         {
             //启动时默认无选中
@@ -774,6 +797,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             //ColumnHeader view
             SourceGrid.Cells.Views.ColumnHeader viewColumnHeader = new SourceGrid.Cells.Views.ColumnHeader();
+
             DevAge.Drawing.VisualElements.ColumnHeader backHeader = new DevAge.Drawing.VisualElements.ColumnHeader();
             //backHeader.BackColor = Color.Maroon;
             backHeader.Style = ControlDrawStyle.Disabled;
@@ -806,6 +830,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 columnHeader.Value = griddefine[i].ColCaption;
                 //暂时默认所有列不自动排序  如果排序则全乱了。总计 和提前插入的空白行都以及数据修改全乱
                 columnHeader.AutomaticSortEnabled = false;
+
                 //griddefine[i].ColIndex = i;
 
                 //if (griddefine[i].ColName == griddefine.DependQuery.TargetCol.TargetColumnName)
@@ -904,7 +929,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
             #endregion
             SetColumnsWidth(grid, griddefine);
-
 
             SourceGridDefineColumnItem selected = griddefine.DefineColumns.Find(c => c.ColName == "Selected");
             if (selected != null)
@@ -2632,6 +2656,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                     {
                                         sgdefine.grid[p.Row, item.ColIndex].DisplayText = "否";
                                     }
+                                    break;
+                                case CustomFormatType.Image:
+
                                     break;
                                 default:
                                     break;

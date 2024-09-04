@@ -5,17 +5,17 @@ using System.Windows.Forms;
 
 namespace SourceGrid.Cells.Views
 {
-	/// <summary>
-	/// Summary description for a 3D Header.
-    /// This is a standard header without theme support. Use the ColumnHeaderThemed for theme support.
-	/// </summary>
-	[Serializable]
+    /// <summary>
+    /// 3D页眉的摘要描述。
+    /// 这是一个没有主题支持的标准标头。使用ColumnHeaderThemed获得主题支持。
+    /// </summary>
+    [Serializable]
 	public class ColumnHeader : Header
 	{
-		/// <summary>
-		/// Represents a Column Header with the ability to draw an Image in the right to indicates the sort operation. You must use this model with a cell of type ICellSortableHeader.
-		/// </summary>
-		public new readonly static ColumnHeader Default;
+        /// <summary>
+        /// 表示列标题，能够在右侧绘制图像以指示排序操作。您必须将此模型与ICellSortableHeader类型的单元格一起使用。
+        /// </summary>
+        public new readonly static ColumnHeader Default;
 
 		#region Constructors
 

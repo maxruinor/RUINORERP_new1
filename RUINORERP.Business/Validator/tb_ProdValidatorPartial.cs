@@ -33,8 +33,10 @@ namespace RUINORERP.Business
             RuleFor(x => x.CNName).NotEmpty().WithMessage("品名必须输入。").Must(UniqueName).WithMessage("这个品名已经存在。");
             RuleFor(tb_Prod => tb_Prod.PropertyType).NotNull().WithMessage("产品类型:不能为空。");
             RuleFor(x => x.PropertyType).NotEmpty().WithMessage("属性类型必须输入。");
+            RuleFor(tb_Prod => tb_Prod.Unit_ID).Must(CheckForeignKeyValue).WithMessage("单位:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Type_ID).Must(CheckForeignKeyValue).WithMessage("产品类型:下拉选择值不正确。");
-           RuleFor(x=>x.Location_ID).NotNull().WithMessage("默认仓库不能为空。");
+            RuleFor(x => x.Location_ID).NotNull().WithMessage("默认仓库不能为空。");
+
             RuleFor(tb_Prod => tb_Prod.Location_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认仓库:下拉选择值不正确。");
         }
 

@@ -1,5 +1,6 @@
 ﻿using BNR;
 using RUINOR.WinFormsUI.Demo.ChkComboBoxDemo;
+using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Extensions.Redis;
 using System;
 using System.Collections.Generic;
@@ -57,8 +58,30 @@ namespace RUINOR.WinFormsUI.Demo
             RUINOR.WinFormsUI.TreeViewColumns.TreeViewColumnsDemo.Form1 treeform = new TreeViewColumns.TreeViewColumnsDemo.Form1();
             treeform.Show();
 
-            TryTreeListView.TryTreeListView tryTree=new TryTreeListView.TryTreeListView();
+            TryTreeListView.TryTreeListView tryTree = new TryTreeListView.TryTreeListView();
             tryTree.Show();
+        }
+
+        private void btnTest平铺chk_Click(object sender, EventArgs e)
+        {
+           
+            tileListView.Clear();
+            tileListView.AddGroup("颜色");
+            for (int i = 0; i < 15; i++)
+            {
+                //tileListView.AddItemToGroup("颜色", i + "Item属",true);
+                tileListView.AddItemToGroup("颜色", i + "Item属性值很长呢？ ", true);
+            }
+
+            tileListView.AddItemToGroup("颜色", "Item 2", false);
+
+            tileListView.AddGroup("Group 2");
+            tileListView.AddItemToGroup("Group 2", "Item 3", true);
+            tileListView.AddItemToGroup("Group 2", "Item 4", false);
+           
+
+            
+             
         }
     }
 }

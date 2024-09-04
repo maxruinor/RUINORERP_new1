@@ -19,6 +19,9 @@ using RUINORERP.Model.Dto;
 using RUINORERP.UI.BaseForm;
 using Netron.GraphLib;
 using RUINORERP.Global;
+using MathNet.Numerics.LinearAlgebra.Factorization;
+using RUINORERP.Common.Extensions;
+using FastReport.DevComponents.DotNetBar.Controls;
 namespace RUINORERP.UI.ProductEAV
 {
 
@@ -41,13 +44,24 @@ namespace RUINORERP.UI.ProductEAV
             tb_ProdController<tb_Prod> dc = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
 
             Expression<Func<tb_Prod, bool>> exp = Expressionable.Create<tb_Prod>() //创建表达式
-           .AndIF(txtNo.Text.Trim().Length > 0, w => w.ProductNo.Contains(txtNo.Text.Trim()))
-           .AndIF(txtNo.Text.Trim().Length > 0, w => w.ProductNo.Contains(txtNo.Text.Trim()))
+           .AndIF(txtModel.Text.Trim().Length > 0, w => w.Model.Contains(txtModel.Text.Trim()))
+           .AndIF(txtName.Text.Trim().Length > 0, w => w.CNName.Contains(txtName.Text.Trim()))
            .AndIF(txtNo.Text.Trim().Length > 0, w => w.ProductNo.Contains(txtNo.Text.Trim()))
            .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.ProductNo.Contains(txtSpecifications.Text.Trim()))
             .ToExpression();
-            var list = dc.BaseQueryByWhereTop(exp, 100);
-            bindingSourcProperty.DataSource = list.ToBindingSortCollection();
+
+            var list = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_Prod>()
+                .Includes(c => c.tb_ProdDetails)
+                .Includes(c => c.tb_Prod_Attr_Relations, d => d.tb_prodpropertyvalue, e => e.tb_prodproperty)
+                .Where(exp)
+
+                .ToList();
+
+
+            //var list = dc.BaseQueryByWhereTop(exp, 100);
+
+
+            bindingSourc产品.DataSource = list.ToBindingSortCollection();
         }
         ConcurrentDictionary<string, KeyValuePair<string, bool>> FieldNameList1;
 
@@ -62,6 +76,14 @@ namespace RUINORERP.UI.ProductEAV
 
         private void UCMultiPropertyEditor_Load(object sender, EventArgs e)
         {
+            listView属性显示.CheckBoxes = true;
+            EnumBindingHelper bindingHelper = new EnumBindingHelper();
+            //https://www.cnblogs.com/cdaniu/p/15236857.html
+            //加载枚举，并且可以过虑不需要的项
+            List<int> exclude = new List<int>();
+            exclude.Add((int)ProductAttributeType.虚拟);
+            bindingHelper.InitDataToCmbByEnumOnWhere<tb_Prod>(typeof(ProductAttributeType).GetListByEnum(2, exclude.ToArray()), e => e.PropertyType, cmbPropertyType);
+
             prodpropValueList = mcPropertyValue.Query();
             prodpropList = mcProperty.Query();
             //DataBindingHelper.BindData4CmbByEnumData<tb_Prod>(entity, k => k.PropertyType, cmbPropertyType);
@@ -71,9 +93,9 @@ namespace RUINORERP.UI.ProductEAV
             dataGridViewProd.XmlFileName = "UCMultiPropertyEditor_" + typeof(tb_Prod).Name;
             dataGridViewProd.FieldNameList = FieldNameList1;
             dataGridViewProd.DataSource = null;
-            bindingSourcProperty.DataSource = new List<tb_Prod>();
-            dataGridViewProd.DataSource = bindingSourcProperty;
-                  
+            bindingSourc产品.DataSource = new List<tb_Prod>();
+            dataGridViewProd.DataSource = bindingSourc产品;
+
             LoadGrid1();
         }
 
@@ -91,11 +113,11 @@ namespace RUINORERP.UI.ProductEAV
 
 
             //指定了关键字段ProdDetailID
-            listCols1 = sgh1.GetGridColumns<ProductSharePart, tb_ProdDetail>(c => c.ProdDetailID, false);
-
-            listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
-            listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
-            listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
+            //listCols1 = sgh1.GetGridColumns<ProductSharePart, tb_ProdDetail>(c => c.ProdDetailID, false);
+            listCols1 = sgh1.GetGridColumns<tb_ProdDetail>();
+            //listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            //listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
+            //listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.ProdDetailID);
             //listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Discount_Price);
             //listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Discount_Price);
@@ -105,11 +127,11 @@ namespace RUINORERP.UI.ProductEAV
             listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Created_by);
             listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Modified_at);
             listCols1.SetCol_NeverVisible<tb_ProdDetail>(c => c.Modified_by);
-            listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+            //listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
 
             if (!MainForm.Instance.AppContext.SysConfig.UseBarCode)
             {
-                listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
+                //listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
             // ControlChildColumnsInvisible(listCols1);
 
@@ -141,13 +163,17 @@ namespace RUINORERP.UI.ProductEAV
             }*/
 
 
-            //sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_ProdDetail>(sgd, f => f.BOM_ID, t => t.BOM_ID);
+            //公共到明细的映射 源 ，左边会隐藏
+            //  sgh1.SetPointToColumnPairs<ProductSharePart, tb_ProdDetail>(sgd1, f => f.SKU, t => t.SKU);
+            // sgh1.SetPointToColumnPairs<ProductSharePart, tb_ProdDetail>(sgd1, f => f.Standard_Price, t => t.Standard_Price);
+            // sgh1.SetPointToColumnPairs<ProductSharePart, tb_ProdDetail>(sgd1, f => f.BarCode, t => t.BarCode);
+            //  sgh1.SetPointToColumnPairs<ProductSharePart, tb_ProdDetail>(sgd1, f => f.Images, t => t.Images);
 
 
             //应该只提供一个结构
             List<tb_ProdDetail> lines = new List<tb_ProdDetail>();
-            bindingSourceGrid.DataSource = lines;
-            sgd1.BindingSourceLines = bindingSourceGrid;
+            bindingSourceSKU明细.DataSource = lines;
+            sgd1.BindingSourceLines = bindingSourceSKU明细;
 
             Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
                .AndIF(true, w => w.CNName.Length > 0)
@@ -156,7 +182,7 @@ namespace RUINORERP.UI.ProductEAV
                               // StringBuilder sb = new StringBuilder();
             /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
             list = dc.BaseQueryByWhere(exp);
-            sgd1.SetDependencyObject<ProductSharePart, tb_ProdDetail>(list);
+            //sgd1.SetDependencyObject<ProductSharePart, tb_ProdDetail>(list);
 
             sgd1.HasRowHeader = true;
             sgh1.InitGrid(grid1, sgd1, true, nameof(tb_ProdDetail));
@@ -207,19 +233,36 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     return;
                 }
-
-                listView属性显示.ItemCheck -= listView属性显示_ItemCheck;
-                AddProdProperty(ppv, prodpropValueList);
-                listView属性显示.ItemCheck += listView属性显示_ItemCheck;
-                PropertyCounter = listView属性显示.Groups.Count;
-                //PropertyValueMaxCounter=prodpropValueList.Where(w=>w.)
-                ControlBtn(ProductAttributeType.可配置多属性);
-                btnAddProperty.Enabled = false;
+                AddProperty(ppv);
             }
+        }
+
+
+        private void AddProperty(tb_ProdProperty ppv)
+        {
+            if (ppv == null)
+            {
+                return;
+            }
+            if (ppv.Property_ID == -1)
+            {
+                return;
+            }
+
+            listView属性显示.ItemCheck -= listView属性显示_ItemCheck;
+            AddProdProperty(ppv, prodpropValueList);
+            listView属性显示.ItemCheck += listView属性显示_ItemCheck;
+            PropertyCounter = listView属性显示.Groups.Count;
+            //PropertyValueMaxCounter=prodpropValueList.Where(w=>w.)
+            ControlBtn(ProductAttributeType.可配置多属性);
+            btnAddProperty.Enabled = false;
+
 
             AttrGoups = GetAttrGoups(listView属性显示);
             CreateSKUList();
         }
+
+
         /// <summary>
         /// 将listview的UI值转为属性组
         /// </summary>
@@ -267,9 +310,9 @@ namespace RUINORERP.UI.ProductEAV
         private void CreateSKUList()
         {
             List<Eav_ProdDetails> propGroups = new List<Eav_ProdDetails>();
-            if (bindingSourceGrid.DataSource is List<Eav_ProdDetails>)
+            if (bindingSourceSKU明细.DataSource is List<Eav_ProdDetails>)
             {
-                propGroups = bindingSourceGrid.DataSource as List<Eav_ProdDetails>;
+                propGroups = bindingSourceSKU明细.DataSource as List<Eav_ProdDetails>;
             }
 
             //如果存在则更新，
@@ -293,7 +336,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     //更新删除
                     Eav_ProdDetails ep = propGroups.Cast<Eav_ProdDetails>().FirstOrDefault(w => w.GroupName == old.Trim());
-                    bindingSourceGrid.Remove(ep);
+                    bindingSourceSKU明细.Remove(ep);
                     //将删除的sku行 暂时加入一个临时列表中
                     // removeSkuList.Add(ep);
                 }
@@ -308,7 +351,7 @@ namespace RUINORERP.UI.ProductEAV
                         //补码
                         ppg.BarCode = BizCodeGenerator.Instance.GetBarCode(ppg.SKU, EditEntity.CNName.Substring(0).ToCharArray()[0]);
                     }
-                    bindingSourceGrid.Add(ppg);
+                    bindingSourceSKU明细.Add(ppg);
                 }
             }
             else
@@ -321,7 +364,7 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         //更新删除
                         Eav_ProdDetails ep = propGroups.Cast<Eav_ProdDetails>().FirstOrDefault(w => w.GroupName == item.Trim());
-                        bindingSourceGrid.Remove(ep);
+                        bindingSourceSKU明细.Remove(ep);
                         //将删除的sku行 暂时加入一个临时列表中
                         // removeSkuList.Add(ep);
                     }
@@ -334,7 +377,7 @@ namespace RUINORERP.UI.ProductEAV
                         Eav_ProdDetails ppg = new Eav_ProdDetails();
                         ppg.GroupName = item;
                         ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
-                        bindingSourceGrid.Add(ppg);
+                        bindingSourceSKU明细.Add(ppg);
 
                     }
                 }
@@ -361,7 +404,6 @@ namespace RUINORERP.UI.ProductEAV
                     btnAddProperty.Enabled = true;
                     btnClear.Enabled = true;
                     kryptonGroupBoxListView.Visible = true;
-
                     grid1.Visible = true;
                     listView属性显示.Height = 80 * PropertyCounter;
                     kryptonGroupBoxListView.Height = listView属性显示.Height;
@@ -518,17 +560,23 @@ namespace RUINORERP.UI.ProductEAV
             listView属性显示.CheckBoxes = true;
 
             listView属性显示.ShowGroups = true;  //记得要设置ShowGroups属性为true（默认是false），否则显示不出分组
-            listView属性显示.View = View.LargeIcon;
+            listView属性显示.View = View.Details;
+
+            ColumnHeader columnHeader1 = new ColumnHeader();
+            listView属性显示.Columns.Add(columnHeader1);
+            columnHeader1.Text = "属性值";
+            columnHeader1.Width = 100;
+
             ImageList imgList = new ImageList();
             imgList.ImageSize = new Size(1, 25);
             listView属性显示.SmallImageList = imgList;
 
             //create goups
-            ListViewGroup lvg = new ListViewGroup();  //创建男生分组
+            ListViewGroup lvg = new ListViewGroup(ppv.PropertyName, HorizontalAlignment.Center);  //创建分组
             lvg.Header = ppv.PropertyName;  //设置组的标题。
             lvg.Name = ppv.Property_ID.ToString();
             lvg.Tag = ppv;
-            lvg.HeaderAlignment = HorizontalAlignment.Left;   //设置组标题文本的对齐方式。（默认为Left）
+            //lvg.HeaderAlignment = HorizontalAlignment.Left;   //设置组标题文本的对齐方式。（默认为Left）
 
             if (!contextMenuStrip1.Items.ContainsKey("【" + ppv.PropertyName + "】全选"))
             {
@@ -537,7 +585,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     AddContextMenu("-", contextMenuStrip1.Items, menuClicked);
                     //属性都多了，之前的值全是不需要的
-                    bindingSourceGrid.Clear();
+                    bindingSourceSKU明细.Clear();
                 }
                 //添加菜单   
                 var yes = AddContextMenu("【" + ppv.PropertyName + "】全选", contextMenuStrip1.Items, menuClicked);
@@ -572,14 +620,14 @@ namespace RUINORERP.UI.ProductEAV
                     propertyEavList.TryAdd(ppv.Property_ID.ToString(), names);
                 }
             }
-         
-                // BindToSkulistGrid(new List<Eav_ProdDetails>());
 
-                if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
-                {
-                    sgh1.LoadItemDataToGrid<tb_ProdDetail>(grid1, sgd1, EditEntity.tb_ProdDetails, c => c.ProdDetailID);
-                }
-           
+            // BindToSkulistGrid(new List<Eav_ProdDetails>());
+
+            if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
+            {
+                sgh1.LoadItemDataToGrid<tb_ProdDetail>(grid1, sgd1, EditEntity.tb_ProdDetails, c => c.ProdDetailID);
+            }
+
 
 
             #endregion
@@ -591,7 +639,7 @@ namespace RUINORERP.UI.ProductEAV
             listView属性显示.Groups.Clear();
             listView属性显示.Clear();
 
-            bindingSourceGrid.Clear();
+            bindingSourceSKU明细.Clear();
             AttrGoups.Clear();
             propertyEavList.Clear();
             //contextMenuStrip1.Items.Clear();
@@ -662,8 +710,8 @@ namespace RUINORERP.UI.ProductEAV
                     if (image != null)
                     {
                         //缩略图 这里用缓存 ?
-                      //  Image thumbnailthumbnail = this.thumbnail(image, 100, 100);
-                       // e.Value = thumbnailthumbnail;
+                        //  Image thumbnailthumbnail = this.thumbnail(image, 100, 100);
+                        // e.Value = thumbnailthumbnail;
                     }
 
                 }
@@ -684,10 +732,108 @@ namespace RUINORERP.UI.ProductEAV
                     if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
                     {
                         sgh1.LoadItemDataToGrid<tb_ProdDetail>(grid1, sgd1, EditEntity.tb_ProdDetails, c => c.ProdDetailID);
+                        //加载属性类型，再加载属性及对应的值
+                        cmbPropertyType.SelectedValue = EditEntity.PropertyType;
+                        List<tb_ProdProperty> propList = new List<tb_ProdProperty>();
+                        foreach (var item in EditEntity.tb_Prod_Attr_Relations)
+                        {
+                            if (item.tb_prodpropertyvalue != null && propList.Contains(item.tb_prodpropertyvalue.tb_prodproperty) == false)
+                            {
+                                propList.Add(item.tb_prodpropertyvalue.tb_prodproperty);
+                            }
+                        }
+                        foreach (var item in propList)
+                        {
+                            AddProperty(item);
+                        }
+                        //加载属性
+                        //EditEntity.tb_Prod_Attr_Relations = EditEntity.tb_Prod_Attr_Relations.OrderBy(c => c.tb_Prod_Attr.AttrOrder).ToList();
+
+                        //加载属性值
                     }
                 }
             }
 
         }
+
+        private void BindToSkulistGrid(List<Eav_ProdDetails> propGroups)
+        {
+            dataGridViewProd.RowHeadersVisible = false;
+            bindingSourceSKU明细.DataSource = propGroups;
+            dataGridViewProd.DataSource = bindingSourceSKU明细;
+        }
+
+        private void cmbPropertyType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cmbPropertyType.Tag == null)
+            {
+                return;
+            }
+            object selectObj = cmbPropertyType.SelectedValue;
+            if (cmbPropertyType.SelectedItem != null && selectObj.ObjToInt() != -1)
+            {
+                EditEntity.PropertyType = (int)cmbPropertyType.SelectedValue;
+                ProductAttributeType pt = (ProductAttributeType)cmbPropertyType.SelectedValue;
+                switch (pt)
+                {
+                    case ProductAttributeType.单属性:
+                        //ControlBtn(pt, EditEntity.ActionStatus);
+                        ControlBtn(pt);
+                        #region 新增修改式
+                        if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ProdBaseID == 0)
+                        {
+                            bindingSourceSKU明细.Clear();
+                            listView属性显示.Visible = false;
+                            listView属性显示.ShowGroups = true;  //记得要设置ShowGroups属性为true（默认是false），否则显示不出分组
+
+                            if (dataGridViewProd.Rows.Count == 0)
+                            {
+                                BindToSkulistGrid(new List<Eav_ProdDetails>());
+                            }
+                            if (EditEntity.ActionStatus != ActionStatus.加载)
+                            {
+                                Eav_ProdDetails ppg = new Eav_ProdDetails();
+                                ppg.GroupName = "";
+                                ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                                bindingSourceSKU明细.Add(ppg);
+                            }
+
+                        }
+                        #endregion
+
+                        if (dataGridViewProd.Columns.Contains("GroupName"))
+                        {
+                            dataGridViewProd.Columns["GroupName"].Visible = false;
+                        }
+
+                        break;
+                    case ProductAttributeType.可配置多属性:
+                        ControlBtn(pt);
+                        cmb属性.Enabled = true;
+                        btnAddProperty.Enabled = true;
+                        bindingSourceSKU明细.Clear();
+                        listView属性显示.ItemCheck -= listView属性显示_ItemCheck;
+                        listView属性显示.ItemCheck += listView属性显示_ItemCheck;
+                        //绑定对应的选项及其值
+                        DataBindingHelper.InitDataToCmb<tb_ProdProperty>(p => p.Property_ID, t => t.PropertyName, cmb属性);
+                        cmb属性.SelectedIndex = -1;
+                        if (EditEntity.tb_Prod_Attr_Relations != null)
+                        {
+                            //编辑性加载
+                        }
+
+
+                        break;
+                    case ProductAttributeType.捆绑:
+                        break;
+                    case ProductAttributeType.虚拟:
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+        }
+
     }
 }

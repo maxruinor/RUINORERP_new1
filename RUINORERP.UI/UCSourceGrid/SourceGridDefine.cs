@@ -723,7 +723,10 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     SourceGrid.Position pt = new Position(currPosition.Row, item.ColIndex);
                     SourceGrid.CellContext processContext = new SourceGrid.CellContext(this.grid, pt);
-
+                    if (item.CustomFormat == CustomFormatType.Image)
+                    {
+                       // processContext.Cell.View = CurrGridDefine.ViewNormal;
+                    }
                     if (!item.IsRowHeaderCol)
                     {
                         processContext.Value = null;

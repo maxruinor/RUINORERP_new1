@@ -793,6 +793,12 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     //清空关联值
                     CurrGridDefine.SetDependTargetValue(null, sender.Position, null, CurrGridDefine[sender.Position.Column].ColName);
+                    if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.Image)
+                    {
+                        //因为是清空。所以图片也要恢复成默认视图
+                        sender.Cell.View = CurrGridDefine.ViewNormal;
+                    }
+
                 }
                 return;
             }

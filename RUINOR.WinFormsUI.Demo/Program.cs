@@ -16,7 +16,6 @@ namespace RUINOR.WinFormsUI.Demo
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new OutlookGridApp.Form1());
             Application.Run(new frmMain());
         }
     }

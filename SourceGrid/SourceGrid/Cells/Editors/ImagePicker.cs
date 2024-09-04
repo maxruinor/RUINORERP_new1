@@ -191,8 +191,14 @@ namespace SourceGrid.Cells.Editors
             editor.BorderStyle = DevAge.Drawing.BorderStyle.None;
             editor.Validator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
             editor.ContextMenuStrip = GetContextMenu();
-
+            editor.TextBox.AllowDrop = true;
+            editor.TextBox.DragDrop += Editor_DragDrop;
             return editor;
+        }
+
+        private void Editor_DragDrop(object sender, DragEventArgs e)
+        {
+             
         }
 
         /// <summary>

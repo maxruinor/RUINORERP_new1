@@ -194,10 +194,10 @@ namespace RUINORERP.Model
 
         private int _PropertyType;
         /// <summary>
-        /// 货品类型
+        /// 属性类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "PropertyType",ColDesc = "货品类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PropertyType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品类型" )]
+        [AdvQueryAttribute(ColName = "PropertyType",ColDesc = "属性类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PropertyType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "属性类型")]
         public int PropertyType
         { 
             get{return _PropertyType;}

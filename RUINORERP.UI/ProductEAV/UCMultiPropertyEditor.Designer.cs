@@ -29,8 +29,10 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer生成组合 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.cmbPropertyType = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.btnClear = new Krypton.Toolkit.KryptonButton();
             this.btnAddProperty = new Krypton.Toolkit.KryptonButton();
             this.cmb属性 = new Krypton.Toolkit.KryptonComboBox();
@@ -67,8 +69,8 @@
             this.groupLine4 = new WinLib.Line.GroupLine();
             this.kryptonPanel2 = new Krypton.Toolkit.KryptonPanel();
             this.groupLine1 = new WinLib.Line.GroupLine();
-            this.bindingSourcProperty = new System.Windows.Forms.BindingSource(this.components);
-            this.bindingSourceGrid = new System.Windows.Forms.BindingSource(this.components);
+            this.bindingSourc产品 = new System.Windows.Forms.BindingSource(this.components);
+            this.bindingSourceSKU明细 = new System.Windows.Forms.BindingSource(this.components);
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合.Panel1)).BeginInit();
@@ -76,6 +78,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合.Panel2)).BeginInit();
             this.kryptonSplitContainer生成组合.Panel2.SuspendLayout();
             this.kryptonSplitContainer生成组合.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbPropertyType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmb属性)).BeginInit();
             this.flowLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxListView)).BeginInit();
@@ -120,8 +123,8 @@
             this.kryptonPanel3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).BeginInit();
             this.kryptonPanel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSourcProperty)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceGrid)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourc产品)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSKU明细)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer生成组合
@@ -134,6 +137,8 @@
             // 
             // kryptonSplitContainer生成组合.Panel1
             // 
+            this.kryptonSplitContainer生成组合.Panel1.Controls.Add(this.cmbPropertyType);
+            this.kryptonSplitContainer生成组合.Panel1.Controls.Add(this.kryptonLabel2);
             this.kryptonSplitContainer生成组合.Panel1.Controls.Add(this.btnClear);
             this.kryptonSplitContainer生成组合.Panel1.Controls.Add(this.btnAddProperty);
             this.kryptonSplitContainer生成组合.Panel1.Controls.Add(this.cmb属性);
@@ -143,12 +148,30 @@
             // 
             this.kryptonSplitContainer生成组合.Panel2.Controls.Add(this.flowLayoutPanel1);
             this.kryptonSplitContainer生成组合.Size = new System.Drawing.Size(966, 271);
-            this.kryptonSplitContainer生成组合.SplitterDistance = 101;
+            this.kryptonSplitContainer生成组合.SplitterDistance = 53;
             this.kryptonSplitContainer生成组合.TabIndex = 135;
+            // 
+            // cmbPropertyType
+            // 
+            this.cmbPropertyType.DropDownWidth = 205;
+            this.cmbPropertyType.IntegralHeight = false;
+            this.cmbPropertyType.Location = new System.Drawing.Point(86, 12);
+            this.cmbPropertyType.Name = "cmbPropertyType";
+            this.cmbPropertyType.Size = new System.Drawing.Size(178, 21);
+            this.cmbPropertyType.TabIndex = 173;
+            this.cmbPropertyType.SelectedIndexChanged += new System.EventHandler(this.cmbPropertyType_SelectedIndexChanged);
+            // 
+            // kryptonLabel2
+            // 
+            this.kryptonLabel2.Location = new System.Drawing.Point(20, 12);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel2.TabIndex = 172;
+            this.kryptonLabel2.Values.Text = "属性类型";
             // 
             // btnClear
             // 
-            this.btnClear.Location = new System.Drawing.Point(651, 13);
+            this.btnClear.Location = new System.Drawing.Point(762, 10);
             this.btnClear.Name = "btnClear";
             this.btnClear.Size = new System.Drawing.Size(40, 25);
             this.btnClear.TabIndex = 171;
@@ -157,7 +180,7 @@
             // 
             // btnAddProperty
             // 
-            this.btnAddProperty.Location = new System.Drawing.Point(510, 13);
+            this.btnAddProperty.Location = new System.Drawing.Point(688, 10);
             this.btnAddProperty.Name = "btnAddProperty";
             this.btnAddProperty.Size = new System.Drawing.Size(40, 25);
             this.btnAddProperty.TabIndex = 170;
@@ -168,15 +191,15 @@
             // 
             this.cmb属性.DropDownWidth = 205;
             this.cmb属性.IntegralHeight = false;
-            this.cmb属性.Location = new System.Drawing.Point(99, 21);
+            this.cmb属性.Location = new System.Drawing.Point(421, 12);
             this.cmb属性.Name = "cmb属性";
-            this.cmb属性.Size = new System.Drawing.Size(306, 21);
+            this.cmb属性.Size = new System.Drawing.Size(180, 21);
             this.cmb属性.TabIndex = 141;
             this.cmb属性.SelectedIndexChanged += new System.EventHandler(this.cmb属性_SelectedIndexChanged);
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(57, 22);
+            this.kryptonLabel3.Location = new System.Drawing.Point(379, 12);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel3.TabIndex = 140;
@@ -189,7 +212,7 @@
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(966, 165);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(966, 213);
             this.flowLayoutPanel1.TabIndex = 0;
             // 
             // listView属性显示
@@ -216,8 +239,8 @@
             this.dataGridViewProd.AllowUserToAddRows = false;
             this.dataGridViewProd.AllowUserToDeleteRows = false;
             this.dataGridViewProd.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
-            this.dataGridViewProd.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
+            this.dataGridViewProd.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridViewProd.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -230,7 +253,7 @@
             this.dataGridViewProd.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewProd.Name = "dataGridViewProd";
             this.dataGridViewProd.RowTemplate.Height = 23;
-            this.dataGridViewProd.Size = new System.Drawing.Size(966, 77);
+            this.dataGridViewProd.Size = new System.Drawing.Size(966, 97);
             this.dataGridViewProd.SumColumns = null;
             this.dataGridViewProd.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.dataGridViewProd.SumRowCellFormat = "N2";
@@ -416,7 +439,7 @@
             // 
             this.kryptonSplitContainer主要操作部分.Panel2.Controls.Add(this.kryptonPanel1);
             this.kryptonSplitContainer主要操作部分.Size = new System.Drawing.Size(966, 754);
-            this.kryptonSplitContainer主要操作部分.SplitterDistance = 184;
+            this.kryptonSplitContainer主要操作部分.SplitterDistance = 204;
             this.kryptonSplitContainer主要操作部分.TabIndex = 138;
             // 
             // kryptonSplitContainer操作查询部分
@@ -435,7 +458,7 @@
             // kryptonSplitContainer操作查询部分.Panel2
             // 
             this.kryptonSplitContainer操作查询部分.Panel2.Controls.Add(this.kryptonPanel4);
-            this.kryptonSplitContainer操作查询部分.Size = new System.Drawing.Size(966, 184);
+            this.kryptonSplitContainer操作查询部分.Size = new System.Drawing.Size(966, 204);
             this.kryptonSplitContainer操作查询部分.SplitterDistance = 102;
             this.kryptonSplitContainer操作查询部分.TabIndex = 140;
             // 
@@ -446,13 +469,13 @@
             this.kryptonPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel4.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel4.Name = "kryptonPanel4";
-            this.kryptonPanel4.Size = new System.Drawing.Size(966, 77);
+            this.kryptonPanel4.Size = new System.Drawing.Size(966, 97);
             this.kryptonPanel4.TabIndex = 2;
             // 
             // groupLine6
             // 
             this.groupLine6.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine6.Location = new System.Drawing.Point(0, 76);
+            this.groupLine6.Location = new System.Drawing.Point(0, 96);
             this.groupLine6.Name = "groupLine6";
             this.groupLine6.Size = new System.Drawing.Size(966, 1);
             this.groupLine6.TabIndex = 2;
@@ -464,7 +487,7 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(966, 565);
+            this.kryptonPanel1.Size = new System.Drawing.Size(966, 545);
             this.kryptonPanel1.TabIndex = 2;
             // 
             // kryptonSplitContainer下
@@ -483,7 +506,7 @@
             // kryptonSplitContainer下.Panel2
             // 
             this.kryptonSplitContainer下.Panel2.Controls.Add(this.kryptonPanel3);
-            this.kryptonSplitContainer下.Size = new System.Drawing.Size(966, 564);
+            this.kryptonSplitContainer下.Size = new System.Drawing.Size(966, 544);
             this.kryptonSplitContainer下.SplitterDistance = 271;
             this.kryptonSplitContainer下.TabIndex = 139;
             // 
@@ -494,7 +517,7 @@
             this.kryptonPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel3.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel3.Name = "kryptonPanel3";
-            this.kryptonPanel3.Size = new System.Drawing.Size(966, 288);
+            this.kryptonPanel3.Size = new System.Drawing.Size(966, 268);
             this.kryptonPanel3.TabIndex = 2;
             // 
             // grid1
@@ -506,7 +529,7 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(966, 287);
+            this.grid1.Size = new System.Drawing.Size(966, 267);
             this.grid1.TabIndex = 3;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
@@ -514,7 +537,7 @@
             // groupLine5
             // 
             this.groupLine5.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine5.Location = new System.Drawing.Point(0, 287);
+            this.groupLine5.Location = new System.Drawing.Point(0, 267);
             this.groupLine5.Name = "groupLine5";
             this.groupLine5.Size = new System.Drawing.Size(966, 1);
             this.groupLine5.TabIndex = 2;
@@ -522,7 +545,7 @@
             // groupLine4
             // 
             this.groupLine4.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine4.Location = new System.Drawing.Point(0, 564);
+            this.groupLine4.Location = new System.Drawing.Point(0, 544);
             this.groupLine4.Name = "groupLine4";
             this.groupLine4.Size = new System.Drawing.Size(966, 1);
             this.groupLine4.TabIndex = 2;
@@ -567,6 +590,7 @@
             this.kryptonSplitContainer生成组合.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合)).EndInit();
             this.kryptonSplitContainer生成组合.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbPropertyType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmb属性)).EndInit();
             this.flowLayoutPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxListView.Panel)).EndInit();
@@ -614,8 +638,8 @@
             this.kryptonPanel3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).EndInit();
             this.kryptonPanel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSourcProperty)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceGrid)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourc产品)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSKU明细)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -648,7 +672,7 @@
         private Krypton.Toolkit.KryptonLabel lblNo;
         private Krypton.Toolkit.KryptonTextBox txtNo;
         private Krypton.Toolkit.KryptonButton btnQueryForGoods;
-        private System.Windows.Forms.BindingSource bindingSourcProperty;
+        private System.Windows.Forms.BindingSource bindingSourc产品;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer主要操作部分;
         internal Krypton.Toolkit.KryptonPanel kryptonPanel1;
         private WinLib.Line.GroupLine groupLine4;
@@ -659,7 +683,9 @@
         internal Krypton.Toolkit.KryptonPanel kryptonPanel4;
         private WinLib.Line.GroupLine groupLine6;
         private SourceGrid.Grid grid1;
-        private System.Windows.Forms.BindingSource bindingSourceGrid;
+        private System.Windows.Forms.BindingSource bindingSourceSKU明细;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private Krypton.Toolkit.KryptonComboBox cmbPropertyType;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel2;
     }
 }

@@ -399,9 +399,19 @@ namespace RUINORERP.UI.ForCustomizeGrid
             }
         }
 
+        private void chkAll_CheckedChanged(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listView1.Items)
+                item.Checked = true;
+        }
 
-
-
+        private void chkReverseSelection_CheckedChanged(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listView1.Items)
+            {
+                item.Checked = !item.Checked;
+            }
+        }
     }
 }
 

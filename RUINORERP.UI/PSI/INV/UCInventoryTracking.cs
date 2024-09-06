@@ -126,6 +126,8 @@ namespace RUINORERP.UI.PSI.INV
             { "库存盘点", "tb_Stocktake" },
             { "领料单", "tb_MaterialRequisition" },
             { "退料单", "tb_MaterialReturn" },
+            { "分割单", "tb_ProdSplit" },
+            { "组合单", "tb_ProdMerge" },
             { "缴库", "tb_FinishedGoodsInv" }
         };
             foreach (KeyValuePair<string, string> item in mappings)

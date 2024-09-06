@@ -112,15 +112,6 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
             }
-            //foreach (DataColumn dc in dt.Columns)
-            //{
-            //    //string[] s = new string[];
-            //    //foreach (DataRow dr in dt.Rows)
-            //    //{
-            //    //    //第一列第1~n行
-            //    //    s. dr[dc.ColumnName]
-            //    //}
-            //}
 
 
             List<string> rs = new List<string>();

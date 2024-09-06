@@ -293,7 +293,7 @@ namespace RUINORERP.UI
             timer1.Start();
             tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
             List<tb_Company> company = await companyController.QueryAsync();
-            Version = "2024-09-3-1";
+            Version = "2024-09-5-1";
             if (company != null)
             {
                 this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + Version;

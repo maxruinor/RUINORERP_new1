@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCMultiPropertyEditor));
             this.kryptonSplitContainer生成组合 = new Krypton.Toolkit.KryptonSplitContainer();
             this.cmbPropertyType = new Krypton.Toolkit.KryptonComboBox();
@@ -63,11 +63,6 @@
             this.kryptonSplitContainer下 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel3 = new Krypton.Toolkit.KryptonPanel();
             this.treeGridView1 = new RUINOR.WinFormsUI.TreeGridView();
-            this.ImgCol = new FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn();
-            this.属性 = new RUINOR.WinFormsUI.TreeGridColumn();
-            this.属性值 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.SKU = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.产品名称 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.groupLine5 = new WinLib.Line.GroupLine();
             this.groupLine4 = new WinLib.Line.GroupLine();
             this.kryptonPanel2 = new Krypton.Toolkit.KryptonPanel();
@@ -77,6 +72,13 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.imageStrip = new System.Windows.Forms.ImageList(this.components);
+            this.ImgCol = new FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn();
+            this.RowID = new FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn();
+            this.属性 = new RUINOR.WinFormsUI.TreeGridColumn();
+            this.属性值 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.SKU = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.产品名称 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.数据状态 = new FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合.Panel1)).BeginInit();
             this.kryptonSplitContainer生成组合.Panel1.SuspendLayout();
@@ -220,8 +222,8 @@
             this.dataGridViewProd.AllowUserToAddRows = false;
             this.dataGridViewProd.AllowUserToDeleteRows = false;
             this.dataGridViewProd.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dataGridViewProd.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.dataGridViewProd.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridViewProd.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -499,10 +501,12 @@
             this.treeGridView1.AllowUserToDeleteRows = false;
             this.treeGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ImgCol,
+            this.RowID,
             this.属性,
             this.属性值,
             this.SKU,
-            this.产品名称});
+            this.产品名称,
+            this.数据状态});
             this.treeGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeGridView1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.treeGridView1.ImageList = null;
@@ -510,38 +514,6 @@
             this.treeGridView1.Name = "treeGridView1";
             this.treeGridView1.Size = new System.Drawing.Size(966, 267);
             this.treeGridView1.TabIndex = 3;
-            // 
-            // ImgCol
-            // 
-            this.ImgCol.HeaderText = "";
-            this.ImgCol.Name = "ImgCol";
-            this.ImgCol.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // 属性
-            // 
-            this.属性.DefaultNodeImage = null;
-            this.属性.HeaderText = "属性";
-            this.属性.Name = "属性";
-            this.属性.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.属性.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // 属性值
-            // 
-            this.属性值.HeaderText = "属性值";
-            this.属性值.Name = "属性值";
-            this.属性值.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // SKU
-            // 
-            this.SKU.HeaderText = "SKU";
-            this.SKU.Name = "SKU";
-            this.SKU.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            // 
-            // 产品名称
-            // 
-            this.产品名称.HeaderText = "产品名称";
-            this.产品名称.Name = "产品名称";
-            this.产品名称.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // groupLine5
             // 
@@ -609,6 +581,49 @@
             this.imageStrip.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
             this.imageStrip.ImageSize = new System.Drawing.Size(16, 16);
             this.imageStrip.TransparentColor = System.Drawing.Color.Transparent;
+            // 
+            // ImgCol
+            // 
+            this.ImgCol.HeaderText = "";
+            this.ImgCol.Name = "ImgCol";
+            this.ImgCol.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // RowID
+            // 
+            this.RowID.HeaderText = "行号";
+            this.RowID.Name = "RowID";
+            this.RowID.Visible = false;
+            // 
+            // 属性
+            // 
+            this.属性.DefaultNodeImage = null;
+            this.属性.HeaderText = "属性";
+            this.属性.Name = "属性";
+            this.属性.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.属性.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // 属性值
+            // 
+            this.属性值.HeaderText = "属性值";
+            this.属性值.Name = "属性值";
+            this.属性值.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // SKU
+            // 
+            this.SKU.HeaderText = "SKU";
+            this.SKU.Name = "SKU";
+            this.SKU.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // 产品名称
+            // 
+            this.产品名称.HeaderText = "产品名称";
+            this.产品名称.Name = "产品名称";
+            this.产品名称.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // 数据状态
+            // 
+            this.数据状态.HeaderText = "数据状态";
+            this.数据状态.Name = "数据状态";
             // 
             // UCMultiPropertyEditor
             // 
@@ -719,9 +734,11 @@
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.ImageList imageStrip;
         private FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn ImgCol;
+        private FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn RowID;
         private RUINOR.WinFormsUI.TreeGridColumn 属性;
         private System.Windows.Forms.DataGridViewTextBoxColumn 属性值;
         private System.Windows.Forms.DataGridViewTextBoxColumn SKU;
         private System.Windows.Forms.DataGridViewTextBoxColumn 产品名称;
+        private FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn 数据状态;
     }
 }

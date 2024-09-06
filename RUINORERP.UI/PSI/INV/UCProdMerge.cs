@@ -305,8 +305,8 @@ namespace RUINORERP.UI.PSI.INV
             grid1.Selection.EnableMultiSelection = false;
 
 
-            List<SourceGridDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdMergeDetail>(c => c.ProdDetailID, true);
-
+            List<SourceGridDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdMergeDetail, InventoryInfo>(c => c.ProdDetailID, true);
+            
             listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.MergeSub_ID);
             listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.MergeID);
@@ -451,14 +451,14 @@ namespace RUINORERP.UI.PSI.INV
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
-       
+
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
- 
+
 
                 if (EditEntity.Employee_ID == 0 || EditEntity.Employee_ID == -1)
                 {

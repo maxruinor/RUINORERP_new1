@@ -601,7 +601,6 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_BOM_S entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_S>().Where(w => w.BOM_ID == (long)id)
-                           //  .Includes(t => t.tb_producttype)
                             .Includes(t => t.tb_files)
                             .Includes(t => t.tb_department)
                             .Includes(t => t.tb_proddetail)
@@ -614,6 +613,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_ProductionDemandDetails)
                             .Includes(t => t.tb_ProductionDemandTargetDetails)
                             .Includes(t => t.tb_BOM_SDetails)
+                            .Includes(t => t.view_ProdDetail)
                         .FirstAsync();
             if (entity != null)
             {

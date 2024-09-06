@@ -2790,6 +2790,13 @@
     <None Include="ResourceFile\Help0.png" />
     <None Include="ResourceFile\US_Dollar.png" />
     <None Include="Resources\WF.minus.ico" />
+    <None Include="Resources\1616_add_.png" />
+    <None Include="Resources\1616_delete_.png" />
+    <None Include="Resources\1616_down_.png" />
+    <None Include="Resources\1616_edit_.png" />
+    <None Include="Resources\1616_favorites_.png" />
+    <None Include="Resources\1616_large icons_.png" />
+    <None Include="Resources\1616_selected_ok_.png" />
     <Content Include="ruinor.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

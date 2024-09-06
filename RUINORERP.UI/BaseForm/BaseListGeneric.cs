@@ -255,6 +255,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (!this.DesignMode)
                 {
+                    GridRelated = new GridViewRelated();
                     ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     //权限菜单
                     if (CurMenuInfo == null)
@@ -1759,7 +1760,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
+        public GridViewRelated GridRelated { get; set; }
 
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {

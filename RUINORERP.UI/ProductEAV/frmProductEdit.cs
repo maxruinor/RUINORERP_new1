@@ -353,6 +353,24 @@ namespace RUINORERP.UI.ProductEAV
             {
                 return;
             }
+
+            if (EditEntity.Is_enabled.HasValue && !EditEntity.Is_enabled.Value)
+            {
+                if (MessageBox.Show("产品没有启用，确定保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
+                {
+                    return;
+                }
+            }
+
+
+            if (EditEntity.Is_available.HasValue && !EditEntity.Is_available.Value)
+            {
+                if (MessageBox.Show("产品设置为不可用用，确定保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
+                {
+                    return;
+                }
+            }
+
             //给出SKU关系列表
             //一个产品明细SKU 可能对应多行关系，所以 主->sku->relation
             EditEntity.tb_ProdDetails = GetDetailsAndRelations(EditEntity, removeSkuList);
@@ -719,83 +737,6 @@ namespace RUINORERP.UI.ProductEAV
         List<tb_ProdCategories> categorylist = new List<tb_ProdCategories>(0);
 
         tb_Prod oldOjb = null;
-        /*
-        public async void BindData(tb_Product entity)
-        {
-            oldOjb = CloneHelper.DeepCloneObject<tb_Product>(entity);
-            _EditEntity = entity;
-
-            #region 类别
-            var parent_categorie = new Binding("Text", entity, "category_ID", true, DataSourceUpdateMode.OnValidation);
-            //数据源的数据类型转换为控件要求的数据类型。
-            parent_categorie.Format += new ConvertEventHandler(DataSourceToControl);
-            //将控件的数据类型转换为数据源要求的数据类型。
-            parent_categorie.Parse += new ConvertEventHandler(ControlToDataSource);
-            txtcategory_ID.DataBindings.Add(parent_categorie);
-          
-            #endregion
-            txtNo.DataBindings.Add("Text", entity, "ProductNo", false, DataSourceUpdateMode.OnValidation);
-            txtShortCode.DataBindings.Add("Text", entity, "ShortCode", false, DataSourceUpdateMode.OnValidation);
-            txtBarCode.DataBindings.Add("Text", entity, "BarCode", false, DataSourceUpdateMode.OnValidation);
-            txtSpecifications.DataBindings.Add("Text", entity, "Specifications", false, DataSourceUpdateMode.OnValidation);
-            #region 产品图片
-            Binding img = new Binding("Image", entity, "Image", true, DataSourceUpdateMode.OnValidation);
-            img.Format += new ConvertEventHandler(PictureFormat);
-            img.Parse += new ConvertEventHandler(Img_Parse);
-            #endregion
-            pictureBox1.DataBindings.Add(img);
-
-            //UIHelper.BindUnit(txtUnitID, entity);
-            DataBindingHelper.BindData4Cmb<tb_Unit>(entity, k => k.Unit_ID, v => v.UnitName, txtUnitID);
-            DataBindingHelper.BindSupplier(cmbCustomerVendor_ID, entity, true);
-
-
-            //txtLocation_ID.DataBindings.Add("Text", entity, "Location_ID", false, DataSourceUpdateMode.OnValidation);
-            //tb_LocationController lc = Startup.GetFromFac<tb_LocationController>();
-            //BindingSource lcbs = new BindingSource();
-            //lcbs.DataSource = await lc.QueryAsync();
-            //DataBindingHelper.BindComboBox(txtLocation_ID, "Location_ID", "Name", entity, lcbs);
-            DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, txtLocation_ID);
-
-
-            // UIHelper.BindComboBox(txtType_ID, "Type_ID", "TypeName", entity, ptcbs);
-            //UIHelper.BindData<tb_ProductType>(entity, p => p.Type_ID, t => t.TypeName, txtType_ID);
-            DataBindingHelper.BindData4Cmb<tb_ProductType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);
-
-            //txtpurchase_price.DataBindings.Add("Text", entity, "purchase_price", false, DataSourceUpdateMode.OnValidation);
-
-            var pur_pricebind = new Binding("Text", entity, "purchase_price", true, DataSourceUpdateMode.OnValidation);
-            //数据源的数据类型转换为控件要求的数据类型。
-            pur_pricebind.Format += (s, args) => args.Value = args.Value == null ? 0 : args.Value;
-            //将控件的数据类型转换为数据源要求的数据类型。
-            pur_pricebind.Parse += (s, args) => args.Value = args.Value == null ? 0 : args.Value;
-            txtpurchase_price.DataBindings.Add(pur_pricebind);
-
-
-
-            txtsales_price.DataBindings.Add("Text", entity, "sales_price", false, DataSourceUpdateMode.OnValidation);
-            txttransfer_price.DataBindings.Add("Text", entity, "transfer_price", false, DataSourceUpdateMode.OnValidation);
-            txtcost_price.DataBindings.Add("Text", entity, "cost_price", false, DataSourceUpdateMode.OnValidation);
-            txtmarket_price.DataBindings.Add("Text", entity, "market_price", false, DataSourceUpdateMode.OnValidation);
-
-            DataBindingHelper.BindData4TextBox<tb_Product>(entity, k => k.Discount_price.ToString(), txtdiscount_price, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_Product>(entity, k => k.Name, txtName, BindDataType4TextBox.Text, false);
-
-
-            DataBindingHelper.BindData4CehckBox<tb_Product>(entity, exp => exp.Is_enabled, txtis_enabled, false);
-            DataBindingHelper.BindData4CehckBox<tb_Product>(entity, exp => exp.Is_available, txtis_available, false);
-            DataBindingHelper.BindData4TextBox<tb_Product>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_Product>(entity, t => t.Brand, txtBrand, BindDataType4TextBox.Text, false);
-
-            txtWeight.DataBindings.Add("Text", entity, "Weight", false, DataSourceUpdateMode.OnValidation);
-
-
-            Task task_2 = Task.Run(task_Help);
-            //task_2.Wait();  //注释打开则等待task_2延时，注释掉则不等待
-
-        }
-        */
-
 
 
         public async override void BindData(BaseEntity entity)
@@ -1803,6 +1744,7 @@ namespace RUINORERP.UI.ProductEAV
         private void CheckBox_CheckStateChanged(object sender, EventArgs e)
         {
             #region 思路 与GetAttrGoups(listView1) 不一样，因为选择状态问题
+            AttrGoups = GetAttrGoups(listView1);
             CheckBox cb = sender as CheckBox;
             if (cb.Tag is tb_ProdPropertyValue ppv)
             {
@@ -2543,31 +2485,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             if (kryptonNavigator1.SelectedPage.Name == "kp箱规信息")
             {
-                /*
-                if (EditEntity.tb_BoxRuleses != null)
-                {
-                    if (EditEntity.tb_BoxRuleses.Count > 0)
-                    {
-                        boxRule = EditEntity.tb_BoxRuleses[0];//只能默认加载第一个。如果有多个要编辑 则到箱规管理中处理。因为是一对多关系。
-                    }
-                }
-                if (boxRule == null)
-                {
-                    boxRule = new tb_BoxRules();
-                    boxRule.PackagingName = $"{EditEntity.CNName}的包装箱规";
-                    boxRule.BoxMaterial = "卡通箱 (CARTON)";
-                    boxRule.Unit_ID = EditEntity.Unit_ID;
-                    boxRule.Is_enabled = true;
-                    boxRule.ActionStatus = ActionStatus.新增;
-                    boxRule.HasChanged = true;
-                    //新的才添加
-                    if (boxRule.Packaging_ID == 0 && chkAddBoxRulesInfo.Checked)
-                    {
-                        EditEntity.tb_BoxRuleses.Add(boxRule);
-                    }
-                }
-                BindBoxRulesData(boxRule);
-                */
+                
             }
 
         }

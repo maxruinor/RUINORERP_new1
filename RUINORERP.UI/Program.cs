@@ -29,6 +29,7 @@ using RUINORERP.Business;
 using WorkflowCore.Services;
 using RUINORERP.WF.BizOperation;
 using RUINORERP.Common.Extensions;
+using System.Threading;
 
 
 namespace RUINORERP.UI
@@ -374,333 +375,343 @@ namespace RUINORERP.UI
         [STAThread]
         static void Main(string[] args)
         {
-            // 如果需要处理命令行参数，可以在这里进行
-            // 例如，打印所有参数
-            if (args.Length > 0)
+            // 创建一个命名 Mutex
+            bool createdNew;
+            using (Mutex mutex = new Mutex(true, "Global\\" + Assembly.GetExecutingAssembly().GetName().Name, out createdNew))
             {
-                Console.WriteLine("接收到的命令行参数如下：");
-                foreach (var arg in args)
+                if (!createdNew)
                 {
-                    Console.WriteLine(arg);
-                    //MessageBox.Show(arg);
+                    MessageBox.Show("已经有一个实例在运行,不允许同时打开多个系统。", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
                 }
-            }
 
-            try
-            {
-                PreCheckMustOverrideBaseClassAttribute.CheckAll(Assembly.GetExecutingAssembly());
+                // 如果需要处理命令行参数，可以在这里进行
+                // 例如，打印所有参数
+                if (args.Length > 0)
+                {
+                    Console.WriteLine("接收到的命令行参数如下：");
+                    foreach (var arg in args)
+                    {
+                        Console.WriteLine(arg);
+                        //MessageBox.Show(arg);
+                    }
+                }
 
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-
-
-            // 处理未捕获的异常
-            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-            Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
-            //UnhandledException 处理非UI线程异常
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
-            //Application.EnableVisualStyles();可能会让其他电脑布局有问题？？
-            Application.SetCompatibleTextRenderingDefault(false);
-            //公共类中的 先要执行
-            //  ILoggerRepository repository = LogManager.CreateRepository("erpComm");
-            //  XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
-            //  Log4NetRepository.loggerRepository = repository;
-
-            //Application.Run(new Form2());
-            //return;
-            #region csla前
-            /*
-            Startup starter = new Startup();
-            ServiceProvider = Startup.ServiceProvider;
-            var mainform = Startup.GetFromFac<MainForm>(); //获取服务Service1
-            Application.Run(mainform);
-            */
-
-
-            #endregion
-
-
-            #region clsa 可用
-            /*
-            var csservices = new ServiceCollection();
-            csservices.AddCsla(options => options.AddWindowsForms());
-            csservices.AddSingleton<Form2>();
-            csservices.AddTransient<tb_LocationTypeList>();
-            csservices.AddTransient<tb_LocationTypeInfo>();
-            csservices.AddTransient<tb_LocationType>();
-            csservices.AddTransient<tb_LocationTypeEdit>();
-            csservices.AddTransient<tb_LocationTypeEditBindingList>();
-            //.AddTransient<Pages.PersonListPage>()
-            //.AddTransient<tb_UnitEntity>()
-
-            // register other services here
-            csservices.AddTransient<Itb_LocationTypeDal, tb_LocationTypeDal>();
-
-            var provider = csservices.BuildServiceProvider();
-            ApplicationContext = provider.GetRequiredService<Csla.ApplicationContext>();
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form2());
-            */
-
-            /*
-
-
-                   var host1 = new HostBuilder()
-                .ConfigureServices((hostContext, services) => services
-                         // register window and page types here
-                         //       .AddSingleton<MainForm>()
-                         //            .AddSingleton<Form2>()
-                         .AddSingleton<Form2>()
-                  .AddTransient<tb_LocationTypeList>()
-                   .AddTransient<tb_LocationTypeInfo>()
-                  .AddTransient<tb_LocationType>()
-                  .AddTransient<tb_LocationTypeEdit>()
-                  .AddTransient<tb_LocationTypeEditBindingList>()
-                   //.AddTransient<Pages.PersonListPage>()
-                   //.AddTransient<tb_UnitEntity>()
-
-                   // register other services here
-                   .AddTransient<Itb_LocationTypeDal, tb_LocationTypeDal>()
-
-                  .AddCsla(options => options.AddWindowsForms())
-                  .AddLogging(configure => configure.AddConsole())
-
-              ).Build();
-
-
-                   IServiceProvider services;
-
-                   using (var serviceScope = host1.Services.CreateScope())
-                   {
-
-                       services = serviceScope.ServiceProvider;
-
-                       try
-                       {
-                           var form1 = services.GetRequiredService<Form2>();
-                           Application.Run(form1);
-
-                           Console.WriteLine("Success");
-                       }
-       #pragma warning disable CA1031 // Do not catch general exception types
-                       catch (Exception ex)
-                       {
-                           Console.WriteLine("Error Occurred " + ex.Message);
-                       }
-       #pragma warning restore CA1031 // Do not catch general exception types
-                   }
-            */
-            #endregion
-
-
-            ///=====----
-
-            try
-            {
-
-                #region 用了csla  
                 try
                 {
-                    //先定义上下文
+                    PreCheckMustOverrideBaseClassAttribute.CheckAll(Assembly.GetExecutingAssembly());
 
-
-
-                    Startup starter = new Startup(true);
-                    IHost myhost = starter.CslaDIPort();
-                    // IHostBuilder  myhost = starter.CslaDIPort();
-                    IServiceProvider services = myhost.Services;
-                    //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
-                    //给上下文服务源
-                    Startup.ServiceProvider = services;
-                    AppContextData.SetServiceProvider(services);
-                    Startup.AutofacContainerScope = services.GetAutofacRoot();
-                    AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
-                    BusinessHelper.Instance.SetContext(AppContextData);
-
-                    /*
-                    services.AddLogging(logBuilder =>
-                    {
-                        logBuilder.ClearProviders();
-                        //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
-
-                        logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", Program.AppContextData));
-                    });
-                    */
-                    #region  启动工作流主机
-
-
-                    #region WF批量注册
-
-                    IWorkflowRegistry _workflowRegistry = Startup.GetFromFac<IWorkflowRegistry>();
-                    // var assembly = Assembly.GetExecutingAssembly();
-                    var assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.WF.dll");
-                    var workflowTypes = assembly.GetTypes()
-                        .Where(t => typeof(IWorkflowMarker).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
-                    foreach (var workflowType in workflowTypes)
-                    {
-                        try
-                        {
-                            if (typeof(IWorkflow<BizOperationData>).IsAssignableFrom(workflowType))
-                            {
-                                var workflow = (IWorkflow<BizOperationData>)Activator.CreateInstance(workflowType);
-                                _workflowRegistry.RegisterWorkflow(workflow);
-                            }
-                            //参数要一样。不然要多种参数都 注册一下。
-                            //if (typeof(IWorkflow<SOProcessData>).IsAssignableFrom(workflowType))
-                            //{
-                            //    var workflow = (IWorkflow<SOProcessData>)Activator.CreateInstance(workflowType);
-                            //    _workflowRegistry.RegisterWorkflow(workflow);
-                            //}
-
-                        }
-                        catch (Exception ex)
-                        {
-                            // 处理异常，例如记录日志
-                            Console.WriteLine($"Failed to register workflow of type {workflowType.FullName}: {ex.Message}");
-                        }
-                    }
-
-                    #endregion
-
-                    var host = Startup.GetFromFac<IWorkflowHost>();
-                    host.OnStepError += Host_OnStepError;
-
-                    //// 这里json注册，后面还是一样的通过名称启动
-                    // https://workflow-core.readthedocs.io/en/latest/json-yaml/
-                    // var json = System.IO.File.ReadAllText("myflow.json");
-
-                    //  services.AddWorkflowDSL();前面加了这个才可以取
-                    var loader = Startup.ServiceProvider.GetService<IDefinitionLoader>();
-                    //loader = Startup.GetFromFac<IDefinitionLoader>();
-                    // loader.LoadDefinition(json, Deserializers.Json);
-                    AppContextData.definitionLoader = loader;
-                    //host.Registry.GetDefinition("HelloWorkflow");
-                    host.RegisterWorkflow<WorkFlowTester.WorkWorkflow>();
-                    host.RegisterWorkflow<WorkFlowTester.WorkWorkflow2, MyNameClass>();
-                    //host.RegisterWorkflow<WFSO, WFProcessData>();//手动单个注册
-
-                    // 如果host启动了，不能再次启动，但没有判断方法
-                    host.Start();
-
-                    AppContextData.workflowHost = host;
-
-                    #endregion
-
-
-                    // var form1=Startup.ServiceProvider.GetService<MainForm>();
-                    var form1 = Startup.GetFromFac<MainForm>();
-
-
-                    //   MainForm form1 = new MainForm(services, aa);
-                    Application.Run(form1);
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    var s = ex.Message;
-                    MessageBox.Show(s);
-                    MessageBox.Show(ex.StackTrace);
-                    Console.Write(ex.StackTrace);
+                    Console.WriteLine(e);
+                    throw;
                 }
+
+
+                // 处理未捕获的异常
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
+                //UnhandledException 处理非UI线程异常
+                AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+                //Application.EnableVisualStyles();可能会让其他电脑布局有问题？？
+                Application.SetCompatibleTextRenderingDefault(false);
+                //公共类中的 先要执行
+                //  ILoggerRepository repository = LogManager.CreateRepository("erpComm");
+                //  XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
+                //  Log4NetRepository.loggerRepository = repository;
+
+                //Application.Run(new Form2());
+                //return;
+                #region csla前
+                /*
+                Startup starter = new Startup();
+                ServiceProvider = Startup.ServiceProvider;
+                var mainform = Startup.GetFromFac<MainForm>(); //获取服务Service1
+                Application.Run(mainform);
+                */
+
+
+                #endregion
+
+
+                #region clsa 可用
+                /*
+                var csservices = new ServiceCollection();
+                csservices.AddCsla(options => options.AddWindowsForms());
+                csservices.AddSingleton<Form2>();
+                csservices.AddTransient<tb_LocationTypeList>();
+                csservices.AddTransient<tb_LocationTypeInfo>();
+                csservices.AddTransient<tb_LocationType>();
+                csservices.AddTransient<tb_LocationTypeEdit>();
+                csservices.AddTransient<tb_LocationTypeEditBindingList>();
+                //.AddTransient<Pages.PersonListPage>()
+                //.AddTransient<tb_UnitEntity>()
+
+                // register other services here
+                csservices.AddTransient<Itb_LocationTypeDal, tb_LocationTypeDal>();
+
+                var provider = csservices.BuildServiceProvider();
+                ApplicationContext = provider.GetRequiredService<Csla.ApplicationContext>();
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new Form2());
+                */
 
                 /*
 
-                IServiceProvider services;
-                using (var serviceScope = myhost.Services.CreateScope())
+
+                       var host1 = new HostBuilder()
+                    .ConfigureServices((hostContext, services) => services
+                             // register window and page types here
+                             //       .AddSingleton<MainForm>()
+                             //            .AddSingleton<Form2>()
+                             .AddSingleton<Form2>()
+                      .AddTransient<tb_LocationTypeList>()
+                       .AddTransient<tb_LocationTypeInfo>()
+                      .AddTransient<tb_LocationType>()
+                      .AddTransient<tb_LocationTypeEdit>()
+                      .AddTransient<tb_LocationTypeEditBindingList>()
+                       //.AddTransient<Pages.PersonListPage>()
+                       //.AddTransient<tb_UnitEntity>()
+
+                       // register other services here
+                       .AddTransient<Itb_LocationTypeDal, tb_LocationTypeDal>()
+
+                      .AddCsla(options => options.AddWindowsForms())
+                      .AddLogging(configure => configure.AddConsole())
+
+                  ).Build();
+
+
+                       IServiceProvider services;
+
+                       using (var serviceScope = host1.Services.CreateScope())
+                       {
+
+                           services = serviceScope.ServiceProvider;
+
+                           try
+                           {
+                               var form1 = services.GetRequiredService<Form2>();
+                               Application.Run(form1);
+
+                               Console.WriteLine("Success");
+                           }
+           #pragma warning disable CA1031 // Do not catch general exception types
+                           catch (Exception ex)
+                           {
+                               Console.WriteLine("Error Occurred " + ex.Message);
+                           }
+           #pragma warning restore CA1031 // Do not catch general exception types
+                       }
+                */
+                #endregion
+
+
+                ///=====----
+
+                try
                 {
-                    services = serviceScope.ServiceProvider;
+
+                    #region 用了csla  
                     try
                     {
-                        serviceScope.ServiceProvider.get
-                        var form1 = services.GetRequiredService<Form2>();
+                        //先定义上下文
+
+
+
+                        Startup starter = new Startup(true);
+                        IHost myhost = starter.CslaDIPort();
+                        // IHostBuilder  myhost = starter.CslaDIPort();
+                        IServiceProvider services = myhost.Services;
+                        //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
+                        //给上下文服务源
+                        Startup.ServiceProvider = services;
+                        AppContextData.SetServiceProvider(services);
+                        Startup.AutofacContainerScope = services.GetAutofacRoot();
+                        AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
+                        BusinessHelper.Instance.SetContext(AppContextData);
+
+                        /*
+                        services.AddLogging(logBuilder =>
+                        {
+                            logBuilder.ClearProviders();
+                            //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
+
+                            logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", Program.AppContextData));
+                        });
+                        */
+                        #region  启动工作流主机
+
+
+                        #region WF批量注册
+
+                        IWorkflowRegistry _workflowRegistry = Startup.GetFromFac<IWorkflowRegistry>();
+                        // var assembly = Assembly.GetExecutingAssembly();
+                        var assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.WF.dll");
+                        var workflowTypes = assembly.GetTypes()
+                            .Where(t => typeof(IWorkflowMarker).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+                        foreach (var workflowType in workflowTypes)
+                        {
+                            try
+                            {
+                                if (typeof(IWorkflow<BizOperationData>).IsAssignableFrom(workflowType))
+                                {
+                                    var workflow = (IWorkflow<BizOperationData>)Activator.CreateInstance(workflowType);
+                                    _workflowRegistry.RegisterWorkflow(workflow);
+                                }
+                                //参数要一样。不然要多种参数都 注册一下。
+                                //if (typeof(IWorkflow<SOProcessData>).IsAssignableFrom(workflowType))
+                                //{
+                                //    var workflow = (IWorkflow<SOProcessData>)Activator.CreateInstance(workflowType);
+                                //    _workflowRegistry.RegisterWorkflow(workflow);
+                                //}
+
+                            }
+                            catch (Exception ex)
+                            {
+                                // 处理异常，例如记录日志
+                                Console.WriteLine($"Failed to register workflow of type {workflowType.FullName}: {ex.Message}");
+                            }
+                        }
+
+                        #endregion
+
+                        var host = Startup.GetFromFac<IWorkflowHost>();
+                        host.OnStepError += Host_OnStepError;
+
+                        //// 这里json注册，后面还是一样的通过名称启动
+                        // https://workflow-core.readthedocs.io/en/latest/json-yaml/
+                        // var json = System.IO.File.ReadAllText("myflow.json");
+
+                        //  services.AddWorkflowDSL();前面加了这个才可以取
+                        var loader = Startup.ServiceProvider.GetService<IDefinitionLoader>();
+                        //loader = Startup.GetFromFac<IDefinitionLoader>();
+                        // loader.LoadDefinition(json, Deserializers.Json);
+                        AppContextData.definitionLoader = loader;
+                        //host.Registry.GetDefinition("HelloWorkflow");
+                        host.RegisterWorkflow<WorkFlowTester.WorkWorkflow>();
+                        host.RegisterWorkflow<WorkFlowTester.WorkWorkflow2, MyNameClass>();
+                        //host.RegisterWorkflow<WFSO, WFProcessData>();//手动单个注册
+
+                        // 如果host启动了，不能再次启动，但没有判断方法
+                        host.Start();
+
+                        AppContextData.workflowHost = host;
+
+                        #endregion
+
+
+                        // var form1=Startup.ServiceProvider.GetService<MainForm>();
+                        var form1 = Startup.GetFromFac<MainForm>();
+
+
+                        //   MainForm form1 = new MainForm(services, aa);
                         Application.Run(form1);
-                        Console.WriteLine("Success");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("Error Occurred " + ex.Message);
+                        var s = ex.Message;
+                        MessageBox.Show(s);
+                        MessageBox.Show(ex.StackTrace);
+                        Console.Write(ex.StackTrace);
                     }
 
+                    /*
+
+                    IServiceProvider services;
+                    using (var serviceScope = myhost.Services.CreateScope())
+                    {
+                        services = serviceScope.ServiceProvider;
+                        try
+                        {
+                            serviceScope.ServiceProvider.get
+                            var form1 = services.GetRequiredService<Form2>();
+                            Application.Run(form1);
+                            Console.WriteLine("Success");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error Occurred " + ex.Message);
+                        }
+
+                    }
+                    */
+
+                    // IHostBuilder ihostbuilder= starter.CslaDIPort();
+                    // ihostbuilder.Start();
+                    //ServiceProvider = Startup.ServiceProvider;
+                    //IServiceProvider services = myhost.Services;
+
+                    //var mainform = services.GetService<Form2>();
+
+                    // var mainform = Startup.GetFromFac<Form2>(); //获取服务Service1
+                    //var mainform = Startup.GetFromFac<MainForm>(); //获取服务Service1
+                    // Application.Run(mainform);
+
+
+
+                    return;
+                    #endregion
+
                 }
+                catch (Exception ex)
+                {
+
+                }
+
+
+
+
+
+
+                /*
+                using (MainForm f1 = ServiceProvider.GetRequiredService<MainForm>())
+                {
+                    // f1.ShowDialog();
+                    //Application.Run(new Form1());
+                    frmBase.BaseServiceProvider = ServiceProvider;
+                    var db = ServiceProvider.GetRequiredService<SqlSugar.ISqlSugarClient>();
+                    var list = db.SqlQueryable<Model.tb_Unit>("select * from tb_Unit").OrderBy("id asc");
+                    MessageBox.Show(list.Count().ToString());
+                    Application.Run(f1);
+                }
+    */
+
+                /*
+                 * ok
+                MainForm _mainform = new MainForm();
+                var sqlSugarScope = new SqlSugar.SqlSugarScope(new SqlSugar.ConnectionConfig
+                {
+                    ConnectionString = "Server=192.168.0.250;Database=erp;UID=sa;Password=sa",
+                    DbType = SqlSugar.DbType.SqlServer,
+                    IsAutoCloseConnection = true,
+                });
+
+
+
+                // _logFactory = new LoggerFactory();
+                var loggerFactory = (ILoggerFactory)new LoggerFactory();
+                loggerFactory.AddProvider(new Log4NetProvider("log4net.config"));
+                var logger = loggerFactory.CreateLogger<Repository.UnitOfWorks.UnitOfWorkManage>();
+                IRepository.Base.IBaseRepository<tb_Supplier> rr = new Repository.Base.BaseRepository<tb_Supplier>(new Repository.UnitOfWorks.UnitOfWorkManage(sqlSugarScope, logger));
+                IMapper mapper = Model.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+               IServices.ISupplierServices us = new Services.SupplierServices(mapper, rr);
+
+               // var mylist = us.QueryTest();
+                Model.tb_Supplier dto = new Model.tb_Supplier();
+                dto.ID = 1;
+                dto.Name = "dt0";
+                // us.SaveRole(dto);
+                //var list = sqlSugarScope.SqlQueryable<Model.tb_Unit>("select * from tb_Unit").OrderBy("id asc");
+                //MessageBox.Show(mylist.ToString());
+                Application.Run(_mainform);
+
                 */
 
-                // IHostBuilder ihostbuilder= starter.CslaDIPort();
-                // ihostbuilder.Start();
-                //ServiceProvider = Startup.ServiceProvider;
-                //IServiceProvider services = myhost.Services;
-
-                //var mainform = services.GetService<Form2>();
-
-                // var mainform = Startup.GetFromFac<Form2>(); //获取服务Service1
-                //var mainform = Startup.GetFromFac<MainForm>(); //获取服务Service1
-                // Application.Run(mainform);
-
-
-
-                return;
-                #endregion
-
             }
-            catch (Exception ex)
-            {
-
-            }
-
-
-
-
-
-
-            /*
-            using (MainForm f1 = ServiceProvider.GetRequiredService<MainForm>())
-            {
-                // f1.ShowDialog();
-                //Application.Run(new Form1());
-                frmBase.BaseServiceProvider = ServiceProvider;
-                var db = ServiceProvider.GetRequiredService<SqlSugar.ISqlSugarClient>();
-                var list = db.SqlQueryable<Model.tb_Unit>("select * from tb_Unit").OrderBy("id asc");
-                MessageBox.Show(list.Count().ToString());
-                Application.Run(f1);
-            }
-*/
-
-            /*
-             * ok
-            MainForm _mainform = new MainForm();
-            var sqlSugarScope = new SqlSugar.SqlSugarScope(new SqlSugar.ConnectionConfig
-            {
-                ConnectionString = "Server=192.168.0.250;Database=erp;UID=sa;Password=sa",
-                DbType = SqlSugar.DbType.SqlServer,
-                IsAutoCloseConnection = true,
-            });
-            
-            
-
-            // _logFactory = new LoggerFactory();
-            var loggerFactory = (ILoggerFactory)new LoggerFactory();
-            loggerFactory.AddProvider(new Log4NetProvider("log4net.config"));
-            var logger = loggerFactory.CreateLogger<Repository.UnitOfWorks.UnitOfWorkManage>();
-            IRepository.Base.IBaseRepository<tb_Supplier> rr = new Repository.Base.BaseRepository<tb_Supplier>(new Repository.UnitOfWorks.UnitOfWorkManage(sqlSugarScope, logger));
-            IMapper mapper = Model.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
-           IServices.ISupplierServices us = new Services.SupplierServices(mapper, rr);
-           
-           // var mylist = us.QueryTest();
-            Model.tb_Supplier dto = new Model.tb_Supplier();
-            dto.ID = 1;
-            dto.Name = "dt0";
-            // us.SaveRole(dto);
-            //var list = sqlSugarScope.SqlQueryable<Model.tb_Unit>("select * from tb_Unit").OrderBy("id asc");
-            //MessageBox.Show(mylist.ToString());
-            Application.Run(_mainform);
-
-            */
-
         }
-
         /// <summary>
         /// 给上下文一些初始值
         /// </summary>

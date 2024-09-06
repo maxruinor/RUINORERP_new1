@@ -30,7 +30,9 @@ namespace RUINORERP.UI.Common
     {
         public GridViewRelated()
         {
-            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+           
+                menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+           
         }
         MenuPowerHelper menuPowerHelper;
 

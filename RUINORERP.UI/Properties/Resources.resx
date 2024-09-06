@@ -577,4 +577,25 @@
   <data name="US_Dollar" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\US_Dollar.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="_1616_add_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\1616_add_.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_1616_delete_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\1616_delete_.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_1616_down_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\1616_down_.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_1616_edit_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\1616_edit_.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_1616_favorites_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\1616_favorites_.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_1616_large_icons_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\1616_large icons_.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_1616_selected_ok_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\1616_selected_ok_.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

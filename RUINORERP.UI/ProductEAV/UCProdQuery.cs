@@ -515,6 +515,7 @@ namespace RUINORERP.UI.ProductEAV
            .AndIF(cmbLocation.SelectedValue != null && cmbLocation.SelectedValue.ToString() != "-1", w => w.Location_ID == long.Parse(cmbLocation.SelectedValue.ToString()))
            .AndIF(txtShortCode.Text.Trim().Length > 0, w => w.ShortCode.Contains(txtShortCode.Text.Trim()))
            .AndIF(txtProp.Text.Trim().Length > 0, w => w.prop.Contains(txtProp.Text.Trim()))
+           .AndIF(txtBrand.Text.Trim().Length > 0, w => w.Brand.Contains(txtBrand.Text.Trim()))
            .AndIF(txtBarCode.Text.Trim().Length > 0, w => w.BarCode.Contains(txtBarCode.Text.Trim()))
            .AndIF(txtSKU码.Text.Trim().Length > 0, w => w.SKU.Contains(txtSKU码.Text.Trim()))
            .AndIF(txtNo.Text.Trim().Length > 0, w => w.ProductNo.Contains(txtNo.Text.Trim()))
@@ -568,7 +569,7 @@ namespace RUINORERP.UI.ProductEAV
             List<long> allIds = listDetails.Select(c => c.ProdDetailID).ToList();
             var listboms = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_BOM_S>()
                     .RightJoin<tb_ProdDetail>((a, b) => a.ProdDetailID == b.ProdDetailID)
-                   // .Includes(a => a.tb_producttype)
+                    // .Includes(a => a.tb_producttype)
                     .Includes(a => a.tb_BOM_SDetails)
                     .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
                     .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)

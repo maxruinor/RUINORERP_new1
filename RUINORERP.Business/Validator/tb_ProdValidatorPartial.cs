@@ -36,7 +36,6 @@ namespace RUINORERP.Business
             RuleFor(tb_Prod => tb_Prod.Unit_ID).Must(CheckForeignKeyValue).WithMessage("单位:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Type_ID).Must(CheckForeignKeyValue).WithMessage("产品类型:下拉选择值不正确。");
             RuleFor(x => x.Location_ID).NotNull().WithMessage("默认仓库不能为空。");
-
             RuleFor(tb_Prod => tb_Prod.Location_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认仓库:下拉选择值不正确。");
         }
 

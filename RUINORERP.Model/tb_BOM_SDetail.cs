@@ -143,20 +143,20 @@ namespace RUINORERP.Model
         //    }
         //}
 
-        private string _property;
-        /// <summary>
-        /// 属性
-        /// </summary>
-        [AdvQueryAttribute(ColName = "property", ColDesc = "属性")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "property", Length = 255, IsNullable = true, ColumnDescription = "属性")]
-        public string property
-        {
-            get { return _property; }
-            set
-            {
-                SetProperty(ref _property, value);
-            }
-        }
+        //private string _property;
+        ///// <summary>
+        ///// 属性
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "property", ColDesc = "属性")]
+        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "property", Length = 255, IsNullable = true, ColumnDescription = "属性")]
+        //public string property
+        //{
+        //    get { return _property; }
+        //    set
+        //    {
+        //        SetProperty(ref _property, value);
+        //    }
+        //}
 
       
 

@@ -689,6 +689,8 @@ namespace RUINORERP.UI.PSI.SAL
                 }
 
 
+
+
                 if (EditEntity.ApprovalStatus == null)
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -700,6 +702,18 @@ namespace RUINORERP.UI.PSI.SAL
                         return false;
                     }
                 }
+
+                if (NeedValidated)
+                {
+                    if (EditEntity.tb_SaleOuts.Count > 0)
+                    {
+                        MessageBox.Show("当前订单已有出库数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                  
+                }
+
+
                 if (EditEntity.SOrder_ID > 0)
                 {
                     //如果是超级管理员，提供一个保存方式 就是在基本明细数据行不变时。只更新部分字段

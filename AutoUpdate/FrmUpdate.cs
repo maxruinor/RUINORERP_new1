@@ -423,8 +423,6 @@ namespace AutoUpdate
                     System.IO.Directory.CreateDirectory(updateDataPath);
                 }
 
-                //
-
                 tempUpdatePath = updateDataPath + "\\" + "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "_" + "\\";
                 //tempUpdatePath = Environment.GetEnvironmentVariable("Temp") + "\\" + "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "_" + "\\";
                 appUpdater.DownAutoUpdateFile(tempUpdatePath);
@@ -449,7 +447,7 @@ namespace AutoUpdate
 
             //比较两个文件配置差异。下载更新文件
             availableUpdate = appUpdater.CheckForUpdate(serverXmlFile, localXmlFile, out htUpdateFile);
-
+            NewVersion = appUpdater.NewVersion;
             //找到了差异的文件集合显示的UI中，等待用户点击下一步
             if (availableUpdate > 0)
             {
@@ -462,7 +460,7 @@ namespace AutoUpdate
             else
             {
                 this.Visible = false;
-                StartEntryPointExe();
+                StartEntryPointExe(NewVersion);
                 this.Close();
             }
 
@@ -833,8 +831,8 @@ namespace AutoUpdate
 
             //全部更新完成后。配置文件也要更新过来
             File.Copy(serverXmlFile, localXmlFile, true);
-            autoupdatePath = "你好！";
-            StartEntryPointExe(autoupdatePath);
+           
+            StartEntryPointExe(NewVersion);
             mainResult = 0;
             this.Close();
             this.Dispose();
@@ -1221,23 +1219,20 @@ namespace AutoUpdate
             //return;
             if (System.IO.File.Exists(mainAppExe))
             {
-                Process.Start(mainAppExe);
+                //Process.Start(mainAppExe);
+                // 要传递给程序的参数
+                string arguments = tempUpdatePath;
+                // 将数组转换为以"|"分隔的字符串
+                arguments = String.Join("|", args);
+                ProcessStartInfo startInfo = new ProcessStartInfo(mainAppExe, arguments);
+                Process.Start(startInfo);
             }
             else
             {
                 MessageBox.Show("系统找不到指定文件的路径：" + mainAppExe, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-
             //MessageBox.Show(mainAppExe);
-            // 要传递给程序的参数
 
-
-            string arguments = tempUpdatePath;
-            // 将数组转换为以"|"分隔的字符串
-            arguments = String.Join("|", args);
-
-            ProcessStartInfo startInfo = new ProcessStartInfo(mainAppExe, arguments);
-            Process.Start(startInfo);
             mainResult = 0;
         }
         #endregion
@@ -1254,6 +1249,8 @@ namespace AutoUpdate
             set { skipCurrentVersion = value; }
         }
 
+
+        private string NewVersion = string.Empty;
 
         private void btnskipCurrentVersion_Click(object sender, EventArgs e)
         {

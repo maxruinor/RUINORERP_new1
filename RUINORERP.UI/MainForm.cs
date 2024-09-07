@@ -293,12 +293,11 @@ namespace RUINORERP.UI
             timer1.Start();
             tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
             List<tb_Company> company = await companyController.QueryAsync();
-            Version = "2024-09-6-2";
             if (company != null)
             {
-                this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + Version;
+                this.Text = company[0].CNName + "企业数字化集成ERP v1.0" +"_"+ AppContext.ClientInfo.Version;
             }
-            AppContext.ClientInfo.Version = version;
+           
             // logger.LogInformation("打开主窗体准备进入系统");
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {

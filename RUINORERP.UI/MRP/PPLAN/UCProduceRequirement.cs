@@ -1958,7 +1958,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     subMaking.ParentId = PID;//一级数据
                     subMaking.BOM_ID = detail.tb_proddetail.BOM_ID;
                     subMaking.ProdDetailID = detail.ProdDetailID;
-                    subMaking.property = detail.property;
+                    subMaking.property = detail.view_ProdDetail.prop;
                     subMaking.Location_ID = Location_ID;
                     //  subMaking.PreEndDate=
                     //subMaking.UnitCost
@@ -2012,7 +2012,7 @@ protected async override Task<ApprovalEntity> ReReview()
                         subMaking.ParentId = PID;//一级数据
                         subMaking.BOM_ID = detail.tb_proddetail.BOM_ID;
                         subMaking.ProdDetailID = detail.ProdDetailID;
-                        subMaking.property = detail.property;
+                        subMaking.property = detail.view_ProdDetail.prop;
                         subMaking.Location_ID = Location_ID;
                         //subMaking.PreEndDate= SubItem.RequirementDate
                         subMaking.UnitCost = detail.MaterialCost;

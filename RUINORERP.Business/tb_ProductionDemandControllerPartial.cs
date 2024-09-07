@@ -469,7 +469,7 @@ namespace RUINORERP.Business
                 long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
                 NewDetail.ID = sid;
                 NewDetail.ParentId = 0;//一级数据
-                NewDetail.property = item.property;
+                NewDetail.property = item.view_ProdDetail.prop;
 
                 //    NewDetail. = item.ProdDetailName;
                 //    NewDetail.ProdDetailCode = item.ProdDetailCode;
@@ -638,7 +638,7 @@ namespace RUINORERP.Business
             NewDetail.ParentId = PID;//一级数据
             NewDetail.BOM_ID = BOM_ID;//再下级由这个BOMID作为父级去找
             NewDetail.ProdDetailID = detail.ProdDetailID;
-            NewDetail.property = detail.property;
+            NewDetail.property = detail.view_ProdDetail.prop;
             NewDetail.Location_ID = Location_ID;//TODO 需求要仓库。BOM不用库仓库
             NewDetail.RequirementDate = RequirementDate;
             NewDetail.tb_proddetail = detail.tb_proddetail;

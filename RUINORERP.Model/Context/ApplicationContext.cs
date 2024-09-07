@@ -189,6 +189,8 @@ namespace RUINORERP.Model.Context
         /// </summary>
         public static string VersionRoutingTag { get; internal set; }
 
+    
+
         /// <summary>
         /// Gets the authentication type being used by the
         /// CSLA .NET framework.

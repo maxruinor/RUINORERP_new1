@@ -736,6 +736,7 @@ namespace RUINORERP.UI.MRP.BOM
                 entity.Effective_at = System.DateTime.Now;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 entity.ApprovalResults = false;
+                
                 entity.SKU = string.Empty;
                 entity.ProdDetailID = 0;
                 if (entity.tb_BOM_SDetails != null && entity.tb_BOM_SDetails.Count > 0)
@@ -984,7 +985,7 @@ namespace RUINORERP.UI.MRP.BOM
 
                     TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdDetail.CNName, 0);
                     itemSub.Tag = bOM_S;
-                    itemSub.SubItems.Add(BOM_SDetail.property);//subitems只是从属于itemRow的子项。目前是四列
+                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.prop);//subitems只是从属于itemRow的子项。目前是四列
                     itemSub.SubItems.Add(BOM_SDetail.SKU);//subitems只是从属于itemRow的子项。目前是四列
                     itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Specifications);
                     string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdDetail.Type_ID);
@@ -1116,7 +1117,7 @@ namespace RUINORERP.UI.MRP.BOM
             //冗余名称和规格
             //  sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.CNName, t => t.SubItemName);
             //  sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Specifications, t => t.SubItemSpec);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.prop, t => t.property);
+            //sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.prop, t => t.property);
             //sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Type_ID, t => t.Type_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Unit_ID, t => t.Unit_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.SKU, t => t.SKU);

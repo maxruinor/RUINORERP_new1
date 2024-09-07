@@ -611,7 +611,7 @@ namespace RUINORERP.UI.ProductEAV
                     TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdDetail.CNName, 0);
                     itemSub.Tag = BOM_SDetail.view_ProdDetail;
                     itemSub.SubItems.Add(BOM_SDetail.SKU);//subitems只是从属于itemRow的子项。目前是四列
-                    itemSub.SubItems.Add(BOM_SDetail.property);//subitems只是从属于itemRow的子项。目前是四列
+                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.prop);//subitems只是从属于itemRow的子项。目前是四列
                     itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Model);
                     itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Specifications);
                     string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdDetail.Type_ID);

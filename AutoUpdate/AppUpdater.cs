@@ -123,6 +123,9 @@ namespace AutoUpdate
             return k;
         }
 
+        private string _NewVersion = string.Empty;
+        public string NewVersion { get; set; }
+
 
 
         /// <summary>
@@ -146,6 +149,9 @@ namespace AutoUpdate
             XmlNodeList newNodeList = serverXmlFiles.GetNodeList("AutoUpdater/Files");
             XmlNodeList oldNodeList = localXmlFiles.GetNodeList("AutoUpdater/Files");
 
+            //È¡°æ±¾ºÅ
+            this.NewVersion = serverXmlFiles.GetNodeValue("AutoUpdater/Application/Version").ToString();
+            
             int k = 0;
             for (int i = 0; i < newNodeList.Count; i++)
             {

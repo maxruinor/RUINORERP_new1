@@ -30,6 +30,7 @@ using WorkflowCore.Services;
 using RUINORERP.WF.BizOperation;
 using RUINORERP.Common.Extensions;
 using System.Threading;
+using SuperSocket.ClientEngine;
 
 
 namespace RUINORERP.UI
@@ -392,7 +393,8 @@ namespace RUINORERP.UI
                     Console.WriteLine("接收到的命令行参数如下：");
                     foreach (var arg in args)
                     {
-                        Console.WriteLine(arg);
+                        AppContextData.ClientInfo.Version = arg;
+                        // Console.WriteLine(arg);
                         //MessageBox.Show(arg);
                     }
                 }

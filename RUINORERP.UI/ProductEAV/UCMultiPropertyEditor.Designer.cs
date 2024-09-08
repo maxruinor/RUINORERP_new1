@@ -79,6 +79,12 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.imageStrip = new System.Windows.Forms.ImageList(this.components);
+            this.contextMenuStripTreeGrid = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.删除SKU明细toolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.删除属性值ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMI全部展开 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMI全部折叠 = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer生成组合.Panel1)).BeginInit();
             this.kryptonSplitContainer生成组合.Panel1.SuspendLayout();
@@ -129,6 +135,7 @@
             this.kryptonPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourc产品)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSKU明细)).BeginInit();
+            this.contextMenuStripTreeGrid.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer生成组合
@@ -626,6 +633,51 @@
             this.imageStrip.ImageSize = new System.Drawing.Size(16, 16);
             this.imageStrip.TransparentColor = System.Drawing.Color.Transparent;
             // 
+            // contextMenuStripTreeGrid
+            // 
+            this.contextMenuStripTreeGrid.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.contextMenuStripTreeGrid.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.删除SKU明细toolStripMenuItem,
+            this.删除属性值ToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.toolStripMI全部展开,
+            this.toolStripMI全部折叠});
+            this.contextMenuStripTreeGrid.Name = "contextMenuStrip1";
+            this.contextMenuStripTreeGrid.Size = new System.Drawing.Size(181, 120);
+            // 
+            // 删除SKU明细toolStripMenuItem
+            // 
+            this.删除SKU明细toolStripMenuItem.Name = "删除SKU明细toolStripMenuItem";
+            this.删除SKU明细toolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.删除SKU明细toolStripMenuItem.Text = "删除SKU明细";
+            this.删除SKU明细toolStripMenuItem.Click += new System.EventHandler(this.删除SKU明细toolStripMenuItem_Click);
+            // 
+            // 删除属性值ToolStripMenuItem
+            // 
+            this.删除属性值ToolStripMenuItem.Name = "删除属性值ToolStripMenuItem";
+            this.删除属性值ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.删除属性值ToolStripMenuItem.Text = "删除属性值";
+            this.删除属性值ToolStripMenuItem.Click += new System.EventHandler(this.删除属性值ToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            // 
+            // toolStripMI全部展开
+            // 
+            this.toolStripMI全部展开.Name = "toolStripMI全部展开";
+            this.toolStripMI全部展开.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMI全部展开.Text = "全部展开";
+            this.toolStripMI全部展开.Click += new System.EventHandler(this.toolStripMI全部展开_Click);
+            // 
+            // toolStripMI全部折叠
+            // 
+            this.toolStripMI全部折叠.Name = "toolStripMI全部折叠";
+            this.toolStripMI全部折叠.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMI全部折叠.Text = "全部折叠";
+            this.toolStripMI全部折叠.Click += new System.EventHandler(this.toolStripMI全部折叠_Click);
+            // 
             // UCMultiPropertyEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -688,6 +740,7 @@
             this.kryptonPanel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourc产品)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSKU明细)).EndInit();
+            this.contextMenuStripTreeGrid.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -741,5 +794,11 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn SKU;
         private System.Windows.Forms.DataGridViewTextBoxColumn 产品名称;
         private FastReport.DevComponents.DotNetBar.Controls.DataGridViewLabelXColumn 数据状态;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripTreeGrid;
+        private System.Windows.Forms.ToolStripMenuItem 删除属性值ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 删除SKU明细toolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMI全部展开;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMI全部折叠;
     }
 }

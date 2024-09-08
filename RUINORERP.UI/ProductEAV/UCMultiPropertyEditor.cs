@@ -127,6 +127,7 @@ namespace RUINORERP.UI.ProductEAV
             dataGridViewProd.DataSource = bindingSourc产品;
 
             listView1.ContextMenuStrip = contextMenuStrip1;
+            treeGridView1.ContextMenuStrip = contextMenuStripTreeGrid;
             //LoadGrid1();
         }
 
@@ -1373,9 +1374,20 @@ namespace RUINORERP.UI.ProductEAV
 
         private void treeGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            if (e.RowIndex == 0)
+            //这个特殊这里是第一行的行号
+            if (e.RowIndex == 0 && e.ColumnIndex == -1)
             {
+                e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
+                Rectangle indexRect = e.CellBounds;
+                indexRect.Inflate(-2, -2);
 
+                TextRenderer.DrawText(e.Graphics,
+                    (e.RowIndex + 1).ToString(),
+                    e.CellStyle.Font,
+                    indexRect,
+                    e.CellStyle.ForeColor,
+                    TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+                e.Handled = true;
             }
 
             if (e.RowIndex > 0)
@@ -1406,22 +1418,52 @@ namespace RUINORERP.UI.ProductEAV
                 }
 
                 #endregion
+            }
 
-                //画总行数行号
-                if (e.ColumnIndex < 0 && e.RowIndex < 0)
-                {
-                    e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
-                    Rectangle indexRect = e.CellBounds;
-                    indexRect.Inflate(-2, -2);
+            ////画总行数行号
+            //if (e.ColumnIndex < 0 && e.RowIndex < 0)
+            //{
+            //    e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
+            //    Rectangle indexRect = e.CellBounds;
+            //    indexRect.Inflate(-2, -2);
 
-                    TextRenderer.DrawText(e.Graphics,
-                        (treeGridView1.Nodes.Count + "#").ToString(),
-                        e.CellStyle.Font,
-                        indexRect,
-                        e.CellStyle.ForeColor,
-                        TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
-                    e.Handled = true;
-                }
+            //    TextRenderer.DrawText(e.Graphics,
+            //        (treeGridView1.Nodes.Count + "#").ToString(),
+            //        e.CellStyle.Font,
+            //        indexRect,
+            //        e.CellStyle.ForeColor,
+            //        TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+            //    e.Handled = true;
+            //}
+        }
+
+
+        private void 删除属性值ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+           
+        }
+
+        private void 删除SKU明细toolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (treeGridView1.CurrentCell != null)
+            {
+
+            }
+        }
+
+        private void toolStripMI全部展开_Click(object sender, EventArgs e)
+        {
+            foreach (var node in treeGridView1.Nodes)
+            {
+                node.Expand();
+            }
+        }
+
+        private void toolStripMI全部折叠_Click(object sender, EventArgs e)
+        {
+            foreach (var node in treeGridView1.Nodes)
+            {
+                node.Collapse();
             }
         }
     }

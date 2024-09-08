@@ -601,6 +601,7 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
             }
             KryptonPage page = (thisform as Control).Parent as KryptonPage;
             MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
+            page.Dispose();
             /*
             if (page == null)
             {

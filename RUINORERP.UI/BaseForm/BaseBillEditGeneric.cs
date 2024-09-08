@@ -1581,7 +1581,7 @@ namespace RUINORERP.UI.BaseForm
                 bindingSourceSub.Clear();
 
                 T NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
-                NewEditEntity = EditEntity.DeepClone();
+                NewEditEntity = EditEntity.DeepCloneByjson();
                 //复制性新增 时  PK要清空，单据编号类的
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
                 long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);

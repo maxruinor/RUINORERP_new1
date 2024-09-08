@@ -2540,7 +2540,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     {
                         if (EditEntity.tb_ProduceGoodsRecommendDetails[i].ID != ID)
                         {
-                            needProcessList.Add(EditEntity.tb_ProduceGoodsRecommendDetails[i].DeepClone());
+                            needProcessList.Add(EditEntity.tb_ProduceGoodsRecommendDetails[i].DeepCloneByjson());
                         }
                     }
 

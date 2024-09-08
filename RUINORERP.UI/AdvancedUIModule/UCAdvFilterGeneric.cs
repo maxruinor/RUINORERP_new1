@@ -398,7 +398,8 @@ namespace RUINORERP.UI.AdvancedUIModule
                 page.Hide(); //高级查询 如果移除会 工具栏失效一次，找不到原因。目前暂时隐藏处理
                              //如果上一级的窗体关闭则删除？
                              //MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
-                             //page.Dispose();
+                             //page.Dispose();TODO:
+                MessageBox.Show("请联系管理员处理此问题。");
             }
             else
             {

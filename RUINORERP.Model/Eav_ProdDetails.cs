@@ -1,4 +1,5 @@
-﻿using SqlSugar;
+﻿using RUINORERP.Global.CustomAttribute;
+using SqlSugar;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -341,13 +342,13 @@ namespace RUINORERP.Model
         }
 
 
-        private int? _Created_by;
+        private long? _Created_by;
         /// <summary>
         /// 创建人
         /// </summary>
-        [Browsable(false)]
-        [SugarColumn(IsIgnore = true, ColumnName = "Created_by", IsNullable = true, ColumnDescription = "创建人")]
-        public int? Created_by
+        [AdvQueryAttribute(ColName = "Created_by", ColDesc = "创建人")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Created_by", DecimalDigits = 0, IsNullable = true, ColumnDescription = "创建人")]
+        public long? Created_by
         {
             get { return _Created_by; }
             set
@@ -373,13 +374,13 @@ namespace RUINORERP.Model
         }
 
 
-        private int? _Modified_by;
+        private long? _Modified_by;
         /// <summary>
         /// 修改人
         /// </summary>
-        [Browsable(false)]
-        [SugarColumn(IsIgnore = true, ColumnName = "Modified_by", IsNullable = true, ColumnDescription = "修改人")]
-        public int? Modified_by
+        [AdvQueryAttribute(ColName = "Modified_by", ColDesc = "修改人")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Modified_by", DecimalDigits = 0, IsNullable = true, ColumnDescription = "修改人")]
+        public long? Modified_by
         {
             get { return _Modified_by; }
             set

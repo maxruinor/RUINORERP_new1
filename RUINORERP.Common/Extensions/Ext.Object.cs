@@ -140,7 +140,7 @@ namespace RUINORERP.Common.Extensions
         /// <typeparam name="T">类型</typeparam>
         /// <param name="obj">对象</param>
         /// <returns></returns>
-        public static T DeepClone<T>(this T obj) where T : class
+        public static T DeepCloneByjson<T>(this T obj) where T : class
         {
             if (obj == null)
                 return null;

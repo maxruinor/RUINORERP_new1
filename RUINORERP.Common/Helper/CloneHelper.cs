@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
@@ -8,7 +9,74 @@ namespace RUINORERP.Common.Helper
 {
     public static class CloneHelper
     {
+        #region 反射赋值 意思是规范代码可以使用。暂时没有去验证了。by 2024-9-8
 
+        /*
+         * cndeng大佬你好，首先感蟹你的回复。
+你的方法我试用了，出现的问题是：如果这个类的引用类型是字段而不是属性，它就无法复制。但如果把字段改成属性搞上get set外套，则可以复制成功。
+如：把TestClass类中的属性  public List<int> Numbers { get; set; }  改成字段 public List<int> Numbers = [];   则无法复制此字段中的值。
+现在的问题是我的代码已经写了很多了，如果要把一个类的所有字段都改成属性，许多地方都要有相应的修改，工程量有点大。
+不知道大佬有没有办法优化一下这个方法？让他可以兼顾字段引用类型的复制。
+         */
+
+        public static T DeepCloneByReflection<T>(this T source)
+        {
+            if (ReferenceEquals(source, null))
+                return default;
+
+            return (T)DeepCloneByReflection((object)source);
+        }
+
+        private static object DeepCloneByReflection(object source)
+        {
+            if (source == null)
+                return null;
+
+            Type type = source.GetType();
+
+            if (type.IsPrimitive || type == typeof(string))
+            {
+                return source;
+            }
+            else if (type.IsArray)
+            {
+                Type elementType = type.GetElementType();
+                var array = source as Array;
+                var copied = Array.CreateInstance(elementType, array.Length);
+                for (int i = 0; i < array.Length; i++)
+                {
+                    copied.SetValue(DeepCloneByReflection(array.GetValue(i)), i);
+                }
+                return copied;
+            }
+            else if (typeof(IList).IsAssignableFrom(type))
+            {
+                Type itemType = type.GetGenericArguments()[0];
+                var collection = Activator.CreateInstance(type) as IList;
+                var list = source as IList;
+                foreach (var item in list)
+                {
+                    collection.Add(DeepCloneByReflection(item));
+                }
+                return collection;
+            }
+            else
+            {
+                var clone = Activator.CreateInstance(type);
+                PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                foreach (var property in properties)
+                {
+                    if (property.CanRead && property.CanWrite)
+                    {
+                        var value = property.GetValue(source);
+                        property.SetValue(clone, DeepCloneByReflection(value));
+                    }
+                }
+                return clone;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 通过遍历属性赋值

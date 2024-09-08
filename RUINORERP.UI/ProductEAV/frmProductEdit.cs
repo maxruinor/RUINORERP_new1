@@ -578,6 +578,17 @@ namespace RUINORERP.UI.ProductEAV
                     IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
                     //为null的不需要，不然会覆盖
                     detail = mapper.Map<tb_ProdDetail>(epd);
+
+                    if (detail.ProdDetailID == 0)
+                    {
+                        detail.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
+                        detail.Created_at = DateTime.Now;
+                    }
+                    else
+                    {
+                        detail.Modified_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
+                        detail.Modified_at = DateTime.Now;
+                    }
                     if (epd.tb_ProdDetail != null)
                     {
                         detail.ProdBaseID = epd.tb_ProdDetail.ProdBaseID;

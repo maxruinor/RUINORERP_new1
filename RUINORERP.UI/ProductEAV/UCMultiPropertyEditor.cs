@@ -31,6 +31,12 @@ using static OfficeOpenXml.ExcelErrorValue;
 using SqlSugar.SplitTableExtensions;
 using System.Diagnostics;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using Krypton.Workspace;
+using Krypton.Navigator;
+using RUINORERP.Common.Helper;
+using ObjectsComparer;
+using System.Collections;
+using Force.DeepCloner;
 namespace RUINORERP.UI.ProductEAV
 {
 
@@ -562,6 +568,8 @@ namespace RUINORERP.UI.ProductEAV
                                     nodeDetail.Cells[6].Value = "编辑";
                                     nodeDetail.ImageIndex = 2;//0 加载，1 新增 2 编辑 3 删除 4 下拉
                                     tb_ProdDetail detailData = nodeDetail.Tag is tb_ProdDetail ? nodeDetail.Tag as tb_ProdDetail : new tb_ProdDetail();
+                                    detailData.Modified_at = DateTime.Now;
+                                    detailData.Modified_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
                                     treeGridView1.Refresh();
                                     if (nodeDetail != null)
                                     {
@@ -574,6 +582,7 @@ namespace RUINORERP.UI.ProductEAV
                                         par.tb_prodproperty = ppv.tb_prodproperty;
                                         par.tb_prodpropertyvalue = ppv;
                                         par.ProdDetailID = Detail.Key;//等待生成
+                                        
                                         par.ActionStatus = ActionStatus.新增;
                                         EditEntity.tb_Prod_Attr_Relations.Add(par);
                                         detailData.tb_Prod_Attr_Relations.Add(par);
@@ -617,6 +626,8 @@ namespace RUINORERP.UI.ProductEAV
                                                                     //detail.SKU = prop;为了不浪费  保存时再成生一次
 
                                     detail.ActionStatus = ActionStatus.新增;
+                                    detail.Created_at = DateTime.Now;
+                                    detail.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
                                     node.NodeName = SkuRowid.ToString();//标记节点ID， 
                                     node.ImageIndex = 1;//0 加载，1 新增 2 编辑 3 删除 4 下拉
                                     node.Tag = detail;
@@ -656,6 +667,8 @@ namespace RUINORERP.UI.ProductEAV
                                     }
                                     #endregion
 
+                                    //添加产品明细的详情
+                                    EditEntity.tb_ProdDetails.Add(detail);
                                     #endregion
                                 }
                                 else
@@ -1154,7 +1167,11 @@ namespace RUINORERP.UI.ProductEAV
         {
             if (dataGridViewProd.CurrentRow != null)
             {
+                EditEntity = null;
+                oldOjb = null;
                 EditEntity = dataGridViewProd.CurrentRow.DataBoundItem as tb_Prod;
+                //oldOjb = CloneHelper.DeepCloneObject<tb_Prod>(EditEntity);
+                oldOjb = EditEntity.DeepClone();
                 if (EditEntity != null)
                 {
                     if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
@@ -1338,8 +1355,8 @@ namespace RUINORERP.UI.ProductEAV
 
             }
         }
-
-        private void btnOk_Click(object sender, EventArgs e)
+        tb_Prod oldOjb = null;
+        private async void btnOk_Click(object sender, EventArgs e)
         {
 
             List<string> MixByTreeGrid = new List<string>();
@@ -1368,9 +1385,117 @@ namespace RUINORERP.UI.ProductEAV
 
             }
 
+            /*
+            List<KeyValuePair<long, string[]>> attrGoupsByID = GetAttrGoupsByIDName(listView1, g => g.GroupID, lvitem => lvitem.Text);
+            List<string> MixByListView = ArrayCombination.Combination4Table(attrGoupsByID);
+            var addItem差集 = MixByListView.Except(MixByTreeGrid).ToList();
+            if (addItem差集.Count == 0)
+            {
+              
+            }
+             */
+
+            //https://github.com/ValeraT1982/ObjectsComparer
+            var _comparer = new ObjectsComparer.Comparer<tb_Prod>(
+              new ComparisonSettings
+              {
+                  //Null and empty error lists are equal
+                  EmptyAndNullEnumerablesEqual = true
+              });
+
+
+            _comparer.IgnoreMember("ProdBaseID");//
+            if (EditEntity.tb_ProdDetails == null)
+            {
+                EditEntity.tb_ProdDetails = new List<tb_ProdDetail>();
+            }
+
+            //var detail = from p in EditEntity.tb_Prod_Attr_Relations select p;
+            _comparer.AddComparerOverride(() => new tb_Prod().tb_Prod_Attr_Relations, DoNotCompareValueComparer.Instance);
+            IEnumerable<Difference> differences;
+            var isEqual = _comparer.Compare(oldOjb, EditEntity, out differences);
+            if (isEqual)
+            {
+                MessageBox.Show("数据没有任何变化，不需要保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            else
+            {
+                EditEntity.ActionStatus = ActionStatus.修改;
+            }
+
+            //如果SKU为空。则是新的数据 detailid=0;
+            foreach (var item in EditEntity.tb_ProdDetails)
+            {
+                //判断明细是不是修改       
+                //如果关系数据中关系ID大于0则是原来的。与包含=0的总数比较。如果不一致。则说明有修改
+                if (item.tb_Prod_Attr_Relations.Count != item.tb_Prod_Attr_Relations.Where(c => c.RAR_ID > 0).Count())
+                {
+                    if (item.ActionStatus != ActionStatus.新增)
+                    {
+                        item.ActionStatus = ActionStatus.修改;
+                    }
+                    
+                }
+                if (item.SKU == null)
+                {
+                    item.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                    if (item.ActionStatus == ActionStatus.新增)
+                    {
+                        item.ProdDetailID = 0;
+                    }
+                }
+            }
             //EditEntity.tb_Prod_Attr_Relations = attr_Relations
+            tb_ProdController<tb_Prod> pctr = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
+            ReturnResults<tb_Prod> rr = new ReturnResults<tb_Prod>();
+            rr = await pctr.SaveOrUpdateAsync(EditEntity);
+            if (rr.Succeeded)
+            {
+                MainForm.Instance.uclog.AddLog("保存成功");
+                this.Exit(this);
+            }
+            else
+            {
+                MainForm.Instance.uclog.AddLog($"保存失败:{rr.ErrorMsg}");
+            }
 
         }
+
+        protected virtual void Exit(object thisform)
+        {
+            CloseTheForm(thisform);
+        }
+
+        private void CloseTheForm(object thisform)
+        {
+            KryptonWorkspaceCell cell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
+            if (cell == null)
+            {
+                cell = new KryptonWorkspaceCell();
+                MainForm.Instance.kryptonDockableWorkspace1.Root.Children.Add(cell);
+            }
+            if ((thisform as Control).Parent is KryptonPage)
+            {
+                KryptonPage page = (thisform as Control).Parent as KryptonPage;
+                MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
+                page.Dispose();
+            }
+            else
+            {
+                if (thisform is Form)
+                {
+                    Form frm = (thisform as Form);
+                    frm.Close();
+                }
+                else
+                {
+                    Form frm = (thisform as Control).Parent.Parent as Form;
+                    frm.Close();
+                }
+            }
+        }
+
 
         private void treeGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
@@ -1440,7 +1565,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void 删除属性值ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-           
+
         }
 
         private void 删除SKU明细toolStripMenuItem_Click(object sender, EventArgs e)

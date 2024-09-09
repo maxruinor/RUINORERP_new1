@@ -15,7 +15,6 @@ namespace RUINORERP.UI
         查询,
         选中,
         保存,
-        高级查询,
         关闭,
         属性,
     }

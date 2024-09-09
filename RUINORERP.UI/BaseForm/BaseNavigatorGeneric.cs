@@ -145,6 +145,11 @@ namespace RUINORERP.UI.BaseForm
             // queryConditions = new List<string>(QueryFilter.QueryFields.Select(t => t.FieldName).ToList());
             int PageNum = 1;
             int PageSize = int.Parse(txtMaxRow.Text);
+            if (QueryFilter.FilterLimitExpressions == null)
+            {
+                QueryFilter.FilterLimitExpressions = new List<LambdaExpression>();
+            }
+            QueryFilter.FilterLimitExpressions.Add(LimitQueryConditions);
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, LimitQueryConditions, QueryDto, PageNum, PageSize) as List<M>;
             list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryFilter, QueryDto, PageNum, PageSize) as List<M>;
 
@@ -199,50 +204,68 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
                 return;
             }
             InitializeComponent();
-
-            foreach (var item in base.BaseToolStrip.Items)
+            if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
-                if (item is ToolStripButton)
+                if (!this.DesignMode)
                 {
-                    ToolStripButton subItem = item as ToolStripButton;
-                    subItem.Click += Item_Click;
-                    UIHelper.ControlButton(this.CurMenuInfo, subItem);
-                }
-                if (item is ToolStripDropDownButton)
-                {
-                    ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
-                    subItem.Click += Item_Click;
-                    UIHelper.ControlButton(this.CurMenuInfo, subItem);
-                    //下一级
-                    if (subItem.HasDropDownItems)
+                    //权限菜单
+                    if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
-                        foreach (var sub in subItem.DropDownItems)
+                        CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
+                        if (CurMenuInfo == null)
                         {
-                            ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                            subStripMenuItem.Click += Item_Click;
-                            UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
+                            MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
+                            return;
                         }
                     }
-                }
-                //打印特殊处理
-                if (item is ToolStripSplitButton)
-                {
-                    ToolStripSplitButton subItem = item as ToolStripSplitButton;
-                    subItem.Click += Item_Click;
-                    UIHelper.ControlButton(this.CurMenuInfo, subItem);
-                    //下一级
-                    if (subItem.HasDropDownItems)
-                    {
-                        foreach (var sub in subItem.DropDownItems)
-                        {
-                            ToolStripItem subStripMenuItem = sub as ToolStripItem;
-                            subStripMenuItem.Click += Item_Click;
-                            UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
-                        }
-                    }
-                }
 
+                    foreach (var item in base.BaseToolStrip.Items)
+                    {
+                        if (item is ToolStripButton)
+                        {
+                            ToolStripButton subItem = item as ToolStripButton;
+                            subItem.Click += Item_Click;
+                            UIHelper.ControlButton(this.CurMenuInfo, subItem);
+                        }
+                        if (item is ToolStripDropDownButton)
+                        {
+                            ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
+                            subItem.Click += Item_Click;
+                            UIHelper.ControlButton(this.CurMenuInfo, subItem);
+                            //下一级
+                            if (subItem.HasDropDownItems)
+                            {
+                                foreach (var sub in subItem.DropDownItems)
+                                {
+                                    ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
+                                    subStripMenuItem.Click += Item_Click;
+                                    UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
+                                }
+                            }
+                        }
+                        //打印特殊处理
+                        if (item is ToolStripSplitButton)
+                        {
+                            ToolStripSplitButton subItem = item as ToolStripSplitButton;
+                            subItem.Click += Item_Click;
+                            UIHelper.ControlButton(this.CurMenuInfo, subItem);
+                            //下一级
+                            if (subItem.HasDropDownItems)
+                            {
+                                foreach (var sub in subItem.DropDownItems)
+                                {
+                                    ToolStripItem subStripMenuItem = sub as ToolStripItem;
+                                    subStripMenuItem.Click += Item_Click;
+                                    UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
+                                }
+                            }
+                        }
+
+                    }
+                }
             }
+
+            
         }
 
 

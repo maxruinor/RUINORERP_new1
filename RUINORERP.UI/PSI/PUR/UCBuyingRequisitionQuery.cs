@@ -52,9 +52,16 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
             }
-            System.Linq.Expressions.Expression<Func<tb_SaleOrderDetail, long>> expProdDetailID;
-            expProdDetailID = (p) => p.ProdDetailID;// == name;
+            System.Linq.Expressions.Expression<Func<tb_BuyingRequisition, long>> expProdDetailID;
+            expProdDetailID = (p) => p.PuRequisition_ID;// == name;
             base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
+
+            System.Linq.Expressions.Expression<Func<tb_BuyingRequisition, int?>> exprPayStatus;
+            exprPayStatus = (p) => p.RefBizType;
+            base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(BizType)));
+
+
+
         }
 
         public override void BuildLimitQueryConditions()
@@ -145,15 +152,17 @@ namespace RUINORERP.UI.PSI.PUR
         */
 
 
+        public override void BuildInvisibleCols()
+        {
+            //base.ChildInvisibleCols.Add(c => c.Cost);
+            base.MasterInvisibleCols.Add(c => c.RefBillID);
+            base.BuildInvisibleCols();
+        }
+
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(e => e.TotalQty);
-     
-
-
             base.ChildSummaryCols.Add(e => e.Quantity);
- 
-
         }
 
         /*

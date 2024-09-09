@@ -296,6 +296,11 @@ namespace RUINORERP.UI.AdvancedUIModule
             // LimitQueryConditions = QueryConditionFilter.GetFilterExpression<T>();
 
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, QueryConditionFilter.GetFilterExpression<T>(), QueryDto, pageNum, pageSize) as List<T>;
+            if (QueryConditionFilter.FilterLimitExpressions ==null)
+            {
+                QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
+            }
+            
             list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<T>;
 
             bindingSourceList.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成

@@ -150,6 +150,7 @@ namespace RUINORERP.UI.PSI.INV
             //创建表达式
             var lambda = Expressionable.Create<tb_ProdReturning>()
                              .And(t => t.isdeleted == false)
+                               .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                             .ToExpression();//注意 这一句 不能少
             base.LimitQueryConditions = lambda;
         }
@@ -165,7 +166,7 @@ namespace RUINORERP.UI.PSI.INV
             //非超级用户时，只能查看自己的订单,如果设置的销售业务限制范围的话
             var lambda = Expressionable.Create<tb_ProdReturning>()
                 .And(t => t.isdeleted == false)
-                .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
               .ToExpression();
 
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);

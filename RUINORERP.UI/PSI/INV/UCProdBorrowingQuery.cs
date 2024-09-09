@@ -73,6 +73,9 @@ namespace RUINORERP.UI.PSI.INV
                              // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                              .And(t => t.isdeleted == false)
                                // .And(t => t.Is_enabled == true)
+                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+
+                            // .And(t => t.Is_enabled == true)
                             .ToExpression();//注意 这一句 不能少
             base.LimitQueryConditions = lambda;
         }

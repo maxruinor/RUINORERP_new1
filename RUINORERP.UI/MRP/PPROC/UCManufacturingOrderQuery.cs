@@ -125,6 +125,7 @@ namespace RUINORERP.UI.MRP.MP
         public override void BuildInvisibleCols()
         {
             base.MasterInvisibleCols.Add(c => c.PDID);
+            base.MasterInvisibleCols.Add(c => c.PDCID);
             base.ChildInvisibleCols.Add(c => c.BOM_ID);
             //  base.ChildInvisibleCols.Add(c => c.ProdDetailID);
 

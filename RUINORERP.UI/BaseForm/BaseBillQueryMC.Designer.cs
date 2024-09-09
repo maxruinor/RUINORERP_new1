@@ -33,7 +33,6 @@
             this.tsbtnBatchConversion = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripBtnAdvQuery = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.tsbtnAntiApproval = new System.Windows.Forms.ToolStripButton();
@@ -77,7 +76,6 @@
             this.tsbtnBatchConversion,
             this.toolStripButton4,
             this.toolStripSeparator2,
-            this.toolStripBtnAdvQuery,
             this.toolStripButton3,
             this.toolStripButton1,
             this.tsbtnAntiApproval,
@@ -119,15 +117,6 @@
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripBtnAdvQuery
-            // 
-            this.toolStripBtnAdvQuery.Image = ((System.Drawing.Image)(resources.GetObject("toolStripBtnAdvQuery.Image")));
-            this.toolStripBtnAdvQuery.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripBtnAdvQuery.Name = "toolStripBtnAdvQuery";
-            this.toolStripBtnAdvQuery.Size = new System.Drawing.Size(79, 22);
-            this.toolStripBtnAdvQuery.Text = "高级查询";
-            this.toolStripBtnAdvQuery.Visible = false;
             // 
             // toolStripButton3
             // 
@@ -366,7 +355,6 @@
         internal System.Windows.Forms.ToolStrip BaseToolStrip;
         private System.Windows.Forms.ToolStripButton toolStripButton4;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        internal System.Windows.Forms.ToolStripButton toolStripBtnAdvQuery;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripBtnExport;
         private System.Windows.Forms.ToolStripButton toolStripButton12;

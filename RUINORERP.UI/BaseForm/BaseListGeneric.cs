@@ -258,10 +258,10 @@ namespace RUINORERP.UI.BaseForm
                     GridRelated = new GridViewRelated();
                     ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     //权限菜单
-                    if (CurMenuInfo == null)
+                    if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
                         CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(T).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                        if (CurMenuInfo == null)
+                        if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                         {
                             MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                             return;
@@ -417,55 +417,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /*
-
-        /// <summary>
-        /// InitializeComponent在这个下面的代码
-        /// </summary>
-        private void InitProcess()
-        {
-            if (!this.DesignMode)
-            {
-                ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                // this.BaseToolStrip.ItemClicked += ToolStrip1_ItemClicked;
-                #region 绑定菜单事件
-
-                foreach (var item in BaseToolStrip.Items)
-                {
-                    if (item is ToolStripButton)
-                    {
-                        ToolStripButton subItem = item as ToolStripButton;
-                        subItem.Click += Item_Click;
-                    }
-                    if (item is ToolStripDropDownButton)
-                    {
-                        ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
-                        subItem.Click += Item_Click;
-                        //下一级
-                        if (subItem.HasDropDownItems)
-                        {
-                            foreach (var sub in subItem.DropDownItems)
-                            {
-                                ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                subStripMenuItem.Click += Item_Click;
-                            }
-                        }
-                    }
-
-
-                }
-
-                #endregion
-                InitBaseValue();
-                this.bindingSourceList.ListChanged += BindingSourceList_ListChanged;
-                InitListData();
-                ClassGenericType = typeof(T);
-                QueryConditionBuilder();
-            }
-        }
-
-        */
-
+ 
 
         protected Result ComPare<C>(C t, C s)
         {
@@ -1391,6 +1343,11 @@ namespace RUINORERP.UI.BaseForm
             // List<string> queryConditions = new List<string>();
             //queryConditions = new List<string>(QueryConditionFilter.QueryFields.Select(t => t.FieldName).ToList());
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, QueryConditionFilter.GetFilterExpression<T>(), QueryDto, pageNum, pageSize) as List<T>;
+            if (QueryConditionFilter.FilterLimitExpressions == null)
+            {
+                QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
+            }
+  
             List<T> list = await ctr.BaseQuerySimpleByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<T>;
 
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);

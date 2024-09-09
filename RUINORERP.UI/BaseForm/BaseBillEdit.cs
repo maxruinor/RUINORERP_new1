@@ -892,58 +892,64 @@ namespace RUINORERP.UI.BaseForm
 
                     //错误图标的闪烁速率（以毫秒为单位）。默认为 250 毫秒
                     errorProviderForAllInput.BlinkRate = 1000;
-
-                    //实际已经在菜单点击时已经传入了正确的值 MenuHelper.cs
-                    if (CurMenuInfo == null)
+                    if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
                     {
-                        CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName == this.GetType().Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                        if (CurMenuInfo == null)
+                        if (!this.DesignMode)
                         {
-                            MessageBox.Show(this.ToString() + "菜单有显示，但无关联数据，请联系管理员。");
-                            return;
-                        }
-                    }
-                    //this.toolStrip1.ItemClicked += ToolStrip1_ItemClicked;
-                    foreach (var item in toolStrip1.Items)
-                    {
-                        if (item is ToolStripButton)
-                        {
-                            ToolStripButton subItem = item as ToolStripButton;
-                            subItem.Click += Item_Click;
-                            ControlButton(subItem);
-                        }
-                        if (item is ToolStripDropDownButton)
-                        {
-                            ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
-                            ControlButton(subItem);
-                            subItem.Click += Item_Click;
-                            //下一级
-                            if (subItem.HasDropDownItems)
+                            //实际已经在菜单点击时已经传入了正确的值 MenuHelper.cs
+                            if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                             {
-                                foreach (var sub in subItem.DropDownItems)
+                                CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.FormName == this.GetType().Name && m.ClassPath == this.ToString()).FirstOrDefault();
+                                if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                                 {
-                                    ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                                    ControlButton(subStripMenuItem);
-                                    subStripMenuItem.Click += Item_Click;
+                                    MessageBox.Show(this.ToString() + "菜单有显示，但无关联数据，请联系管理员。");
+                                    return;
                                 }
                             }
-                        }
-                        if (item is ToolStripSplitButton)
-                        {
-                            ToolStripSplitButton subItem = item as ToolStripSplitButton;
-                            subItem.Click += Item_Click;
-                            //下一级
-                            if (subItem.HasDropDownItems)
+                            foreach (var item in toolStrip1.Items)
                             {
-                                foreach (var sub in subItem.DropDownItems)
+                                if (item is ToolStripButton)
                                 {
-                                    ToolStripItem subStripMenuItem = sub as ToolStripItem;
-                                    subStripMenuItem.Click += Item_Click;
+                                    ToolStripButton subItem = item as ToolStripButton;
+                                    subItem.Click += Item_Click;
+                                    ControlButton(subItem);
                                 }
+                                if (item is ToolStripDropDownButton)
+                                {
+                                    ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
+                                    ControlButton(subItem);
+                                    subItem.Click += Item_Click;
+                                    //下一级
+                                    if (subItem.HasDropDownItems)
+                                    {
+                                        foreach (var sub in subItem.DropDownItems)
+                                        {
+                                            ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
+                                            ControlButton(subStripMenuItem);
+                                            subStripMenuItem.Click += Item_Click;
+                                        }
+                                    }
+                                }
+                                if (item is ToolStripSplitButton)
+                                {
+                                    ToolStripSplitButton subItem = item as ToolStripSplitButton;
+                                    subItem.Click += Item_Click;
+                                    //下一级
+                                    if (subItem.HasDropDownItems)
+                                    {
+                                        foreach (var sub in subItem.DropDownItems)
+                                        {
+                                            ToolStripItem subStripMenuItem = sub as ToolStripItem;
+                                            subStripMenuItem.Click += Item_Click;
+                                        }
+                                    }
+                                }
+
                             }
                         }
-
                     }
+        
+                 
                     #endregion
                 }
             }

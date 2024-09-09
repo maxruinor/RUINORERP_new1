@@ -384,45 +384,61 @@ namespace RUINORERP.UI.PSI.SAL
                 return;
             }
             InitializeComponent();
-
-            foreach (var item in BaseToolStrip.Items)
+            if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
-                if (item is ToolStripButton)
+                if (!this.DesignMode)
                 {
-                    ToolStripButton subItem = item as ToolStripButton;
-                    subItem.Click += Item_Click;
-                }
-                if (item is ToolStripDropDownButton)
-                {
-                    ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
-                    subItem.Click += Item_Click;
-                    //下一级
-                    if (subItem.HasDropDownItems)
+                    //权限菜单
+                    if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
-                        foreach (var sub in subItem.DropDownItems)
+                        CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.ClassPath == this.ToString()).FirstOrDefault();
+                        if (CurMenuInfo == null)
                         {
-                            ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
-                            subStripMenuItem.Click += Item_Click;
+                            MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
+                            return;
                         }
                     }
-                }
-                //打印特殊处理
-                if (item is ToolStripSplitButton)
-                {
-                    ToolStripSplitButton subItem = item as ToolStripSplitButton;
-                    subItem.Click += Item_Click;
-                    //下一级
-                    if (subItem.HasDropDownItems)
+                    foreach (var item in BaseToolStrip.Items)
                     {
-                        foreach (var sub in subItem.DropDownItems)
+                        if (item is ToolStripButton)
                         {
-                            ToolStripItem subStripMenuItem = sub as ToolStripItem;
-                            subStripMenuItem.Click += Item_Click;
+                            ToolStripButton subItem = item as ToolStripButton;
+                            subItem.Click += Item_Click;
                         }
-                    }
-                }
+                        if (item is ToolStripDropDownButton)
+                        {
+                            ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
+                            subItem.Click += Item_Click;
+                            //下一级
+                            if (subItem.HasDropDownItems)
+                            {
+                                foreach (var sub in subItem.DropDownItems)
+                                {
+                                    ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
+                                    subStripMenuItem.Click += Item_Click;
+                                }
+                            }
+                        }
+                        //打印特殊处理
+                        if (item is ToolStripSplitButton)
+                        {
+                            ToolStripSplitButton subItem = item as ToolStripSplitButton;
+                            subItem.Click += Item_Click;
+                            //下一级
+                            if (subItem.HasDropDownItems)
+                            {
+                                foreach (var sub in subItem.DropDownItems)
+                                {
+                                    ToolStripItem subStripMenuItem = sub as ToolStripItem;
+                                    subStripMenuItem.Click += Item_Click;
+                                }
+                            }
+                        }
 
+                    }
+                }
             }
+            
         }
 
 
@@ -900,14 +916,14 @@ namespace RUINORERP.UI.PSI.SAL
                 case NavigatorMenuType.销售订单数据汇总:
                     entityType = typeof(Proc_SaleOrderStatisticsByEmployee);
                     baseProcessor = Startup.GetFromFacByName<BaseProcessor>(nameof(Proc_SaleOrderStatisticsByEmployee) + "Processor");
-                    queryShow.Name= nameof(NavigatorMenuType.销售订单数据汇总)+"QueryShow";
+                    queryShow.Name = nameof(NavigatorMenuType.销售订单数据汇总) + "QueryShow";
                     LoadQueryConditionToUISaleOrder(queryShow.kryptonPanelQuery, baseProcessor.GetQueryFilter());
                     //分组条件
                     _UCMasterQuery.InvisibleCols = OrderInvisibleCols;
                     break;
                 case NavigatorMenuType.销售出库业绩汇总:
                     entityType = typeof(Proc_SaleOutStatisticsByEmployee);
-                    queryShow.Name = nameof(NavigatorMenuType.销售出库业绩汇总) + "QueryShow"; 
+                    queryShow.Name = nameof(NavigatorMenuType.销售出库业绩汇总) + "QueryShow";
                     baseProcessor = Startup.GetFromFacByName<BaseProcessor>(nameof(Proc_SaleOutStatisticsByEmployee) + "Processor");
                     LoadQueryConditionToUISaleOut(queryShow.kryptonPanelQuery, baseProcessor.GetQueryFilter());
                     //分组条件
@@ -919,7 +935,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             _UCMasterQuery.entityType = entityType;
             _UCMasterQuery.Name = menuType.ToString();
-            
+
             _UCMasterQuery.SummaryCols = baseProcessor.GetSummaryCols();
             _UCMasterQuery.ColNameDataDictionary = MasterColNameDataDictionary;
             _UCMasterQuery.newSumDataGridViewMaster.UseCustomColumnDisplay = true;

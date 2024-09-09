@@ -29,19 +29,19 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseBillQuery));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseBillQuery));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.pageButtons = new Krypton.Toolkit.KryptonGroup();
+            this.btnQuery = new Krypton.Toolkit.KryptonButton();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.newSumDataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonPanel3 = new Krypton.Toolkit.KryptonPanel();
             this.navigatorTop = new Krypton.Navigator.KryptonNavigator();
             this.buttonTopArrow = new Krypton.Navigator.ButtonSpecNavigator();
             this.pageQuery = new Krypton.Navigator.KryptonPage();
             this.kryptonSplitContainerQuery = new Krypton.Toolkit.KryptonSplitContainer();
-            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.btnQuery = new Krypton.Toolkit.KryptonButton();
             this.pageAdvQuery = new Krypton.Navigator.KryptonPage();
             this.kryptonSplitContainerAdvQuery = new Krypton.Toolkit.KryptonSplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -137,18 +137,42 @@
             this.pageButtons.Size = new System.Drawing.Size(927, 544);
             this.pageButtons.TabIndex = 4;
             // 
+            // btnQuery
+            // 
+            this.btnQuery.Location = new System.Drawing.Point(399, 56);
+            this.btnQuery.Margin = new System.Windows.Forms.Padding(0, 10, 0, 20);
+            this.btnQuery.Name = "btnQuery";
+            this.btnQuery.Size = new System.Drawing.Size(139, 25);
+            this.btnQuery.TabIndex = 0;
+            this.btnQuery.Values.Text = "查找";
+            this.btnQuery.Click += new System.EventHandler(this.btnQuery_Click);
+            // 
+            // tableLayoutPanel2
+            // 
+            this.tableLayoutPanel2.ColumnCount = 2;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(647, 93);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RowCount = 2;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(200, 34);
+            this.tableLayoutPanel2.TabIndex = 3;
+            // 
             // newSumDataGridView1
             // 
             this.newSumDataGridView1.AllowUserToAddRows = false;
             this.newSumDataGridView1.AllowUserToDeleteRows = false;
             this.newSumDataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.newSumDataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.newSumDataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.newSumDataGridView1.CustomRowNo = false;
             this.newSumDataGridView1.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridView1.FieldNameList")));
             this.newSumDataGridView1.IsShowSumRow = false;
             this.newSumDataGridView1.Location = new System.Drawing.Point(12, 175);
@@ -202,7 +226,7 @@
             this.navigatorTop.PopupPages.AllowPopupPages = Krypton.Navigator.PopupPageAllow.OnlyCompatibleModes;
             this.navigatorTop.PopupPages.Element = Krypton.Navigator.PopupPageElement.Navigator;
             this.navigatorTop.PopupPages.Position = Krypton.Navigator.PopupPagePosition.BelowMatch;
-            this.navigatorTop.SelectedIndex = 0;
+            this.navigatorTop.SelectedIndex = 1;
             this.navigatorTop.Size = new System.Drawing.Size(927, 107);
             this.navigatorTop.TabIndex = 2;
             this.navigatorTop.Text = "kryptonNavigator2";
@@ -237,29 +261,6 @@
             this.kryptonSplitContainerQuery.Size = new System.Drawing.Size(921, 76);
             this.kryptonSplitContainerQuery.SplitterDistance = 735;
             this.kryptonSplitContainerQuery.TabIndex = 1;
-            // 
-            // tableLayoutPanel2
-            // 
-            this.tableLayoutPanel2.ColumnCount = 2;
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(647, 93);
-            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 2;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(200, 34);
-            this.tableLayoutPanel2.TabIndex = 3;
-            // 
-            // btnQuery
-            // 
-            this.btnQuery.Location = new System.Drawing.Point(399, 56);
-            this.btnQuery.Margin = new System.Windows.Forms.Padding(0, 10, 0, 20);
-            this.btnQuery.Name = "btnQuery";
-            this.btnQuery.Size = new System.Drawing.Size(139, 25);
-            this.btnQuery.TabIndex = 0;
-            this.btnQuery.Values.Text = "查找";
-            this.btnQuery.Click += new System.EventHandler(this.btnQuery_Click);
             // 
             // pageAdvQuery
             // 
@@ -392,13 +393,14 @@
             this.newSumDataGridViewDetail.AllowUserToAddRows = false;
             this.newSumDataGridViewDetail.AllowUserToDeleteRows = false;
             this.newSumDataGridViewDetail.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridViewDetail.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridViewDetail.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.newSumDataGridViewDetail.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.newSumDataGridViewDetail.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridViewDetail.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.newSumDataGridViewDetail.CustomRowNo = false;
             this.newSumDataGridViewDetail.Dock = System.Windows.Forms.DockStyle.Fill;
             this.newSumDataGridViewDetail.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridViewDetail.FieldNameList")));
             this.newSumDataGridViewDetail.IsShowSumRow = false;

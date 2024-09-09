@@ -32,10 +32,15 @@ namespace RUINORERP.UI.BI
 
 
 
-        
+
         public override void BindData(BaseEntity entity)
         {
-           
+            tb_Currency currency = entity as tb_Currency;
+            if (currency.Currency_ID == 0)
+            {
+                currency.GroupName = string.Empty;
+            }
+
             DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.GroupName, txtGroupName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.CurrencyCode, txtCurrencyCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Currency>(entity, t => t.CurrencyName, txtCurrencyName, BindDataType4TextBox.Text, false);
@@ -57,7 +62,7 @@ namespace RUINORERP.UI.BI
             this.Close();
         }
 
-      
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             if (base.Validator())

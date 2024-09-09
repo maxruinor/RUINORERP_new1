@@ -206,11 +206,13 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
                 {
                     ToolStripButton subItem = item as ToolStripButton;
                     subItem.Click += Item_Click;
+                    UIHelper.ControlButton(this.CurMenuInfo, subItem);
                 }
                 if (item is ToolStripDropDownButton)
                 {
                     ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
                     subItem.Click += Item_Click;
+                    UIHelper.ControlButton(this.CurMenuInfo, subItem);
                     //下一级
                     if (subItem.HasDropDownItems)
                     {
@@ -218,6 +220,7 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
                         {
                             ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
                             subStripMenuItem.Click += Item_Click;
+                            UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
                         }
                     }
                 }
@@ -226,6 +229,7 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
                 {
                     ToolStripSplitButton subItem = item as ToolStripSplitButton;
                     subItem.Click += Item_Click;
+                    UIHelper.ControlButton(this.CurMenuInfo, subItem);
                     //下一级
                     if (subItem.HasDropDownItems)
                     {
@@ -233,6 +237,7 @@ customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
                         {
                             ToolStripItem subStripMenuItem = sub as ToolStripItem;
                             subStripMenuItem.Click += Item_Click;
+                            UIHelper.ControlButton(this.CurMenuInfo, subStripMenuItem);
                         }
                     }
                 }

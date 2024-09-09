@@ -119,9 +119,26 @@ namespace RUINORERP.UI.BaseForm
         //    RelatedBillCols.TryAdd(expRefBillNoColName.GetMemberInfo().Name, typeof(T).Name + "|" + expSourceBillNoColName.GetMemberInfo().Name);
         //}
 
+        
         public BaseBillQueryMC()
         {
             InitializeComponent();
+            if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                if (!this.DesignMode)
+                {
+                    //权限菜单
+                    if (CurMenuInfo == null)
+                    {
+                        CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
+                        if (CurMenuInfo == null)
+                        {
+                            MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
+                            return;
+                        }
+                    }
+                }
+            }
 
             foreach (var item in BaseToolStrip.Items)
             {
@@ -129,17 +146,19 @@ namespace RUINORERP.UI.BaseForm
                 {
                     ToolStripButton subItem = item as ToolStripButton;
                     subItem.Click += Item_Click;
+                    UIHelper.ControlButton(CurMenuInfo, subItem);
                 }
-                if (item is ToolStripDropDownButton)
+                if (item is ToolStripDropDownButton subItemDr)
                 {
-                    ToolStripDropDownButton subItem = item as ToolStripDropDownButton;
-                    subItem.Click += Item_Click;
+                    UIHelper.ControlButton(CurMenuInfo, subItemDr);
+                    subItemDr.Click += Item_Click;
                     //下一级
-                    if (subItem.HasDropDownItems)
+                    if (subItemDr.HasDropDownItems)
                     {
-                        foreach (var sub in subItem.DropDownItems)
+                        foreach (var sub in subItemDr.DropDownItems)
                         {
                             ToolStripMenuItem subStripMenuItem = sub as ToolStripMenuItem;
+                            UIHelper.ControlButton(CurMenuInfo, subStripMenuItem);
                             subStripMenuItem.Click += Item_Click;
                         }
                     }
@@ -148,6 +167,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     ToolStripSplitButton subItem = item as ToolStripSplitButton;
                     subItem.Click += Item_Click;
+                    UIHelper.ControlButton(CurMenuInfo, subItem);
                     //下一级
                     if (subItem.HasDropDownItems)
                     {
@@ -162,8 +182,8 @@ namespace RUINORERP.UI.BaseForm
 
             toolStripButton结案.Visible = false;
 
-
         }
+
 
 
 
@@ -1210,7 +1230,7 @@ namespace RUINORERP.UI.BaseForm
         KryptonCheckBox cbbatch = new KryptonCheckBox();
         private void BaseBillQueryMC_Load(object sender, EventArgs e)
         {
-         
+
             if (this.DesignMode)
             {
                 return;
@@ -1238,7 +1258,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
             }
-           
+
             // Setup docking functionality
             ws = kryptonDockingManagerQuery.ManageWorkspace(kryptonDockableWorkspaceQuery);
             kryptonDockingManagerQuery.ManageControl(kryptonPanelMainBig, ws);
@@ -1397,7 +1417,7 @@ namespace RUINORERP.UI.BaseForm
 
         public BaseEntity QueryDto { get => _queryDto; set => _queryDto = value; }
 
-      
+
 
         private void _UCBillMasterQuery_OnSelectDataRow(object entity)
         {
@@ -1509,7 +1529,7 @@ namespace RUINORERP.UI.BaseForm
             kryptonPanel条件生成容器.Visible = true;
             return QueryDto;
         }
-        
+
 
         /// <summary>
         /// 主表要统计的列

@@ -491,8 +491,15 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
+                if (NeedValidated)
+                {
+                    if (EditEntity.tb_MaterialReturns != null && EditEntity.tb_MaterialReturns.Count > 0)
+                    {
+                        MessageBox.Show("当前领料单已有退回数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
 
-               
                 ReturnMainSubResults<tb_MaterialRequisition> SaveResult = new ReturnMainSubResults<tb_MaterialRequisition>();
                 if (NeedValidated)
                 {

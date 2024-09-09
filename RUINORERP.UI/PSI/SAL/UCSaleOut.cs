@@ -468,8 +468,15 @@ namespace RUINORERP.UI.PSI.SAL
                     System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
+                if (NeedValidated)
+                {
+                    if (EditEntity.tb_SaleOutRes != null && EditEntity.tb_SaleOutRes.Count > 0)
+                    {
+                        MessageBox.Show("当前销售出库单已有销售出库退回数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
 
-         
                 ReturnMainSubResults<tb_SaleOut> SaveResult = new ReturnMainSubResults<tb_SaleOut>();
                 if (NeedValidated)
                 {

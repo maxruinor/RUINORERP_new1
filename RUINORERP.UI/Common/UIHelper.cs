@@ -820,6 +820,129 @@ namespace RUINORERP.UI.Common
         #endregion
 
 
+        public  static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripSplitButton btnItem)
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if (CurMenuInfo.tb_P4Buttons == null)
+                {
+                    btnItem.Visible = false;
+                }
+                else
+                {
+                    //如果因为热键 Text改变了。到时再处理
+                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
+                    if (p4b != null)
+                    {
+                        btnItem.Visible = p4b.IsVisble;
+                        btnItem.Enabled = p4b.IsEnabled;
+                    }
+                    else
+                    {
+                        btnItem.Visible = false;
+                    }
+                }
+            }
+        }
+
+        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripMenuItem btnItem)
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if (CurMenuInfo.tb_P4Buttons == null)
+                {
+                    btnItem.Visible = false;
+                }
+                else
+                {
+                    //如果因为热键 Text改变了。到时再处理
+                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
+                    if (p4b != null)
+                    {
+                        btnItem.Visible = p4b.IsVisble;
+                        btnItem.Enabled = p4b.IsEnabled;
+                    }
+                    else
+                    {
+                        btnItem.Visible = false;
+                    }
+                }
+            }
+        }
+
+        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripDropDownButton btnItem)
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if (CurMenuInfo.tb_P4Buttons == null)
+                {
+                    btnItem.Visible = false;
+                }
+                else
+                {
+                    //如果因为热键 Text改变了。到时再处理
+                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
+                    if (p4b != null)
+                    {
+                        btnItem.Visible = p4b.IsVisble;
+                        btnItem.Enabled = p4b.IsEnabled;
+                    }
+                    else
+                    {
+                        btnItem.Visible = false;
+                    }
+                }
+            }
+        }
+
+        public static void ControlButton(tb_MenuInfo CurMenuInfo,ToolStripButton btnItem)
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if (CurMenuInfo.tb_P4Buttons == null)
+                {
+                    btnItem.Visible = false;
+                }
+                else
+                {
+                    //如果因为热键 Text改变了。到时再处理
+                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
+                    if (p4b != null)
+                    {
+                        btnItem.Visible = p4b.IsVisble;
+                        btnItem.Enabled = p4b.IsEnabled;
+                    }
+                    else
+                    {
+                        btnItem.Visible = false;
+                    }
+                }
+            }
+        }
+        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripItem btnItem)
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if (CurMenuInfo.tb_P4Buttons == null)
+                {
+                    btnItem.Visible = false;
+                }
+                else
+                {
+                    //如果因为热键 Text改变了。到时再处理
+                    tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
+                    if (p4b != null)
+                    {
+                        btnItem.Visible = p4b.IsVisble;
+                        btnItem.Enabled = p4b.IsEnabled;
+                    }
+                    else
+                    {
+                        btnItem.Visible = false;
+                    }
+                }
+            }
+        }
 
 
         /// <summary>

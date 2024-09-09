@@ -341,7 +341,7 @@ namespace RUINORERP.UI.BaseForm
         {
         }
 
-
+        
         public void ControlButton(ToolStripMenuItem btnItem)
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
@@ -1585,7 +1585,7 @@ namespace RUINORERP.UI.BaseForm
                     case ActionStatus.修改:
                         if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         {
-                            MainForm.Instance.logger.LogInformation($"保存:{typeof(T).Name}");
+                            //MainForm.Instance.logger.LogInformation($"保存:{typeof(T).Name}");
                         }
                         ReturnResults<T> rr = new ReturnResults<T>();
                         rr = await ctr.BaseSaveOrUpdate(entity as T);

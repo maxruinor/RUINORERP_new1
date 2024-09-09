@@ -705,12 +705,12 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (NeedValidated)
                 {
-                    if (EditEntity.tb_SaleOuts.Count > 0)
+                    if (EditEntity.tb_SaleOuts != null && EditEntity.tb_SaleOuts.Count > 0)
                     {
-                        MessageBox.Show("当前订单已有出库数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show("当前订单已有销售出库数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;
                     }
-                  
+
                 }
 
 

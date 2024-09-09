@@ -403,6 +403,14 @@ namespace RUINORERP.UI.PSI.PUR
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
+                if (NeedValidated)
+                {
+                    if (EditEntity.tb_PurEntryRes != null && EditEntity.tb_PurEntryRes.Count > 0)
+                    {
+                        MessageBox.Show("当前采购入库单已有采购入库退回数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
 
                 ReturnMainSubResults<tb_PurEntry> SaveResult = new ReturnMainSubResults<tb_PurEntry>();
                 if (NeedValidated)

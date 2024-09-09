@@ -495,7 +495,24 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
-   
+                if (NeedValidated)
+                {
+                    if (EditEntity.tb_MaterialRequisitions != null && EditEntity.tb_MaterialRequisitions.Count > 0)
+                    {
+                        MessageBox.Show("当前制令单已经存在领料单数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
+
+                if (NeedValidated)
+                {
+                    if (EditEntity.tb_FinishedGoodsInvs != null && EditEntity.tb_FinishedGoodsInvs.Count > 0)
+                    {
+                        MessageBox.Show("当前制令单已经存在缴库数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
+
                 ReturnMainSubResults<tb_ManufacturingOrder> SaveResult = new ReturnMainSubResults<tb_ManufacturingOrder>();
                 if (NeedValidated)
                 {

@@ -53,7 +53,29 @@ namespace RUINORERP.UI.ProductEAV
             Query();
         }
 
+        protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
+        {
+            int WM_KEYDOWN = 256;
+            int WM_SYSKEYDOWN = 260;
 
+            if (msg.Msg == WM_KEYDOWN | msg.Msg == WM_SYSKEYDOWN)
+            {
+                switch (keyData)
+                {
+                    case Keys.Escape:
+                        Exit(this);
+                        break;
+                    case Keys.F1:
+
+                        break;
+                    case Keys.Enter:
+                        Query();
+                        break;
+                }
+
+            }
+            return false;
+        }
         public void Query()
         {
             tb_ProdController<tb_Prod> dc = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
@@ -161,7 +183,7 @@ namespace RUINORERP.UI.ProductEAV
         List<tb_ProdPropertyValue> prodpropValueList = new List<tb_ProdPropertyValue>();
         tb_ProdPropertyController<tb_ProdProperty> mcProperty = Startup.GetFromFac<tb_ProdPropertyController<tb_ProdProperty>>();
         tb_ProdPropertyValueController<tb_ProdPropertyValue> mcPropertyValue = Startup.GetFromFac<tb_ProdPropertyValueController<tb_ProdPropertyValue>>();
- 
+
 
         /// <summary>
         /// 属性原始组合队列，以文字显示。方便查看而已。后面已经改为了ID
@@ -1079,7 +1101,7 @@ namespace RUINORERP.UI.ProductEAV
             //attrGoupsByName.Clear();
             contextMenuStrip1.Items.Clear();
             bindingSourceSKU明细.Clear();
-    
+
 
             #region 单属性
 
@@ -1257,7 +1279,7 @@ namespace RUINORERP.UI.ProductEAV
                     foreach (var par in item.tb_Prod_Attr_Relations)
                     {
                         node.DefaultCellStyle.Font = boldFont;
-                        //如果属性值不为空，则添加子节点
+                        //如果属性值不为空，则添加子节点,
                         if (par.tb_prodpropertyvalue != null && node.Index != -1)
                         {
                             TreeGridNode subnode = node.Nodes.Add(par.RAR_ID, par.RAR_ID, par.tb_prodpropertyvalue.tb_prodproperty.PropertyName, par.tb_prodpropertyvalue.PropertyValueName, "", "", "加载");
@@ -1267,6 +1289,10 @@ namespace RUINORERP.UI.ProductEAV
 
                             //加载属性值时，勾选对应的属性值
                             //listView1.SetItemChecked(par.tb_prodpropertyvalue.tb_prodproperty.Property_ID.ToString(), par.tb_prodpropertyvalue.PropertyValueName, true);
+                        }
+                        else
+                        {
+                            //单属性时 属性值给的是空。
                         }
                         node.ImageIndex = 0;
                     }
@@ -1421,6 +1447,15 @@ namespace RUINORERP.UI.ProductEAV
             {
                 EditEntity.ActionStatus = ActionStatus.修改;
             }
+
+            //如果是单属性，则关系中只会有一条数据。并且属性值为空。
+            ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));
+            if (pt == ProductAttributeType.单属性 && EditEntity.tb_Prod_Attr_Relations.Count > 1)
+            {
+                MessageBox.Show("单属性的产品时，属性关系不能超过一条。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
 
             //如果SKU为空。则是新的数据 detailid=0;
             foreach (var item in EditEntity.tb_ProdDetails)

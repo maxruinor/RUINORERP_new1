@@ -511,6 +511,14 @@ namespace RUINORERP.UI.PSI.PUR
                     return false;
                 }
 
+                if (NeedValidated)
+                {
+                    if (EditEntity.tb_PurEntries != null && EditEntity.tb_PurEntries.Count > 0)
+                    {
+                        MessageBox.Show("当前订单已有采购入库数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
 
                 ReturnMainSubResults<tb_PurOrder> SaveResult = new ReturnMainSubResults<tb_PurOrder>();
                 if (NeedValidated)

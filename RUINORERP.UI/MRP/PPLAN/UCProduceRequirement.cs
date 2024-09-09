@@ -1029,7 +1029,16 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
-                
+
+                if (NeedValidated)
+                {
+                    if (EditEntity.tb_ManufacturingOrders != null && EditEntity.tb_ManufacturingOrders.Count > 0)
+                    {
+                        MessageBox.Show("当前需求分析单已经存在制令单数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
+
                 ReturnMainSubResults<tb_ProductionDemand> SaveResult = new ReturnMainSubResults<tb_ProductionDemand>();
                 if (NeedValidated)
                 {

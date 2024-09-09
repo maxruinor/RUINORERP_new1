@@ -39,12 +39,12 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripBtnExport = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton12 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnFunction = new System.Windows.Forms.ToolStripDropDownButton();
             this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.最大行数 = new System.Windows.Forms.ToolStripLabel();
             this.txtMaxRow = new System.Windows.Forms.ToolStripTextBox();
-            this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.BaseToolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -136,6 +136,14 @@
             this.toolStripButton12.Size = new System.Drawing.Size(53, 22);
             this.toolStripButton12.Text = "关闭";
             // 
+            // toolStripbtnProperty
+            // 
+            this.toolStripbtnProperty.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnProperty.Image")));
+            this.toolStripbtnProperty.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnProperty.Name = "toolStripbtnProperty";
+            this.toolStripbtnProperty.Size = new System.Drawing.Size(53, 22);
+            this.toolStripbtnProperty.Text = "属性";
+            // 
             // toolStripbtnFunction
             // 
             this.toolStripbtnFunction.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -171,14 +179,6 @@
             this.txtMaxRow.Name = "txtMaxRow";
             this.txtMaxRow.Size = new System.Drawing.Size(100, 25);
             this.txtMaxRow.Text = "200";
-            // 
-            // toolStripbtnProperty
-            // 
-            this.toolStripbtnProperty.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnProperty.Image")));
-            this.toolStripbtnProperty.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripbtnProperty.Name = "toolStripbtnProperty";
-            this.toolStripbtnProperty.Size = new System.Drawing.Size(53, 22);
-            this.toolStripbtnProperty.Text = "属性";
             // 
             // BaseNavigator
             // 

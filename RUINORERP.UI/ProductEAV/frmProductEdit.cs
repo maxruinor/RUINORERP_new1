@@ -757,11 +757,7 @@ namespace RUINORERP.UI.ProductEAV
             if (_EditEntity.ProdBaseID == 0)
             {
                 _EditEntity.DataStatus = (int)RUINORERP.Global.DataStatus.草稿;
-            }
-
-            //生成助记码
-            if (EditEntity.ProdBaseID == 0)
-            {
+                _EditEntity.ActionStatus = ActionStatus.新增;
                 long maxid = await mcProdBase.GetMaxID();
                 //生成编号
                 _EditEntity.ProductNo = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ProductNo);
@@ -2496,7 +2492,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             if (kryptonNavigator1.SelectedPage.Name == "kp箱规信息")
             {
-                
+
             }
 
         }

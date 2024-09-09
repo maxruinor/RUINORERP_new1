@@ -161,14 +161,7 @@ namespace RUINORERP.UI.ProductEAV
         List<tb_ProdPropertyValue> prodpropValueList = new List<tb_ProdPropertyValue>();
         tb_ProdPropertyController<tb_ProdProperty> mcProperty = Startup.GetFromFac<tb_ProdPropertyController<tb_ProdProperty>>();
         tb_ProdPropertyValueController<tb_ProdPropertyValue> mcPropertyValue = Startup.GetFromFac<tb_ProdPropertyValueController<tb_ProdPropertyValue>>();
-
-        private ConcurrentDictionary<string, string> propertyEavList = new ConcurrentDictionary<string, string>();
-
-        /// <summary>
-        /// 保存属性及对应选中的值
-        /// </summary>
-        public ConcurrentDictionary<string, string> PropertyEavList { get => propertyEavList; set => propertyEavList = value; }
-
+ 
 
         /// <summary>
         /// 属性原始组合队列，以文字显示。方便查看而已。后面已经改为了ID
@@ -211,7 +204,7 @@ namespace RUINORERP.UI.ProductEAV
             ControlBtn(ProductAttributeType.可配置多属性);
             // List<KeyValuePair<long, string[]>> attrGoupsByName = GetAttrGoups(listView1, g => g.GroupID, lvitem => lvitem.Text);
             //this.attrGoupsByName = attrGoupsByName;
-            CreateSKUList();
+            //CreateSKUList();
         }
 
 
@@ -282,6 +275,7 @@ namespace RUINORERP.UI.ProductEAV
             return attrGoups;
         }
 
+        /*
         private void CreateSKUList()
         {
             List<Eav_ProdDetails> propGroups = new List<Eav_ProdDetails>();
@@ -359,7 +353,7 @@ namespace RUINORERP.UI.ProductEAV
 
             }
         }
-
+        */
 
         private void ControlBtn(ProductAttributeType pat)
         {
@@ -504,10 +498,10 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 keys = keys.Trim(',');
                 names = names.Trim(',');
-                if (!string.IsNullOrEmpty(names))
-                {
-                    propertyEavList.TryAdd(ppv.Property_ID.ToString(), names);
-                }
+                //if (!string.IsNullOrEmpty(names))
+                //{
+                //    propertyEavList.TryAdd(ppv.Property_ID.ToString(), names);
+                //}
             }
 
 
@@ -626,6 +620,8 @@ namespace RUINORERP.UI.ProductEAV
                                                                     //detail.SKU = prop;为了不浪费  保存时再成生一次
 
                                     detail.ActionStatus = ActionStatus.新增;
+                                    detail.Is_enabled = true;
+                                    detail.Is_available = true;
                                     detail.Created_at = DateTime.Now;
                                     detail.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
                                     node.NodeName = SkuRowid.ToString();//标记节点ID， 
@@ -1083,7 +1079,7 @@ namespace RUINORERP.UI.ProductEAV
             //attrGoupsByName.Clear();
             contextMenuStrip1.Items.Clear();
             bindingSourceSKU明细.Clear();
-            propertyEavList.Clear();
+    
 
             #region 单属性
 

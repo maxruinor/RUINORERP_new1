@@ -1750,15 +1750,16 @@ namespace RUINORERP.UI.Common
             if (value == null)
             {
                 value = "false";
+                //ReflectionHelper.SetPropertyValue(entity, key, false);
             }
             // Set initial values
             chkBox.Checked = bool.Parse(value);
 
             // Change on event
-            chkBox.CheckedChanged += delegate
-            {
-                ReflectionHelper.SetPropertyValue(entity, key, chkBox.Checked);
-            };
+            //chkBox.CheckedChanged += delegate
+            //{
+            //    ReflectionHelper.SetPropertyValue(entity, key, chkBox.Checked);
+            //};
             //数据源的数据类型转换为控件要求的数据类型。
             binddata.Format += (s, args) => args.Value = args.Value == null ? false : args.Value;
             //将控件的数据类型转换为数据源要求的数据类型。

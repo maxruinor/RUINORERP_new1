@@ -55,7 +55,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.Employee_ID);
-            queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.tb_location);
+            //queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.tb_location);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.Created_at);
             return queryFilter;

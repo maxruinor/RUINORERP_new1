@@ -582,7 +582,7 @@ namespace RUINORERP.UI.ProductEAV
                                         par.tb_prodproperty = ppv.tb_prodproperty;
                                         par.tb_prodpropertyvalue = ppv;
                                         par.ProdDetailID = Detail.Key;//等待生成
-                                        
+
                                         par.ActionStatus = ActionStatus.新增;
                                         EditEntity.tb_Prod_Attr_Relations.Add(par);
                                         detailData.tb_Prod_Attr_Relations.Add(par);
@@ -1171,7 +1171,7 @@ namespace RUINORERP.UI.ProductEAV
                 oldOjb = null;
                 EditEntity = dataGridViewProd.CurrentRow.DataBoundItem as tb_Prod;
                 //oldOjb = CloneHelper.DeepCloneObject<tb_Prod>(EditEntity);
-                oldOjb = EditEntity.DeepClone();
+                oldOjb = EditEntity.DeepCloneByjson();
                 if (EditEntity != null)
                 {
                     if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
@@ -1403,8 +1403,10 @@ namespace RUINORERP.UI.ProductEAV
                   EmptyAndNullEnumerablesEqual = true
               });
 
-
-            _comparer.IgnoreMember("ProdBaseID");//
+            _comparer.IgnoreMember("Created_by");//
+            _comparer.IgnoreMember("Created_at");//
+            _comparer.IgnoreMember("Modified_at");//
+            _comparer.IgnoreMember("Modified_by");//
             if (EditEntity.tb_ProdDetails == null)
             {
                 EditEntity.tb_ProdDetails = new List<tb_ProdDetail>();
@@ -1435,9 +1437,9 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         item.ActionStatus = ActionStatus.修改;
                     }
-                    
+
                 }
-                if (item.SKU == null)
+                if (item.SKU.IsNullOrEmpty())
                 {
                     item.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
                     if (item.ActionStatus == ActionStatus.新增)

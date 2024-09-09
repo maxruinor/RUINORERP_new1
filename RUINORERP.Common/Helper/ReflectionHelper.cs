@@ -682,8 +682,7 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception ex)
             {
-                //System.Windows.Forms.MessageBox.Show("SetPropertyValue出错:" + as_propertyname + "|" + aobj_propertyvalue);
-                throw new Exception("SetPropertyValue出错:" + as_propertyname + "|" + aobj_propertyvalue + "|" + ex.Message);
+                throw new Exception($"SetPropertyValue，{nameof(obj)}设置出错:" + as_propertyname + "|" + aobj_propertyvalue + "|" + ex.Message);
             }
 
         }

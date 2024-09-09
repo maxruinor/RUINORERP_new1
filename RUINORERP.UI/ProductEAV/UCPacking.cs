@@ -94,6 +94,8 @@ namespace RUINORERP.UI.ProductEAV
                     entity.PrimaryKeyID = entity.Pack_ID;
                     entity.ActionStatus = ActionStatus.加载;
                     // entity.DataStatus = (int)DataStatus.确认;
+                    entity.Modified_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                    entity.Modified_at = System.DateTime.Now;
                     //如果审核了，审核要灰色
                 }
                 else

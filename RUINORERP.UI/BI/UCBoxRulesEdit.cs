@@ -38,10 +38,14 @@ namespace RUINORERP.UI.BI
             {
                 entity.ActionStatus= ActionStatus.新增;
                 entity.Is_enabled = true;
+                entity.Created_at = DateTime.Now;
+                entity.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
             }
             else
             {
                 entity.ActionStatus = ActionStatus.修改;
+                entity.Modified_at = DateTime.Now;
+                entity.Modified_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
             }
 
             DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.BoxRuleName, txtBoxRuleName, BindDataType4TextBox.Text, false);

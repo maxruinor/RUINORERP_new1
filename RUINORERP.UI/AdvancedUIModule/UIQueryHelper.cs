@@ -1165,7 +1165,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                                 string newBoolProName1 = coldata.FieldName + "_Enable";
                                 var attrBoolBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "是", newBoolProName1, AdvQueryProcessType.useYesOrNoToAll });
                                 //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newBoolProp1 = AddProperty(tb, newBoolProName1);
+                                PropertyBuilder newBoolProp1 = AddProperty(tb, newBoolProName1, typeof(bool));
                                 newBoolProp1.SetCustomAttribute(attrBoolBuilder1);
                             }
                             break;
@@ -1449,7 +1449,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                                 string newBoolProName1 = coldata.FieldName + "_Enable";
                                 var attrBoolBuilder1 = new CustomAttributeBuilder(attrCtorInfo, new object[] { coldata.FieldName, "是", newBoolProName1, AdvQueryProcessType.useYesOrNoToAll });
                                 //动态属性要提前创建生成，后面要实体化传入控件
-                                PropertyBuilder newBoolProp1 = AddProperty(tb, newBoolProName1);
+                                PropertyBuilder newBoolProp1 = AddProperty(tb, newBoolProName1, typeof(bool));
                                 newBoolProp1.SetCustomAttribute(attrBoolBuilder1);
                             }
                             break;

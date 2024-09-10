@@ -284,6 +284,7 @@ namespace RUINORERP.Model
         [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "产品类型")]
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" ,IsNullable = true,ColumnDescription = "产品类型" )]
         [Display(Name = "产品类型")]
+        [FKRelationAttribute("tb_ProductType","Type_ID")]
         public long? Type_ID 
         { 
             get{return _Type_ID;}            set{                SetProperty(ref _Type_ID, value);                }

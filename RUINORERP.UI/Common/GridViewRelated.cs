@@ -252,7 +252,7 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 关联单据时  业务和数据表不一致时，需要指定业务表名
         /// </summary>
-        private List<RelatedInfo> RelatedInfoList { get; set; } = new List<RelatedInfo>();
+        public List<RelatedInfo> RelatedInfoList { get; set; } = new List<RelatedInfo>();
 
 
 
@@ -378,7 +378,10 @@ namespace RUINORERP.UI.Common
             if (relatedRelationship != null)
             {
                 RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-                if (CurrentRow.DataBoundItem is RUINORERP.Model.BaseEntity entity && relatedRelationship.TargetTableName.Key == relatedRelationship.SourceTableName)
+                if (CurrentRow.DataBoundItem is RUINORERP.Model.BaseEntity entity 
+                    && relatedRelationship.TargetTableName.Key == relatedRelationship.SourceTableName
+                    && !CurrentRow.DataBoundItem.GetType().Name.Contains("View_")//排除视图
+                    )
                 {
                     if (RelatedMenuInfo != null)
                     {
@@ -391,7 +394,7 @@ namespace RUINORERP.UI.Common
                 }
                 else
                 {
-                    //要查询取值
+                    //要查询取值,视图也适用于这里
                     GuideToForm(GridViewColumnFieldName, CurrentRow.DataBoundItem);
                 }
             }
@@ -431,6 +434,7 @@ namespace RUINORERP.UI.Common
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
                     .Includes(c => c.tb_BOM_SDetails)
+                    .Includes(c => c.view_ProdDetail)
                     .Includes(c => c.tb_BOM_SDetailSecondaries)
                     .WhereIF(billno.GetType() == typeof(long), c => c.BOM_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.BOM_No == billno.ToString())

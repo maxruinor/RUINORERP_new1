@@ -23,25 +23,35 @@ using NPOI.Util;
 namespace RUINORERP.UI.MRP.BOM
 {
     [MenuAttrAssemblyInfo("BOM清单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
-    public partial class UCBillOfMaterialsQuery : BaseBillQueryMC<tb_BOM_S, tb_BOM_SDetail>
+    public partial class UCBillOfMaterialsQuery : BaseBillQueryMC<View_BOM, tb_BOM_SDetail>
     {
         public UCBillOfMaterialsQuery()
         {
             InitializeComponent();
-            //生成查询条件的相关实体
-            // ReladtedEntityType = typeof(tb_BOM_S);
-            base.RelatedBillEditCol = (c => c.BOM_No);
+            //设置双击列指向哪个业务的单据。打开单据编辑界面，视图用SetRelatedInfo
+            //base.RelatedBillEditCol = (c => c.BOM_No);
             this.Load += UCInventoryQuery_Load;
         }
 
         private void UCInventoryQuery_Load(object sender, EventArgs e)
         {
             //表格显示时DataGridView1_CellFormatting 取外键类型
-            // base._UCBillMasterQuery.ColDisplayType = typeof(tb_BOM_S);
+
+            //这个应该是一个组 多个表
+            // base._UCMasterQuery.ColDisplayType = typeof(tb_Prod);
+            base._UCBillMasterQuery.ColDisplayTypes = new List<Type>();
+
+            //不能在上面的构造函数里面初始化
+            base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_BOM_S, tb_BOM_S>(c => c.BOM_No, r => r.BOM_No);
+
+            //是否能通过一两个主表，通过 外键去找多级关联的表？
+            //base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail));
+           // base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_BOM_S));
+            base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
         }
 
 
-        protected async override void Delete(List<tb_BOM_S> Datas)
+        protected async override void Delete(List<View_BOM> Datas)
         {
             if (Datas == null || Datas.Count == 0)
             {
@@ -60,15 +70,16 @@ namespace RUINORERP.UI.MRP.BOM
                     if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
                     {
                         BaseController<tb_BOM_S> ctr = Startup.GetFromFacByName<BaseController<tb_BOM_S>>(typeof(tb_BOM_S).Name + "Controller");
-                        bool rs = await ctr.BaseDeleteByNavAsync(item as tb_BOM_S);
+                        var mybom = await ctr.BaseQueryByIdNavAsync(item.BOM_ID.Value);
+                        bool rs = await ctr.BaseDeleteByNavAsync(mybom as tb_BOM_S);
                         if (rs)
                         {
                             //清空对应产品明细中的BOM信息
-                            if (item.tb_proddetail.BOM_ID.HasValue)
+                            if (mybom.tb_proddetail.BOM_ID.HasValue)
                             {
-                                item.tb_proddetail.BOM_ID = null;
+                                mybom.tb_proddetail.BOM_ID = null;
                                 BaseController<tb_ProdDetail> ctrDetail = Startup.GetFromFacByName<BaseController<tb_ProdDetail>>(typeof(tb_ProdDetail).Name + "Controller");
-                                await ctrDetail.BaseSaveOrUpdate(item.tb_proddetail);
+                                await ctrDetail.BaseSaveOrUpdate(mybom.tb_proddetail);
                             }
 
                             counter++;
@@ -89,14 +100,14 @@ namespace RUINORERP.UI.MRP.BOM
         /// 销售订单审核，审核成功后，库存中的拟销售量增加，同时检查数量和金额，总数量和总金额不能小于明细小计的和
         /// </summary>
         /// <returns></returns>
-        public async override Task<bool> ReReview(List<tb_BOM_S> EditEntitys)
+        public async override Task<bool> ReReview(List<View_BOM> EditEntitys)
         {
             if (EditEntitys == null)
             {
                 return false;
             }
             //如果已经审核并且通过，则不能重复审核
-            List<tb_BOM_S> needApprovals = EditEntitys.Where(
+            List<View_BOM> needApprovals = EditEntitys.Where(
                 c => (c.ApprovalStatus.HasValue
                 && c.ApprovalStatus.Value == (int)ApprovalStatus.已审核
                 && c.ApprovalResults.HasValue && c.ApprovalResults.Value)
@@ -108,7 +119,7 @@ namespace RUINORERP.UI.MRP.BOM
                 return false;
             }
 
-            tb_BOM_SController<tb_BOM_S> ctr = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
+            tb_BOM_SController<View_BOM> ctr = Startup.GetFromFac<tb_BOM_SController<View_BOM>>();
             bool Succeeded = await ctr.ReverseApproveAsync(needApprovals[0]);
             if (Succeeded)
             {
@@ -125,7 +136,7 @@ namespace RUINORERP.UI.MRP.BOM
             return true;
         }
         */
-        public override void AddByCopy(List<tb_BOM_S> EditEntitys)
+        public override void AddByCopy(List<View_BOM> EditEntitys)
         {
             /*
             //这里是显示明细
@@ -188,7 +199,7 @@ namespace RUINORERP.UI.MRP.BOM
         public override void BuildLimitQueryConditions()
         {
             //创建表达式
-            var lambda = Expressionable.Create<tb_BOM_S>()
+            var lambda = Expressionable.Create<View_BOM>()
                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                             .And(t => t.isdeleted == false)
@@ -215,7 +226,7 @@ namespace RUINORERP.UI.MRP.BOM
             //QueryParameter<tb_SaleOrder> parameter = new QueryParameter<tb_SaleOrder>(c => c.CustomerVendor_ID);
             //parameter.SetFieldLimitCondition<tb_CustomerVendor>(lambda);
             //QueryParameters.Add(parameter);
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_BOM_S).Name + "Processor");
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_BOM).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
 
         }
@@ -229,7 +240,8 @@ namespace RUINORERP.UI.MRP.BOM
         public override void BuildInvisibleCols()
         {
             base.MasterInvisibleCols.Add(c => c.TotalMaterialCost);
-            //指定子表中 主表ID列不需要显示，是不是可以统一处理？
+            base.MasterInvisibleCols.Add(c => c.BOM_ID);
+            base.MasterInvisibleCols.Add(c => c.ProdDetailID);
             base.ChildInvisibleCols.Add(C => C.BOM_ID);
         }
 

@@ -99,26 +99,6 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public Expression<Func<M, string>> RelatedBillEditCol { get; set; }
 
-        /// <summary>
-        /// 关联单据的列,前面是引用单号列名，后面是 表名+原始单号列名
-        /// 例如：如果在出库单中打开订单：则入订单类型，出库表中的引用订单的单号列名|订单自己的列名
-        /// </summary>
-        //private ConcurrentDictionary<string, string> RelatedBillCols { get; set; } = new ConcurrentDictionary<string, string>();
-
-        ///// <summary>
-        ///// 设置关联单据的列
-        ///// 关联单据的列，key:引用单号列名  value:前面是表名+|+原始单号列名
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <typeparam name="M"></typeparam>
-        ///// <param name="table"></param>
-        ///// <param name="expBillNoColName"></param>
-        ///// <returns></returns>
-        //public void SetRelatedBillCols<T>(Expression<Func<T, string>> expSourceBillNoColName, Expression<Func<M, string>> expRefBillNoColName)
-        //{
-        //    RelatedBillCols.TryAdd(expRefBillNoColName.GetMemberInfo().Name, typeof(T).Name + "|" + expSourceBillNoColName.GetMemberInfo().Name);
-        //}
-
 
         public BaseBillQueryMC()
         {
@@ -179,7 +159,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
-  
+
 
 
 
@@ -1635,14 +1615,12 @@ namespace RUINORERP.UI.BaseForm
 
             _UCBillMasterQuery.ColNameDataDictionary = MasterColNameDataDictionary;
 
-            if (RelatedBillEditCol == null)
+            if (_UCBillMasterQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
             {
-                MessageBox.Show("请设置关联单号列");
-            }
-            else
-            {
+                MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
                 _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
             }
+
             SetGridViewDisplayConfig();
             KryptonPage page = NewPage("单据信息", 1, _UCBillMasterQuery);
             //page.ClearFlags(KryptonPageFlags.All);

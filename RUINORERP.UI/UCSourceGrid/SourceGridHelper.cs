@@ -519,7 +519,8 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.Position pt = new SourceGrid.Position(r, dc.ColIndex);
                     SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
                     currContext.Value = null;
-                    if (dc.CustomFormat == CustomFormatType.Image)
+                    //如果是图片列。但不是总计行。则清空为平常的样式
+                    if (dc.CustomFormat == CustomFormatType.Image && pt.Row != grid1.Rows.Count - 1)
                     {
                         currContext.Cell.View = sgdefine.ViewNormal;
                     }
@@ -1575,28 +1576,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 #endregion
             }
-            #region 参考
-            /*
-            if (!pi.PropertyType.IsGenericType)
-            {
-                //非泛型
 
-            }
-            else
-            {
-                //泛型Nullable<>
-                Type genericTypeDefinition = pi.PropertyType.GetGenericTypeDefinition();
-                if (genericTypeDefinition == typeof(Nullable<>))
-                {
-
-                }
-                else
-                {
-
-                }
-            }
-            */
-            #endregion
 
             //这里的类型要对应好。不然可能会引起异常
             //https://www.cnblogs.com/tongdengquan/p/6090544.html SQL数据类型 金额
@@ -2583,7 +2563,78 @@ namespace RUINORERP.UI.UCSourceGrid
            */
 
         /// <summary>
-        /// 设置单元格的值
+        /// 具体的将某列的值。全部更新为TargetValue
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sgdefine"></param>
+        /// <param name="colNameExp"></param>
+        /// <param name="TargetValue"></param>
+        public void SetCellValue<T>(SourceGridDefine sgdefine, Expression<Func<T, object>> colNameExp, object TargetValue)
+        {
+
+            string colName = colNameExp.GetMemberInfo().Name;
+            SourceGridDefineColumnItem dc = sgdefine.DefineColumns.Where(c => c.ColName == colNameExp.GetMemberInfo().Name).FirstOrDefault();
+            if (dc == null)
+            {
+                return;
+            }
+            #region 目标列要修改对应的绑定数据对象
+
+            foreach (RowInfo row in sgdefine.grid.Rows)
+            {
+                if (sgdefine.grid.Rows[row.Index].RowData != null)
+                {
+                    SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(row.Index, dc.ColIndex));
+                    var currentObj = sgdefine.grid.Rows[row.Index].RowData;
+
+                    if (TargetValue != null && TargetValue.IsNotEmptyOrNull() && !dc.IsFKRelationColumn)
+                    {
+                        currentObj.SetPropertyValue(colName, TargetValue);
+                        sgdefine.grid[row.Index, dc.ColIndex].Value = TargetValue;
+                        switch (dc.CustomFormat)
+                        {
+                            case CustomFormatType.DefaultFormat:
+                                break;
+                            case CustomFormatType.PercentFormat:
+                                decimal pf = decimal.Parse(TargetValue.ToString());
+                                sgdefine.grid[row.Index, dc.ColIndex].Value = pf;
+                                break;
+                            case CustomFormatType.CurrencyFormat:
+                                decimal cf = decimal.Parse(TargetValue.ToString());
+                                sgdefine.grid[row.Index, dc.ColIndex].Value = cf;
+                                break;
+                            case CustomFormatType.DecimalPrecision:
+                                break;
+                            case CustomFormatType.Bool:
+                                bool bl = TargetValue.ToBool();
+                                if (bl == true)
+                                {
+                                    sgdefine.grid[row.Index, dc.ColIndex].DisplayText = "是";
+                                }
+                                else
+                                {
+                                    sgdefine.grid[row.Index, dc.ColIndex].DisplayText = "否";
+                                }
+                                break;
+                            case CustomFormatType.Image:
+
+                                break;
+                            default:
+                                break;
+                        }
+
+                    }
+                }
+
+
+                #endregion
+
+            }
+        }
+
+
+        /// <summary>
+        /// 设置单元格的值,包含关联的值
         /// </summary>
         /// <param name="dc">指定列</param>
         /// <param name="p"></param>

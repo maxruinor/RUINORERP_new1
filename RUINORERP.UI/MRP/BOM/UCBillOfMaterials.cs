@@ -736,7 +736,8 @@ namespace RUINORERP.UI.MRP.BOM
                 entity.Effective_at = System.DateTime.Now;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 entity.ApprovalResults = false;
-                
+                entity.is_enabled = true;
+                entity.is_available = true;
                 entity.SKU = string.Empty;
                 entity.ProdDetailID = 0;
                 if (entity.tb_BOM_SDetails != null && entity.tb_BOM_SDetails.Count > 0)
@@ -1287,6 +1288,23 @@ namespace RUINORERP.UI.MRP.BOM
                 EditEntity.tb_BOM_SDetailSecondaries = new List<tb_BOM_SDetailSecondary>();
                 EditEntity.tb_BOM_SDetailSecondaries.Add(new tb_BOM_SDetailSecondary());
 
+                if (EditEntity.is_enabled && !EditEntity.is_enabled)
+                {
+                    if (MessageBox.Show("BOM清单没有启用，确定保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
+                    {
+                        return false;
+                    }
+                }
+
+
+                if (EditEntity.is_available && !EditEntity.is_available)
+                {
+                    if (MessageBox.Show("BOM清单设置为不可用，确定保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
+                    {
+                        return false;
+                    }
+                }
+
 
                 EditEntity.tb_BOM_SDetails = details;
                 //没有经验通过下面先不计算
@@ -1305,7 +1323,7 @@ namespace RUINORERP.UI.MRP.BOM
                     MessageBox.Show("BOM子件中不能包含目标母件本身。请检查数据后再保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
-
+          
 
                 EditEntity.tb_BOM_SDetailSecondaries.Clear();
 

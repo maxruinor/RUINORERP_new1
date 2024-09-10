@@ -114,8 +114,89 @@ namespace RUINORERP.UI.ProductEAV
                 SetBaseValue<Eav_ProdDetails>();
                 InitDataTocmbbox();
             }
+            //this.AllowDrop = true; // 允许窗体接受拖放
+            //pictureBox1.AllowDrop = true; // 允许PictureBox接受拖放
+            //this.DragEnter += new DragEventHandler(MainForm_DragEnter);
+            //this.DragDrop += new DragEventHandler(MainForm_DragDrop);
+            //pictureBox1.DragDrop += new DragEventHandler(pictureBox1_DragDrop);
+            //pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox1.AllowDrop = true;
+            pictureBox1.DragEnter += new DragEventHandler(pictureBox1_DragEnter);
+            pictureBox1.DragDrop += new DragEventHandler(pictureBox1_DragDrop);
 
         }
+
+        private void pictureBox1_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private void pictureBox1_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files != null && files.Length > 0)
+                {
+                    string filePath = files[0];
+                    if (filePath.ToLower().EndsWith(".png") || filePath.ToLower().EndsWith(".jpg") || filePath.ToLower().EndsWith(".jpeg") || filePath.ToLower().EndsWith(".bmp"))
+                    {
+                        pictureBox1.Image = SetImageToEntity(filePath);
+                    }
+                    else
+                    {
+                        MessageBox.Show("只能接受图片文件。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+        }
+       
+
+        private void MainForm_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private void MainForm_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files != null && files.Length > 0)
+                {
+                    string filePath = files[0];
+                    if (filePath.ToLower().EndsWith(".png") || filePath.ToLower().EndsWith(".jpg") || filePath.ToLower().EndsWith(".jpeg") || filePath.ToLower().EndsWith(".bmp"))
+                    {
+                        pictureBox1.Image = SetImageToEntity(filePath);
+                        //pictureBox1.Imag= Image.FromFile(filePath);
+                    }
+                    else
+                    {
+                        MessageBox.Show("只能接受图片文件。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+        }
+
+        //private void pictureBox1_DragDrop(object sender, DragEventArgs e)
+        //{
+        //    MainForm_DragDrop(sender, e);
+        //}
+
 
         List<Eav_ProdDetails> removeSkuList = new List<Eav_ProdDetails>();
 
@@ -365,7 +446,7 @@ namespace RUINORERP.UI.ProductEAV
 
             if (EditEntity.Is_available.HasValue && !EditEntity.Is_available.Value)
             {
-                if (MessageBox.Show("产品设置为不可用用，确定保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
+                if (MessageBox.Show("产品设置为不可用，确定保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
                 {
                     return;
                 }
@@ -1028,42 +1109,46 @@ namespace RUINORERP.UI.ProductEAV
             if (openFileDialog4Img.ShowDialog() == DialogResult.OK)
             {
                 string pathName = openFileDialog4Img.FileName;
-                System.Drawing.Image img = System.Drawing.Image.FromFile(pathName);
+                this.pictureBox1.Image = SetImageToEntity(pathName);
+            }
+        }
+
+
+        private Image SetImageToEntity(string pathName)
+        {
+            System.Drawing.Image img = System.Drawing.Image.FromFile(pathName);
+            //将图像读入到字节数组
+            System.IO.FileStream fs = new System.IO.FileStream(pathName, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+            byte[] buffByte = new byte[fs.Length];
+            fs.Read(buffByte, 0, (int)fs.Length);
+            fs.Close();
+            fs = null;
+            // 判断图片大小是否超过 500KB
+            if (buffByte.Length > 500 * 1024)
+            {
+                // 压缩图片
+                ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
+                EncoderParameters encoderParams = new EncoderParameters(1);
+                encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
+                img = (Image)new Bitmap(img, new Size(800, 600));
+                img.Save("compressed.jpg", jpegCodec, encoderParams);
+
+                // 重新读取压缩后的图片
+                img = System.Drawing.Image.FromFile("compressed.jpg");
                 this.pictureBox1.Image = img;
 
-                //将图像读入到字节数组
-                System.IO.FileStream fs = new System.IO.FileStream(pathName, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                byte[] buffByte = new byte[fs.Length];
-                fs.Read(buffByte, 0, (int)fs.Length);
-                fs.Close();
-                fs = null;
-                // 判断图片大小是否超过 500KB
-                if (buffByte.Length > 500 * 1024)
-                {
-                    // 压缩图片
-                    ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
-                    EncoderParameters encoderParams = new EncoderParameters(1);
-                    encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
-                    img = (Image)new Bitmap(img, new Size(800, 600));
-                    img.Save("compressed.jpg", jpegCodec, encoderParams);
+                MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 将压缩后的图片转换为 byte[] 数组
+                byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
 
-                    // 重新读取压缩后的图片
-                    img = System.Drawing.Image.FromFile("compressed.jpg");
-                    this.pictureBox1.Image = img;
-
-                    MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    // 将压缩后的图片转换为 byte[] 数组
-                    byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
-
-                    // 在这里将 compressedImageBytes 保存到数据库中
-                    _EditEntity.Images = compressedImageBytes;
-                }
-                else
-                {
-                    _EditEntity.Images = buffByte;
-                }
-
+                // 在这里将 compressedImageBytes 保存到数据库中
+                _EditEntity.Images = compressedImageBytes;
             }
+            else
+            {
+                _EditEntity.Images = buffByte;
+            }
+            return img;
         }
 
 
@@ -1438,82 +1523,6 @@ namespace RUINORERP.UI.ProductEAV
                 default:
                     break;
             }
-        }
-
-        /// <summary>
-        /// 2023-10-31
-        /// </summary>
-        /// <param name="isMultProperty"></param>
-        /// <param name="details"></param>
-        /// <param name="relations"></param>
-        private async void LoadRelationToEavSku(List<tb_ProdDetail> details, List<tb_Prod_Attr_Relation> relations)
-        {
-            bool isMultProperty = false;
-            List<Eav_ProdDetails> propGroups = new List<Eav_ProdDetails>();
-            if (bindingSourceList.DataSource is List<Eav_ProdDetails>)
-            {
-                propGroups = bindingSourceList.DataSource as List<Eav_ProdDetails>;
-            }
-            if (isMultProperty)
-            {
-                //为了显示属性值中文
-                //根据关系明细中的详情id分组
-                var detailIds = relations.GroupBy(d => d.ProdDetailID);
-                foreach (var did in detailIds)
-                {
-                    tb_ProdDetail detail = details.Where(d => d.ProdDetailID == did.Key.Value).FirstOrDefault();
-                    //找到对应的
-                    List<tb_Prod_Attr_Relation> pars = relations.FindAll(w => w.ProdDetailID == detail.ProdDetailID).ToList();
-                    string groupName = string.Empty;
-                    foreach (tb_Prod_Attr_Relation par in pars)
-                    {
-                        if (par.Property_ID != null && par.PropertyValueID != null)
-                        {
-                            tb_ProdPropertyValue ppv = prodpropValueList.FirstOrDefault(f => f.PropertyValueID == par.PropertyValueID);
-                            groupName += ppv.PropertyValueName + ",";
-                        }
-                        else
-                        {
-                            groupName = "";
-                        }
-                    }
-                    groupName = groupName.TrimEnd(',');
-                    IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                    Eav_ProdDetails ppg = mapper.Map<Eav_ProdDetails>(detail);
-                    ppg.GroupName = groupName;
-                    ppg.tb_Prod_Attr_Relations = pars;
-                    ppg.tb_ProdDetail = detail;
-                    bindingSourceList.Add(ppg);
-                    ppg.ActionStatus = ActionStatus.加载;
-                }
-            }
-            else
-            {
-                //单属性的话，这里应该只有一行详情
-                var detailIds = relations.GroupBy(d => d.ProdDetailID);
-                foreach (var did in detailIds)
-                {
-                    tb_ProdDetail detail = new tb_ProdDetail();
-                    if (did.Key != null)
-                    {
-                        detail = await mcDetail.BaseQueryByIdAsync(did.Key);
-                    }
-                    else
-                    {
-                        // detail= .
-                    }
-                    IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                    Eav_ProdDetails ppg = mapper.Map<Eav_ProdDetails>(detail);
-                    ppg.GroupName = "";
-                    ppg.tb_Prod_Attr_Relations = relations;
-                    bindingSourceList.Add(ppg);
-                    ppg.ActionStatus = ActionStatus.加载;
-                }
-                btnAddProperty.Enabled = false;
-                btnClear.Enabled = false;
-            }
-
-            return;
         }
 
 

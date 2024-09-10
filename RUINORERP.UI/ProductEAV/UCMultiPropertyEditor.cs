@@ -140,9 +140,12 @@ namespace RUINORERP.UI.ProductEAV
             //加载枚举，并且可以过虑不需要的项
             List<int> exclude = new List<int>();
             exclude.Add((int)ProductAttributeType.虚拟);
+            exclude.Add((int)ProductAttributeType.捆绑);
             bindingHelper.InitDataToCmbByEnumOnWhere<tb_Prod>(typeof(ProductAttributeType).GetListByEnum(2, exclude.ToArray()), e => e.PropertyType, cmbPropertyType);
 
             prodpropValueList = mcPropertyValue.QueryByNav(c => true);
+
+
             prodpropList = mcProperty.QueryByNav(c => true);
             //DataBindingHelper.BindData4CmbByEnumData<tb_Prod>(entity, k => k.PropertyType, cmbPropertyType);
             DataBindingHelper.InitDataToCmb<tb_ProdProperty>(p => p.Property_ID, t => t.PropertyName, cmb属性);
@@ -377,6 +380,10 @@ namespace RUINORERP.UI.ProductEAV
         }
         */
 
+        /// <summary>
+        /// 单属性可以变为多属性，反过来不可以。
+        /// </summary>
+        /// <param name="pat"></param>
         private void ControlBtn(ProductAttributeType pat)
         {
             switch (pat)
@@ -385,14 +392,14 @@ namespace RUINORERP.UI.ProductEAV
                     cmb属性.Enabled = false;
                     btnAddProperty.Enabled = false;
                     btnClear.Enabled = false;
-
+                    cmbPropertyType.Enabled = true;
 
                     break;
                 case ProductAttributeType.可配置多属性:
                     cmb属性.Enabled = true;
                     btnAddProperty.Enabled = true;
                     btnClear.Enabled = true;
-
+                    cmbPropertyType.Enabled = false;
 
                     break;
                 case ProductAttributeType.捆绑:
@@ -548,11 +555,35 @@ namespace RUINORERP.UI.ProductEAV
             #region 获取最新的组合关系。并且保存为一个新的数组与现有的组合关系进行比较 取差集
             List<tb_Prod_Attr_Relation> attr_Relations = GetProdDetailsFromTreeGrid();
             var existDetails = attr_Relations.GroupBy(c => c.ProdDetailID).ToList();
-            foreach (var item in existDetails)
+
+            ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));
+            if (EditEntity.tb_Prod_Attr_Relations.Count == 1)
             {
-                var array = attr_Relations.Where(c => c.ProdDetailID == item.Key).ToList().Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
-                MixByTreeGrid.Add(string.Join(",", array));
+                //如果为单属性时，则直接添加为空
+                if (EditEntity.tb_Prod_Attr_Relations[0].Property_ID == null)
+                {
+                    MixByTreeGrid.Add("");
+                }
+                else
+                {
+                    foreach (var item in existDetails)
+                    {
+                        var array = attr_Relations.Where(c => c.ProdDetailID == item.Key).ToList().Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
+                        MixByTreeGrid.Add(string.Join(",", array));
+                    }
+                }
+
             }
+            else
+            {
+                foreach (var item in existDetails)
+                {
+                    var array = attr_Relations.Where(c => c.ProdDetailID == item.Key).ToList().Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
+                    MixByTreeGrid.Add(string.Join(",", array));
+                }
+            }
+
+
             #endregion
 
             if (cb.Tag is tb_ProdPropertyValue ppv)
@@ -639,7 +670,7 @@ namespace RUINORERP.UI.ProductEAV
                                     tb_ProdDetail detail = new tb_ProdDetail();
                                     detail.ProdBaseID = EditEntity.ProdBaseID;
                                     detail.ProdDetailID = SkuRowid; //为了后面可以查询暂时保存行号。实际保存DB前要生新设置为0.
-                                                                    //detail.SKU = prop;为了不浪费  保存时再成生一次
+                                    //detail.SKU = prop;为了不浪费  保存时再成生一次
 
                                     detail.ActionStatus = ActionStatus.新增;
                                     detail.Is_enabled = true;
@@ -691,6 +722,49 @@ namespace RUINORERP.UI.ProductEAV
                                 }
                                 else
                                 {
+                                    //单属性变多属性的情况：将第一个属性值添加到第一个产品详情中。产品详情应该是编辑状态
+                                    if (EditEntity.tb_ProdDetails.Count == 1)
+                                    {
+                                        TreeGridNode nodeDetail = treeGridView1.Nodes.FirstOrDefault(c => c.NodeName == EditEntity.tb_ProdDetails[0].ProdDetailID.ToString());
+                                        nodeDetail.Cells[6].Value = "编辑";
+                                        nodeDetail.ImageIndex = 2;//0 加载，1 新增 2 编辑 3 删除 4 下拉
+                                        tb_ProdDetail detailData = nodeDetail.Tag is tb_ProdDetail ? nodeDetail.Tag as tb_ProdDetail : new tb_ProdDetail();
+                                        if (nodeDetail != null)
+                                        {
+                                            if (detailData.tb_Prod_Attr_Relations.Count == 1 && EditEntity.tb_Prod_Attr_Relations.Count == 1)
+                                            {
+                                                detailData.tb_Prod_Attr_Relations[0].Property_ID = ppv.Property_ID;
+                                                detailData.tb_Prod_Attr_Relations[0].PropertyValueID = ppv.PropertyValueID;
+                                                detailData.tb_Prod_Attr_Relations[0].ActionStatus = ActionStatus.修改;
+                                                if (detailData.tb_Prod_Attr_Relations[0].tb_prodpropertyvalue == null)
+                                                {
+                                                    detailData.tb_Prod_Attr_Relations[0].tb_prodpropertyvalue = ppv;
+                                                }
+                                                #region 更新空值的属性值节点
+                                                long rarid = detailData.tb_Prod_Attr_Relations[0].RAR_ID;
+                                                TreeGridNode subnode = nodeDetail.Nodes.FirstOrDefault(c => c.NodeName == rarid.ToString());
+                                                subnode.ImageIndex = 2;//0 加载，1 新增 2 编辑 3 删除 4 下拉
+                                                subnode.Cells[2].Value = tpp.PropertyName;
+                                                subnode.Cells[3].Value = ppv.PropertyValueName;
+                                                subnode.Cells[6].Value = "编辑";
+                                                subnode.Tag = detailData.tb_Prod_Attr_Relations[0];
+                                                EditEntity.tb_Prod_Attr_Relations[0].Property_ID = ppv.Property_ID;
+                                                EditEntity.tb_Prod_Attr_Relations[0].PropertyValueID = ppv.PropertyValueID;
+                                                EditEntity.tb_Prod_Attr_Relations[0].ActionStatus = ActionStatus.修改;
+                                                #endregion
+                                            }
+                                            detailData.ActionStatus = ActionStatus.修改;
+                                            detailData.Modified_at = DateTime.Now;
+                                            detailData.Modified_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
+
+                                            nodeDetail.Cells[3].Value = GetPropertiesText(detailData.tb_Prod_Attr_Relations);
+                                        }
+                                        treeGridView1.Refresh();
+                                    }
+                                    else
+                                    {
+
+                                    }
                                     /*
                                     List<long> PVlist = new List<long>();
                                     var list = EditEntity.tb_Prod_Attr_Relations.Where(c => MItem.Contains(c.PropertyValueID.ToString())).ToList();
@@ -1293,6 +1367,10 @@ namespace RUINORERP.UI.ProductEAV
                         else
                         {
                             //单属性时 属性值给的是空。
+                            TreeGridNode subnode = node.Nodes.Add(par.RAR_ID, par.RAR_ID, "", "", "", "", "加载");
+                            //标记节点ID，实际就是产品属性关系ID
+                            subnode.NodeName = par.RAR_ID.ToString();
+                            subnode.Tag = par;
                         }
                         node.ImageIndex = 0;
                     }
@@ -1311,70 +1389,69 @@ namespace RUINORERP.UI.ProductEAV
 
         private void cmbPropertyType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (cmbPropertyType.Tag == null)
+            //if (cmbPropertyType.Tag == null)
+            //{
+            //    return;
+            //}
+
+            if (cmbPropertyType.SelectedItem != null)
             {
-                return;
-            }
-            object selectObj = cmbPropertyType.SelectedValue;
-            if (cmbPropertyType.SelectedItem != null && selectObj.ObjToInt() != -1)
-            {
-                EditEntity.PropertyType = (int)cmbPropertyType.SelectedValue;
-                ProductAttributeType pt = (ProductAttributeType)cmbPropertyType.SelectedValue;
-                switch (pt)
+                object selectObj = cmbPropertyType.SelectedValue;
+                if (selectObj.GetPropertyValue("PropertyType").ToInt() != -1)
                 {
-                    case ProductAttributeType.单属性:
-                        //ControlBtn(pt, EditEntity.ActionStatus);
-                        ControlBtn(pt);
-                        #region 新增修改式
-                        if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ProdBaseID == 0)
-                        {
+                    ProductAttributeType pt = (ProductAttributeType)cmbPropertyType.SelectedValue;
+                    switch (pt)
+                    {
+                        case ProductAttributeType.单属性:
+
+                            ControlBtn(pt);
+                            #region 新增修改式
+                            if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ProdBaseID == 0)
+                            {
+                                bindingSourceSKU明细.Clear();
+
+                                if (dataGridViewProd.Rows.Count == 0)
+                                {
+                                    //BindToSkulistGrid(new List<Eav_ProdDetails>());
+                                }
+                                if (EditEntity.ActionStatus != ActionStatus.加载)
+                                {
+                                    Eav_ProdDetails ppg = new Eav_ProdDetails();
+                                    ppg.GroupName = "";
+                                    ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
+                                    bindingSourceSKU明细.Add(ppg);
+                                }
+
+                            }
+                            #endregion
+
+                            if (dataGridViewProd.Columns.Contains("GroupName"))
+                            {
+                                dataGridViewProd.Columns["GroupName"].Visible = false;
+                            }
+
+                            break;
+                        case ProductAttributeType.可配置多属性:
+                            ControlBtn(pt);
+                            cmb属性.Enabled = true;
+                            btnAddProperty.Enabled = true;
                             bindingSourceSKU明细.Clear();
 
-                            if (dataGridViewProd.Rows.Count == 0)
-                            {
-                                //BindToSkulistGrid(new List<Eav_ProdDetails>());
-                            }
-                            if (EditEntity.ActionStatus != ActionStatus.加载)
-                            {
-                                Eav_ProdDetails ppg = new Eav_ProdDetails();
-                                ppg.GroupName = "";
-                                ppg.SKU = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.SKU_No);
-                                bindingSourceSKU明细.Add(ppg);
-                            }
-
-                        }
-                        #endregion
-
-                        if (dataGridViewProd.Columns.Contains("GroupName"))
-                        {
-                            dataGridViewProd.Columns["GroupName"].Visible = false;
-                        }
-
-                        break;
-                    case ProductAttributeType.可配置多属性:
-                        ControlBtn(pt);
-                        cmb属性.Enabled = true;
-                        btnAddProperty.Enabled = true;
-                        bindingSourceSKU明细.Clear();
-
-                        //绑定对应的选项及其值
-                        DataBindingHelper.InitDataToCmb<tb_ProdProperty>(p => p.Property_ID, t => t.PropertyName, cmb属性);
-                        cmb属性.SelectedIndex = -1;
-                        if (EditEntity.tb_Prod_Attr_Relations != null)
-                        {
-                            //编辑性加载
-                        }
+                            //绑定对应的选项及其值
+                            DataBindingHelper.InitDataToCmb<tb_ProdProperty>(p => p.Property_ID, t => t.PropertyName, cmb属性);
+                            cmb属性.SelectedIndex = -1;
 
 
-                        break;
-                    case ProductAttributeType.捆绑:
-                        break;
-                    case ProductAttributeType.虚拟:
-                        break;
-                    default:
-                        break;
+
+                            break;
+                        case ProductAttributeType.捆绑:
+                            break;
+                        case ProductAttributeType.虚拟:
+                            break;
+                        default:
+                            break;
+                    }
                 }
-
             }
         }
         tb_Prod oldOjb = null;
@@ -1455,7 +1532,11 @@ namespace RUINORERP.UI.ProductEAV
                 MessageBox.Show("单属性的产品时，属性关系不能超过一条。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
+            else
+            {
+                EditEntity.PropertyType = (int)ProductAttributeType.可配置多属性;
+            }
+            //
 
             //如果SKU为空。则是新的数据 detailid=0;
             foreach (var item in EditEntity.tb_ProdDetails)

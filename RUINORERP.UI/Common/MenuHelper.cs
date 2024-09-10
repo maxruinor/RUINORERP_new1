@@ -166,6 +166,16 @@ namespace RUINORERP.UI.Common
             //mlist = mlist.Sort(new MenuNameComparer());
             foreach (tb_MenuInfo var in sortlist)
             {
+                if (var.CaptionCN.Contains("异常"))
+                {
+                   
+                }
+
+                if (var.CaptionCN.Contains("审计"))
+                {
+
+                }
+
                 if (!var.IsEnabled || !var.IsVisble)
                 {
                     continue;

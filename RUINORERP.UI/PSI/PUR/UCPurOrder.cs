@@ -38,6 +38,7 @@ using AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.CommService;
+using ZXing.Common;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -162,6 +163,11 @@ namespace RUINORERP.UI.PSI.PUR
                         PreDeliveryDate = EditEntity.PreDeliveryDate.Value;
                         //预交日期来自于主表
                         listCols.SetCol_DefaultValue<tb_PurOrderDetail>(c => c.PreDeliveryDate, PreDeliveryDate);
+                        if (entity.tb_PurOrderDetails != null)
+                        {
+                            entity.tb_PurOrderDetails.ForEach(c => c.PreDeliveryDate = PreDeliveryDate);
+                            sgh.SetCellValue<tb_PurOrderDetail>(sgd, colNameExp => colNameExp.PreDeliveryDate, PreDeliveryDate);
+                        }
                     }
                 }
 
@@ -452,13 +458,14 @@ namespace RUINORERP.UI.PSI.PUR
             }
         }
 
-        List<tb_PurOrderDetail> details = new List<tb_PurOrderDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
             {
                 return false;
             }
+
+            List<tb_PurOrderDetail> details = new List<tb_PurOrderDetail>();
             var eer = errorProviderForAllInput.GetError(txtTotalAmount);
             bindingSourceSub.EndEdit();
             List<tb_PurOrderDetail> detailentity = bindingSourceSub.DataSource as List<tb_PurOrderDetail>;

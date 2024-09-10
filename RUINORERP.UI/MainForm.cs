@@ -63,6 +63,7 @@ using System.Linq.Expressions;
 using Google.Protobuf.Collections;
 using ExCSS;
 using RUINORERP.Model.Models;
+using RUINORERP.Business.CommService;
 
 
 
@@ -295,9 +296,9 @@ namespace RUINORERP.UI
             List<tb_Company> company = await companyController.QueryAsync();
             if (company != null)
             {
-                this.Text = company[0].CNName + "企业数字化集成ERP v1.0" +"_"+ AppContext.ClientInfo.Version;
+                this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + "_" + AppContext.ClientInfo.Version;
             }
-           
+
             // logger.LogInformation("打开主窗体准备进入系统");
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {
@@ -379,6 +380,13 @@ namespace RUINORERP.UI
             MainForm.Instance.uclog.AddLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
+            
+            var rslist = CacheHelper.Manager.CacheEntityList.Get(nameof(tb_MenuInfo));
+            if (rslist != null)
+            {
+                MainForm.Instance.AppContext.UserMenuList = rslist as List<tb_MenuInfo>;
+            }
+
         }
 
         private void kryptonDockableWorkspace1_ActivePageChanged(object sender, ActivePageChangedEventArgs e)

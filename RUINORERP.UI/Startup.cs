@@ -421,6 +421,15 @@ public IHost CslaDIPortBackup()
                  .PropertiesAutowired()//指定属性注入
                  .SingleInstance();
 
+            ////覆盖上面自动dll批量注入的方法，因为要用单例模式
+            builder.RegisterType(typeof(RUINORERP.Business.CommService.BillConverterFactory))
+                 .AsImplementedInterfaces() //加上这一行，会出错
+                 .EnableInterfaceInterceptors()
+                 .EnableClassInterceptors()//打开AOP类的虚方法注入
+                 .PropertiesAutowired()//指定属性注入
+                 .SingleInstance();
+
+
             //_containerBuilder = builder;
             //AutoFacContainer = builder.Build();
             #endregion

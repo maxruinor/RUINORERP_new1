@@ -31,15 +31,13 @@ namespace RUINORERP.Business.CommService
         private List<tb_MenuInfo> _UserMenuList = null;
         public List<tb_MenuInfo> UserMenuList
         {
+            set
+            {
+                _UserMenuList = value;
+            }
             get
             {
-                if (_UserMenuList == null)
-                {
-                    _UserMenuList = _context.Db.CopyNew().Queryable<tb_MenuInfo>().Where(r => r.IsVisble == true)
-                //.Includes(t => t.)
-                //.Includes(t => t.tb_roleinfo)
-                .ToList();
-                }
+
                 return _UserMenuList;
             }
         }
@@ -68,6 +66,12 @@ namespace RUINORERP.Business.CommService
         {
             CommBillData cbd = new CommBillData();
             BizType bizType = new BizType();
+            if (UserMenuList == null)
+            {
+                this.UserMenuList = _context.UserMenuList;
+                //_UserMenuList = _context.Db.CopyNew().Queryable<tb_MenuInfo>().Where(r => r.IsVisble == true).ToList();
+            }
+
             tb_MenuInfo menuInfo = UserMenuList.Where(c => c.EntityName == type.Name).FirstOrDefault();
             if (menuInfo != null)
             {

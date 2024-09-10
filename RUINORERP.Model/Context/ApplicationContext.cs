@@ -19,6 +19,12 @@ namespace RUINORERP.Model.Context
     /// </summary>
     public class ApplicationContext
     {
+
+        //BillConverterFactory 中会用到这个。UI层才有缓存。单例模式没有作用到。暂时没有处理用。用这个属性来传值。
+        public List<tb_MenuInfo> UserMenuList;
+
+
+
         #region 工作流
 
         /// <summary>
@@ -189,7 +195,7 @@ namespace RUINORERP.Model.Context
         /// </summary>
         public static string VersionRoutingTag { get; internal set; }
 
-    
+
 
         /// <summary>
         /// Gets the authentication type being used by the

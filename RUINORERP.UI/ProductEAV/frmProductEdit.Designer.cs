@@ -199,7 +199,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage3,
             this.kryptonPageImage,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 0;
+            this.kryptonNavigator1.SelectedIndex = 2;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1024, 614);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -757,7 +757,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPageImage.LastVisibleSet = true;
             this.kryptonPageImage.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPageImage.Name = "kryptonPageImage";
-            this.kryptonPageImage.Size = new System.Drawing.Size(1022, 572);
+            this.kryptonPageImage.Size = new System.Drawing.Size(1022, 583);
             this.kryptonPageImage.Text = "产品图片";
             this.kryptonPageImage.ToolTipTitle = "Page ToolTip";
             this.kryptonPageImage.UniqueName = "CD97FA5517E84BB2E7A6ADAAB237DDAC";
@@ -768,7 +768,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanelImage.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelImage.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelImage.Name = "kryptonPanelImage";
-            this.kryptonPanelImage.Size = new System.Drawing.Size(1022, 572);
+            this.kryptonPanelImage.Size = new System.Drawing.Size(1022, 583);
             this.kryptonPanelImage.TabIndex = 0;
             // 
             // kryptonSplitContainer2
@@ -787,8 +787,8 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.btnClearImage);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.btnAddImage);
-            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1022, 572);
-            this.kryptonSplitContainer2.SplitterDistance = 480;
+            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1022, 583);
+            this.kryptonSplitContainer2.SplitterDistance = 489;
             this.kryptonSplitContainer2.TabIndex = 0;
             // 
             // pictureBox1

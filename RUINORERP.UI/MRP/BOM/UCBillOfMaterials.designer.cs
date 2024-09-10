@@ -99,6 +99,7 @@
             this.treeListView1 = new System.Windows.Forms.TreeListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeaderSKU = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -107,7 +108,6 @@
             this.kryptonTreeGridViewBOMDetail = new Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView();
             this.kryptonTreeView1 = new Krypton.Toolkit.KryptonTreeView();
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
-            this.columnHeaderSKU = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -292,7 +292,7 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(677, 51);
+            this.kryptonLabel1.Location = new System.Drawing.Point(680, 51);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel1.TabIndex = 133;
@@ -421,7 +421,7 @@
             // 
             // lblis_enabled
             // 
-            this.lblis_enabled.Location = new System.Drawing.Point(677, 80);
+            this.lblis_enabled.Location = new System.Drawing.Point(680, 80);
             this.lblis_enabled.Name = "lblis_enabled";
             this.lblis_enabled.Size = new System.Drawing.Size(62, 20);
             this.lblis_enabled.TabIndex = 102;
@@ -445,7 +445,7 @@
             // 
             // chkis_available
             // 
-            this.chkis_available.Location = new System.Drawing.Point(840, 83);
+            this.chkis_available.Location = new System.Drawing.Point(843, 83);
             this.chkis_available.Name = "chkis_available";
             this.chkis_available.Size = new System.Drawing.Size(19, 13);
             this.chkis_available.TabIndex = 105;
@@ -833,6 +833,11 @@
             this.columnHeader2.Text = "属性";
             this.columnHeader2.Width = 72;
             // 
+            // columnHeaderSKU
+            // 
+            this.columnHeaderSKU.Text = "SKU";
+            this.columnHeaderSKU.Width = 137;
+            // 
             // columnHeader3
             // 
             this.columnHeader3.Text = "规格";
@@ -864,7 +869,7 @@
             this.tabPageTree.Location = new System.Drawing.Point(4, 22);
             this.tabPageTree.Name = "tabPageTree";
             this.tabPageTree.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageTree.Size = new System.Drawing.Size(222, 720);
+            this.tabPageTree.Size = new System.Drawing.Size(211, 720);
             this.tabPageTree.TabIndex = 0;
             this.tabPageTree.Text = "树形结构";
             this.tabPageTree.UseVisualStyleBackColor = true;
@@ -882,7 +887,7 @@
             this.kryptonTreeGridViewBOMDetail.Location = new System.Drawing.Point(3, 3);
             this.kryptonTreeGridViewBOMDetail.Name = "kryptonTreeGridViewBOMDetail";
             this.kryptonTreeGridViewBOMDetail.ParentIdRootValue = ((long)(0));
-            this.kryptonTreeGridViewBOMDetail.Size = new System.Drawing.Size(216, 714);
+            this.kryptonTreeGridViewBOMDetail.Size = new System.Drawing.Size(205, 714);
             this.kryptonTreeGridViewBOMDetail.TabIndex = 12;
             this.kryptonTreeGridViewBOMDetail.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.kryptonTreeGridViewBOMDetail_CellFormatting);
             // 
@@ -891,14 +896,9 @@
             this.kryptonTreeView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonTreeView1.Location = new System.Drawing.Point(3, 3);
             this.kryptonTreeView1.Name = "kryptonTreeView1";
-            this.kryptonTreeView1.Size = new System.Drawing.Size(216, 714);
+            this.kryptonTreeView1.Size = new System.Drawing.Size(205, 714);
             this.kryptonTreeView1.Sorted = true;
             this.kryptonTreeView1.TabIndex = 3;
-            // 
-            // columnHeaderSKU
-            // 
-            this.columnHeaderSKU.Text = "SKU";
-            this.columnHeaderSKU.Width = 137;
             // 
             // UCBillOfMaterials
             // 

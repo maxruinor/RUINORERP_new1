@@ -312,11 +312,11 @@ namespace RUINORERP.Business
                                         detail.tb_Prod_Attr_Relations[i].ProdDetailID = detail.ProdDetailID;
                                         detail.tb_Prod_Attr_Relations[i].ProdBaseID = info.ProdBaseID;
                                     }
-
                                 }
-                                //关系不会修改
-                                //await _unitOfWorkManage.GetDbClient().Updateable(detail.tb_Prod_Attr_Relations).ExecuteCommandAsync();
+                                //关系修改和新增加分开处理
+                                await _unitOfWorkManage.GetDbClient().Updateable(detail.tb_Prod_Attr_Relations.Where(c => c.RAR_ID > 0).ToList()).ExecuteCommandAsync();
                                 await _unitOfWorkManage.GetDbClient().Insertable(detail.tb_Prod_Attr_Relations.Where(c => c.RAR_ID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
+
                                 //实际上 ，业务上因为修改的只是详情。关系没有变化?
                             }
 

@@ -349,6 +349,14 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
         }
+
+        /// <summary>
+        /// 这里实现的是价格历史自动给值
+        /// </summary>
+        /// <param name="_View_ProdDetail"></param>
+        /// <param name="rowObj"></param>
+        /// <param name="griddefine"></param>
+        /// <param name="Position"></param>
         private void Sgh_OnLoadRelevantFields(object _View_ProdDetail, object rowObj, SourceGridDefine griddefine, Position Position)
         {
             if (EditEntity == null)
@@ -385,6 +393,10 @@ namespace RUINORERP.UI.PSI.PUR
                 foreach (var item in RowDetails)
                 {
                     tb_PurOrderDetail bOM_SDetail = mapper.Map<tb_PurOrderDetail>(item);
+                    if (EditEntity.PreDeliveryDate.HasValue)
+                    {
+                        bOM_SDetail.PreDeliveryDate = EditEntity.PreDeliveryDate.Value;
+                    }
                     bOM_SDetail.Quantity = 0;
                     details.Add(bOM_SDetail);
                 }

@@ -484,6 +484,13 @@ namespace RUINORERP.UI.PSI.SAL
             MainForm.Instance.uclog.AddLog("加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
         }
 
+        /// <summary>
+        /// 这里实现的是价格历史自动给值
+        /// </summary>
+        /// <param name="_View_ProdDetail"></param>
+        /// <param name="rowObj"></param>
+        /// <param name="griddefine"></param>
+        /// <param name="Position"></param>
         private void Sgh_OnLoadRelevantFields(object _View_ProdDetail, object rowObj, SourceGridDefine griddefine, Position Position)
         {
             if (EditEntity == null)
@@ -710,9 +717,15 @@ namespace RUINORERP.UI.PSI.SAL
                         MessageBox.Show("当前订单已有销售出库数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;
                     }
-
                 }
-
+                if (NeedValidated)
+                {
+                    if (EditEntity.tb_ProductionPlans != null && EditEntity.tb_ProductionPlans.Count > 0)
+                    {
+                        MessageBox.Show("当前订单已有计划单数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
 
                 if (EditEntity.SOrder_ID > 0)
                 {

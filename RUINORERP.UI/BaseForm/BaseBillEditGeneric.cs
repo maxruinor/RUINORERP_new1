@@ -1285,14 +1285,25 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected async override Task<ApprovalEntity> Review()
         {
-            //如果已经审核并且审核通过，则不能再次审核
-            ApprovalEntity ae = new ApprovalEntity();
             if (EditEntity == null)
             {
                 return null;
             }
+            ApprovalEntity ae = new ApprovalEntity();
+            if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+            {
+                //审核过，并且通过了，不能再次审核
+                if ((EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核 || EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.结案)
+                    && EditEntity.GetPropertyValue("ApprovalResults") != null
+                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
+                    )
+                {
+                    MainForm.Instance.uclog.AddLog("未审核，或已审核且【未通过】的单据才能再次审核。");
+                    return ae;
+                }
+            }
+            //如果已经审核并且审核通过，则不能再次审核
             BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
-
             CommonUI.frmApproval frm = new CommonUI.frmApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -1802,7 +1813,7 @@ namespace RUINORERP.UI.BaseForm
                     toolStripbtnSubmit.Enabled = false;
                     if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                     {
-                        MainForm.Instance.logger.Error("提交时,单据已经是【完结】或【确认】状态");
+                        MainForm.Instance.uclog.AddLog("单据已经是【完结】或【确认】状态，提交失败。");
                     }
                     return;
                 }
@@ -1939,7 +1950,7 @@ namespace RUINORERP.UI.BaseForm
                     //先保存再提交
                     if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                     {
-                        MainForm.Instance.logger.Error("提交时,单据没有保存,将状态修改为提交状态后直接保存了。");
+                        MainForm.Instance.uclog.AddLog("提交时,单据没有保存,将状态修改为提交状态后直接保存了。");
                     }
                     ReturnResults<T> rmr = new ReturnResults<T>();
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");

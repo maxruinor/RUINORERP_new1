@@ -310,7 +310,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         /// <summary>
-        /// 加载已经的数据明细显示到表格
+        /// 插入数据明细显示到表格,注意可能是第一行。第N行插入
         /// </summary>
         /// <typeparam name="C"></typeparam>
         /// <param name="grid1"></param>
@@ -330,7 +330,6 @@ namespace RUINORERP.UI.UCSourceGrid
             List<C> _details, Expression<Func<C, long?>> BizKeyTargetColExp, int rowPosition, bool isLoadData) where C : class
         {
             int i = rowPosition;
-
             int row头尾 = 1;
             if (grid1.HasSummary)
             {
@@ -351,11 +350,197 @@ namespace RUINORERP.UI.UCSourceGrid
 
             var mb = BizKeyTargetColExp.GetMemberInfo();
             string key = mb.Name;
+            //如果是从查询或其它单据点击过来。加载的。就可以直接添加。
+            //如果是编辑时多选带过来时。因为会提前默认加一个空行。这时空行得更新式添加，如果是从中间添加也可以
+            //判断前一个KEY，业务主键是否为空值。
+            //在实际应用中，选择 Stack<T> 还是 Queue< T > 取决于你的具体需求：
+            //如果你需要一个后进先出的数据结构，那么 Stack<T> 是更好的选择。
+            //如果你需要一个先进先出的数据结构，那么 Queue< T > 是更好的选择。
+            // 创建一个栈
+            if (_details.Count == 0)
+            {
+                return;
+            }
+            Queue<C> DetailQueue = new Queue<C>();
+            foreach (var item in _details)
+            {
+                DetailQueue.Enqueue(item);
+            }
+            //取出来处理掉
+            while (DetailQueue.Count > 0)
+            {
+                var detail = DetailQueue.Dequeue();
 
-            //为了显示公共部分，将带出的数据明细，从数据源里取产品信息来填充
-            //List<object> products = new List<object>();
+                if (isLoadData)
+                {
+                    sgdefine.BindingSourceLines.Add(detail);
+                }
+                else
+                {
+                    //先判断位置起点所在行是否有数据。有数据就更新，没有就添加,第一行才处理空行情况
+                    if (sgdefine.BindingSourceLines.Count == 1
+                        && DetailQueue.Count == _details.Count - 1) //第一行
+                    {
+                        //上一行是空行时
+                        var existProdetailID = sgdefine.BindingSourceLines[i - 1].GetPropertyValue(key);
+                        if (existProdetailID.ToLong() == 0)//空行
+                        {
+                            sgdefine.BindingSourceLines[0] = detail;
+                        }
+                        else
+                        {
+                            sgdefine.BindingSourceLines.Add(detail);
+                        }
+                    }
+                    else
+                    {
+                        //上一行是空行时
+                        var existProdetailID = sgdefine.BindingSourceLines[sgdefine.BindingSourceLines.Count - 1].GetPropertyValue(key);
+                        if (existProdetailID.ToLong() == 0)//空行
+                        {
+                            sgdefine.BindingSourceLines[sgdefine.BindingSourceLines.Count - 1] = detail;
+                        }
+                        else
+                        {
+                            sgdefine.BindingSourceLines.Add(detail);
+                        }
+                    }
+                }
 
-            foreach (C item in _details)
+
+                //载入数据就是相对完整的  固定按行号添加新行
+                if (grid1.Rows[i].RowData == null && isLoadData)
+                {
+                    grid1.Rows[i].RowData = sgdefine.BindingSourceLines.List[i - 1];//表格是第一个从1开始，集合是从0开始
+                }
+                else
+                {
+                    grid1.Rows[i].RowData = sgdefine.BindingSourceLines.List[i - 1];//表格是第一个从1开始，集合是从0开始
+                }
+          
+                //将行的数据设置到每个格子中显示出来
+                #region 优化
+                foreach (SourceGridDefineColumnItem dc in sgdefine.ToArray())
+                {
+                    SourceGrid.Position pt = new SourceGrid.Position(i, dc.ColIndex);
+                    SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
+
+                    //设置为可以编辑
+                    SetRowEditable(dc.ParentGridDefine.grid, new int[] { i }, dc.ParentGridDefine);
+                    //如果行头，就添加右键删除菜单
+                    if (dc.IsRowHeaderCol)
+                    {
+                        currContext.Value = i;
+                        PopupMenuForRowHeader pop = currContext.Cell.FindController<PopupMenuForRowHeader>();
+                        if (pop == null)
+                        {
+                            PopupMenuForRowHeader menuController = new PopupMenuForRowHeader(i, dc.ParentGridDefine.grid, sgdefine);
+                            if (currContext.Cell.Controller != null)
+                            {
+                                currContext.Cell.Controller.AddController(menuController);
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        if (dc.BelongingObjectType == null)
+                        {
+                            continue;
+                        }
+                        //真正明细部分
+                        if (dc.BelongingObjectType.Name == detail.GetType().Name)
+                        {
+                            object cellvalue = ReflectionHelper.GetPropertyValue(detail, dc.ColName);
+                            if (!cellvalue.IsNullOrEmpty())
+                            {
+                                currContext.DisplayText = ShowFKColumnText(dc, cellvalue, sgdefine);
+                                currContext.Value = cellvalue;
+                                currContext.Tag = detail;
+                                if (dc.ColName == "Selected")
+                                {
+                                    grid1[pt] = new SourceGrid.Cells.CheckBox(null, cellvalue.ToBool());
+                                    continue;
+                                }
+                                //产品ID
+                                if (dc.IsPrimaryBizKeyColumn)
+                                {
+                                    if (grid1.Rows[i].RowData != null)
+                                    {
+                                        var currentObj = grid1.Rows[i].RowData;
+                                        ReflectionHelper.SetPropertyValue(currentObj, dc.ColName, cellvalue);
+                                    }
+                                }
+                            }
+
+                        }
+                        else
+                        {
+                            //公共部分
+                            var prodetailID = ReflectionHelper.GetPropertyValue(detail, key);
+                            var v_prod = sgdefine.SourceList.Find(x => ReflectionHelper.GetPropertyValue(x, key).ToString() == prodetailID.ToString());
+                            if (v_prod != null)
+                            {
+                                object cellvalue = ReflectionHelper.GetPropertyValue(v_prod, dc.ColName);
+                                if (!cellvalue.IsNullOrEmpty())
+                                {
+                                    if (!isLoadData)
+                                    {
+                                        //如果是加载数据，不用设置值，插入时才设置
+                                        //如果这个列指定和目标，也要设置一下 ，但是这里是加载。都已经保存在数据库了。不需要？
+                                        SetCellValue(dc, pt, v_prod, true);
+                                    }
+                                    //如果是产品图片时，显示出来
+                                    if (dc.CustomFormat == CustomFormatType.Image)
+                                    {
+                                        currContext.DisplayText = "";
+                                        if (cellvalue != null)
+                                        {
+                                            currContext.Cell.View = new SourceGrid.Cells.Views.SingleImage();
+                                            currContext.Value = cellvalue;
+                                        }
+                                        else
+                                        {
+                                            currContext.Cell.View = sgdefine.ViewNormal;
+                                        }
+                                        currContext.Tag = v_prod;
+                                    }
+                                    else
+                                    {
+                                        //如果是与值不一样的名称显示，这种情况。1）行rowdata中已经是真正的数据。
+                                        //如果有编辑器的也区分了。所以这里可以把值改为显示名称
+                                        currContext.DisplayText = ShowFKColumnText(dc, cellvalue, sgdefine);
+                                        if (!string.IsNullOrEmpty(currContext.DisplayText))
+                                        {
+                                            currContext.Value = currContext.DisplayText;
+                                        }
+                                        else
+                                        {
+                                            currContext.Value = cellvalue;
+                                        }
+                                        currContext.Cell.View = sgdefine.ViewNormal;
+                                        currContext.Tag = v_prod;
+                                    }
+
+
+                                }
+
+                            }
+
+
+
+                        }
+
+                    }
+                }
+                #endregion
+                //行号在前。所以这个在后
+                i++;
+            }
+
+
+            /*
+                         foreach (C item in _details)
             {
                 sgdefine.BindingSourceLines.Add(item);
                 //载入数据就是相对完整的  固定按行号添加新行
@@ -485,6 +670,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 #endregion
 
             }
+             */
 
         }
 

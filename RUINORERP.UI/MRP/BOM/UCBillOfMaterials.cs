@@ -1269,7 +1269,7 @@ namespace RUINORERP.UI.MRP.BOM
             {
                 return false;
             }
-            // var eer = errorProviderForAllInput.GetError(txtTotalQty);
+           var eer = errorProviderForAllInput.GetError(txtBOM_Name);
             bindingSourceSub.EndEdit();
             List<tb_BOM_SDetail> detailentity = bindingSourceSub.DataSource as List<tb_BOM_SDetail>;
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)

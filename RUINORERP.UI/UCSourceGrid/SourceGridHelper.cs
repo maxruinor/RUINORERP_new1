@@ -1624,7 +1624,7 @@ namespace RUINORERP.UI.UCSourceGrid
             //captionModel.BackColor = grid.BackColor;
 
             EditorControlBase _editor = new SourceGrid.Cells.Editors.TextBox(typeof(string));
-
+            
             System.Reflection.PropertyInfo pi = null;
             Type newcolType;
             if (dci.ColPropertyInfo == null)
@@ -1895,7 +1895,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             {
                                 return;
                             }
-
+                            
                             #region 验证值 不成功就弹出 或清空 
                             SourceGrid.CellContext currContext = new SourceGrid.CellContext(dci.ParentGridDefine.grid, _editor.EditPosition);
                             //注意，这里分两种情况，一种是自动手输的。一种是查询出来的正确值

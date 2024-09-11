@@ -193,14 +193,76 @@ namespace SourceGrid.Cells.Editors
             editor.ContextMenuStrip = GetContextMenu();
             editor.TextBox.AllowDrop = true;
             editor.TextBox.DragDrop += Editor_DragDrop;
+            editor.TextBox.DragEnter += Editor_DragEnter;
             return editor;
+        }
+
+        private void Editor_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
         }
 
         private void Editor_DragDrop(object sender, DragEventArgs e)
         {
-             
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files != null && files.Length > 0)
+                {
+                    string filePath = files[0];
+                    if (filePath.ToLower().EndsWith(".png") || filePath.ToLower().EndsWith(".jpg") || filePath.ToLower().EndsWith(".jpeg") || filePath.ToLower().EndsWith(".bmp"))
+                    {
+                        // pictureBox1.Image = SetImageToEntity(filePath);
+                        Control.Value = SetImageToEntity(filePath);
+                    }
+                    else
+                    {
+                        MessageBox.Show("只能接受图片文件。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
         }
+        private System.Drawing.Image SetImageToEntity(string pathName)
+        {
+            System.Drawing.Image img = System.Drawing.Image.FromFile(pathName);
+            //将图像读入到字节数组
+            System.IO.FileStream fs = new System.IO.FileStream(pathName, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+            byte[] buffByte = new byte[fs.Length];
+            fs.Read(buffByte, 0, (int)fs.Length);
+            fs.Close();
+            fs = null;
+            // 判断图片大小是否超过 500KB
+            if (buffByte.Length > 500 * 1024)
+            {
+                // 压缩图片
+                ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
+                EncoderParameters encoderParams = new EncoderParameters(1);
+                encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
+                img = (System.Drawing.Image)new System.Drawing.Bitmap(img, new System.Drawing.Size(800, 600));
+                img.Save("compressed.jpg", jpegCodec, encoderParams);
 
+                // 重新读取压缩后的图片
+                img = System.Drawing.Image.FromFile("compressed.jpg");
+                MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 将压缩后的图片转换为 byte[] 数组
+                // byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
+
+                // 在这里将 compressedImageBytes 保存到数据库中
+                //_EditEntity.Images = compressedImageBytes;
+            }
+            else
+            {
+                // _EditEntity.Images = buffByte;
+            }
+            return img;
+        }
         /// <summary>
         /// Gets the control used for editing the cell.
         /// </summary>
@@ -256,7 +318,7 @@ namespace SourceGrid.Cells.Editors
                     return imageValidator.ValueToObject(val, typeof(byte[]));
                 }
                 #endregion
-             
+
 
                 //Stranamente questo codice in caso di ico va in eccezione!
                 //				System.Drawing.Image img = (System.Drawing.Image)val;

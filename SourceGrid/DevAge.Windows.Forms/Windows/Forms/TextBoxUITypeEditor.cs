@@ -19,6 +19,7 @@ namespace DevAge.Windows.Forms
 		{
 			// This call is required by the Windows Form Designer.
 			InitializeComponent();
+			
 		}
 
 		/// <summary>

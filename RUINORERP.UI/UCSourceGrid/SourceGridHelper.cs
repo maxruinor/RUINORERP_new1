@@ -4,6 +4,8 @@ using DevAge.Windows.Forms;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Utils;
 using NPOI.SS.Formula.Functions;
+using NPOI.SS.UserModel;
+
 
 //using Google.Protobuf.Reflection;
 //using NetTaste;
@@ -539,138 +541,6 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
 
-            /*
-                         foreach (C item in _details)
-            {
-                sgdefine.BindingSourceLines.Add(item);
-                //载入数据就是相对完整的  固定按行号添加新行
-                if (grid1.Rows[i].RowData == null)
-                {
-                    grid1.Rows[i].RowData = sgdefine.BindingSourceLines.List[i - 1];//数据源是0开始，表格0是列头所有是1开始
-                    //grid1.Rows[i].RowData = sgdefine.BindingSourceLines.AddNew();
-                }
-                //优化后开始
-                #region 优化
-                foreach (SourceGridDefineColumnItem dc in sgdefine.ToArray())
-                {
-                    SourceGrid.Position pt = new SourceGrid.Position(i, dc.ColIndex);
-                    SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
-
-                    //设置为可以编辑
-                    SetRowEditable(dc.ParentGridDefine.grid, new int[] { i }, dc.ParentGridDefine);
-
-                    //如果行头，就添加右键删除菜单
-                    if (dc.IsRowHeaderCol)
-                    {
-                        currContext.Value = i;
-                        PopupMenuForRowHeader pop = currContext.Cell.FindController<PopupMenuForRowHeader>();
-                        if (pop == null)
-                        {
-                            PopupMenuForRowHeader menuController = new PopupMenuForRowHeader(i, dc.ParentGridDefine.grid, sgdefine);
-                            if (currContext.Cell.Controller != null)
-                            {
-                                currContext.Cell.Controller.AddController(menuController);
-                            }
-
-                        }
-                    }
-                    else
-                    {
-                        if (dc.BelongingObjectType == null)
-                        {
-                            continue;
-                        }
-                        //真正明细部分
-                        if (dc.BelongingObjectType.Name == item.GetType().Name)
-                        {
-                            object cellvalue = ReflectionHelper.GetPropertyValue(item, dc.ColName);
-                            if (!cellvalue.IsNullOrEmpty())
-                            {
-                                currContext.DisplayText = ShowFKColumnText(dc, cellvalue, sgdefine);
-                                currContext.Value = cellvalue;
-                                currContext.Tag = item;
-                                if (dc.ColName == "Selected")
-                                {
-                                    grid1[pt] = new SourceGrid.Cells.CheckBox(null, cellvalue.ToBool());
-                                    continue;
-                                }
-                                //产品ID
-                                if (dc.IsPrimaryBizKeyColumn)
-                                {
-                                    if (grid1.Rows[i].RowData != null)
-                                    {
-                                        var currentObj = grid1.Rows[i].RowData;
-                                        ReflectionHelper.SetPropertyValue(currentObj, dc.ColName, cellvalue);
-                                    }
-                                }
-                            }
-
-                        }
-                        else
-                        {
-                            //公共部分
-                            var prodetailID = ReflectionHelper.GetPropertyValue(item, key);
-                            var v_prod = sgdefine.SourceList.Find(x => ReflectionHelper.GetPropertyValue(x, key).ToString() == prodetailID.ToString());
-                            if (v_prod != null)
-                            {
-                                object cellvalue = ReflectionHelper.GetPropertyValue(v_prod, dc.ColName);
-                                if (!cellvalue.IsNullOrEmpty())
-                                {
-                                    if (!isLoadData)
-                                    {
-                                        //如果是加载数据，不用设置值，插入时才设置
-                                        //如果这个列指定和目标，也要设置一下 ，但是这里是加载。都已经保存在数据库了。不需要？
-                                        SetCellValue(dc, pt, v_prod, true);
-                                    }
-                                    //如果是产品图片时，显示出来
-                                    if (dc.CustomFormat == CustomFormatType.Image)
-                                    {
-                                        currContext.DisplayText = "";
-                                        if (cellvalue != null)
-                                        {
-                                            currContext.Cell.View = new SourceGrid.Cells.Views.SingleImage();
-                                            currContext.Value = cellvalue;
-                                        }
-                                        else
-                                        {
-                                            currContext.Cell.View = sgdefine.ViewNormal;
-                                        }
-                                        currContext.Tag = v_prod;
-                                    }
-                                    else
-                                    {
-                                        //如果是与值不一样的名称显示，这种情况。1）行rowdata中已经是真正的数据。
-                                        //如果有编辑器的也区分了。所以这里可以把值改为显示名称
-                                        currContext.DisplayText = ShowFKColumnText(dc, cellvalue, sgdefine);
-                                        if (!string.IsNullOrEmpty(currContext.DisplayText))
-                                        {
-                                            currContext.Value = currContext.DisplayText;
-                                        }
-                                        else
-                                        {
-                                            currContext.Value = cellvalue;
-                                        }
-                                        currContext.Cell.View = sgdefine.ViewNormal;
-                                        currContext.Tag = v_prod;
-                                    }
-
-
-                                }
-
-                            }
-
-
-
-                        }
-
-                    }
-                }
-                i++;
-
-                #endregion
-
-            }
-             */
 
         }
 
@@ -2759,7 +2629,8 @@ namespace RUINORERP.UI.UCSourceGrid
         {
 
             string colName = colNameExp.GetMemberInfo().Name;
-            SourceGridDefineColumnItem dc = sgdefine.DefineColumns.Where(c => c.ColName == colNameExp.GetMemberInfo().Name).FirstOrDefault();
+            SourceGridDefineColumnItem dc = sgdefine.DefineColumns.Where(c => c.ColName == colNameExp.GetMemberInfo().Name 
+            && c.BelongingObjectType==typeof(T)).FirstOrDefault();
             if (dc == null)
             {
                 return;
@@ -2772,11 +2643,16 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(row.Index, dc.ColIndex));
                     var currentObj = sgdefine.grid.Rows[row.Index].RowData;
-
-                    if (TargetValue != null && TargetValue.IsNotEmptyOrNull() && !dc.IsFKRelationColumn)
+                    //设置为可以编辑
+                    SetRowEditable(dc.ParentGridDefine.grid, new int[] { row .Index}, dc.ParentGridDefine);
+                    if (TargetValue != null && TargetValue.IsNotEmptyOrNull() )
                     {
                         currentObj.SetPropertyValue(colName, TargetValue);
                         sgdefine.grid[row.Index, dc.ColIndex].Value = TargetValue;
+                        if (dc.IsFKRelationColumn)
+                        {
+                            processDefaultContext.DisplayText = ShowFKColumnText(dc, TargetValue, sgdefine);
+                        }
                         switch (dc.CustomFormat)
                         {
                             case CustomFormatType.DefaultFormat:

@@ -127,56 +127,64 @@ namespace RUINORERP.UI.BaseForm
         [MustOverride]
         protected async virtual void Query()
         {
-            //if (QueryHandler != null)
-            //{
-            //    OnQuery()
-            //}
-            if (ValidationHelper.hasValidationErrors(this.Controls))
-                return;
-            BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
-
-            //既然前台指定的查询哪些字段，到时可以配置。这里应该是 除软件删除外的。其他字段不需要
-
-            // List<string> queryConditions = new List<string>();
-
-            List<M> list = new List<M>();
-
-            //提取指定的列名，即条件集合
-            // queryConditions = new List<string>(QueryFilter.QueryFields.Select(t => t.FieldName).ToList());
-            int PageNum = 1;
-            int PageSize = int.Parse(txtMaxRow.Text);
-            if (QueryFilter.FilterLimitExpressions == null)
+            using (StatusBusy busy = new StatusBusy("系统正在查询 请稍候"))
             {
-                QueryFilter.FilterLimitExpressions = new List<LambdaExpression>();
+                #region
+                //if (QueryHandler != null)
+                //{
+                //    OnQuery()
+                //}
+                if (ValidationHelper.hasValidationErrors(this.Controls))
+                    return;
+                BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
+
+                //既然前台指定的查询哪些字段，到时可以配置。这里应该是 除软件删除外的。其他字段不需要
+
+                // List<string> queryConditions = new List<string>();
+
+                List<M> list = new List<M>();
+
+                //提取指定的列名，即条件集合
+                // queryConditions = new List<string>(QueryFilter.QueryFields.Select(t => t.FieldName).ToList());
+                int PageNum = 1;
+                int PageSize = int.Parse(txtMaxRow.Text);
+                if (QueryFilter.FilterLimitExpressions == null)
+                {
+                    QueryFilter.FilterLimitExpressions = new List<LambdaExpression>();
+                }
+                QueryFilter.FilterLimitExpressions.Add(LimitQueryConditions);
+                //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, LimitQueryConditions, QueryDto, PageNum, PageSize) as List<M>;
+                list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryFilter, QueryDto, PageNum, PageSize) as List<M>;
+
+
+                _UCMasterQuery.bindingSourceMaster.DataSource = list.ToBindingSortCollection();
+                _UCMasterQuery.ShowSummaryCols();
+                if (_UCOutlookGridGroupAnalysis != null)
+                {
+                    _UCOutlookGridGroupAnalysis.FieldNameList = _UCMasterQuery.newSumDataGridViewMaster.FieldNameList;
+                    _UCOutlookGridGroupAnalysis.bindingSourceOutlook.DataSource = list;
+                    //控制列的显示
+                    _UCOutlookGridGroupAnalysis.ColumnDisplays = _UCMasterQuery.newSumDataGridViewMaster.ColumnDisplays;
+                    _UCOutlookGridGroupAnalysis.OnLoadData += _UCBillOutlookGridAnalysis_OnLoadData;
+                    _UCOutlookGridGroupAnalysis.LoadDataToGrid<M>(list);
+
+                }
+
+                //这里可以重构掉 用属性事件驱动
+
+                /*
+                     customersDataGridView.Columns["CustomerID"].Visible = false;
+                    customersDataGridView.Columns["ContactName"].DisplayIndex = 0;
+    customersDataGridView.Columns["ContactTitle"].DisplayIndex = 1;
+    customersDataGridView.Columns["City"].DisplayIndex = 2;
+    customersDataGridView.Columns["Country"].DisplayIndex = 3;
+    customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
+                 */
+
+
+                #endregion
+
             }
-            QueryFilter.FilterLimitExpressions.Add(LimitQueryConditions);
-            //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, LimitQueryConditions, QueryDto, PageNum, PageSize) as List<M>;
-            list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryFilter, QueryDto, PageNum, PageSize) as List<M>;
-
-
-            _UCMasterQuery.bindingSourceMaster.DataSource = list.ToBindingSortCollection();
-            _UCMasterQuery.ShowSummaryCols();
-            if (_UCOutlookGridGroupAnalysis != null)
-            {
-                _UCOutlookGridGroupAnalysis.FieldNameList = _UCMasterQuery.newSumDataGridViewMaster.FieldNameList;
-                _UCOutlookGridGroupAnalysis.bindingSourceOutlook.DataSource = list;
-                //控制列的显示
-                _UCOutlookGridGroupAnalysis.ColumnDisplays = _UCMasterQuery.newSumDataGridViewMaster.ColumnDisplays;
-                _UCOutlookGridGroupAnalysis.OnLoadData += _UCBillOutlookGridAnalysis_OnLoadData;
-                _UCOutlookGridGroupAnalysis.LoadDataToGrid<M>(list);
-
-            }
-
-            //这里可以重构掉 用属性事件驱动
-
-            /*
-                 customersDataGridView.Columns["CustomerID"].Visible = false;
-                customersDataGridView.Columns["ContactName"].DisplayIndex = 0;
-customersDataGridView.Columns["ContactTitle"].DisplayIndex = 1;
-customersDataGridView.Columns["City"].DisplayIndex = 2;
-customersDataGridView.Columns["Country"].DisplayIndex = 3;
-customersDataGridView.Columns["CompanyName"].DisplayIndex = 4;
-             */
 
 
 

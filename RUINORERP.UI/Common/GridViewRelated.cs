@@ -510,6 +510,24 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+            if (tableName == typeof(tb_ProdBorrowing).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdBorrowing>()
+                    .Includes(c => c.tb_ProdBorrowingDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.BorrowID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.BorrowNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+            if (tableName == typeof(tb_ProdReturning).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdReturning>()
+                    .Includes(c => c.tb_ProdReturningDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.ReturnID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.BorrowNO == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
 
             if (tableName == typeof(tb_ProdMerge).Name)
             {

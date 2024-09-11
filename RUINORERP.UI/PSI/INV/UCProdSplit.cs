@@ -223,9 +223,18 @@ namespace RUINORERP.UI.PSI.INV
                     }
                 }
 
-                if (s2.PropertyName == entity.GetPropertyName<tb_ProdSplit>(c => c.Location_ID))
+                if (s2.PropertyName == entity.GetPropertyName<tb_ProdMerge>(c => c.Location_ID))
                 {
-
+                    if (EditEntity.Location_ID > 0)
+                    {
+                        //明细仓库优先来自于主表，可以手动修改。
+                        listCols.SetCol_DefaultValue<tb_ProdSplitDetail>(c => c.Location_ID, EditEntity.Location_ID);
+                        if (entity.tb_ProdSplitDetails != null)
+                        {
+                            entity.tb_ProdSplitDetails.ForEach(c => c.Location_ID = EditEntity.Location_ID);
+                            sgh.SetCellValue<tb_ProdSplitDetail>(sgd, colNameExp => colNameExp.Location_ID, EditEntity.Location_ID);
+                        }
+                    }
                 }
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
@@ -309,7 +318,7 @@ namespace RUINORERP.UI.PSI.INV
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
-
+        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             // list = dc.Query();
@@ -321,7 +330,7 @@ namespace RUINORERP.UI.PSI.INV
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 
-            List<SourceGridDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdSplitDetail, InventoryInfo>(c => c.ProdDetailID, true);
+             listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdSplitDetail, InventoryInfo>(c => c.ProdDetailID, true);
 
             listCols.SetCol_NeverVisible<tb_ProdSplitDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdSplitDetail>(c => c.SplitSub_ID);

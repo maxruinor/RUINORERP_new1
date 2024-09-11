@@ -38,6 +38,7 @@ using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using Netron.GraphLib;
+using Krypton.Toolkit;
 
 
 namespace RUINORERP.UI.PSI.INV
@@ -262,6 +263,21 @@ namespace RUINORERP.UI.PSI.INV
 
 
                     }
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_ProdMerge>(c => c.Location_ID))
+                    {
+                        if (EditEntity.Location_ID > 0)
+                        {
+
+                            //明细仓库优先来自于主表，可以手动修改。
+                            listCols.SetCol_DefaultValue<tb_ProdMergeDetail>(c => c.Location_ID, EditEntity.Location_ID);
+                            if (entity.tb_ProdMergeDetails != null)
+                            {
+                                entity.tb_ProdMergeDetails.ForEach(c => c.Location_ID = EditEntity.Location_ID);
+                                sgh.SetCellValue<tb_ProdMergeDetail>(sgd, colNameExp => colNameExp.Location_ID, EditEntity.Location_ID);
+                            }
+                        }
+                    }
                 }
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
@@ -282,9 +298,11 @@ namespace RUINORERP.UI.PSI.INV
                     toolStripbtnPrint.Enabled = false;
                 }
             };
+        }
 
-
-
+        private void Bsa_Click(object sender, EventArgs e)
+        {
+            SelectLocationTips();
         }
 
         SourceGridDefine sgd = null;
@@ -292,7 +310,7 @@ namespace RUINORERP.UI.PSI.INV
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
-
+        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             // list = dc.Query();
@@ -305,8 +323,8 @@ namespace RUINORERP.UI.PSI.INV
             grid1.Selection.EnableMultiSelection = false;
 
 
-            List<SourceGridDefineColumnItem> listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdMergeDetail, InventoryInfo>(c => c.ProdDetailID, true);
-            
+            listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdMergeDetail, InventoryInfo>(c => c.ProdDetailID, true);
+
             listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.MergeSub_ID);
             listCols.SetCol_NeverVisible<tb_ProdMergeDetail>(c => c.MergeID);

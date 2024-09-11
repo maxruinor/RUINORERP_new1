@@ -13,8 +13,10 @@ namespace RUINORERP.UI
         public StatusBusy(string statusText)
         {
             st.Start();
-            _oldStatus = MainForm.Instance.SystemOperatorState.Text;
-            MainForm.Instance.SystemOperatorState.Text = statusText + "...";
+            //            _oldStatus = MainForm.Instance.SystemOperatorState.Text;
+            _oldStatus = MainForm.Instance.lblStatusGlobal.Text;
+            //MainForm.Instance.SystemOperatorState.Text = statusText + "...";
+            MainForm.Instance.lblStatusGlobal.Text= statusText + "...";
             _oldCursor = MainForm.Instance.Cursor;
             MainForm.Instance.Cursor = Cursors.WaitCursor;
             Application.DoEvents();
@@ -30,8 +32,10 @@ namespace RUINORERP.UI
                 if (disposing)
                 {
                     st.Stop();
-                    MainForm.Instance.SystemOperatorState.Text = "加载完成,用时:" + st.Elapsed.Add(TimeSpan.FromSeconds(2)).TotalMinutes.ToString("0.000000") + "秒";
-                    MainForm.Instance.SystemOperatorState.Text = _oldStatus;
+                    //MainForm.Instance.SystemOperatorState.Text = "加载完成,用时:" + st.Elapsed.Add(TimeSpan.FromSeconds(2)).TotalMinutes.ToString("0.000000") + "秒";
+                    //MainForm.Instance.SystemOperatorState.Text = _oldStatus;
+                    MainForm.Instance.lblStatusGlobal.Text = "加载完成,用时:" + st.Elapsed.Add(TimeSpan.FromSeconds(2)).TotalMinutes.ToString("0.000000") + "秒";
+                    MainForm.Instance.lblStatusGlobal.Text = _oldStatus;
                     MainForm.Instance.Cursor = Cursors.Arrow;
                     MainForm.Instance.Refresh();
                 }

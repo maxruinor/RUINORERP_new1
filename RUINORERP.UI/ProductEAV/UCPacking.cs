@@ -570,7 +570,6 @@ namespace RUINORERP.UI.ProductEAV
             }
             try
             {
-                //ReflectionHelper.SetPropertyValue(rowObj, "RequirementQty", RecommendQty);
                 sgh2.SetCellValue(sgd2.GetColumnDefineInfo<tb_BoxRules>(c => c.BoxRuleName), Position, rowObj, false, true);
             }
             catch (Exception ex)

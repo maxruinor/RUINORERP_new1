@@ -113,7 +113,7 @@ namespace RUINORERP.Model
         /// 预交易总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "PreTotalAmount",ColDesc = "预交易总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PreTotalAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "预交易总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PreTotalAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "预交易总金额" )]
         public decimal? PreTotalAmount
         { 
             get{return _PreTotalAmount;}
@@ -127,7 +127,7 @@ namespace RUINORERP.Model
         /// 已预交易总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "PrePaidTotalAmount",ColDesc = "已预交易总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrePaidTotalAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "已预交易总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrePaidTotalAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "已预交易总金额" )]
         public decimal? PrePaidTotalAmount
         { 
             get{return _PrePaidTotalAmount;}

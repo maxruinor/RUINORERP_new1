@@ -32,7 +32,6 @@
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripBtnAdvQuery = new System.Windows.Forms.ToolStripButton();
             this.toolStripSplitButtonPrint = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
@@ -54,7 +53,6 @@
             this.BaseToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButton4,
             this.toolStripSeparator2,
-            this.toolStripBtnAdvQuery,
             this.toolStripSplitButtonPrint,
             this.toolStripSeparator1,
             this.toolStripBtnExport,
@@ -83,15 +81,6 @@
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
-            // toolStripBtnAdvQuery
-            // 
-            this.toolStripBtnAdvQuery.Image = ((System.Drawing.Image)(resources.GetObject("toolStripBtnAdvQuery.Image")));
-            this.toolStripBtnAdvQuery.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripBtnAdvQuery.Name = "toolStripBtnAdvQuery";
-            this.toolStripBtnAdvQuery.Size = new System.Drawing.Size(79, 22);
-            this.toolStripBtnAdvQuery.Text = "高级查询";
-            this.toolStripBtnAdvQuery.Visible = false;
-            // 
             // toolStripSplitButtonPrint
             // 
             this.toolStripSplitButtonPrint.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -106,13 +95,13 @@
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem1.Text = "预览";
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem2.Text = "设计";
             // 
             // toolStripSeparator1
@@ -197,7 +186,6 @@
         #endregion
         private System.Windows.Forms.ToolStripButton toolStripButton4;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        internal System.Windows.Forms.ToolStripButton toolStripBtnAdvQuery;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripBtnExport;
         private System.Windows.Forms.ToolStripButton toolStripButton12;

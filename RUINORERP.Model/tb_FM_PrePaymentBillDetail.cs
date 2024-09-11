@@ -199,7 +199,7 @@ namespace RUINORERP.Model
         /// 金额
         /// </summary>
         [AdvQueryAttribute(ColName = "Amount",ColDesc = "金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Amount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Amount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "金额" )]
         public decimal? Amount
         { 
             get{return _Amount;}
@@ -213,7 +213,7 @@ namespace RUINORERP.Model
         /// 已转金额
         /// </summary>
         [AdvQueryAttribute(ColName = "PrepaidAmount",ColDesc = "已转金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrepaidAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "已转金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrepaidAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "已转金额" )]
         public decimal? PrepaidAmount
         { 
             get{return _PrepaidAmount;}

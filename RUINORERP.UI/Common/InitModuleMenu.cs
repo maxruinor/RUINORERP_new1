@@ -82,7 +82,7 @@ namespace RUINORERP.UI.Common
                 menuInfoparent.CaptionCN = item.Name;
                 menuInfoparent.MenuType = "导航菜单";
                 menuInfoparent.Parent_id = 0;
-     
+
                 menuInfoparent.Created_at = System.DateTime.Now;
                 tb_MenuInfo MenuInfo = mc.IsExistEntity(e => e.MenuName == menuInfoparent.MenuName && e.Parent_id == 0);
                 if (MenuInfo == null)
@@ -248,6 +248,43 @@ namespace RUINORERP.UI.Common
                                 //{
                                 //    btnInfo = ExistBtnInfo;
                                 //}
+                            }
+                        }
+
+                        else if (btnItem is ToolStripSplitButton btnSplit)
+                        {
+                            //按钮名至少大于1
+                            if (btnSplit.Text.Trim().Length > 1)
+                            {
+                                //添加
+                                tb_ButtonInfo btnInfo = new tb_ButtonInfo();
+                                btnInfo.BtnName = btnSplit.Name;
+                                btnInfo.BtnText = btnSplit.Text;
+                                btnInfo.FormName = info.ClassName;
+                                btnInfo.ClassPath = info.ClassPath;
+                                btnInfo.MenuID = menuInfo.MenuID;
+                                btnInfo.IsEnabled = true;
+                                tb_ButtonInfo ExistBtnInfo = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnSplit.Text && it.MenuID == menuInfo.MenuID);
+                                if (ExistBtnInfo == null)
+                                {
+                                    tb_ButtonInfos.Add(btnInfo);
+                                }
+                                foreach (ToolStripItem tsi in btnSplit.DropDownItems)
+                                {
+                                    //添加
+                                    tb_ButtonInfo btnInfoSub = new tb_ButtonInfo();
+                                    btnInfoSub.BtnName = tsi.Name;
+                                    btnInfoSub.BtnText = tsi.Text;
+                                    btnInfoSub.FormName = info.ClassName;
+                                    btnInfoSub.ClassPath = info.ClassPath;
+                                    btnInfoSub.MenuID = menuInfo.MenuID;
+                                    btnInfoSub.IsEnabled = true;
+                                    tb_ButtonInfo ExistBtnInfoSub = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
+                                    if (ExistBtnInfoSub == null)
+                                    {
+                                        tb_ButtonInfos.Add(btnInfoSub);
+                                    }
+                                }
                             }
                         }
                         else

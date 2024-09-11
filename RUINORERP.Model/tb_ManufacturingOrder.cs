@@ -487,7 +487,7 @@ namespace RUINORERP.Model
         /// 人工费
         /// </summary>
         [AdvQueryAttribute(ColName = "LaborCost",ColDesc = "人工费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LaborCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "人工费" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LaborCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "人工费" )]
         public decimal LaborCost
         { 
             get{return _LaborCost;}
@@ -543,7 +543,7 @@ namespace RUINORERP.Model
         /// 托工费用
         /// </summary>
         [AdvQueryAttribute(ColName = "ExternalProduceFee",ColDesc = "托工费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ExternalProduceFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "托工费用" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ExternalProduceFee" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "托工费用" )]
         public decimal ExternalProduceFee
         { 
             get{return _ExternalProduceFee;}

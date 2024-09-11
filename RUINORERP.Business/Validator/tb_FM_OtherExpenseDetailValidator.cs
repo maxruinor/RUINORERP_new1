@@ -42,7 +42,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.subject_id).Must(CheckForeignKeyValueCanNull).WithMessage("会计科目:下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.subject_id).NotEmpty().When(x => x.subject_id.HasValue);
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
- RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Notes).MaximumLength(100).WithMessage("备注:中文字符不能超过最大长度,100.");
  RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
  RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
  RuleFor(x => x.UntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");

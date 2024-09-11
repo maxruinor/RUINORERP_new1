@@ -155,7 +155,7 @@ namespace RUINORERP.Model
         /// 载账总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CarryingTotalAmount",ColDesc = "载账总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CarryingTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "载账总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CarryingTotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "载账总成本" )]
         public decimal CarryingTotalAmount
         { 
             get{return _CarryingTotalAmount;}
@@ -281,7 +281,7 @@ namespace RUINORERP.Model
         /// 差异总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "DiffTotalAmount",ColDesc = "差异总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiffTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "差异总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiffTotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "差异总金额" )]
         public decimal DiffTotalAmount
         { 
             get{return _DiffTotalAmount;}
@@ -309,7 +309,7 @@ namespace RUINORERP.Model
         /// 盘点总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CheckTotalAmount",ColDesc = "盘点总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CheckTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "盘点总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CheckTotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "盘点总成本" )]
         public decimal CheckTotalAmount
         { 
             get{return _CheckTotalAmount;}

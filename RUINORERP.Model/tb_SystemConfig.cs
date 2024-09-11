@@ -238,7 +238,7 @@ namespace RUINORERP.Model
         /// 自动审核销售订单金额
         /// </summary>
         [AdvQueryAttribute(ColName = "AutoApprovedSaleOrderAmount",ColDesc = "自动审核销售订单金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedSaleOrderAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "自动审核销售订单金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedSaleOrderAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "自动审核销售订单金额" )]
         public decimal AutoApprovedSaleOrderAmount
         { 
             get{return _AutoApprovedSaleOrderAmount;}
@@ -252,7 +252,7 @@ namespace RUINORERP.Model
         /// 自动审核采购订单金额
         /// </summary>
         [AdvQueryAttribute(ColName = "AutoApprovedPurOrderAmount",ColDesc = "自动审核采购订单金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedPurOrderAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "自动审核采购订单金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedPurOrderAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "自动审核采购订单金额" )]
         public decimal AutoApprovedPurOrderAmount
         { 
             get{return _AutoApprovedPurOrderAmount;}

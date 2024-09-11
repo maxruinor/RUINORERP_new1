@@ -280,7 +280,7 @@ namespace RUINORERP.Model
         /// 工资
         /// </summary>
         [AdvQueryAttribute(ColName = "salary",ColDesc = "工资")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "salary" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "工资" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "salary" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "工资" )]
         public decimal? salary
         { 
             get{return _salary;}

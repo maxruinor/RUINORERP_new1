@@ -354,7 +354,15 @@ namespace DevAge.Windows.Forms
 
         void txtBox_TextChanged(object sender, EventArgs e)
         {
-            mValue = null;
+            if (mValue!= null && mValue.GetType().Name == "Byte[]")
+            {
+                //ͼƬʱ
+            }
+            else
+            {
+                mValue = null;
+            }
+
         }
     }
 }

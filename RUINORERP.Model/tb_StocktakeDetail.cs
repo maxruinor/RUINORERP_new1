@@ -113,7 +113,7 @@ namespace RUINORERP.Model
         /// 成本
         /// </summary>
         [AdvQueryAttribute(ColName = "Cost",ColDesc = "成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本" )]
         public decimal Cost
         { 
             get{return _Cost;}
@@ -141,7 +141,7 @@ namespace RUINORERP.Model
         /// 载账小计
         /// </summary>
         [AdvQueryAttribute(ColName = "CarryingSubtotalAmount",ColDesc = "载账小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CarryingSubtotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "载账小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CarryingSubtotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "载账小计" )]
         public decimal CarryingSubtotalAmount
         { 
             get{return _CarryingSubtotalAmount;}
@@ -169,7 +169,7 @@ namespace RUINORERP.Model
         /// 差异小计
         /// </summary>
         [AdvQueryAttribute(ColName = "DiffSubtotalAmount",ColDesc = "差异小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiffSubtotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "差异小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiffSubtotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "差异小计" )]
         public decimal DiffSubtotalAmount
         { 
             get{return _DiffSubtotalAmount;}
@@ -197,7 +197,7 @@ namespace RUINORERP.Model
         /// 盘点小计
         /// </summary>
         [AdvQueryAttribute(ColName = "CheckSubtotalAmount",ColDesc = "盘点小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CheckSubtotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "盘点小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CheckSubtotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "盘点小计" )]
         public decimal CheckSubtotalAmount
         { 
             get{return _CheckSubtotalAmount;}

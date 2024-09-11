@@ -30,14 +30,14 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Employee_ID).Must(CheckForeignKeyValue).WithMessage("制单人:下拉选择值不正确。");
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
 //有默认值
- RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Notes).MaximumLength(500).WithMessage("备注:中文字符不能超过最大长度,500.");
  RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
  RuleFor(x => x.TaxRate).PrecisionScale(8,2,true).WithMessage("税率:小数位不能超过2。");
  RuleFor(x => x.UntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
- RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.ApprovalOpinions).MaximumLength(500).WithMessage("审批意见:不能超过最大长度,500.");
+ RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.ApprovalOpinions).MaximumLength(500).WithMessage("审批意见:中文字符不能超过最大长度,500.");
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 //***** 
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");

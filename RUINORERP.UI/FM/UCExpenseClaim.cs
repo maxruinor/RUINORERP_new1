@@ -127,7 +127,7 @@ namespace RUINORERP.UI.FM
             {
                 sgh.LoadItemDataToGrid<tb_FM_ExpenseClaimDetail>(grid1, sgd, new List<tb_FM_ExpenseClaimDetail>(), c => c.ClaimSubID);
             }
-
+           
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {
@@ -137,6 +137,7 @@ namespace RUINORERP.UI.FM
                 {
                     entity.ActionStatus = ActionStatus.修改;
                     base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    chkClaimEmployee.Enabled = true;
                 }
 
                 //显示 打印状态 如果是草稿状态 不显示打印

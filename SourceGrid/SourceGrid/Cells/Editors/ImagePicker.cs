@@ -169,12 +169,9 @@ namespace SourceGrid.Cells.Editors
             if (PickerImage != null)
             {
                 DevAge.Windows.Forms.frmPictureViewer frm = new DevAge.Windows.Forms.frmPictureViewer();
-
-
                 frm.PictureBoxViewer.Image = PickerImage;
                 frm.ShowDialog();
             }
-
         }
         #endregion
 
@@ -194,9 +191,38 @@ namespace SourceGrid.Cells.Editors
             editor.TextBox.AllowDrop = true;
             editor.TextBox.DragDrop += Editor_DragDrop;
             editor.TextBox.DragEnter += Editor_DragEnter;
+            editor.TextBox.KeyDown += Editor_KeyDown;
             return editor;
         }
 
+        private void Editor_KeyDown(object sender, KeyEventArgs e)
+        {
+            // 检查是否按下了 Ctrl+V
+            if ((e.Control && e.KeyCode == Keys.V) || (e.Shift && e.KeyCode == Keys.Insert))
+            {
+                // 检查剪贴板中是否有图像
+                if (Clipboard.ContainsImage())
+                {
+                    // 获取图像
+                    System.Drawing.Image image = Clipboard.GetImage();
+                    if (image != null)
+                    {
+                        // 处理图像，例如保存到文件
+                        Control.Value = GetByteImage(image);// GetImage(image);
+                    }
+                }
+                //else if (Clipboard.ContainsText())
+                //{
+
+                //    // 获取文本
+                //    string text = Clipboard.GetText();
+                //    // 将文本插入到 TextBox 中
+                //    textBox1.SelectedText = text;
+                //}
+            }
+        }
+
+    
         private void Editor_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -220,7 +246,8 @@ namespace SourceGrid.Cells.Editors
                     if (filePath.ToLower().EndsWith(".png") || filePath.ToLower().EndsWith(".jpg") || filePath.ToLower().EndsWith(".jpeg") || filePath.ToLower().EndsWith(".bmp"))
                     {
                         // pictureBox1.Image = SetImageToEntity(filePath);
-                        Control.Value = SetImageToEntity(filePath);
+                        //Control.Value = GetImage(filePath);
+                        Control.Value = GetByteImage(System.Drawing.Image.FromFile(filePath));
                     }
                     else
                     {
@@ -229,9 +256,52 @@ namespace SourceGrid.Cells.Editors
                 }
             }
         }
-        private System.Drawing.Image SetImageToEntity(string pathName)
+        private System.Drawing.Image GetImage(string pathName)
         {
             System.Drawing.Image img = System.Drawing.Image.FromFile(pathName);
+            return GetImage(img);
+        }
+        private System.Drawing.Image GetImage(System.Drawing.Image img)
+        {
+            System.Drawing.Image NewImg = null;
+            // 创建一个内存流
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                // 将图像保存到内存流中，指定图像格式
+                img.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                // 将内存流中的字节数组转换为byte[]
+                byte[] buffByte = memoryStream.ToArray();
+                // 判断图片大小是否超过 500KB
+                if (buffByte.Length > 500 * 1024)
+                {
+                    // 压缩图片
+                    ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
+                    EncoderParameters encoderParams = new EncoderParameters(1);
+                    encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
+                    img = (System.Drawing.Image)new System.Drawing.Bitmap(img, new System.Drawing.Size(800, 600));
+                    img.Save("compressed.jpg", jpegCodec, encoderParams);
+
+                    // 重新读取压缩后的图片
+                    NewImg = System.Drawing.Image.FromFile("compressed.jpg");
+                    MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // 将压缩后的图片转换为 byte[] 数组
+                    // byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
+
+                    // 在这里将 compressedImageBytes 保存到数据库中
+                    //_EditEntity.Images = compressedImageBytes;
+                }
+                else
+                {
+                    NewImg = img;
+                }
+                // 此时buffByte包含了图像的字节数据
+                // 你可以对buffByte进行进一步的操作，比如保存到文件或发送到网络
+
+                // 释放Image资源
+                img.Dispose();
+            }
+            /*
             //将图像读入到字节数组
             System.IO.FileStream fs = new System.IO.FileStream(pathName, System.IO.FileMode.Open, System.IO.FileAccess.Read);
             byte[] buffByte = new byte[fs.Length];
@@ -260,9 +330,10 @@ namespace SourceGrid.Cells.Editors
             else
             {
                 // _EditEntity.Images = buffByte;
-            }
-            return img;
+            }*/
+            return NewImg;
         }
+
         /// <summary>
         /// Gets the control used for editing the cell.
         /// </summary>
@@ -276,7 +347,97 @@ namespace SourceGrid.Cells.Editors
 
 
         #endregion
+        public override object GetEditedValue()
+        {
+            object val = Control.Value;
+            if (val == null)
+                return null;
+            else if (val is System.Drawing.Image)
+            {
+                System.Drawing.Image img = val as System.Drawing.Image;
 
+                // 将图像转换为字节数组
+                byte[] buffByte = GetByteImage(img);
+
+                // 判断图片大小是否超过 500KB
+                if (buffByte.Length > 500 * 1024)
+                {
+                    // 压缩图片
+                    ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
+                    EncoderParameters encoderParams = new EncoderParameters(1);
+                    encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 50L);
+
+                    using (var ms = new MemoryStream())
+                    {
+                        img.Save(ms, jpegCodec, encoderParams);
+                        byte[] compressedImageBytes = ms.ToArray();
+
+                        // 显示压缩提示
+                        MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        // 返回压缩后的字节数组
+                        return compressedImageBytes;
+                    }
+                }
+                else
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        img.Save(ms, img.RawFormat);
+                        return ms.ToArray();
+                    }
+                }
+            }
+            else if (val is byte[])
+            {
+                byte[] bytes = val as byte[];
+                using (MemoryStream ms = new MemoryStream(bytes))
+                {
+                    PickerImage = System.Drawing.Image.FromStream(ms, true);
+                }
+                return val;
+            }
+            else
+                throw new InvalidOperationException("编辑值无效，应为字节[]或图像");
+        }
+
+        //private byte[] GetByteImage(System.Drawing.Image image)
+        //{
+        //    using (MemoryStream ms = new MemoryStream())
+        //    {
+        //        image.Save(ms, image.RawFormat);
+        //        return ms.ToArray();
+        //    }
+        //}
+        public byte[] GetByteImage(System.Drawing.Image img)
+        {
+            byte[] bt = null;
+            if (!img.Equals(null))
+            {
+                using (MemoryStream mostream = new MemoryStream())
+                {
+                    System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(img);
+                    bmp.Save(mostream, System.Drawing.Imaging.ImageFormat.Bmp);//将图像以指定的格式存入缓存内存流
+                    bt = new byte[mostream.Length];
+                    mostream.Position = 0;//设置留的初始位置
+                    mostream.Read(bt, 0, Convert.ToInt32(bt.Length));
+                }
+            }
+            return bt;
+        }
+        private ImageCodecInfo GetEncoderInfo(ImageFormat format)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
+        }
+        /*
         public override object GetEditedValue()
         {
             object val = Control.Value;
@@ -342,36 +503,10 @@ namespace SourceGrid.Cells.Editors
             else
                 throw new SourceGridException("Invalid edited value, expected byte[] or Image");
         }
+        */
 
-        public byte[] GetByteImage(System.Drawing.Image img)
-        {
-            byte[] bt = null;
-            if (!img.Equals(null))
-            {
-                using (MemoryStream mostream = new MemoryStream())
-                {
-                    System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(img);
-                    bmp.Save(mostream, System.Drawing.Imaging.ImageFormat.Bmp);//将图像以指定的格式存入缓存内存流
-                    bt = new byte[mostream.Length];
-                    mostream.Position = 0;//设置留的初始位置
-                    mostream.Read(bt, 0, Convert.ToInt32(bt.Length));
-                }
-            }
-            return bt;
-        }
 
-        private ImageCodecInfo GetEncoderInfo(ImageFormat format)
-        {
-            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
-            foreach (ImageCodecInfo codec in codecs)
-            {
-                if (codec.FormatID == format.Guid)
-                {
-                    return codec;
-                }
-            }
-            return null;
-        }
+
 
 
         public override void SetEditValue(object editValue)

@@ -513,29 +513,7 @@ namespace RUINORERP.UI.BaseForm
                     break;
             }
 
-            /*
-            if (p_Text == "新增" || p_Text == "F9") Add();
-            if (p_Text == "修改" || p_Text == "F10") Modify();
-            if (p_Text == "删除" || p_Text == "Del") Delete();
-            if (p_Text == "保存" || p_Text == "F12")
-            {
-                Save();
-                //if (ReceiptCheck() == false) { return; }
-                //ReceiptSave();
-            }
-            //if (p_Text == "放弃" || p_Text == "Escape") ReceiptCancel();
-            //if (p_Text == "预览" || p_Text == "F6") ReceiptPreview();
-            // if (p_Text == "高级查询") AdvancedQuery();
-            // if (p_Text == "刷新") ReceiptRefresh();
-            if (p_Text == "查询") Query();
-            //if (p_Text == "首页" || p_Text == "Home") FirstPage();
-            //if (p_Text == "上页" || p_Text == "PageUp") UpPage();
-            //if (p_Text == "下页" || p_Text == "PageDown") DownPage();
-            //if (p_Text == "末页" || p_Text == "End") LastPage(); 导出Excel
-            //if (p_Text == "导出Excel") base.OutFastOfDataGridView(this.dataGridView1);
-
-            if (p_Text == "关闭" || p_Text == "Esc" || p_Text == "退出") CloseTheForm();
-            */
+            
         }
 
 

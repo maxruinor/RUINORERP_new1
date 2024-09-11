@@ -227,7 +227,7 @@ namespace RUINORERP.Model
         /// 物料成本 
         /// </summary>
         [AdvQueryAttribute(ColName = "MaterialCost",ColDesc = "物料成本 ")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "MaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "物料成本 " )]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "MaterialCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "物料成本 " )]
         public decimal MaterialCost
         { 
             get{return _MaterialCost;}

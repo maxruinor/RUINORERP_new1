@@ -384,7 +384,7 @@ namespace RUINORERP.Model
         /// 总分摊成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalApportionedCost",ColDesc = "总分摊成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalApportionedCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总分摊成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalApportionedCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总分摊成本" )]
         public decimal TotalApportionedCost
         { 
             get{return _TotalApportionedCost;}
@@ -398,7 +398,7 @@ namespace RUINORERP.Model
         /// 总托工费用
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalTollFees",ColDesc = "总托工费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTollFees" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总托工费用" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTollFees" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总托工费用" )]
         public decimal TotalTollFees
         { 
             get{return _TotalTollFees;}
@@ -412,7 +412,7 @@ namespace RUINORERP.Model
         /// 人工成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalLaborCost",ColDesc = "人工成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLaborCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "人工成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLaborCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "人工成本" )]
         public decimal TotalLaborCost
         { 
             get{return _TotalLaborCost;}
@@ -426,7 +426,7 @@ namespace RUINORERP.Model
         /// 生产总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalProductionCost",ColDesc = "生产总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalProductionCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "生产总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalProductionCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "生产总成本" )]
         public decimal TotalProductionCost
         { 
             get{return _TotalProductionCost;}
@@ -440,7 +440,7 @@ namespace RUINORERP.Model
         /// 总材料成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalMaterialCost",ColDesc = "总材料成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalMaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总材料成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalMaterialCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总材料成本" )]
         public decimal TotalMaterialCost
         { 
             get{return _TotalMaterialCost;}

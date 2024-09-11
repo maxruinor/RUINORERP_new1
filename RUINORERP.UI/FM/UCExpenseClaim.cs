@@ -37,6 +37,7 @@ using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using Krypton.Toolkit;
 using NPOI.SS.Formula.Functions;
+using Netron.GraphLib;
 
 namespace RUINORERP.UI.FM
 {
@@ -72,8 +73,10 @@ namespace RUINORERP.UI.FM
         {
             if (entity == null)
             {
+                chkClaimEmployee.Enabled = false;
                 return;
             }
+            
             EditEntity = entity;
             if (entity.ClaimMainID > 0)
             {
@@ -85,6 +88,7 @@ namespace RUINORERP.UI.FM
             else
             {
                 entity.ActionStatus = ActionStatus.新增;
+                chkClaimEmployee.Enabled = true;
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                 {
@@ -161,6 +165,7 @@ namespace RUINORERP.UI.FM
         //设计关联列和目标列
         tb_FM_OtherExpenseDetailController<tb_FM_ExpenseClaimDetail> dc = Startup.GetFromFac<tb_FM_OtherExpenseDetailController<tb_FM_ExpenseClaimDetail>>();
         List<tb_FM_ExpenseClaimDetail> list = new List<tb_FM_ExpenseClaimDetail>();
+        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             if (CurMenuInfo != null)
@@ -175,7 +180,7 @@ namespace RUINORERP.UI.FM
             grid1.Selection.EnableMultiSelection = false;
 
 
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+            listCols = new List<SourceGridDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<tb_FM_ExpenseClaimDetail>();
 
@@ -226,8 +231,16 @@ namespace RUINORERP.UI.FM
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ExpenseClaimDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
+            sgh.OnAddDataRow += Sgh_OnAddDataRow;
         }
 
+        private void Sgh_OnAddDataRow(object rowObj)
+        {
+            if (chkClaimEmployee.Checked)
+            {
+                sgh.SetCellValue<tb_FM_ExpenseClaimDetail>(sgd, c => c.Employee_ID, EditEntity.Employee_ID);
+            }
+        }
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
@@ -295,8 +308,8 @@ namespace RUINORERP.UI.FM
                 {
                     return false;
                 }
-              
-     
+
+
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
                 if (NeedValidated)
                 {
@@ -334,5 +347,12 @@ namespace RUINORERP.UI.FM
             return ae;
         }
 
+        private void chkClaimEmployee_CheckedChanged(object sender, EventArgs e)
+        {
+            //if (EditEntity != null && chkClaimEmployee.Checked)
+            //{
+            //    listCols.SetCol_DefaultValue<tb_FM_ExpenseClaimDetail>(c => c.Employee_ID, EditEntity.Employee_ID);
+            //}
+        }
     }
 }

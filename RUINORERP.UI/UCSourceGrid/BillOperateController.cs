@@ -47,6 +47,15 @@ namespace RUINORERP.UI.UCSourceGrid
             CurrGridDefine = _CurrentGridDefine;
         }
 
+        /// <summary>
+        /// 添加数据行时生成的事件  这里定义事件，还会在SourceGridHelper定义一下。用来事件传递。架构这样。暂时没有优化。
+        /// </summary>
+        public event AddDataRowDelegate OnAddDataRow;
+
+        public delegate void AddDataRowDelegate(object rowObj);
+
+
+
         //sgd 要提供当前操作的行 列 值
 
         public delegate void ValidateDataRowsDelegate(object rowObj);
@@ -698,6 +707,31 @@ namespace RUINORERP.UI.UCSourceGrid
             if (canEdit && CurrGridDefine.grid.Rows[sender.Position.Row].RowData == null)
             {
                 CurrGridDefine.grid.Rows[sender.Position.Row].RowData = CurrGridDefine.BindingSourceLines.AddNew();
+                if (OnAddDataRow != null)
+                {
+                    OnAddDataRow(CurrGridDefine.grid.Rows[sender.Position.Row].RowData);
+                }
+
+                /*
+                BillOperateController billController = new BillOperateController(define);
+                billController.OnValidateDataCell += (rowObj) =>
+                {
+
+                };
+
+                //目前认为是目标列才计算，并且 类型要为数字型
+                if (define[i].Summary || define[i].CustomFormat == CustomFormatType.PercentFormat)
+                {
+                    billController.OnCalculateColumnValue += (rowdata, CurrGridDefine, rowIndex) =>
+                    {
+                        if (rowdata != null && OnCalculateColumnValue != null)
+                        {
+                            OnCalculateColumnValue(rowdata, grid.Tag as SourceGridDefine, rowIndex);
+                        }
+                    };
+                }
+                */
+
                 //设置编辑时的行号 不要减-1  因为第一行是列头
                 CurrGridDefine.grid[sender.Position.Row, 0].Value = sender.Position.Row;
                 sh.SetRowEditable(CurrGridDefine.grid, new int[] { sender.Position.Row }, CurrGridDefine);

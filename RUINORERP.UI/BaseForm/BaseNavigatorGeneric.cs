@@ -397,6 +397,7 @@ namespace RUINORERP.UI.BaseForm
                     Print(RptMode.DESIGN);
                     break;
                 case MenuItemEnums.导出:
+                    UIExcelHelper.ExportExcel(_UCMasterQuery.newSumDataGridViewMaster);
                     break;
                 default:
                     break;

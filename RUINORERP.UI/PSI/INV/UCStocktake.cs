@@ -148,7 +148,8 @@ namespace RUINORERP.UI.PSI.INV
                     //设置一下默认的枚举
 
                     entity.CheckMode = (int)CheckMode.一般盘点;
-                    entity.Adjust_Type = (int)Adjust_Type.全部;
+                    entity.Adjust_Type = (int)Adjust_Type.全部; 
+          
 
                     if (entity.tb_StocktakeDetails != null && entity.tb_StocktakeDetails.Count > 0)
                     {
@@ -197,10 +198,9 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CheckNo, txtCheckNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CarryingTotalQty.ToString(), txtCarryingTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CarryingTotalAmount.ToString(), txtCarryingTotalAmount, BindDataType4TextBox.Money, true);
-            if (entity.Check_date == null)
-            {
-                entity.Check_date = System.DateTime.Now;
-            }
+           
+             
+           
             DataBindingHelper.BindData4DataTime<tb_Stocktake>(entity, t => t.Check_date, dtpcheck_date, false);
             DataBindingHelper.BindData4DataTime<tb_Stocktake>(entity, t => t.CarryingDate, dtpCarryingDate, false);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
@@ -236,6 +236,21 @@ namespace RUINORERP.UI.PSI.INV
                 {
                     entity.ActionStatus = ActionStatus.修改;
                     base.ToolBarEnabledControl(MenuItemEnums.修改);
+
+                    //if (s2.PropertyName == entity.GetPropertyName<tb_Stocktake>(c => c.Location_ID))
+                    //{
+                    //    if (EditEntity.Location_ID > 0)
+                    //    {
+
+                    //        //明细仓库优先来自于主表，可以手动修改。
+                    //        listCols.SetCol_DefaultValue<tb_Stocktake>(c => c.Location_ID, EditEntity.Location_ID);
+                    //        if (entity.tb_StocktakeDetails != null)
+                    //        {
+                    //            entity.tb_StocktakeDetails.ForEach(c => c.lo = EditEntity.Location_ID);
+                    //            sgh.SetCellValue<tb_ProdMergeDetail>(sgd, colNameExp => colNameExp.Location_ID, EditEntity.Location_ID);
+                    //        }
+                    //    }
+                    //}
                 }
 
                 //显示 打印状态 如果是草稿状态 不显示打印
@@ -265,6 +280,7 @@ namespace RUINORERP.UI.PSI.INV
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
+        List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
         private void UCStocktake_Load(object sender, EventArgs e)
         {
             grid1.Enter += Grid1_Enter;
@@ -285,7 +301,7 @@ namespace RUINORERP.UI.PSI.INV
 
 
 
-            List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
+             listCols = new List<SourceGridDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_StocktakeDetail>(c => c.ProdDetailID, true);
 

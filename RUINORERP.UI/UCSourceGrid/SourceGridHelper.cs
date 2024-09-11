@@ -52,6 +52,15 @@ namespace RUINORERP.UI.UCSourceGrid
     /// <typeparam name="T">明细表</typeparam>
     public class SourceGridHelper
     {
+
+        /// <summary>
+        /// 添加数据行时生成的事件  这里定义事件，还会在SourceGridHelper定义一下。用来事件传递。架构这样。暂时没有优化。
+        /// </summary>
+        public event AddDataRowDelegate OnAddDataRow;
+
+        public delegate void AddDataRowDelegate(object rowObj);
+
+
         public delegate void ValidateDataRowsDelegate(object rowObj);
         /// <summary>
         /// 验证行数据
@@ -419,7 +428,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     grid1.Rows[i].RowData = sgdefine.BindingSourceLines.List[i - 1];//表格是第一个从1开始，集合是从0开始
                 }
-          
+
                 //将行的数据设置到每个格子中显示出来
                 #region 优化
                 foreach (SourceGridDefineColumnItem dc in sgdefine.ToArray())
@@ -1108,6 +1117,16 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
 
                     };
+
+                    billController.OnAddDataRow += (rowObj) =>
+                    {
+                        //添加默认值
+                        if (OnAddDataRow != null)
+                        {
+                            OnAddDataRow(rowObj);
+                        }
+                    };
+
 
                     //目前认为是目标列才计算，并且 类型要为数字型
                     if (define[i].Summary || define[i].CustomFormat == CustomFormatType.PercentFormat)
@@ -2629,8 +2648,8 @@ namespace RUINORERP.UI.UCSourceGrid
         {
 
             string colName = colNameExp.GetMemberInfo().Name;
-            SourceGridDefineColumnItem dc = sgdefine.DefineColumns.Where(c => c.ColName == colNameExp.GetMemberInfo().Name 
-            && c.BelongingObjectType==typeof(T)).FirstOrDefault();
+            SourceGridDefineColumnItem dc = sgdefine.DefineColumns.Where(c => c.ColName == colNameExp.GetMemberInfo().Name
+            && c.BelongingObjectType == typeof(T)).FirstOrDefault();
             if (dc == null)
             {
                 return;
@@ -2644,8 +2663,8 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(row.Index, dc.ColIndex));
                     var currentObj = sgdefine.grid.Rows[row.Index].RowData;
                     //设置为可以编辑
-                    SetRowEditable(dc.ParentGridDefine.grid, new int[] { row .Index}, dc.ParentGridDefine);
-                    if (TargetValue != null && TargetValue.IsNotEmptyOrNull() )
+                    SetRowEditable(dc.ParentGridDefine.grid, new int[] { row.Index }, dc.ParentGridDefine);
+                    if (TargetValue != null && TargetValue.IsNotEmptyOrNull())
                     {
                         currentObj.SetPropertyValue(colName, TargetValue);
                         sgdefine.grid[row.Index, dc.ColIndex].Value = TargetValue;

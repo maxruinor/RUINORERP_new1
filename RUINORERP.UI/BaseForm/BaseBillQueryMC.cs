@@ -1617,7 +1617,10 @@ namespace RUINORERP.UI.BaseForm
 
             if (_UCBillMasterQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
             {
-                MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
+                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                {
+                    MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
+                }
                 _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
             }
 

@@ -123,7 +123,7 @@ namespace RUINORERP.Server.ServerService
                 ApprovalEntity aEntity = new ApprovalEntity();
                 aEntity.ApprovalResults = true;
                 aEntity.BillID = billID;
-                aEntity.ApprovalComments = opinion;
+              //  aEntity.ApprovalComments = opinion;
                 data.approvalEntity = aEntity;
                 WFController wc = Startup.GetFromFac<WFController>();
                 wc.PublishEvent(Program.WorkflowHost, data, frmMain.Instance.workflowlist);
@@ -154,7 +154,7 @@ namespace RUINORERP.Server.ServerService
                 data.BillID = billID;
                 data.bizType = (Global.BizType)BizType;
                 data.ApprovalResults = ApprovalResults;
-                data.ApprovalComments = opinion;
+               // data.ApprovalComments = opinion;
 
                 approvalWFData.approvalEntity = data;
 

@@ -39,7 +39,7 @@
             this.PictureBoxViewer.Location = new System.Drawing.Point(0, 0);
             this.PictureBoxViewer.Name = "PictureBoxViewer";
             this.PictureBoxViewer.Size = new System.Drawing.Size(732, 698);
-            this.PictureBoxViewer.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.PictureBoxViewer.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.PictureBoxViewer.TabIndex = 0;
             this.PictureBoxViewer.TabStop = false;
             // 
@@ -55,9 +55,9 @@
             this.Name = "frmPictureViewer";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "frmPictureViewer";
+            this.Load += new System.EventHandler(this.frmPictureViewer_Load);
             ((System.ComponentModel.ISupportInitialize)(this.PictureBoxViewer)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 

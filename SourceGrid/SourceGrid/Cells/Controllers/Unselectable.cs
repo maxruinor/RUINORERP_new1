@@ -2,10 +2,10 @@ using System;
 
 namespace SourceGrid.Cells.Controllers
 {
-	/// <summary>
-	/// Implements a behavior that cannot receive the focus. This behavior can be shared between multiple cells.
-	/// </summary>
-	public class Unselectable : ControllerBase
+    /// <summary>
+    /// 实现无法接收焦点的行为。这种行为可以在多个单元格之间共享。
+    /// </summary>
+    public class Unselectable : ControllerBase
 	{
 		public readonly static Unselectable Default = new Unselectable();
 

@@ -331,6 +331,7 @@
     <Compile Include="SourceGrid\Cells\Controllers\RowSelector.cs" />
     <Compile Include="SourceGrid\Cells\Controllers\SortableHeader.cs" />
     <Compile Include="SourceGrid\Cells\Controllers\StandardBehavior.cs" />
+    <Compile Include="SourceGrid\Cells\Controllers\PictureViewer.cs" />
     <Compile Include="SourceGrid\Cells\Controllers\ToolTipText.cs" />
     <Compile Include="SourceGrid\Cells\Controllers\Unselectable.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ComboBox.cs" />

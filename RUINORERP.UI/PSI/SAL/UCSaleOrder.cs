@@ -595,7 +595,7 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.PlatformOrderNo = EditEntity.PlatformOrderNo.Trim();//去空格
             }
 
-            if (!chk平台单.Checked && !string.IsNullOrEmpty(txtPlatformOrderNo.Text))
+            if (chk平台单.Checked && !string.IsNullOrEmpty(txtPlatformOrderNo.Text))
             {
                 //检测平台单号。重复性提示
                 tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();

@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Site\barley.mp4" />
+    <None Remove="Site\FormParsing.html" />
+    <None Remove="Site\Index.html" />
+    <None Remove="Site\UrlParsingResponse.thtml" />
+    <None Remove="Site\video-licence.txt" />
+    <None Remove="Site\VideoPlaying.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Site\barley.mp4">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\FormParsing.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\Index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\UrlParsingResponse.thtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\video-licence.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\VideoPlaying.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
+    <ProjectReference Include="..\SimpleHTTP\SimpleHttp.csproj" />
+  </ItemGroup>
+
+</Project>

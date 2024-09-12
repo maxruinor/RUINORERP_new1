@@ -208,7 +208,30 @@ namespace SourceGrid.Cells.Editors
                     if (image != null)
                     {
                         // 处理图像，例如保存到文件
+                        byte[] buffByte = GetByteImage(image);
                         Control.Value = GetByteImage(image);// GetImage(image);
+                        // 判断图片大小是否超过 500KB
+                        if (buffByte.Length > 800 * 1024)
+                        {
+                            // 压缩图片
+                            ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
+                            EncoderParameters encoderParams = new EncoderParameters(1);
+                            encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
+                            image = (System.Drawing.Image)new System.Drawing.Bitmap(image, new System.Drawing.Size(800, 600));
+                            image.Save("compressed.jpg", jpegCodec, encoderParams);
+
+                            // 重新读取压缩后的图片
+                            image = System.Drawing.Image.FromFile("compressed.jpg");
+                            MessageBox.Show("图片大小超过 800KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            // 将压缩后的图片转换为 byte[] 数组
+                            byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
+                            Control.Value = compressedImageBytes;
+                        }
+                        else
+                        {
+                            Control.Value = buffByte;
+                        }
+
                     }
                 }
                 //else if (Clipboard.ContainsText())
@@ -222,7 +245,7 @@ namespace SourceGrid.Cells.Editors
             }
         }
 
-    
+
         private void Editor_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -411,6 +434,10 @@ namespace SourceGrid.Cells.Editors
         //}
         public byte[] GetByteImage(System.Drawing.Image img)
         {
+
+
+
+
             byte[] bt = null;
             if (!img.Equals(null))
             {

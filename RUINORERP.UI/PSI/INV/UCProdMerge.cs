@@ -135,6 +135,7 @@ namespace RUINORERP.UI.PSI.INV
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 entity.MergeNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.产品组合单);
                 entity.MergeDate = System.DateTime.Now;
+                cmbBOM_ID.DataSource = null;
                 if (entity.tb_ProdMergeDetails != null && entity.tb_ProdMergeDetails.Count > 0)
                 {
                     entity.tb_ProdMergeDetails.ForEach(c => c.MergeID = 0);
@@ -220,11 +221,13 @@ namespace RUINORERP.UI.PSI.INV
                     {
 
                         BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
-                        var vpprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
 
+                        var vpprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+                        //txtSpecifications.Text = string.Empty;
+                        //txtType.Text = string.Empty;
+                        //txtproperty.Text = string.Empty;
                         txtSpecifications.Text = vpprod.Specifications;
                         entity.property = vpprod.prop;
-                        txtBOM_Name.Text = vpprod.CNName;
                         entity.SKU = vpprod.SKU;
                         txtType.Text = UIHelper.ShowGridColumnsNameValue<tb_Prod>(nameof(vpprod.Type_ID), vpprod.Type_ID);
 
@@ -249,11 +252,10 @@ namespace RUINORERP.UI.PSI.INV
                         // 不管选什么都先清空
                         txtBOM_Name.Text = string.Empty;
                         txtBOM_No.Text = string.Empty;
-
                         if (vpprod.BOM_ID.HasValue && vpprod.BOM_ID > 0)
                         {
                             //给一个默认
-                            cmbBOM_ID.SelectedValue = vpprod.BOM_ID;
+                            cmbBOM_ID.SelectedValue = vpprod.BOM_ID.Value;
                             LoadItemsFromBOM();
                         }
                         else
@@ -264,6 +266,11 @@ namespace RUINORERP.UI.PSI.INV
 
                     }
 
+                    //
+                    if (entity.BOM_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProdMerge>(c => c.BOM_ID))
+                    {
+
+                    }
                     if (s2.PropertyName == entity.GetPropertyName<tb_ProdMerge>(c => c.Location_ID))
                     {
                         if (EditEntity.Location_ID > 0)
@@ -683,7 +690,10 @@ protected async override void ReReview()
 
         private void LoadItemsFromBOM()
         {
-
+            if (cmbBOM_ID.SelectedValue == null || cmbBOM_ID.SelectedValue.ToString() == "-1")
+            {
+                return;
+            }
             if (EditEntity.tb_ProdMergeDetails == null)
             {
                 EditEntity.tb_ProdMergeDetails = new List<tb_ProdMergeDetail>();
@@ -691,7 +701,7 @@ protected async override void ReReview()
             EditEntity.tb_ProdMergeDetails.Clear();
             //通过BOM_id找到明细加载
             List<tb_BOM_SDetail> RowDetails = new List<tb_BOM_SDetail>();
-            if (cmbBOM_ID.SelectedValue.ToString() != "-1")
+            if (cmbBOM_ID.SelectedValue != null && cmbBOM_ID.SelectedValue.ToString() != "-1")
             {
                 if (EditEntity.Location_ID == -1)
                 {
@@ -765,6 +775,11 @@ protected async override void ReReview()
         private void txtProdDetailID_Enter(object sender, EventArgs e)
         {
             SelectLocationTips();
+        }
+
+        private void cmbBOM_ID_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            LoadItemsFromBOM();
         }
     }
 }

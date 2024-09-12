@@ -19,6 +19,7 @@ using RUINORERP.UI.Common;
 using RUINORERP.UI.UCSourceGrid;
 using SourceGrid;
 using SourceGrid.Cells;
+using SourceGrid.Cells.Controllers;
 using SourceGrid.Cells.Editors;
 using SourceGrid.Selection;
 using SqlSugar;
@@ -1098,13 +1099,20 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
                 else
                 {
+
+                    //SourceGrid.Cells.Controllers.ToolTipText toolTipController = new SourceGrid.Cells.Controllers.ToolTipText();
+                    //toolTipController.ToolTipTitle = "ToolTip example";
+                    //toolTipController.ToolTipIcon = ToolTipIcon.Info;
+                    //toolTipController.IsBalloon = true;
+
+                    ////目前只加到要手输入的，非关联字段上
                     //提示控制器
                     SourceGrid.Cells.Controllers.ToolTipText toolTipController = new SourceGrid.Cells.Controllers.ToolTipText();
                     //toolTipController.ToolTipTitle = "asdfad";
                     //toolTipController.ToolTipIcon = ToolTipIcon.Info;
                     //toolTipController.IsBalloon = true;
 
-
+                    PictureViewer pictureViewer = new PictureViewer();
 
                     //目前只加到要手输入的，非关联字段上
                     CustomKeyEvent tabkeyController = new CustomKeyEvent();
@@ -1189,6 +1197,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             break;
                         case "System.Byte[]":
                             // c = new SourceGrid.Cells.Image(null);新加行时 不用要图片，这个图片列，好像是背景。会相同
+                            c.AddController(pictureViewer);
                             break;
                         case "System.Boolean":
                             c = new SourceGrid.Cells.CheckBox(null, true);

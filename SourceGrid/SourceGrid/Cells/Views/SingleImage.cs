@@ -7,6 +7,7 @@ using System.IO;
 using DevAge.Drawing.VisualElements;
 using System.Drawing.Imaging;
 using SourceGrid.Cells.Editors;
+using System.Runtime.CompilerServices;
 
 namespace SourceGrid.Cells.Views
 {
@@ -16,6 +17,9 @@ namespace SourceGrid.Cells.Views
     [Serializable]
     public class SingleImage : Cell
     {
+
+        
+
         #region Constructors
 
         /// <summary>
@@ -24,6 +28,7 @@ namespace SourceGrid.Cells.Views
         public SingleImage()
         {
             ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Covering;
+            
         }
 
         private System.Drawing.Image _GridImage;

@@ -179,6 +179,7 @@
             this.cmbBOM_ID.Name = "cmbBOM_ID";
             this.cmbBOM_ID.Size = new System.Drawing.Size(143, 21);
             this.cmbBOM_ID.TabIndex = 166;
+            this.cmbBOM_ID.SelectedIndexChanged += new System.EventHandler(this.cmbBOM_ID_SelectedIndexChanged);
             // 
             // lblBOM_No
             // 

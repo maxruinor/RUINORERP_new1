@@ -73,7 +73,7 @@ namespace RUINORERP.Server
                 data.BillID = 888;
                 data.bizType = Global.BizType.制令单;
                 data.ApprovalResults = false;
-                data.ApprovalComments = "人不在";
+              //  data.ApprovalComments = "人不在";
                 approvalWFData.approvalEntity = data;
 
                 WFController wc = Startup.GetFromFac<WFController>();
@@ -118,7 +118,7 @@ namespace RUINORERP.Server
             ApprovalEntity aEntity = new ApprovalEntity();
             aEntity.ApprovalResults = true;
             aEntity.BillID = 555;
-            aEntity.ApprovalComments = "测试审核事件";
+            //aEntity.ApprovalComments = "测试审核事件";
             data.approvalEntity = aEntity;
             WFController wc = Startup.GetFromFac<WFController>();
             wc.PublishEvent(Program.WorkflowHost, data, frmMain.Instance.workflowlist);

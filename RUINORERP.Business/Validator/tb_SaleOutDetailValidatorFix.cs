@@ -21,7 +21,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 箱规表验证类
     /// </summary>
-    public partial class tb_SaleOutDetailValidator : AbstractValidator<tb_SaleOutDetail>
+    public partial class tb_SaleOutDetailValidator : BaseValidatorGeneric<tb_SaleOutDetail>
     {
         //public override void Initialize()
         //{

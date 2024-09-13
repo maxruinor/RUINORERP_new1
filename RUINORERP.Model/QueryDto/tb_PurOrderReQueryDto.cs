@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:44
+// 时间：09/13/2024 18:44:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,6 +58,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PurOrder_ID;}
             set{SetProperty(ref _PurOrder_ID, value);}
+        }
+     
+
+        private string _PurOrderNo;
+        /// <summary>
+        /// 采购单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PurOrderNo",ColDesc = "采购单号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "PurOrderNo",Length=100,IsNullable = false,ColumnDescription = "采购单号" )]
+        public string PurOrderNo 
+        { 
+            get{return _PurOrderNo;}
+            set{SetProperty(ref _PurOrderNo, value);}
         }
      
 

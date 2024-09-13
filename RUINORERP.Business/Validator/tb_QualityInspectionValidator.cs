@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:34
+// 时间：09/13/2024 18:44:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,14 +21,15 @@ namespace RUINORERP.Business
     /// <summary>
     /// 质检表验证类
     /// </summary>
-    public partial class tb_QualityInspectionValidator:AbstractValidator<tb_QualityInspection>
+    /*public partial class tb_QualityInspectionValidator:AbstractValidator<tb_QualityInspection>*/
+    public partial class tb_QualityInspectionValidator:BaseValidatorGeneric<tb_QualityInspection>
     {
      public tb_QualityInspectionValidator() 
      {
-      RuleFor(tb_QualityInspection =>tb_QualityInspection.InspectionResult).MaximumLength(500).WithMessage(":不能超过最大长度,500.");
+      RuleFor(tb_QualityInspection =>tb_QualityInspection.InspectionResult).MaximumLength(250).WithMessage(":不能超过最大长度,250.");
  RuleFor(tb_QualityInspection =>tb_QualityInspection.ProductID).NotEmpty().When(x => x.ProductID.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

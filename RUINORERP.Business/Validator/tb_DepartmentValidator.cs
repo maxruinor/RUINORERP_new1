@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:29
+// 时间：09/13/2024 18:43:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,19 +21,19 @@ namespace RUINORERP.Business
     /// <summary>
     /// 部门表是否分层验证类
     /// </summary>
-    public partial class tb_DepartmentValidator:AbstractValidator<tb_Department>
+    /*public partial class tb_DepartmentValidator:AbstractValidator<tb_Department>*/
+    public partial class tb_DepartmentValidator:BaseValidatorGeneric<tb_Department>
     {
      public tb_DepartmentValidator() 
      {
-      RuleFor(tb_Department =>tb_Department.DepartmentCode).MaximumLength(20).WithMessage("部门代号:不能超过最大长度,20.");
- RuleFor(tb_Department =>tb_Department.DepartmentCode).NotEmpty().WithMessage("部门代号:不能为空。");
- RuleFor(tb_Department =>tb_Department.DepartmentName).MaximumLength(255).WithMessage("部门名称:不能超过最大长度,255.");
+      RuleFor(tb_Department =>tb_Department.DepartmentCode).NotEmpty().WithMessage("部门代号:不能为空。");
+ RuleFor(tb_Department =>tb_Department.DepartmentName).MaximumLength(127).WithMessage("部门名称:不能超过最大长度,127.");
  RuleFor(tb_Department =>tb_Department.DepartmentName).NotEmpty().WithMessage("部门名称:不能为空。");
- RuleFor(tb_Department =>tb_Department.TEL).MaximumLength(20).WithMessage("电话:不能超过最大长度,20.");
- RuleFor(tb_Department =>tb_Department.Notes).MaximumLength(200).WithMessage("备注:不能超过最大长度,200.");
- RuleFor(tb_Department =>tb_Department.Director).MaximumLength(20).WithMessage("责任人:不能超过最大长度,20.");
+ RuleFor(tb_Department =>tb_Department.TEL).MaximumLength(10).WithMessage("电话:不能超过最大长度,10.");
+ RuleFor(tb_Department =>tb_Department.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_Department =>tb_Department.Director).MaximumLength(10).WithMessage("责任人:不能超过最大长度,10.");
        	
-           	
+           	        Initialize();
      }
 
 

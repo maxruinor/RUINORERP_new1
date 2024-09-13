@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:08
+// 时间：09/13/2024 18:43:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 流程图定义
     /// </summary>
     [Serializable()]
+    [Description("tb_FlowchartDefinition")]
     [SugarTable("tb_FlowchartDefinition")]
     public partial class tb_FlowchartDefinition: BaseEntity, ICloneable
     {
@@ -100,7 +101,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ModuleID))]
         public virtual tb_ModuleDefinition tb_moduledefinition { get; set; }
-        //public virtual tb_ModuleDefinition tb_ModuleID { get; set; }
 
 
         //[Browsable(false)]

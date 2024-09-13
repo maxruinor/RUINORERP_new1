@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:13
+// 时间：09/13/2024 18:44:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -63,10 +63,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "货品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long? ProdDetailID 
         { 
@@ -77,10 +77,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _ProdBaseID;
         /// <summary>
-        /// 产品
+        /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdBaseID",ColDesc = "产品")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdBaseID",IsNullable = true,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdBaseID",ColDesc = "货品")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdBaseID",IsNullable = true,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_Prod","ProdBaseID")]
         public long? ProdBaseID 
         { 

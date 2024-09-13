@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:32
+// 时间：09/13/2024 18:43:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 预付款表明细
     /// </summary>
     [Serializable()]
+    [Description("tb_FM_PrePaymentBillDetail")]
     [SugarTable("tb_FM_PrePaymentBillDetail")]
     public partial class tb_FM_PrePaymentBillDetail: BaseEntity, ICloneable
     {
@@ -199,7 +200,7 @@ namespace RUINORERP.Model
         /// 金额
         /// </summary>
         [AdvQueryAttribute(ColName = "Amount",ColDesc = "金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Amount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Amount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "金额" )]
         public decimal? Amount
         { 
             get{return _Amount;}
@@ -213,7 +214,7 @@ namespace RUINORERP.Model
         /// 已转金额
         /// </summary>
         [AdvQueryAttribute(ColName = "PrepaidAmount",ColDesc = "已转金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrepaidAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "已转金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrepaidAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "已转金额" )]
         public decimal? PrepaidAmount
         { 
             get{return _PrepaidAmount;}
@@ -243,25 +244,21 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
-        //public virtual tb_CustomerVendor tb_CustomerVendor_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
-        //public virtual tb_Currency tb_Currency_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
-        //public virtual tb_FM_Account tb_account_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PrePaymentBill_id))]
         public virtual tb_FM_PrePaymentBill tb_fm_prepaymentbill { get; set; }
-        //public virtual tb_FM_PrePaymentBill tb_PrePaymentBill_id { get; set; }
 
 
 

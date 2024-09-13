@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:26
+// 时间：09/13/2024 18:43:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 付款单 中有两种情况，1）如果有应收款，可以抵扣而少付款，如果有预付款也可以抵扣。
     /// </summary>
     [Serializable()]
+    [Description("tb_FM_PaymentBill")]
     [SugarTable("tb_FM_PaymentBill")]
     public partial class tb_FM_PaymentBill: BaseEntity, ICloneable
     {
@@ -257,7 +258,7 @@ namespace RUINORERP.Model
         /// 付款总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "付款总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "付款总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "付款总金额" )]
         public decimal? TotalAmount
         { 
             get{return _TotalAmount;}
@@ -313,7 +314,7 @@ namespace RUINORERP.Model
         /// 超付金额
         /// </summary>
         [AdvQueryAttribute(ColName = "OverpaymentAmount",ColDesc = "超付金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OverpaymentAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "超付金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OverpaymentAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "超付金额" )]
         public decimal? OverpaymentAmount
         { 
             get{return _OverpaymentAmount;}
@@ -469,7 +470,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "数据状态" )]
-        [Browsable(false)]
         public int? DataStatus
         { 
             get{return _DataStatus;}
@@ -499,37 +499,31 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PrePaymentBill_id))]
         public virtual tb_FM_PrePaymentBill tb_fm_prepaymentbill { get; set; }
-        //public virtual tb_FM_PrePaymentBill tb_PrePaymentBill_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
-        //public virtual tb_Department tb_DepartmentID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
-        //public virtual tb_FM_Account tb_account_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
-        //public virtual tb_Currency tb_Currency_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
-        //public virtual tb_CustomerVendor tb_CustomerVendor_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
-        //public virtual tb_Employee tb_Employee_ID { get; set; }
 
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:49:20
+// 时间：09/13/2024 18:44:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -63,14 +63,27 @@ namespace RUINORERP.Model.QueryDto
 
         private bool _Authorized= false;
         /// <summary>
-        /// 已授权
+        /// 默认角色
         /// </summary>
-        [AdvQueryAttribute(ColName = "Authorized",ColDesc = "已授权")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Authorized",IsNullable = false,ColumnDescription = "已授权" )]
+        [AdvQueryAttribute(ColName = "Authorized",ColDesc = "默认角色")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Authorized",IsNullable = false,ColumnDescription = "默认角色" )]
         public bool Authorized 
         { 
             get{return _Authorized;}
             set{SetProperty(ref _Authorized, value);}
+        }
+     
+
+        private bool _DefaultRole= false;
+        /// <summary>
+        /// 已授权
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DefaultRole",ColDesc = "已授权")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "DefaultRole",IsNullable = false,ColumnDescription = "已授权" )]
+        public bool DefaultRole 
+        { 
+            get{return _DefaultRole;}
+            set{SetProperty(ref _DefaultRole, value);}
         }
 
 

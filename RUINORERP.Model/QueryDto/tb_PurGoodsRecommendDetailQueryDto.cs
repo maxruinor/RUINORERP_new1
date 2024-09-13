@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:39
+// 时间：09/13/2024 18:44:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 采购产品建议
+    /// 采购商品建议
     /// </summary>
     [Serializable()]
     [SugarTable("tb_PurGoodsRecommendDetail")]
@@ -33,28 +33,28 @@ namespace RUINORERP.Model.QueryDto
     
      
 
-        private long? _PDID;
+        private long _PDID;
         /// <summary>
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "PDID",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PDID",IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PDID",IsNullable = false,ColumnDescription = "" )]
         [FKRelationAttribute("tb_ProductionDemand","PDID")]
-        public long? PDID 
+        public long PDID 
         { 
             get{return _PDID;}
             set{SetProperty(ref _PDID, value);}
         }
      
 
-        private long? _ProdDetailID;
+        private long _ProdDetailID;
         /// <summary>
-        /// 产品
+        /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
-        public long? ProdDetailID 
+        public long ProdDetailID 
         { 
             get{return _ProdDetailID;}
             set{SetProperty(ref _ProdDetailID, value);}
@@ -115,6 +115,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private int _ActualRequiredQty;
+        /// <summary>
+        /// 需求数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ActualRequiredQty",ColDesc = "需求数量")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ActualRequiredQty",IsNullable = false,ColumnDescription = "需求数量" )]
+        public int ActualRequiredQty 
+        { 
+            get{return _ActualRequiredQty;}
+            set{SetProperty(ref _ActualRequiredQty, value);}
+        }
+     
+
         private int _RecommendQty= ((0));
         /// <summary>
         /// 建议量
@@ -143,40 +156,14 @@ namespace RUINORERP.Model.QueryDto
 
         private DateTime _RequirementDate;
         /// <summary>
-        /// 需求日
+        /// 需求日期
         /// </summary>
-        [AdvQueryAttribute(ColName = "RequirementDate",ColDesc = "需求日")]
-        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "RequirementDate",IsNullable = false,ColumnDescription = "需求日" )]
+        [AdvQueryAttribute(ColName = "RequirementDate",ColDesc = "需求日期")]
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "RequirementDate",IsNullable = false,ColumnDescription = "需求日期" )]
         public DateTime RequirementDate 
         { 
             get{return _RequirementDate;}
             set{SetProperty(ref _RequirementDate, value);}
-        }
-     
-
-        private DateTime _PurDate;
-        /// <summary>
-        /// 采购日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PurDate",ColDesc = "采购日期")]
-        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "PurDate",IsNullable = false,ColumnDescription = "采购日期" )]
-        public DateTime PurDate 
-        { 
-            get{return _PurDate;}
-            set{SetProperty(ref _PurDate, value);}
-        }
-     
-
-        private DateTime _ExpectedDeliveryDate;
-        /// <summary>
-        /// 预交日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ExpectedDeliveryDate",ColDesc = "预交日期")]
-        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "ExpectedDeliveryDate",IsNullable = false,ColumnDescription = "预交日期" )]
-        public DateTime ExpectedDeliveryDate 
-        { 
-            get{return _ExpectedDeliveryDate;}
-            set{SetProperty(ref _ExpectedDeliveryDate, value);}
         }
      
 
@@ -229,6 +216,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _RefBillID;}
             set{SetProperty(ref _RefBillID, value);}
+        }
+     
+
+        private long? _PDCID_RowID;
+        /// <summary>
+        /// 生成单据
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PDCID_RowID",ColDesc = "生成单据")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PDCID_RowID",IsNullable = true,ColumnDescription = "生成单据" )]
+        public long? PDCID_RowID 
+        { 
+            get{return _PDCID_RowID;}
+            set{SetProperty(ref _PDCID_RowID, value);}
         }
 
 

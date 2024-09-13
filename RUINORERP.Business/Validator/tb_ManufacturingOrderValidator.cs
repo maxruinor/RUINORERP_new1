@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/06/2024 16:02:37
+// 时间：09/13/2024 18:43:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,16 +21,17 @@ namespace RUINORERP.Business
     /// <summary>
     /// 制令单-生产工单 ，工单(MO)各种企业的叫法不一样，比如生产单，制令单，生产指导单，裁单，等等。其实都是同一个东西–MO,    来源于 销售订单，计划单，生产需求单，我在下文都以工单简称。https://blog.csdn.net/qq_37365475/article/details/106612960验证类
     /// </summary>
-    public partial class tb_ManufacturingOrderValidator:AbstractValidator<tb_ManufacturingOrder>
+    /*public partial class tb_ManufacturingOrderValidator:AbstractValidator<tb_ManufacturingOrder>*/
+    public partial class tb_ManufacturingOrderValidator:BaseValidatorGeneric<tb_ManufacturingOrder>
     {
      public tb_ManufacturingOrderValidator() 
      {
       RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.MONO).MaximumLength(50).WithMessage("制令单号:不能超过最大长度,50.");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.MONO).NotEmpty().WithMessage("制令单号:不能为空。");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDNO).MaximumLength(50).WithMessage("需求单号:不能超过最大长度,50.");
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDCID).Must(CheckForeignKeyValueCanNull).WithMessage("需求单据:下拉选择值不正确。");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDCID).Must(CheckForeignKeyValueCanNull).WithMessage("自制品:下拉选择值不正确。");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDCID).NotEmpty().When(x => x.PDCID.HasValue);
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDID).Must(CheckForeignKeyValueCanNull).WithMessage("需求自制:下拉选择值不正确。");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDID).Must(CheckForeignKeyValueCanNull).WithMessage("需求单据:下拉选择值不正确。");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDID).NotEmpty().When(x => x.PDID.HasValue);
 //***** 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.QuantityDelivered).NotNull().WithMessage("已交付量:不能为空。");
@@ -60,8 +61,8 @@ namespace RUINORERP.Business
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CloseCaseOpinions).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Notes).MaximumLength(750).WithMessage("结案情况:不能超过最大长度,750.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CloseCaseOpinions).MaximumLength(100).WithMessage("结案情况:不能超过最大长度,100.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
  RuleFor(x => x.LaborCost).PrecisionScale(19,4,true).WithMessage("人工费:小数位不能超过4。");
  RuleFor(x => x.PeopleQty).PrecisionScale(5,3,true).WithMessage("人数:小数位不能超过3。");
  RuleFor(x => x.WorkingHour).PrecisionScale(5,3,true).WithMessage("工时:小数位不能超过3。");
@@ -82,7 +83,7 @@ namespace RUINORERP.Business
                 //RuleForEach(x => x.tb_ManufacturingOrderDetails).NotNull();
                 //RuleFor(x => x.tb_ManufacturingOrderDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
         
-        
+                Initialize();
      }
 
 

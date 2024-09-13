@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:36
+// 时间：09/13/2024 18:43:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 库存表
     /// </summary>
     [Serializable()]
+    [Description("tb_Inventory")]
     [SugarTable("tb_Inventory")]
     public partial class tb_Inventory: BaseEntity, ICloneable
     {
@@ -52,10 +53,10 @@ namespace RUINORERP.Model
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 
@@ -151,34 +152,45 @@ namespace RUINORERP.Model
             }
         }
 
-        private int _Sale_Qty = ((0));
+        private int _Sale_Qty= ((0));
         /// <summary>
         /// 拟销售量
         /// </summary>
-        [AdvQueryAttribute(ColName = "Sale_Qty", ColDesc = "拟销售量")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "Sale_Qty", DecimalDigits = 0, IsNullable = false, ColumnDescription = "拟销售量")]
+        [AdvQueryAttribute(ColName = "Sale_Qty",ColDesc = "拟销售量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Sale_Qty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "拟销售量" )]
         public int Sale_Qty
-        {
-            get { return _Sale_Qty; }
-            set
-            {
-                SetProperty(ref _Sale_Qty, value);
+        { 
+            get{return _Sale_Qty;}
+            set{
+            SetProperty(ref _Sale_Qty, value);
             }
         }
 
-
-        private int _NotOutQty = ((0));
+        private int _MakingQty= ((0));
         /// <summary>
-        /// 未发料量
+        /// 在制数量
         /// </summary>
-        [AdvQueryAttribute(ColName = "NotOutQty", ColDesc = "未发料量")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "NotOutQty", DecimalDigits = 0, IsNullable = false, ColumnDescription = "未发料量")]
+        [AdvQueryAttribute(ColName = "MakingQty",ColDesc = "在制数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "MakingQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "在制数量" )]
+        public int MakingQty
+        { 
+            get{return _MakingQty;}
+            set{
+            SetProperty(ref _MakingQty, value);
+            }
+        }
+
+        private int _NotOutQty= ((0));
+        /// <summary>
+        /// 未发数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "NotOutQty",ColDesc = "未发数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "NotOutQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "未发数量" )]
         public int NotOutQty
-        {
-            get { return _NotOutQty; }
-            set
-            {
-                SetProperty(ref _NotOutQty, value);
+        { 
+            get{return _NotOutQty;}
+            set{
+            SetProperty(ref _NotOutQty, value);
             }
         }
 
@@ -215,7 +227,7 @@ namespace RUINORERP.Model
         /// 先进先出成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CostFIFO",ColDesc = "先进先出成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostFIFO" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "先进先出成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostFIFO" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "先进先出成本" )]
         public decimal CostFIFO
         { 
             get{return _CostFIFO;}
@@ -229,7 +241,7 @@ namespace RUINORERP.Model
         /// 月加权平均成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CostMonthlyWA",ColDesc = "月加权平均成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostMonthlyWA" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "月加权平均成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostMonthlyWA" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "月加权平均成本" )]
         public decimal CostMonthlyWA
         { 
             get{return _CostMonthlyWA;}
@@ -243,7 +255,7 @@ namespace RUINORERP.Model
         /// 移动加权平均成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CostMovingWA",ColDesc = "移动加权平均成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostMovingWA" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "移动加权平均成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostMovingWA" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "移动加权平均成本" )]
         public decimal CostMovingWA
         { 
             get{return _CostMovingWA;}
@@ -257,7 +269,7 @@ namespace RUINORERP.Model
         /// 成本
         /// </summary>
         [AdvQueryAttribute(ColName = "Inv_AdvCost",ColDesc = "成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_AdvCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_AdvCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本" )]
         public decimal Inv_AdvCost
         { 
             get{return _Inv_AdvCost;}
@@ -268,10 +280,10 @@ namespace RUINORERP.Model
 
         private decimal _Inv_Cost= ((0));
         /// <summary>
-        /// 产品成本
+        /// 货品成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "Inv_Cost",ColDesc = "产品成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_Cost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "产品成本" )]
+        [AdvQueryAttribute(ColName = "Inv_Cost",ColDesc = "货品成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_Cost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "货品成本" )]
         public decimal Inv_Cost
         { 
             get{return _Inv_Cost;}
@@ -285,7 +297,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "Inv_SubtotalCostMoney",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_SubtotalCostMoney" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_SubtotalCostMoney" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal Inv_SubtotalCostMoney
         { 
             get{return _Inv_SubtotalCostMoney;}
@@ -293,22 +305,6 @@ namespace RUINORERP.Model
             SetProperty(ref _Inv_SubtotalCostMoney, value);
             }
         }
-
-        private int _MakingQty= ((0));
-        /// <summary>
-        /// 在制数量
-        /// </summary>
-        [AdvQueryAttribute(ColName = "MakingQty",ColDesc = "在制数量")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "MakingQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "在制数量" )]
-        public int MakingQty
-        { 
-            get{return _MakingQty;}
-            set{
-            SetProperty(ref _MakingQty, value);
-            }
-        }
-
-
 
         private DateTime? _LatestOutboundTime;
         /// <summary>
@@ -338,22 +334,19 @@ namespace RUINORERP.Model
             }
         }
 
-
         private DateTime? _LastInventoryDate;
         /// <summary>
         /// 最后盘点时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "LastInventoryDate", ColDesc = "最后盘点时间")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "LastInventoryDate", IsNullable = true, ColumnDescription = "最后盘点时间")]
+        [AdvQueryAttribute(ColName = "LastInventoryDate",ColDesc = "最后盘点时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "LastInventoryDate" ,IsNullable = true,ColumnDescription = "最后盘点时间" )]
         public DateTime? LastInventoryDate
-        {
-            get { return _LastInventoryDate; }
-            set
-            {
-                SetProperty(ref _LastInventoryDate, value);
+        { 
+            get{return _LastInventoryDate;}
+            set{
+            SetProperty(ref _LastInventoryDate, value);
             }
         }
-
 
         private string _Notes;
         /// <summary>
@@ -432,19 +425,16 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
-        //public virtual tb_StorageRack tb_Rack_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
-        //public virtual tb_ProdDetail tb_ProdDetailID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
-        //public virtual tb_Location tb_Location_ID { get; set; }
 
 
         //[Browsable(false)]

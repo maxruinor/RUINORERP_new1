@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/05/2024 17:00:21
+// 时间：09/13/2024 18:44:14
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 生产需求分析表 是一个中间表，由计划生产单或销售订单带入数据来分析，产生采购订单再产生制令单，分析时有三步，库存不足项（包括有成品材料所有项），采购产品建议，自制品成品建议,中间表保存记录而已，操作UI上会有生成采购订单，或生产单等操作
+    /// 生产需求分析表 是一个中间表，由计划生产单或销售订单带入数据来分析，产生采购订单再产生制令单，分析时有三步，库存不足项（包括有成品材料所有项），采购商品建议，自制品成品建议,中间表保存记录而已，操作UI上会有生成采购订单，或生产单等操作
     /// </summary>
     public partial class tb_ProductionDemandController<T>:BaseController<T> where T : class
     {
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_ProductionDemand entity = model as tb_ProductionDemand;
@@ -241,29 +239,31 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.PDID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
                         .Include(m => m.tb_PurOrders)
-                    .Include(m => m.tb_ProduceGoodsRecommendDetails)
                     .Include(m => m.tb_ManufacturingOrders)
+                    .Include(m => m.tb_ProduceGoodsRecommendDetails)
                     .Include(m => m.tb_ProductionDemandDetails)
                     .Include(m => m.tb_ProductionDemandTargetDetails)
                     .Include(m => m.tb_PurGoodsRecommendDetails)
-                    .ExecuteCommandAsync();
+                            .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
                 .Include(m => m.tb_PurOrders)
-                .Include(m => m.tb_ProduceGoodsRecommendDetails)
                 .Include(m => m.tb_ManufacturingOrders)
+                .Include(m => m.tb_ProduceGoodsRecommendDetails)
                 .Include(m => m.tb_ProductionDemandDetails)
                 .Include(m => m.tb_ProductionDemandTargetDetails)
                 .Include(m => m.tb_PurGoodsRecommendDetails)
-                        .ExecuteCommandAsync();
+                                .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
@@ -274,12 +274,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -296,8 +294,8 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
                                 .Includes(m => m.tb_PurOrders)
-                        .Includes(m => m.tb_ProduceGoodsRecommendDetails)
                         .Includes(m => m.tb_ManufacturingOrders)
+                        .Includes(m => m.tb_ProduceGoodsRecommendDetails)
                         .Includes(m => m.tb_ProductionDemandDetails)
                         .Includes(m => m.tb_ProductionDemandTargetDetails)
                         .Includes(m => m.tb_PurGoodsRecommendDetails)
@@ -311,8 +309,8 @@ namespace RUINORERP.Business
             tb_ProductionDemand entity = model as tb_ProductionDemand;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProductionDemand>(m => m.PDID== entity.PDID)
                                 .Include(m => m.tb_PurOrders)
-                        .Include(m => m.tb_ProduceGoodsRecommendDetails)
                         .Include(m => m.tb_ManufacturingOrders)
+                        .Include(m => m.tb_ProduceGoodsRecommendDetails)
                         .Include(m => m.tb_ProductionDemandDetails)
                         .Include(m => m.tb_ProductionDemandTargetDetails)
                         .Include(m => m.tb_PurGoodsRecommendDetails)
@@ -481,8 +479,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_productionplan )
                                             .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ManufacturingOrders )
+                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
                                 .Includes(t => t.tb_PurGoodsRecommendDetails )
@@ -508,8 +506,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_productionplan )
                                             .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ManufacturingOrders )
+                                .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
                                 .Includes(t => t.tb_PurGoodsRecommendDetails )
@@ -535,8 +533,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_productionplan )
                                         .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_ManufacturingOrders )
+                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProductionDemandTargetDetails )
                             .Includes(t => t.tb_PurGoodsRecommendDetails )
@@ -579,8 +577,8 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_productionplan )
                                         .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_ManufacturingOrders )
+                            .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProductionDemandTargetDetails )
                             .Includes(t => t.tb_PurGoodsRecommendDetails )

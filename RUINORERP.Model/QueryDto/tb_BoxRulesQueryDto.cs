@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 14:54:17
+// 时间：09/13/2024 18:43:27
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -152,19 +152,6 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _GrossWeight;
-        /// <summary>
-        /// 毛重G.Wt.(kg)
-        /// </summary>
-        [AdvQueryAttribute(ColName = "GrossWeight",ColDesc = "毛重G.Wt.(kg)")]
-        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "GrossWeight",IsNullable = false,ColumnDescription = "毛重G.Wt.(kg)" )]
-        public decimal GrossWeight 
-        { 
-            get{return _GrossWeight;}
-            set{SetProperty(ref _GrossWeight, value);}
-        }
-     
-
         private decimal _NetWeight;
         /// <summary>
         /// 净重N.Wt.(kg)
@@ -175,6 +162,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _NetWeight;}
             set{SetProperty(ref _NetWeight, value);}
+        }
+     
+
+        private decimal _GrossWeight;
+        /// <summary>
+        /// 毛重G.Wt.(kg)
+        /// </summary>
+        [AdvQueryAttribute(ColName = "GrossWeight",ColDesc = "毛重G.Wt.(kg)")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "GrossWeight",IsNullable = false,ColumnDescription = "毛重G.Wt.(kg)" )]
+        public decimal GrossWeight 
+        { 
+            get{return _GrossWeight;}
+            set{SetProperty(ref _GrossWeight, value);}
         }
      
 
@@ -191,7 +191,7 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool _Is_enabled;
+        private bool _Is_enabled= true;
         /// <summary>
         /// 是否启用
         /// </summary>

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:12
+// 时间：09/13/2024 18:44:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 产品主次及属性关系表
     /// </summary>
     [Serializable()]
+    [Description("tb_Prod_Attr_Relation")]
     [SugarTable("tb_Prod_Attr_Relation")]
     public partial class tb_Prod_Attr_Relation: BaseEntity, ICloneable
     {
@@ -82,10 +83,10 @@ namespace RUINORERP.Model
 
         private long? _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "货品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long? ProdDetailID
         { 
@@ -97,10 +98,10 @@ namespace RUINORERP.Model
 
         private long? _ProdBaseID;
         /// <summary>
-        /// 产品
+        /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdBaseID",ColDesc = "产品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdBaseID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdBaseID",ColDesc = "货品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdBaseID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_Prod","ProdBaseID")]
         public long? ProdBaseID
         { 
@@ -132,25 +133,21 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdBaseID))]
         public virtual tb_Prod tb_prod { get; set; }
-        //public virtual tb_Prod tb_ProdBaseID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
-        //public virtual tb_ProdDetail tb_ProdDetailID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PropertyValueID))]
         public virtual tb_ProdPropertyValue tb_prodpropertyvalue { get; set; }
-        //public virtual tb_ProdPropertyValue tb_PropertyValueID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Property_ID))]
         public virtual tb_ProdProperty tb_prodproperty { get; set; }
-        //public virtual tb_ProdProperty tb_Property_ID { get; set; }
 
 
 

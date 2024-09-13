@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:29
+// 时间：09/13/2024 18:44:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 项目组信息 用于业务分组小团队
     /// </summary>
     [Serializable()]
+    [Description("tb_ProjectGroup")]
     [SugarTable("tb_ProjectGroup")]
     public partial class tb_ProjectGroup: BaseEntity, ICloneable
     {
@@ -50,6 +51,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private long? _DepartmentID;
+        /// <summary>
+        /// 部门
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "部门")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "部门" )]
+        [FKRelationAttribute("tb_Department","DepartmentID")]
+        public long? DepartmentID
+        { 
+            get{return _DepartmentID;}
+            set{
+            SetProperty(ref _DepartmentID, value);
+            }
+        }
+
         private string _ProjectGroupCode;
         /// <summary>
         /// 项目组代号
@@ -61,22 +77,6 @@ namespace RUINORERP.Model
             get{return _ProjectGroupCode;}
             set{
             SetProperty(ref _ProjectGroupCode, value);
-            }
-        }
-
-        private long _DepartmentID;
-        /// <summary>
-        /// 部门
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DepartmentID", ColDesc = "部门")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "DepartmentID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "部门")]
-        [FKRelationAttribute("tb_Department", "DepartmentID")]
-        public long DepartmentID
-        {
-            get { return _DepartmentID; }
-            set
-            {
-                SetProperty(ref _DepartmentID, value);
             }
         }
 
@@ -237,6 +237,27 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
+        public virtual tb_Department tb_department { get; set; }
+
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.ProjectGroup_ID))]
+        public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
+        //tb_FM_OtherExpenseDetail.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_OTHEREXPENSEDETAIL_REF_PROJEGROUP)
+        //tb_ProjectGroup.ProjectGroup_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlan.ProjectGroup_ID))]
+        public virtual List<tb_ProductionPlan> tb_ProductionPlans { get; set; }
+        //tb_ProductionPlan.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_TB_PRODUPLAN_REF_PROJECTGROUP)
+        //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -248,10 +269,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.ProjectGroup_ID))]
-        public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
-        //tb_FM_OtherExpenseDetail.ProjectGroup_ID)
-        //ProjectGroup_ID.FK_OTHEREXPENSEDETAIL_REF_PROJEGROUP)
+        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.ProjectGroup_ID))]
+        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
+        //tb_MaterialRequisition.ProjectGroup_ID)
+        //ProjectGroup_ID.FK_MATEREQUISITIONS_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
         //[Browsable(false)]

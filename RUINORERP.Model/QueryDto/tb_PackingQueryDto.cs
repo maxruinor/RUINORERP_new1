@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 14:54:19
+// 时间：09/13/2024 18:44:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -206,19 +206,6 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _GrossWeight;
-        /// <summary>
-        /// 毛重G.Wt.(g)
-        /// </summary>
-        [AdvQueryAttribute(ColName = "GrossWeight",ColDesc = "毛重G.Wt.(g)")]
-        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "GrossWeight",IsNullable = false,ColumnDescription = "毛重G.Wt.(g)" )]
-        public decimal GrossWeight 
-        { 
-            get{return _GrossWeight;}
-            set{SetProperty(ref _GrossWeight, value);}
-        }
-     
-
         private decimal _NetWeight;
         /// <summary>
         /// 净重N.Wt.(g)
@@ -229,6 +216,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _NetWeight;}
             set{SetProperty(ref _NetWeight, value);}
+        }
+     
+
+        private decimal _GrossWeight;
+        /// <summary>
+        /// 毛重G.Wt.(g)
+        /// </summary>
+        [AdvQueryAttribute(ColName = "GrossWeight",ColDesc = "毛重G.Wt.(g)")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "GrossWeight",IsNullable = false,ColumnDescription = "毛重G.Wt.(g)" )]
+        public decimal GrossWeight 
+        { 
+            get{return _GrossWeight;}
+            set{SetProperty(ref _GrossWeight, value);}
         }
      
 
@@ -245,13 +245,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool? _Is_enabled;
+        private bool _Is_enabled= true;
         /// <summary>
         /// 是否启用
         /// </summary>
         [AdvQueryAttribute(ColName = "Is_enabled",ColDesc = "是否启用")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Is_enabled",IsNullable = true,ColumnDescription = "是否启用" )]
-        public bool? Is_enabled 
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Is_enabled",IsNullable = false,ColumnDescription = "是否启用" )]
+        public bool Is_enabled 
         { 
             get{return _Is_enabled;}
             set{SetProperty(ref _Is_enabled, value);}

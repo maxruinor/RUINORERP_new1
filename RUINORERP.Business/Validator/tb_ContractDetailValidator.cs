@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:28
+// 时间：09/13/2024 18:43:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 合同明细验证类
     /// </summary>
-    public partial class tb_ContractDetailValidator:AbstractValidator<tb_ContractDetail>
+    /*public partial class tb_ContractDetailValidator:AbstractValidator<tb_ContractDetail>*/
+    public partial class tb_ContractDetailValidator:BaseValidatorGeneric<tb_ContractDetail>
     {
      public tb_ContractDetailValidator() 
      {
@@ -30,13 +31,13 @@ namespace RUINORERP.Business
  RuleFor(tb_ContractDetail =>tb_ContractDetail.Qty).NotEmpty().When(x => x.Qty.HasValue);
  RuleFor(x => x.Price).PrecisionScale(19,4,true).WithMessage("售价:小数位不能超过4。");
  RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
- RuleFor(tb_ContractDetail =>tb_ContractDetail.Summary).MaximumLength(255).WithMessage("摘要:不能超过最大长度,255.");
+ RuleFor(tb_ContractDetail =>tb_ContractDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
 //***** 
  RuleFor(tb_ContractDetail =>tb_ContractDetail.SubtotalQty).NotNull().WithMessage("数量小计:不能为空。");
  RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
  RuleFor(x => x.SubtotalPirceAmount).PrecisionScale(19,4,true).WithMessage("金额小计:小数位不能超过4。");
        	
-           	
+           	        Initialize();
      }
 
 

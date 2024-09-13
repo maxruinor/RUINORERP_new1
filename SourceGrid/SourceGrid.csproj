@@ -340,6 +340,8 @@
     <Compile Include="SourceGrid\Cells\Editors\EditorControlBase.cs" />
     <Compile Include="SourceGrid\Cells\Editors\Factory.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImagePicker.cs" />
+    <Compile Include="SourceGrid\Cells\Editors\ImagePickerHelper.cs" />
+    <Compile Include="SourceGrid\Cells\Editors\ImageWebPicker.cs" />
     <Compile Include="SourceGrid\Cells\Editors\NumericUpDown.cs" />
     <Compile Include="SourceGrid\Cells\Editors\RichTextBox.cs" />
     <Compile Include="SourceGrid\Cells\Editors\CheckBox.cs" />

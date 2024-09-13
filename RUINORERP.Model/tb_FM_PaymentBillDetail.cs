@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:28
+// 时间：09/13/2024 18:43:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 付款单明细
     /// </summary>
     [Serializable()]
+    [Description("tb_FM_PaymentBillDetail")]
     [SugarTable("tb_FM_PaymentBillDetail")]
     public partial class tb_FM_PaymentBillDetail: BaseEntity, ICloneable
     {
@@ -167,7 +168,7 @@ namespace RUINORERP.Model
         /// 付款总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "付款总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "付款总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "付款总金额" )]
         public decimal? TotalAmount
         { 
             get{return _TotalAmount;}
@@ -223,7 +224,7 @@ namespace RUINORERP.Model
         /// 超付金额
         /// </summary>
         [AdvQueryAttribute(ColName = "OverpaymentAmount",ColDesc = "超付金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OverpaymentAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "超付金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OverpaymentAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "超付金额" )]
         public decimal? OverpaymentAmount
         { 
             get{return _OverpaymentAmount;}
@@ -393,7 +394,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "数据状态" )]
-        [Browsable(false)]
         public int? DataStatus
         { 
             get{return _DataStatus;}

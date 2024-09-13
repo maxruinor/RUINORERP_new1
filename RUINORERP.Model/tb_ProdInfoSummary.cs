@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:18
+// 时间：09/13/2024 18:44:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,9 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 产品信息汇总
+    /// 商品信息汇总
     /// </summary>
     [Serializable()]
+    [Description("tb_ProdInfoSummary")]
     [SugarTable("tb_ProdInfoSummary")]
     public partial class tb_ProdInfoSummary: BaseEntity, ICloneable
     {

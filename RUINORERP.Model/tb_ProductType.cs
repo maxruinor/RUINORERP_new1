@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:28
+// 时间：09/13/2024 18:44:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 货物类型  成品  半成品  包装材料 下脚料这种内容
     /// </summary>
     [Serializable()]
+    [Description("tb_ProductType")]
     [SugarTable("tb_ProductType")]
     public partial class tb_ProductType: BaseEntity, ICloneable
     {
@@ -82,12 +83,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        ////[Browsable(false)]
-        //[SugarColumn(IsIgnore = true)]
-        //[Navigate(NavigateType.OneToMany, nameof(tb_BOM_S.Type_ID))]
-        //public virtual List<tb_BOM_S> tb_BOM_Ss { get; set; }
-        //tb_BOM_S.Type_ID)
-        //Type_ID.FK_BOM_S_REF_PRODUCTTYPE)
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Type_ID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.Type_ID)
+        //Type_ID.FK_MANUFACTURINGORDER_REF_PRODUCTYPE)
         //tb_ProductType.Type_ID)
 
         //[Browsable(false)]
@@ -96,14 +97,6 @@ namespace RUINORERP.Model
         public virtual List<tb_Prod> tb_Prods { get; set; }
         //tb_Prod.Type_ID)
         //Type_ID.FK_TB_PROD_REFERENCE_TB_PRODU)
-        //tb_ProductType.Type_ID)
-
-        ////[Browsable(false)]
-        //[SugarColumn(IsIgnore = true)]
-        //[Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetail.Type_ID))]
-        //public virtual List<tb_BOM_SDetail> tb_BOM_SDetails { get; set; }
-        //tb_BOM_SDetail.Type_ID)
-        //Type_ID.FK_BOM_SDetail_REF_PRODUcttype)
         //tb_ProductType.Type_ID)
 
 

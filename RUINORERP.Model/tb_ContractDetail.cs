@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:52
+// 时间：09/13/2024 18:43:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 合同明细
     /// </summary>
     [Serializable()]
+    [Description("tb_ContractDetail")]
     [SugarTable("tb_ContractDetail")]
     public partial class tb_ContractDetail: BaseEntity, ICloneable
     {
@@ -67,10 +68,10 @@ namespace RUINORERP.Model
 
         private long? _ProdDetailID;
         /// <summary>
-        /// 产品
+        /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "货品" )]
         public long? ProdDetailID
         { 
             get{return _ProdDetailID;}
@@ -98,7 +99,7 @@ namespace RUINORERP.Model
         /// 售价
         /// </summary>
         [AdvQueryAttribute(ColName = "Price",ColDesc = "售价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Price" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "售价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Price" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "售价" )]
         public decimal? Price
         { 
             get{return _Price;}
@@ -112,7 +113,7 @@ namespace RUINORERP.Model
         /// 成本
         /// </summary>
         [AdvQueryAttribute(ColName = "Cost",ColDesc = "成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "成本" )]
         public decimal? Cost
         { 
             get{return _Cost;}
@@ -154,7 +155,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal SubtotalCostAmount
         { 
             get{return _SubtotalCostAmount;}
@@ -168,7 +169,7 @@ namespace RUINORERP.Model
         /// 金额小计
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalPirceAmount",ColDesc = "金额小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalPirceAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "金额小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalPirceAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "金额小计" )]
         public decimal SubtotalPirceAmount
         { 
             get{return _SubtotalPirceAmount;}
@@ -184,7 +185,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ContractID))]
         public virtual tb_Contract tb_contract { get; set; }
-        //public virtual tb_Contract tb_ContractID { get; set; }
 
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/20/2024 10:31:33
+// 时间：09/13/2024 18:43:38
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_FlowchartDefinition entity = model as tb_FlowchartDefinition;
@@ -241,13 +239,15 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FlowchartDefinition>(entity as tb_FlowchartDefinition)
                         .Include(m => m.tb_FlowchartItems)
                     .Include(m => m.tb_FlowchartLines)
-                    .ExecuteCommandAsync();
+                            .ExecuteCommandAsync();
          
         }
         else    
@@ -255,7 +255,7 @@ namespace RUINORERP.Business
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FlowchartDefinition>(entity as tb_FlowchartDefinition)
                 .Include(m => m.tb_FlowchartItems)
                 .Include(m => m.tb_FlowchartLines)
-                        .ExecuteCommandAsync();
+                                .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
@@ -266,12 +266,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }

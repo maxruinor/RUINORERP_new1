@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:36
+// 时间：09/13/2024 18:44:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,37 +21,27 @@ namespace RUINORERP.Business
     /// <summary>
     /// 货架信息表验证类
     /// </summary>
-    public partial class tb_StorageRackValidator:AbstractValidator<tb_StorageRack>
+    /*public partial class tb_StorageRackValidator:AbstractValidator<tb_StorageRack>*/
+    public partial class tb_StorageRackValidator:BaseValidatorGeneric<tb_StorageRack>
     {
      public tb_StorageRackValidator() 
      {
       RuleFor(tb_StorageRack =>tb_StorageRack.Location_ID).Must(CheckForeignKeyValueCanNull).WithMessage("所属仓库:下拉选择值不正确。");
  RuleFor(tb_StorageRack =>tb_StorageRack.Location_ID).NotEmpty().When(x => x.Location_ID.HasValue);
- RuleFor(tb_StorageRack =>tb_StorageRack.RackNO).MaximumLength(50).WithMessage("货架编号:不能超过最大长度,50.");
+ RuleFor(tb_StorageRack =>tb_StorageRack.RackNO).MaximumLength(25).WithMessage("货架编号:不能超过最大长度,25.");
  RuleFor(tb_StorageRack =>tb_StorageRack.RackNO).NotEmpty().WithMessage("货架编号:不能为空。");
- RuleFor(tb_StorageRack =>tb_StorageRack.RackName).MaximumLength(50).WithMessage("货架名称:不能超过最大长度,50.");
+ RuleFor(tb_StorageRack =>tb_StorageRack.RackName).MaximumLength(25).WithMessage("货架名称:不能超过最大长度,25.");
  RuleFor(tb_StorageRack =>tb_StorageRack.RackName).NotEmpty().WithMessage("货架名称:不能为空。");
- RuleFor(tb_StorageRack =>tb_StorageRack.RackLocation).MaximumLength(100).WithMessage("货架位置:不能超过最大长度,100.");
- RuleFor(tb_StorageRack =>tb_StorageRack.Desc).MaximumLength(100).WithMessage("描述:不能超过最大长度,100.");
+ RuleFor(tb_StorageRack =>tb_StorageRack.RackLocation).MaximumLength(50).WithMessage("货架位置:不能超过最大长度,50.");
+ RuleFor(tb_StorageRack =>tb_StorageRack.Desc).MaximumLength(50).WithMessage("描述:不能超过最大长度,50.");
        	
-           	
+           	        Initialize();
      }
 
 
 
 
-        private bool DetailedRecordsNotEmpty(List<tb_FinishedGoodsInvDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
-        private bool DetailedRecordsNotEmpty(List<tb_StockInDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_StockOutDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -73,7 +63,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_StockOutDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_FinishedGoodsInvDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -95,7 +85,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_SaleOutDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_PurEntryDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -117,7 +107,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_PurEntryDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_SaleOutDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -128,7 +118,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_StockInDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

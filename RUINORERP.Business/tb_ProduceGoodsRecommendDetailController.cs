@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/28/2024 12:31:24
+// 时间：09/13/2024 18:44:13
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_ProduceGoodsRecommendDetail entity = model as tb_ProduceGoodsRecommendDetail;
@@ -241,20 +239,20 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.PDCID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProduceGoodsRecommendDetail>(entity as tb_ProduceGoodsRecommendDetail)
-            //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                        .Include(m => m.tb_ManufacturingOrders)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProduceGoodsRecommendDetail>(entity as tb_ProduceGoodsRecommendDetail)
-        //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                .Include(m => m.tb_ManufacturingOrders)
                                 .ExecuteCommandAsync();
         }
         
@@ -266,12 +264,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -287,9 +283,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProduceGoodsRecommendDetail>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .Includes(m => m.tb_ManufacturingOrders)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -298,9 +293,8 @@ namespace RUINORERP.Business
         {
             tb_ProduceGoodsRecommendDetail entity = model as tb_ProduceGoodsRecommendDetail;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProduceGoodsRecommendDetail>(m => m.PDCID== entity.PDCID)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                .Include(m => m.tb_ManufacturingOrders)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -466,7 +460,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_location )
                                .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_productiondemand )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_ManufacturingOrders )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -489,7 +484,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_location )
                                .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_productiondemand )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_ManufacturingOrders )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -512,7 +508,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_location )
                             .Includes(t => t.tb_proddetail )
                             .Includes(t => t.tb_productiondemand )
-                                    .ToList();
+                                        .Includes(t => t.tb_ManufacturingOrders )
+                        .ToList();
             
             foreach (var item in list)
             {
@@ -552,7 +549,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_location )
                             .Includes(t => t.tb_proddetail )
                             .Includes(t => t.tb_productiondemand )
-                                    .FirstAsync();
+                                        .Includes(t => t.tb_ManufacturingOrders )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

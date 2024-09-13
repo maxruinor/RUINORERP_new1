@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:41
+// 时间：09/13/2024 18:44:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -197,14 +197,27 @@ namespace RUINORERP.Model.QueryDto
 
         private decimal _TotalAmount;
         /// <summary>
-        /// 总金额
+        /// 货款金额
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalAmount",IsNullable = false,ColumnDescription = "总金额" )]
+        [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "货款金额")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalAmount",IsNullable = false,ColumnDescription = "货款金额" )]
         public decimal TotalAmount 
         { 
             get{return _TotalAmount;}
             set{SetProperty(ref _TotalAmount, value);}
+        }
+     
+
+        private decimal _ActualAmount;
+        /// <summary>
+        /// 实付金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ActualAmount",ColDesc = "实付金额")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ActualAmount",IsNullable = false,ColumnDescription = "实付金额" )]
+        public decimal ActualAmount 
+        { 
+            get{return _ActualAmount;}
+            set{SetProperty(ref _ActualAmount, value);}
         }
      
 
@@ -226,7 +239,7 @@ namespace RUINORERP.Model.QueryDto
         /// 备注
         /// </summary>
         [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=255,IsNullable = true,ColumnDescription = "备注" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=1500,IsNullable = true,ColumnDescription = "备注" )]
         public string Notes 
         { 
             get{return _Notes;}
@@ -312,6 +325,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private string _CloseCaseOpinions;
+        /// <summary>
+        /// 审批意见
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "审批意见")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "CloseCaseOpinions",Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string CloseCaseOpinions 
+        { 
+            get{return _CloseCaseOpinions;}
+            set{SetProperty(ref _CloseCaseOpinions, value);}
+        }
+     
+
         private string _ApprovalOpinions;
         /// <summary>
         /// 审批意见
@@ -374,6 +400,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Approver_at;}
             set{SetProperty(ref _Approver_at, value);}
+        }
+     
+
+        private int _PrintStatus= ((0));
+        /// <summary>
+        /// 打印状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrintStatus",ColDesc = "打印状态")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "PrintStatus",IsNullable = false,ColumnDescription = "打印状态" )]
+        public int PrintStatus 
+        { 
+            get{return _PrintStatus;}
+            set{SetProperty(ref _PrintStatus, value);}
         }
      
 
@@ -478,19 +517,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _RefBizType;}
             set{SetProperty(ref _RefBizType, value);}
-        }
-     
-
-        private int _PrintStatus= ((0));
-        /// <summary>
-        /// 打印状态
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PrintStatus",ColDesc = "打印状态")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "PrintStatus",IsNullable = false,ColumnDescription = "打印状态" )]
-        public int PrintStatus 
-        { 
-            get{return _PrintStatus;}
-            set{SetProperty(ref _PrintStatus, value);}
         }
 
 

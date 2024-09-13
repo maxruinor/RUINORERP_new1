@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/28/2024 11:55:42
+// 时间：09/13/2024 18:43:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,10 +68,10 @@ namespace RUINORERP.Model
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品
+        /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 
@@ -227,7 +227,7 @@ namespace RUINORERP.Model
         /// 物料成本 
         /// </summary>
         [AdvQueryAttribute(ColName = "MaterialCost",ColDesc = "物料成本 ")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "MaterialCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "物料成本 " )]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "MaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "物料成本 " )]
         public decimal MaterialCost
         { 
             get{return _MaterialCost;}

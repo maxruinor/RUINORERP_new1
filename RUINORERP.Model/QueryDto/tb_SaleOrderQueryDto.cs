@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/31/2024 20:20:01
+// 时间：09/13/2024 18:44:27
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,13 +46,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int? _PayStatus;
+        private int _PayStatus;
         /// <summary>
         /// 付款状态
         /// </summary>
         [AdvQueryAttribute(ColName = "PayStatus",ColDesc = "付款状态")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "PayStatus",IsNullable = true,ColumnDescription = "付款状态" )]
-        public int? PayStatus 
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "PayStatus",IsNullable = false,ColumnDescription = "付款状态" )]
+        public int PayStatus 
         { 
             get{return _PayStatus;}
             set{SetProperty(ref _PayStatus, value);}
@@ -570,16 +570,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool _IsNotFromPlatform;
+        private bool _IsFromPlatform;
         /// <summary>
-        /// 非平台单
+        /// 平台单
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsNotFromPlatform",ColDesc = "非平台单")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsNotFromPlatform",IsNullable = false,ColumnDescription = "非平台单" )]
-        public bool IsNotFromPlatform 
+        [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsFromPlatform",IsNullable = false,ColumnDescription = "平台单" )]
+        public bool IsFromPlatform 
         { 
-            get{return _IsNotFromPlatform;}
-            set{SetProperty(ref _IsNotFromPlatform, value);}
+            get{return _IsFromPlatform;}
+            set{SetProperty(ref _IsFromPlatform, value);}
         }
      
 

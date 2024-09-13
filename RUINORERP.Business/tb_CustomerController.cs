@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/20/2024 10:31:32
+// 时间：09/13/2024 18:43:32
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ namespace RUINORERP.Business
         public Itb_CustomerServices _tb_CustomerServices { get; set; }
        // private readonly ApplicationContext _appContext;
        
-        public tb_CustomerController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CustomerServices tb_CustomerServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_CustomerController(ILogger<tb_CustomerController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CustomerServices tb_CustomerServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_Customer entity = model as tb_Customer;
@@ -241,16 +239,18 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.Customer_id > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Customer>(entity as tb_Customer)
                         .Include(m => m.tb_Regions)
                     .Include(m => m.tb_Contacts)
-                    .Include(m => m.tb_CustomerVendors)
                     .Include(m => m.tb_Customer_interactions)
+                    .Include(m => m.tb_CustomerVendors)
                     .Include(m => m.tb_Sales_Chances)
-                    .ExecuteCommandAsync();
+                            .ExecuteCommandAsync();
          
         }
         else    
@@ -258,10 +258,10 @@ namespace RUINORERP.Business
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Customer>(entity as tb_Customer)
                 .Include(m => m.tb_Regions)
                 .Include(m => m.tb_Contacts)
-                .Include(m => m.tb_CustomerVendors)
                 .Include(m => m.tb_Customer_interactions)
+                .Include(m => m.tb_CustomerVendors)
                 .Include(m => m.tb_Sales_Chances)
-                        .ExecuteCommandAsync();
+                                .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
@@ -272,12 +272,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -295,8 +293,8 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Customer>()
                                 .Includes(m => m.tb_Regions)
                         .Includes(m => m.tb_Contacts)
-                        .Includes(m => m.tb_CustomerVendors)
                         .Includes(m => m.tb_Customer_interactions)
+                        .Includes(m => m.tb_CustomerVendors)
                         .Includes(m => m.tb_Sales_Chances)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -309,8 +307,8 @@ namespace RUINORERP.Business
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Customer>(m => m.Customer_id== entity.Customer_id)
                                 .Include(m => m.tb_Regions)
                         .Include(m => m.tb_Contacts)
-                        .Include(m => m.tb_CustomerVendors)
                         .Include(m => m.tb_Customer_interactions)
+                        .Include(m => m.tb_CustomerVendors)
                         .Include(m => m.tb_Sales_Chances)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -477,8 +475,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_Regions )
                                 .Includes(t => t.tb_Contacts )
-                                .Includes(t => t.tb_CustomerVendors )
                                 .Includes(t => t.tb_Customer_interactions )
+                                .Includes(t => t.tb_CustomerVendors )
                                 .Includes(t => t.tb_Sales_Chances )
                         .ToListAsync();
             
@@ -502,8 +500,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_Regions )
                                 .Includes(t => t.tb_Contacts )
-                                .Includes(t => t.tb_CustomerVendors )
                                 .Includes(t => t.tb_Customer_interactions )
+                                .Includes(t => t.tb_CustomerVendors )
                                 .Includes(t => t.tb_Sales_Chances )
                         .ToListAsync();
             
@@ -527,8 +525,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_Regions )
                             .Includes(t => t.tb_Contacts )
-                            .Includes(t => t.tb_CustomerVendors )
                             .Includes(t => t.tb_Customer_interactions )
+                            .Includes(t => t.tb_CustomerVendors )
                             .Includes(t => t.tb_Sales_Chances )
                         .ToList();
             
@@ -569,8 +567,8 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_Regions )
                             .Includes(t => t.tb_Contacts )
-                            .Includes(t => t.tb_CustomerVendors )
                             .Includes(t => t.tb_Customer_interactions )
+                            .Includes(t => t.tb_CustomerVendors )
                             .Includes(t => t.tb_Sales_Chances )
                         .FirstAsync();
             if(entity!=null)

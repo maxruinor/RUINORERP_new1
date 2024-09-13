@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:48
+// 时间：09/13/2024 18:44:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 返厂售后单
     /// </summary>
     [Serializable()]
+    [Description("tb_Return")]
     [SugarTable("tb_Return")]
     public partial class tb_Return: BaseEntity, ICloneable
     {
@@ -98,7 +99,7 @@ namespace RUINORERP.Model
         /// 总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总成本" )]
         public decimal TotalCost
         { 
             get{return _TotalCost;}
@@ -184,7 +185,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "数据状态" )]
-        [Browsable(false)]
         public int DataStatus
         { 
             get{return _DataStatus;}
@@ -282,7 +282,7 @@ namespace RUINORERP.Model
         /// 已付运费
         /// </summary>
         [AdvQueryAttribute(ColName = "ShipCost",ColDesc = "已付运费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "已付运费" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "已付运费" )]
         public decimal ShipCost
         { 
             get{return _ShipCost;}
@@ -424,7 +424,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
-        //public virtual tb_CustomerVendor tb_CustomerVendor_ID { get; set; }
 
 
         //[Browsable(false)]

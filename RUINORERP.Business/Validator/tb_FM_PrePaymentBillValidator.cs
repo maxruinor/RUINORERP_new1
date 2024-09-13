@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:30
+// 时间：09/13/2024 18:43:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 预收预付单,冲销动作会在付款单和收款单中体现验证类
     /// </summary>
-    public partial class tb_FM_PrePaymentBillValidator:AbstractValidator<tb_FM_PrePaymentBill>
+    /*public partial class tb_FM_PrePaymentBillValidator:AbstractValidator<tb_FM_PrePaymentBill>*/
+    public partial class tb_FM_PrePaymentBillValidator:BaseValidatorGeneric<tb_FM_PrePaymentBill>
     {
      public tb_FM_PrePaymentBillValidator() 
      {
@@ -31,11 +32,10 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
  RuleFor(x => x.PreTotalAmount).PrecisionScale(19,4,true).WithMessage("预交易总金额:小数位不能超过4。");
  RuleFor(x => x.PrePaidTotalAmount).PrecisionScale(19,4,true).WithMessage("已预交易总金额:小数位不能超过4。");
- RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Reason).MaximumLength(10).WithMessage("预交易原因:不能超过最大长度,10.");
- RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Remark).MaximumLength(300).WithMessage("备注:不能超过最大长度,300.");
+ RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
- RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.ApprovalOpinions).MaximumLength(255).WithMessage("审批意见:不能超过最大长度,255.");
+ RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
 //***** 
@@ -44,12 +44,13 @@ namespace RUINORERP.Business
            	                //long?
                 //PrePaymentBill_id
                 //tb_FM_PrePaymentBillDetail
-                RuleFor(c => c.tb_FM_PrePaymentBillDetails).NotNull();
-                RuleForEach(x => x.tb_FM_PrePaymentBillDetails).NotNull();
                 //RuleFor(x => x.tb_FM_PrePaymentBillDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                RuleFor(x => x.tb_FM_PrePaymentBillDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+               //视图不需要验证，目前认为无编辑新增操作
+                //RuleFor(c => c.tb_FM_PrePaymentBillDetails).NotNull();
+                //RuleForEach(x => x.tb_FM_PrePaymentBillDetails).NotNull();
+                //RuleFor(x => x.tb_FM_PrePaymentBillDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
         
-        
+                Initialize();
      }
 
 

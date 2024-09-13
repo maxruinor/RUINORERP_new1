@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/28/2024 11:55:45
+// 时间：09/13/2024 18:43:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,13 +21,14 @@ namespace RUINORERP.Business
     /// <summary>
     /// 退料单明细验证类
     /// </summary>
-    public partial class tb_MaterialReturnDetailValidator:AbstractValidator<tb_MaterialReturnDetail>
+    /*public partial class tb_MaterialReturnDetailValidator:AbstractValidator<tb_MaterialReturnDetail>*/
+    public partial class tb_MaterialReturnDetailValidator:BaseValidatorGeneric<tb_MaterialReturnDetail>
     {
      public tb_MaterialReturnDetailValidator() 
      {
      //***** 
  RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.MRE_ID).NotNull().WithMessage("主单:不能为空。");
- RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品:下拉选择值不正确。");
+ RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
  RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
  RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 //***** 
@@ -36,7 +37,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.Price).PrecisionScale(10,4,true).WithMessage("单价:小数位不能超过4。");
  RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
        	
-           	
+           	        Initialize();
      }
 
 

@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/02/2024 18:57:05
+// 时间：09/13/2024 18:44:39
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
@@ -21,43 +21,45 @@ namespace RUINORERP.Business
     /// <summary>
     /// 系统配置表验证类
     /// </summary>
-    public partial class tb_SystemConfigValidator : AbstractValidator<tb_SystemConfig>
+    /*public partial class tb_SystemConfigValidator:AbstractValidator<tb_SystemConfig>*/
+    public partial class tb_SystemConfigValidator:BaseValidatorGeneric<tb_SystemConfig>
     {
-        public tb_SystemConfigValidator()
+     public tb_SystemConfigValidator() 
+     {
+     //***** 
+ RuleFor(tb_SystemConfig =>tb_SystemConfig.QtyDataPrecision).NotNull().WithMessage("数量精度:不能为空。");
+//***** 
+ RuleFor(tb_SystemConfig =>tb_SystemConfig.TaxRateDataPrecision).NotNull().WithMessage("税率精度:不能为空。");
+//***** 
+ RuleFor(tb_SystemConfig =>tb_SystemConfig.MoneyDataPrecision).NotNull().WithMessage("金额精度:不能为空。");
+//有默认值
+//***** 
+ RuleFor(tb_SystemConfig =>tb_SystemConfig.CostCalculationMethod).NotNull().WithMessage("成本方式:不能为空。");
+//有默认值
+//有默认值
+ RuleFor(x => x.AutoApprovedSaleOrderAmount).PrecisionScale(19,4,true).WithMessage("自动审核销售订单金额:小数位不能超过4。");
+ RuleFor(x => x.AutoApprovedPurOrderAmount).PrecisionScale(19,4,true).WithMessage("自动审核采购订单金额:小数位不能超过4。");
+       	
+           	        Initialize();
+     }
+
+
+
+
+
+
+
+    
+          private bool CheckForeignKeyValue(long ForeignKeyID)
         {
-            //***** 
-            RuleFor(tb_SystemConfig => tb_SystemConfig.QtyDataPrecision).NotNull().WithMessage("数量精度:不能为空。");
-            //***** 
-            RuleFor(tb_SystemConfig => tb_SystemConfig.TaxRateDataPrecision).NotNull().WithMessage("税率精度:不能为空。");
-            //***** 
-            RuleFor(tb_SystemConfig => tb_SystemConfig.MoneyDataPrecision).NotNull().WithMessage("金额精度:不能为空。");
-            //有默认值
-            //***** 
-            RuleFor(tb_SystemConfig => tb_SystemConfig.CostCalculationMethod).NotNull().WithMessage("成本方式:不能为空。");
-            //有默认值
-            RuleFor(x => x.AutoApprovedSaleOrderAmount).PrecisionScale(19, 4, true).WithMessage("自动审核销售订单金额:小数位不能超过4。");
-            RuleFor(x => x.AutoApprovedPurOrderAmount).PrecisionScale(19, 4, true).WithMessage("自动审核采购订单金额:小数位不能超过4。");
-
-
-        }
-
-
-
-
-
-
-
-
-        private bool CheckForeignKeyValue(long ForeignKeyID)
-        {
-            bool rs = true;
+            bool rs = true;    
             if (ForeignKeyID == 0 || ForeignKeyID == -1)
             {
                 return false;
             }
             return rs;
         }
-
+        
         private bool CheckForeignKeyValueCanNull(long? ForeignKeyID)
         {
             bool rs = true;
@@ -69,9 +71,9 @@ namespace RUINORERP.Business
                 }
             }
             return rs;
-
-        }
+        
     }
+}
 
 }
 

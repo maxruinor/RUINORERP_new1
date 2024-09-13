@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:58
+// 时间：09/13/2024 18:44:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -75,6 +75,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private string _SaleOrderNo;
+        /// <summary>
+        /// 销售订单编号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SaleOrderNo",ColDesc = "销售订单编号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SaleOrderNo",Length=50,IsNullable = true,ColumnDescription = "销售订单编号" )]
+        public string SaleOrderNo 
+        { 
+            get{return _SaleOrderNo;}
+            set{SetProperty(ref _SaleOrderNo, value);}
+        }
+     
+
         private string _SaleOutNo;
         /// <summary>
         /// 出库单号
@@ -85,6 +98,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _SaleOutNo;}
             set{SetProperty(ref _SaleOutNo, value);}
+        }
+     
+
+        private long? _ProjectGroup_ID;
+        /// <summary>
+        /// 项目组
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProjectGroup_ID",IsNullable = true,ColumnDescription = "项目组" )]
+        public long? ProjectGroup_ID 
+        { 
+            get{return _ProjectGroup_ID;}
+            set{SetProperty(ref _ProjectGroup_ID, value);}
         }
      
 
@@ -107,6 +133,7 @@ namespace RUINORERP.Model.QueryDto
         /// </summary>
         [AdvQueryAttribute(ColName = "Paytype_ID",ColDesc = "付款类型")]
         [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Paytype_ID",IsNullable = true,ColumnDescription = "付款类型" )]
+        [FKRelationAttribute("tb_PaymentMethod","Paytype_ID")]
         public long? Paytype_ID 
         { 
             get{return _Paytype_ID;}
@@ -184,7 +211,7 @@ namespace RUINORERP.Model.QueryDto
         /// 发货地址
         /// </summary>
         [AdvQueryAttribute(ColName = "ShippingAddress",ColDesc = "发货地址")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ShippingAddress",Length=255,IsNullable = true,ColumnDescription = "发货地址" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ShippingAddress",Length=500,IsNullable = true,ColumnDescription = "发货地址" )]
         public string ShippingAddress 
         { 
             get{return _ShippingAddress;}
@@ -202,6 +229,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _ShippingWay;}
             set{SetProperty(ref _ShippingWay, value);}
+        }
+     
+
+        private string _PlatformOrderNo;
+        /// <summary>
+        /// 平台单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PlatformOrderNo",ColDesc = "平台单号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "PlatformOrderNo",Length=100,IsNullable = true,ColumnDescription = "平台单号" )]
+        public string PlatformOrderNo 
+        { 
+            get{return _PlatformOrderNo;}
+            set{SetProperty(ref _PlatformOrderNo, value);}
+        }
+     
+
+        private bool _IsFromPlatform;
+        /// <summary>
+        /// 平台单
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsFromPlatform",IsNullable = false,ColumnDescription = "平台单" )]
+        public bool IsFromPlatform 
+        { 
+            get{return _IsFromPlatform;}
+            set{SetProperty(ref _IsFromPlatform, value);}
         }
      
 
@@ -301,7 +354,7 @@ namespace RUINORERP.Model.QueryDto
         /// 备注
         /// </summary>
         [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=500,IsNullable = true,ColumnDescription = "备注" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=1500,IsNullable = true,ColumnDescription = "备注" )]
         public string Notes 
         { 
             get{return _Notes;}
@@ -465,29 +518,29 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _TaxAmount;
+        private decimal _TotalTaxAmount;
         /// <summary>
-        /// 税额
+        /// 总税额
         /// </summary>
-        [AdvQueryAttribute(ColName = "TaxAmount",ColDesc = "税额")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TaxAmount",IsNullable = false,ColumnDescription = "税额" )]
-        public decimal TaxAmount 
+        [AdvQueryAttribute(ColName = "TotalTaxAmount",ColDesc = "总税额")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalTaxAmount",IsNullable = false,ColumnDescription = "总税额" )]
+        public decimal TotalTaxAmount 
         { 
-            get{return _TaxAmount;}
-            set{SetProperty(ref _TaxAmount, value);}
+            get{return _TotalTaxAmount;}
+            set{SetProperty(ref _TotalTaxAmount, value);}
         }
      
 
-        private decimal _UntaxedAmount;
+        private decimal _TotalUntaxedAmount;
         /// <summary>
         /// 未税本位币
         /// </summary>
-        [AdvQueryAttribute(ColName = "UntaxedAmount",ColDesc = "未税本位币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "UntaxedAmount",IsNullable = false,ColumnDescription = "未税本位币" )]
-        public decimal UntaxedAmount 
+        [AdvQueryAttribute(ColName = "TotalUntaxedAmount",ColDesc = "未税本位币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalUntaxedAmount",IsNullable = false,ColumnDescription = "未税本位币" )]
+        public decimal TotalUntaxedAmount 
         { 
-            get{return _UntaxedAmount;}
-            set{SetProperty(ref _UntaxedAmount, value);}
+            get{return _TotalUntaxedAmount;}
+            set{SetProperty(ref _TotalUntaxedAmount, value);}
         }
      
 

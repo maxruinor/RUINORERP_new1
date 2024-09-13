@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:55
+// 时间：09/13/2024 18:43:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 客户交互表，CRM系统中使用      
     /// </summary>
     [Serializable()]
+    [Description("tb_Customer_interaction")]
     [SugarTable("tb_Customer_interaction")]
     public partial class tb_Customer_interaction: BaseEntity, ICloneable
     {
@@ -129,13 +130,11 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
-        //public virtual tb_Employee tb_Employee_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Customer_id))]
         public virtual tb_Customer tb_customer { get; set; }
-        //public virtual tb_Customer tb_Customer_id { get; set; }
 
 
 

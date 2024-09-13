@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 14:54:18
+// 时间：09/13/2024 18:43:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -98,7 +98,7 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _Thickness= ((0.1m));
+        private decimal _Thickness= 0.1M;
         /// <summary>
         /// 纸板厚度(cm)
         /// </summary>

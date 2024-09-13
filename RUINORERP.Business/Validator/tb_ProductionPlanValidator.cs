@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2024 17:20:32
+// 时间：09/13/2024 18:44:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 生产计划表 应该是分析来的。可能来自于生产需求单，比方系统根据库存情况分析销售情况等也也可以手动。也可以程序分析验证类
     /// </summary>
-    public partial class tb_ProductionPlanValidator:AbstractValidator<tb_ProductionPlan>
+    /*public partial class tb_ProductionPlanValidator:AbstractValidator<tb_ProductionPlan>*/
+    public partial class tb_ProductionPlanValidator:BaseValidatorGeneric<tb_ProductionPlan>
     {
      public tb_ProductionPlanValidator() 
      {
@@ -37,9 +38,9 @@ namespace RUINORERP.Business
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.Priority).NotNull().WithMessage("紧急程度:不能为空。");
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 //***** 
- RuleFor(tb_ProductionPlan =>tb_ProductionPlan.TotalCompletedQuantity).NotNull().WithMessage("总数量:不能为空。");
+ RuleFor(tb_ProductionPlan =>tb_ProductionPlan.TotalCompletedQuantity).NotNull().WithMessage("完成数:不能为空。");
 //***** 
- RuleFor(tb_ProductionPlan =>tb_ProductionPlan.TotalQuantity).NotNull().WithMessage("总数量:不能为空。");
+ RuleFor(tb_ProductionPlan =>tb_ProductionPlan.TotalQuantity).NotNull().WithMessage("计划数:不能为空。");
 //***** 
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.DataStatus).NotNull().WithMessage("单据状态:不能为空。");
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -60,7 +61,7 @@ namespace RUINORERP.Business
                 //RuleForEach(x => x.tb_ProductionPlanDetails).NotNull();
                 //RuleFor(x => x.tb_ProductionPlanDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
         
-        
+                Initialize();
      }
 
 

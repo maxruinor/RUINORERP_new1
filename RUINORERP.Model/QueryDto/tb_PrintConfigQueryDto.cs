@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/26/2024 10:52:23
+// 时间：09/13/2024 18:44:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -82,6 +82,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PrinterName;}
             set{SetProperty(ref _PrinterName, value);}
+        }
+     
+
+        private bool? _PrinterSelected= false;
+        /// <summary>
+        /// 设置了默认打印机
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrinterSelected",ColDesc = "设置了默认打印机")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "PrinterSelected",IsNullable = true,ColumnDescription = "设置了默认打印机" )]
+        public bool? PrinterSelected 
+        { 
+            get{return _PrinterSelected;}
+            set{SetProperty(ref _PrinterSelected, value);}
+        }
+     
+
+        private bool? _Landscape= false;
+        /// <summary>
+        /// 设置横向打印
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Landscape",ColDesc = "设置横向打印")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Landscape",IsNullable = true,ColumnDescription = "设置横向打印" )]
+        public bool? Landscape 
+        { 
+            get{return _Landscape;}
+            set{SetProperty(ref _Landscape, value);}
         }
 
 

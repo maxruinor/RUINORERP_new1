@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/02/2024 19:07:53
+// 时间：09/13/2024 18:44:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 角色属性配置不同角色权限功能等不一样验证类
     /// </summary>
-    public partial class tb_RolePropertyConfigValidator:AbstractValidator<tb_RolePropertyConfig>
+    /*public partial class tb_RolePropertyConfigValidator:AbstractValidator<tb_RolePropertyConfig>*/
+    public partial class tb_RolePropertyConfigValidator:BaseValidatorGeneric<tb_RolePropertyConfig>
     {
      public tb_RolePropertyConfigValidator() 
      {
@@ -37,7 +38,7 @@ namespace RUINORERP.Business
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.CostCalculationMethod).NotNull().WithMessage("成本方式:不能为空。");
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.DataBoardUnits).MaximumLength(250).WithMessage(":不能超过最大长度,250.");
        	
-           	        
+           	        Initialize();
      }
 
 

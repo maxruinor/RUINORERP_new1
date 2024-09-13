@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/15/2024 13:50:21
+// 时间：09/13/2024 18:43:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,14 +21,15 @@ namespace RUINORERP.Business
     /// <summary>
     /// 成品入库单明细验证类
     /// </summary>
-    public partial class tb_FinishedGoodsInvDetailValidator:AbstractValidator<tb_FinishedGoodsInvDetail>
+    /*public partial class tb_FinishedGoodsInvDetailValidator:AbstractValidator<tb_FinishedGoodsInvDetail>*/
+    public partial class tb_FinishedGoodsInvDetailValidator:BaseValidatorGeneric<tb_FinishedGoodsInvDetail>
     {
      public tb_FinishedGoodsInvDetailValidator() 
      {
       RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.FG_ID).NotEmpty().When(x => x.FG_ID.HasValue);
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Unit_ID).Must(CheckForeignKeyValueCanNull).WithMessage("单位:下拉选择值不正确。");
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Unit_ID).NotEmpty().When(x => x.Unit_ID.HasValue);
- RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品详情:下拉选择值不正确。");
+ RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("货架:下拉选择值不正确。");
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
@@ -49,7 +50,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
        	
-           	
+           	        Initialize();
      }
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:34
+// 时间：09/13/2024 18:44:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,17 +21,18 @@ namespace RUINORERP.Business
     /// <summary>
     /// 地区表验证类
     /// </summary>
-    public partial class tb_RegionValidator:AbstractValidator<tb_Region>
+    /*public partial class tb_RegionValidator:AbstractValidator<tb_Region>*/
+    public partial class tb_RegionValidator:BaseValidatorGeneric<tb_Region>
     {
      public tb_RegionValidator() 
      {
-      RuleFor(tb_Region =>tb_Region.Region_Name).MaximumLength(50).WithMessage("地区名称:不能超过最大长度,50.");
- RuleFor(tb_Region =>tb_Region.Region_code).MaximumLength(20).WithMessage("地区代码:不能超过最大长度,20.");
+      RuleFor(tb_Region =>tb_Region.Region_Name).MaximumLength(25).WithMessage("地区名称:不能超过最大长度,25.");
+ RuleFor(tb_Region =>tb_Region.Region_code).MaximumLength(10).WithMessage("地区代码:不能超过最大长度,10.");
  RuleFor(tb_Region =>tb_Region.Parent_region_id).NotEmpty().When(x => x.Parent_region_id.HasValue);
  RuleFor(tb_Region =>tb_Region.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage("意向客户:下拉选择值不正确。");
  RuleFor(tb_Region =>tb_Region.Customer_id).NotEmpty().When(x => x.Customer_id.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

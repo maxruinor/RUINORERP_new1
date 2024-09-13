@@ -23,7 +23,25 @@ namespace RUINORERP.Model.Context
         //BillConverterFactory 中会用到这个。UI层才有缓存。单例模式没有作用到。暂时没有处理用。用这个属性来传值。
         public List<tb_MenuInfo> UserMenuList;
 
+        #region 全局变量
 
+
+        /// <summary>
+        /// web服务器地址
+        /// </summary>
+        public string WebServerUrl { get; set; } = "http://192.168.0.99:8080";
+
+        /// <summary>
+        /// 服务器图片目录地址
+        /// </summary>
+        public string ImageDirectoryPath { get; set; }
+
+        /// <summary>
+        /// 服务器文件目录地址
+        /// </summary>
+        public string FileDirectoryPath { get; set; }
+
+        #endregion
 
         #region 工作流
 

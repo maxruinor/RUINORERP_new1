@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/14/2024 21:41:49
+// 时间：09/13/2024 18:43:52
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ namespace RUINORERP.Business.Processor
            _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
         }
-      
+        
     }
 }
 

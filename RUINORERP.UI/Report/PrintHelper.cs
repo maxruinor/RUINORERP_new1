@@ -150,7 +150,7 @@ namespace RUINORERP.UI.Report
                         case RptMode.PRINT:
                             ////////打印////////
                             //设置默认打印机
-                            if (printConfig.PrinterSelected)
+                            if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
                             {
                                 FReport.PrintSettings.ShowDialog = false;
                                 FReport.PrintSettings.Printer = printConfig.PrinterName;
@@ -277,7 +277,7 @@ namespace RUINORERP.UI.Report
                     }
                     ////////打印////////
                     //设置默认打印机
-                    if (printConfig.PrinterSelected)
+                    if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
                     {
                         FReport.PrintSettings.ShowDialog = false;
                         FReport.PrintSettings.Printer = printConfig.PrinterName;
@@ -419,7 +419,7 @@ namespace RUINORERP.UI.Report
                     }
                     ////////打印////////
                     //设置默认打印机
-                    if (printConfig.PrinterSelected)
+                    if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
                     {
                         FReport.PrintSettings.ShowDialog = false;
                         FReport.PrintSettings.Printer = printConfig.PrinterName;
@@ -534,7 +534,7 @@ namespace RUINORERP.UI.Report
                 //}
                 ////////打印////////
                 //设置默认打印机
-                if (printConfig.PrinterSelected)
+                if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
                 {
                     FReport.PrintSettings.ShowDialog = false;
                     FReport.PrintSettings.Printer = printConfig.PrinterName;

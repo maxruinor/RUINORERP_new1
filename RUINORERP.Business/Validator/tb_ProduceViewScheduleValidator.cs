@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:33
+// 时间：09/13/2024 18:44:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,14 +21,15 @@ namespace RUINORERP.Business
     /// <summary>
     /// 可视化排程验证类
     /// </summary>
-    public partial class tb_ProduceViewScheduleValidator:AbstractValidator<tb_ProduceViewSchedule>
+    /*public partial class tb_ProduceViewScheduleValidator:AbstractValidator<tb_ProduceViewSchedule>*/
+    public partial class tb_ProduceViewScheduleValidator:BaseValidatorGeneric<tb_ProduceViewSchedule>
     {
      public tb_ProduceViewScheduleValidator() 
      {
       RuleFor(tb_ProduceViewSchedule =>tb_ProduceViewSchedule.product_id).NotEmpty().When(x => x.product_id.HasValue);
  RuleFor(tb_ProduceViewSchedule =>tb_ProduceViewSchedule.quantity).NotEmpty().When(x => x.quantity.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

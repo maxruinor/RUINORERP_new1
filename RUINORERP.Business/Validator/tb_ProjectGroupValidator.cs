@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:33
+// 时间：09/13/2024 18:44:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,20 +21,23 @@ namespace RUINORERP.Business
     /// <summary>
     /// 项目组信息 用于业务分组小团队验证类
     /// </summary>
-    public partial class tb_ProjectGroupValidator:AbstractValidator<tb_ProjectGroup>
+    /*public partial class tb_ProjectGroupValidator:AbstractValidator<tb_ProjectGroup>*/
+    public partial class tb_ProjectGroupValidator:BaseValidatorGeneric<tb_ProjectGroup>
     {
      public tb_ProjectGroupValidator() 
      {
-      RuleFor(tb_ProjectGroup =>tb_ProjectGroup.ProjectGroupCode).MaximumLength(50).WithMessage("项目组代号:不能超过最大长度,50.");
- RuleFor(tb_ProjectGroup =>tb_ProjectGroup.ProjectGroupName).MaximumLength(50).WithMessage("项目组名称:不能超过最大长度,50.");
- RuleFor(tb_ProjectGroup =>tb_ProjectGroup.ResponsiblePerson).MaximumLength(50).WithMessage("负责人:不能超过最大长度,50.");
- RuleFor(tb_ProjectGroup =>tb_ProjectGroup.Phone).MaximumLength(255).WithMessage("电话:不能超过最大长度,255.");
- RuleFor(tb_ProjectGroup =>tb_ProjectGroup.Notes).MaximumLength(255).WithMessage("备注:不能超过最大长度,255.");
+      RuleFor(tb_ProjectGroup =>tb_ProjectGroup.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
+ RuleFor(tb_ProjectGroup =>tb_ProjectGroup.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
+ RuleFor(tb_ProjectGroup =>tb_ProjectGroup.ProjectGroupCode).MaximumLength(25).WithMessage("项目组代号:不能超过最大长度,25.");
+ RuleFor(tb_ProjectGroup =>tb_ProjectGroup.ProjectGroupName).MaximumLength(25).WithMessage("项目组名称:不能超过最大长度,25.");
+ RuleFor(tb_ProjectGroup =>tb_ProjectGroup.ResponsiblePerson).MaximumLength(25).WithMessage("负责人:不能超过最大长度,25.");
+ RuleFor(tb_ProjectGroup =>tb_ProjectGroup.Phone).MaximumLength(127).WithMessage("电话:不能超过最大长度,127.");
+ RuleFor(tb_ProjectGroup =>tb_ProjectGroup.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
  RuleFor(tb_ProjectGroup =>tb_ProjectGroup.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_ProjectGroup =>tb_ProjectGroup.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 //有默认值
        	
-           	
+           	        Initialize();
      }
 
 

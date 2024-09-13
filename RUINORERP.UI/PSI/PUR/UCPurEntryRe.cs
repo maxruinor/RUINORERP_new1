@@ -173,7 +173,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
 
                 //如果是采购入库引入变化则加载明细及相关数据
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PurEntryID.HasValue && entity.PurEntryID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurEntryRe>(c => c.PurEntryID))
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PurEntryID > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurEntryRe>(c => c.PurEntryID))
                 {
                     LoadRefBillData(entity.PurEntryID);
                 }
@@ -641,7 +641,7 @@ protected async override void ReReview()
                 entity.Approver_by = null;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.ReturnDate = System.DateTime.Now;
-                if (entity.PurEntryID.HasValue && entity.PurEntryID > 0)
+                if (entity.PurEntryID > 0)
                 {
                     entity.CustomerVendor_ID = purEntry.CustomerVendor_ID;
                     entity.PurEntryNo = purEntry.PurEntryNo;

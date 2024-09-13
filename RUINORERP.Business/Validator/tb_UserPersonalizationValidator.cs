@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:36
+// 时间：09/13/2024 18:44:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,14 +21,15 @@ namespace RUINORERP.Business
     /// <summary>
     /// 用户个性化设置表验证类
     /// </summary>
-    public partial class tb_UserPersonalizationValidator:AbstractValidator<tb_UserPersonalization>
+    /*public partial class tb_UserPersonalizationValidator:AbstractValidator<tb_UserPersonalization>*/
+    public partial class tb_UserPersonalizationValidator:BaseValidatorGeneric<tb_UserPersonalization>
     {
      public tb_UserPersonalizationValidator() 
      {
       RuleFor(tb_UserPersonalization =>tb_UserPersonalization.User_ID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
  RuleFor(tb_UserPersonalization =>tb_UserPersonalization.User_ID).NotEmpty().When(x => x.User_ID.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

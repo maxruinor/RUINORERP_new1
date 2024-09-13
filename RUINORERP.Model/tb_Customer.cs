@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:54
+// 时间：09/13/2024 18:43:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 意向客户，公海客户 CRM系统中使用，给成交客户作外键引用
     /// </summary>
     [Serializable()]
+    [Description("tb_Customer")]
     [SugarTable("tb_Customer")]
     public partial class tb_Customer: BaseEntity, ICloneable
     {
@@ -128,7 +129,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
-        //public virtual tb_Employee tb_Employee_ID { get; set; }
 
 
         //[Browsable(false)]
@@ -149,18 +149,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.Customer_id))]
-        public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }
-        //tb_CustomerVendor.Customer_id)
-        //Customer_id.FK_CUSTOMERVENDOR_REF_CUSTOMER)
-        //tb_Customer.Customer_id)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Customer_interaction.Customer_id))]
         public virtual List<tb_Customer_interaction> tb_Customer_interactions { get; set; }
         //tb_Customer_interaction.Customer_id)
         //Customer_id.FK_CUSTOMERINTERACTIONS_REF_CUSTOMER)
+        //tb_Customer.Customer_id)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.Customer_id))]
+        public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }
+        //tb_CustomerVendor.Customer_id)
+        //Customer_id.FK_CUSTOMERVENDOR_REF_CUSTOMER)
         //tb_Customer.Customer_id)
 
         //[Browsable(false)]

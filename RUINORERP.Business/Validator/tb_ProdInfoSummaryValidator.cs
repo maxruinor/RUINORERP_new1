@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:33
+// 时间：09/13/2024 18:44:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,9 +19,10 @@ using FluentValidation;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 产品信息汇总验证类
+    /// 商品信息汇总验证类
     /// </summary>
-    public partial class tb_ProdInfoSummaryValidator:AbstractValidator<tb_ProdInfoSummary>
+    /*public partial class tb_ProdInfoSummaryValidator:AbstractValidator<tb_ProdInfoSummary>*/
+    public partial class tb_ProdInfoSummaryValidator:BaseValidatorGeneric<tb_ProdInfoSummary>
     {
      public tb_ProdInfoSummaryValidator() 
      {
@@ -29,7 +30,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdInfoSummary =>tb_ProdInfoSummary.总销售量).NotEmpty().When(x => x.总销售量.HasValue);
  RuleFor(tb_ProdInfoSummary =>tb_ProdInfoSummary.库存总量).NotEmpty().When(x => x.库存总量.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

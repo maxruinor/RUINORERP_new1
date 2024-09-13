@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/15/2024 13:50:20
+// 时间：09/13/2024 18:43:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 成品入库单 要进一步完善验证类
     /// </summary>
-    public partial class tb_FinishedGoodsInvValidator:AbstractValidator<tb_FinishedGoodsInv>
+    /*public partial class tb_FinishedGoodsInvValidator:AbstractValidator<tb_FinishedGoodsInv>*/
+    public partial class tb_FinishedGoodsInvValidator:BaseValidatorGeneric<tb_FinishedGoodsInv>
     {
      public tb_FinishedGoodsInvValidator() 
      {
@@ -36,8 +37,8 @@ namespace RUINORERP.Business
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.ShippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.MONo).MaximumLength(25).WithMessage("制令单号:不能超过最大长度,25.");
- RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.MONo).NotEmpty().WithMessage("制令单号:不能为空。");
- RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.MOID).Must(CheckForeignKeyValue).WithMessage("制令单:下拉选择值不正确。");
+ RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.MOID).Must(CheckForeignKeyValueCanNull).WithMessage("制令单:下拉选择值不正确。");
+ RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.MOID).NotEmpty().When(x => x.MOID.HasValue);
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
@@ -60,7 +61,7 @@ namespace RUINORERP.Business
                 //RuleForEach(x => x.tb_FinishedGoodsInvDetails).NotNull();
                 //RuleFor(x => x.tb_FinishedGoodsInvDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
         
-        
+                Initialize();
      }
 
 

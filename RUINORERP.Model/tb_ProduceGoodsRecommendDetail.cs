@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/28/2024 12:31:25
+// 时间：09/13/2024 18:44:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,10 +68,10 @@ namespace RUINORERP.Model
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品
+        /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 
@@ -172,7 +172,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal SubtotalCostAmount
         { 
             get{return _SubtotalCostAmount;}
@@ -186,7 +186,7 @@ namespace RUINORERP.Model
         /// 单位成本
         /// </summary>
         [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单位成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
         public decimal UnitCost
         { 
             get{return _UnitCost;}
@@ -223,18 +223,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private int _PlanNeedQty = ((0));
+        private int _PlanNeedQty= ((0));
         /// <summary>
-        /// 计划需求数量
+        /// 计划需求数
         /// </summary>
-        [AdvQueryAttribute(ColName = "PlanNeedQty", ColDesc = "计划需求数")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PlanNeedQty", DecimalDigits = 0, IsNullable = false, ColumnDescription = "计划需求数")]
+        [AdvQueryAttribute(ColName = "PlanNeedQty",ColDesc = "计划需求数")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PlanNeedQty" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "计划需求数" )]
         public int PlanNeedQty
-        {
-            get { return _PlanNeedQty; }
-            set
-            {
-                SetProperty(ref _PlanNeedQty, value);
+        { 
+            get{return _PlanNeedQty;}
+            set{
+            SetProperty(ref _PlanNeedQty, value);
             }
         }
 
@@ -345,6 +344,14 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(PDID))]
         public virtual tb_ProductionDemand tb_productiondemand { get; set; }
 
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.PDCID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.PDCID)
+        //PDCID.FK_MANUFACTRUINGORDRDER_REF_PRODUCEGROODSRECOMMENDDETAIL)
+        //tb_ProduceGoodsRecommendDetail.PDCID)
 
 
         #endregion

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:30
+// 时间：09/13/2024 18:43:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 存货预警特性表验证类
     /// </summary>
-    public partial class tb_Inv_Alert_AttributeValidator:AbstractValidator<tb_Inv_Alert_Attribute>
+    /*public partial class tb_Inv_Alert_AttributeValidator:AbstractValidator<tb_Inv_Alert_Attribute>*/
+    public partial class tb_Inv_Alert_AttributeValidator:BaseValidatorGeneric<tb_Inv_Alert_Attribute>
     {
      public tb_Inv_Alert_AttributeValidator() 
      {
@@ -33,7 +34,7 @@ namespace RUINORERP.Business
  RuleFor(tb_Inv_Alert_Attribute =>tb_Inv_Alert_Attribute.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_Inv_Alert_Attribute =>tb_Inv_Alert_Attribute.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

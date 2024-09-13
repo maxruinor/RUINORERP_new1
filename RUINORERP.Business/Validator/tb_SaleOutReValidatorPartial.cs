@@ -19,7 +19,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 销售出库退回单验证类
     /// </summary>
-    public partial class tb_SaleOutReValidator : AbstractValidator<tb_SaleOutRe>
+    public partial class tb_SaleOutReValidator : BaseValidatorGeneric<tb_SaleOutRe>
     {
         //public class CustomerValidator : AbstractValidator<tb_SaleOutRe>
         //{

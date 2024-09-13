@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:23
+// 时间：09/13/2024 18:44:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 可视化排程
     /// </summary>
     [Serializable()]
+    [Description("tb_ProduceViewSchedule")]
     [SugarTable("tb_ProduceViewSchedule")]
     public partial class tb_ProduceViewSchedule: BaseEntity, ICloneable
     {

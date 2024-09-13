@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:36
+// 时间：09/13/2024 18:44:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,22 +21,23 @@ namespace RUINORERP.Business
     /// <summary>
     /// 用户表验证类
     /// </summary>
-    public partial class tb_UserInfoValidator:AbstractValidator<tb_UserInfo>
+    /*public partial class tb_UserInfoValidator:AbstractValidator<tb_UserInfo>*/
+    public partial class tb_UserInfoValidator:BaseValidatorGeneric<tb_UserInfo>
     {
      public tb_UserInfoValidator() 
      {
-      RuleFor(tb_UserInfo =>tb_UserInfo.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
+      RuleFor(tb_UserInfo =>tb_UserInfo.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("员工信息:下拉选择值不正确。");
  RuleFor(tb_UserInfo =>tb_UserInfo.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
- RuleFor(tb_UserInfo =>tb_UserInfo.UserName).MaximumLength(255).WithMessage("用户名:不能超过最大长度,255.");
+ RuleFor(tb_UserInfo =>tb_UserInfo.UserName).MaximumLength(127).WithMessage("用户名:不能超过最大长度,127.");
  RuleFor(tb_UserInfo =>tb_UserInfo.UserName).NotEmpty().WithMessage("用户名:不能为空。");
- RuleFor(tb_UserInfo =>tb_UserInfo.Password).MaximumLength(255).WithMessage("密码:不能超过最大长度,255.");
+ RuleFor(tb_UserInfo =>tb_UserInfo.Password).MaximumLength(127).WithMessage("密码:不能超过最大长度,127.");
 //有默认值
 //有默认值
- RuleFor(tb_UserInfo =>tb_UserInfo.Notes).MaximumLength(100).WithMessage("备注说明:不能超过最大长度,100.");
+ RuleFor(tb_UserInfo =>tb_UserInfo.Notes).MaximumLength(50).WithMessage("备注说明:不能超过最大长度,50.");
  RuleFor(tb_UserInfo =>tb_UserInfo.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_UserInfo =>tb_UserInfo.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

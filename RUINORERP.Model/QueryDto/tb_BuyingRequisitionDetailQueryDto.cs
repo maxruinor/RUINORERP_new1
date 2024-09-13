@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/05/2024 17:00:18
+// 时间：09/13/2024 18:43:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,10 +49,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "货品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID 
         { 
@@ -110,6 +110,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Quantity;}
             set{SetProperty(ref _Quantity, value);}
+        }
+     
+
+        private decimal? _EstimatedPrice;
+        /// <summary>
+        /// 预估价格
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EstimatedPrice",ColDesc = "预估价格")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "EstimatedPrice",IsNullable = true,ColumnDescription = "预估价格" )]
+        public decimal? EstimatedPrice 
+        { 
+            get{return _EstimatedPrice;}
+            set{SetProperty(ref _EstimatedPrice, value);}
         }
      
 

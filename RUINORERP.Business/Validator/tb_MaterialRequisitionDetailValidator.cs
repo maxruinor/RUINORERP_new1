@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/28/2024 11:55:44
+// 时间：09/13/2024 18:43:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,14 +21,15 @@ namespace RUINORERP.Business
     /// <summary>
     /// 领料单明细验证类
     /// </summary>
-    public partial class tb_MaterialRequisitionDetailValidator:AbstractValidator<tb_MaterialRequisitionDetail>
+    /*public partial class tb_MaterialRequisitionDetailValidator:AbstractValidator<tb_MaterialRequisitionDetail>*/
+    public partial class tb_MaterialRequisitionDetailValidator:BaseValidatorGeneric<tb_MaterialRequisitionDetail>
     {
      public tb_MaterialRequisitionDetailValidator() 
      {
      //***** 
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.MR_ID).NotNull().WithMessage("领料单:不能为空。");
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
- RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品详情:下拉选择值不正确。");
+ RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
 //***** 
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.ShouldSendQty).NotNull().WithMessage("应发数:不能为空。");
@@ -47,7 +48,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.ManufacturingOrderDetailRowID).NotNull().WithMessage(":不能为空。");
        	
-           	
+           	        Initialize();
      }
 
 

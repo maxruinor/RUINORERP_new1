@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:38
+// 时间：09/13/2024 18:43:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 开票资料
     /// </summary>
     [Serializable()]
+    [Description("tb_InvoiceInfo")]
     [SugarTable("tb_InvoiceInfo")]
     public partial class tb_InvoiceInfo: BaseEntity, ICloneable
     {
@@ -268,7 +269,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
-        //public virtual tb_CustomerVendor tb_CustomerVendor_ID { get; set; }
 
 
         //[Browsable(false)]

@@ -1049,6 +1049,11 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 图片
         /// </summary>
         Image,
+
+        /// <summary>
+        /// 图片路径形式保存，会上传图片到服务器的
+        /// </summary>
+        WebImage,
     }
 
 }

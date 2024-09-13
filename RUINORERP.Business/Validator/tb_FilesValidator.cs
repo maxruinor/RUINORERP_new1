@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:29
+// 时间：09/13/2024 18:43:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,14 +21,15 @@ namespace RUINORERP.Business
     /// <summary>
     /// 文档表验证类
     /// </summary>
-    public partial class tb_FilesValidator:AbstractValidator<tb_Files>
+    /*public partial class tb_FilesValidator:AbstractValidator<tb_Files>*/
+    public partial class tb_FilesValidator:BaseValidatorGeneric<tb_Files>
     {
      public tb_FilesValidator() 
      {
-      RuleFor(tb_Files =>tb_Files.Files_Path).MaximumLength(800).WithMessage(":不能超过最大长度,800.");
- RuleFor(tb_Files =>tb_Files.FileName).MaximumLength(100).WithMessage(":不能超过最大长度,100.");
+      RuleFor(tb_Files =>tb_Files.Files_Path).MaximumLength(400).WithMessage(":不能超过最大长度,400.");
+ RuleFor(tb_Files =>tb_Files.FileName).MaximumLength(50).WithMessage(":不能超过最大长度,50.");
        	
-           	
+           	        Initialize();
      }
 
 

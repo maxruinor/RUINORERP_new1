@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:36
+// 时间：09/13/2024 18:44:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 用户角色关系表验证类
     /// </summary>
-    public partial class tb_User_RoleValidator:AbstractValidator<tb_User_Role>
+    /*public partial class tb_User_RoleValidator:AbstractValidator<tb_User_Role>*/
+    public partial class tb_User_RoleValidator:BaseValidatorGeneric<tb_User_Role>
     {
      public tb_User_RoleValidator() 
      {
@@ -30,7 +31,7 @@ namespace RUINORERP.Business
  RuleFor(tb_User_Role =>tb_User_Role.RoleID).Must(CheckForeignKeyValueCanNull).WithMessage("角色:下拉选择值不正确。");
  RuleFor(tb_User_Role =>tb_User_Role.RoleID).NotEmpty().When(x => x.RoleID.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

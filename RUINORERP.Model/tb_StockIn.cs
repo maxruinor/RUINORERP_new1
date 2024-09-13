@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:49:07
+// 时间：09/13/2024 19:02:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 入库单 非生产领料/退料
     /// </summary>
     [Serializable()]
+    [Description("tb_StockIn")]
     [SugarTable("tb_StockIn")]
     public partial class tb_StockIn: BaseEntity, ICloneable
     {
@@ -56,7 +57,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "入库类型")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "入库类型" )]
-        [FKRelationAttribute("tb_OutInStockType","Type_ID")]
         public long Type_ID
         { 
             get{return _Type_ID;}
@@ -85,8 +85,7 @@ namespace RUINORERP.Model
         /// 内部来源人员
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "内部来源人员")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "内部来源人员")]
-        [FKRelationAttribute("tb_Employee","Employee_ID")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "内部来源人员" )]
         public long? Employee_ID
         { 
             get{return _Employee_ID;}
@@ -128,7 +127,7 @@ namespace RUINORERP.Model
         /// 总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总成本" )]
         public decimal TotalCost
         { 
             get{return _TotalCost;}
@@ -142,7 +141,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -312,7 +311,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "数据状态" )]
-        [Browsable(false)]
         public int DataStatus
         { 
             get{return _DataStatus;}
@@ -412,19 +410,10 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
-        //public virtual tb_CustomerVendor tb_CustomerVendor_ID { get; set; }
-
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
-        //public virtual tb_Employee tb_Employee_ID { get; set; }
-
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
-        public virtual tb_OutInStockType tb_outinstocktype { get; set; }
-        //public virtual tb_OutInStockType tb_Type_ID { get; set; }
 
 
         //[Browsable(false)]

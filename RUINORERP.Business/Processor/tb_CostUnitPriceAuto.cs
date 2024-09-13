@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/29/2024 13:46:08
+// 时间：09/13/2024 18:43:31
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 成本单价表 参考天思产品基本资料中的价格部分
+    /// 成本单价表 参考天思货品基本资料中的价格部分
     /// </summary>
     public partial class tb_CostUnitPriceProcessor:BaseProcessor 
     {
@@ -41,9 +41,6 @@ namespace RUINORERP.Business.Processor
            _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
         }
-      
-        
-
         
     }
 }

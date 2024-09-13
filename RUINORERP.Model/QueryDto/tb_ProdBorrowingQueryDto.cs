@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:36
+// 时间：09/13/2024 18:44:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,10 +49,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _Employee_ID;
         /// <summary>
-        /// 经办人
+        /// 借出人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Employee_ID",IsNullable = false,ColumnDescription = "经办人" )]
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "借出人")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Employee_ID",IsNullable = false,ColumnDescription = "借出人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long Employee_ID 
         { 
@@ -230,12 +230,25 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _ApprovalOpinions;
+        private string _Reason;
         /// <summary>
         /// 审批意见
         /// </summary>
-        [AdvQueryAttribute(ColName = "ApprovalOpinions",ColDesc = "审批意见")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ApprovalOpinions",Length=500,IsNullable = true,ColumnDescription = "审批意见" )]
+        [AdvQueryAttribute(ColName = "Reason",ColDesc = "审批意见")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Reason",Length=500,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string Reason 
+        { 
+            get{return _Reason;}
+            set{SetProperty(ref _Reason, value);}
+        }
+     
+
+        private string _ApprovalOpinions;
+        /// <summary>
+        /// 借出原因
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ApprovalOpinions",ColDesc = "借出原因")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ApprovalOpinions",Length=500,IsNullable = true,ColumnDescription = "借出原因" )]
         public string ApprovalOpinions 
         { 
             get{return _ApprovalOpinions;}
@@ -308,42 +321,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _RefBillID;
+        private string _CloseCaseOpinions;
         /// <summary>
-        /// 引用单据
+        /// 审批意见
         /// </summary>
-        [AdvQueryAttribute(ColName = "RefBillID",ColDesc = "引用单据")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "RefBillID",IsNullable = true,ColumnDescription = "引用单据" )]
-        public long? RefBillID 
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "审批意见")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "CloseCaseOpinions",Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string CloseCaseOpinions 
         { 
-            get{return _RefBillID;}
-            set{SetProperty(ref _RefBillID, value);}
-        }
-     
-
-        private string _RefNO;
-        /// <summary>
-        /// 引用单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "RefNO",ColDesc = "引用单号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "RefNO",Length=50,IsNullable = true,ColumnDescription = "引用单号" )]
-        public string RefNO 
-        { 
-            get{return _RefNO;}
-            set{SetProperty(ref _RefNO, value);}
-        }
-     
-
-        private int? _RefBizType;
-        /// <summary>
-        /// 引用单据类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "RefBizType",ColDesc = "引用单据类型")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "RefBizType",IsNullable = true,ColumnDescription = "引用单据类型" )]
-        public int? RefBizType 
-        { 
-            get{return _RefBizType;}
-            set{SetProperty(ref _RefBizType, value);}
+            get{return _CloseCaseOpinions;}
+            set{SetProperty(ref _CloseCaseOpinions, value);}
         }
 
 

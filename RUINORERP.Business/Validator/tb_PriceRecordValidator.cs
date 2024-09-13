@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/11/2024 18:42:55
+// 时间：09/13/2024 18:44:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,16 +21,17 @@ namespace RUINORERP.Business
     /// <summary>
     /// 价格记录表验证类
     /// </summary>
-    public partial class tb_PriceRecordValidator:AbstractValidator<tb_PriceRecord>
+    /*public partial class tb_PriceRecordValidator:AbstractValidator<tb_PriceRecord>*/
+    public partial class tb_PriceRecordValidator:BaseValidatorGeneric<tb_PriceRecord>
     {
      public tb_PriceRecordValidator() 
      {
-      RuleFor(tb_PriceRecord =>tb_PriceRecord.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品详情:下拉选择值不正确。");
+      RuleFor(tb_PriceRecord =>tb_PriceRecord.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
  RuleFor(tb_PriceRecord =>tb_PriceRecord.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
  RuleFor(x => x.PurPrice).PrecisionScale(19,4,true).WithMessage("采购价:小数位不能超过4。");
  RuleFor(x => x.SalePrice).PrecisionScale(19,4,true).WithMessage("销售价:小数位不能超过4。");
        	
-           	
+           	        Initialize();
      }
 
 

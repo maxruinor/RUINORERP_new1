@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/31/2024 20:20:02
+// 时间：09/13/2024 18:44:22
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,9 +30,9 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 销售订单明细
+    /// 采购订单明细表
     /// </summary>
-    public partial class tb_PurOrderDetailProcessor : BaseProcessor 
+    public partial class tb_PurOrderDetailProcessor:BaseProcessor 
     {
        
         public tb_PurOrderDetailProcessor(ILogger<tb_PurOrderDetailProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)

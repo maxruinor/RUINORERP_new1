@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:31
+// 时间：09/13/2024 18:43:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 外发加工订单表验证类
     /// </summary>
-    public partial class tb_Outsourcing_orderValidator:AbstractValidator<tb_Outsourcing_order>
+    /*public partial class tb_Outsourcing_orderValidator:AbstractValidator<tb_Outsourcing_order>*/
+    public partial class tb_Outsourcing_orderValidator:BaseValidatorGeneric<tb_Outsourcing_order>
     {
      public tb_Outsourcing_orderValidator() 
      {
@@ -31,7 +32,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.Total_amount).PrecisionScale(10,2,true).WithMessage(":小数位不能超过2。");
  RuleFor(tb_Outsourcing_order =>tb_Outsourcing_order.Status).NotEmpty().When(x => x.Status.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

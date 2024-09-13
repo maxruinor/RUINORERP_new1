@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:54
+// 时间：09/13/2024 18:43:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 币别资料表
     /// </summary>
     [Serializable()]
+    [Description("tb_Currency")]
     [SugarTable("tb_Currency")]
     public partial class tb_Currency: BaseEntity, ICloneable
     {

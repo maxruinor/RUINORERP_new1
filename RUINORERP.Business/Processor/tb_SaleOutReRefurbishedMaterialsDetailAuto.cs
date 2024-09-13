@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/15/2024 19:01:20
+// 时间：09/13/2024 19:02:36
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -41,13 +41,6 @@ namespace RUINORERP.Business.Processor
            _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
         }
-      
-        public override QueryFilter GetQueryFilter()
-        {
-            QueryFilter queryFilter = new QueryFilter();
-            return queryFilter;
-        }
-
         
     }
 }

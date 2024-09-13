@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:38
+// 时间：09/13/2024 18:44:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -114,7 +114,7 @@ namespace RUINORERP.Model
         /// 总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总成本" )]
         public decimal TotalCost
         { 
             get{return _TotalCost;}
@@ -128,7 +128,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -360,6 +360,20 @@ namespace RUINORERP.Model
             get{return _PrintStatus;}
             set{
             SetProperty(ref _PrintStatus, value);
+            }
+        }
+
+        private string _CloseCaseOpinions;
+        /// <summary>
+        /// 审批意见
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "审批意见")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string CloseCaseOpinions
+        { 
+            get{return _CloseCaseOpinions;}
+            set{
+            SetProperty(ref _CloseCaseOpinions, value);
             }
         }
 

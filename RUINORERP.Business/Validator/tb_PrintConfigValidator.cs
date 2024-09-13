@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:32
+// 时间：09/13/2024 18:44:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,19 +21,20 @@ namespace RUINORERP.Business
     /// <summary>
     /// 报表打印配置表验证类
     /// </summary>
-    public partial class tb_PrintConfigValidator:AbstractValidator<tb_PrintConfig>
+    /*public partial class tb_PrintConfigValidator:AbstractValidator<tb_PrintConfig>*/
+    public partial class tb_PrintConfigValidator:BaseValidatorGeneric<tb_PrintConfig>
     {
      public tb_PrintConfigValidator() 
      {
-      RuleFor(tb_PrintConfig =>tb_PrintConfig.Config_Name).MaximumLength(100).WithMessage("配置名称:不能超过最大长度,100.");
+      RuleFor(tb_PrintConfig =>tb_PrintConfig.Config_Name).MaximumLength(50).WithMessage("配置名称:不能超过最大长度,50.");
  RuleFor(tb_PrintConfig =>tb_PrintConfig.Config_Name).NotEmpty().WithMessage("配置名称:不能为空。");
 //***** 
  RuleFor(tb_PrintConfig =>tb_PrintConfig.BizType).NotNull().WithMessage("业务类型:不能为空。");
- RuleFor(tb_PrintConfig =>tb_PrintConfig.BizName).MaximumLength(30).WithMessage("业务名称:不能超过最大长度,30.");
+ RuleFor(tb_PrintConfig =>tb_PrintConfig.BizName).MaximumLength(15).WithMessage("业务名称:不能超过最大长度,15.");
  RuleFor(tb_PrintConfig =>tb_PrintConfig.BizName).NotEmpty().WithMessage("业务名称:不能为空。");
- RuleFor(tb_PrintConfig =>tb_PrintConfig.PrinterName).MaximumLength(200).WithMessage("打印机名称:不能超过最大长度,200.");
+ RuleFor(tb_PrintConfig =>tb_PrintConfig.PrinterName).MaximumLength(100).WithMessage("打印机名称:不能超过最大长度,100.");
        	
-           	
+           	        Initialize();
      }
 
 

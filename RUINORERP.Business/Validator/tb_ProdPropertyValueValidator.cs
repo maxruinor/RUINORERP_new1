@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:33
+// 时间：09/13/2024 18:44:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,21 +21,22 @@ namespace RUINORERP.Business
     /// <summary>
     /// 产品属性值表验证类
     /// </summary>
-    public partial class tb_ProdPropertyValueValidator:AbstractValidator<tb_ProdPropertyValue>
+    /*public partial class tb_ProdPropertyValueValidator:AbstractValidator<tb_ProdPropertyValue>*/
+    public partial class tb_ProdPropertyValueValidator:BaseValidatorGeneric<tb_ProdPropertyValue>
     {
      public tb_ProdPropertyValueValidator() 
      {
      //***** 
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.Property_ID).NotNull().WithMessage("属性:不能为空。");
- RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueName).MaximumLength(20).WithMessage("属性值名称:不能超过最大长度,20.");
+ RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueName).MaximumLength(10).WithMessage("属性值名称:不能超过最大长度,10.");
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueName).NotEmpty().WithMessage("属性值名称:不能为空。");
- RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueDesc).MaximumLength(50).WithMessage("属性值描述:不能超过最大长度,50.");
+ RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueDesc).MaximumLength(25).WithMessage("属性值描述:不能超过最大长度,25.");
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.SortOrder).NotEmpty().When(x => x.SortOrder.HasValue);
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

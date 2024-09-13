@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/20/2024 20:30:03
+// 时间：09/13/2024 18:44:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -166,7 +166,6 @@ namespace RUINORERP.Model
             }
         }
 
-
         private string _property;
         /// <summary>
         /// 属性
@@ -215,7 +214,7 @@ namespace RUINORERP.Model
         /// 配方编号
         /// </summary>
         [AdvQueryAttribute(ColName = "BOM_No",ColDesc = "配方编号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BOM_No" ,Length=50,IsNullable = false,ColumnDescription = "配方编号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BOM_No" ,Length=50,IsNullable = true,ColumnDescription = "配方编号" )]
         public string BOM_No
         { 
             get{return _BOM_No;}
@@ -223,8 +222,6 @@ namespace RUINORERP.Model
             SetProperty(ref _BOM_No, value);
             }
         }
-
-     
 
         private DateTime? _Created_at;
         /// <summary>

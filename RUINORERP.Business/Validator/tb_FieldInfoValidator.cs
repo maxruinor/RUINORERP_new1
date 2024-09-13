@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:29
+// 时间：09/13/2024 18:43:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,22 +21,23 @@ namespace RUINORERP.Business
     /// <summary>
     /// 字段信息表验证类
     /// </summary>
-    public partial class tb_FieldInfoValidator:AbstractValidator<tb_FieldInfo>
+    /*public partial class tb_FieldInfoValidator:AbstractValidator<tb_FieldInfo>*/
+    public partial class tb_FieldInfoValidator:BaseValidatorGeneric<tb_FieldInfo>
     {
      public tb_FieldInfoValidator() 
      {
       RuleFor(tb_FieldInfo =>tb_FieldInfo.MenuID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单:下拉选择值不正确。");
  RuleFor(tb_FieldInfo =>tb_FieldInfo.MenuID).NotEmpty().When(x => x.MenuID.HasValue);
- RuleFor(tb_FieldInfo =>tb_FieldInfo.EntityName).MaximumLength(50).WithMessage("实体名称:不能超过最大长度,50.");
- RuleFor(tb_FieldInfo =>tb_FieldInfo.FieldName).MaximumLength(50).WithMessage("字段名称:不能超过最大长度,50.");
- RuleFor(tb_FieldInfo =>tb_FieldInfo.FieldText).MaximumLength(50).WithMessage("字段显示:不能超过最大长度,50.");
- RuleFor(tb_FieldInfo =>tb_FieldInfo.ClassPath).MaximumLength(500).WithMessage("类路径:不能超过最大长度,500.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.EntityName).MaximumLength(25).WithMessage("实体名称:不能超过最大长度,25.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.FieldName).MaximumLength(25).WithMessage("字段名称:不能超过最大长度,25.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.FieldText).MaximumLength(25).WithMessage("字段显示:不能超过最大长度,25.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.ClassPath).MaximumLength(250).WithMessage("类路径:不能超过最大长度,250.");
 //有默认值
- RuleFor(tb_FieldInfo =>tb_FieldInfo.Notes).MaximumLength(200).WithMessage("备注:不能超过最大长度,200.");
- RuleFor(tb_FieldInfo =>tb_FieldInfo.ChildEntityName).MaximumLength(50).WithMessage("子表名称:不能超过最大长度,50.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.ChildEntityName).MaximumLength(25).WithMessage("子表名称:不能超过最大长度,25.");
  RuleFor(tb_FieldInfo =>tb_FieldInfo.ChildEntityName).NotEmpty().WithMessage("子表名称:不能为空。");
        	
-           	
+           	        Initialize();
      }
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:00
+// 时间：09/13/2024 18:43:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -116,10 +116,10 @@ namespace RUINORERP.Model.QueryDto
 
         private bool _HideValue;
         /// <summary>
-        /// 隐藏值
+        /// 默认隐藏
         /// </summary>
-        [AdvQueryAttribute(ColName = "HideValue",ColDesc = "隐藏值")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "HideValue",IsNullable = false,ColumnDescription = "隐藏值" )]
+        [AdvQueryAttribute(ColName = "HideValue",ColDesc = "默认隐藏")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "HideValue",IsNullable = false,ColumnDescription = "默认隐藏" )]
         public bool HideValue 
         { 
             get{return _HideValue;}
@@ -176,6 +176,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Modified_by;}
             set{SetProperty(ref _Modified_by, value);}
+        }
+     
+
+        private bool _IsChild;
+        /// <summary>
+        /// 子表字段
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsChild",ColDesc = "子表字段")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsChild",IsNullable = false,ColumnDescription = "子表字段" )]
+        public bool IsChild 
+        { 
+            get{return _IsChild;}
+            set{SetProperty(ref _IsChild, value);}
         }
 
 

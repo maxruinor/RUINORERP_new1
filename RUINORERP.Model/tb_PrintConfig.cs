@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/26/2024 10:52:22
+// 时间：09/13/2024 18:44:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 报表打印配置表
     /// </summary>
     [Serializable()]
+    [Description("tb_PrintConfig")]
     [SugarTable("tb_PrintConfig")]
     public partial class tb_PrintConfig: BaseEntity, ICloneable
     {
@@ -94,10 +95,10 @@ namespace RUINORERP.Model
 
         private string _PrinterName;
         /// <summary>
-        /// 默认打印机名称
+        /// 打印机名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "PrinterName",ColDesc = "默认打印机名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PrinterName" ,Length=200,IsNullable = true,ColumnDescription = "默认打印机名称")]
+        [AdvQueryAttribute(ColName = "PrinterName",ColDesc = "打印机名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PrinterName" ,Length=200,IsNullable = true,ColumnDescription = "打印机名称" )]
         public string PrinterName
         { 
             get{return _PrinterName;}
@@ -106,39 +107,33 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _PrinterSelected = false;
+        private bool? _PrinterSelected= false;
         /// <summary>
-        /// 设置默认打印机
+        /// 设置了默认打印机
         /// </summary>
-        [AdvQueryAttribute(ColName = "PrinterSelected", ColDesc = "设置默认打印机")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "PrinterSelected", IsNullable = false, ColumnDescription = "设置默认打印机")]
-        [Browsable(false)]
-        public bool PrinterSelected
-        {
-            get { return _PrinterSelected; }
-            set
-            {
-                SetProperty(ref _PrinterSelected, value);
+        [AdvQueryAttribute(ColName = "PrinterSelected",ColDesc = "设置了默认打印机")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "PrinterSelected" ,IsNullable = true,ColumnDescription = "设置了默认打印机" )]
+        public bool? PrinterSelected
+        { 
+            get{return _PrinterSelected;}
+            set{
+            SetProperty(ref _PrinterSelected, value);
             }
         }
 
-
-        private bool _Landscape = false;
+        private bool? _Landscape= false;
         /// <summary>
         /// 设置横向打印
         /// </summary>
-        [AdvQueryAttribute(ColName = "Landscape", ColDesc = "设置横向打印")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Landscape", IsNullable = false, ColumnDescription = "设置横向打印")]
-        [Browsable(false)]
-        public bool Landscape
-        {
-            get { return _Landscape; }
-            set
-            {
-                SetProperty(ref _Landscape, value);
+        [AdvQueryAttribute(ColName = "Landscape",ColDesc = "设置横向打印")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Landscape" ,IsNullable = true,ColumnDescription = "设置横向打印" )]
+        public bool? Landscape
+        { 
+            get{return _Landscape;}
+            set{
+            SetProperty(ref _Landscape, value);
             }
         }
-
 
         #endregion
 

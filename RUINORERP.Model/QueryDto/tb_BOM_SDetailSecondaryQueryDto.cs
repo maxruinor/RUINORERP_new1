@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/10/2024 19:17:32
+// 时间：09/13/2024 18:43:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -35,10 +35,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "货品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long? ProdDetailID 
         { 
@@ -72,32 +72,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Location_ID;}
             set{SetProperty(ref _Location_ID, value);}
-        }
-     
-
-        private string _SecondItemName;
-        /// <summary>
-        /// 副产名称
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SecondItemName",ColDesc = "副产名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SecondItemName",Length=200,IsNullable = true,ColumnDescription = "副产名称" )]
-        public string SecondItemName 
-        { 
-            get{return _SecondItemName;}
-            set{SetProperty(ref _SecondItemName, value);}
-        }
-     
-
-        private string _SecondItemSpec;
-        /// <summary>
-        /// 副产规格
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SecondItemSpec",ColDesc = "副产规格")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SecondItemSpec",Length=200,IsNullable = true,ColumnDescription = "副产规格" )]
-        public string SecondItemSpec 
-        { 
-            get{return _SecondItemSpec;}
-            set{SetProperty(ref _SecondItemSpec, value);}
         }
      
 

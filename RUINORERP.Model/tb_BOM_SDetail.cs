@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:35
+// 时间：09/13/2024 18:43:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -422,12 +422,10 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
-
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual View_ProdDetail view_ProdDetail { get; set; }
-
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]

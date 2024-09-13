@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/07/2024 19:06:31
+// 时间：09/13/2024 18:44:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -84,7 +84,7 @@ namespace RUINORERP.Model
         /// 套装单位
         /// </summary>
         [AdvQueryAttribute(ColName = "Unit_ID",ColDesc = "套装单位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Unit_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "套装单位")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Unit_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "套装单位" )]
         [FKRelationAttribute("tb_Unit","Unit_ID")]
         public long Unit_ID
         { 
@@ -141,7 +141,7 @@ namespace RUINORERP.Model
         /// 市场零售价
         /// </summary>
         [AdvQueryAttribute(ColName = "Market_Price",ColDesc = "市场零售价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Market_Price" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "市场零售价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Market_Price" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "市场零售价" )]
         public decimal? Market_Price
         { 
             get{return _Market_Price;}

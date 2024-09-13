@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:28
+// 时间：09/13/2024 18:43:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,16 +21,17 @@ namespace RUINORERP.Business
     /// <summary>
     /// 流程步骤 为转移条件集合，Field为条件左参数，Operator为操作操作符如果值类型为String则表达式只能为==或者!=，Value为表达式值验证类
     /// </summary>
-    public partial class tb_ConNodeConditionsValidator:AbstractValidator<tb_ConNodeConditions>
+    /*public partial class tb_ConNodeConditionsValidator:AbstractValidator<tb_ConNodeConditions>*/
+    public partial class tb_ConNodeConditionsValidator:BaseValidatorGeneric<tb_ConNodeConditions>
     {
      public tb_ConNodeConditionsValidator() 
      {
-      RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Field).MaximumLength(50).WithMessage("表达式:不能超过最大长度,50.");
+      RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Field).MaximumLength(25).WithMessage("表达式:不能超过最大长度,25.");
  RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Field).NotEmpty().WithMessage("表达式:不能为空。");
- RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Operator).MaximumLength(50).WithMessage("操作符:不能超过最大长度,50.");
- RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Value).MaximumLength(50).WithMessage("表达式值:不能超过最大长度,50.");
+ RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Operator).MaximumLength(25).WithMessage("操作符:不能超过最大长度,25.");
+ RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Value).MaximumLength(25).WithMessage("表达式值:不能超过最大长度,25.");
        	
-           	
+           	        Initialize();
      }
 
 

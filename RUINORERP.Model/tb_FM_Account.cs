@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:10
+// 时间：09/13/2024 18:43:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 账户管理，财务系统中使用
     /// </summary>
     [Serializable()]
+    [Description("tb_FM_Account")]
     [SugarTable("tb_FM_Account")]
     public partial class tb_FM_Account: BaseEntity, ICloneable
     {
@@ -156,7 +157,7 @@ namespace RUINORERP.Model
         /// 初始余额
         /// </summary>
         [AdvQueryAttribute(ColName = "OpeningBalance",ColDesc = "初始余额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OpeningBalance" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "初始余额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OpeningBalance" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "初始余额" )]
         public decimal? OpeningBalance
         { 
             get{return _OpeningBalance;}
@@ -170,7 +171,7 @@ namespace RUINORERP.Model
         /// 当前余额
         /// </summary>
         [AdvQueryAttribute(ColName = "CurrentBalance",ColDesc = "当前余额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CurrentBalance" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "当前余额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CurrentBalance" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "当前余额" )]
         public decimal? CurrentBalance
         { 
             get{return _CurrentBalance;}
@@ -186,20 +187,25 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
-        //public virtual tb_Department tb_DepartmentID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
-        //public virtual tb_Currency tb_Currency_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
-        //public virtual tb_FM_Subject tb_subject_id { get; set; }
 
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.account_id))]
+        public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
+        //tb_FM_OtherExpenseDetail.account_id)
+        //account_id.FK_TB_FM_OT_REFERENCE_TB_FM_AC)
+        //tb_FM_Account.account_id)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -215,14 +221,6 @@ namespace RUINORERP.Model
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
         //tb_FM_PaymentBill.account_id)
         //account_id.FK_FM_PAYMENTBILL_REF_ACCOUNTS)
-        //tb_FM_Account.account_id)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.account_id))]
-        public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
-        //tb_FM_OtherExpenseDetail.account_id)
-        //account_id.FK_TB_FM_OT_REFERENCE_TB_FM_AC)
         //tb_FM_Account.account_id)
 
         //[Browsable(false)]

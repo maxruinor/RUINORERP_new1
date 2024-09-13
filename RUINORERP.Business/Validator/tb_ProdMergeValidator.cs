@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/20/2024 20:30:03
+// 时间：09/13/2024 18:44:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 产品组合单验证类
     /// </summary>
-    public partial class tb_ProdMergeValidator:AbstractValidator<tb_ProdMerge>
+    /*public partial class tb_ProdMergeValidator:AbstractValidator<tb_ProdMerge>*/
+    public partial class tb_ProdMergeValidator:BaseValidatorGeneric<tb_ProdMerge>
     {
      public tb_ProdMergeValidator() 
      {
@@ -35,10 +36,10 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdMerge =>tb_ProdMerge.MergeTargetQty).NotNull().WithMessage("产出数量:不能为空。");
 //***** 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.MergeSourceTotalQty).NotNull().WithMessage("子件总数量:不能为空。");
- 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
  RuleFor(tb_ProdMerge =>tb_ProdMerge.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
  RuleFor(tb_ProdMerge =>tb_ProdMerge.BOM_ID).Must(CheckForeignKeyValueCanNull).WithMessage("拆分配方:下拉选择值不正确。");
+ RuleFor(tb_ProdMerge =>tb_ProdMerge.BOM_ID).NotEmpty().When(x => x.BOM_ID.HasValue);
  RuleFor(tb_ProdMerge =>tb_ProdMerge.BOM_No).MaximumLength(25).WithMessage("配方编号:不能超过最大长度,25.");
  RuleFor(tb_ProdMerge =>tb_ProdMerge.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_ProdMerge =>tb_ProdMerge.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
@@ -58,7 +59,7 @@ namespace RUINORERP.Business
                 //RuleForEach(x => x.tb_ProdMergeDetails).NotNull();
                 //RuleFor(x => x.tb_ProdMergeDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
         
-        
+                Initialize();
      }
 
 

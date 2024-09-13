@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:19
+// 时间：09/13/2024 18:44:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 产品属性表
     /// </summary>
     [Serializable()]
+    [Description("tb_ProdProperty")]
     [SugarTable("tb_ProdProperty")]
     public partial class tb_ProdProperty: BaseEntity, ICloneable
     {
@@ -183,7 +184,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "数据状态" )]
-        [Browsable(false)]
         public int? DataStatus
         { 
             get{return _DataStatus;}

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:52
+// 时间：09/13/2024 18:43:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -307,13 +307,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int? _Sort;
+        private int _Sort;
         /// <summary>
         /// 排序
         /// </summary>
         [AdvQueryAttribute(ColName = "Sort",ColDesc = "排序")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Sort",IsNullable = true,ColumnDescription = "排序" )]
-        public int? Sort 
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Sort",IsNullable = false,ColumnDescription = "排序" )]
+        public int Sort 
         { 
             get{return _Sort;}
             set{SetProperty(ref _Sort, value);}
@@ -330,6 +330,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _HotKey;}
             set{SetProperty(ref _HotKey, value);}
+        }
+     
+
+        private string _DefaultLayout;
+        /// <summary>
+        /// 
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DefaultLayout",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "text",SqlParameterDbType ="String",ColumnName = "DefaultLayout",Length=2147483647,IsNullable = true,ColumnDescription = "" )]
+        public string DefaultLayout 
+        { 
+            get{return _DefaultLayout;}
+            set{SetProperty(ref _DefaultLayout, value);}
         }
 
 

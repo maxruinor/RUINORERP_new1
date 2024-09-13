@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/28/2024 12:31:25
+// 时间：09/13/2024 18:44:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,10 +49,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品
+        /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID 
         { 
@@ -193,6 +193,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private int _PlanNeedQty= ((0));
+        /// <summary>
+        /// 计划需求数
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PlanNeedQty",ColDesc = "计划需求数")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "PlanNeedQty",IsNullable = false,ColumnDescription = "计划需求数" )]
+        public int PlanNeedQty 
+        { 
+            get{return _PlanNeedQty;}
+            set{SetProperty(ref _PlanNeedQty, value);}
+        }
+     
+
         private DateTime? _PreStartDate;
         /// <summary>
         /// 预开工日
@@ -224,7 +237,7 @@ namespace RUINORERP.Model.QueryDto
         /// 摘要
         /// </summary>
         [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Summary",Length=255,IsNullable = true,ColumnDescription = "摘要" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Summary",Length=1000,IsNullable = true,ColumnDescription = "摘要" )]
         public string Summary 
         { 
             get{return _Summary;}

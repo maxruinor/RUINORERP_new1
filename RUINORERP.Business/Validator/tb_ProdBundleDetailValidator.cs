@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/07/2024 19:06:32
+// 时间：09/13/2024 18:44:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 产品套装明细验证类
     /// </summary>
-    public partial class tb_ProdBundleDetailValidator:AbstractValidator<tb_ProdBundleDetail>
+    /*public partial class tb_ProdBundleDetailValidator:AbstractValidator<tb_ProdBundleDetail>*/
+    public partial class tb_ProdBundleDetailValidator:BaseValidatorGeneric<tb_ProdBundleDetail>
     {
      public tb_ProdBundleDetailValidator() 
      {
@@ -38,7 +39,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:29
+// 时间：09/13/2024 18:43:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,14 +21,13 @@ namespace RUINORERP.Business
     /// <summary>
     /// 流程图线验证类
     /// </summary>
-    public partial class tb_FlowchartLineValidator:AbstractValidator<tb_FlowchartLine>
+    /*public partial class tb_FlowchartLineValidator:AbstractValidator<tb_FlowchartLine>*/
+    public partial class tb_FlowchartLineValidator:BaseValidatorGeneric<tb_FlowchartLine>
     {
      public tb_FlowchartLineValidator() 
      {
-      RuleFor(tb_FlowchartLine =>tb_FlowchartLine.PointToString1).MaximumLength(100).WithMessage("大小:不能超过最大长度,100.");
- RuleFor(tb_FlowchartLine =>tb_FlowchartLine.PointToString2).MaximumLength(100).WithMessage("位置:不能超过最大长度,100.");
-       	
-           	
+            	
+           	        Initialize();
      }
 
 

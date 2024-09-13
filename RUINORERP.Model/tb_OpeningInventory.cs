@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:55
+// 时间：09/13/2024 18:43:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,9 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 期初存货来自期初盘点或业务上首次库存入库 ，主要是他会影响成本。他可以录入成本
+    /// 期初存货来自期初盘点或业务上首次库存入库
     /// </summary>
     [Serializable()]
+    [Description("tb_OpeningInventory")]
     [SugarTable("tb_OpeningInventory")]
     public partial class tb_OpeningInventory: BaseEntity, ICloneable
     {
@@ -84,7 +85,7 @@ namespace RUINORERP.Model
         /// 成本价格
         /// </summary>
         [AdvQueryAttribute(ColName = "Cost_price",ColDesc = "成本价格")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost_price" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本价格" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost_price" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本价格" )]
         public decimal Cost_price
         { 
             get{return _Cost_price;}
@@ -98,7 +99,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "Subtotal_Cost_Price",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Subtotal_Cost_Price" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Subtotal_Cost_Price" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal Subtotal_Cost_Price
         { 
             get{return _Subtotal_Cost_Price;}
@@ -184,7 +185,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Inventory_ID))]
         public virtual tb_Inventory tb_inventory { get; set; }
-        //public virtual tb_Inventory tb_Inventory_ID { get; set; }
 
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:29
+// 时间：09/13/2024 18:43:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,15 +21,16 @@ namespace RUINORERP.Business
     /// <summary>
     /// 客户厂商认证文件表验证类
     /// </summary>
-    public partial class tb_CustomerVendorFilesValidator:AbstractValidator<tb_CustomerVendorFiles>
+    /*public partial class tb_CustomerVendorFilesValidator:AbstractValidator<tb_CustomerVendorFiles>*/
+    public partial class tb_CustomerVendorFilesValidator:BaseValidatorGeneric<tb_CustomerVendorFiles>
     {
      public tb_CustomerVendorFilesValidator() 
      {
       RuleFor(tb_CustomerVendorFiles =>tb_CustomerVendorFiles.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
- RuleFor(tb_CustomerVendorFiles =>tb_CustomerVendorFiles.FileName).MaximumLength(200).WithMessage("文件名:不能超过最大长度,200.");
- RuleFor(tb_CustomerVendorFiles =>tb_CustomerVendorFiles.FileType).MaximumLength(50).WithMessage("文件类型:不能超过最大长度,50.");
+ RuleFor(tb_CustomerVendorFiles =>tb_CustomerVendorFiles.FileName).MaximumLength(100).WithMessage("文件名:不能超过最大长度,100.");
+ RuleFor(tb_CustomerVendorFiles =>tb_CustomerVendorFiles.FileType).MaximumLength(25).WithMessage("文件类型:不能超过最大长度,25.");
        	
-           	
+           	        Initialize();
      }
 
 

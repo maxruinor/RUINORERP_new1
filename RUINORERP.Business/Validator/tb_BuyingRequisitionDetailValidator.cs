@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/05/2024 17:00:19
+// 时间：09/13/2024 18:43:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,24 +21,26 @@ namespace RUINORERP.Business
     /// <summary>
     /// 请购单明细表验证类
     /// </summary>
-    public partial class tb_BuyingRequisitionDetailValidator:AbstractValidator<tb_BuyingRequisitionDetail>
+    /*public partial class tb_BuyingRequisitionDetailValidator:AbstractValidator<tb_BuyingRequisitionDetail>*/
+    public partial class tb_BuyingRequisitionDetailValidator:BaseValidatorGeneric<tb_BuyingRequisitionDetail>
     {
      public tb_BuyingRequisitionDetailValidator() 
      {
       RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.PuRequisition_ID).NotEmpty().When(x => x.PuRequisition_ID.HasValue);
- RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品详情:下拉选择值不正确。");
+ RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
 //***** 
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.ActualRequiredQty).NotNull().WithMessage("需求数量:不能为空。");
 //***** 
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Quantity).NotNull().WithMessage("请购数量:不能为空。");
+ RuleFor(x => x.EstimatedPrice).PrecisionScale(19,4,true).WithMessage("预估价格:小数位不能超过4。");
 //***** 
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.DeliveredQuantity).NotNull().WithMessage("已交数量:不能为空。");
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Purpose).MaximumLength(250).WithMessage("用途:不能超过最大长度,250.");
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Purpose).NotEmpty().WithMessage("用途:不能为空。");
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Notes).MaximumLength(500).WithMessage("备注:不能超过最大长度,500.");
        	
-           	
+           	        Initialize();
      }
 
 

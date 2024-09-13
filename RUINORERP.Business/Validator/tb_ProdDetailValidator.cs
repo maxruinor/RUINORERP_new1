@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/07/2024 19:06:33
+// 时间：09/13/2024 18:44:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 产品详细表验证类
     /// </summary>
-    public partial class tb_ProdDetailValidator:AbstractValidator<tb_ProdDetail>
+    /*public partial class tb_ProdDetailValidator:AbstractValidator<tb_ProdDetail>*/
+    public partial class tb_ProdDetailValidator:BaseValidatorGeneric<tb_ProdDetail>
     {
      public tb_ProdDetailValidator() 
      {
@@ -45,13 +46,24 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdDetail =>tb_ProdDetail.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_ProdDetail =>tb_ProdDetail.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 
 
 
         private bool DetailedRecordsNotEmpty(List<tb_ProdSplitDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_ProductionPlanDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -96,17 +108,6 @@ namespace RUINORERP.Business
         
 
         private bool DetailedRecordsNotEmpty(List<tb_MaterialReturnDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
-        private bool DetailedRecordsNotEmpty(List<tb_ProductionPlanDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -172,17 +173,6 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_SaleOrderDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
         private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetailSecondary> details)
         {
             bool rs = true;
@@ -228,6 +218,17 @@ namespace RUINORERP.Business
         
 
         private bool DetailedRecordsNotEmpty(List<tb_ManufacturingOrderDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_SaleOrderDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -293,6 +294,17 @@ namespace RUINORERP.Business
         }
         
 
+        private bool DetailedRecordsNotEmpty(List<tb_BuyingRequisitionDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
         private bool DetailedRecordsNotEmpty(List<tb_PurOrderReDetail> details)
         {
             bool rs = true;
@@ -305,17 +317,6 @@ namespace RUINORERP.Business
         
 
         private bool DetailedRecordsNotEmpty(List<tb_StockInDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
-        private bool DetailedRecordsNotEmpty(List<tb_BuyingRequisitionDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

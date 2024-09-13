@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:30
+// 时间：09/13/2024 18:43:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,28 +21,22 @@ namespace RUINORERP.Business
     /// <summary>
     /// 开票资料验证类
     /// </summary>
-    public partial class tb_InvoiceInfoValidator:AbstractValidator<tb_InvoiceInfo>
+    /*public partial class tb_InvoiceInfoValidator:AbstractValidator<tb_InvoiceInfo>*/
+    public partial class tb_InvoiceInfoValidator:BaseValidatorGeneric<tb_InvoiceInfo>
     {
      public tb_InvoiceInfoValidator() 
      {
       RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("往来单位:下拉选择值不正确。");
  RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PICompanyName).MaximumLength(200).WithMessage("公司名称:不能超过最大长度,200.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PITaxID).MaximumLength(100).WithMessage("税号:不能超过最大长度,100.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PIAddress).MaximumLength(200).WithMessage("地址:不能超过最大长度,200.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PITEL).MaximumLength(50).WithMessage("电话:不能超过最大长度,50.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PIBankName).MaximumLength(150).WithMessage("开户行:不能超过最大长度,150.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PIBankNo).MaximumLength(50).WithMessage("银行帐号:不能超过最大长度,50.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.Notes).MaximumLength(255).WithMessage(":不能超过最大长度,255.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.信用天数).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.往来余额).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.应收款).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.预收款).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.纳税号).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.开户行).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.银行帐号).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
+ RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PICompanyName).MaximumLength(100).WithMessage("公司名称:不能超过最大长度,100.");
+ RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PITaxID).MaximumLength(50).WithMessage("税号:不能超过最大长度,50.");
+ RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PIAddress).MaximumLength(100).WithMessage("地址:不能超过最大长度,100.");
+ RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PITEL).MaximumLength(25).WithMessage("电话:不能超过最大长度,25.");
+ RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PIBankName).MaximumLength(75).WithMessage("开户行:不能超过最大长度,75.");
+ RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PIBankNo).MaximumLength(25).WithMessage("银行帐号:不能超过最大长度,25.");
+ RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.Notes).MaximumLength(127).WithMessage(":不能超过最大长度,127.");
        	
-           	
+           	        Initialize();
      }
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:30
+// 时间：09/13/2024 18:43:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,23 +21,24 @@ namespace RUINORERP.Business
     /// <summary>
     /// 会计科目表，财务系统中使用验证类
     /// </summary>
-    public partial class tb_FM_SubjectValidator:AbstractValidator<tb_FM_Subject>
+    /*public partial class tb_FM_SubjectValidator:AbstractValidator<tb_FM_Subject>*/
+    public partial class tb_FM_SubjectValidator:BaseValidatorGeneric<tb_FM_Subject>
     {
      public tb_FM_SubjectValidator() 
      {
       RuleFor(tb_FM_Subject =>tb_FM_Subject.parent_subject_id).NotEmpty().When(x => x.parent_subject_id.HasValue);
- RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_code).MaximumLength(50).WithMessage("科目代码:不能超过最大长度,50.");
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_code).MaximumLength(25).WithMessage("科目代码:不能超过最大长度,25.");
  RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_code).NotEmpty().WithMessage("科目代码:不能为空。");
- RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_name).MaximumLength(100).WithMessage("科目名称:不能超过最大长度,100.");
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_name).MaximumLength(50).WithMessage("科目名称:不能超过最大长度,50.");
  RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_name).NotEmpty().WithMessage("科目名称:不能为空。");
- RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_en_name).MaximumLength(100).WithMessage("科目名称:不能超过最大长度,100.");
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_en_name).MaximumLength(50).WithMessage("科目名称:不能超过最大长度,50.");
 //***** 
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Subject_Type).NotNull().WithMessage("科目类型:不能为空。");
 //有默认值
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Sort).NotEmpty().When(x => x.Sort.HasValue);
- RuleFor(tb_FM_Subject =>tb_FM_Subject.Notes).MaximumLength(200).WithMessage("备注:不能超过最大长度,200.");
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
        	
-           	
+           	        Initialize();
      }
 
 

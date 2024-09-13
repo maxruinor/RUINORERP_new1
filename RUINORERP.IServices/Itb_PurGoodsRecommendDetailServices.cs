@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/14/2024 17:57:33
+// 时间：09/13/2024 18:44:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -16,7 +16,7 @@ using RUINORERP.Model;
 namespace RUINORERP.IServices
 {
     /// <summary>
-    /// 采购产品建议
+    /// 采购商品建议
     /// </summary>
     public partial interface Itb_PurGoodsRecommendDetailServices : IBaseServices<tb_PurGoodsRecommendDetail>
     {

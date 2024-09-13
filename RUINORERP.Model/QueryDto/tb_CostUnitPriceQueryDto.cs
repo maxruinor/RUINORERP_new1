@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:53
+// 时间：09/13/2024 18:43:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 成本单价表 参考天思产品基本资料中的价格部分
+    /// 成本单价表 参考天思货品基本资料中的价格部分
     /// </summary>
     [Serializable()]
     [SugarTable("tb_CostUnitPrice")]
@@ -35,10 +35,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "货品详情" )]
         public long? ProdDetailID 
         { 
             get{return _ProdDetailID;}
@@ -48,10 +48,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _Group_id;
         /// <summary>
-        /// 产品组
+        /// 货品组
         /// </summary>
-        [AdvQueryAttribute(ColName = "Group_id",ColDesc = "产品组")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Group_id",IsNullable = true,ColumnDescription = "产品组" )]
+        [AdvQueryAttribute(ColName = "Group_id",ColDesc = "货品组")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Group_id",IsNullable = true,ColumnDescription = "货品组" )]
         public long? Group_id 
         { 
             get{return _Group_id;}

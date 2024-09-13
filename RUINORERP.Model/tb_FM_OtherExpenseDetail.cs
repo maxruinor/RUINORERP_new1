@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:24
+// 时间：09/13/2024 18:43:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 其它费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单
     /// </summary>
     [Serializable()]
+    [Description("tb_FM_OtherExpenseDetail")]
     [SugarTable("tb_FM_OtherExpenseDetail")]
     public partial class tb_FM_OtherExpenseDetail: BaseEntity, ICloneable
     {
@@ -37,7 +38,7 @@ namespace RUINORERP.Model
         #region 属性
         private long _ExpenseSubID;
         /// <summary>
-        /// 费用
+        /// 
         /// </summary>
  
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ExpenseSubID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
@@ -52,7 +53,7 @@ namespace RUINORERP.Model
 
         private long _ExpenseMainID;
         /// <summary>
-        /// 费用
+        /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "ExpenseMainID",ColDesc = "")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ExpenseMainID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
@@ -79,14 +80,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long _Employee_ID;
+        private long? _Employee_ID;
         /// <summary>
         /// 经办人
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "经办人" )]
-        [FKRelationAttribute("tb_Employee", "Employee_ID")]
-        public long Employee_ID
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "经办人" )]
+        [FKRelationAttribute("tb_Employee","Employee_ID")]
+        public long? Employee_ID
         { 
             get{return _Employee_ID;}
             set{
@@ -188,7 +189,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -230,7 +231,7 @@ namespace RUINORERP.Model
         /// 税额
         /// </summary>
         [AdvQueryAttribute(ColName = "TaxAmount",ColDesc = "税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "税额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "税额" )]
         public decimal? TaxAmount
         { 
             get{return _TaxAmount;}
@@ -258,7 +259,7 @@ namespace RUINORERP.Model
         /// 未税本位币
         /// </summary>
         [AdvQueryAttribute(ColName = "UntaxedAmount",ColDesc = "未税本位币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UntaxedAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "未税本位币" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UntaxedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "未税本位币" )]
         public decimal UntaxedAmount
         { 
             get{return _UntaxedAmount;}
@@ -285,53 +286,45 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
-
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
-        public virtual tb_Employee tb_employee { get; set; }
-
-
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
-        //public virtual tb_CustomerVendor tb_CustomerVendor_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ExpenseMainID))]
         public virtual tb_FM_OtherExpense tb_fm_otherexpense { get; set; }
-        //public virtual tb_FM_OtherExpense tb_ExpenseMainID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
-        //public virtual tb_Department tb_DepartmentID { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
+        public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
-        //public virtual tb_ProjectGroup tb_ProjectGroup_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
-        //public virtual tb_FM_Account tb_account_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ExpenseType_id))]
         public virtual tb_FM_ExpenseType tb_fm_expensetype { get; set; }
-        //public virtual tb_FM_ExpenseType tb_ExpenseType_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
-        //public virtual tb_FM_Subject tb_subject_id { get; set; }
 
 
 

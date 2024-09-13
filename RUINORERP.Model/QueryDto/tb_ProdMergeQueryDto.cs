@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/20/2024 20:30:02
+// 时间：09/13/2024 18:44:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -140,19 +140,6 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _Specifications;
-        /// <summary>
-        /// 规格
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Specifications",ColDesc = "规格")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Specifications",Length=200,IsNullable = true,ColumnDescription = "规格" )]
-        public string Specifications 
-        { 
-            get{return _Specifications;}
-            set{SetProperty(ref _Specifications, value);}
-        }
-     
-
         private string _property;
         /// <summary>
         /// 属性
@@ -179,14 +166,14 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long _BOM_ID;
+        private long? _BOM_ID;
         /// <summary>
         /// 拆分配方
         /// </summary>
         [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "拆分配方")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "BOM_ID",IsNullable = false,ColumnDescription = "拆分配方" )]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "BOM_ID",IsNullable = true,ColumnDescription = "拆分配方" )]
         [FKRelationAttribute("tb_BOM_S","BOM_ID")]
-        public long BOM_ID 
+        public long? BOM_ID 
         { 
             get{return _BOM_ID;}
             set{SetProperty(ref _BOM_ID, value);}
@@ -198,24 +185,11 @@ namespace RUINORERP.Model.QueryDto
         /// 配方编号
         /// </summary>
         [AdvQueryAttribute(ColName = "BOM_No",ColDesc = "配方编号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BOM_No",Length=50,IsNullable = false,ColumnDescription = "配方编号" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BOM_No",Length=50,IsNullable = true,ColumnDescription = "配方编号" )]
         public string BOM_No 
         { 
             get{return _BOM_No;}
             set{SetProperty(ref _BOM_No, value);}
-        }
-     
-
-        private string _BOM_Name;
-        /// <summary>
-        /// 配方名称
-        /// </summary>
-        [AdvQueryAttribute(ColName = "BOM_Name",ColDesc = "配方名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BOM_Name",Length=100,IsNullable = false,ColumnDescription = "配方名称" )]
-        public string BOM_Name 
-        { 
-            get{return _BOM_Name;}
-            set{SetProperty(ref _BOM_Name, value);}
         }
      
 

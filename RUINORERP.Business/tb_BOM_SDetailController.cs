@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/11/2024 14:33:47
+// 时间：09/13/2024 18:43:25
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_BOM_SDetail entity = model as tb_BOM_SDetail;
@@ -241,11 +239,13 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.SubID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_BOM_SDetail>(entity as tb_BOM_SDetail)
-            //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                             .ExecuteCommandAsync();
          
@@ -253,7 +253,7 @@ namespace RUINORERP.Business
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_BOM_SDetail>(entity as tb_BOM_SDetail)
-        //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                                 .ExecuteCommandAsync();
         }
@@ -266,12 +266,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -462,12 +460,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_BOM_SDetail>> QueryByNavAsync()
         {
             List<tb_BOM_SDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                             //  .Includes(t => t.tb_producttype )
                                .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_unit_conversion )
                                .Includes(t => t.tb_bom_s )
                                .Includes(t => t.tb_proddetail )
-                               .Includes(t => t.tb_bom_s )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -487,12 +483,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_BOM_SDetail>> QueryByNavAsync(Expression<Func<tb_BOM_SDetail, bool>> exp)
         {
             List<tb_BOM_SDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(exp)
-                            //  .Includes(t => t.tb_producttype )
                                .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_unit_conversion )
                                .Includes(t => t.tb_bom_s )
                                .Includes(t => t.tb_proddetail )
-                               .Includes(t => t.tb_bom_s )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -512,12 +506,10 @@ namespace RUINORERP.Business
          public virtual List<tb_BOM_SDetail> QueryByNav(Expression<Func<tb_BOM_SDetail, bool>> exp)
         {
             List<tb_BOM_SDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(exp)
-                          //  .Includes(t => t.tb_producttype )
                             .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_unit_conversion )
                             .Includes(t => t.tb_bom_s )
                             .Includes(t => t.tb_proddetail )
-                            .Includes(t => t.tb_bom_s )
                                     .ToList();
             
             foreach (var item in list)
@@ -554,12 +546,10 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_BOM_SDetail entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(w => w.SubID == (long)id)
-                            // .Includes(t => t.tb_producttype )
-                            .Includes(t => t.tb_unit )
+                             .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_unit_conversion )
                             .Includes(t => t.tb_bom_s )
                             .Includes(t => t.tb_proddetail )
-                            .Includes(t => t.tb_bom_s )
                                     .FirstAsync();
             if(entity!=null)
             {

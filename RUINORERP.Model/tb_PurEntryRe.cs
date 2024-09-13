@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:34
+// 时间：09/13/2024 18:44:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,9 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 采购入库单 供应商接到采购订单后，向企业发货，用户在收到货物时，可以先检验，对合格品进行入库，也可以直接入库，形成采购入库单。为了保证清楚地记录进货情况，对进货的管理就很重要，而在我们的系统中，凭证、收付款是根据进货单自动一环扣一环地切制，故详细输入进货单资料后，存货的数量、成本会随着改变，收付账款也会跟着你的立帐方式变化；凭证亦会随着“您是否立即产生凭证”变化。采购入库单可以由采购订单、借入单、在途物资单转入，也可以手动录入新增单据。
+    /// 采购入库单 供应商接到采购订单后，向企业发货，用户在收到货物时，可以先检验，对合格品进行入库，也可以直接入库，形成采购入库单。为了保证清楚地记录进货情况，对进货的管理就很重要，而在我们的系统中，凭证、收付款是根据进货单自动一环扣一环地切制，故详细输入进货单资料后，存货的数量、成本会随着改变，收付帐款也会跟着你的立帐方式变化；凭证亦会随着“您是否立即产生凭证”变化。采购入库单可以由采购订单、借入单、在途物资单转入，也可以手动录入新增单据。
     /// </summary>
     [Serializable()]
+    [Description("tb_PurEntryRe")]
     [SugarTable("tb_PurEntryRe")]
     public partial class tb_PurEntryRe: BaseEntity, ICloneable
     {
@@ -110,32 +111,32 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _PurEntryID;
+        private long _PurEntryID;
         /// <summary>
         /// 采购入库单
         /// </summary>
         [AdvQueryAttribute(ColName = "PurEntryID",ColDesc = "采购入库单")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurEntryID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "采购入库单" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurEntryID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "采购入库单" )]
         [FKRelationAttribute("tb_PurEntry","PurEntryID")]
-        public long? PurEntryID
+        public long PurEntryID
         { 
             get{return _PurEntryID;}
             set{
             SetProperty(ref _PurEntryID, value);
             }
         }
+
         private string _PurEntryNo;
         /// <summary>
         /// 入库单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "PurEntryNo", ColDesc = "入库单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PurEntryNo", Length = 50, IsNullable = false, ColumnDescription = "入库单号")]
+        [AdvQueryAttribute(ColName = "PurEntryNo",ColDesc = "入库单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PurEntryNo" ,Length=50,IsNullable = false,ColumnDescription = "入库单号" )]
         public string PurEntryNo
-        {
-            get { return _PurEntryNo; }
-            set
-            {
-                SetProperty(ref _PurEntryNo, value);
+        { 
+            get{return _PurEntryNo;}
+            set{
+            SetProperty(ref _PurEntryNo, value);
             }
         }
 
@@ -172,7 +173,7 @@ namespace RUINORERP.Model
         /// 合计税额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalTaxAmount",ColDesc = "合计税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTaxAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "合计税额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTaxAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "合计税额" )]
         public decimal TotalTaxAmount
         { 
             get{return _TotalTaxAmount;}
@@ -186,7 +187,7 @@ namespace RUINORERP.Model
         /// 合计金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "合计金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "合计金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "合计金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -200,7 +201,7 @@ namespace RUINORERP.Model
         /// 实退金额
         /// </summary>
         [AdvQueryAttribute(ColName = "ActualAmount",ColDesc = "实退金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "实退金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实退金额" )]
         public decimal ActualAmount
         { 
             get{return _ActualAmount;}
@@ -223,6 +224,20 @@ namespace RUINORERP.Model
             }
         }
 
+        private int _ProcessWay= ((0));
+        /// <summary>
+        /// 处理方式
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProcessWay",ColDesc = "处理方式")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ProcessWay" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "处理方式" )]
+        public int ProcessWay
+        { 
+            get{return _ProcessWay;}
+            set{
+            SetProperty(ref _ProcessWay, value);
+            }
+        }
+
         private DateTime? _ReturnDate;
         /// <summary>
         /// 退回日期
@@ -234,20 +249,6 @@ namespace RUINORERP.Model
             get{return _ReturnDate;}
             set{
             SetProperty(ref _ReturnDate, value);
-            }
-        }
-        private int _ProcessWay;
-        /// <summary>
-        /// 处理方式
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ProcessWay", ColDesc = "处理方式")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "ProcessWay", DecimalDigits = 0, IsNullable = false, ColumnDescription = "处理方式")]
-        public int ProcessWay
-        {
-            get { return _ProcessWay; }
-            set
-            {
-                SetProperty(ref _ProcessWay, value);
             }
         }
 
@@ -439,7 +440,7 @@ namespace RUINORERP.Model
         /// 订金
         /// </summary>
         [AdvQueryAttribute(ColName = "Deposit",ColDesc = "订金")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deposit" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "订金" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deposit" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "订金" )]
         public decimal? Deposit
         { 
             get{return _Deposit;}
@@ -467,7 +468,7 @@ namespace RUINORERP.Model
         /// 折扣金额总计
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalDiscountAmount",ColDesc = "折扣金额总计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalDiscountAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "折扣金额总计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalDiscountAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "折扣金额总计" )]
         public decimal? TotalDiscountAmount
         { 
             get{return _TotalDiscountAmount;}
@@ -496,7 +497,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "数据状态" )]
-        [Browsable(false)]
         public int DataStatus
         { 
             get{return _DataStatus;}
@@ -582,31 +582,26 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
-        //public virtual tb_CustomerVendor tb_CustomerVendor_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PurEntryID))]
         public virtual tb_PurEntry tb_purentry { get; set; }
-        //public virtual tb_PurEntry tb_PurEntryID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Paytype_ID))]
         public virtual tb_PaymentMethod tb_paymentmethod { get; set; }
-        //public virtual tb_PaymentMethod tb_Paytype_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
-        //public virtual tb_Department tb_DepartmentID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
-        //public virtual tb_Employee tb_Employee_ID { get; set; }
 
 
         //[Browsable(false)]

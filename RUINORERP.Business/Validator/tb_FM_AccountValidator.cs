@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:29
+// 时间：09/13/2024 18:43:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 账户管理，财务系统中使用验证类
     /// </summary>
-    public partial class tb_FM_AccountValidator:AbstractValidator<tb_FM_Account>
+    /*public partial class tb_FM_AccountValidator:AbstractValidator<tb_FM_Account>*/
+    public partial class tb_FM_AccountValidator:BaseValidatorGeneric<tb_FM_Account>
     {
      public tb_FM_AccountValidator() 
      {
@@ -31,14 +32,14 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_Account =>tb_FM_Account.subject_id).NotEmpty().When(x => x.subject_id.HasValue);
  RuleFor(tb_FM_Account =>tb_FM_Account.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币种:下拉选择值不正确。");
  RuleFor(tb_FM_Account =>tb_FM_Account.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
- RuleFor(tb_FM_Account =>tb_FM_Account.account_name).MaximumLength(50).WithMessage("账户名称:不能超过最大长度,50.");
- RuleFor(tb_FM_Account =>tb_FM_Account.account_No).MaximumLength(100).WithMessage("账号:不能超过最大长度,100.");
+ RuleFor(tb_FM_Account =>tb_FM_Account.account_name).MaximumLength(25).WithMessage("账户名称:不能超过最大长度,25.");
+ RuleFor(tb_FM_Account =>tb_FM_Account.account_No).MaximumLength(50).WithMessage("账号:不能超过最大长度,50.");
  RuleFor(tb_FM_Account =>tb_FM_Account.account_type).NotEmpty().When(x => x.account_type.HasValue);
- RuleFor(tb_FM_Account =>tb_FM_Account.Bank).MaximumLength(30).WithMessage("所属银行:不能超过最大长度,30.");
+ RuleFor(tb_FM_Account =>tb_FM_Account.Bank).MaximumLength(15).WithMessage("所属银行:不能超过最大长度,15.");
  RuleFor(x => x.OpeningBalance).PrecisionScale(19,4,true).WithMessage("初始余额:小数位不能超过4。");
  RuleFor(x => x.CurrentBalance).PrecisionScale(19,4,true).WithMessage("当前余额:小数位不能超过4。");
        	
-           	
+           	        Initialize();
      }
 
 

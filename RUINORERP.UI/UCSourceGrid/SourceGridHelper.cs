@@ -1815,7 +1815,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
             #endregion
-            //格式处理
+            //格式处理b  要在这里处理 手工指定的要覆盖上面的。
             switch (dci.CustomFormat)
             {
                 case CustomFormatType.DefaultFormat:
@@ -1836,6 +1836,9 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     break;
                 case CustomFormatType.DecimalPrecision:
+                    break;
+                case CustomFormatType.WebImage:
+                    _editor = new SourceGrid.Cells.Editors.ImageWebPicker();
                     break;
                 default:
                     break;
@@ -2708,6 +2711,13 @@ namespace RUINORERP.UI.UCSourceGrid
                                 break;
                             case CustomFormatType.Image:
 
+                                break;
+                            case CustomFormatType.WebImage:
+                                //tag中保存图片的path name
+                                currentObj.SetPropertyValue(colName, TargetValue);
+                                sgdefine.grid[row.Index, dc.ColIndex].Tag = TargetValue;
+                                sgdefine.grid[row.Index, dc.ColIndex].Value = TargetValue;
+                                sgdefine.grid[row.Index, dc.ColIndex].Editor.SetCellTagValue(processDefaultContext, TargetValue);
                                 break;
                             default:
                                 break;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:25
+// 时间：09/13/2024 18:43:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -35,10 +35,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _ExpenseMainID;
         /// <summary>
-        /// 费用
+        /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "ExpenseMainID",ColDesc = "费用")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ExpenseMainID",IsNullable = false,ColumnDescription = "费用" )]
+        [AdvQueryAttribute(ColName = "ExpenseMainID",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ExpenseMainID",IsNullable = false,ColumnDescription = "" )]
         [FKRelationAttribute("tb_FM_OtherExpense","ExpenseMainID")]
         public long ExpenseMainID 
         { 
@@ -52,7 +52,7 @@ namespace RUINORERP.Model.QueryDto
         /// 事由
         /// </summary>
         [AdvQueryAttribute(ColName = "ExpenseName",ColDesc = "事由")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ExpenseName",Length=300,IsNullable = true,ColumnDescription = "事由" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ExpenseName",Length=300,IsNullable = false,ColumnDescription = "事由" )]
         public string ExpenseName 
         { 
             get{return _ExpenseName;}
@@ -66,6 +66,7 @@ namespace RUINORERP.Model.QueryDto
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")]
         [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Employee_ID",IsNullable = true,ColumnDescription = "经办人" )]
+        [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID 
         { 
             get{return _Employee_ID;}

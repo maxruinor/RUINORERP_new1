@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/23/2024 18:54:53
+// 时间：09/13/2024 18:44:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 付款方式 交易方式，后面扩展有关账期 账龄分析的字段
     /// </summary>
     [Serializable()]
+    [Description("tb_PaymentMethod")]
     [SugarTable("tb_PaymentMethod")]
     public partial class tb_PaymentMethod: BaseEntity, ICloneable
     {
@@ -55,7 +56,7 @@ namespace RUINORERP.Model
         /// 付款方式
         /// </summary>
         [AdvQueryAttribute(ColName = "Paytype_Name",ColDesc = "付款方式")] 
-        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "Paytype_Name" ,Length=20,IsNullable = true,ColumnDescription = "付款方式" )]
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "Paytype_Name" ,Length=50,IsNullable = true,ColumnDescription = "付款方式" )]
         public string Paytype_Name
         { 
             get{return _Paytype_Name;}
@@ -106,18 +107,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntry.Paytype_ID))]
-        public virtual List<tb_PurEntry> tb_PurEntries { get; set; }
-        //tb_PurEntry.Paytype_ID)
-        //Paytype_ID.FK_TB_PUREN_REF_TB_PAYMETHOD)
-        //tb_PaymentMethod.Paytype_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.Paytype_ID))]
         public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
         //tb_PurEntryRe.Paytype_ID)
         //Paytype_ID.FK_PURENTRYRE_PAYMETHOD)
+        //tb_PaymentMethod.Paytype_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntry.Paytype_ID))]
+        public virtual List<tb_PurEntry> tb_PurEntries { get; set; }
+        //tb_PurEntry.Paytype_ID)
+        //Paytype_ID.FK_TB_PUREN_REF_TB_PAYMETHOD)
         //tb_PaymentMethod.Paytype_ID)
 
         //[Browsable(false)]

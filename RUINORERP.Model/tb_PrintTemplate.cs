@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/26/2024 10:52:24
+// 时间：09/13/2024 18:44:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 打印模板
     /// </summary>
     [Serializable()]
+    [Description("tb_PrintTemplate")]
     [SugarTable("tb_PrintTemplate")]
     public partial class tb_PrintTemplate: BaseEntity, ICloneable
     {
@@ -69,8 +70,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 模板编号
         /// </summary>
-        [AdvQueryAttribute(ColName = "Template_NO",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Template_NO" ,Length=20,IsNullable = true,ColumnDescription = "")]
+        [AdvQueryAttribute(ColName = "Template_NO",ColDesc = "模板编号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Template_NO" ,Length=20,IsNullable = true,ColumnDescription = "模板编号" )]
         public string Template_NO
         { 
             get{return _Template_NO;}
@@ -97,8 +98,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 业务类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "BizType",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "")]
+        [AdvQueryAttribute(ColName = "BizType",ColDesc = "业务类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "业务类型" )]
         public int? BizType
         { 
             get{return _BizType;}
@@ -112,7 +113,7 @@ namespace RUINORERP.Model
         /// 业务名称
         /// </summary>
         [AdvQueryAttribute(ColName = "BizName",ColDesc = "业务名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BizName" ,Length=30,IsNullable = true,ColumnDescription = "业务名称")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BizName" ,Length=30,IsNullable = true,ColumnDescription = "业务名称" )]
         public string BizName
         { 
             get{return _BizName;}
@@ -123,10 +124,10 @@ namespace RUINORERP.Model
 
         private string _Templatet_Path;
         /// <summary>
-        /// 报表路径
+        /// 模板路径
         /// </summary>
-        [AdvQueryAttribute(ColName = "Templatet_Path",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Templatet_Path" ,Length=200,IsNullable = true,ColumnDescription = "")]
+        [AdvQueryAttribute(ColName = "Templatet_Path",ColDesc = "模板路径")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Templatet_Path" ,Length=200,IsNullable = true,ColumnDescription = "模板路径" )]
         public string Templatet_Path
         { 
             get{return _Templatet_Path;}
@@ -137,10 +138,10 @@ namespace RUINORERP.Model
 
         private string _Template_DataSource;
         /// <summary>
-        /// 报表数据源
+        /// 模板数据源
         /// </summary>
-        [AdvQueryAttribute(ColName = "Template_DataSource",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Template_DataSource" ,Length=200,IsNullable = true,ColumnDescription = "")]
+        [AdvQueryAttribute(ColName = "Template_DataSource",ColDesc = "模板数据源")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Template_DataSource" ,Length=200,IsNullable = true,ColumnDescription = "模板数据源" )]
         public string Template_DataSource
         { 
             get{return _Template_DataSource;}
@@ -153,8 +154,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 模板文件数据
         /// </summary>
-        [AdvQueryAttribute(ColName = "TemplateFileData",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "TemplateFileData" ,Length=2147483647,IsNullable = false,ColumnDescription = "")]
+        [AdvQueryAttribute(ColName = "TemplateFileData",ColDesc = "模板文件数据")] 
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "TemplateFileData" ,Length=2147483647,IsNullable = false,ColumnDescription = "模板文件数据" )]
         public string TemplateFileData
         { 
             get{return _TemplateFileData;}
@@ -167,8 +168,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 模板流数据
         /// </summary>
-        [AdvQueryAttribute(ColName = "TemplateFileStream",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "varbinary", SqlParameterDbType ="Binary",  ColumnName = "TemplateFileStream" ,Length=-1,IsNullable = true,ColumnDescription = "")]
+        [AdvQueryAttribute(ColName = "TemplateFileStream",ColDesc = "模板流数据")] 
+        [SugarColumn(ColumnDataType = "varbinary", SqlParameterDbType ="Binary",  ColumnName = "TemplateFileStream" ,Length=-1,IsNullable = true,ColumnDescription = "模板流数据" )]
         public byte[] TemplateFileStream
         { 
             get{return _TemplateFileStream;}
@@ -181,8 +182,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 默认模板
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsDefaultTemplate",ColDesc = "默认")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsDefaultTemplate" ,IsNullable = true,ColumnDescription = "默认")]
+        [AdvQueryAttribute(ColName = "IsDefaultTemplate",ColDesc = "默认模板")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsDefaultTemplate" ,IsNullable = true,ColumnDescription = "默认模板" )]
         public bool? IsDefaultTemplate
         { 
             get{return _IsDefaultTemplate;}
@@ -198,7 +199,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PrintConfigID))]
         public virtual tb_PrintConfig tb_printconfig { get; set; }
-        //public virtual tb_PrintConfig tb_PrintConfigID { get; set; }
 
 
 

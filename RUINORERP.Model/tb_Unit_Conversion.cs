@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/14/2024 15:19:48
+// 时间：09/13/2024 18:44:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 单位换算表
     /// </summary>
     [Serializable()]
+    [Description("tb_Unit_Conversion")]
     [SugarTable("tb_Unit_Conversion")]
     public partial class tb_Unit_Conversion: BaseEntity, ICloneable
     {
@@ -52,10 +53,10 @@ namespace RUINORERP.Model
 
         private string _UnitConversion_Name;
         /// <summary>
-        /// 换算名称
+        /// 备注
         /// </summary>
-        [AdvQueryAttribute(ColName = "UnitConversion_Name",ColDesc = "换算名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "UnitConversion_Name" ,Length=100,IsNullable = false,ColumnDescription = "换算名称" )]
+        [AdvQueryAttribute(ColName = "UnitConversion_Name",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "UnitConversion_Name" ,Length=100,IsNullable = false,ColumnDescription = "备注" )]
         public string UnitConversion_Name
         { 
             get{return _UnitConversion_Name;}
@@ -70,7 +71,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Source_unit_id",ColDesc = "来源单位")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Source_unit_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "来源单位" )]
-        [FKRelationAttribute("tb_Unit", "Unit_ID")]
         public long Source_unit_id
         { 
             get{return _Source_unit_id;}
@@ -85,7 +85,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Target_unit_id",ColDesc = "目标单位")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Target_unit_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标单位" )]
-        [FKRelationAttribute("tb_Unit", "Unit_ID")]
         public long Target_unit_id
         { 
             get{return _Target_unit_id;}

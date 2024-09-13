@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/26/2024 10:52:24
+// 时间：09/13/2024 18:44:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,10 +49,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _Template_NO;
         /// <summary>
-        /// 报表编号
+        /// 模板编号
         /// </summary>
-        [AdvQueryAttribute(ColName = "Template_NO",ColDesc = "报表编号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Template_NO",Length=20,IsNullable = true,ColumnDescription = "报表编号" )]
+        [AdvQueryAttribute(ColName = "Template_NO",ColDesc = "模板编号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Template_NO",Length=20,IsNullable = true,ColumnDescription = "模板编号" )]
         public string Template_NO 
         { 
             get{return _Template_NO;}
@@ -62,10 +62,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _Template_Name;
         /// <summary>
-        /// 报表名称
+        /// 模板名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "Template_Name",ColDesc = "报表名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Template_Name",Length=100,IsNullable = true,ColumnDescription = "报表名称" )]
+        [AdvQueryAttribute(ColName = "Template_Name",ColDesc = "模板名称")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Template_Name",Length=100,IsNullable = true,ColumnDescription = "模板名称" )]
         public string Template_Name 
         { 
             get{return _Template_Name;}
@@ -101,10 +101,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _Templatet_Path;
         /// <summary>
-        /// 报表路径
+        /// 模板路径
         /// </summary>
-        [AdvQueryAttribute(ColName = "Templatet_Path",ColDesc = "报表路径")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Templatet_Path",Length=200,IsNullable = true,ColumnDescription = "报表路径" )]
+        [AdvQueryAttribute(ColName = "Templatet_Path",ColDesc = "模板路径")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Templatet_Path",Length=200,IsNullable = true,ColumnDescription = "模板路径" )]
         public string Templatet_Path 
         { 
             get{return _Templatet_Path;}
@@ -114,10 +114,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _Template_DataSource;
         /// <summary>
-        /// 报表数据源
+        /// 模板数据源
         /// </summary>
-        [AdvQueryAttribute(ColName = "Template_DataSource",ColDesc = "报表数据源")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Template_DataSource",Length=200,IsNullable = true,ColumnDescription = "报表数据源" )]
+        [AdvQueryAttribute(ColName = "Template_DataSource",ColDesc = "模板数据源")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Template_DataSource",Length=200,IsNullable = true,ColumnDescription = "模板数据源" )]
         public string Template_DataSource 
         { 
             get{return _Template_DataSource;}

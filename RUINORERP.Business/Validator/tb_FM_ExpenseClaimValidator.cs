@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/12/2024 18:21:41
+// 时间：09/13/2024 18:43:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -22,7 +22,7 @@ namespace RUINORERP.Business
     /// 费用报销单验证类
     /// </summary>
     /*public partial class tb_FM_ExpenseClaimValidator:AbstractValidator<tb_FM_ExpenseClaim>*/
-    public partial class tb_FM_ExpenseClaimValidator: BaseValidatorGeneric<tb_FM_ExpenseClaim>
+    public partial class tb_FM_ExpenseClaimValidator:BaseValidatorGeneric<tb_FM_ExpenseClaim>
     {
      public tb_FM_ExpenseClaimValidator() 
      {
@@ -55,6 +55,8 @@ namespace RUINORERP.Business
         
                 Initialize();
      }
+
+
 
 
         private bool DetailedRecordsNotEmpty(List<tb_FM_ExpenseClaimDetail> details)

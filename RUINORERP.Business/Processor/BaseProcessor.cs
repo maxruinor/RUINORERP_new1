@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using System.Windows.Media.Media3D;
 
 
 
@@ -62,6 +63,7 @@ namespace RUINORERP.Business.Processor
 
         /// <summary>
         /// 用于加载下拉时有过滤条件的情况就子类重写进行过滤操作，没有的话，直接返回本身
+        /// 移除不符合条件的
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="list"></param>
@@ -102,12 +104,11 @@ namespace RUINORERP.Business.Processor
                     {
                         #region 移除不符合条件的
                         string FieldName = binaryExpression.Left.GetMemberInfo().Name;
-                        string FiledValue = ((ConstantExpression)binaryExpression.Right).Value.ToString();
+                        string FiledValue = GetExpressinValueFromExp(binaryExpression.Right);
                         for (int i = 0; i < lastList.Count; i++)
                         {
                             if (lastList[i].GetPropertyValue(FieldName).ToString() != FiledValue)
                             {
-                                //listInstances.Add(item);
                                 lastList.Remove(lastList[i]);
                             }
                         }
@@ -116,35 +117,39 @@ namespace RUINORERP.Business.Processor
                     }
 
                     //有多个条件时
-                    if (binaryExpression.Left != null && binaryExpression.NodeType == ExpressionType.AndAlso)
+                    if (binaryExpression != null && binaryExpression.Left != null && binaryExpression.NodeType == ExpressionType.AndAlso)
                     {
                         var binaryExpressionLeft = (BinaryExpression)binaryExpression.Left;
                         //(t.Is_enabled == True)  后面包含 等其它形式再来补充
                         //左边是变量，右边是常量
                         if (binaryExpressionLeft.NodeType == ExpressionType.Equal)
                         {
-                            var binaryExpressionright = (ConstantExpression)binaryExpressionLeft.Right;
                             #region 移除不符合条件的
-                            string FieldName = binaryExpressionLeft.Left.GetMemberInfo().Name;
-                            string FiledValue = (binaryExpressionright).Value.ToString();
-                            for (int i = 0; i < lastList.Count; i++)
+                            // 获取成员名称和常量值
+                            if (binaryExpressionLeft.Left is MemberExpression memberExpression)
                             {
-                                if (lastList[i].GetPropertyValue(FieldName).ToString() != FiledValue)
+                                string FieldName = memberExpression.Member.Name;
+                                string FiledValue = GetExpressinValueFromExp(binaryExpressionLeft.Right);
+                                //string FieldName = binaryExpressionLeft.Left.GetMemberInfo().Name;
+                                //string FiledValue = (binaryExpressionright).Value.ToString();
+                                for (int i = 0; i < lastList.Count; i++)
                                 {
-                                    //listInstances.Add(item);
-                                    lastList.Remove(lastList[i]);
+                                    if (lastList[i].GetPropertyValue(FieldName).ToString() != FiledValue)
+                                    {
+                                        //listInstances.Add(item);
+                                        lastList.Remove(lastList[i]);
+                                    }
                                 }
                             }
                             #endregion
-
                         }
                     }
 
                     // 如果右子树也是 BinaryExpression，则继续转换
                     if (binaryExpression.NodeType == ExpressionType.AndAlso &&
-                        binaryExpression.Right is BinaryExpression right)
+                        binaryExpression.Right is BinaryExpression rightt)
                     {
-                        binaryExpression = right;
+                        binaryExpression = rightt;
                     }
                     else
                     {
@@ -153,6 +158,35 @@ namespace RUINORERP.Business.Processor
                 }
             }
             return lastList;
+        }
+
+
+        public string GetExpressinValueFromExp(Expression expression)
+        {
+            string expressionValue = string.Empty;
+            if (expression is ConstantExpression constant)
+            {
+                expressionValue = constant.Value.ToString();
+            }
+            else if (expression is MemberExpression member)
+            {
+                expressionValue = member.Member.Name;
+            }
+            else if (expression is UnaryExpression unary)
+            {
+                // 获取单目运算的参数
+                if (unary.Operand is ConstantExpression constExp)
+                {
+                    var value = constExp.Value;
+                    if (value is bool boolValue && boolValue)
+                    {
+                        expressionValue = value.ToString();
+                    }
+                }
+            }
+
+            return expressionValue;
+
         }
 
 

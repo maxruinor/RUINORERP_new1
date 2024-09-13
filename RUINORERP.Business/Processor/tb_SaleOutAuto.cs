@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/29/2024 13:46:09
+// 时间：09/13/2024 18:44:29
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -32,19 +32,16 @@ namespace RUINORERP.Business.Processor
     /// <summary>
     /// 销售出库单
     /// </summary>
-    public partial class tb_SaleOutProcessor : BaseProcessor
+    public partial class tb_SaleOutProcessor:BaseProcessor 
     {
-
-        public tb_SaleOutProcessor(ILogger<tb_SaleOutProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
+       
+        public tb_SaleOutProcessor(ILogger<tb_SaleOutProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-            _unitOfWorkManage = unitOfWorkManage;
+           _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
         }
-
-
-
-
+        
     }
 }
 

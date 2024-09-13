@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:51
+// 时间：09/13/2024 18:44:38
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
@@ -22,41 +22,42 @@ namespace RUINORERP.Business
     /// 系统全局动态配置表 行转列验证类
     /// </summary>
     /*public partial class tb_SysGlobalDynamicConfigValidator:AbstractValidator<tb_SysGlobalDynamicConfig>*/
-    public partial class tb_SysGlobalDynamicConfigValidator : BaseValidatorGeneric<tb_SysGlobalDynamicConfig>
+    public partial class tb_SysGlobalDynamicConfigValidator:BaseValidatorGeneric<tb_SysGlobalDynamicConfig>
     {
-        public tb_SysGlobalDynamicConfigValidator()
+     public tb_SysGlobalDynamicConfigValidator() 
+     {
+      RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigKey).MaximumLength(127).WithMessage("配置项:不能超过最大长度,127.");
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigKey).NotEmpty().WithMessage("配置项:不能为空。");
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigValue).NotEmpty().WithMessage("配置值:不能为空。");
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.Description).MaximumLength(100).WithMessage("配置描述:不能超过最大长度,100.");
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.Description).NotEmpty().WithMessage("配置描述:不能为空。");
+//***** 
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ValueType).NotNull().WithMessage("配置项的值类型:不能为空。");
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigType).MaximumLength(50).WithMessage("配置类型:不能超过最大长度,50.");
+//有默认值
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+       	
+           	        Initialize();
+     }
+
+
+
+
+
+
+
+    
+          private bool CheckForeignKeyValue(long ForeignKeyID)
         {
-            RuleFor(tb_SysGlobalDynamicConfig => tb_SysGlobalDynamicConfig.ConfigKey).MaximumLength(127).WithMessage("配置项:不能超过最大长度,127.");
-            RuleFor(tb_SysGlobalDynamicConfig => tb_SysGlobalDynamicConfig.ConfigKey).NotEmpty().WithMessage("配置项:不能为空。");
-            RuleFor(tb_SysGlobalDynamicConfig => tb_SysGlobalDynamicConfig.ConfigValue).NotEmpty().WithMessage("配置值:不能为空。");
-            RuleFor(tb_SysGlobalDynamicConfig => tb_SysGlobalDynamicConfig.Description).MaximumLength(100).WithMessage("配置描述:不能超过最大长度,100.");
-            RuleFor(tb_SysGlobalDynamicConfig => tb_SysGlobalDynamicConfig.Description).NotEmpty().WithMessage("配置描述:不能为空。");
-            RuleFor(tb_SysGlobalDynamicConfig => tb_SysGlobalDynamicConfig.ValueType).NotNull().WithMessage("配置项的值类型:不能为空。");
-            RuleFor(tb_SysGlobalDynamicConfig => tb_SysGlobalDynamicConfig.ConfigType).MaximumLength(50).WithMessage("配置类型:不能超过最大长度,50.");
-            //有默认值
-            RuleFor(tb_SysGlobalDynamicConfig => tb_SysGlobalDynamicConfig.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
-            RuleFor(tb_SysGlobalDynamicConfig => tb_SysGlobalDynamicConfig.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-
-            Initialize();
-        }
-
-
-
-
-
-
-
-
-        private bool CheckForeignKeyValue(long ForeignKeyID)
-        {
-            bool rs = true;
+            bool rs = true;    
             if (ForeignKeyID == 0 || ForeignKeyID == -1)
             {
                 return false;
             }
             return rs;
         }
-
+        
         private bool CheckForeignKeyValueCanNull(long? ForeignKeyID)
         {
             bool rs = true;
@@ -68,9 +69,9 @@ namespace RUINORERP.Business
                 }
             }
             return rs;
-
-        }
+        
     }
+}
 
 }
 

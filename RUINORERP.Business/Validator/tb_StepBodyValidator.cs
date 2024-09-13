@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:35
+// 时间：09/13/2024 18:44:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,18 +21,19 @@ namespace RUINORERP.Business
     /// <summary>
     /// 步骤定义验证类
     /// </summary>
-    public partial class tb_StepBodyValidator:AbstractValidator<tb_StepBody>
+    /*public partial class tb_StepBodyValidator:AbstractValidator<tb_StepBody>*/
+    public partial class tb_StepBodyValidator:BaseValidatorGeneric<tb_StepBody>
     {
      public tb_StepBodyValidator() 
      {
       RuleFor(tb_StepBody =>tb_StepBody.Para_Id).Must(CheckForeignKeyValueCanNull).WithMessage("输入参数:下拉选择值不正确。");
  RuleFor(tb_StepBody =>tb_StepBody.Para_Id).NotEmpty().When(x => x.Para_Id.HasValue);
- RuleFor(tb_StepBody =>tb_StepBody.Name).MaximumLength(50).WithMessage("名称:不能超过最大长度,50.");
- RuleFor(tb_StepBody =>tb_StepBody.DisplayName).MaximumLength(50).WithMessage("显示名称:不能超过最大长度,50.");
- RuleFor(tb_StepBody =>tb_StepBody.TypeFullName).MaximumLength(50).WithMessage("类型全名:不能超过最大长度,50.");
- RuleFor(tb_StepBody =>tb_StepBody.AssemblyFullName).MaximumLength(50).WithMessage("标题:不能超过最大长度,50.");
+ RuleFor(tb_StepBody =>tb_StepBody.Name).MaximumLength(25).WithMessage("名称:不能超过最大长度,25.");
+ RuleFor(tb_StepBody =>tb_StepBody.DisplayName).MaximumLength(25).WithMessage("显示名称:不能超过最大长度,25.");
+ RuleFor(tb_StepBody =>tb_StepBody.TypeFullName).MaximumLength(25).WithMessage("类型全名:不能超过最大长度,25.");
+ RuleFor(tb_StepBody =>tb_StepBody.AssemblyFullName).MaximumLength(25).WithMessage("标题:不能超过最大长度,25.");
        	
-           	
+           	        Initialize();
      }
 
 

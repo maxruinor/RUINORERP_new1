@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:16
+// 时间：09/13/2024 18:43:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 业务类型 报销，员工借支还款，运费
     /// </summary>
     [Serializable()]
+    [Description("tb_FM_ExpenseType")]
     [SugarTable("tb_FM_ExpenseType")]
     public partial class tb_FM_ExpenseType: BaseEntity, ICloneable
     {
@@ -114,16 +115,7 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
-        //public virtual tb_FM_Subject tb_subject_id { get; set; }
 
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.ExpenseType_id))]
-        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
-        //tb_FM_Initial_PayAndReceivable.ExpenseType_id)
-        //ExpenseType_id.FK_TB_FM_IN_REFERENCE_TB_FM_EX)
-        //tb_FM_ExpenseType.ExpenseType_id)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -131,6 +123,14 @@ namespace RUINORERP.Model
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
         //tb_FM_OtherExpenseDetail.ExpenseType_id)
         //ExpenseType_id.FK_TB_FM_OT_REFERENCE_TB_FM_EX)
+        //tb_FM_ExpenseType.ExpenseType_id)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.ExpenseType_id))]
+        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
+        //tb_FM_Initial_PayAndReceivable.ExpenseType_id)
+        //ExpenseType_id.FK_TB_FM_IN_REFERENCE_TB_FM_EX)
         //tb_FM_ExpenseType.ExpenseType_id)
 
         //[Browsable(false)]

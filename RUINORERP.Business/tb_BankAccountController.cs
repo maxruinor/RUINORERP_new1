@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/20/2024 10:31:31
+// 时间：09/13/2024 18:43:23
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ namespace RUINORERP.Business
         public Itb_BankAccountServices _tb_BankAccountServices { get; set; }
        // private readonly ApplicationContext _appContext;
        
-        public tb_BankAccountController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_BankAccountServices tb_BankAccountServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_BankAccountController(ILogger<tb_BankAccountController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_BankAccountServices tb_BankAccountServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_BankAccount entity = model as tb_BankAccount;
@@ -241,21 +239,23 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.BankAccount_id > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_BankAccount>(entity as tb_BankAccount)
-                        .Include(m => m.tb_CustomerVendors)
-                    .Include(m => m.tb_Employees)
-                    .ExecuteCommandAsync();
+                        .Include(m => m.tb_Employees)
+                    .Include(m => m.tb_CustomerVendors)
+                            .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_BankAccount>(entity as tb_BankAccount)
-                .Include(m => m.tb_CustomerVendors)
                 .Include(m => m.tb_Employees)
-                        .ExecuteCommandAsync();
+                .Include(m => m.tb_CustomerVendors)
+                                .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
@@ -266,12 +266,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -287,8 +285,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_BankAccount>()
-                                .Includes(m => m.tb_CustomerVendors)
-                        .Includes(m => m.tb_Employees)
+                                .Includes(m => m.tb_Employees)
+                        .Includes(m => m.tb_CustomerVendors)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -298,8 +296,8 @@ namespace RUINORERP.Business
         {
             tb_BankAccount entity = model as tb_BankAccount;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_BankAccount>(m => m.BankAccount_id== entity.BankAccount_id)
-                                .Include(m => m.tb_CustomerVendors)
-                        .Include(m => m.tb_Employees)
+                                .Include(m => m.tb_Employees)
+                        .Include(m => m.tb_CustomerVendors)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -462,8 +460,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_BankAccount>> QueryByNavAsync()
         {
             List<tb_BankAccount> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BankAccount>()
-                                            .Includes(t => t.tb_CustomerVendors )
-                                .Includes(t => t.tb_Employees )
+                                            .Includes(t => t.tb_Employees )
+                                .Includes(t => t.tb_CustomerVendors )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -483,8 +481,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_BankAccount>> QueryByNavAsync(Expression<Func<tb_BankAccount, bool>> exp)
         {
             List<tb_BankAccount> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BankAccount>().Where(exp)
-                                            .Includes(t => t.tb_CustomerVendors )
-                                .Includes(t => t.tb_Employees )
+                                            .Includes(t => t.tb_Employees )
+                                .Includes(t => t.tb_CustomerVendors )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -504,8 +502,8 @@ namespace RUINORERP.Business
          public virtual List<tb_BankAccount> QueryByNav(Expression<Func<tb_BankAccount, bool>> exp)
         {
             List<tb_BankAccount> list = _unitOfWorkManage.GetDbClient().Queryable<tb_BankAccount>().Where(exp)
-                                        .Includes(t => t.tb_CustomerVendors )
-                            .Includes(t => t.tb_Employees )
+                                        .Includes(t => t.tb_Employees )
+                            .Includes(t => t.tb_CustomerVendors )
                         .ToList();
             
             foreach (var item in list)
@@ -542,8 +540,8 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_BankAccount entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_BankAccount>().Where(w => w.BankAccount_id == (long)id)
-                                         .Includes(t => t.tb_CustomerVendors )
-                            .Includes(t => t.tb_Employees )
+                                         .Includes(t => t.tb_Employees )
+                            .Includes(t => t.tb_CustomerVendors )
                         .FirstAsync();
             if(entity!=null)
             {

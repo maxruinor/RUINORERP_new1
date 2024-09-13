@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:29
+// 时间：09/13/2024 18:43:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,18 +21,18 @@ namespace RUINORERP.Business
     /// <summary>
     /// 流程图定义验证类
     /// </summary>
-    public partial class tb_FlowchartDefinitionValidator:AbstractValidator<tb_FlowchartDefinition>
+    /*public partial class tb_FlowchartDefinitionValidator:AbstractValidator<tb_FlowchartDefinition>*/
+    public partial class tb_FlowchartDefinitionValidator:BaseValidatorGeneric<tb_FlowchartDefinition>
     {
      public tb_FlowchartDefinitionValidator() 
      {
       RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.ModuleID).Must(CheckForeignKeyValueCanNull).WithMessage("模块:下拉选择值不正确。");
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.ModuleID).NotEmpty().When(x => x.ModuleID.HasValue);
- RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartNo).MaximumLength(50).WithMessage("流程图编号:不能超过最大长度,50.");
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartNo).NotEmpty().WithMessage("流程图编号:不能为空。");
- RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).MaximumLength(20).WithMessage("流程图名称:不能超过最大长度,20.");
+ RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).MaximumLength(10).WithMessage("流程图名称:不能超过最大长度,10.");
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).NotEmpty().WithMessage("流程图名称:不能为空。");
        	
-           	
+           	        Initialize();
      }
 
 

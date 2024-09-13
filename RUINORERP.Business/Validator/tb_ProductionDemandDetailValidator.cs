@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/28/2024 11:55:47
+// 时间：09/13/2024 18:44:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,13 +21,14 @@ namespace RUINORERP.Business
     /// <summary>
     /// 生产需求分析表明细验证类
     /// </summary>
-    public partial class tb_ProductionDemandDetailValidator:AbstractValidator<tb_ProductionDemandDetail>
+    /*public partial class tb_ProductionDemandDetailValidator:AbstractValidator<tb_ProductionDemandDetail>*/
+    public partial class tb_ProductionDemandDetailValidator:BaseValidatorGeneric<tb_ProductionDemandDetail>
     {
      public tb_ProductionDemandDetailValidator() 
      {
      //***** 
  RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.PDID).NotNull().WithMessage(":不能为空。");
- RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品:下拉选择值不正确。");
+ RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
  RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
  RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
  RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.BOM_ID).Must(CheckForeignKeyValueCanNull).WithMessage("标准配方:下拉选择值不正确。");
@@ -56,7 +57,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.NotOutQty).NotNull().WithMessage("未发数量:不能为空。");
  RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
        	
-           	
+           	        Initialize();
      }
 
 

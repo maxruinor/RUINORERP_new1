@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:31
+// 时间：09/13/2024 18:43:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,16 +21,17 @@ namespace RUINORERP.Business
     /// <summary>
     /// 流程步骤 转移条件集合验证类
     /// </summary>
-    public partial class tb_NextNodesValidator:AbstractValidator<tb_NextNodes>
+    /*public partial class tb_NextNodesValidator:AbstractValidator<tb_NextNodes>*/
+    public partial class tb_NextNodesValidator:BaseValidatorGeneric<tb_NextNodes>
     {
      public tb_NextNodesValidator() 
      {
       RuleFor(tb_NextNodes =>tb_NextNodes.ConNodeConditions_Id).Must(CheckForeignKeyValueCanNull).WithMessage("条件:下拉选择值不正确。");
  RuleFor(tb_NextNodes =>tb_NextNodes.ConNodeConditions_Id).NotEmpty().When(x => x.ConNodeConditions_Id.HasValue);
- RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).MaximumLength(50).WithMessage("下节点名称:不能超过最大长度,50.");
+ RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).MaximumLength(25).WithMessage("下节点名称:不能超过最大长度,25.");
  RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).NotEmpty().WithMessage("下节点名称:不能为空。");
        	
-           	
+           	        Initialize();
      }
 
 

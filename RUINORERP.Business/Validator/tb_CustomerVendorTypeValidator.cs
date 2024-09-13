@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:29
+// 时间：09/13/2024 18:43:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,14 +21,15 @@ namespace RUINORERP.Business
     /// <summary>
     /// 往来单位类型,如级别，电商，大客户，亚马逊等验证类
     /// </summary>
-    public partial class tb_CustomerVendorTypeValidator:AbstractValidator<tb_CustomerVendorType>
+    /*public partial class tb_CustomerVendorTypeValidator:AbstractValidator<tb_CustomerVendorType>*/
+    public partial class tb_CustomerVendorTypeValidator:BaseValidatorGeneric<tb_CustomerVendorType>
     {
      public tb_CustomerVendorTypeValidator() 
      {
-      RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.TypeName).MaximumLength(50).WithMessage("类型等级名称:不能超过最大长度,50.");
- RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.Desc).MaximumLength(100).WithMessage("描述:不能超过最大长度,100.");
+      RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.TypeName).MaximumLength(25).WithMessage("类型等级名称:不能超过最大长度,25.");
+ RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.Desc).MaximumLength(50).WithMessage("描述:不能超过最大长度,50.");
        	
-           	
+           	        Initialize();
      }
 
 

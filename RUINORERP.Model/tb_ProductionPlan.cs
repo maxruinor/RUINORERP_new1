@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2024 17:20:32
+// 时间：09/13/2024 18:44:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -186,7 +186,7 @@ namespace RUINORERP.Model
         /// 完成数
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCompletedQuantity",ColDesc = "完成数")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalCompletedQuantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "完成数")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalCompletedQuantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "完成数" )]
         public int TotalCompletedQuantity
         { 
             get{return _TotalCompletedQuantity;}
@@ -200,7 +200,7 @@ namespace RUINORERP.Model
         /// 计划数
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalQuantity",ColDesc = "计划数")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalQuantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "计划数")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalQuantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "计划数" )]
         public int TotalQuantity
         { 
             get{return _TotalQuantity;}

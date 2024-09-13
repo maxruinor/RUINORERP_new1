@@ -148,8 +148,8 @@ namespace RUINORERP.UI.BI
 
 
             // Set initial values
-            rdbis_enabledYes.Checked = entity.Is_enabled;
-            rdbis_enabledNo.Checked = !entity.Is_enabled;
+            rdbis_enabledYes.Checked = entity.Is_enabled.Value;
+            rdbis_enabledNo.Checked = !entity.Is_enabled.Value;
             // Change on event
             rdbis_enabledYes.CheckedChanged += delegate
             {
@@ -164,8 +164,8 @@ namespace RUINORERP.UI.BI
             rdbis_enabledYes.DataBindings.Add("Checked", entity, "is_enabled", true, DataSourceUpdateMode.OnValidation);
 
             // Set initial values
-            rdbis_availableYes.Checked = entity.Is_available;
-            rdbis_availableNo.Checked = !entity.Is_available;
+            rdbis_availableYes.Checked = entity.Is_available.Value;
+            rdbis_availableNo.Checked = !entity.Is_available.Value;
 
             // Change on event
             rdbis_availableYes.CheckedChanged += delegate
@@ -194,6 +194,9 @@ namespace RUINORERP.UI.BI
             if (_EditEntity.Employee_ID == 0)
             {
                 _EditEntity.Employee_NO = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Employee);
+                _EditEntity.Is_available = true;
+                _EditEntity.Is_enabled = true;
+          
             }
             DataBindingHelper.BindData4TextBox<tb_Employee>(entity, t => t.Employee_NO, txtEmployee_NO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Employee>(entity, t => t.Employee_Name, txtEmployee_Name, BindDataType4TextBox.Text, false);

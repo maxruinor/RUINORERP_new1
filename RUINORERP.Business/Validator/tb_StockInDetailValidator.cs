@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:35
+// 时间：09/13/2024 19:02:38
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
@@ -21,46 +21,46 @@ namespace RUINORERP.Business
     /// <summary>
     /// 入库单明细验证类
     /// </summary>
-    public partial class tb_StockInDetailValidator : AbstractValidator<tb_StockInDetail>
+    /*public partial class tb_StockInDetailValidator:AbstractValidator<tb_StockInDetail>*/
+    public partial class tb_StockInDetailValidator:BaseValidatorGeneric<tb_StockInDetail>
     {
-        public tb_StockInDetailValidator()
+     public tb_StockInDetailValidator() 
+     {
+     //***** 
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.MainID).NotNull().WithMessage("入库:不能为空。");
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("货架:下拉选择值不正确。");
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
+//***** 
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.Qty).NotNull().WithMessage("数量:不能为空。");
+ RuleFor(x => x.Price).PrecisionScale(19,4,true).WithMessage("售价:小数位不能超过4。");
+ RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
+ RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
+ RuleFor(x => x.SubtotalPirceAmount).PrecisionScale(19,4,true).WithMessage("金额小计:小数位不能超过4。");
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+       	
+           	        Initialize();
+     }
+
+
+
+
+
+
+
+    
+          private bool CheckForeignKeyValue(long ForeignKeyID)
         {
-            //***** 
-            RuleFor(tb_StockInDetail => tb_StockInDetail.MainID).NotNull().WithMessage("入库:不能为空。");
-            RuleFor(tb_StockInDetail => tb_StockInDetail.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("货架:下拉选择值不正确。");
-            RuleFor(tb_StockInDetail => tb_StockInDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
-            RuleFor(tb_StockInDetail => tb_StockInDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品:下拉选择值不正确。");
-            RuleFor(tb_StockInDetail => tb_StockInDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
-            //***** 
-            RuleFor(tb_StockInDetail => tb_StockInDetail.Qty).NotNull().WithMessage("数量:不能为空。");
-            RuleFor(tb_StockInDetail => tb_StockInDetail.Qty).GreaterThanOrEqualTo(1).WithMessage("数量:不能小于或等于零。");
-            RuleFor(x => x.Price).PrecisionScale(19, 4, true).WithMessage("售价:小数位不能超过4。");
-            RuleFor(x => x.Cost).PrecisionScale(19, 4, true).WithMessage("成本:小数位不能超过4。");
-            RuleFor(tb_StockInDetail => tb_StockInDetail.Summary).MaximumLength(255).WithMessage("摘要:不能超过最大长度,255.");
-            RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19, 4, true).WithMessage("成本小计:小数位不能超过4。");
-            RuleFor(x => x.SubtotalPirceAmount).PrecisionScale(19, 4, true).WithMessage("金额小计:小数位不能超过4。");
-            RuleFor(tb_StockInDetail => tb_StockInDetail.property).MaximumLength(255).WithMessage("属性:不能超过最大长度,255.");
-
-
-        }
-
-
-
-
-
-
-
-
-        private bool CheckForeignKeyValue(long ForeignKeyID)
-        {
-            bool rs = true;
+            bool rs = true;    
             if (ForeignKeyID == 0 || ForeignKeyID == -1)
             {
                 return false;
             }
             return rs;
         }
-
+        
         private bool CheckForeignKeyValueCanNull(long? ForeignKeyID)
         {
             bool rs = true;
@@ -72,9 +72,9 @@ namespace RUINORERP.Business
                 }
             }
             return rs;
-
-        }
+        
     }
+}
 
 }
 

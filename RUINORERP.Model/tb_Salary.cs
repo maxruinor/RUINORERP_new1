@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:51
+// 时间：09/13/2024 18:44:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 工资表
     /// </summary>
     [Serializable()]
+    [Description("tb_Salary")]
     [SugarTable("tb_Salary")]
     public partial class tb_Salary: BaseEntity, ICloneable
     {
@@ -69,7 +70,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "BaseSalary",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "BaseSalary" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "BaseSalary" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
         public decimal? BaseSalary
         { 
             get{return _BaseSalary;}
@@ -83,7 +84,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "Bonus",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Bonus" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Bonus" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
         public decimal? Bonus
         { 
             get{return _Bonus;}
@@ -97,7 +98,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "Deduction",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deduction" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deduction" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
         public decimal? Deduction
         { 
             get{return _Deduction;}
@@ -111,7 +112,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "ActualSalary",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualSalary" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualSalary" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
         public decimal? ActualSalary
         { 
             get{return _ActualSalary;}

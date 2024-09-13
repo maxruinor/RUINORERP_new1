@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:58
+// 时间：09/13/2024 18:43:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 外发加工订单表
     /// </summary>
     [Serializable()]
+    [Description("tb_Outsourcing_order")]
     [SugarTable("tb_Outsourcing_order")]
     public partial class tb_Outsourcing_order: BaseEntity, ICloneable
     {

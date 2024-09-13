@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/15/2024 13:50:19
+// 时间：09/13/2024 18:43:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,20 +43,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _DeliveryBillNo;}
             set{SetProperty(ref _DeliveryBillNo, value);}
-        }
-     
-
-        private long _Location_ID;
-        /// <summary>
-        /// 库位
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "库位")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Location_ID",IsNullable = false,ColumnDescription = "库位" )]
-        [FKRelationAttribute("tb_Location","Location_ID")]
-        public long Location_ID 
-        { 
-            get{return _Location_ID;}
-            set{SetProperty(ref _Location_ID, value);}
         }
      
 
@@ -211,7 +197,7 @@ namespace RUINORERP.Model.QueryDto
         /// 制令单号
         /// </summary>
         [AdvQueryAttribute(ColName = "MONo",ColDesc = "制令单号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "MONo",Length=50,IsNullable = false,ColumnDescription = "制令单号" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "MONo",Length=50,IsNullable = true,ColumnDescription = "制令单号" )]
         public string MONo 
         { 
             get{return _MONo;}
@@ -219,14 +205,14 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long _MOID;
+        private long? _MOID;
         /// <summary>
         /// 制令单
         /// </summary>
         [AdvQueryAttribute(ColName = "MOID",ColDesc = "制令单")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "MOID",IsNullable = false,ColumnDescription = "制令单" )]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "MOID",IsNullable = true,ColumnDescription = "制令单" )]
         [FKRelationAttribute("tb_ManufacturingOrder","MOID")]
-        public long MOID 
+        public long? MOID 
         { 
             get{return _MOID;}
             set{SetProperty(ref _MOID, value);}

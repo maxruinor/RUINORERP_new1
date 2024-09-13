@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:30
+// 时间：09/13/2024 18:43:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,17 +21,18 @@ namespace RUINORERP.Business
     /// <summary>
     /// 业务类型 报销，员工借支还款，运费验证类
     /// </summary>
-    public partial class tb_FM_ExpenseTypeValidator:AbstractValidator<tb_FM_ExpenseType>
+    /*public partial class tb_FM_ExpenseTypeValidator:AbstractValidator<tb_FM_ExpenseType>*/
+    public partial class tb_FM_ExpenseTypeValidator:BaseValidatorGeneric<tb_FM_ExpenseType>
     {
      public tb_FM_ExpenseTypeValidator() 
      {
       RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.subject_id).Must(CheckForeignKeyValueCanNull).WithMessage("科目:下拉选择值不正确。");
  RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.subject_id).NotEmpty().When(x => x.subject_id.HasValue);
- RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Expense_name).MaximumLength(50).WithMessage("费用业务名称:不能超过最大长度,50.");
+ RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Expense_name).MaximumLength(25).WithMessage("费用业务名称:不能超过最大长度,25.");
 //有默认值
- RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Notes).MaximumLength(30).WithMessage("备注:不能超过最大长度,30.");
+ RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Notes).MaximumLength(15).WithMessage("备注:不能超过最大长度,15.");
        	
-           	
+           	        Initialize();
      }
 
 

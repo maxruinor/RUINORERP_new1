@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:00
+// 时间：09/13/2024 18:43:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 字段权限表
     /// </summary>
     [Serializable()]
+    [Description("tb_P4Field")]
     [SugarTable("tb_P4Field")]
     public partial class tb_P4Field: BaseEntity, ICloneable
     {
@@ -94,20 +95,6 @@ namespace RUINORERP.Model
             SetProperty(ref _MenuID, value);
             }
         }
-        private bool _IsChild;
-        /// <summary>
-        /// 子表字段
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsChild", ColDesc = "子表字段")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsChild", IsNullable = false, ColumnDescription = "子表字段")]
-        public bool IsChild
-        {
-            get { return _IsChild; }
-            set
-            {
-                SetProperty(ref _IsChild, value);
-            }
-        }
 
         private bool _IsVisble;
         /// <summary>
@@ -151,12 +138,12 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _HideValue=false;
+        private bool _HideValue;
         /// <summary>
         /// 默认隐藏
         /// </summary>
         [AdvQueryAttribute(ColName = "HideValue",ColDesc = "默认隐藏")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "HideValue" ,IsNullable = false,ColumnDescription = "隐藏值" )]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "HideValue" ,IsNullable = false,ColumnDescription = "默认隐藏" )]
         public bool HideValue
         { 
             get{return _HideValue;}
@@ -221,6 +208,20 @@ namespace RUINORERP.Model
             }
         }
 
+        private bool _IsChild;
+        /// <summary>
+        /// 子表字段
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsChild",ColDesc = "子表字段")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsChild" ,IsNullable = false,ColumnDescription = "子表字段" )]
+        public bool IsChild
+        { 
+            get{return _IsChild;}
+            set{
+            SetProperty(ref _IsChild, value);
+            }
+        }
+
         #endregion
 
         #region 扩展属性
@@ -228,19 +229,16 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(FieldInfo_ID))]
         public virtual tb_FieldInfo tb_fieldinfo { get; set; }
-        //public virtual tb_FieldInfo tb_FieldInfo_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(MenuID))]
         public virtual tb_MenuInfo tb_menuinfo { get; set; }
-        //public virtual tb_MenuInfo tb_MenuID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(RoleID))]
         public virtual tb_RoleInfo tb_roleinfo { get; set; }
-        //public virtual tb_RoleInfo tb_RoleID { get; set; }
 
 
 

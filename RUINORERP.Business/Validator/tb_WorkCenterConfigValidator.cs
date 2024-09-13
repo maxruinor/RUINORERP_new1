@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/31/2024 14:23:57
+// 时间：09/13/2024 18:44:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 工作台配置表验证类
     /// </summary>
-    public partial class tb_WorkCenterConfigValidator:AbstractValidator<tb_WorkCenterConfig>
+    /*public partial class tb_WorkCenterConfigValidator:AbstractValidator<tb_WorkCenterConfig>*/
+    public partial class tb_WorkCenterConfigValidator:BaseValidatorGeneric<tb_WorkCenterConfig>
     {
      public tb_WorkCenterConfigValidator() 
      {
@@ -32,7 +33,7 @@ namespace RUINORERP.Business
  RuleFor(tb_WorkCenterConfig =>tb_WorkCenterConfig.FrequentlyMenus).MaximumLength(200).WithMessage("常用菜单:不能超过最大长度,200.");
  RuleFor(tb_WorkCenterConfig =>tb_WorkCenterConfig.DataOverview).MaximumLength(500).WithMessage("数据概览:不能超过最大长度,500.");
        	
-           	
+           	        Initialize();
      }
 
 

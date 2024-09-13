@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/06/2024 16:02:36
+// 时间：09/13/2024 18:43:49
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -81,10 +81,10 @@ namespace RUINORERP.Model
 
         private long? _PDCID;
         /// <summary>
-        /// 需求单据
+        /// 自制品
         /// </summary>
-        [AdvQueryAttribute(ColName = "PDCID",ColDesc = "需求单据")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDCID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "需求单据" )]
+        [AdvQueryAttribute(ColName = "PDCID",ColDesc = "自制品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDCID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "自制品" )]
         [FKRelationAttribute("tb_ProduceGoodsRecommendDetail","PDCID")]
         public long? PDCID
         { 
@@ -96,10 +96,10 @@ namespace RUINORERP.Model
 
         private long? _PDID;
         /// <summary>
-        /// 需求自制
+        /// 需求单据
         /// </summary>
-        [AdvQueryAttribute(ColName = "PDID",ColDesc = "需求自制")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "需求自制" )]
+        [AdvQueryAttribute(ColName = "PDID",ColDesc = "需求单据")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "需求单据" )]
         [FKRelationAttribute("tb_ProductionDemand","PDID")]
         public long? PDID
         { 
@@ -459,7 +459,7 @@ namespace RUINORERP.Model
         /// 结案情况
         /// </summary>
         [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "结案情况")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "结案情况")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "结案情况" )]
         public string CloseCaseOpinions
         { 
             get{return _CloseCaseOpinions;}
@@ -473,7 +473,7 @@ namespace RUINORERP.Model
         /// 备注
         /// </summary>
         [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=1500,IsNullable = true,ColumnDescription = "备注")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=1500,IsNullable = true,ColumnDescription = "备注" )]
         public string Notes
         { 
             get{return _Notes;}
@@ -487,7 +487,7 @@ namespace RUINORERP.Model
         /// 人工费
         /// </summary>
         [AdvQueryAttribute(ColName = "LaborCost",ColDesc = "人工费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LaborCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "人工费" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LaborCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "人工费" )]
         public decimal LaborCost
         { 
             get{return _LaborCost;}
@@ -543,7 +543,7 @@ namespace RUINORERP.Model
         /// 托工费用
         /// </summary>
         [AdvQueryAttribute(ColName = "ExternalProduceFee",ColDesc = "托工费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ExternalProduceFee" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "托工费用" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ExternalProduceFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "托工费用" )]
         public decimal ExternalProduceFee
         { 
             get{return _ExternalProduceFee;}

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/20/2024 10:31:40
+// 时间：09/13/2024 19:02:34
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 销售出库退回单
     /// </summary>
-    public partial class tb_SaleOutReController<T> : BaseController<T> where T : class
+    public partial class tb_SaleOutReController<T>:BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -39,28 +39,28 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_SaleOutReServices _tb_SaleOutReServices { get; set; }
-        // private readonly ApplicationContext _appContext;
-
-        public tb_SaleOutReController(ILogger<tb_SaleOutReController<T>> logger, IUnitOfWorkManage unitOfWorkManage, tb_SaleOutReServices tb_SaleOutReServices, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
+       // private readonly ApplicationContext _appContext;
+       
+        public tb_SaleOutReController(ILogger<tb_SaleOutReController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_SaleOutReServices tb_SaleOutReServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-            _unitOfWorkManage = unitOfWorkManage;
-            _tb_SaleOutReServices = tb_SaleOutReServices;
+           _unitOfWorkManage = unitOfWorkManage;
+           _tb_SaleOutReServices = tb_SaleOutReServices;
             _appContext = appContext;
         }
-
-
-
-
-        public ValidationResult Validator(tb_SaleOutRe info)
+      
+        
+        
+        
+         public ValidationResult Validator(tb_SaleOutRe info)
         {
             tb_SaleOutReValidator validator = new tb_SaleOutReValidator();
             ValidationResult results = validator.Validate(info);
             return results;
         }
-
+        
         #region 扩展方法
-
+        
         /// <summary>
         /// 某字段是否存在
         /// </summary>
@@ -70,8 +70,8 @@ namespace RUINORERP.Business
         {
             return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).Any();
         }
-
-
+      
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
@@ -110,14 +110,14 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-
+        
+        
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<T>> BaseSaveOrUpdate(T model)
+        public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
             tb_SaleOutRe entity = model as tb_SaleOutRe;
@@ -136,7 +136,7 @@ namespace RUINORERP.Business
                 }
                 else
                 {
-                    Returnobj = await _tb_SaleOutReServices.AddReEntityAsync(entity) as T;
+                    Returnobj = await _tb_SaleOutReServices.AddReEntityAsync(entity) as T ;
                     MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(entity);
                 }
 
@@ -151,8 +151,8 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-
-        public async override Task<List<T>> BaseQueryAsync(string wheresql)
+        
+        public async override Task<List<T>> BaseQueryAsync(string wheresql) 
         {
             List<T> list = await _tb_SaleOutReServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
@@ -163,11 +163,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+             }
             return list;
         }
-
-        public async override Task<List<T>> BaseQueryAsync()
+        
+        public async override Task<List<T>> BaseQueryAsync() 
         {
             List<T> list = await _tb_SaleOutReServices.QueryAsync() as List<T>;
             foreach (var item in list)
@@ -178,11 +178,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 MyCacheManager.Instance.UpdateEntityList<List<T>>(list);
-            }
+             }
             return list;
         }
-
-
+        
+        
         public async override Task<bool> BaseDeleteAsync(T model)
         {
             tb_SaleOutRe entity = model as tb_SaleOutRe;
@@ -194,36 +194,36 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-
+        
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
-            bool rs = false;
+            bool rs=false;
             List<tb_SaleOutRe> entitys = models as List<tb_SaleOutRe>;
             int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_SaleOutRe>(entitys).ExecuteCommandAsync();
-            if (c > 0)
+            if (c>0)
             {
-                rs = true;
+                rs=true;
                 ////生成时暂时只考虑了一个主键的情况
-                long[] result = entitys.Select(e => e.SaleOutRe_ID).ToArray();
+                 long[] result = entitys.Select(e => e.SaleOutRe_ID).ToArray();
                 MyCacheManager.Instance.DeleteEntityList<tb_SaleOutRe>(result);
             }
             return rs;
         }
-
+        
         public override ValidationResult BaseValidator(T info)
         {
             tb_SaleOutReValidator validator = new tb_SaleOutReValidator();
             ValidationResult results = validator.Validate(info as tb_SaleOutRe);
             return results;
         }
-
-
-        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike, object dto)
+        
+        
+        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike, dto);
+            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
-
+        
         public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;
@@ -231,9 +231,7 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
-                //缓存当前编辑的对象。如果撤销就回原来的值
+                 //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_SaleOutRe entity = model as tb_SaleOutRe;
                 command.UndoOperation = delegate ()
@@ -241,66 +239,66 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-
-                if (entity.SaleOutRe_ID > 0)
-                {
-                    rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOutRe>(entity as tb_SaleOutRe)
-                            .Include(m => m.tb_SaleOutReDetails)
-                            .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
-                        .ExecuteCommandAsync();
-
-                }
-                else
-                {
-                    rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOutRe>(entity as tb_SaleOutRe)
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
+            if (entity.SaleOutRe_ID > 0)
+            {
+                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOutRe>(entity as tb_SaleOutRe)
                         .Include(m => m.tb_SaleOutReDetails)
-                        .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                    .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                            .ExecuteCommandAsync();
+         
+        }
+        else    
+        {
+            rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOutRe>(entity as tb_SaleOutRe)
+                .Include(m => m.tb_SaleOutReDetails)
+                .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
                                 .ExecuteCommandAsync();
-                }
-
+        }
+        
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rsms.ReturnObject = entity as T;
+                rsms.ReturnObject = entity as T ;
                 entity.PrimaryKeyID = entity.SaleOutRe_ID;
                 rsms.Succeeded = rs;
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
 
             return rsms;
         }
-
+        
         #endregion
-
-
+        
+        
         #region override mothed
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>()
                                 .Includes(m => m.tb_SaleOutReDetails)
-                                .Includes(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                        .Includes(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
                                         .Where(useLike, dto);
-            return await querySqlQueryable.ToListAsync() as List<T>;
+            return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
 
-        public async override Task<bool> BaseDeleteByNavAsync(T model)
+        public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
             tb_SaleOutRe entity = model as tb_SaleOutRe;
-            bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_SaleOutRe>(m => m.SaleOutRe_ID == entity.SaleOutRe_ID)
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_SaleOutRe>(m => m.SaleOutRe_ID== entity.SaleOutRe_ID)
                                 .Include(m => m.tb_SaleOutReDetails)
-                                .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
-                                       .ExecuteCommandAsync();
+                        .Include(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -309,68 +307,68 @@ namespace RUINORERP.Business
             return rs;
         }
         #endregion
-
-
-
+        
+        
+        
         public tb_SaleOutRe AddReEntity(tb_SaleOutRe entity)
         {
-            tb_SaleOutRe AddEntity = _tb_SaleOutReServices.AddReEntity(entity);
+            tb_SaleOutRe AddEntity =  _tb_SaleOutReServices.AddReEntity(entity);
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
-        public async Task<tb_SaleOutRe> AddReEntityAsync(tb_SaleOutRe entity)
+        
+         public async Task<tb_SaleOutRe> AddReEntityAsync(tb_SaleOutRe entity)
         {
             tb_SaleOutRe AddEntity = await _tb_SaleOutReServices.AddReEntityAsync(entity);
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-
+        
         public async Task<long> AddAsync(tb_SaleOutRe entity)
         {
             long id = await _tb_SaleOutReServices.Add(entity);
-            if (id > 0)
+            if(id>0)
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(entity);
             }
             return id;
         }
-
+        
         public async Task<List<long>> AddAsync(List<tb_SaleOutRe> infos)
         {
             List<long> ids = await _tb_SaleOutReServices.Add(infos);
-            if (ids.Count > 0)//成功的个数 这里缓存 对不对呢？
+            if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(infos);
+                 MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(infos);
             }
             return ids;
         }
-
-
+        
+        
         public async Task<bool> DeleteAsync(tb_SaleOutRe entity)
         {
             bool rs = await _tb_SaleOutReServices.Delete(entity);
             if (rs)
             {
                 MyCacheManager.Instance.DeleteEntityList<tb_SaleOutRe>(entity);
-
+                
             }
             return rs;
         }
-
+        
         public async Task<bool> UpdateAsync(tb_SaleOutRe entity)
         {
             bool rs = await _tb_SaleOutReServices.Update(entity);
             if (rs)
             {
-                MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
         }
-
+        
         public async Task<bool> DeleteAsync(long id)
         {
             bool rs = await _tb_SaleOutReServices.DeleteById(id);
@@ -380,8 +378,8 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-
-        public async Task<bool> DeleteAsync(long[] ids)
+        
+         public async Task<bool> DeleteAsync(long[] ids)
         {
             bool rs = await _tb_SaleOutReServices.DeleteByIds(ids);
             if (rs)
@@ -390,10 +388,10 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-
+        
         public virtual async Task<List<tb_SaleOutRe>> QueryAsync()
         {
-            List<tb_SaleOutRe> list = await _tb_SaleOutReServices.QueryAsync();
+            List<tb_SaleOutRe> list = await  _tb_SaleOutReServices.QueryAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
@@ -401,10 +399,10 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(list);
             return list;
         }
-
+        
         public virtual List<tb_SaleOutRe> Query()
         {
-            List<tb_SaleOutRe> list = _tb_SaleOutReServices.Query();
+            List<tb_SaleOutRe> list =  _tb_SaleOutReServices.Query();
             foreach (var item in list)
             {
                 item.HasChanged = false;
@@ -412,10 +410,10 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(list);
             return list;
         }
-
+        
         public virtual List<tb_SaleOutRe> Query(string wheresql)
         {
-            List<tb_SaleOutRe> list = _tb_SaleOutReServices.Query(wheresql);
+            List<tb_SaleOutRe> list =  _tb_SaleOutReServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
@@ -423,8 +421,8 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(list);
             return list;
         }
-
-        public virtual async Task<List<tb_SaleOutRe>> QueryAsync(string wheresql)
+        
+        public virtual async Task<List<tb_SaleOutRe>> QueryAsync(string wheresql) 
         {
             List<tb_SaleOutRe> list = await _tb_SaleOutReServices.QueryAsync(wheresql);
             foreach (var item in list)
@@ -434,7 +432,7 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(list);
             return list;
         }
-
+        
 
 
         /// <summary>
@@ -452,28 +450,28 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(list);
             return list;
         }
-
-
-
+        
+        
+        
         /// <summary>
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<tb_SaleOutRe>> QueryByNavAsync()
+         public virtual async Task<List<tb_SaleOutRe>> QueryByNavAsync()
         {
             List<tb_SaleOutRe> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>()
-                               .Includes(t => t.tb_saleout)
-                               .Includes(t => t.tb_employee)
-                               .Includes(t => t.tb_customervendor)
-                        .Includes(t => t.tb_SaleOutReDetails)
-                        .Includes(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                               .Includes(t => t.tb_saleout )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_customervendor )
+                                            .Includes(t => t.tb_SaleOutReDetails )
+                                .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
                         .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
+            
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(list);
             return list;
         }
@@ -483,58 +481,58 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual async Task<List<tb_SaleOutRe>> QueryByNavAsync(Expression<Func<tb_SaleOutRe, bool>> exp)
+         public virtual async Task<List<tb_SaleOutRe>> QueryByNavAsync(Expression<Func<tb_SaleOutRe, bool>> exp)
         {
             List<tb_SaleOutRe> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>().Where(exp)
-                               .Includes(t => t.tb_saleout)
-                               .Includes(t => t.tb_employee)
-                               .Includes(t => t.tb_customervendor)
-                                            .Includes(t => t.tb_SaleOutReDetails)
-                                                                    .Includes(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                               .Includes(t => t.tb_saleout )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_customervendor )
+                                            .Includes(t => t.tb_SaleOutReDetails )
+                                .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
                         .ToListAsync();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
+            
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(list);
             return list;
         }
-
-
+        
+        
         /// <summary>
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual List<tb_SaleOutRe> QueryByNav(Expression<Func<tb_SaleOutRe, bool>> exp)
+         public virtual List<tb_SaleOutRe> QueryByNav(Expression<Func<tb_SaleOutRe, bool>> exp)
         {
             List<tb_SaleOutRe> list = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>().Where(exp)
-                            .Includes(t => t.tb_saleout)
-                            .Includes(t => t.tb_employee)
-                            .Includes(t => t.tb_customervendor)
-                                        .Includes(t => t.tb_SaleOutReDetails)
-                                                                .Includes(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                            .Includes(t => t.tb_saleout )
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_customervendor )
+                                        .Includes(t => t.tb_SaleOutReDetails )
+                            .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
                         .ToList();
-
+            
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-
+            
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(list);
             return list;
         }
-
-
+        
+        
 
         /// <summary>
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_SaleOutRe>> QueryByAdvancedAsync(bool useLike, object dto)
+        public async Task<List<tb_SaleOutRe>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>().Where(useLike, dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>().Where(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -545,19 +543,19 @@ namespace RUINORERP.Business
             T entity = await _tb_SaleOutReServices.QueryByIdAsync(id) as T;
             return entity;
         }
-
-
-
+        
+        
+        
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_SaleOutRe entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>().Where(w => w.SaleOutRe_ID == (long)id)
-                             .Includes(t => t.tb_saleout)
-                            .Includes(t => t.tb_employee)
-                            .Includes(t => t.tb_customervendor)
-                            .Includes(t => t.tb_SaleOutReDetails)
-                                                    .Includes(m => m.tb_SaleOutReRefurbishedMaterialsDetails)
+                             .Includes(t => t.tb_saleout )
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_customervendor )
+                                        .Includes(t => t.tb_SaleOutReDetails )
+                            .Includes(t => t.tb_SaleOutReRefurbishedMaterialsDetails )
                         .FirstAsync();
-            if (entity != null)
+            if(entity!=null)
             {
                 entity.HasChanged = false;
             }
@@ -565,12 +563,12 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOutRe>(entity);
             return entity as T;
         }
-
-
-
-
-
-
+        
+        
+        
+        
+        
+        
     }
 }
 

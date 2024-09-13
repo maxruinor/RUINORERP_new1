@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 14:01:32
+// 时间：09/13/2024 18:43:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 出入库类型  非生产领料/退料  借出，归还  报损报溢？单独处理？验证类
     /// </summary>
-    public partial class tb_OutInStockTypeValidator:AbstractValidator<tb_OutInStockType>
+    /*public partial class tb_OutInStockTypeValidator:AbstractValidator<tb_OutInStockType>*/
+    public partial class tb_OutInStockTypeValidator:BaseValidatorGeneric<tb_OutInStockType>
     {
      public tb_OutInStockTypeValidator() 
      {
@@ -30,7 +31,7 @@ namespace RUINORERP.Business
  RuleFor(tb_OutInStockType =>tb_OutInStockType.TypeDesc).MaximumLength(50).WithMessage("描述:不能超过最大长度,50.");
 //有默认值
        	
-           	
+           	        Initialize();
      }
 
 

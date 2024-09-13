@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/07/2024 19:06:30
+// 时间：09/13/2024 18:44:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -137,10 +137,10 @@ namespace RUINORERP.Model
 
         private string _ShortCode;
         /// <summary>
-        /// 助记码
+        /// 短码
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShortCode",ColDesc = "助记码")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ShortCode" ,Length=50,IsNullable = true,ColumnDescription = "助记码" )]
+        [AdvQueryAttribute(ColName = "ShortCode",ColDesc = "短码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ShortCode" ,Length=50,IsNullable = true,ColumnDescription = "短码" )]
         public string ShortCode
         { 
             get{return _ShortCode;}
@@ -197,7 +197,7 @@ namespace RUINORERP.Model
         /// 属性类型
         /// </summary>
         [AdvQueryAttribute(ColName = "PropertyType",ColDesc = "属性类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PropertyType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "属性类型")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PropertyType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "属性类型" )]
         public int PropertyType
         { 
             get{return _PropertyType;}

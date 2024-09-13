@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:28
+// 时间：09/13/2024 18:43:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,18 +21,19 @@ namespace RUINORERP.Business
     /// <summary>
     /// 意向客户，公海客户 CRM系统中使用，给成交客户作外键引用验证类
     /// </summary>
-    public partial class tb_CustomerValidator:AbstractValidator<tb_Customer>
+    /*public partial class tb_CustomerValidator:AbstractValidator<tb_Customer>*/
+    public partial class tb_CustomerValidator:BaseValidatorGeneric<tb_Customer>
     {
      public tb_CustomerValidator() 
      {
-      RuleFor(tb_Customer =>tb_Customer.CompanyName).MaximumLength(50).WithMessage("公司名称:不能超过最大长度,50.");
+      RuleFor(tb_Customer =>tb_Customer.CompanyName).MaximumLength(25).WithMessage("公司名称:不能超过最大长度,25.");
  RuleFor(tb_Customer =>tb_Customer.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("对接人:下拉选择值不正确。");
  RuleFor(tb_Customer =>tb_Customer.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
- RuleFor(tb_Customer =>tb_Customer.CustomerName).MaximumLength(50).WithMessage("客户名称:不能超过最大长度,50.");
- RuleFor(tb_Customer =>tb_Customer.CustomerAddress).MaximumLength(300).WithMessage("客户地址:不能超过最大长度,300.");
- RuleFor(tb_Customer =>tb_Customer.CustomerDesc).MaximumLength(1000).WithMessage("客户描述:不能超过最大长度,1000.");
+ RuleFor(tb_Customer =>tb_Customer.CustomerName).MaximumLength(25).WithMessage("客户名称:不能超过最大长度,25.");
+ RuleFor(tb_Customer =>tb_Customer.CustomerAddress).MaximumLength(150).WithMessage("客户地址:不能超过最大长度,150.");
+ RuleFor(tb_Customer =>tb_Customer.CustomerDesc).MaximumLength(500).WithMessage("客户描述:不能超过最大长度,500.");
        	
-           	
+           	        Initialize();
      }
 
 

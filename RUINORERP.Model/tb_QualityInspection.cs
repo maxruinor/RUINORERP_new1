@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:46
+// 时间：09/13/2024 18:44:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 质检表
     /// </summary>
     [Serializable()]
+    [Description("tb_QualityInspection")]
     [SugarTable("tb_QualityInspection")]
     public partial class tb_QualityInspection: BaseEntity, ICloneable
     {

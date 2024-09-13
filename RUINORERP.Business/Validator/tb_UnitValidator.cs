@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/14/2024 15:01:03
+// 时间：09/13/2024 18:44:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,15 +21,16 @@ namespace RUINORERP.Business
     /// <summary>
     /// 基本单位验证类
     /// </summary>
-    public partial class tb_UnitValidator:AbstractValidator<tb_Unit>
+    /*public partial class tb_UnitValidator:AbstractValidator<tb_Unit>*/
+    public partial class tb_UnitValidator:BaseValidatorGeneric<tb_Unit>
     {
      public tb_UnitValidator() 
      {
-      RuleFor(tb_Unit =>tb_Unit.UnitName).MaximumLength(255).WithMessage("单位名称:不能超过最大长度,255.");
+      RuleFor(tb_Unit =>tb_Unit.UnitName).MaximumLength(127).WithMessage("单位名称:不能超过最大长度,127.");
  RuleFor(tb_Unit =>tb_Unit.UnitName).NotEmpty().WithMessage("单位名称:不能为空。");
- RuleFor(tb_Unit =>tb_Unit.Notes).MaximumLength(255).WithMessage("备注:不能超过最大长度,255.");
+ RuleFor(tb_Unit =>tb_Unit.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
        	
-           	
+           	        Initialize();
      }
 
 

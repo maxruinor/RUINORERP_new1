@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:49:10
+// 时间：09/13/2024 18:44:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,10 +49,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _CustomerVendor_ID;
         /// <summary>
-        /// 外部接收单位
+        /// 接收单位
         /// </summary>
-        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "外部接收单位")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "CustomerVendor_ID",IsNullable = true,ColumnDescription = "外部接收单位" )]
+        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "接收单位")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "CustomerVendor_ID",IsNullable = true,ColumnDescription = "接收单位" )]
         [FKRelationAttribute("tb_CustomerVendor","CustomerVendor_ID")]
         public long? CustomerVendor_ID 
         { 
@@ -61,14 +61,14 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _Employee_ID;
+        private long _Employee_ID;
         /// <summary>
-        /// 内部接收人员
+        /// 经办人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "内部接收人员")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Employee_ID",IsNullable = true,ColumnDescription = "内部接收人员" )]
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Employee_ID",IsNullable = false,ColumnDescription = "经办人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
-        public long? Employee_ID 
+        public long Employee_ID 
         { 
             get{return _Employee_ID;}
             set{SetProperty(ref _Employee_ID, value);}
@@ -77,10 +77,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _BillNo;
         /// <summary>
-        /// 其它出库编号
+        /// 其它出库单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "BillNo",ColDesc = "其它出库编号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BillNo",Length=50,IsNullable = true,ColumnDescription = "其它出库编号" )]
+        [AdvQueryAttribute(ColName = "BillNo",ColDesc = "其它出库单号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BillNo",Length=50,IsNullable = true,ColumnDescription = "其它出库单号" )]
         public string BillNo 
         { 
             get{return _BillNo;}
@@ -127,26 +127,26 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private DateTime? _Bill_Date;
+        private DateTime _Bill_Date;
         /// <summary>
         /// 单据日期
         /// </summary>
         [AdvQueryAttribute(ColName = "Bill_Date",ColDesc = "单据日期")]
-        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Bill_Date",IsNullable = true,ColumnDescription = "单据日期" )]
-        public DateTime? Bill_Date 
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Bill_Date",IsNullable = false,ColumnDescription = "单据日期" )]
+        public DateTime Bill_Date 
         { 
             get{return _Bill_Date;}
             set{SetProperty(ref _Bill_Date, value);}
         }
      
 
-        private DateTime? _Out_date;
+        private DateTime _Out_date;
         /// <summary>
         /// 出库日期
         /// </summary>
         [AdvQueryAttribute(ColName = "Out_date",ColDesc = "出库日期")]
-        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Out_date",IsNullable = true,ColumnDescription = "出库日期" )]
-        public DateTime? Out_date 
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Out_date",IsNullable = false,ColumnDescription = "出库日期" )]
+        public DateTime Out_date 
         { 
             get{return _Out_date;}
             set{SetProperty(ref _Out_date, value);}
@@ -210,7 +210,7 @@ namespace RUINORERP.Model.QueryDto
         /// 备注
         /// </summary>
         [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=255,IsNullable = true,ColumnDescription = "备注" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=1500,IsNullable = true,ColumnDescription = "备注" )]
         public string Notes 
         { 
             get{return _Notes;}

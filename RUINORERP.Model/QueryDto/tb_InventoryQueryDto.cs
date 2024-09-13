@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:37
+// 时间：09/13/2024 18:43:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -35,10 +35,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "货品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID 
         { 
@@ -140,6 +140,32 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private int _MakingQty= ((0));
+        /// <summary>
+        /// 在制数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "MakingQty",ColDesc = "在制数量")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "MakingQty",IsNullable = false,ColumnDescription = "在制数量" )]
+        public int MakingQty 
+        { 
+            get{return _MakingQty;}
+            set{SetProperty(ref _MakingQty, value);}
+        }
+     
+
+        private int _NotOutQty= ((0));
+        /// <summary>
+        /// 未发数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "NotOutQty",ColDesc = "未发数量")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "NotOutQty",IsNullable = false,ColumnDescription = "未发数量" )]
+        public int NotOutQty 
+        { 
+            get{return _NotOutQty;}
+            set{SetProperty(ref _NotOutQty, value);}
+        }
+     
+
         private int _BatchNumber= ((0));
         /// <summary>
         /// 批次管理
@@ -220,10 +246,10 @@ namespace RUINORERP.Model.QueryDto
 
         private decimal _Inv_Cost= ((0));
         /// <summary>
-        /// 产品成本
+        /// 货品成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "Inv_Cost",ColDesc = "产品成本")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "Inv_Cost",IsNullable = false,ColumnDescription = "产品成本" )]
+        [AdvQueryAttribute(ColName = "Inv_Cost",ColDesc = "货品成本")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "Inv_Cost",IsNullable = false,ColumnDescription = "货品成本" )]
         public decimal Inv_Cost 
         { 
             get{return _Inv_Cost;}
@@ -241,32 +267,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Inv_SubtotalCostMoney;}
             set{SetProperty(ref _Inv_SubtotalCostMoney, value);}
-        }
-     
-
-        private int _MakingQty= ((0));
-        /// <summary>
-        /// 在制数量
-        /// </summary>
-        [AdvQueryAttribute(ColName = "MakingQty",ColDesc = "在制数量")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "MakingQty",IsNullable = false,ColumnDescription = "在制数量" )]
-        public int MakingQty 
-        { 
-            get{return _MakingQty;}
-            set{SetProperty(ref _MakingQty, value);}
-        }
-     
-
-        private int _NotOutQty= ((0));
-        /// <summary>
-        /// 未发数量
-        /// </summary>
-        [AdvQueryAttribute(ColName = "NotOutQty",ColDesc = "未发数量")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "NotOutQty",IsNullable = false,ColumnDescription = "未发数量" )]
-        public int NotOutQty 
-        { 
-            get{return _NotOutQty;}
-            set{SetProperty(ref _NotOutQty, value);}
         }
      
 
@@ -293,6 +293,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _LatestStorageTime;}
             set{SetProperty(ref _LatestStorageTime, value);}
+        }
+     
+
+        private DateTime? _LastInventoryDate;
+        /// <summary>
+        /// 最后盘点时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "LastInventoryDate",ColDesc = "最后盘点时间")]
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "LastInventoryDate",IsNullable = true,ColumnDescription = "最后盘点时间" )]
+        public DateTime? LastInventoryDate 
+        { 
+            get{return _LastInventoryDate;}
+            set{SetProperty(ref _LastInventoryDate, value);}
         }
      
 

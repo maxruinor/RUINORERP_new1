@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:34
+// 时间：09/13/2024 18:44:27
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,13 +21,14 @@ namespace RUINORERP.Business
     /// <summary>
     /// 薪资发放表验证类
     /// </summary>
-    public partial class tb_SalaryPaymentValidator:AbstractValidator<tb_SalaryPayment>
+    /*public partial class tb_SalaryPaymentValidator:AbstractValidator<tb_SalaryPayment>*/
+    public partial class tb_SalaryPaymentValidator:BaseValidatorGeneric<tb_SalaryPayment>
     {
      public tb_SalaryPaymentValidator() 
      {
       RuleFor(x => x.amount).PrecisionScale(10,2,true).WithMessage(":小数位不能超过2。");
        	
-           	
+           	        Initialize();
      }
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:49:12
+// 时间：09/13/2024 18:44:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 盘点表
     /// </summary>
     [Serializable()]
+    [Description("tb_Stocktake")]
     [SugarTable("tb_Stocktake")]
     public partial class tb_Stocktake: BaseEntity, ICloneable
     {
@@ -155,7 +156,7 @@ namespace RUINORERP.Model
         /// 载账总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CarryingTotalAmount",ColDesc = "载账总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CarryingTotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "载账总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CarryingTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "载账总成本" )]
         public decimal CarryingTotalAmount
         { 
             get{return _CarryingTotalAmount;}
@@ -281,7 +282,7 @@ namespace RUINORERP.Model
         /// 差异总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "DiffTotalAmount",ColDesc = "差异总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiffTotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "差异总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiffTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "差异总金额" )]
         public decimal DiffTotalAmount
         { 
             get{return _DiffTotalAmount;}
@@ -309,7 +310,7 @@ namespace RUINORERP.Model
         /// 盘点总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CheckTotalAmount",ColDesc = "盘点总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CheckTotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "盘点总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CheckTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "盘点总成本" )]
         public decimal CheckTotalAmount
         { 
             get{return _CheckTotalAmount;}
@@ -339,7 +340,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "数据状态" )]
-        [Browsable(false)]
         public int DataStatus
         { 
             get{return _DataStatus;}
@@ -439,13 +439,11 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
-        //public virtual tb_Location tb_Location_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
-        //public virtual tb_Employee tb_Employee_ID { get; set; }
 
 
         //[Browsable(false)]

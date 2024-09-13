@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/20/2024 10:31:32
+// 时间：09/13/2024 18:43:34
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ namespace RUINORERP.Business
         public Itb_CustomerVendorTypeServices _tb_CustomerVendorTypeServices { get; set; }
        // private readonly ApplicationContext _appContext;
        
-        public tb_CustomerVendorTypeController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CustomerVendorTypeServices tb_CustomerVendorTypeServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_CustomerVendorTypeController(ILogger<tb_CustomerVendorTypeController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CustomerVendorTypeServices tb_CustomerVendorTypeServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_CustomerVendorType entity = model as tb_CustomerVendorType;
@@ -241,19 +239,21 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.Type_ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_CustomerVendorType>(entity as tb_CustomerVendorType)
                         .Include(m => m.tb_CustomerVendors)
-                    .ExecuteCommandAsync();
+                            .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_CustomerVendorType>(entity as tb_CustomerVendorType)
                 .Include(m => m.tb_CustomerVendors)
-                        .ExecuteCommandAsync();
+                                .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
@@ -264,12 +264,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }

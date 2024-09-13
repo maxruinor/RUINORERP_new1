@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/10/2024 19:17:29
+// 时间：09/13/2024 18:43:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -141,33 +141,6 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _Specifications;
-        /// <summary>
-        /// 规格
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Specifications",ColDesc = "规格")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Specifications",Length=200,IsNullable = true,ColumnDescription = "规格" )]
-        public string Specifications 
-        { 
-            get{return _Specifications;}
-            set{SetProperty(ref _Specifications, value);}
-        }
-     
-
-        private long? _Type_ID;
-        /// <summary>
-        /// 产品类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "产品类型")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Type_ID",IsNullable = true,ColumnDescription = "产品类型" )]
-        [FKRelationAttribute("tb_ProductType","Type_ID")]
-        public long? Type_ID 
-        { 
-            get{return _Type_ID;}
-            set{SetProperty(ref _Type_ID, value);}
-        }
-     
-
         private DateTime _Effective_at;
         /// <summary>
         /// 生效时间
@@ -181,7 +154,7 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool _is_enabled;
+        private bool _is_enabled= true;
         /// <summary>
         /// 是否启用
         /// </summary>
@@ -194,7 +167,7 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool _is_available;
+        private bool _is_available= true;
         /// <summary>
         /// 是否可用
         /// </summary>

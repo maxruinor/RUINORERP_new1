@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:32
+// 时间：09/13/2024 18:44:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 产品主次及属性关系表验证类
     /// </summary>
-    public partial class tb_Prod_Attr_RelationValidator:AbstractValidator<tb_Prod_Attr_Relation>
+    /*public partial class tb_Prod_Attr_RelationValidator:AbstractValidator<tb_Prod_Attr_Relation>*/
+    public partial class tb_Prod_Attr_RelationValidator:BaseValidatorGeneric<tb_Prod_Attr_Relation>
     {
      public tb_Prod_Attr_RelationValidator() 
      {
@@ -29,11 +30,11 @@ namespace RUINORERP.Business
  RuleFor(tb_Prod_Attr_Relation =>tb_Prod_Attr_Relation.PropertyValueID).NotEmpty().When(x => x.PropertyValueID.HasValue);
  RuleFor(tb_Prod_Attr_Relation =>tb_Prod_Attr_Relation.Property_ID).Must(CheckForeignKeyValueCanNull).WithMessage("属性:下拉选择值不正确。");
  RuleFor(tb_Prod_Attr_Relation =>tb_Prod_Attr_Relation.Property_ID).NotEmpty().When(x => x.Property_ID.HasValue);
- RuleFor(tb_Prod_Attr_Relation =>tb_Prod_Attr_Relation.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("产品详情:下拉选择值不正确。");
+ RuleFor(tb_Prod_Attr_Relation =>tb_Prod_Attr_Relation.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("货品详情:下拉选择值不正确。");
  RuleFor(tb_Prod_Attr_Relation =>tb_Prod_Attr_Relation.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);
  RuleFor(tb_Prod_Attr_Relation =>tb_Prod_Attr_Relation.ProdBaseID).NotEmpty().When(x => x.ProdBaseID.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

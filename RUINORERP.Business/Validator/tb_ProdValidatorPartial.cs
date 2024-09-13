@@ -19,7 +19,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 产品表验证类
     /// </summary>
-    public partial class tb_ProdValidator : AbstractValidator<tb_Prod>
+    public partial class tb_ProdValidator : BaseValidatorGeneric<tb_Prod>
     {
         tb_ProdController<tb_Prod> _controller;
 

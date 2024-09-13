@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:33
+// 时间：09/13/2024 18:44:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,29 +49,15 @@ namespace RUINORERP.Model.QueryDto
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "货品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID 
         { 
             get{return _ProdDetailID;}
             set{SetProperty(ref _ProdDetailID, value);}
-        }
-     
-
-        private long? _Rack_ID;
-        /// <summary>
-        /// 货架
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Rack_ID",ColDesc = "货架")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Rack_ID",IsNullable = true,ColumnDescription = "货架" )]
-        [FKRelationAttribute("tb_StorageRack","Rack_ID")]
-        public long? Rack_ID 
-        { 
-            get{return _Rack_ID;}
-            set{SetProperty(ref _Rack_ID, value);}
         }
      
 
@@ -86,6 +72,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PurEntryID;}
             set{SetProperty(ref _PurEntryID, value);}
+        }
+     
+
+        private string _property;
+        /// <summary>
+        /// 属性
+        /// </summary>
+        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "属性" )]
+        public string property 
+        { 
+            get{return _property;}
+            set{SetProperty(ref _property, value);}
         }
      
 
@@ -193,19 +192,6 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private DateTime _PreDeliveryDate;
-        /// <summary>
-        /// 预交日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PreDeliveryDate",ColDesc = "预交日期")]
-        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "PreDeliveryDate",IsNullable = false,ColumnDescription = "预交日期" )]
-        public DateTime PreDeliveryDate 
-        { 
-            get{return _PreDeliveryDate;}
-            set{SetProperty(ref _PreDeliveryDate, value);}
-        }
-     
-
         private string _CustomertModel;
         /// <summary>
         /// 客户型号
@@ -224,7 +210,7 @@ namespace RUINORERP.Model.QueryDto
         /// 摘要
         /// </summary>
         [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Summary",Length=255,IsNullable = true,ColumnDescription = "摘要" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Summary",Length=1000,IsNullable = true,ColumnDescription = "摘要" )]
         public string Summary 
         { 
             get{return _Summary;}
@@ -258,16 +244,43 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _property;
+        private int _ReturnedQty= ((0));
         /// <summary>
-        /// 属性
+        /// 退回数
         /// </summary>
-        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "属性" )]
-        public string property 
+        [AdvQueryAttribute(ColName = "ReturnedQty",ColDesc = "退回数")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ReturnedQty",IsNullable = false,ColumnDescription = "退回数" )]
+        public int ReturnedQty 
         { 
-            get{return _property;}
-            set{SetProperty(ref _property, value);}
+            get{return _ReturnedQty;}
+            set{SetProperty(ref _ReturnedQty, value);}
+        }
+     
+
+        private long? _Rack_ID;
+        /// <summary>
+        /// 货架
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Rack_ID",ColDesc = "货架")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Rack_ID",IsNullable = true,ColumnDescription = "货架" )]
+        [FKRelationAttribute("tb_StorageRack","Rack_ID")]
+        public long? Rack_ID 
+        { 
+            get{return _Rack_ID;}
+            set{SetProperty(ref _Rack_ID, value);}
+        }
+     
+
+        private long? _PurOrder_ChildID;
+        /// <summary>
+        /// 
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PurOrder_ChildID",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PurOrder_ChildID",IsNullable = true,ColumnDescription = "" )]
+        public long? PurOrder_ChildID 
+        { 
+            get{return _PurOrder_ChildID;}
+            set{SetProperty(ref _PurOrder_ChildID, value);}
         }
 
 

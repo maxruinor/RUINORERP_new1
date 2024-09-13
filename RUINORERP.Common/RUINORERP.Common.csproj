@@ -56,8 +56,6 @@
   <Compile Remove="Global\GlobalVar.cs" />
   <Compile Remove="Helper\ApplicationHelper.cs" />
   <Compile Remove="Helper\Class1.cs" />
-  <Compile Remove="Helper\HttpHelper.cs" />
-  <Compile Remove="Helper\ImgHelper.cs" />
   <Compile Remove="Helper\ImgVerifyCodeHelper.cs" />
   <Compile Remove="Helper\JsEncryptHelper.cs" />
   <Compile Remove="Helper\PingYinHelper.cs" />

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:43
+// 时间：09/13/2024 18:44:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 采购退回单 当采购发生退回时，您可以将它记录在本系统的采购退回作业中。在实际业务中虽然发生了采购但实际货物却还未入库，采购退回作业可退回订金、退回数量处理。采购退回单可以由采购订单转入，也可以手动录入新增单据,一般没有金额变化的，可以直接作废采购单。有订单等才需要做退回
     /// </summary>
     [Serializable()]
+    [Description("tb_PurOrderRe")]
     [SugarTable("tb_PurOrderRe")]
     public partial class tb_PurOrderRe: BaseEntity, ICloneable
     {
@@ -84,14 +85,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 采购单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "PurOrderNo", ColDesc = "采购单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PurOrderNo", Length = 100, IsNullable = false, ColumnDescription = "采购单号")]
+        [AdvQueryAttribute(ColName = "PurOrderNo",ColDesc = "采购单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PurOrderNo" ,Length=100,IsNullable = false,ColumnDescription = "采购单号" )]
         public string PurOrderNo
-        {
-            get { return _PurOrderNo; }
-            set
-            {
-                SetProperty(ref _PurOrderNo, value);
+        { 
+            get{return _PurOrderNo;}
+            set{
+            SetProperty(ref _PurOrderNo, value);
             }
         }
 
@@ -128,7 +128,7 @@ namespace RUINORERP.Model
         /// 实际收回订金货款
         /// </summary>
         [AdvQueryAttribute(ColName = "GetPayment",ColDesc = "实际收回订金货款")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "GetPayment" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "实际收回订金货款" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "GetPayment" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实际收回订金货款" )]
         public decimal GetPayment
         { 
             get{return _GetPayment;}
@@ -142,7 +142,7 @@ namespace RUINORERP.Model
         /// 总计税额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalTaxAmount",ColDesc = "总计税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTaxAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总计税额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTaxAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总计税额" )]
         public decimal TotalTaxAmount
         { 
             get{return _TotalTaxAmount;}
@@ -156,7 +156,7 @@ namespace RUINORERP.Model
         /// 总计金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总计金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总计金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总计金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -354,7 +354,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "数据状态" )]
-        [Browsable(false)]
         public int DataStatus
         { 
             get{return _DataStatus;}
@@ -424,7 +423,7 @@ namespace RUINORERP.Model
         /// 合计数量
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalQty",ColDesc = "合计数量")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalQty" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "合计数量" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalQty" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "合计数量" )]
         public decimal? TotalQty
         { 
             get{return _TotalQty;}
@@ -440,13 +439,11 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PurOrder_ID))]
         public virtual tb_PurOrder tb_purorder { get; set; }
-        //public virtual tb_PurOrder tb_PurOrder_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
-        //public virtual tb_CustomerVendor tb_CustomerVendor_ID { get; set; }
 
 
         //[Browsable(false)]

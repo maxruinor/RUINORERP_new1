@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:31
+// 时间：09/13/2024 18:43:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,17 +21,17 @@ namespace RUINORERP.Business
     /// <summary>
     /// 功能模块定义（仅限部分已经硬码并体现于菜单表中）验证类
     /// </summary>
-    public partial class tb_ModuleDefinitionValidator:AbstractValidator<tb_ModuleDefinition>
+    /*public partial class tb_ModuleDefinitionValidator:AbstractValidator<tb_ModuleDefinition>*/
+    public partial class tb_ModuleDefinitionValidator:BaseValidatorGeneric<tb_ModuleDefinition>
     {
      public tb_ModuleDefinitionValidator() 
      {
-      RuleFor(tb_ModuleDefinition =>tb_ModuleDefinition.ModuleNo).MaximumLength(50).WithMessage("模块编号:不能超过最大长度,50.");
- RuleFor(tb_ModuleDefinition =>tb_ModuleDefinition.ModuleNo).NotEmpty().WithMessage("模块编号:不能为空。");
- RuleFor(tb_ModuleDefinition =>tb_ModuleDefinition.ModuleName).MaximumLength(20).WithMessage("模块名称:不能超过最大长度,20.");
+      RuleFor(tb_ModuleDefinition =>tb_ModuleDefinition.ModuleNo).NotEmpty().WithMessage("模块编号:不能为空。");
+ RuleFor(tb_ModuleDefinition =>tb_ModuleDefinition.ModuleName).MaximumLength(10).WithMessage("模块名称:不能超过最大长度,10.");
  RuleFor(tb_ModuleDefinition =>tb_ModuleDefinition.ModuleName).NotEmpty().WithMessage("模块名称:不能为空。");
- RuleFor(tb_ModuleDefinition =>tb_ModuleDefinition.IconFile_Path).MaximumLength(100).WithMessage("图标路径:不能超过最大长度,100.");
+ RuleFor(tb_ModuleDefinition =>tb_ModuleDefinition.IconFile_Path).MaximumLength(50).WithMessage("图标路径:不能超过最大长度,50.");
        	
-           	
+           	        Initialize();
      }
 
 

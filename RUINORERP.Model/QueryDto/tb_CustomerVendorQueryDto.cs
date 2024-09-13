@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:57
+// 时间：09/13/2024 18:43:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -97,6 +97,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Employee_ID;}
             set{SetProperty(ref _Employee_ID, value);}
+        }
+     
+
+        private bool _IsExclusive= true;
+        /// <summary>
+        /// 是否可用
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsExclusive",ColDesc = "是否可用")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsExclusive",IsNullable = false,ColumnDescription = "是否可用" )]
+        public bool IsExclusive 
+        { 
+            get{return _IsExclusive;}
+            set{SetProperty(ref _IsExclusive, value);}
         }
      
 

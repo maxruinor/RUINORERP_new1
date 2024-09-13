@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/05/2024 17:00:21
+// 时间：09/13/2024 18:43:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 领料单(包括生产和托工)验证类
     /// </summary>
-    public partial class tb_MaterialRequisitionValidator:AbstractValidator<tb_MaterialRequisition>
+    /*public partial class tb_MaterialRequisitionValidator:AbstractValidator<tb_MaterialRequisition>*/
+    public partial class tb_MaterialRequisitionValidator:BaseValidatorGeneric<tb_MaterialRequisition>
     {
      public tb_MaterialRequisitionValidator() 
      {
@@ -66,7 +67,7 @@ namespace RUINORERP.Business
                 //RuleForEach(x => x.tb_MaterialRequisitionDetails).NotNull();
                 //RuleFor(x => x.tb_MaterialRequisitionDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
         
-        
+                Initialize();
      }
 
 

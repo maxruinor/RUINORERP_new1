@@ -782,6 +782,19 @@ namespace RUINORERP.UI.UCSourceGrid
                     sender.Cell.View = CurrGridDefine.ViewNormal;
                 }
             }
+            else if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebImage)
+            {
+                // sender.Cell.View = CurrGridDefine.ImagesViewModel;
+                //如果有图片值才设置，不然还是和其它一样
+                if (sender.Value != null)
+                {
+                    sender.Cell.View = new SourceGrid.Cells.Views.SingleImage();
+                }
+                else
+                {
+                    sender.Cell.View = CurrGridDefine.ViewNormal;
+                }
+            }
             else
             {
                 sender.Cell.View = CurrGridDefine.ViewNormal;
@@ -849,13 +862,32 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 sender.Cell.View.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleLeft;
             }
-
-
             var setcurrentObj = CurrGridDefine.grid.Rows[sender.Position.Row].RowData;
             if (setcurrentObj == null)
             {
                 return;
             }
+            if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebImage)
+            {
+                if (sender.Cell.Editor != null && sender.Cell.Editor is ImageWebPicker webPicker)
+                {
+                    //如果图片存在，则显示图片
+                    if (System.IO.File.Exists(webPicker.AbsolutelocPath))
+                    {
+                        sender.Cell.View = CurrGridDefine.ImagesViewModel;
+                    }
+                    else if (false)
+                    {
+
+                    }
+                    else
+                    {
+                        sender.Cell.View = CurrGridDefine.ViewNormal;
+                    }
+                }
+                
+            }
+
             //这里计算是一些公共的，针对具体单据的计算 需要用一个事件抛出来处理
             #region 小计加总计(反向)
 

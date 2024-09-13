@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:53
+// 时间：09/13/2024 18:43:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 流程步骤 转移条件集合
     /// </summary>
     [Serializable()]
+    [Description("tb_NextNodes")]
     [SugarTable("tb_NextNodes")]
     public partial class tb_NextNodes: BaseEntity, ICloneable
     {
@@ -86,7 +87,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ConNodeConditions_Id))]
         public virtual tb_ConNodeConditions tb_connodeconditions { get; set; }
-        //public virtual tb_ConNodeConditions tb_ConNodeConditions_Id { get; set; }
 
 
         //[Browsable(false)]

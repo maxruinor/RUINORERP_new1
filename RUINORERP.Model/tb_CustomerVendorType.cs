@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:58
+// 时间：09/13/2024 18:43:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 往来单位类型,如级别，电商，大客户，亚马逊等
     /// </summary>
     [Serializable()]
+    [Description("tb_CustomerVendorType")]
     [SugarTable("tb_CustomerVendorType")]
     public partial class tb_CustomerVendorType: BaseEntity, ICloneable
     {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:34
+// 时间：09/13/2024 18:44:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,12 +21,13 @@ namespace RUINORERP.Business
     /// <summary>
     /// 品质检验记录表验证类
     /// </summary>
-    public partial class tb_Quality_inspection_recordValidator:AbstractValidator<tb_Quality_inspection_record>
+    /*public partial class tb_Quality_inspection_recordValidator:AbstractValidator<tb_Quality_inspection_record>*/
+    public partial class tb_Quality_inspection_recordValidator:BaseValidatorGeneric<tb_Quality_inspection_record>
     {
      public tb_Quality_inspection_recordValidator() 
      {
             	
-           	
+           	        Initialize();
      }
 
 

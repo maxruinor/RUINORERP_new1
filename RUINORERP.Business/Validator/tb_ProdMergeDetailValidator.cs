@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/20/2024 20:30:04
+// 时间：09/13/2024 18:44:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 组合单明细验证类
     /// </summary>
-    public partial class tb_ProdMergeDetailValidator:AbstractValidator<tb_ProdMergeDetail>
+    /*public partial class tb_ProdMergeDetailValidator:AbstractValidator<tb_ProdMergeDetail>*/
+    public partial class tb_ProdMergeDetailValidator:BaseValidatorGeneric<tb_ProdMergeDetail>
     {
      public tb_ProdMergeDetailValidator() 
      {
@@ -34,7 +35,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdMergeDetail =>tb_ProdMergeDetail.Qty).NotNull().WithMessage("子件数量:不能为空。");
  RuleFor(tb_ProdMergeDetail =>tb_ProdMergeDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
        	
-           	
+           	        Initialize();
      }
 
 

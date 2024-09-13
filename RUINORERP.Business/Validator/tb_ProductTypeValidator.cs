@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:33
+// 时间：09/13/2024 18:44:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,30 +21,20 @@ namespace RUINORERP.Business
     /// <summary>
     /// 货物类型  成品  半成品  包装材料 下脚料这种内容验证类
     /// </summary>
-    public partial class tb_ProductTypeValidator:AbstractValidator<tb_ProductType>
+    /*public partial class tb_ProductTypeValidator:AbstractValidator<tb_ProductType>*/
+    public partial class tb_ProductTypeValidator:BaseValidatorGeneric<tb_ProductType>
     {
      public tb_ProductTypeValidator() 
      {
-      RuleFor(tb_ProductType =>tb_ProductType.TypeName).MaximumLength(50).WithMessage("类型名称:不能超过最大长度,50.");
+      RuleFor(tb_ProductType =>tb_ProductType.TypeName).MaximumLength(25).WithMessage("类型名称:不能超过最大长度,25.");
  RuleFor(tb_ProductType =>tb_ProductType.TypeName).NotEmpty().WithMessage("类型名称:不能为空。");
- RuleFor(tb_ProductType =>tb_ProductType.TypeDesc).MaximumLength(100).WithMessage("描述:不能超过最大长度,100.");
+ RuleFor(tb_ProductType =>tb_ProductType.TypeDesc).MaximumLength(50).WithMessage("描述:不能超过最大长度,50.");
        	
-           	
+           	        Initialize();
      }
 
 
 
-
-        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
 
 
 

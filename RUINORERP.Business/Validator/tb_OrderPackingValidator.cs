@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/31/2024 20:19:58
+// 时间：09/13/2024 18:43:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 订单装箱单，针对特别订单详细处理 也用主子表来做。暂时不搞验证类
     /// </summary>
-    public partial class tb_OrderPackingValidator:AbstractValidator<tb_OrderPacking>
+    /*public partial class tb_OrderPackingValidator:AbstractValidator<tb_OrderPacking>*/
+    public partial class tb_OrderPackingValidator:BaseValidatorGeneric<tb_OrderPacking>
     {
      public tb_OrderPackingValidator() 
      {
@@ -43,7 +44,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.NetWeight).PrecisionScale(10,3,true).WithMessage("净重(KG):小数位不能超过3。");
  RuleFor(tb_OrderPacking =>tb_OrderPacking.PackingMethod).MaximumLength(50).WithMessage("打包方式:不能超过最大长度,50.");
        	
-           	
+           	        Initialize();
      }
 
 

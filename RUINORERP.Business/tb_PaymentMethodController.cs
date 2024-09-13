@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/23/2024 18:54:52
+// 时间：09/13/2024 18:44:01
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_PaymentMethod entity = model as tb_PaymentMethod;
@@ -241,29 +239,31 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.Paytype_ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_PaymentMethod>(entity as tb_PaymentMethod)
                         .Include(m => m.tb_PurOrders)
-                    .Include(m => m.tb_PurEntries)
                     .Include(m => m.tb_PurEntryRes)
+                    .Include(m => m.tb_PurEntries)
                     .Include(m => m.tb_SaleOuts)
                     .Include(m => m.tb_SaleOrders)
                     .Include(m => m.tb_CustomerVendors)
-                    .ExecuteCommandAsync();
+                            .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_PaymentMethod>(entity as tb_PaymentMethod)
                 .Include(m => m.tb_PurOrders)
-                .Include(m => m.tb_PurEntries)
                 .Include(m => m.tb_PurEntryRes)
+                .Include(m => m.tb_PurEntries)
                 .Include(m => m.tb_SaleOuts)
                 .Include(m => m.tb_SaleOrders)
                 .Include(m => m.tb_CustomerVendors)
-                        .ExecuteCommandAsync();
+                                .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
@@ -274,12 +274,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -296,8 +294,8 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>()
                                 .Includes(m => m.tb_PurOrders)
-                        .Includes(m => m.tb_PurEntries)
                         .Includes(m => m.tb_PurEntryRes)
+                        .Includes(m => m.tb_PurEntries)
                         .Includes(m => m.tb_SaleOuts)
                         .Includes(m => m.tb_SaleOrders)
                         .Includes(m => m.tb_CustomerVendors)
@@ -311,8 +309,8 @@ namespace RUINORERP.Business
             tb_PaymentMethod entity = model as tb_PaymentMethod;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_PaymentMethod>(m => m.Paytype_ID== entity.Paytype_ID)
                                 .Include(m => m.tb_PurOrders)
-                        .Include(m => m.tb_PurEntries)
                         .Include(m => m.tb_PurEntryRes)
+                        .Include(m => m.tb_PurEntries)
                         .Include(m => m.tb_SaleOuts)
                         .Include(m => m.tb_SaleOrders)
                         .Include(m => m.tb_CustomerVendors)
@@ -479,8 +477,8 @@ namespace RUINORERP.Business
         {
             List<tb_PaymentMethod> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>()
                                             .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_PurEntries )
                                 .Includes(t => t.tb_PurEntryRes )
+                                .Includes(t => t.tb_PurEntries )
                                 .Includes(t => t.tb_SaleOuts )
                                 .Includes(t => t.tb_SaleOrders )
                                 .Includes(t => t.tb_CustomerVendors )
@@ -504,8 +502,8 @@ namespace RUINORERP.Business
         {
             List<tb_PaymentMethod> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>().Where(exp)
                                             .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_PurEntries )
                                 .Includes(t => t.tb_PurEntryRes )
+                                .Includes(t => t.tb_PurEntries )
                                 .Includes(t => t.tb_SaleOuts )
                                 .Includes(t => t.tb_SaleOrders )
                                 .Includes(t => t.tb_CustomerVendors )
@@ -529,8 +527,8 @@ namespace RUINORERP.Business
         {
             List<tb_PaymentMethod> list = _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>().Where(exp)
                                         .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_PurEntries )
                             .Includes(t => t.tb_PurEntryRes )
+                            .Includes(t => t.tb_PurEntries )
                             .Includes(t => t.tb_SaleOuts )
                             .Includes(t => t.tb_SaleOrders )
                             .Includes(t => t.tb_CustomerVendors )
@@ -571,8 +569,8 @@ namespace RUINORERP.Business
         {
             tb_PaymentMethod entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>().Where(w => w.Paytype_ID == (long)id)
                                          .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_PurEntries )
                             .Includes(t => t.tb_PurEntryRes )
+                            .Includes(t => t.tb_PurEntries )
                             .Includes(t => t.tb_SaleOuts )
                             .Includes(t => t.tb_SaleOrders )
                             .Includes(t => t.tb_CustomerVendors )

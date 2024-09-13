@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:51
+// 时间：09/13/2024 18:43:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 菜单程序集信息表
     /// </summary>
     [Serializable()]
+    [Description("tb_MenuInfo")]
     [SugarTable("tb_MenuInfo")]
     public partial class tb_MenuInfo: BaseEntity, ICloneable
     {
@@ -177,8 +178,6 @@ namespace RUINORERP.Model
             }
         }
 
-        
-
         private string _ClassPath;
         /// <summary>
         /// 类路径
@@ -291,22 +290,6 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _DefaultLayout;
-        /// <summary>
-        /// 默认布局
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DefaultLayout", ColDesc = "默认布局")]
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType = "String", ColumnName = "DefaultLayout", Length = 2147483647, IsNullable = false, ColumnDescription = "默认布局")]
-        public string DefaultLayout
-        {
-            get { return _DefaultLayout; }
-            set
-            {
-                SetProperty(ref _DefaultLayout, value);
-            }
-        }
-
-
         private DateTime? _Created_at;
         /// <summary>
         /// 创建时间
@@ -363,7 +346,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private int _Sort=0;
+        private int _Sort;
         /// <summary>
         /// 排序
         /// </summary>
@@ -391,6 +374,20 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _DefaultLayout;
+        /// <summary>
+        /// 
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DefaultLayout",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "DefaultLayout" ,Length=2147483647,IsNullable = true,ColumnDescription = "" )]
+        public string DefaultLayout
+        { 
+            get{return _DefaultLayout;}
+            set{
+            SetProperty(ref _DefaultLayout, value);
+            }
+        }
+
         #endregion
 
         #region 扩展属性
@@ -398,7 +395,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ModuleID))]
         public virtual tb_ModuleDefinition tb_moduledefinition { get; set; }
-        //public virtual tb_ModuleDefinition tb_ModuleID { get; set; }
 
 
         //[Browsable(false)]
@@ -407,6 +403,14 @@ namespace RUINORERP.Model
         public virtual List<tb_ButtonInfo> tb_ButtonInfos { get; set; }
         //tb_ButtonInfo.MenuID)
         //MenuID.FK_TB_BUTTO_REFERENCE_TB_MENUI)
+        //tb_MenuInfo.MenuID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_P4Field.MenuID))]
+        public virtual List<tb_P4Field> tb_P4Fields { get; set; }
+        //tb_P4Field.MenuID)
+        //MenuID.FK_TB_P4FIE_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
         //[Browsable(false)]
@@ -423,14 +427,6 @@ namespace RUINORERP.Model
         public virtual List<tb_P4Button> tb_P4Buttons { get; set; }
         //tb_P4Button.MenuID)
         //MenuID.FK_TB_P4BUT_REFERENCE_TB_MENUI)
-        //tb_MenuInfo.MenuID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_P4Field.MenuID))]
-        public virtual List<tb_P4Field> tb_P4Fields { get; set; }
-        //tb_P4Field.MenuID)
-        //MenuID.FK_TB_P4FIE_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
         //[Browsable(false)]

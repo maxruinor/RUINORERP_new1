@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/02/2024 18:57:04
+// 时间：09/13/2024 18:44:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _OwnershipControl= false;
+        private bool _OwnershipControl= true;
         /// <summary>
         /// 数据归属控制
         /// </summary>
@@ -238,7 +238,7 @@ namespace RUINORERP.Model
         /// 自动审核销售订单金额
         /// </summary>
         [AdvQueryAttribute(ColName = "AutoApprovedSaleOrderAmount",ColDesc = "自动审核销售订单金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedSaleOrderAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "自动审核销售订单金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedSaleOrderAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "自动审核销售订单金额" )]
         public decimal AutoApprovedSaleOrderAmount
         { 
             get{return _AutoApprovedSaleOrderAmount;}
@@ -252,7 +252,7 @@ namespace RUINORERP.Model
         /// 自动审核采购订单金额
         /// </summary>
         [AdvQueryAttribute(ColName = "AutoApprovedPurOrderAmount",ColDesc = "自动审核采购订单金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedPurOrderAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "自动审核采购订单金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "AutoApprovedPurOrderAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "自动审核采购订单金额" )]
         public decimal AutoApprovedPurOrderAmount
         { 
             get{return _AutoApprovedPurOrderAmount;}

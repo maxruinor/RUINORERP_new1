@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/14/2024 15:01:02
+// 时间：09/13/2024 18:44:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 基本单位
     /// </summary>
     [Serializable()]
+    [Description("tb_Unit")]
     [SugarTable("tb_Unit")]
     public partial class tb_Unit: BaseEntity, ICloneable
     {
@@ -98,13 +99,35 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Unit_ID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.Unit_ID)
+        //Unit_ID.FK_MANUFACTURINGORDER_REF_UNIT)
+        //tb_Unit.Unit_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInvDetail.Unit_ID))]
         public virtual List<tb_FinishedGoodsInvDetail> tb_FinishedGoodsInvDetails { get; set; }
         //tb_FinishedGoodsInvDetail.Unit_ID)
         //Unit_ID.FK_TB_FINISDetail_REF_TB_UNIT)
         //tb_Unit.Unit_ID)
 
-       
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Unit_ID))]
+        public virtual List<tb_Prod> tb_Prods { get; set; }
+        //tb_Prod.Unit_ID)
+        //Unit_ID.FK_TB_PROD_REFERENCE_TB_UNIT)
+        //tb_Unit.Unit_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_Packing.Unit_ID))]
+        public virtual List<tb_Packing> tb_Packings { get; set; }
+        //tb_Packing.Unit_ID)
+        //Unit_ID.FK_PACKIING_REF_UNIT)
+        //tb_Unit.Unit_ID)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -116,26 +139,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Unit_Conversion.Target_unit_id))]
-        public virtual List<tb_Unit_Conversion> tb_Unit_ConversionsT { get; set; }
-        //tb_Unit_Conversion.Unit_ID)
-        //Unit_ID.FK_UNIT_Conversions_TB_UNIT_1)
-        //tb_Unit.Target_unit_id)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Unit_Conversion.Source_unit_id))]
-        public virtual List<tb_Unit_Conversion> tb_Unit_ConversionsS { get; set; }
-        //tb_Unit_Conversion.Unit_ID)
-        //Unit_ID.FK_UNIT_Conversions_TB_UNIT_2)
-        //tb_Unit.Source_unit_id)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Unit_ID))]
-        public virtual List<tb_Prod> tb_Prods { get; set; }
-        //tb_Prod.Unit_ID)
-        //Unit_ID.FK_TB_PROD_REFERENCE_TB_UNIT)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdBundle.Unit_ID))]
+        public virtual List<tb_ProdBundle> tb_ProdBundles { get; set; }
+        //tb_ProdBundle.Unit_ID)
+        //Unit_ID.FK_PRODBUNDLE_REF_UNIT)
         //tb_Unit.Unit_ID)
 
 

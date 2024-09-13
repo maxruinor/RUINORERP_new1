@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/28/2024 11:55:42
+// 时间：09/13/2024 18:43:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,13 +21,14 @@ namespace RUINORERP.Business
     /// <summary>
     /// 制令单的原料明细表 明细对应的是一个树，结构同BOM，先把BOM搞好再来实现这里的细节验证类
     /// </summary>
-    public partial class tb_ManufacturingOrderDetailValidator:AbstractValidator<tb_ManufacturingOrderDetail>
+    /*public partial class tb_ManufacturingOrderDetailValidator:AbstractValidator<tb_ManufacturingOrderDetail>*/
+    public partial class tb_ManufacturingOrderDetailValidator:BaseValidatorGeneric<tb_ManufacturingOrderDetail>
     {
      public tb_ManufacturingOrderDetailValidator() 
      {
      //***** 
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.MOID).NotNull().WithMessage(":不能为空。");
- RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品:下拉选择值不正确。");
+ RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
 //***** 
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.ID).NotNull().WithMessage(":不能为空。");
@@ -46,7 +47,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.AssemblyPosition).MaximumLength(250).WithMessage("组装位置:不能超过最大长度,250.");
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Prelevel_BOM_Desc).MaximumLength(100).WithMessage("上级配方:不能超过最大长度,100.");
        	
-           	
+           	        Initialize();
      }
 
 

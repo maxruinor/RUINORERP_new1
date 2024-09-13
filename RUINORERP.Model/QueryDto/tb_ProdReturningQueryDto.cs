@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:38
+// 时间：09/13/2024 18:44:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -139,14 +139,14 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _BorrowID;
+        private long _BorrowID;
         /// <summary>
         /// 借出单
         /// </summary>
         [AdvQueryAttribute(ColName = "BorrowID",ColDesc = "借出单")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "BorrowID",IsNullable = true,ColumnDescription = "借出单" )]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "BorrowID",IsNullable = false,ColumnDescription = "借出单" )]
         [FKRelationAttribute("tb_ProdBorrowing","BorrowID")]
-        public long? BorrowID 
+        public long BorrowID 
         { 
             get{return _BorrowID;}
             set{SetProperty(ref _BorrowID, value);}
@@ -158,7 +158,7 @@ namespace RUINORERP.Model.QueryDto
         /// 借出单号
         /// </summary>
         [AdvQueryAttribute(ColName = "BorrowNO",ColDesc = "借出单号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BorrowNO",Length=50,IsNullable = true,ColumnDescription = "借出单号" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BorrowNO",Length=50,IsNullable = false,ColumnDescription = "借出单号" )]
         public string BorrowNO 
         { 
             get{return _BorrowNO;}
@@ -319,6 +319,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PrintStatus;}
             set{SetProperty(ref _PrintStatus, value);}
+        }
+     
+
+        private string _CloseCaseOpinions;
+        /// <summary>
+        /// 审批意见
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "审批意见")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "CloseCaseOpinions",Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string CloseCaseOpinions 
+        { 
+            get{return _CloseCaseOpinions;}
+            set{SetProperty(ref _CloseCaseOpinions, value);}
         }
 
 

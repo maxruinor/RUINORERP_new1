@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System;
 using System.Linq;
+using System.IO;
 
 namespace RUINORERP.Common.Helper
 { 
@@ -28,7 +29,7 @@ public static class ApplicationHelper
     /// <returns>The assembly library info</returns>
     public static LibraryInfo GetLibraryInfo(Assembly assembly)
     {
-            Extensions.Guard.NotNull(assembly);
+           
         var assemblyInformation = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         var repositoryUrl = assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
             .FirstOrDefault(x => nameof(LibraryInfo.RepositoryUrl).Equals(x.Key))?.Value ?? string.Empty;
@@ -63,7 +64,7 @@ public static class ApplicationHelper
     {
         var executableName =
             $"dotnet{(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty)}";
-        var searchPaths = Guard.NotNull(Environment.GetEnvironmentVariable("PATH"))
+        var searchPaths = string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PATH"))
             .Split(new[] { Path.PathSeparator }, options: StringSplitOptions.RemoveEmptyEntries)
             .Select(p => p.Trim('"'))
             .ToArray();

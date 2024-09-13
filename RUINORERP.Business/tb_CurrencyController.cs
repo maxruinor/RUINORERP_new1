@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/28/2024 15:29:24
+// 时间：09/13/2024 18:43:31
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -245,10 +245,10 @@ namespace RUINORERP.Business
             if (entity.Currency_ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Currency>(entity as tb_Currency)
-                        .Include(m => m.tb_FM_OtherExpenses)
-                    .Include(m => m.tb_FM_Accounts)
+                        .Include(m => m.tb_FM_Accounts)
                     .Include(m => m.tb_FM_PaymentBills)
                     .Include(m => m.tb_FM_PrePaymentBillDetails)
+                    .Include(m => m.tb_FM_OtherExpenses)
                     .Include(m => m.tb_FM_ExpenseClaims)
                             .ExecuteCommandAsync();
          
@@ -256,10 +256,10 @@ namespace RUINORERP.Business
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Currency>(entity as tb_Currency)
-                .Include(m => m.tb_FM_OtherExpenses)
                 .Include(m => m.tb_FM_Accounts)
                 .Include(m => m.tb_FM_PaymentBills)
                 .Include(m => m.tb_FM_PrePaymentBillDetails)
+                .Include(m => m.tb_FM_OtherExpenses)
                 .Include(m => m.tb_FM_ExpenseClaims)
                                 .ExecuteCommandAsync();
         }
@@ -273,12 +273,9 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-               
                 _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -294,10 +291,10 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>()
-                                .Includes(m => m.tb_FM_OtherExpenses)
-                        .Includes(m => m.tb_FM_Accounts)
+                                .Includes(m => m.tb_FM_Accounts)
                         .Includes(m => m.tb_FM_PaymentBills)
                         .Includes(m => m.tb_FM_PrePaymentBillDetails)
+                        .Includes(m => m.tb_FM_OtherExpenses)
                         .Includes(m => m.tb_FM_ExpenseClaims)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -308,10 +305,10 @@ namespace RUINORERP.Business
         {
             tb_Currency entity = model as tb_Currency;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Currency>(m => m.Currency_ID== entity.Currency_ID)
-                                .Include(m => m.tb_FM_OtherExpenses)
-                        .Include(m => m.tb_FM_Accounts)
+                                .Include(m => m.tb_FM_Accounts)
                         .Include(m => m.tb_FM_PaymentBills)
                         .Include(m => m.tb_FM_PrePaymentBillDetails)
+                        .Include(m => m.tb_FM_OtherExpenses)
                         .Include(m => m.tb_FM_ExpenseClaims)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -475,10 +472,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Currency>> QueryByNavAsync()
         {
             List<tb_Currency> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>()
-                                            .Includes(t => t.tb_FM_OtherExpenses )
-                                .Includes(t => t.tb_FM_Accounts )
+                                            .Includes(t => t.tb_FM_Accounts )
                                 .Includes(t => t.tb_FM_PaymentBills )
                                 .Includes(t => t.tb_FM_PrePaymentBillDetails )
+                                .Includes(t => t.tb_FM_OtherExpenses )
                                 .Includes(t => t.tb_FM_ExpenseClaims )
                         .ToListAsync();
             
@@ -499,10 +496,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Currency>> QueryByNavAsync(Expression<Func<tb_Currency, bool>> exp)
         {
             List<tb_Currency> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>().Where(exp)
-                                            .Includes(t => t.tb_FM_OtherExpenses )
-                                .Includes(t => t.tb_FM_Accounts )
+                                            .Includes(t => t.tb_FM_Accounts )
                                 .Includes(t => t.tb_FM_PaymentBills )
                                 .Includes(t => t.tb_FM_PrePaymentBillDetails )
+                                .Includes(t => t.tb_FM_OtherExpenses )
                                 .Includes(t => t.tb_FM_ExpenseClaims )
                         .ToListAsync();
             
@@ -523,10 +520,10 @@ namespace RUINORERP.Business
          public virtual List<tb_Currency> QueryByNav(Expression<Func<tb_Currency, bool>> exp)
         {
             List<tb_Currency> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>().Where(exp)
-                                        .Includes(t => t.tb_FM_OtherExpenses )
-                            .Includes(t => t.tb_FM_Accounts )
+                                        .Includes(t => t.tb_FM_Accounts )
                             .Includes(t => t.tb_FM_PaymentBills )
                             .Includes(t => t.tb_FM_PrePaymentBillDetails )
+                            .Includes(t => t.tb_FM_OtherExpenses )
                             .Includes(t => t.tb_FM_ExpenseClaims )
                         .ToList();
             
@@ -564,10 +561,10 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Currency entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Currency>().Where(w => w.Currency_ID == (long)id)
-                                         .Includes(t => t.tb_FM_OtherExpenses )
-                            .Includes(t => t.tb_FM_Accounts )
+                                         .Includes(t => t.tb_FM_Accounts )
                             .Includes(t => t.tb_FM_PaymentBills )
                             .Includes(t => t.tb_FM_PrePaymentBillDetails )
+                            .Includes(t => t.tb_FM_OtherExpenses )
                             .Includes(t => t.tb_FM_ExpenseClaims )
                         .FirstAsync();
             if(entity!=null)

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/07/2024 19:06:31
+// 时间：09/13/2024 18:44:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,10 +61,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _Unit_ID;
         /// <summary>
-        /// 单位
+        /// 套装单位
         /// </summary>
-        [AdvQueryAttribute(ColName = "Unit_ID",ColDesc = "单位")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Unit_ID",IsNullable = false,ColumnDescription = "单位" )]
+        [AdvQueryAttribute(ColName = "Unit_ID",ColDesc = "套装单位")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Unit_ID",IsNullable = false,ColumnDescription = "套装单位" )]
         [FKRelationAttribute("tb_Unit","Unit_ID")]
         public long Unit_ID 
         { 

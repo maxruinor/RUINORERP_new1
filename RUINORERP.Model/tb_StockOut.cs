@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:49:10
+// 时间：09/13/2024 18:44:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 出库单
     /// </summary>
     [Serializable()]
+    [Description("tb_StockOut")]
     [SugarTable("tb_StockOut")]
     public partial class tb_StockOut: BaseEntity, ICloneable
     {
@@ -80,14 +81,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Employee_ID;
+        private long _Employee_ID;
         /// <summary>
         /// 经办人
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "经办人")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "经办人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
-        public long? Employee_ID
+        public long Employee_ID
         { 
             get{return _Employee_ID;}
             set{
@@ -100,7 +101,7 @@ namespace RUINORERP.Model
         /// 其它出库单号
         /// </summary>
         [AdvQueryAttribute(ColName = "BillNo",ColDesc = "其它出库单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BillNo" ,Length=50,IsNullable = true,ColumnDescription = "其它出库单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BillNo" ,Length=50,IsNullable = true,ColumnDescription = "其它出库单号" )]
         public string BillNo
         { 
             get{return _BillNo;}
@@ -128,7 +129,7 @@ namespace RUINORERP.Model
         /// 总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总成本" )]
         public decimal TotalCost
         { 
             get{return _TotalCost;}
@@ -142,7 +143,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -151,13 +152,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime? _Bill_Date;
+        private DateTime _Bill_Date;
         /// <summary>
         /// 单据日期
         /// </summary>
         [AdvQueryAttribute(ColName = "Bill_Date",ColDesc = "单据日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Bill_Date" ,IsNullable = true,ColumnDescription = "单据日期" )]
-        public DateTime? Bill_Date
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Bill_Date" ,IsNullable = false,ColumnDescription = "单据日期" )]
+        public DateTime Bill_Date
         { 
             get{return _Bill_Date;}
             set{
@@ -165,13 +166,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime? _Out_date;
+        private DateTime _Out_date;
         /// <summary>
         /// 出库日期
         /// </summary>
         [AdvQueryAttribute(ColName = "Out_date",ColDesc = "出库日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Out_date" ,IsNullable = true,ColumnDescription = "出库日期" )]
-        public DateTime? Out_date
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Out_date" ,IsNullable = false,ColumnDescription = "出库日期" )]
+        public DateTime Out_date
         { 
             get{return _Out_date;}
             set{
@@ -270,7 +271,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "DataStatus",ColDesc = "数据状态")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DataStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "数据状态" )]
-        [Browsable(false)]
         public int DataStatus
         { 
             get{return _DataStatus;}
@@ -412,19 +412,16 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
-        //public virtual tb_CustomerVendor tb_CustomerVendor_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
-        //public virtual tb_Employee tb_Employee_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
         public virtual tb_OutInStockType tb_outinstocktype { get; set; }
-        //public virtual tb_OutInStockType tb_Type_ID { get; set; }
 
 
         //[Browsable(false)]

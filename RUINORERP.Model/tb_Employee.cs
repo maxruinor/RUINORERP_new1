@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:00
+// 时间：09/13/2024 18:43:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 员工表
     /// </summary>
     [Serializable()]
+    [Description("tb_Employee")]
     [SugarTable("tb_Employee")]
     public partial class tb_Employee: BaseEntity, ICloneable
     {
@@ -280,7 +281,7 @@ namespace RUINORERP.Model
         /// 工资
         /// </summary>
         [AdvQueryAttribute(ColName = "salary",ColDesc = "工资")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "salary" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "工资" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "salary" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "工资" )]
         public decimal? salary
         { 
             get{return _salary;}
@@ -303,13 +304,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _Is_enabled= true;
+        private bool? _Is_enabled= true;
         /// <summary>
         /// 是否启用
         /// </summary>
         [AdvQueryAttribute(ColName = "Is_enabled",ColDesc = "是否启用")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_enabled" ,IsNullable = false,ColumnDescription = "是否启用" )]
-        public bool Is_enabled
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_enabled" ,IsNullable = true,ColumnDescription = "是否启用" )]
+        public bool? Is_enabled
         { 
             get{return _Is_enabled;}
             set{
@@ -317,13 +318,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _Is_available= true;
+        private bool? _Is_available= true;
         /// <summary>
         /// 是否可用
         /// </summary>
         [AdvQueryAttribute(ColName = "Is_available",ColDesc = "是否可用")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_available" ,IsNullable = false,ColumnDescription = "是否可用" )]
-        public bool Is_available
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_available" ,IsNullable = true,ColumnDescription = "是否可用" )]
+        public bool? Is_available
         { 
             get{return _Is_available;}
             set{
@@ -423,21 +424,27 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(BankAccount_id))]
         public virtual tb_BankAccount tb_bankaccount { get; set; }
-        //public virtual tb_BankAccount tb_BankAccount_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
-        //public virtual tb_Department tb_DepartmentID { get; set; }
 
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_StockIn.Employee_ID))]
-        public virtual List<tb_StockIn> tb_StockIns { get; set; }
-        //tb_StockIn.Employee_ID)
-        //Employee_ID.FK_TB_STOCKIN_RE_EMPLOYEE)
+        [Navigate(NavigateType.OneToMany, nameof(tb_AuditLogs.Employee_ID))]
+        public virtual List<tb_AuditLogs> tb_AuditLogses { get; set; }
+        //tb_AuditLogs.Employee_ID)
+        //Employee_ID.FK_TB_AUDIT_REFERENCE_TB_EMPLO)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInv.Employee_ID))]
+        public virtual List<tb_FinishedGoodsInv> tb_FinishedGoodsInvs { get; set; }
+        //tb_FinishedGoodsInv.Employee_ID)
+        //Employee_ID.FK_TB_FINISGINV_REF_TB_EMPLO)
         //tb_Employee.Employee_ID)
 
         //[Browsable(false)]
@@ -450,18 +457,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_StockOut.Employee_ID))]
-        public virtual List<tb_StockOut> tb_StockOuts { get; set; }
-        //tb_StockOut.Employee_ID)
-        //Employee_ID.FK_TB_STOCKOUT_REF_TB_EMPLOYEE)
-        //tb_Employee.Employee_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Employee_ID))]
-        public virtual List<tb_Prod> tb_Prods { get; set; }
-        //tb_Prod.Employee_ID)
-        //Employee_ID.FK_PRODBASE_REF_EMPLOYEE)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Employee_ID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.Employee_ID)
+        //Employee_ID.FK_MANUFORDER_REFE_EMPLOY)
         //tb_Employee.Employee_ID)
 
         //[Browsable(false)]
@@ -482,42 +481,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Customer.Employee_ID))]
-        public virtual List<tb_Customer> tb_Customers { get; set; }
-        //tb_Customer.Employee_ID)
-        //Employee_ID.FK_TB_CUSTO_REFERENCE_TB_EMPLO)
-        //tb_Employee.Employee_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.Employee_ID))]
-        public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }
-        //tb_CustomerVendor.Employee_ID)
-        //Employee_ID.FK_CUSTVENDOR_REF_EMPLOYEE)
-        //tb_Employee.Employee_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.Employee_ID))]
-        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitionses { get; set; }
-        //tb_MaterialRequisitions.Employee_ID)
-        //Employee_ID.FK_MATERREWUIS_REF_TB_EMPLO)
-        //tb_Employee.Employee_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Customer_interaction.Employee_ID))]
-        public virtual List<tb_Customer_interaction> tb_Customer_interactions { get; set; }
-        //tb_Customer_interaction.Employee_ID)
-        //Employee_ID.FK_CUSTOMERINTERACTIONS_RE_EMPLOYEE)
-        //tb_Employee.Employee_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_UserInfo.Employee_ID))]
-        public virtual List<tb_UserInfo> tb_UserInfos { get; set; }
-        //tb_UserInfo.Employee_ID)
-        //Employee_ID.FK_TB_USERI_REFERENCE_TB_EMPLO)
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.Employee_ID))]
+        public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
+        //tb_FM_OtherExpenseDetail.Employee_ID)
+        //Employee_ID.FK_FM_OTHEREXPENSES_R_EMPLOYEE)
         //tb_Employee.Employee_ID)
 
         //[Browsable(false)]
@@ -530,26 +497,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.Employee_ID))]
-        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
-        //tb_FM_Initial_PayAndReceivable.Employee_ID)
-        //Employee_ID.FK_TB_FM_INITPR_EMPLOYEE)
-        //tb_Employee.Employee_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturn.Employee_ID))]
-        public virtual List<tb_MaterialReturn> tb_MaterialReturns { get; set; }
-        //tb_MaterialReturn.Employee_ID)
-        //Employee_ID.FK_MATERRETURN_RE_EMPLOYEE)
-        //tb_Employee.Employee_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOut.Employee_ID))]
-        public virtual List<tb_SaleOut> tb_SaleOuts { get; set; }
-        //tb_SaleOut.Employee_ID)
-        //Employee_ID.FK_SALEOUT_RE_EMPLOYEE)
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.Employee_ID))]
+        public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
+        //tb_PurEntryRe.Employee_ID)
+        //Employee_ID.FK_TB_PURENTRYRE_EMPLO)
         //tb_Employee.Employee_ID)
 
         //[Browsable(false)]
@@ -562,10 +513,114 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOut.Employee_ID))]
+        public virtual List<tb_SaleOut> tb_SaleOuts { get; set; }
+        //tb_SaleOut.Employee_ID)
+        //Employee_ID.FK_SALEOUT_RE_EMPLOYEE)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Employee_ID))]
+        public virtual List<tb_Prod> tb_Prods { get; set; }
+        //tb_Prod.Employee_ID)
+        //Employee_ID.FK_PRODBASE_REF_EMPLOYEE)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturn.Employee_ID))]
+        public virtual List<tb_MaterialReturn> tb_MaterialReturns { get; set; }
+        //tb_MaterialReturn.Employee_ID)
+        //Employee_ID.FK_MATERRETURN_RE_EMPLOYEE)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PriceRecord.Employee_ID))]
+        public virtual List<tb_PriceRecord> tb_PriceRecords { get; set; }
+        //tb_PriceRecord.Employee_ID)
+        //Employee_ID.FK_TB_PRICE_REFTB_EMPLO)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_Customer.Employee_ID))]
+        public virtual List<tb_Customer> tb_Customers { get; set; }
+        //tb_Customer.Employee_ID)
+        //Employee_ID.FK_TB_CUSTO_REFERENCE_TB_EMPLO)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdReturning.Employee_ID))]
+        public virtual List<tb_ProdReturning> tb_ProdReturnings { get; set; }
+        //tb_ProdReturning.Employee_ID)
+        //Employee_ID.FK_PRODReturning_REF_EMPLOyee)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_Customer_interaction.Employee_ID))]
+        public virtual List<tb_Customer_interaction> tb_Customer_interactions { get; set; }
+        //tb_Customer_interaction.Employee_ID)
+        //Employee_ID.FK_CUSTOMERINTERACTIONS_RE_EMPLOYEE)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdSplit.Employee_ID))]
+        public virtual List<tb_ProdSplit> tb_ProdSplits { get; set; }
+        //tb_ProdSplit.Employee_ID)
+        //Employee_ID.FK_TB_PRODSplit_REF_TB_EMPLOYEE)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_BuyingRequisition.Employee_ID))]
+        public virtual List<tb_BuyingRequisition> tb_BuyingRequisitions { get; set; }
+        //tb_BuyingRequisition.Employee_ID)
+        //Employee_ID.FK_BUYINGREQUISITION_REF_EMPLOYEE)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrder.Employee_ID))]
         public virtual List<tb_SaleOrder> tb_SaleOrders { get; set; }
         //tb_SaleOrder.Employee_ID)
         //Employee_ID.FK_TB_SALEO_REFERENCE_TB_EMPLO)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdBorrowing.Employee_ID))]
+        public virtual List<tb_ProdBorrowing> tb_ProdBorrowings { get; set; }
+        //tb_ProdBorrowing.Employee_ID)
+        //Employee_ID.FK_PRODBorrowing_REF_EMPLOyee)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutRe.Employee_ID))]
+        public virtual List<tb_SaleOutRe> tb_SaleOutRes { get; set; }
+        //tb_SaleOutRe.Employee_ID)
+        //Employee_ID.FK_TB_SARE_REF_TB_EMPLO)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.Employee_ID))]
+        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
+        //tb_FM_Initial_PayAndReceivable.Employee_ID)
+        //Employee_ID.FK_TB_FM_INITPR_EMPLOYEE)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdMerge.Employee_ID))]
+        public virtual List<tb_ProdMerge> tb_ProdMerges { get; set; }
+        //tb_ProdMerge.Employee_ID)
+        //Employee_ID.FK_PRODMerge_REF_EMPLOyee)
         //tb_Employee.Employee_ID)
 
         //[Browsable(false)]
@@ -586,18 +641,26 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutRe.Employee_ID))]
-        public virtual List<tb_SaleOutRe> tb_SaleOutRes { get; set; }
-        //tb_SaleOutRe.Employee_ID)
-        //Employee_ID.FK_TB_SARE_REF_TB_EMPLO)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemand.Employee_ID))]
+        public virtual List<tb_ProductionDemand> tb_ProductionDemands { get; set; }
+        //tb_ProductionDemand.Employee_ID)
+        //Employee_ID.FK_PRODUDEMAND_REF_EMPLOYEE)
         //tb_Employee.Employee_ID)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.Employee_ID))]
-        public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
-        //tb_PurEntryRe.Employee_ID)
-        //Employee_ID.FK_TB_PURENTRYRE_EMPLO)
+        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.Employee_ID))]
+        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
+        //tb_MaterialRequisition.Employee_ID)
+        //Employee_ID.FK_MATERREWUIS_REF_TB_EMPLO)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.Employee_ID))]
+        public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }
+        //tb_CustomerVendor.Employee_ID)
+        //Employee_ID.FK_CUSTVENDOR_REF_EMPLOYEE)
         //tb_Employee.Employee_ID)
 
         //[Browsable(false)]
@@ -606,19 +669,6 @@ namespace RUINORERP.Model
         public virtual List<tb_FM_OtherExpense> tb_FM_OtherExpenses { get; set; }
         //tb_FM_OtherExpense.Employee_ID)
         //Employee_ID.FK_TB_FM_OTHEREXPENSE_REF_EMPLOYEE)
-        //tb_Employee.Employee_ID)
-
-
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.Employee_ID))]
-        public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInv.Employee_ID))]
-        public virtual List<tb_FinishedGoodsInv> tb_FinishedGoodsInvs { get; set; }
-        //tb_FinishedGoodsInv.Employee_ID)
-        //Employee_ID.FK_TB_FINISGINV_REF_TB_EMPLO)
         //tb_Employee.Employee_ID)
 
         //[Browsable(false)]
@@ -631,10 +681,26 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_StockOut.Employee_ID))]
+        public virtual List<tb_StockOut> tb_StockOuts { get; set; }
+        //tb_StockOut.Employee_ID)
+        //Employee_ID.FK_TB_STOCKOUT_REF_TB_EMPLOYEE)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.Employee_ID))]
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
         //tb_FM_ExpenseClaimDetail.Employee_ID)
         //Employee_ID.FK_FMEXPENSECLAIMDETAIL_REF_EMPLOYEE)
+        //tb_Employee.Employee_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_UserInfo.Employee_ID))]
+        public virtual List<tb_UserInfo> tb_UserInfos { get; set; }
+        //tb_UserInfo.Employee_ID)
+        //Employee_ID.FK_TB_USERI_REFERENCE_TB_EMPLO)
         //tb_Employee.Employee_ID)
 
 

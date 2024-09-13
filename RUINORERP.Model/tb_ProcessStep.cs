@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:09
+// 时间：09/13/2024 18:44:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 流程步骤
     /// </summary>
     [Serializable()]
+    [Description("tb_ProcessStep")]
     [SugarTable("tb_ProcessStep")]
     public partial class tb_ProcessStep: BaseEntity, ICloneable
     {
@@ -186,19 +187,16 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(NextNode_ID))]
         public virtual tb_NextNodes tb_nextnodes { get; set; }
-        //public virtual tb_NextNodes tb_NextNode_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Position_Id))]
         public virtual tb_Position tb_position { get; set; }
-        //public virtual tb_Position tb_Position_Id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(StepBodyld))]
         public virtual tb_StepBody tb_stepbody { get; set; }
-        //public virtual tb_StepBody tb_StepBodyld { get; set; }
 
 
         //[Browsable(false)]

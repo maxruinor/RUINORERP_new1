@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/29/2024 13:46:09
+// 时间：09/13/2024 18:43:41
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 期初应收应付账款表
+    /// 期初应收应付帐款表
     /// </summary>
     public partial class tb_FM_Initial_PayAndReceivableProcessor:BaseProcessor 
     {
@@ -41,9 +41,6 @@ namespace RUINORERP.Business.Processor
            _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
         }
-      
-        
-
         
     }
 }

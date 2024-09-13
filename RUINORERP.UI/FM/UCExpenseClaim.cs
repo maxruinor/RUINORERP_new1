@@ -76,7 +76,7 @@ namespace RUINORERP.UI.FM
                 chkClaimEmployee.Enabled = false;
                 return;
             }
-            
+
             EditEntity = entity;
             if (entity.ClaimMainID > 0)
             {
@@ -127,7 +127,7 @@ namespace RUINORERP.UI.FM
             {
                 sgh.LoadItemDataToGrid<tb_FM_ExpenseClaimDetail>(grid1, sgd, new List<tb_FM_ExpenseClaimDetail>(), c => c.ClaimSubID);
             }
-           
+
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {
@@ -189,14 +189,13 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.ClaimSubID);
             listCols.SetCol_DefaultValue<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, 0.00M);
 
-
             //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
-
 
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TotalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImagePath, CustomFormatType.WebImage);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridData = EditEntity;
             /*
@@ -241,6 +240,12 @@ namespace RUINORERP.UI.FM
             {
                 sgh.SetCellValue<tb_FM_ExpenseClaimDetail>(sgd, c => c.Employee_ID, EditEntity.Employee_ID);
             }
+
+            // 获取应用程序的执行目录下的 temp 文件夹路径
+           // string tempPath = DirectoryHelper.GetTempPath();
+            // 生成唯一的文件名
+           // string newFileName = Guid.NewGuid().ToString() + ".jpg"; // 假设保存为 JPG 格式
+            //sgh.SetCellValue<tb_FM_ExpenseClaimDetail>(sgd, c => c.EvidenceImagePath, newFileName);
         }
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
@@ -317,6 +322,13 @@ namespace RUINORERP.UI.FM
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
+                        //上传图片
+                        foreach (var item in EditEntity.tb_FM_ExpenseClaimDetails)
+                        {
+                            string imagePath = System.IO.Path.Combine(Application.StartupPath, item.EvidenceImagePath);
+                            await HttpHelper.UploadImageAsync(AppContext.WebServerUrl, item.EvidenceImagePath);
+                        }
+
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ClaimNo}。");
                     }
                     else
@@ -345,7 +357,7 @@ namespace RUINORERP.UI.FM
                 EditEntity.DataStatus = (int)DataStatus.完结;
                 await AppContext.Db.Updateable(EditEntity).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
 
-            
+
 
                 string filePath = @"C:\path\to\your\image.jpg";
                 string uploadUrl = "http://example.com/upload";

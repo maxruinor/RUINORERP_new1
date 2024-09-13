@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:49:15
+// 时间：09/13/2024 18:44:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 货架信息表
     /// </summary>
     [Serializable()]
+    [Description("tb_StorageRack")]
     [SugarTable("tb_StorageRack")]
     public partial class tb_StorageRack: BaseEntity, ICloneable
     {
@@ -128,8 +129,23 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
-        //public virtual tb_Location tb_Location_ID { get; set; }
 
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_StockOutDetail.Rack_ID))]
+        public virtual List<tb_StockOutDetail> tb_StockOutDetails { get; set; }
+        //tb_StockOutDetail.Rack_ID)
+        //Rack_ID.FK_TB_STOCKOUTDETAIL_REF_TB_STORARACK)
+        //tb_StorageRack.Rack_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutReDetail.Rack_ID))]
+        public virtual List<tb_SaleOutReDetail> tb_SaleOutReDetails { get; set; }
+        //tb_SaleOutReDetail.Rack_ID)
+        //Rack_ID.FK_SOREDETAIL_RE_STORARACK)
+        //tb_StorageRack.Rack_ID)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -137,14 +153,6 @@ namespace RUINORERP.Model
         public virtual List<tb_FinishedGoodsInvDetail> tb_FinishedGoodsInvDetails { get; set; }
         //tb_FinishedGoodsInvDetail.Rack_ID)
         //Rack_ID.FK_FINISHEDGOODSDETAIL_REF_STORARACK)
-        //tb_StorageRack.Rack_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_StockInDetail.Rack_ID))]
-        public virtual List<tb_StockInDetail> tb_StockInDetails { get; set; }
-        //tb_StockInDetail.Rack_ID)
-        //Rack_ID.FK_TB_STOCKINDE_REF_TB_STORA)
         //tb_StorageRack.Rack_ID)
 
         //[Browsable(false)]
@@ -157,27 +165,26 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Inventory.Rack_ID))]
-        public virtual List<tb_Inventory> tb_Inventories { get; set; }
-        //tb_Inventory.Rack_ID)
-        //Rack_ID.FK_TB_INVEN_REF_TB_STORARACK)
-        //tb_StorageRack.Rack_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_StockOutDetail.Rack_ID))]
-        public virtual List<tb_StockOutDetail> tb_StockOutDetails { get; set; }
-        //tb_StockOutDetail.Rack_ID)
-        //Rack_ID.FK_TB_STOCKOUTDETAIL_REF_TB_STORARACK)
-        //tb_StorageRack.Rack_ID)
-
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StocktakeDetail.Rack_ID))]
         public virtual List<tb_StocktakeDetail> tb_StocktakeDetails { get; set; }
         //tb_StocktakeDetail.Rack_ID)
         //Rack_ID.FK_TB_STOCKSTAKEDETAIL_REF_TB_STORA)
+        //tb_StorageRack.Rack_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryDetail.Rack_ID))]
+        public virtual List<tb_PurEntryDetail> tb_PurEntryDetails { get; set; }
+        //tb_PurEntryDetail.Rack_ID)
+        //Rack_ID.FK_TB_PURENTRYDETAIL_REFE_TB_STORA)
+        //tb_StorageRack.Rack_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.Rack_ID))]
+        public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
+        //tb_PurEntryReDetail.Rack_ID)
+        //Rack_ID.FK_TB_PURENTRYREDETAIL_REF_TB_STORA)
         //tb_StorageRack.Rack_ID)
 
         //[Browsable(false)]
@@ -190,23 +197,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryDetail.Rack_ID))]
-        public virtual List<tb_PurEntryDetail> tb_PurEntryDetails { get; set; }
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutReDetail.Rack_ID))]
-        public virtual List<tb_SaleOutReDetail> tb_SaleOutReDetails { get; set; }
-        //tb_SaleOutReDetail.Rack_ID)
-        //Rack_ID.FK_SOREDETAIL_RE_STORARACK)
+        [Navigate(NavigateType.OneToMany, nameof(tb_Inventory.Rack_ID))]
+        public virtual List<tb_Inventory> tb_Inventories { get; set; }
+        //tb_Inventory.Rack_ID)
+        //Rack_ID.FK_TB_INVEN_REF_TB_STORARACK)
         //tb_StorageRack.Rack_ID)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.Rack_ID))]
-        public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
-        //tb_PurEntryReDetail.Rack_ID)
-        //Rack_ID.FK_PURENREDE__STORARACK)
+        [Navigate(NavigateType.OneToMany, nameof(tb_StockInDetail.Rack_ID))]
+        public virtual List<tb_StockInDetail> tb_StockInDetails { get; set; }
+        //tb_StockInDetail.Rack_ID)
+        //Rack_ID.FK_TB_STOCKINDE_REF_TB_STORA)
         //tb_StorageRack.Rack_ID)
 
 
@@ -215,8 +217,8 @@ namespace RUINORERP.Model
 
 
 
-        //如果为false,则不可以。
-        private bool PK_FK_ID_Check()
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;

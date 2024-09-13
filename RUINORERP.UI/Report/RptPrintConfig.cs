@@ -273,7 +273,7 @@ namespace RUINORERP.UI.Report
             TargetReport.Prepare(true);
 
             //设置默认打印机
-            if (printConfig.PrinterSelected)
+            if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
             {
                 TargetReport.PrintSettings.ShowDialog = false;
                 TargetReport.PrintSettings.Printer = printConfig.PrinterName;
@@ -337,7 +337,7 @@ namespace RUINORERP.UI.Report
             {
                 cmbPrinterList.Items.Add(item);
             }
-            if (printConfig.PrinterSelected)
+            if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
             {
                 cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printConfig.PrinterName);
             }

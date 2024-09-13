@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:36
+// 时间：09/13/2024 18:44:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,10 +68,10 @@ namespace RUINORERP.Model
 
         private long _Employee_ID;
         /// <summary>
-        /// 经办人
+        /// 借出人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "经办人" )]
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "借出人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "借出人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long Employee_ID
         { 
@@ -114,7 +114,7 @@ namespace RUINORERP.Model
         /// 总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总成本" )]
         public decimal TotalCost
         { 
             get{return _TotalCost;}
@@ -128,7 +128,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -162,37 +162,6 @@ namespace RUINORERP.Model
             get{return _Out_date;}
             set{
             SetProperty(ref _Out_date, value);
-            }
-        }
-
-        private string _Reason;
-        /// <summary>
-        /// 借出原因
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Reason", ColDesc = "借出原因")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Reason", Length = 500, IsNullable = true, ColumnDescription = "借出原因")]
-        public string Reason
-        {
-            get { return _Reason; }
-            set
-            {
-                SetProperty(ref _Reason, value);
-            }
-        }
-
-
-        private string _CloseCaseOpinions;
-        /// <summary>
-        /// 审批意见
-        /// </summary>
-        [AdvQueryAttribute(ColName = "CloseCaseOpinions", ColDesc = "审批意见")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "CloseCaseOpinions", Length = 200, IsNullable = true, ColumnDescription = "审批意见")]
-        public string CloseCaseOpinions
-        {
-            get { return _CloseCaseOpinions; }
-            set
-            {
-                SetProperty(ref _CloseCaseOpinions, value);
             }
         }
 
@@ -295,12 +264,26 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _ApprovalOpinions;
+        private string _Reason;
         /// <summary>
         /// 审批意见
         /// </summary>
-        [AdvQueryAttribute(ColName = "ApprovalOpinions",ColDesc = "审批意见")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ApprovalOpinions" ,Length=500,IsNullable = true,ColumnDescription = "审批意见" )]
+        [AdvQueryAttribute(ColName = "Reason",ColDesc = "审批意见")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Reason" ,Length=500,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string Reason
+        { 
+            get{return _Reason;}
+            set{
+            SetProperty(ref _Reason, value);
+            }
+        }
+
+        private string _ApprovalOpinions;
+        /// <summary>
+        /// 借出原因
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ApprovalOpinions",ColDesc = "借出原因")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ApprovalOpinions" ,Length=500,IsNullable = true,ColumnDescription = "借出原因" )]
         public string ApprovalOpinions
         { 
             get{return _ApprovalOpinions;}
@@ -379,7 +362,19 @@ namespace RUINORERP.Model
             }
         }
 
-     
+        private string _CloseCaseOpinions;
+        /// <summary>
+        /// 审批意见
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "审批意见")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string CloseCaseOpinions
+        { 
+            get{return _CloseCaseOpinions;}
+            set{
+            SetProperty(ref _CloseCaseOpinions, value);
+            }
+        }
 
         #endregion
 

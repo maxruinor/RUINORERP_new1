@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:35
+// 时间：09/13/2024 18:43:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 存货预警特性表
     /// </summary>
     [Serializable()]
+    [Description("tb_Inv_Alert_Attribute")]
     [SugarTable("tb_Inv_Alert_Attribute")]
     public partial class tb_Inv_Alert_Attribute: BaseEntity, ICloneable
     {
@@ -184,7 +185,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Inventory_ID))]
         public virtual tb_Inventory tb_inventory { get; set; }
-        //public virtual tb_Inventory tb_Inventory_ID { get; set; }
 
 
 

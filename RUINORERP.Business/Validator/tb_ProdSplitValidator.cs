@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/20/2024 20:30:05
+// 时间：09/13/2024 18:44:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 产品拆分单验证类
     /// </summary>
-    public partial class tb_ProdSplitValidator:AbstractValidator<tb_ProdSplit>
+    /*public partial class tb_ProdSplitValidator:AbstractValidator<tb_ProdSplit>*/
+    public partial class tb_ProdSplitValidator:BaseValidatorGeneric<tb_ProdSplit>
     {
      public tb_ProdSplitValidator() 
      {
@@ -35,7 +36,6 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdSplit =>tb_ProdSplit.SplitParentQty).NotNull().WithMessage("母件数量:不能为空。");
 //***** 
  RuleFor(tb_ProdSplit =>tb_ProdSplit.SplitChildTotalQty).NotNull().WithMessage("子件总数量:不能为空。");
- 
  RuleFor(tb_ProdSplit =>tb_ProdSplit.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
  RuleFor(tb_ProdSplit =>tb_ProdSplit.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
  RuleFor(tb_ProdSplit =>tb_ProdSplit.BOM_ID).Must(CheckForeignKeyValue).WithMessage("拆分配方:下拉选择值不正确。");
@@ -59,7 +59,7 @@ namespace RUINORERP.Business
                 //RuleForEach(x => x.tb_ProdSplitDetails).NotNull();
                 //RuleFor(x => x.tb_ProdSplitDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
         
-        
+                Initialize();
      }
 
 

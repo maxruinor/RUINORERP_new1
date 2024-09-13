@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2024 17:20:31
+// 时间：09/13/2024 18:44:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -156,10 +156,10 @@ namespace RUINORERP.Model.QueryDto
 
         private int _TotalCompletedQuantity= ((0));
         /// <summary>
-        /// 总数量
+        /// 完成数
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalCompletedQuantity",ColDesc = "总数量")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "TotalCompletedQuantity",IsNullable = false,ColumnDescription = "总数量" )]
+        [AdvQueryAttribute(ColName = "TotalCompletedQuantity",ColDesc = "完成数")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "TotalCompletedQuantity",IsNullable = false,ColumnDescription = "完成数" )]
         public int TotalCompletedQuantity 
         { 
             get{return _TotalCompletedQuantity;}
@@ -169,10 +169,10 @@ namespace RUINORERP.Model.QueryDto
 
         private int _TotalQuantity= ((0));
         /// <summary>
-        /// 总数量
+        /// 计划数
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalQuantity",ColDesc = "总数量")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "TotalQuantity",IsNullable = false,ColumnDescription = "总数量" )]
+        [AdvQueryAttribute(ColName = "TotalQuantity",ColDesc = "计划数")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "TotalQuantity",IsNullable = false,ColumnDescription = "计划数" )]
         public int TotalQuantity 
         { 
             get{return _TotalQuantity;}

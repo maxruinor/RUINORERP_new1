@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/20/2024 10:31:39
+// 时间：09/13/2024 18:44:17
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ namespace RUINORERP.Business
         public Itb_ProjectGroupServices _tb_ProjectGroupServices { get; set; }
        // private readonly ApplicationContext _appContext;
        
-        public tb_ProjectGroupController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProjectGroupServices tb_ProjectGroupServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ProjectGroupController(ILogger<tb_ProjectGroupController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProjectGroupServices tb_ProjectGroupServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_ProjectGroup entity = model as tb_ProjectGroup;
@@ -241,23 +239,29 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.ProjectGroup_ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProjectGroup>(entity as tb_ProjectGroup)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
+                    .Include(m => m.tb_ProductionPlans)
                     .Include(m => m.tb_SaleOrders)
+                    .Include(m => m.tb_MaterialRequisitions)
                     .Include(m => m.tb_FM_ExpenseClaimDetails)
-                    .ExecuteCommandAsync();
+                            .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProjectGroup>(entity as tb_ProjectGroup)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
+                .Include(m => m.tb_ProductionPlans)
                 .Include(m => m.tb_SaleOrders)
+                .Include(m => m.tb_MaterialRequisitions)
                 .Include(m => m.tb_FM_ExpenseClaimDetails)
-                        .ExecuteCommandAsync();
+                                .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
@@ -268,12 +272,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -290,7 +292,9 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>()
                                 .Includes(m => m.tb_FM_OtherExpenseDetails)
+                        .Includes(m => m.tb_ProductionPlans)
                         .Includes(m => m.tb_SaleOrders)
+                        .Includes(m => m.tb_MaterialRequisitions)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -302,7 +306,9 @@ namespace RUINORERP.Business
             tb_ProjectGroup entity = model as tb_ProjectGroup;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProjectGroup>(m => m.ProjectGroup_ID== entity.ProjectGroup_ID)
                                 .Include(m => m.tb_FM_OtherExpenseDetails)
+                        .Include(m => m.tb_ProductionPlans)
                         .Include(m => m.tb_SaleOrders)
+                        .Include(m => m.tb_MaterialRequisitions)
                         .Include(m => m.tb_FM_ExpenseClaimDetails)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -466,8 +472,11 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProjectGroup>> QueryByNavAsync()
         {
             List<tb_ProjectGroup> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>()
+                               .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_SaleOrders )
+                                .Includes(t => t.tb_MaterialRequisitions )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .ToListAsync();
             
@@ -488,8 +497,11 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProjectGroup>> QueryByNavAsync(Expression<Func<tb_ProjectGroup, bool>> exp)
         {
             List<tb_ProjectGroup> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>().Where(exp)
+                               .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
+                                .Includes(t => t.tb_ProductionPlans )
                                 .Includes(t => t.tb_SaleOrders )
+                                .Includes(t => t.tb_MaterialRequisitions )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .ToListAsync();
             
@@ -510,8 +522,11 @@ namespace RUINORERP.Business
          public virtual List<tb_ProjectGroup> QueryByNav(Expression<Func<tb_ProjectGroup, bool>> exp)
         {
             List<tb_ProjectGroup> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>().Where(exp)
+                            .Includes(t => t.tb_department )
                                         .Includes(t => t.tb_FM_OtherExpenseDetails )
+                            .Includes(t => t.tb_ProductionPlans )
                             .Includes(t => t.tb_SaleOrders )
+                            .Includes(t => t.tb_MaterialRequisitions )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .ToList();
             
@@ -549,8 +564,11 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_ProjectGroup entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProjectGroup>().Where(w => w.ProjectGroup_ID == (long)id)
-                                         .Includes(t => t.tb_FM_OtherExpenseDetails )
+                             .Includes(t => t.tb_department )
+                                        .Includes(t => t.tb_FM_OtherExpenseDetails )
+                            .Includes(t => t.tb_ProductionPlans )
                             .Includes(t => t.tb_SaleOrders )
+                            .Includes(t => t.tb_MaterialRequisitions )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .FirstAsync();
             if(entity!=null)

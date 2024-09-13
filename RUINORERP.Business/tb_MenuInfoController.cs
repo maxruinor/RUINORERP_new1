@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/20/2024 10:31:36
+// 时间：09/13/2024 18:43:54
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ namespace RUINORERP.Business
         public Itb_MenuInfoServices _tb_MenuInfoServices { get; set; }
        // private readonly ApplicationContext _appContext;
        
-        public tb_MenuInfoController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_MenuInfoServices tb_MenuInfoServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_MenuInfoController(ILogger<tb_MenuInfoController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_MenuInfoServices tb_MenuInfoServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_MenuInfo entity = model as tb_MenuInfo;
@@ -241,27 +239,29 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.MenuID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_MenuInfo>(entity as tb_MenuInfo)
                         .Include(m => m.tb_ButtonInfos)
+                    .Include(m => m.tb_P4Fields)
                     .Include(m => m.tb_FieldInfos)
                     .Include(m => m.tb_P4Buttons)
-                    .Include(m => m.tb_P4Fields)
                     .Include(m => m.tb_P4Menus)
-                    .ExecuteCommandAsync();
+                            .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_MenuInfo>(entity as tb_MenuInfo)
                 .Include(m => m.tb_ButtonInfos)
+                .Include(m => m.tb_P4Fields)
                 .Include(m => m.tb_FieldInfos)
                 .Include(m => m.tb_P4Buttons)
-                .Include(m => m.tb_P4Fields)
                 .Include(m => m.tb_P4Menus)
-                        .ExecuteCommandAsync();
+                                .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
@@ -272,12 +272,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -294,9 +292,9 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>()
                                 .Includes(m => m.tb_ButtonInfos)
+                        .Includes(m => m.tb_P4Fields)
                         .Includes(m => m.tb_FieldInfos)
                         .Includes(m => m.tb_P4Buttons)
-                        .Includes(m => m.tb_P4Fields)
                         .Includes(m => m.tb_P4Menus)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -308,9 +306,9 @@ namespace RUINORERP.Business
             tb_MenuInfo entity = model as tb_MenuInfo;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_MenuInfo>(m => m.MenuID== entity.MenuID)
                                 .Include(m => m.tb_ButtonInfos)
+                        .Include(m => m.tb_P4Fields)
                         .Include(m => m.tb_FieldInfos)
                         .Include(m => m.tb_P4Buttons)
-                        .Include(m => m.tb_P4Fields)
                         .Include(m => m.tb_P4Menus)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -476,9 +474,9 @@ namespace RUINORERP.Business
             List<tb_MenuInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>()
                                .Includes(t => t.tb_moduledefinition )
                                             .Includes(t => t.tb_ButtonInfos )
+                                .Includes(t => t.tb_P4Fields )
                                 .Includes(t => t.tb_FieldInfos )
                                 .Includes(t => t.tb_P4Buttons )
-                                .Includes(t => t.tb_P4Fields )
                                 .Includes(t => t.tb_P4Menus )
                         .ToListAsync();
             
@@ -501,9 +499,9 @@ namespace RUINORERP.Business
             List<tb_MenuInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>().Where(exp)
                                .Includes(t => t.tb_moduledefinition )
                                             .Includes(t => t.tb_ButtonInfos )
+                                .Includes(t => t.tb_P4Fields )
                                 .Includes(t => t.tb_FieldInfos )
                                 .Includes(t => t.tb_P4Buttons )
-                                .Includes(t => t.tb_P4Fields )
                                 .Includes(t => t.tb_P4Menus )
                         .ToListAsync();
             
@@ -526,9 +524,9 @@ namespace RUINORERP.Business
             List<tb_MenuInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>().Where(exp)
                             .Includes(t => t.tb_moduledefinition )
                                         .Includes(t => t.tb_ButtonInfos )
+                            .Includes(t => t.tb_P4Fields )
                             .Includes(t => t.tb_FieldInfos )
                             .Includes(t => t.tb_P4Buttons )
-                            .Includes(t => t.tb_P4Fields )
                             .Includes(t => t.tb_P4Menus )
                         .ToList();
             
@@ -568,9 +566,9 @@ namespace RUINORERP.Business
             tb_MenuInfo entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>().Where(w => w.MenuID == (long)id)
                              .Includes(t => t.tb_moduledefinition )
                                         .Includes(t => t.tb_ButtonInfos )
+                            .Includes(t => t.tb_P4Fields )
                             .Includes(t => t.tb_FieldInfos )
                             .Includes(t => t.tb_P4Buttons )
-                            .Includes(t => t.tb_P4Fields )
                             .Includes(t => t.tb_P4Menus )
                         .FirstAsync();
             if(entity!=null)

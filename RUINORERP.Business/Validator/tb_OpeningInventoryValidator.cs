@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:31
+// 时间：09/13/2024 18:43:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 期初存货来自期初盘点或业务上首次库存入库验证类
     /// </summary>
-    public partial class tb_OpeningInventoryValidator:AbstractValidator<tb_OpeningInventory>
+    /*public partial class tb_OpeningInventoryValidator:AbstractValidator<tb_OpeningInventory>*/
+    public partial class tb_OpeningInventoryValidator:BaseValidatorGeneric<tb_OpeningInventory>
     {
      public tb_OpeningInventoryValidator() 
      {
@@ -32,11 +33,11 @@ namespace RUINORERP.Business
  RuleFor(x => x.Cost_price).PrecisionScale(19,4,true).WithMessage("成本价格:小数位不能超过4。");
  RuleFor(x => x.Subtotal_Cost_Price).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
  RuleFor(tb_OpeningInventory =>tb_OpeningInventory.RefBillID).NotEmpty().When(x => x.RefBillID.HasValue);
- RuleFor(tb_OpeningInventory =>tb_OpeningInventory.RefNO).MaximumLength(50).WithMessage("引用单据:不能超过最大长度,50.");
- RuleFor(tb_OpeningInventory =>tb_OpeningInventory.RefBizType).MaximumLength(50).WithMessage("单据类型:不能超过最大长度,50.");
- RuleFor(tb_OpeningInventory =>tb_OpeningInventory.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_OpeningInventory =>tb_OpeningInventory.RefNO).MaximumLength(25).WithMessage("引用单据:不能超过最大长度,25.");
+ RuleFor(tb_OpeningInventory =>tb_OpeningInventory.RefBizType).MaximumLength(25).WithMessage("单据类型:不能超过最大长度,25.");
+ RuleFor(tb_OpeningInventory =>tb_OpeningInventory.Notes).MaximumLength(50).WithMessage("备注:不能超过最大长度,50.");
        	
-           	
+           	        Initialize();
      }
 
 

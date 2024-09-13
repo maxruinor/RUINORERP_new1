@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:48:47
+// 时间：09/13/2024 18:44:24
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -21,15 +21,16 @@ namespace RUINORERP.Model
     /// 地区表
     /// </summary>
     [Serializable()]
+    [Description("tb_Region")]
     [SugarTable("tb_Region")]
-    public partial class tb_Region : BaseEntity, ICloneable
+    public partial class tb_Region: BaseEntity, ICloneable
     {
         public tb_Region()
         {
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                //throw new Exception("tb_Region" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("tb_Region" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -39,15 +40,14 @@ namespace RUINORERP.Model
         /// <summary>
         /// 地区
         /// </summary>
-
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Region_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "地区", IsPrimaryKey = true)]
+ 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Region_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "地区" , IsPrimaryKey = true)]
         public long Region_ID
-        {
-            get { return _Region_ID; }
-            set
-            {
-                base.PrimaryKeyID = _Region_ID;
-                SetProperty(ref _Region_ID, value);
+        { 
+            get{return _Region_ID;}
+            set{
+            base.PrimaryKeyID = _Region_ID;
+            SetProperty(ref _Region_ID, value);
             }
         }
 
@@ -55,14 +55,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 地区名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "Region_Name", ColDesc = "地区名称")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Region_Name", Length = 50, IsNullable = true, ColumnDescription = "地区名称")]
+        [AdvQueryAttribute(ColName = "Region_Name",ColDesc = "地区名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Region_Name" ,Length=50,IsNullable = true,ColumnDescription = "地区名称" )]
         public string Region_Name
-        {
-            get { return _Region_Name; }
-            set
-            {
-                SetProperty(ref _Region_Name, value);
+        { 
+            get{return _Region_Name;}
+            set{
+            SetProperty(ref _Region_Name, value);
             }
         }
 
@@ -70,14 +69,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 地区代码
         /// </summary>
-        [AdvQueryAttribute(ColName = "Region_code", ColDesc = "地区代码")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Region_code", Length = 20, IsNullable = true, ColumnDescription = "地区代码")]
+        [AdvQueryAttribute(ColName = "Region_code",ColDesc = "地区代码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Region_code" ,Length=20,IsNullable = true,ColumnDescription = "地区代码" )]
         public string Region_code
-        {
-            get { return _Region_code; }
-            set
-            {
-                SetProperty(ref _Region_code, value);
+        { 
+            get{return _Region_code;}
+            set{
+            SetProperty(ref _Region_code, value);
             }
         }
 
@@ -85,15 +83,14 @@ namespace RUINORERP.Model
         /// <summary>
         ///  父地区
         /// </summary>
-        [AdvQueryAttribute(ColName = "Parent_region_id", ColDesc = " 父地区")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Parent_region_id", DecimalDigits = 0, IsNullable = true, ColumnDescription = " 父地区")]
-        [FKRelationAttribute("tb_Region", "Parent_region_id")]
+        [AdvQueryAttribute(ColName = "Parent_region_id",ColDesc = " 父地区")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Parent_region_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = " 父地区" )]
+        [FKRelationAttribute("tb_Region","Parent_region_id")]
         public long? Parent_region_id
-        {
-            get { return _Parent_region_id; }
-            set
-            {
-                SetProperty(ref _Parent_region_id, value);
+        { 
+            get{return _Parent_region_id;}
+            set{
+            SetProperty(ref _Parent_region_id, value);
             }
         }
 
@@ -101,15 +98,14 @@ namespace RUINORERP.Model
         /// <summary>
         /// 意向客户
         /// </summary>
-        [AdvQueryAttribute(ColName = "Customer_id", ColDesc = "意向客户")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Customer_id", DecimalDigits = 0, IsNullable = true, ColumnDescription = "意向客户")]
-        [FKRelationAttribute("tb_Customer", "Customer_id")]
+        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "意向客户")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "意向客户" )]
+        [FKRelationAttribute("tb_Customer","Customer_id")]
         public long? Customer_id
-        {
-            get { return _Customer_id; }
-            set
-            {
-                SetProperty(ref _Customer_id, value);
+        { 
+            get{return _Customer_id;}
+            set{
+            SetProperty(ref _Customer_id, value);
             }
         }
 
@@ -120,13 +116,11 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Parent_region_id))]
         public virtual tb_Region tb_region { get; set; }
-        //public virtual tb_Region tb_Parent_region_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Customer_id))]
         public virtual tb_Customer tb_customer { get; set; }
-        //public virtual tb_Customer tb_Customer_id { get; set; }
 
 
         //[Browsable(false)]
@@ -143,16 +137,16 @@ namespace RUINORERP.Model
 
 
 
-        //如果为false,则不可以。
-        private bool PK_FK_ID_Check()
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
+{
+  bool rs=true;
+         if("Region_ID"!="Parent_region_id")
         {
-            bool rs = true;
-            if ("Region_ID" != "Parent_region_id")
-            {
-                rs = false;
-            }
-            return rs;
+        // rs=false;
         }
+return rs;
+}
 
 
 
@@ -178,35 +172,35 @@ namespace RUINORERP.Model
                     fieldNameList = new ConcurrentDictionary<string, string>();
                     SugarColumn entityAttr;
                     Type type = typeof(tb_Region);
-
-                    foreach (PropertyInfo field in type.GetProperties())
-                    {
-                        foreach (Attribute attr in field.GetCustomAttributes(true))
-                        {
-                            entityAttr = attr as SugarColumn;
-                            if (null != entityAttr)
+                    
+                       foreach (PropertyInfo field in type.GetProperties())
                             {
-                                if (entityAttr.ColumnDescription == null)
+                                foreach (Attribute attr in field.GetCustomAttributes(true))
                                 {
-                                    continue;
-                                }
-                                if (entityAttr.IsIdentity)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.IsPrimaryKey)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                {
-                                    fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
+                                    entityAttr = attr as SugarColumn;
+                                    if (null != entityAttr)
+                                    {
+                                        if (entityAttr.ColumnDescription == null)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsIdentity)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsPrimaryKey)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.ColumnDescription.Trim().Length > 0)
+                                        {
+                                            fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    }
                 }
-
+                
                 return fieldNameList;
             }
             set
@@ -216,7 +210,7 @@ namespace RUINORERP.Model
 
         }
         #endregion
-
+        
 
         public override object Clone()
         {

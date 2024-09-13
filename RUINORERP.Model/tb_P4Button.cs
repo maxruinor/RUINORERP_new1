@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:59
+// 时间：09/13/2024 18:43:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 按钮权限表
     /// </summary>
     [Serializable()]
+    [Description("tb_P4Button")]
     [SugarTable("tb_P4Button")]
     public partial class tb_P4Button: BaseEntity, ICloneable
     {
@@ -186,19 +187,16 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ButtonInfo_ID))]
         public virtual tb_ButtonInfo tb_buttoninfo { get; set; }
-        //public virtual tb_ButtonInfo tb_ButtonInfo_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(MenuID))]
         public virtual tb_MenuInfo tb_menuinfo { get; set; }
-        //public virtual tb_MenuInfo tb_MenuID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(RoleID))]
         public virtual tb_RoleInfo tb_roleinfo { get; set; }
-        //public virtual tb_RoleInfo tb_RoleID { get; set; }
 
 
 

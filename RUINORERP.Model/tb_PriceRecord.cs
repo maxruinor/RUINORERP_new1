@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/11/2024 18:42:54
+// 时间：09/13/2024 18:44:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 
@@ -114,7 +114,7 @@ namespace RUINORERP.Model
         /// 采购价
         /// </summary>
         [AdvQueryAttribute(ColName = "PurPrice",ColDesc = "采购价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PurPrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "采购价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PurPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "采购价" )]
         public decimal PurPrice
         { 
             get{return _PurPrice;}
@@ -128,7 +128,7 @@ namespace RUINORERP.Model
         /// 销售价
         /// </summary>
         [AdvQueryAttribute(ColName = "SalePrice",ColDesc = "销售价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SalePrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "销售价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SalePrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "销售价" )]
         public decimal SalePrice
         { 
             get{return _SalePrice;}

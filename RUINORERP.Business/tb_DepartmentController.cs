@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/20/2024 10:31:32
+// 时间：09/13/2024 18:43:34
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -231,8 +231,6 @@ namespace RUINORERP.Business
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                  //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
                 tb_Department entity = model as tb_Department;
@@ -241,49 +239,57 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-       
+                       // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                
             if (entity.DepartmentID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Department>(entity as tb_Department)
-                        .Include(m => m.tb_PurOrders)
+                        .Include(m => m.tb_FinishedGoodsInvs)
+                    .Include(m => m.tb_PurOrders)
+                    .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_FM_OtherExpenseDetails)
-                    .Include(m => m.tb_MaterialRequisitionses)
-                    .Include(m => m.tb_PurEntryRes)
-                    .Include(m => m.tb_Employees)
-                    .Include(m => m.tb_FM_Accounts)
                     .Include(m => m.tb_ProductionPlans)
-                    .Include(m => m.tb_Prods)
-                    .Include(m => m.tb_FM_Initial_PayAndReceivables)
-                    .Include(m => m.tb_MaterialReturns)
+                    .Include(m => m.tb_PurEntryRes)
                     .Include(m => m.tb_PurEntries)
+                    .Include(m => m.tb_ProjectGroups)
+                    .Include(m => m.tb_Prods)
+                    .Include(m => m.tb_MaterialReturns)
+                    .Include(m => m.tb_Employees)
+                    .Include(m => m.tb_BuyingRequisitions)
+                    .Include(m => m.tb_FM_Accounts)
+                    .Include(m => m.tb_FM_Initial_PayAndReceivables)
                     .Include(m => m.tb_FM_PaymentBills)
                     .Include(m => m.tb_BOM_Ss)
                     .Include(m => m.tb_FM_PrePaymentBills)
-                    .Include(m => m.tb_FinishedGoodsInvs)
+                    .Include(m => m.tb_MaterialRequisitions)
                     .Include(m => m.tb_FM_ExpenseClaimDetails)
-                    .ExecuteCommandAsync();
+                            .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Department>(entity as tb_Department)
+                .Include(m => m.tb_FinishedGoodsInvs)
                 .Include(m => m.tb_PurOrders)
+                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
-                .Include(m => m.tb_MaterialRequisitionses)
-                .Include(m => m.tb_PurEntryRes)
-                .Include(m => m.tb_Employees)
-                .Include(m => m.tb_FM_Accounts)
                 .Include(m => m.tb_ProductionPlans)
-                .Include(m => m.tb_Prods)
-                .Include(m => m.tb_FM_Initial_PayAndReceivables)
-                .Include(m => m.tb_MaterialReturns)
+                .Include(m => m.tb_PurEntryRes)
                 .Include(m => m.tb_PurEntries)
+                .Include(m => m.tb_ProjectGroups)
+                .Include(m => m.tb_Prods)
+                .Include(m => m.tb_MaterialReturns)
+                .Include(m => m.tb_Employees)
+                .Include(m => m.tb_BuyingRequisitions)
+                .Include(m => m.tb_FM_Accounts)
+                .Include(m => m.tb_FM_Initial_PayAndReceivables)
                 .Include(m => m.tb_FM_PaymentBills)
                 .Include(m => m.tb_BOM_Ss)
                 .Include(m => m.tb_FM_PrePaymentBills)
-                .Include(m => m.tb_FinishedGoodsInvs)
+                .Include(m => m.tb_MaterialRequisitions)
                 .Include(m => m.tb_FM_ExpenseClaimDetails)
-                        .ExecuteCommandAsync();
+                                .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
@@ -294,12 +300,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 //出错后，取消生成的ID等值
                 command.Undo();
-                _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
-                //_logger.Error("BaseSaveOrUpdateWithChild事务回滚");
-                // rr.ErrorMsg = "事务回滚=>" + ex.Message;
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
             }
@@ -315,21 +319,24 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Department>()
-                                .Includes(m => m.tb_PurOrders)
+                                .Includes(m => m.tb_FinishedGoodsInvs)
+                        .Includes(m => m.tb_PurOrders)
+                        .Includes(m => m.tb_ManufacturingOrders)
                         .Includes(m => m.tb_FM_OtherExpenseDetails)
-                        .Includes(m => m.tb_MaterialRequisitionses)
-                        .Includes(m => m.tb_PurEntryRes)
-                        .Includes(m => m.tb_Employees)
-                        .Includes(m => m.tb_FM_Accounts)
                         .Includes(m => m.tb_ProductionPlans)
-                        .Includes(m => m.tb_Prods)
-                        .Includes(m => m.tb_FM_Initial_PayAndReceivables)
-                        .Includes(m => m.tb_MaterialReturns)
+                        .Includes(m => m.tb_PurEntryRes)
                         .Includes(m => m.tb_PurEntries)
+                        .Includes(m => m.tb_ProjectGroups)
+                        .Includes(m => m.tb_Prods)
+                        .Includes(m => m.tb_MaterialReturns)
+                        .Includes(m => m.tb_Employees)
+                        .Includes(m => m.tb_BuyingRequisitions)
+                        .Includes(m => m.tb_FM_Accounts)
+                        .Includes(m => m.tb_FM_Initial_PayAndReceivables)
                         .Includes(m => m.tb_FM_PaymentBills)
                         .Includes(m => m.tb_BOM_Ss)
                         .Includes(m => m.tb_FM_PrePaymentBills)
-                        .Includes(m => m.tb_FinishedGoodsInvs)
+                        .Includes(m => m.tb_MaterialRequisitions)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -340,21 +347,24 @@ namespace RUINORERP.Business
         {
             tb_Department entity = model as tb_Department;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Department>(m => m.DepartmentID== entity.DepartmentID)
-                                .Include(m => m.tb_PurOrders)
+                                .Include(m => m.tb_FinishedGoodsInvs)
+                        .Include(m => m.tb_PurOrders)
+                        .Include(m => m.tb_ManufacturingOrders)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
-                        .Include(m => m.tb_MaterialRequisitionses)
-                        .Include(m => m.tb_PurEntryRes)
-                        .Include(m => m.tb_Employees)
-                        .Include(m => m.tb_FM_Accounts)
                         .Include(m => m.tb_ProductionPlans)
-                        .Include(m => m.tb_Prods)
-                        .Include(m => m.tb_FM_Initial_PayAndReceivables)
-                        .Include(m => m.tb_MaterialReturns)
+                        .Include(m => m.tb_PurEntryRes)
                         .Include(m => m.tb_PurEntries)
+                        .Include(m => m.tb_ProjectGroups)
+                        .Include(m => m.tb_Prods)
+                        .Include(m => m.tb_MaterialReturns)
+                        .Include(m => m.tb_Employees)
+                        .Include(m => m.tb_BuyingRequisitions)
+                        .Include(m => m.tb_FM_Accounts)
+                        .Include(m => m.tb_FM_Initial_PayAndReceivables)
                         .Include(m => m.tb_FM_PaymentBills)
                         .Include(m => m.tb_BOM_Ss)
                         .Include(m => m.tb_FM_PrePaymentBills)
-                        .Include(m => m.tb_FinishedGoodsInvs)
+                        .Include(m => m.tb_MaterialRequisitions)
                         .Include(m => m.tb_FM_ExpenseClaimDetails)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -518,21 +528,24 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Department>> QueryByNavAsync()
         {
             List<tb_Department> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Department>()
-                                            .Includes(t => t.tb_PurOrders )
+                                            .Includes(t => t.tb_FinishedGoodsInvs )
+                                .Includes(t => t.tb_PurOrders )
+                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_FM_OtherExpenseDetails )
-                                .Includes(t => t.tb_MaterialRequisitionses )
-                                .Includes(t => t.tb_PurEntryRes )
-                                .Includes(t => t.tb_Employees )
-                                .Includes(t => t.tb_FM_Accounts )
                                 .Includes(t => t.tb_ProductionPlans )
-                                .Includes(t => t.tb_Prods )
-                                .Includes(t => t.tb_FM_Initial_PayAndReceivables )
-                                .Includes(t => t.tb_MaterialReturns )
+                                .Includes(t => t.tb_PurEntryRes )
                                 .Includes(t => t.tb_PurEntries )
+                                .Includes(t => t.tb_ProjectGroups )
+                                .Includes(t => t.tb_Prods )
+                                .Includes(t => t.tb_MaterialReturns )
+                                .Includes(t => t.tb_Employees )
+                                .Includes(t => t.tb_BuyingRequisitions )
+                                .Includes(t => t.tb_FM_Accounts )
+                                .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                                 .Includes(t => t.tb_FM_PaymentBills )
                                 .Includes(t => t.tb_BOM_Ss )
                                 .Includes(t => t.tb_FM_PrePaymentBills )
-                                .Includes(t => t.tb_FinishedGoodsInvs )
+                                .Includes(t => t.tb_MaterialRequisitions )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .ToListAsync();
             
@@ -553,21 +566,24 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Department>> QueryByNavAsync(Expression<Func<tb_Department, bool>> exp)
         {
             List<tb_Department> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Department>().Where(exp)
-                                            .Includes(t => t.tb_PurOrders )
+                                            .Includes(t => t.tb_FinishedGoodsInvs )
+                                .Includes(t => t.tb_PurOrders )
+                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_FM_OtherExpenseDetails )
-                                .Includes(t => t.tb_MaterialRequisitionses )
-                                .Includes(t => t.tb_PurEntryRes )
-                                .Includes(t => t.tb_Employees )
-                                .Includes(t => t.tb_FM_Accounts )
                                 .Includes(t => t.tb_ProductionPlans )
-                                .Includes(t => t.tb_Prods )
-                                .Includes(t => t.tb_FM_Initial_PayAndReceivables )
-                                .Includes(t => t.tb_MaterialReturns )
+                                .Includes(t => t.tb_PurEntryRes )
                                 .Includes(t => t.tb_PurEntries )
+                                .Includes(t => t.tb_ProjectGroups )
+                                .Includes(t => t.tb_Prods )
+                                .Includes(t => t.tb_MaterialReturns )
+                                .Includes(t => t.tb_Employees )
+                                .Includes(t => t.tb_BuyingRequisitions )
+                                .Includes(t => t.tb_FM_Accounts )
+                                .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                                 .Includes(t => t.tb_FM_PaymentBills )
                                 .Includes(t => t.tb_BOM_Ss )
                                 .Includes(t => t.tb_FM_PrePaymentBills )
-                                .Includes(t => t.tb_FinishedGoodsInvs )
+                                .Includes(t => t.tb_MaterialRequisitions )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .ToListAsync();
             
@@ -588,21 +604,24 @@ namespace RUINORERP.Business
          public virtual List<tb_Department> QueryByNav(Expression<Func<tb_Department, bool>> exp)
         {
             List<tb_Department> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Department>().Where(exp)
-                                        .Includes(t => t.tb_PurOrders )
+                                        .Includes(t => t.tb_FinishedGoodsInvs )
+                            .Includes(t => t.tb_PurOrders )
+                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_FM_OtherExpenseDetails )
-                            .Includes(t => t.tb_MaterialRequisitionses )
-                            .Includes(t => t.tb_PurEntryRes )
-                            .Includes(t => t.tb_Employees )
-                            .Includes(t => t.tb_FM_Accounts )
                             .Includes(t => t.tb_ProductionPlans )
-                            .Includes(t => t.tb_Prods )
-                            .Includes(t => t.tb_FM_Initial_PayAndReceivables )
-                            .Includes(t => t.tb_MaterialReturns )
+                            .Includes(t => t.tb_PurEntryRes )
                             .Includes(t => t.tb_PurEntries )
+                            .Includes(t => t.tb_ProjectGroups )
+                            .Includes(t => t.tb_Prods )
+                            .Includes(t => t.tb_MaterialReturns )
+                            .Includes(t => t.tb_Employees )
+                            .Includes(t => t.tb_BuyingRequisitions )
+                            .Includes(t => t.tb_FM_Accounts )
+                            .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                             .Includes(t => t.tb_FM_PaymentBills )
                             .Includes(t => t.tb_BOM_Ss )
                             .Includes(t => t.tb_FM_PrePaymentBills )
-                            .Includes(t => t.tb_FinishedGoodsInvs )
+                            .Includes(t => t.tb_MaterialRequisitions )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .ToList();
             
@@ -640,21 +659,24 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Department entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Department>().Where(w => w.DepartmentID == (long)id)
-                                         .Includes(t => t.tb_PurOrders )
+                                         .Includes(t => t.tb_FinishedGoodsInvs )
+                            .Includes(t => t.tb_PurOrders )
+                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_FM_OtherExpenseDetails )
-                            .Includes(t => t.tb_MaterialRequisitionses )
-                            .Includes(t => t.tb_PurEntryRes )
-                            .Includes(t => t.tb_Employees )
-                            .Includes(t => t.tb_FM_Accounts )
                             .Includes(t => t.tb_ProductionPlans )
-                            .Includes(t => t.tb_Prods )
-                            .Includes(t => t.tb_FM_Initial_PayAndReceivables )
-                            .Includes(t => t.tb_MaterialReturns )
+                            .Includes(t => t.tb_PurEntryRes )
                             .Includes(t => t.tb_PurEntries )
+                            .Includes(t => t.tb_ProjectGroups )
+                            .Includes(t => t.tb_Prods )
+                            .Includes(t => t.tb_MaterialReturns )
+                            .Includes(t => t.tb_Employees )
+                            .Includes(t => t.tb_BuyingRequisitions )
+                            .Includes(t => t.tb_FM_Accounts )
+                            .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                             .Includes(t => t.tb_FM_PaymentBills )
                             .Includes(t => t.tb_BOM_Ss )
                             .Includes(t => t.tb_FM_PrePaymentBills )
-                            .Includes(t => t.tb_FinishedGoodsInvs )
+                            .Includes(t => t.tb_MaterialRequisitions )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .FirstAsync();
             if(entity!=null)

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:35
+// 时间：09/13/2024 18:44:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,17 +21,18 @@ namespace RUINORERP.Business
     /// <summary>
     /// 销售机会验证类
     /// </summary>
-    public partial class tb_Sales_ChanceValidator:AbstractValidator<tb_Sales_Chance>
+    /*public partial class tb_Sales_ChanceValidator:AbstractValidator<tb_Sales_Chance>*/
+    public partial class tb_Sales_ChanceValidator:BaseValidatorGeneric<tb_Sales_Chance>
     {
      public tb_Sales_ChanceValidator() 
      {
       RuleFor(tb_Sales_Chance =>tb_Sales_Chance.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage("意向客户:下拉选择值不正确。");
  RuleFor(tb_Sales_Chance =>tb_Sales_Chance.Customer_id).NotEmpty().When(x => x.Customer_id.HasValue);
- RuleFor(tb_Sales_Chance =>tb_Sales_Chance.opportunity_name).MaximumLength(50).WithMessage("机会名称:不能超过最大长度,50.");
- RuleFor(tb_Sales_Chance =>tb_Sales_Chance.opportunity_amount).MaximumLength(100).WithMessage("机会金额:不能超过最大长度,100.");
- RuleFor(tb_Sales_Chance =>tb_Sales_Chance.opportunity_stage).MaximumLength(200).WithMessage("机会阶段:不能超过最大长度,200.");
+ RuleFor(tb_Sales_Chance =>tb_Sales_Chance.opportunity_name).MaximumLength(25).WithMessage("机会名称:不能超过最大长度,25.");
+ RuleFor(tb_Sales_Chance =>tb_Sales_Chance.opportunity_amount).MaximumLength(50).WithMessage("机会金额:不能超过最大长度,50.");
+ RuleFor(tb_Sales_Chance =>tb_Sales_Chance.opportunity_stage).MaximumLength(100).WithMessage("机会阶段:不能超过最大长度,100.");
        	
-           	
+           	        Initialize();
      }
 
 

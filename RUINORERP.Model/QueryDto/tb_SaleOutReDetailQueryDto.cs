@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:49:04
+// 时间：09/13/2024 19:02:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -63,10 +63,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品
+        /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID 
         { 
@@ -86,6 +86,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _SaleOutRe_ID;}
             set{SetProperty(ref _SaleOutRe_ID, value);}
+        }
+     
+
+        private string _property;
+        /// <summary>
+        /// 属性
+        /// </summary>
+        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "属性" )]
+        public string property 
+        { 
+            get{return _property;}
+            set{SetProperty(ref _property, value);}
         }
      
 
@@ -115,16 +128,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _SubtotalAmount= ((0));
+        private decimal _SubtotalTransAmount= ((0));
         /// <summary>
         /// 小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalAmount",ColDesc = "小计")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "SubtotalAmount",IsNullable = false,ColumnDescription = "小计" )]
-        public decimal SubtotalAmount 
+        [AdvQueryAttribute(ColName = "SubtotalTransAmount",ColDesc = "小计")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "SubtotalTransAmount",IsNullable = false,ColumnDescription = "小计" )]
+        public decimal SubtotalTransAmount 
         { 
-            get{return _SubtotalAmount;}
-            set{SetProperty(ref _SubtotalAmount, value);}
+            get{return _SubtotalTransAmount;}
+            set{SetProperty(ref _SubtotalTransAmount, value);}
         }
      
 
@@ -167,55 +180,29 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _TotalCostAmount= ((0));
+        private decimal _SubtotalCostAmount= ((0));
         /// <summary>
         /// 成本小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalCostAmount",ColDesc = "成本小计")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TotalCostAmount",IsNullable = false,ColumnDescription = "成本小计" )]
-        public decimal TotalCostAmount 
+        [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "成本小计")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "SubtotalCostAmount",IsNullable = false,ColumnDescription = "成本小计" )]
+        public decimal SubtotalCostAmount 
         { 
-            get{return _TotalCostAmount;}
-            set{SetProperty(ref _TotalCostAmount, value);}
+            get{return _SubtotalCostAmount;}
+            set{SetProperty(ref _SubtotalCostAmount, value);}
         }
      
 
-        private int _OrderSubtotalOutQty= ((0));
-        /// <summary>
-        /// 订单累计数
-        /// </summary>
-        [AdvQueryAttribute(ColName = "OrderSubtotalOutQty",ColDesc = "订单累计数")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "OrderSubtotalOutQty",IsNullable = false,ColumnDescription = "订单累计数" )]
-        public int OrderSubtotalOutQty 
-        { 
-            get{return _OrderSubtotalOutQty;}
-            set{SetProperty(ref _OrderSubtotalOutQty, value);}
-        }
-     
-
-        private int _OrderReturnSubtotalQty= ((0));
-        /// <summary>
-        /// 订单退回数
-        /// </summary>
-        [AdvQueryAttribute(ColName = "OrderReturnSubtotalQty",ColDesc = "订单退回数")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "OrderReturnSubtotalQty",IsNullable = false,ColumnDescription = "订单退回数" )]
-        public int OrderReturnSubtotalQty 
-        { 
-            get{return _OrderReturnSubtotalQty;}
-            set{SetProperty(ref _OrderReturnSubtotalQty, value);}
-        }
-     
-
-        private decimal _UntaxedAmount= ((0));
+        private decimal _SubtotalUntaxedAmount= ((0));
         /// <summary>
         /// 未税本位币
         /// </summary>
-        [AdvQueryAttribute(ColName = "UntaxedAmount",ColDesc = "未税本位币")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "UntaxedAmount",IsNullable = false,ColumnDescription = "未税本位币" )]
-        public decimal UntaxedAmount 
+        [AdvQueryAttribute(ColName = "SubtotalUntaxedAmount",ColDesc = "未税本位币")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "SubtotalUntaxedAmount",IsNullable = false,ColumnDescription = "未税本位币" )]
+        public decimal SubtotalUntaxedAmount 
         { 
-            get{return _UntaxedAmount;}
-            set{SetProperty(ref _UntaxedAmount, value);}
+            get{return _SubtotalUntaxedAmount;}
+            set{SetProperty(ref _SubtotalUntaxedAmount, value);}
         }
      
 
@@ -245,16 +232,29 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _TaxAmount= ((0));
+        private decimal _SubtotalTaxAmount= ((0));
         /// <summary>
         /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "TaxAmount",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TaxAmount",IsNullable = false,ColumnDescription = "" )]
-        public decimal TaxAmount 
+        [AdvQueryAttribute(ColName = "SubtotalTaxAmount",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "SubtotalTaxAmount",IsNullable = false,ColumnDescription = "" )]
+        public decimal SubtotalTaxAmount 
         { 
-            get{return _TaxAmount;}
-            set{SetProperty(ref _TaxAmount, value);}
+            get{return _SubtotalTaxAmount;}
+            set{SetProperty(ref _SubtotalTaxAmount, value);}
+        }
+     
+
+        private decimal? _CommissionAmount;
+        /// <summary>
+        /// 抽成返还
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CommissionAmount",ColDesc = "抽成返还")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "CommissionAmount",IsNullable = true,ColumnDescription = "抽成返还" )]
+        public decimal? CommissionAmount 
+        { 
+            get{return _CommissionAmount;}
+            set{SetProperty(ref _CommissionAmount, value);}
         }
 
 

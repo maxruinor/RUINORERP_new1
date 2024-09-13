@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/07/2024 19:06:30
+// 时间：09/13/2024 18:44:04
 // **************************************
 using System;
 using SqlSugar;
@@ -21,10 +21,12 @@ namespace RUINORERP.Business
     /// <summary>
     /// 货品基本信息表验证类
     /// </summary>
-    public partial class tb_ProdValidator : AbstractValidator<tb_Prod>
+    /*public partial class tb_ProdValidator:AbstractValidator<tb_Prod>*/
+    public partial class tb_ProdValidator : BaseValidatorGeneric<tb_Prod>
     {
         public tb_ProdValidator()
         {
+
             RuleFor(tb_Prod => tb_Prod.ProductNo).MaximumLength(20).WithMessage("品号:不能超过最大长度,20.");
             RuleFor(tb_Prod => tb_Prod.ProductNo).NotEmpty().WithMessage("品号:不能为空。");
             RuleFor(tb_Prod => tb_Prod.CNName).MaximumLength(127).WithMessage("品名:不能超过最大长度,127.");
@@ -32,14 +34,13 @@ namespace RUINORERP.Business
             RuleFor(tb_Prod => tb_Prod.ImagesPath).MaximumLength(1000).WithMessage("图片组:不能超过最大长度,1000.");
             RuleFor(tb_Prod => tb_Prod.ENName).MaximumLength(127).WithMessage("英文名称:不能超过最大长度,127.");
             RuleFor(tb_Prod => tb_Prod.Model).MaximumLength(25).WithMessage("型号:不能超过最大长度,25.");
-            RuleFor(tb_Prod => tb_Prod.ShortCode).MaximumLength(25).WithMessage("助记码:不能超过最大长度,25.");
+            RuleFor(tb_Prod => tb_Prod.ShortCode).MaximumLength(25).WithMessage("短码:不能超过最大长度,25.");
             RuleFor(tb_Prod => tb_Prod.Specifications).MaximumLength(500).WithMessage("规格:不能超过最大长度,500.");
             RuleFor(tb_Prod => tb_Prod.SourceType).NotEmpty().When(x => x.SourceType.HasValue);
             RuleFor(tb_Prod => tb_Prod.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("所属部门:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
             //***** 
-            RuleFor(tb_Prod => tb_Prod.PropertyType).NotNull().WithMessage("货品类型:不能为空。");
-            RuleFor(tb_Prod => tb_Prod.Unit_ID).NotEmpty().WithMessage("单位:下拉选择值不正确，不能为空。");
+            RuleFor(tb_Prod => tb_Prod.PropertyType).NotNull().WithMessage("属性类型:不能为空。");
             RuleFor(tb_Prod => tb_Prod.Unit_ID).Must(CheckForeignKeyValue).WithMessage("单位:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Category_ID).Must(CheckForeignKeyValueCanNull).WithMessage("类别:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Category_ID).NotEmpty().When(x => x.Category_ID.HasValue);
@@ -63,16 +64,7 @@ namespace RUINORERP.Business
             RuleFor(tb_Prod => tb_Prod.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
             RuleFor(tb_Prod => tb_Prod.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
 
-            //long?
-            //ProdBaseID
-            //tb_ProdDetail
-            //RuleFor(x => x.tb_ProdDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-            //视图不需要验证，目前认为无编辑新增操作
-            //RuleFor(c => c.tb_ProdDetails).NotNull();
-            //RuleForEach(x => x.tb_ProdDetails).NotNull();
-            //RuleFor(x => x.tb_ProdDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-
-
+            Initialize();
         }
 
 

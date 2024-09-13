@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/25/2024 12:31:34
+// 时间：09/13/2024 18:44:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -124,6 +124,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private bool _OwnershipControl= false;
+        /// <summary>
+        /// 数据归属控制
+        /// </summary>
+        [AdvQueryAttribute(ColName = "OwnershipControl",ColDesc = "数据归属控制")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "OwnershipControl",IsNullable = false,ColumnDescription = "数据归属控制" )]
+        public bool OwnershipControl 
+        { 
+            get{return _OwnershipControl;}
+            set{SetProperty(ref _OwnershipControl, value);}
+        }
+     
+
         private bool _SaleBizLimited= false;
         /// <summary>
         /// 销售业务范围限制
@@ -176,26 +189,26 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool? _QueryGridColCustomize;
+        private bool _QueryGridColCustomize;
         /// <summary>
         /// 查询表格列自定义
         /// </summary>
         [AdvQueryAttribute(ColName = "QueryGridColCustomize",ColDesc = "查询表格列自定义")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "QueryGridColCustomize",IsNullable = true,ColumnDescription = "查询表格列自定义" )]
-        public bool? QueryGridColCustomize 
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "QueryGridColCustomize",IsNullable = false,ColumnDescription = "查询表格列自定义" )]
+        public bool QueryGridColCustomize 
         { 
             get{return _QueryGridColCustomize;}
             set{SetProperty(ref _QueryGridColCustomize, value);}
         }
      
 
-        private bool? _BillGridColCustomize;
+        private bool _BillGridColCustomize;
         /// <summary>
         /// 单据表格列自定义
         /// </summary>
         [AdvQueryAttribute(ColName = "BillGridColCustomize",ColDesc = "单据表格列自定义")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "BillGridColCustomize",IsNullable = true,ColumnDescription = "单据表格列自定义" )]
-        public bool? BillGridColCustomize 
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "BillGridColCustomize",IsNullable = false,ColumnDescription = "单据表格列自定义" )]
+        public bool BillGridColCustomize 
         { 
             get{return _BillGridColCustomize;}
             set{SetProperty(ref _BillGridColCustomize, value);}

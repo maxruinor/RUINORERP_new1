@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 14:54:19
+// 时间：09/13/2024 18:43:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 卡通箱规格表验证类
     /// </summary>
-    public partial class tb_CartoonBoxValidator:AbstractValidator<tb_CartoonBox>
+    /*public partial class tb_CartoonBoxValidator:AbstractValidator<tb_CartoonBox>*/
+    public partial class tb_CartoonBoxValidator:BaseValidatorGeneric<tb_CartoonBox>
     {
      public tb_CartoonBoxValidator() 
      {
@@ -42,7 +43,7 @@ namespace RUINORERP.Business
  RuleFor(tb_CartoonBox =>tb_CartoonBox.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_CartoonBox =>tb_CartoonBox.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

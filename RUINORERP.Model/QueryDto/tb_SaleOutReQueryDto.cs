@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:49:02
+// 时间：09/13/2024 19:02:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,6 +43,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _ReturnNo;}
             set{SetProperty(ref _ReturnNo, value);}
+        }
+     
+
+        private long? _ProjectGroup_ID;
+        /// <summary>
+        /// 项目组
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProjectGroup_ID",IsNullable = true,ColumnDescription = "项目组" )]
+        public long? ProjectGroup_ID 
+        { 
+            get{return _ProjectGroup_ID;}
+            set{SetProperty(ref _ProjectGroup_ID, value);}
         }
      
 
@@ -114,16 +127,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _SO_NO;
+        private string _SaleOut_NO;
         /// <summary>
         /// 销售出库单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "SaleOut_NO", ColDesc = "销售出库单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "varchar", ColumnName = "SaleOut_NO", Length = 50, IsNullable = true, ColumnDescription = "销售出库单号")]
-        public long? SO_NO 
+        [AdvQueryAttribute(ColName = "SaleOut_NO",ColDesc = "销售出库单号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SaleOut_NO",Length=50,IsNullable = true,ColumnDescription = "销售出库单号" )]
+        public string SaleOut_NO 
         { 
-            get{return _SO_NO;}
-            set{SetProperty(ref _SO_NO, value);}
+            get{return _SaleOut_NO;}
+            set{SetProperty(ref _SaleOut_NO, value);}
         }
      
 
@@ -170,12 +183,25 @@ namespace RUINORERP.Model.QueryDto
         /// <summary>
         /// 发货日期
         /// </summary>
-        [AdvQueryAttribute(ColName = "DeliveryDate",ColDesc = "发货日期")]
+        [AdvQueryAttribute(ColName = "ReturnDate",ColDesc = "发货日期")]
         [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "ReturnDate",IsNullable = true,ColumnDescription = "发货日期" )]
-        public DateTime? ReturnDate
+        public DateTime? ReturnDate 
         { 
-            get{return _ReturnDate; }
+            get{return _ReturnDate;}
             set{SetProperty(ref _ReturnDate, value);}
+        }
+     
+
+        private decimal _ShipCost= ((0));
+        /// <summary>
+        /// 需退运费
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ShipCost",ColDesc = "需退运费")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "ShipCost",IsNullable = false,ColumnDescription = "需退运费" )]
+        public decimal ShipCost 
+        { 
+            get{return _ShipCost;}
+            set{SetProperty(ref _ShipCost, value);}
         }
      
 
@@ -257,12 +283,25 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private string _ReturnReason;
+        /// <summary>
+        /// 备注
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReturnReason",ColDesc = "备注")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ReturnReason",Length=1000,IsNullable = true,ColumnDescription = "备注" )]
+        public string ReturnReason 
+        { 
+            get{return _ReturnReason;}
+            set{SetProperty(ref _ReturnReason, value);}
+        }
+     
+
         private string _Notes;
         /// <summary>
         /// 备注
         /// </summary>
         [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=255,IsNullable = true,ColumnDescription = "备注" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Notes",Length=1500,IsNullable = true,ColumnDescription = "备注" )]
         public string Notes 
         { 
             get{return _Notes;}
@@ -335,12 +374,25 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool? _IsIncludeTax;
+        private bool _RefundOnly;
         /// <summary>
         /// 含税
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsIncludeTax",ColDesc = "含税")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsIncludeTax",IsNullable = true,ColumnDescription = "含税" )]
+        [AdvQueryAttribute(ColName = "RefundOnly",ColDesc = "含税")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "RefundOnly",IsNullable = false,ColumnDescription = "含税" )]
+        public bool RefundOnly 
+        { 
+            get{return _RefundOnly;}
+            set{SetProperty(ref _RefundOnly, value);}
+        }
+     
+
+        private bool? _IsIncludeTax= false;
+        /// <summary>
+        /// 仅退款
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsIncludeTax",ColDesc = "仅退款")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsIncludeTax",IsNullable = true,ColumnDescription = "仅退款" )]
         public bool? IsIncludeTax 
         { 
             get{return _IsIncludeTax;}
@@ -410,32 +462,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _GenerateVouchers;}
             set{SetProperty(ref _GenerateVouchers, value);}
-        }
-     
-
-        private int _OrderTotalOutQty= ((0));
-        /// <summary>
-        /// 订单累计数量
-        /// </summary>
-        [AdvQueryAttribute(ColName = "OrderTotalOutQty",ColDesc = "订单累计数量")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "OrderTotalOutQty",IsNullable = false,ColumnDescription = "订单累计数量" )]
-        public int OrderTotalOutQty 
-        { 
-            get{return _OrderTotalOutQty;}
-            set{SetProperty(ref _OrderTotalOutQty, value);}
-        }
-     
-
-        private int _OrderReturnTotalQty= ((0));
-        /// <summary>
-        /// 订单退回数量
-        /// </summary>
-        [AdvQueryAttribute(ColName = "OrderReturnTotalQty",ColDesc = "订单退回数量")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "OrderReturnTotalQty",IsNullable = false,ColumnDescription = "订单退回数量" )]
-        public int OrderReturnTotalQty 
-        { 
-            get{return _OrderReturnTotalQty;}
-            set{SetProperty(ref _OrderReturnTotalQty, value);}
         }
 
 

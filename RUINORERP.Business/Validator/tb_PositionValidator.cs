@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:32
+// 时间：09/13/2024 18:44:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,17 +21,18 @@ namespace RUINORERP.Business
     /// <summary>
     /// 位置信息验证类
     /// </summary>
-    public partial class tb_PositionValidator:AbstractValidator<tb_Position>
+    /*public partial class tb_PositionValidator:AbstractValidator<tb_Position>*/
+    public partial class tb_PositionValidator:BaseValidatorGeneric<tb_Position>
     {
      public tb_PositionValidator() 
      {
-      RuleFor(tb_Position =>tb_Position.Left).MaximumLength(50).WithMessage("左边距:不能超过最大长度,50.");
+      RuleFor(tb_Position =>tb_Position.Left).MaximumLength(25).WithMessage("左边距:不能超过最大长度,25.");
  RuleFor(tb_Position =>tb_Position.Left).NotEmpty().WithMessage("左边距:不能为空。");
- RuleFor(tb_Position =>tb_Position.Right).MaximumLength(50).WithMessage("右边距:不能超过最大长度,50.");
- RuleFor(tb_Position =>tb_Position.Bottom).MaximumLength(50).WithMessage("下边距:不能超过最大长度,50.");
- RuleFor(tb_Position =>tb_Position.Top).MaximumLength(50).WithMessage("上边距:不能超过最大长度,50.");
+ RuleFor(tb_Position =>tb_Position.Right).MaximumLength(25).WithMessage("右边距:不能超过最大长度,25.");
+ RuleFor(tb_Position =>tb_Position.Bottom).MaximumLength(25).WithMessage("下边距:不能超过最大长度,25.");
+ RuleFor(tb_Position =>tb_Position.Top).MaximumLength(25).WithMessage("上边距:不能超过最大长度,25.");
        	
-           	
+           	        Initialize();
      }
 
 

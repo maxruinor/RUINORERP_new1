@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/11/2024 14:33:48
+// 时间：09/13/2024 18:43:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -35,15 +35,28 @@ namespace RUINORERP.Model.QueryDto
 
         private long _ProdDetailID;
         /// <summary>
-        /// 产品详情
+        /// 货品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "产品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "货品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID 
         { 
             get{return _ProdDetailID;}
             set{SetProperty(ref _ProdDetailID, value);}
+        }
+     
+
+        private string _SKU;
+        /// <summary>
+        /// SKU码
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SKU",ColDesc = "SKU码")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SKU",Length=80,IsNullable = true,ColumnDescription = "SKU码" )]
+        public string SKU 
+        { 
+            get{return _SKU;}
+            set{SetProperty(ref _SKU, value);}
         }
      
 
@@ -58,59 +71,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _BOM_ID;}
             set{SetProperty(ref _BOM_ID, value);}
-        }
-     
-
-        private long _Type_ID;
-        /// <summary>
-        /// 类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "类型")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Type_ID",IsNullable = false,ColumnDescription = "类型" )]
-        [FKRelationAttribute("tb_ProductType","Type_ID")]
-        public long Type_ID 
-        { 
-            get{return _Type_ID;}
-            set{SetProperty(ref _Type_ID, value);}
-        }
-     
-
-        private string _property;
-        /// <summary>
-        /// 属性
-        /// </summary>
-        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "属性" )]
-        public string property 
-        { 
-            get{return _property;}
-            set{SetProperty(ref _property, value);}
-        }
-     
-
-        private string _SubItemName;
-        /// <summary>
-        /// 子件名称
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubItemName",ColDesc = "子件名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SubItemName",Length=200,IsNullable = true,ColumnDescription = "子件名称" )]
-        public string SubItemName 
-        { 
-            get{return _SubItemName;}
-            set{SetProperty(ref _SubItemName, value);}
-        }
-     
-
-        private string _SubItemSpec;
-        /// <summary>
-        /// 子件规格
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubItemSpec",ColDesc = "子件规格")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "SubItemSpec",Length=1000,IsNullable = true,ColumnDescription = "子件规格" )]
-        public string SubItemSpec 
-        { 
-            get{return _SubItemSpec;}
-            set{SetProperty(ref _SubItemSpec, value);}
         }
      
 
@@ -343,7 +303,6 @@ namespace RUINORERP.Model.QueryDto
         /// </summary>
         [AdvQueryAttribute(ColName = "Child_BOM_Node_ID",ColDesc = "子件配方")]
         [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Child_BOM_Node_ID",IsNullable = true,ColumnDescription = "子件配方" )]
-        [FKRelationAttribute("tb_BOM_S","Child_BOM_Node_ID")]
         public long? Child_BOM_Node_ID 
         { 
             get{return _Child_BOM_Node_ID;}

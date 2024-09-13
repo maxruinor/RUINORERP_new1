@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:15
+// 时间：09/13/2024 18:43:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -232,6 +232,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _UntaxedAmount;}
             set{SetProperty(ref _UntaxedAmount, value);}
+        }
+     
+
+        private byte[] _EvidenceImage;
+        /// <summary>
+        /// 凭证图
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EvidenceImage",ColDesc = "凭证图")]
+        [SugarColumn(ColumnDataType = "image",SqlParameterDbType ="Binary",ColumnName = "EvidenceImage",Length=2147483647,IsNullable = true,ColumnDescription = "凭证图" )]
+        public byte[] EvidenceImage 
+        { 
+            get{return _EvidenceImage;}
+            set{SetProperty(ref _EvidenceImage, value);}
+        }
+     
+
+        private string _EvidenceImagePath;
+        /// <summary>
+        /// 凭证图
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EvidenceImagePath",ColDesc = "凭证图")]
+        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "EvidenceImagePath",Length=200,IsNullable = true,ColumnDescription = "凭证图" )]
+        public string EvidenceImagePath 
+        { 
+            get{return _EvidenceImagePath;}
+            set{SetProperty(ref _EvidenceImagePath, value);}
         }
 
 

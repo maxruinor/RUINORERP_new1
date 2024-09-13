@@ -177,8 +177,9 @@ namespace RUINORERP.UI.ProductEAV
         /// <summary>
         /// 产品比较特殊 
         /// </summary>
-        public async override void Save()
+        public async override Task<List<tb_Prod>> Save()
         {
+            List<tb_Prod> list = new List<tb_Prod>();
             tb_ProdController<tb_Prod> pctr = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
             //这里是否要用保存列表来处理
             foreach (var item in bindingSourceList.List)
@@ -192,9 +193,6 @@ namespace RUINORERP.UI.ProductEAV
                     case ActionStatus.新增:
                     case ActionStatus.修改:
 
-
-
-                        //ReturnMainSubResultstb_Prod rr = new ReturnMainSubResultstb_Prod();
                         ReturnResults<tb_Prod> rr = new ReturnResults<tb_Prod>();
                         rr = await pctr.SaveOrUpdateAsync(entity);
                         //  rr = await base.ctr.BaseSaveOrUpdateWithChildtb_Prod(entity as tb_Prod);
@@ -202,7 +200,7 @@ namespace RUINORERP.UI.ProductEAV
                         if (rr.Succeeded)
                         {
                             ToolBarEnabledControl(MenuItemEnums.保存);
-
+                            list.Add(rr.ReturnObject);
                             //保存箱规
                             //if (entity.tb_BoxRuleses.Count > 0 && entity.tb_BoxRuleses[0] != null && entity.tb_BoxRuleses[0].HasChanged)
                             //{
@@ -235,6 +233,7 @@ namespace RUINORERP.UI.ProductEAV
             }
 
             base.toolStripButtonModify.Enabled = true;
+            return list;
         }
 
 

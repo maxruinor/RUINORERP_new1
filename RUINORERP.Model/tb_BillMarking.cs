@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:41
+// 时间：09/13/2024 11:11:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 单据标识 保存在主单中一个字段，作用于各种单明细的搜索过滤 有必要吗？
     /// </summary>
     [Serializable()]
+    [Description("tb_BillMarking")]
     [SugarTable("tb_BillMarking")]
     public partial class tb_BillMarking: BaseEntity, ICloneable
     {

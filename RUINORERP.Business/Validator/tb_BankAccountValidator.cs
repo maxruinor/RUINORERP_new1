@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:28
+// 时间：09/13/2024 11:11:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,20 +21,21 @@ namespace RUINORERP.Business
     /// <summary>
     /// 银行账号信息表验证类
     /// </summary>
-    public partial class tb_BankAccountValidator:AbstractValidator<tb_BankAccount>
+    /*public partial class tb_BankAccountValidator:AbstractValidator<tb_BankAccount>*/
+    public partial class tb_BankAccountValidator:BaseValidatorGeneric<tb_BankAccount>
     {
      public tb_BankAccountValidator() 
      {
-      RuleFor(tb_BankAccount =>tb_BankAccount.Account_Name).MaximumLength(100).WithMessage("账户名称:不能超过最大长度,100.");
+      RuleFor(tb_BankAccount =>tb_BankAccount.Account_Name).MaximumLength(50).WithMessage("账户名称:不能超过最大长度,50.");
  RuleFor(tb_BankAccount =>tb_BankAccount.Account_Name).NotEmpty().WithMessage("账户名称:不能为空。");
- RuleFor(tb_BankAccount =>tb_BankAccount.Account_No).MaximumLength(100).WithMessage("账号:不能超过最大长度,100.");
+ RuleFor(tb_BankAccount =>tb_BankAccount.Account_No).MaximumLength(50).WithMessage("账号:不能超过最大长度,50.");
  RuleFor(tb_BankAccount =>tb_BankAccount.Account_No).NotEmpty().WithMessage("账号:不能为空。");
- RuleFor(tb_BankAccount =>tb_BankAccount.OpeningBank).MaximumLength(100).WithMessage("开户行:不能超过最大长度,100.");
+ RuleFor(tb_BankAccount =>tb_BankAccount.OpeningBank).MaximumLength(50).WithMessage("开户行:不能超过最大长度,50.");
  RuleFor(tb_BankAccount =>tb_BankAccount.OpeningBank).NotEmpty().WithMessage("开户行:不能为空。");
 //有默认值
- RuleFor(tb_BankAccount =>tb_BankAccount.Notes).MaximumLength(200).WithMessage("备注:不能超过最大长度,200.");
+ RuleFor(tb_BankAccount =>tb_BankAccount.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
        	
-           	
+           	        Initialize();
      }
 
 

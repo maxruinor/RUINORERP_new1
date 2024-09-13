@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:28
+// 时间：09/13/2024 11:11:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 审核流程明细表验证类
     /// </summary>
-    public partial class tb_ApprovalProcessDetailValidator:AbstractValidator<tb_ApprovalProcessDetail>
+    /*public partial class tb_ApprovalProcessDetailValidator:AbstractValidator<tb_ApprovalProcessDetail>*/
+    public partial class tb_ApprovalProcessDetailValidator:BaseValidatorGeneric<tb_ApprovalProcessDetail>
     {
      public tb_ApprovalProcessDetailValidator() 
      {
@@ -29,7 +30,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ApprovalProcessDetail =>tb_ApprovalProcessDetail.ApprovalResults).NotEmpty().When(x => x.ApprovalResults.HasValue);
  RuleFor(tb_ApprovalProcessDetail =>tb_ApprovalProcessDetail.ApprovalOrder).NotEmpty().When(x => x.ApprovalOrder.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

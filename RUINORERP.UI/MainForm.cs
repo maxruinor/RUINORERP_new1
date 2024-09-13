@@ -804,7 +804,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// 注销
         /// </summary>
-        public void LogLock()
+        public async void LogLock()
         {
             this.SystemOperatorState.Text = "注销";
             ecs.LoginStatus = false;
@@ -819,7 +819,7 @@ namespace RUINORERP.UI
                 return;
             }
             MainForm.Instance.AppContext.IsOnline = true;
-            InitConfig();
+           await InitConfig();
             LoadUIMenus();
             LoadUIForIM_LogPages();
         }
@@ -1997,7 +1997,7 @@ namespace RUINORERP.UI
 
         #endregion
 
-        private void cmbRoles_SelectedIndexChanged(object sender, EventArgs e)
+        private async void cmbRoles_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (toolStripDropDownBtnRoles.DropDownItems[0] is ToolStripComboBox comboBoxRoles)
             {
@@ -2008,7 +2008,7 @@ namespace RUINORERP.UI
                     ClearUI();
                     AppContext.CurUserInfo.UserModList.Clear();
                     PTPrincipal.GetAllAuthorizationInfo(AppContext, AppContext.CurUserInfo.UserInfo, roleInfo);
-                    InitConfig();
+                   await InitConfig();
                     LoadUIMenus();
                     LoadUIForIM_LogPages();
                     this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";

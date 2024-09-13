@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:28
+// 时间：09/13/2024 11:11:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,17 +21,17 @@ namespace RUINORERP.Business
     /// <summary>
     /// BOM配置历史 数据保存在BOM中 只是多份一样，细微区别用版本号标识验证类
     /// </summary>
-    public partial class tb_BOMConfigHistoryValidator:AbstractValidator<tb_BOMConfigHistory>
+    /*public partial class tb_BOMConfigHistoryValidator:AbstractValidator<tb_BOMConfigHistory>*/
+    public partial class tb_BOMConfigHistoryValidator:BaseValidatorGeneric<tb_BOMConfigHistory>
     {
      public tb_BOMConfigHistoryValidator() 
      {
-      RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.VerNo).MaximumLength(50).WithMessage("版本号:不能超过最大长度,50.");
- RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.VerNo).NotEmpty().WithMessage("版本号:不能为空。");
- RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.Notes).MaximumLength(500).WithMessage("备注说明:不能超过最大长度,500.");
+      RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.VerNo).NotEmpty().WithMessage("版本号:不能为空。");
+ RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.Notes).MaximumLength(250).WithMessage("备注说明:不能超过最大长度,250.");
  RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

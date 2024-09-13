@@ -1053,7 +1053,7 @@ namespace RUINORERP.UI.MRP.MP
                     }
                 }
                 return SaveResult.Succeeded;
-          
+
             }
             return false;
         }
@@ -1888,7 +1888,7 @@ protected async override Task<ApprovalEntity> ReReview()
         /// 通过BOM找到不足的库存后。算出要制作的数量 。比方 如果PCBA仓库有的。制的数量少1，则要仓库发出1，一定会在制令单中体现
         /// 由库存不足数据组成
         /// </summary>
-        private void GenerateProductionSuggestionsNew()
+        private async void GenerateProductionSuggestionsNew()
         {
             if (EditEntity == null)
             {
@@ -1926,7 +1926,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 //实际以他是否有bom为标记找下级需要的材料
                 if (MakingProd.BOM_ID.HasValue)
                 {
-                    var nextlist = GetNextBomToMakingItemNew(target.NeedQuantity, target.RequirementDate, MakingProd.ID.Value, target.BOM_ID.Value, AlreadyReducedQtyList, target.Location_ID);
+                    var nextlist =await GetNextBomToMakingItemNew(target.NeedQuantity, target.RequirementDate, MakingProd.ID.Value, target.BOM_ID.Value, AlreadyReducedQtyList, target.Location_ID);
                     MakingProditems.AddRange(nextlist);
                 }
                 MakingProditems.Add(MakingProd);
@@ -1947,7 +1947,7 @@ protected async override Task<ApprovalEntity> ReReview()
         /// <param name="BOM_ID">父级bom的ID,由这个查出BOM详情的相关子组件</param>
         /// <param name="locationID"></param>
         /// <returns></returns>
-        public List<tb_ProduceGoodsRecommendDetail> GetNextBomToMakingItem(int NeedQuantity,
+        public async Task<List<tb_ProduceGoodsRecommendDetail>> GetNextBomToMakingItem(int NeedQuantity,
             DateTime RequirementDate, long PID, long BOM_ID,
             ConcurrentDictionary<long, tb_ProduceGoodsRecommendDetail> AlreadyReducedQtyList,
             long Location_ID = 0)
@@ -1956,7 +1956,7 @@ protected async override Task<ApprovalEntity> ReReview()
             tb_BOM_SDetailController<tb_BOM_SDetail> sDetailController = Startup.GetFromFac<tb_BOM_SDetailController<tb_BOM_SDetail>>();
 
             List<tb_BOM_SDetail> bomDetailsOnlyWithBOM = new List<tb_BOM_SDetail>();
-            bomDetailsOnlyWithBOM = sDetailController.QueryByNavWithSubBom(c => c.BOM_ID == BOM_ID);
+            bomDetailsOnlyWithBOM = await sDetailController.QueryByNavWithSubBom(c => c.BOM_ID == BOM_ID);
             foreach (tb_BOM_SDetail detail in bomDetailsOnlyWithBOM)
             {
                 if (detail.tb_proddetail.BOM_ID.HasValue)
@@ -1977,7 +1977,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     subMaking.RecommendQty = subMaking.RequirementQty - detail.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == Location_ID).Sum(d => d.Quantity);//库存？
                     if (subMaking.BOM_ID.HasValue)
                     {
-                        var nextSublist = GetNextBomToMakingItem(NeedQuantity, RequirementDate, subMaking.ID.Value, detail.tb_proddetail.BOM_ID.Value, AlreadyReducedQtyList, Location_ID);
+                        var nextSublist =await GetNextBomToMakingItem(NeedQuantity, RequirementDate, subMaking.ID.Value, detail.tb_proddetail.BOM_ID.Value, AlreadyReducedQtyList, Location_ID);
                         SubMakingProditems.AddRange(nextSublist);
                     }
 
@@ -1998,7 +1998,7 @@ protected async override Task<ApprovalEntity> ReReview()
         /// <param name="BOM_ID">父级bom的ID,由这个查出BOM详情的相关子组件</param>
         /// <param name="locationID"></param>
         /// <returns></returns>
-        public List<tb_ProduceGoodsRecommendDetail> GetNextBomToMakingItemNew(int NeedQuantity,
+        public async Task<List<tb_ProduceGoodsRecommendDetail>> GetNextBomToMakingItemNew(int NeedQuantity,
             DateTime RequirementDate, long PID, long BOM_ID,
             ConcurrentDictionary<long, tb_ProduceGoodsRecommendDetail> AlreadyReducedQtyList,
             long Location_ID = 0)
@@ -2007,7 +2007,7 @@ protected async override Task<ApprovalEntity> ReReview()
             tb_BOM_SDetailController<tb_BOM_SDetail> sDetailController = Startup.GetFromFac<tb_BOM_SDetailController<tb_BOM_SDetail>>();
             //找到他的次级
             List<tb_BOM_SDetail> bomDetailsOnlyWithBOM = new List<tb_BOM_SDetail>();
-            bomDetailsOnlyWithBOM = sDetailController.QueryByNavWithSubBom(c => c.BOM_ID == BOM_ID);
+            bomDetailsOnlyWithBOM = await sDetailController.QueryByNavWithSubBom(c => c.BOM_ID == BOM_ID);
             foreach (tb_ProductionDemandDetail SubItem in EditEntity.tb_ProductionDemandDetails.Where(c => c.ParentId.Value == PID).ToList())
             {
                 if (SubItem.BOM_ID.HasValue)
@@ -2038,7 +2038,7 @@ protected async override Task<ApprovalEntity> ReReview()
                         }
                         if (subMaking.BOM_ID.HasValue)
                         {
-                            var nextSublist = GetNextBomToMakingItemNew(NeedQuantity, RequirementDate, subMaking.ID.Value, detail.tb_proddetail.BOM_ID.Value, AlreadyReducedQtyList, Location_ID);
+                            var nextSublist = await GetNextBomToMakingItemNew(NeedQuantity, RequirementDate, subMaking.ID.Value, detail.tb_proddetail.BOM_ID.Value, AlreadyReducedQtyList, Location_ID);
                             SubMakingProditems.AddRange(nextSublist);
                         }
 
@@ -2473,12 +2473,12 @@ protected async override Task<ApprovalEntity> ReReview()
         }
 
 
-        private void updateSubItem(tb_ProduceGoodsRecommendDetail row, tb_ProduceGoodsRecommendDetail Prow)
+        private async void updateSubItem(tb_ProduceGoodsRecommendDetail row, tb_ProduceGoodsRecommendDetail Prow)
         {
             decimal DiffQty = row.RecommendQty - row.RequirementQty;
             tb_BOM_SDetailController<tb_BOM_SDetail> sDetailController = Startup.GetFromFac<tb_BOM_SDetailController<tb_BOM_SDetail>>();
 
-            List<tb_BOM_SDetail> subBomDetails = sDetailController.QueryByNavWithSubBom(c => c.BOM_ID == row.BOM_ID);
+            List<tb_BOM_SDetail> subBomDetails = await sDetailController.QueryByNavWithSubBom(c => c.BOM_ID == row.BOM_ID);
             //Prow.BOM_ID.ToBool
             //要通过上级BOM找到BOM明细再算出对应的数量,里面可能存在已经累计过的。相同的物料。这里只是算出差值。直接减掉。
             foreach (var item in EditEntity.tb_PurGoodsRecommendDetails)

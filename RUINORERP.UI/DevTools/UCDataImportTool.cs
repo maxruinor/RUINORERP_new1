@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.UI.Common;
 using RUINORERP.Model;
-using HLH.Lib.List;
 using HLH.Lib.Office.Excel;
 using System.IO;
 using System.Reflection;
@@ -20,6 +19,7 @@ using HLH.Lib.Helper;
 using ReflectionHelper = RUINORERP.Common.Helper.ReflectionHelper;
 using SqlSugar;
 using CommonProcess.StringProcess;
+using RUINORERP.Common.CollectionExtension;
 
 namespace RUINORERP.UI.DevTools
 {

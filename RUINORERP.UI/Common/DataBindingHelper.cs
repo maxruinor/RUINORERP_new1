@@ -1851,7 +1851,7 @@ namespace RUINORERP.UI.Common
                 dtp.CustomFormat = null;
                 if (dtp.DataBindings.Count > 0)
                 {
-                    if (dtp.Value != null && dtp.Value.Year == 1)
+                    if (dtp != null && dtp.Value.Year == 1)
                     {
                         dtp.Value = System.DateTime.Now;
                     }

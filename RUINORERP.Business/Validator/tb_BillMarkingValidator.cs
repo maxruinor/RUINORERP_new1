@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:28
+// 时间：09/13/2024 11:11:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,15 +21,16 @@ namespace RUINORERP.Business
     /// <summary>
     /// 单据标识 保存在主单中一个字段，作用于各种单明细的搜索过滤 有必要吗？验证类
     /// </summary>
-    public partial class tb_BillMarkingValidator:AbstractValidator<tb_BillMarking>
+    /*public partial class tb_BillMarkingValidator:AbstractValidator<tb_BillMarking>*/
+    public partial class tb_BillMarkingValidator:BaseValidatorGeneric<tb_BillMarking>
     {
      public tb_BillMarkingValidator() 
      {
-      RuleFor(tb_BillMarking =>tb_BillMarking.TypeName).MaximumLength(50).WithMessage("类型名称:不能超过最大长度,50.");
+      RuleFor(tb_BillMarking =>tb_BillMarking.TypeName).MaximumLength(25).WithMessage("类型名称:不能超过最大长度,25.");
  RuleFor(tb_BillMarking =>tb_BillMarking.TypeName).NotEmpty().WithMessage("类型名称:不能为空。");
- RuleFor(tb_BillMarking =>tb_BillMarking.Desc).MaximumLength(100).WithMessage("描述:不能超过最大长度,100.");
+ RuleFor(tb_BillMarking =>tb_BillMarking.Desc).MaximumLength(50).WithMessage("描述:不能超过最大长度,50.");
        	
-           	
+           	        Initialize();
      }
 
 

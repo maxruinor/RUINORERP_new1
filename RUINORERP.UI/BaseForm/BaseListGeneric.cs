@@ -643,7 +643,7 @@ namespace RUINORERP.UI.BaseForm
         /// 控制功能按钮
         /// </summary>
         /// <param name="p_Text"></param>
-        protected virtual void DoButtonClick(MenuItemEnums menuItem)
+        protected virtual async void DoButtonClick(MenuItemEnums menuItem)
         {
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
@@ -675,7 +675,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.保存:
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-                    Save();
+                   await Save();
                     break;
                 //case MenuItemEnums.高级查询:
                 //    AdvQuery();
@@ -930,20 +930,18 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-
-
             object frm = Activator.CreateInstance(EditForm);
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
             {
                 BaseEditGeneric<T> frmaddg = frm as BaseEditGeneric<T>;
                 frmaddg.Text = this.CurMenuInfo.CaptionCN + "编辑";
-                Modify<T>(frmaddg);
+                Modify(frmaddg);
             }
             else
             {
                 BaseEdit frmadd = frm as BaseEdit;
                 frmadd.Text = this.CurMenuInfo.CaptionCN + "编辑";
-                Modify<T>(frmadd);
+                Modify(frmadd);
             }
         }
         protected virtual void Selected()
@@ -981,7 +979,7 @@ namespace RUINORERP.UI.BaseForm
                 LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
             }
         }
-        protected virtual void Modify<T>(BaseEdit frmadd)
+        protected virtual void Modify(BaseEdit frmadd)
         {
             if (bindingSourceList.Current != null)
             {
@@ -1527,8 +1525,9 @@ namespace RUINORERP.UI.BaseForm
 
 
         protected BaseController<T> ctr;//= Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-        public async virtual void Save()
+        public async virtual Task<List<T>> Save()
         {
+            List<T> list = new List<T>();
             //这里是否要用保存列表来处理
             foreach (var item in bindingSourceList.List)
             {
@@ -1554,8 +1553,7 @@ namespace RUINORERP.UI.BaseForm
                             MainForm.Instance.ecs.AddSendData(beatData);
                             //审计日志
                             AuditLogHelper.Instance.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
-                          //  AuditLogHelper.Instance.CreateAuditLog<T>("保存", rr.ReturnObject);
-
+                            list.Add(rr.ReturnObject);
                         }
                         //tb_Unit Entity = await ctr.AddReEntityAsync(entity);
                         //如果新增 保存后。还是新增加状态，因为增加另一条。所以保存不为灰色。所以会重复增加
@@ -1568,6 +1566,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 entity.HasChanged = false;
             }
+            return list;
         }
 
 

@@ -46,6 +46,7 @@ using RUINORERP.UI.Common;
 using FluentValidation;
 using RUINORERP.Business.Processor;
 using WorkflowCore.Services;
+using RUINORERP.UI.SysConfig;
 
 
 namespace RUINORERP.UI
@@ -746,6 +747,7 @@ public IHost CslaDIPortBackup()
         /// <param name="services"></param>
         public static void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton(typeof(ConfigManager));
             services.AddSingleton(typeof(MainForm_test));//MDI最大。才开一次才能单例
             services.AddSingleton(typeof(MainForm));//MDI最大。才开一次才能单例
                                                     // 注册工作流定义

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:40
+// 时间：09/13/2024 11:11:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 批次表 在采购入库时和出库时保存批次ID
     /// </summary>
     [Serializable()]
+    [Description("tb_BatchNumber")]
     [SugarTable("tb_BatchNumber")]
     public partial class tb_BatchNumber: BaseEntity, ICloneable
     {

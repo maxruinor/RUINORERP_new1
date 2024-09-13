@@ -39,8 +39,9 @@ namespace RUINORERP.UI.BI
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
 
-        public override void Save()
+        public override async Task<List<tb_RoleInfo>> Save()
         {
+            List<tb_RoleInfo> list = new List<tb_RoleInfo>();
             foreach (var item in bindingSourceList.List)
             {
                 var entity = item as tb_RoleInfo;
@@ -51,8 +52,8 @@ namespace RUINORERP.UI.BI
                         break;
                     case ActionStatus.新增:
                     case ActionStatus.修改:
-
                         ReturnResults<tb_RoleInfo> rr = new ReturnResults<tb_RoleInfo>();
+                        await Task.Delay(0);
                         if (entity.RoleID > 0)
                         {
                             if (entity.tb_rolepropertyconfig.RolePropertyID > 0)
@@ -78,6 +79,7 @@ namespace RUINORERP.UI.BI
                         }
                         if (rr.Succeeded)
                         {
+                            list.Add(rr.ReturnObject);
                             ToolBarEnabledControl(MenuItemEnums.保存);
                         }
 
@@ -89,6 +91,7 @@ namespace RUINORERP.UI.BI
                 }
                 entity.HasChanged = false;
             }
+            return list;
         }
 
         public async override void Query()

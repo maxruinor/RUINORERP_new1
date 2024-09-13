@@ -24,6 +24,7 @@ using FastReport.Table;
 using System.Threading.Tasks;
 
 
+
 namespace RUINORERP.UI.SysConfig
 {
 
@@ -100,11 +101,47 @@ namespace RUINORERP.UI.SysConfig
             //加载当前程序集的业务窗体
             List<MenuAttrAssemblyInfo> list = UIHelper.RegisterForm();
             dataGridView1.DataSource = list.ToBindingSortCollection<MenuAttrAssemblyInfo>();
-
+            txtMenuName.Tag = dataGridView1.DataSource;//缓存起来。后面过滤时恢复数据使用。
             LoadEnevt();
             tree_MainMenu.HideSelection = false;
             tree_MainMenu.Nodes[0].Expand();
             //tree_MainMenu.DrawMode = TreeViewDrawMode.OwnerDrawText;
+
+            txtMenuName.TextChanged += txtMenuName_TextChanged;
+        }
+
+        private void txtMenuName_TextChanged(object sender, EventArgs e)
+        {
+            BindingSortCollection<MenuAttrAssemblyInfo> oldList = new BindingSortCollection<MenuAttrAssemblyInfo>();
+
+            if (txtMenuName.Tag != null && txtMenuName.Tag is List<MenuAttrAssemblyInfo> list)
+            {
+                oldList = list.ToBindingSortCollection();
+            }
+            if (txtMenuName.Tag != null && txtMenuName.Tag is BindingSortCollection<MenuAttrAssemblyInfo> sortList)
+            {
+                oldList = sortList;
+            }
+
+            //上面是恢复数据，原始数据。过滤的基础。每次需要
+
+
+            if (dataGridView1.Rows.Count > 0 && txtMenuName.Text.Trim().Length > 0)
+            {
+                if (dataGridView1.DataSource is List<MenuAttrAssemblyInfo> menuAttrAssemblyInfos)
+                {
+                    dataGridView1.DataSource = oldList.Where(c => c.Caption.Contains(txtMenuName.Text.Trim())).ToList();
+                }
+                if (dataGridView1.DataSource is BindingSortCollection<MenuAttrAssemblyInfo> SortMenuAttrAssemblyInfos)
+                {
+                    dataGridView1.DataSource = oldList.Where(c => c.Caption.Contains(txtMenuName.Text.Trim())).ToList();
+                }
+            }
+            else
+            {
+
+                dataGridView1.DataSource = oldList;
+            }
         }
 
 
@@ -655,7 +692,7 @@ namespace RUINORERP.UI.SysConfig
             //加载当前程序集的业务窗体
             List<MenuAttrAssemblyInfo> list = UIHelper.RegisterForm();
             dataGridView1.DataSource = list.ToBindingSortCollection<MenuAttrAssemblyInfo>();
-
+            txtMenuName.Tag = dataGridView1.DataSource;//缓存起来。后面过滤时恢复数据使用。
             //MenuController mc = Startup.GetFromFac<MenuController>();
             //List<tb_MenuInfo> listAA = new List<tb_MenuInfo>();
             //listAA = await mc.Query();
@@ -703,12 +740,15 @@ namespace RUINORERP.UI.SysConfig
                         dr.ReadOnly = true;//继续，这行可选，如果你的DataGridView是编辑的就加上吧。
                         dr.Visible = false;
                         cm.ResumeBinding();//继续，这行必需有
+
                     }
                     else
                     {
                         dr.Visible = true;
                     }
                 }
+
+                txtMenuName.Tag = dataGridView1.DataSource;//缓存起来。后面过滤时恢复数据使用。
             }
             else
             {
@@ -888,7 +928,11 @@ namespace RUINORERP.UI.SysConfig
 
 
             }
+        }
 
+        private void txtMenuName_KeyPress(object sender, KeyPressEventArgs e)
+        {
+           
         }
     }
 }

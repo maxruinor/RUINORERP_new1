@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/10/2024 19:17:31
+// 时间：09/13/2024 11:11:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 标准物料表BOM_BillOfMateria_S-要适当冗余? 生产是从0开始的。先有下级才有上级。验证类
     /// </summary>
-    public partial class tb_BOM_SValidator:AbstractValidator<tb_BOM_S>
+    /*public partial class tb_BOM_SValidator:AbstractValidator<tb_BOM_S>*/
+    public partial class tb_BOM_SValidator:BaseValidatorGeneric<tb_BOM_S>
     {
      public tb_BOM_SValidator() 
      {
@@ -38,9 +39,8 @@ namespace RUINORERP.Business
  RuleFor(tb_BOM_S =>tb_BOM_S.Doc_ID).NotEmpty().When(x => x.Doc_ID.HasValue);
  RuleFor(tb_BOM_S =>tb_BOM_S.BOM_S_VERID).Must(CheckForeignKeyValueCanNull).WithMessage("版本号:下拉选择值不正确。");
  RuleFor(tb_BOM_S =>tb_BOM_S.BOM_S_VERID).NotEmpty().When(x => x.BOM_S_VERID.HasValue);
- 
- //RuleFor(tb_BOM_S =>tb_BOM_S.Type_ID).Must(CheckForeignKeyValueCanNull).WithMessage("产品类型:下拉选择值不正确。");
- //RuleFor(tb_BOM_S =>tb_BOM_S.Type_ID).NotEmpty().When(x => x.Type_ID.HasValue);
+//有默认值
+//有默认值
  RuleFor(x => x.ManufacturingCost).PrecisionScale(19,4,true).WithMessage("自产制造费用:小数位不能超过4。");
  RuleFor(x => x.OutManuCost).PrecisionScale(19,4,true).WithMessage("外发费用:小数位不能超过4。");
  RuleFor(x => x.TotalMaterialCost).PrecisionScale(19,4,true).WithMessage("总物料费用:小数位不能超过4。");
@@ -78,11 +78,22 @@ namespace RUINORERP.Business
                 //RuleForEach(x => x.tb_BOM_SDetails).NotNull();
                 //RuleFor(x => x.tb_BOM_SDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
         
-        
+                Initialize();
      }
 
 
 
+
+        private bool DetailedRecordsNotEmpty(List<tb_ProductionPlanDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
 
         private bool DetailedRecordsNotEmpty(List<tb_ProduceGoodsRecommendDetail> details)
         {
@@ -96,17 +107,6 @@ namespace RUINORERP.Business
         
 
         private bool DetailedRecordsNotEmpty(List<tb_ProdDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
-        private bool DetailedRecordsNotEmpty(List<tb_ProductionPlanDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -139,7 +139,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_ProductionDemandTargetDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -150,7 +150,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_ProductionDemandTargetDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

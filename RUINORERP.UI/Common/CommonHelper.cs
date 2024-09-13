@@ -5,6 +5,7 @@ using RUINORERP.Business;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.Model;
 using RUINORERP.Model;
+using RUINORERP.UI.SysConfig;
 using SourceGrid2.Win32;
 using System;
 using System.Collections;
@@ -49,8 +50,39 @@ namespace RUINORERP.UI.Common
         {
             m_instance = new CommonHelper();
         }
+
+        /// <summary>
+        /// 获取枚举描述，描述保存在枚举值中的特性中
+        /// </summary>
+        /// <param name="enumType"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public List<KeyValuePair<object, string>> GetEnumDescription(Type enumType)
+        {
+            if (!enumType.IsEnum)
+                throw new ArgumentException("提供的类型必须是枚举类型。", nameof(enumType));
+
+            List<KeyValuePair<object, string>> kvlistPayStatus = new List<KeyValuePair<object, string>>();
+            Array enumValues = Enum.GetValues(enumType);
+            foreach (var value in enumValues)
+            {
+                int currentValue = (int)value;
+                string currentDescription = EnumExtensions.GetDescription(value as Enum);
+                kvlistPayStatus.Add(new KeyValuePair<object, string>(currentValue, currentDescription));
+            }
+            return kvlistPayStatus;
+        }
+
+
+        /// <summary>
+        /// 获取枚举值和名称
+        /// </summary>
+        /// <param name="enumType"></param>
+        /// <returns></returns>
         public List<KeyValuePair<object, string>> GetKeyValuePairs(Type enumType)
         {
+            if (!enumType.IsEnum)
+                throw new ArgumentException("提供的类型必须是枚举类型。", nameof(enumType));
             List<KeyValuePair<object, string>> kvlistPayStatus = new List<KeyValuePair<object, string>>();
             Array enumValues = Enum.GetValues(enumType);
             IEnumerator e = enumValues.GetEnumerator();
@@ -108,12 +140,12 @@ namespace RUINORERP.UI.Common
             return newcolType;
         }
 
- 
 
 
- 
 
-      
+
+
+
 
     }
 }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:38
+// 时间：09/13/2024 11:11:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 审核配置表 对于所有单据审核，并且提供明细，每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html 
     /// </summary>
     [Serializable()]
+    [Description("tb_Approval")]
     [SugarTable("tb_Approval")]
     public partial class tb_Approval: BaseEntity, ICloneable
     {

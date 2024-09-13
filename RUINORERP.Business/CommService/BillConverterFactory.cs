@@ -69,7 +69,6 @@ namespace RUINORERP.Business.CommService
             if (UserMenuList == null)
             {
                 this.UserMenuList = _context.UserMenuList;
-                //_UserMenuList = _context.Db.CopyNew().Queryable<tb_MenuInfo>().Where(r => r.IsVisble == true).ToList();
             }
 
             tb_MenuInfo menuInfo = UserMenuList.Where(c => c.EntityName == type.Name).FirstOrDefault();

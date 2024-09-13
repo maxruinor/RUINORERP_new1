@@ -21,7 +21,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 箱规表验证类
     /// </summary>
-    public partial class tb_BoxRulesValidator : AbstractValidator<tb_BoxRules>
+    public partial class tb_BoxRulesValidator : BaseValidatorGeneric<tb_BoxRules>
     {
         private void Initialize()
         {

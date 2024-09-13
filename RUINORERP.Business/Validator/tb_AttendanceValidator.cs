@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:28
+// 时间：09/13/2024 11:11:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,17 +21,13 @@ namespace RUINORERP.Business
     /// <summary>
     /// 考勤表验证类
     /// </summary>
-    public partial class tb_AttendanceValidator:AbstractValidator<tb_Attendance>
+    /*public partial class tb_AttendanceValidator:AbstractValidator<tb_Attendance>*/
+    public partial class tb_AttendanceValidator:BaseValidatorGeneric<tb_Attendance>
     {
      public tb_AttendanceValidator() 
      {
-      RuleFor(tb_Attendance =>tb_Attendance.badgenumber).MaximumLength(30).WithMessage(":不能超过最大长度,30.");
- RuleFor(tb_Attendance =>tb_Attendance.username).MaximumLength(50).WithMessage("姓名:不能超过最大长度,50.");
- RuleFor(tb_Attendance =>tb_Attendance.deptname).MaximumLength(60).WithMessage("部门:不能超过最大长度,60.");
- RuleFor(tb_Attendance =>tb_Attendance.sDate).MaximumLength(100).WithMessage("开始时间:不能超过最大长度,100.");
- RuleFor(tb_Attendance =>tb_Attendance.stime).MaximumLength(255).WithMessage("时间组:不能超过最大长度,255.");
-       	
-           	
+            	
+           	        Initialize();
      }
 
 

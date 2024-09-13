@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:47:14
+// 时间：09/12/2024 18:21:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 费用报销单明细
     /// </summary>
     [Serializable()]
+    [Description("tb_FM_ExpenseClaimDetail")]
     [SugarTable("tb_FM_ExpenseClaimDetail")]
     public partial class tb_FM_ExpenseClaimDetail: BaseEntity, ICloneable
     {
@@ -188,7 +189,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -196,22 +197,6 @@ namespace RUINORERP.Model
             SetProperty(ref _TotalAmount, value);
             }
         }
-
-        private byte[] _EvidenceImage;
-        /// <summary>
-        /// 产品图
-        /// </summary>
-        [AdvQueryAttribute(ColName = "EvidenceImage", ColDesc = "凭证图")]
-        [SugarColumn(ColumnDataType = "image", SqlParameterDbType = "Binary", ColumnName = "EvidenceImage", Length = 2147483647, IsNullable = true, ColumnDescription = "凭证图")]
-        public byte[] EvidenceImage
-        {
-            get { return _EvidenceImage; }
-            set
-            {
-                SetProperty(ref _EvidenceImage, value);
-            }
-        }
-
 
         private bool _IncludeTax= false;
         /// <summary>
@@ -260,7 +245,7 @@ namespace RUINORERP.Model
         /// 税额
         /// </summary>
         [AdvQueryAttribute(ColName = "TaxAmount",ColDesc = "税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "税额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "税额" )]
         public decimal? TaxAmount
         { 
             get{return _TaxAmount;}
@@ -269,17 +254,45 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _UntaxedAmount=0;
+        private decimal _UntaxedAmount;
         /// <summary>
         /// 未税本位币
         /// </summary>
         [AdvQueryAttribute(ColName = "UntaxedAmount",ColDesc = "未税本位币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UntaxedAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "未税本位币" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UntaxedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "未税本位币" )]
         public decimal UntaxedAmount
         { 
             get{return _UntaxedAmount;}
             set{
             SetProperty(ref _UntaxedAmount, value);
+            }
+        }
+
+        private byte[] _EvidenceImage;
+        /// <summary>
+        /// 凭证图
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EvidenceImage",ColDesc = "凭证图")] 
+        [SugarColumn(ColumnDataType = "image", SqlParameterDbType ="Binary",  ColumnName = "EvidenceImage" ,Length=2147483647,IsNullable = true,ColumnDescription = "凭证图" )]
+        public byte[] EvidenceImage
+        { 
+            get{return _EvidenceImage;}
+            set{
+            SetProperty(ref _EvidenceImage, value);
+            }
+        }
+
+        private string _EvidenceImagePath;
+        /// <summary>
+        /// 凭证图
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EvidenceImagePath",ColDesc = "凭证图")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "EvidenceImagePath" ,Length=200,IsNullable = true,ColumnDescription = "凭证图" )]
+        public string EvidenceImagePath
+        { 
+            get{return _EvidenceImagePath;}
+            set{
+            SetProperty(ref _EvidenceImagePath, value);
             }
         }
 
@@ -290,43 +303,36 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
-        //public virtual tb_FM_Account tb_account_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ExpenseType_id))]
         public virtual tb_FM_ExpenseType tb_fm_expensetype { get; set; }
-        //public virtual tb_FM_ExpenseType tb_ExpenseType_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
-        //public virtual tb_ProjectGroup tb_ProjectGroup_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
-        //public virtual tb_FM_Subject tb_subject_id { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
-        //public virtual tb_Department tb_DepartmentID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
-        //public virtual tb_Employee tb_Employee_ID { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ClaimMainID))]
         public virtual tb_FM_ExpenseClaim tb_fm_expenseclaim { get; set; }
-        //public virtual tb_FM_ExpenseClaim tb_ClaimMainID { get; set; }
 
 
 

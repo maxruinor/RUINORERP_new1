@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:40
+// 时间：09/13/2024 11:11:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 银行账号信息表
     /// </summary>
     [Serializable()]
+    [Description("tb_BankAccount")]
     [SugarTable("tb_BankAccount")]
     public partial class tb_BankAccount: BaseEntity, ICloneable
     {
@@ -126,18 +127,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.BankAccount_id))]
-        public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }
-        //tb_CustomerVendor.BankAccount_id)
-        //BankAccount_id.FK_CUSTOMERVENDOR_REF_BANKACCOUNT)
-        //tb_BankAccount.BankAccount_id)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Employee.BankAccount_id))]
         public virtual List<tb_Employee> tb_Employees { get; set; }
         //tb_Employee.BankAccount_id)
         //BankAccount_id.FK_EMPLOYEE_REF_BANKACCOUNT)
+        //tb_BankAccount.BankAccount_id)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.BankAccount_id))]
+        public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }
+        //tb_CustomerVendor.BankAccount_id)
+        //BankAccount_id.FK_CUSTOMERVENDOR_REF_BANKACCOUNT)
         //tb_BankAccount.BankAccount_id)
 
 

@@ -2161,7 +2161,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 PrintConfig = PrintHelper<T>.GetPrintConfig(list);
             }
-            await PrintHelper<T>.Print(list, RptMode.DESIGN, PrintConfig);
+            bool rs = await PrintHelper<T>.Print(list, RptMode.DESIGN, PrintConfig);
         }
 
 
@@ -2195,7 +2195,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 PrintConfig = PrintHelper<T>.GetPrintConfig(list);
             }
-            await PrintHelper<T>.Print(list, RptMode.PRINT, PrintConfig);
+            bool rs = await PrintHelper<T>.Print(list, RptMode.PRINT, PrintConfig);
             AuditLogHelper.Instance.CreateAuditLog<T>("打印", EditEntity);
         }
 
@@ -2213,7 +2213,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 PrintConfig = PrintHelper<T>.GetPrintConfig(list);
             }
-            await PrintHelper<T>.Print(list, RptMode.PREVIEW, PrintConfig);
+            bool rs = await PrintHelper<T>.Print(list, RptMode.PREVIEW, PrintConfig);
         }
 
         #endregion

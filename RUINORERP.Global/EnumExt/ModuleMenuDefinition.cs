@@ -96,6 +96,7 @@ namespace RUINORERP.Model
             审计日志,
             流程设计,
             系统工具,
+            动态参数
         }
 
     }

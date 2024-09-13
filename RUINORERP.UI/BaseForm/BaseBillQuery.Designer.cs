@@ -94,7 +94,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerAdvQuery.Panel1)).BeginInit();
             this.kryptonSplitContainerAdvQuery.Panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerAdvQuery.Panel2)).BeginInit();
-            this.kryptonSplitContainerAdvQuery.Panel2.SuspendLayout();
             this.kryptonSplitContainerAdvQuery.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.navigatorLeft)).BeginInit();
@@ -130,6 +129,7 @@
             // 
             // pageButtons.Panel
             // 
+            this.pageButtons.Panel.Controls.Add(this.btnAdvQuery);
             this.pageButtons.Panel.Controls.Add(this.btnQuery);
             this.pageButtons.Panel.Controls.Add(this.tableLayoutPanel2);
             this.pageButtons.Panel.Controls.Add(this.newSumDataGridView1);
@@ -286,10 +286,6 @@
             // kryptonSplitContainerAdvQuery.Panel1
             // 
             this.kryptonSplitContainerAdvQuery.Panel1.Controls.Add(this.tableLayoutPanel1);
-            // 
-            // kryptonSplitContainerAdvQuery.Panel2
-            // 
-            this.kryptonSplitContainerAdvQuery.Panel2.Controls.Add(this.btnAdvQuery);
             this.kryptonSplitContainerAdvQuery.Size = new System.Drawing.Size(923, 78);
             this.kryptonSplitContainerAdvQuery.SplitterDistance = 733;
             this.kryptonSplitContainerAdvQuery.TabIndex = 3;
@@ -313,7 +309,7 @@
             // 
             // btnAdvQuery
             // 
-            this.btnAdvQuery.Location = new System.Drawing.Point(18, 11);
+            this.btnAdvQuery.Location = new System.Drawing.Point(707, 18);
             this.btnAdvQuery.Name = "btnAdvQuery";
             this.btnAdvQuery.Size = new System.Drawing.Size(90, 25);
             this.btnAdvQuery.TabIndex = 1;
@@ -631,7 +627,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerAdvQuery.Panel1)).EndInit();
             this.kryptonSplitContainerAdvQuery.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerAdvQuery.Panel2)).EndInit();
-            this.kryptonSplitContainerAdvQuery.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerAdvQuery)).EndInit();
             this.kryptonSplitContainerAdvQuery.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).EndInit();

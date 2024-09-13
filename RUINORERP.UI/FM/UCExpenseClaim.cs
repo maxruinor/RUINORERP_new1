@@ -344,6 +344,12 @@ namespace RUINORERP.UI.FM
             {
                 EditEntity.DataStatus = (int)DataStatus.完结;
                 await AppContext.Db.Updateable(EditEntity).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+
+            
+
+                string filePath = @"C:\path\to\your\image.jpg";
+                string uploadUrl = "http://example.com/upload";
+                await ImageUploader.UploadImageAsync(filePath, uploadUrl);
             }
             return ae;
         }

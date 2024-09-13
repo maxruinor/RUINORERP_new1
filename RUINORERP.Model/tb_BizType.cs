@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:42
+// 时间：09/13/2024 11:11:33
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -21,9 +21,9 @@ namespace RUINORERP.Model
     /// 业务类型
     /// </summary>
     [Serializable()]
-    [Description("业务类型")]
+    [Description("tb_BizType")]
     [SugarTable("tb_BizType")]
-    public partial class tb_BizType : BaseEntity, ICloneable
+    public partial class tb_BizType: BaseEntity, ICloneable
     {
         public tb_BizType()
         {
@@ -40,15 +40,14 @@ namespace RUINORERP.Model
         /// <summary>
         /// 
         /// </summary>
-
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Type_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "", IsPrimaryKey = true)]
+ 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
         public long Type_ID
-        {
-            get { return _Type_ID; }
-            set
-            {
-                base.PrimaryKeyID = _Type_ID;
-                SetProperty(ref _Type_ID, value);
+        { 
+            get{return _Type_ID;}
+            set{
+            base.PrimaryKeyID = _Type_ID;
+            SetProperty(ref _Type_ID, value);
             }
         }
 
@@ -56,14 +55,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 类型名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "TypeName", ColDesc = "类型名称")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "TypeName", Length = 50, IsNullable = false, ColumnDescription = "类型名称")]
+        [AdvQueryAttribute(ColName = "TypeName",ColDesc = "类型名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "TypeName" ,Length=50,IsNullable = false,ColumnDescription = "类型名称" )]
         public string TypeName
-        {
-            get { return _TypeName; }
-            set
-            {
-                SetProperty(ref _TypeName, value);
+        { 
+            get{return _TypeName;}
+            set{
+            SetProperty(ref _TypeName, value);
             }
         }
 
@@ -71,14 +69,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 描述
         /// </summary>
-        [AdvQueryAttribute(ColName = "TypeDesc", ColDesc = "描述")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "TypeDesc", Length = 100, IsNullable = true, ColumnDescription = "描述")]
+        [AdvQueryAttribute(ColName = "TypeDesc",ColDesc = "描述")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "TypeDesc" ,Length=100,IsNullable = true,ColumnDescription = "描述" )]
         public string TypeDesc
-        {
-            get { return _TypeDesc; }
-            set
-            {
-                SetProperty(ref _TypeDesc, value);
+        { 
+            get{return _TypeDesc;}
+            set{
+            SetProperty(ref _TypeDesc, value);
             }
         }
 
@@ -86,14 +83,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 所属模块
         /// </summary>
-        [AdvQueryAttribute(ColName = "Module", ColDesc = "所属模块")]
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType = "String", ColumnName = "Module", Length = 50, IsNullable = true, ColumnDescription = "所属模块")]
+        [AdvQueryAttribute(ColName = "Module",ColDesc = "所属模块")] 
+        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "Module" ,Length=50,IsNullable = true,ColumnDescription = "所属模块" )]
         public string Module
-        {
-            get { return _Module; }
-            set
-            {
-                SetProperty(ref _Module, value);
+        { 
+            get{return _Module;}
+            set{
+            SetProperty(ref _Module, value);
             }
         }
 
@@ -107,12 +103,12 @@ namespace RUINORERP.Model
 
 
 
-        //如果为false,则不可以。
-        private bool PK_FK_ID_Check()
-        {
-            bool rs = true;
-            return rs;
-        }
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
+{
+  bool rs=true;
+return rs;
+}
 
 
 
@@ -138,35 +134,35 @@ namespace RUINORERP.Model
                     fieldNameList = new ConcurrentDictionary<string, string>();
                     SugarColumn entityAttr;
                     Type type = typeof(tb_BizType);
-
-                    foreach (PropertyInfo field in type.GetProperties())
-                    {
-                        foreach (Attribute attr in field.GetCustomAttributes(true))
-                        {
-                            entityAttr = attr as SugarColumn;
-                            if (null != entityAttr)
+                    
+                       foreach (PropertyInfo field in type.GetProperties())
                             {
-                                if (entityAttr.ColumnDescription == null)
+                                foreach (Attribute attr in field.GetCustomAttributes(true))
                                 {
-                                    continue;
-                                }
-                                if (entityAttr.IsIdentity)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.IsPrimaryKey)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                {
-                                    fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
+                                    entityAttr = attr as SugarColumn;
+                                    if (null != entityAttr)
+                                    {
+                                        if (entityAttr.ColumnDescription == null)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsIdentity)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsPrimaryKey)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.ColumnDescription.Trim().Length > 0)
+                                        {
+                                            fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    }
                 }
-
+                
                 return fieldNameList;
             }
             set
@@ -176,7 +172,7 @@ namespace RUINORERP.Model
 
         }
         #endregion
-
+        
 
         public override object Clone()
         {

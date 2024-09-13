@@ -255,7 +255,7 @@ namespace RUINORERP.UI.BaseForm
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
-                        await Review(selectlist[0]);
+                        ApprovalEntity ae= await Review(selectlist[0]);
                     }
 
                     break;
@@ -263,7 +263,7 @@ namespace RUINORERP.UI.BaseForm
                     if (selectlist.Count > 0)
                     {
                         //只操作批一行
-                        await ReReview(selectlist[0]);
+                        ApprovalEntity ae = await ReReview(selectlist[0]);
                     }
                     break;
                 case MenuItemEnums.结案:
@@ -1619,7 +1619,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                 {
-                    MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
+                   // MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
                 }
                 _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
             }

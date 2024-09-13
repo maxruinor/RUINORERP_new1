@@ -39,8 +39,9 @@ namespace RUINORERP.Extensions
                 DbType = SqlSugar.DbType.SqlServer,
                 ConnectionString = configuration[dbName],
                 IsAutoCloseConnection = true,
-
-                ConfigureExternalServices = new ConfigureExternalServices()
+                InitKeyType = InitKeyType.Attribute,//就改这一行
+     
+              ConfigureExternalServices = new ConfigureExternalServices()
                 {
                     DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache)
                 }

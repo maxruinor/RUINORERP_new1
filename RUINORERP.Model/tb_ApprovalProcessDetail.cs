@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:38
+// 时间：09/13/2024 11:11:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// 审核流程明细表
     /// </summary>
     [Serializable()]
+    [Description("tb_ApprovalProcessDetail")]
     [SugarTable("tb_ApprovalProcessDetail")]
     public partial class tb_ApprovalProcessDetail: BaseEntity, ICloneable
     {
@@ -100,7 +101,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ApprovalID))]
         public virtual tb_Approval tb_approval { get; set; }
-        //public virtual tb_Approval tb_ApprovalID { get; set; }
 
 
 

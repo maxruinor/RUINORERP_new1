@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/11/2024 14:33:49
+// 时间：09/13/2024 11:11:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,16 +21,15 @@ namespace RUINORERP.Business
     /// <summary>
     /// 标准物料表BOM明细-要适当冗余验证类
     /// </summary>
-    public partial class tb_BOM_SDetailValidator:AbstractValidator<tb_BOM_SDetail>
+    /*public partial class tb_BOM_SDetailValidator:AbstractValidator<tb_BOM_SDetail>*/
+    public partial class tb_BOM_SDetailValidator:BaseValidatorGeneric<tb_BOM_SDetail>
     {
      public tb_BOM_SDetailValidator() 
      {
-      RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品详情:下拉选择值不正确。");
+      RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
+ RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.SKU).MaximumLength(40).WithMessage("SKU码:不能超过最大长度,40.");
 //***** 
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.BOM_ID).NotNull().WithMessage("对应BOM:不能为空。");
- //RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Type_ID).Must(CheckForeignKeyValue).WithMessage("类型:下拉选择值不正确。");
- 
- 
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Remarks).MaximumLength(100).WithMessage("备注说明:不能超过最大长度,100.");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Unit_ID).Must(CheckForeignKeyValue).WithMessage("单位:下拉选择值不正确。");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.UnitConversion_ID).Must(CheckForeignKeyValueCanNull).WithMessage("单位换算:下拉选择值不正确。");
@@ -57,7 +56,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Sort).NotNull().WithMessage("排序:不能为空。");
        	
-           	
+           	        Initialize();
      }
 
 

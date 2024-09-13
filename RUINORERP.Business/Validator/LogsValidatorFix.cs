@@ -21,14 +21,8 @@ namespace RUINORERP.Business
     /// <summary>
     /// 验证类
     /// </summary>
-    public partial class LogsValidator : AbstractValidator<Logs>
+    public partial class LogsValidator : BaseValidatorGeneric<Logs>
     {
-        public void Initialize()
-        {
-
-
-        }
-
 
 
     }

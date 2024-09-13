@@ -38,9 +38,9 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-        public virtual List<tb_BOM_SDetail> QueryByNavWithSubBom(Expression<Func<tb_BOM_SDetail, bool>> exp)
+        public virtual async Task<List<tb_BOM_SDetail>> QueryByNavWithSubBom(Expression<Func<tb_BOM_SDetail, bool>> exp)
         {
-            List<tb_BOM_SDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(exp)
+            List<tb_BOM_SDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(exp)
 
                            // .Includes(t => t.tb_producttype)
                            .Includes(t => t.view_ProdDetail)
@@ -49,7 +49,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_bom_s)
                             .Includes(t => t.tb_proddetail, s => s.tb_bom_s)
                             .Includes(t => t.tb_proddetail, s => s.tb_Inventories)
-                            .ToList();
+                            .ToListAsync();
 
             foreach (var item in list)
             {

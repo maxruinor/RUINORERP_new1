@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/06/2024 13:53:28
+// 时间：09/13/2024 11:11:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,18 +21,19 @@ namespace RUINORERP.Business
     /// <summary>
     /// 批次表 在采购入库时和出库时保存批次ID验证类
     /// </summary>
-    public partial class tb_BatchNumberValidator:AbstractValidator<tb_BatchNumber>
+    /*public partial class tb_BatchNumberValidator:AbstractValidator<tb_BatchNumber>*/
+    public partial class tb_BatchNumberValidator:BaseValidatorGeneric<tb_BatchNumber>
     {
      public tb_BatchNumberValidator() 
      {
-      RuleFor(tb_BatchNumber =>tb_BatchNumber.BatchNO).MaximumLength(50).WithMessage(":不能超过最大长度,50.");
- RuleFor(tb_BatchNumber =>tb_BatchNumber.采购单号).MaximumLength(20).WithMessage(":不能超过最大长度,20.");
+      RuleFor(tb_BatchNumber =>tb_BatchNumber.BatchNO).MaximumLength(25).WithMessage(":不能超过最大长度,25.");
+ RuleFor(tb_BatchNumber =>tb_BatchNumber.采购单号).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
  RuleFor(tb_BatchNumber =>tb_BatchNumber.供应商).NotEmpty().When(x => x.供应商.HasValue);
  RuleFor(x => x.采购单价).PrecisionScale(10,0,true).WithMessage(":小数位不能超过0。");
  RuleFor(x => x.sale_price).PrecisionScale(10,2,true).WithMessage(":小数位不能超过2。");
  RuleFor(tb_BatchNumber =>tb_BatchNumber.quantity).NotEmpty().When(x => x.quantity.HasValue);
        	
-           	
+           	        Initialize();
      }
 
 

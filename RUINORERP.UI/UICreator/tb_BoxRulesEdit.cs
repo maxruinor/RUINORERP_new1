@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 17:26:39
+// 时间：09/13/2024 11:11:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -67,8 +67,8 @@ namespace RUINORERP.UI
                         entity.Width = Decimal.Parse(txtWidth.Text);
                         entity.Height = Decimal.Parse(txtHeight.Text);
                         entity.Volume = Decimal.Parse(txtVolume.Text);
-                        entity.GrossWeight = Decimal.Parse(txtGrossWeight.Text);
                         entity.NetWeight = Decimal.Parse(txtNetWeight.Text);
+                        entity.GrossWeight = Decimal.Parse(txtGrossWeight.Text);
                         entity.Notes = txtNotes.Text ;
                        entity.Is_enabled = Boolean.Parse(txtIs_enabled.Text);
                         entity.Created_at = DateTime.Parse(txtCreated_at.Text);
@@ -94,10 +94,11 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.Width.ToString(), txtWidth, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.Height.ToString(), txtHeight, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.Volume.ToString(), txtVolume, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.GrossWeight.ToString(), txtGrossWeight, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.NetWeight.ToString(), txtNetWeight, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.GrossWeight.ToString(), txtGrossWeight, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4CehckBox<tb_BoxRules>(entity, t => t.Is_enabled, chkIs_enabled, false);
+//有默认值
            DataBindingHelper.BindData4DataTime<tb_BoxRules>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_BoxRules>(entity, t => t.Modified_at, dtpModified_at,false);

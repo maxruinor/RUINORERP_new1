@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/20/2024 16:46:47
+// 时间：09/13/2024 11:11:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,6 +21,7 @@ namespace RUINORERP.Model
     /// BOM配置历史 数据保存在BOM中 只是多份一样，细微区别用版本号标识
     /// </summary>
     [Serializable()]
+    [Description("tb_BOMConfigHistory")]
     [SugarTable("tb_BOMConfigHistory")]
     public partial class tb_BOMConfigHistory: BaseEntity, ICloneable
     {

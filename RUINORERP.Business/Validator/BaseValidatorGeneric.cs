@@ -11,9 +11,14 @@ namespace RUINORERP.Business
     {
         protected BaseValidatorGeneric()
         {
-                
+
         }
-        public abstract void Initialize();
+        //public abstract void Initialize();
+
+        public virtual void Initialize()
+        { 
+        }
+
 
         ///// <summary>
         ///// 为了实现个性化验证，可以在子类中重写此方法

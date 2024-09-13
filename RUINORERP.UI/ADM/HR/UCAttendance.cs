@@ -48,7 +48,7 @@ namespace RUINORERP.UI.ADM.HR
                         item.t2 = cday.AddHours(DateTime.Parse(sts[2]).Hour).AddMinutes(DateTime.Parse(sts[2]).Minute);
                         item.t3 = cday.AddHours(DateTime.Parse(sts[3]).Hour).AddMinutes(DateTime.Parse(sts[3]).Minute);
                         item.t4 = cday.AddHours(DateTime.Parse(sts[4]).Hour).AddMinutes(DateTime.Parse(sts[4]).Minute);
-                        await mc.UpdateAsync(item);
+                      bool rs=  await mc.UpdateAsync(item);
                     }
                 }
                 if (sts.Length == 4)
@@ -58,7 +58,7 @@ namespace RUINORERP.UI.ADM.HR
                     item.t2 = cday.AddHours(DateTime.Parse(sts[1]).Hour).AddMinutes(DateTime.Parse(sts[1]).Minute);
                     item.t3 = cday.AddHours(DateTime.Parse(sts[2]).Hour).AddMinutes(DateTime.Parse(sts[2]).Minute);
                     item.t4 = cday.AddHours(DateTime.Parse(sts[3]).Hour).AddMinutes(DateTime.Parse(sts[3]).Minute);
-                    await mc.UpdateAsync(item);
+                    bool rs = await mc.UpdateAsync(item);
                 }
                 if (sts.Length == 3)
                 {
@@ -67,7 +67,7 @@ namespace RUINORERP.UI.ADM.HR
                     item.t2 = cday.AddHours(DateTime.Parse(sts[1]).Hour).AddMinutes(DateTime.Parse(sts[1]).Minute);
                     item.t3 = cday.AddHours(DateTime.Parse(sts[1]).Hour).AddMinutes(DateTime.Parse(sts[1]).Minute);
                     item.t4 = cday.AddHours(DateTime.Parse(sts[2]).Hour).AddMinutes(DateTime.Parse(sts[2]).Minute);
-                    await mc.UpdateAsync(item);
+                    bool rs = await mc.UpdateAsync(item);
                 }
                 if (sts.Length == 2)
                 {
@@ -94,7 +94,7 @@ namespace RUINORERP.UI.ADM.HR
                         //算上午
                         item.t4 = cday2;
                     }
-                    await mc.UpdateAsync(item);
+                    bool rs = await mc.UpdateAsync(item);
                 }
             }
         }

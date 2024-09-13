@@ -66,6 +66,8 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainer3 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.txtSort = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
             this.txtBizType = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.txtBIBaseForm = new System.Windows.Forms.TextBox();
@@ -73,8 +75,11 @@ namespace RUINORERP.UI.SysConfig
             this.chkOnlyNew = new System.Windows.Forms.CheckBox();
             this.txtEntityName = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.txtSort = new System.Windows.Forms.TextBox();
-            this.label8 = new System.Windows.Forms.Label();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.txtMenuName = new System.Windows.Forms.ToolStripTextBox();
+            this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
+            this.groupLine1 = new WinLib.Line.GroupLine();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
@@ -94,6 +99,9 @@ namespace RUINORERP.UI.SysConfig
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3.Panel2)).BeginInit();
             this.kryptonSplitContainer3.Panel2.SuspendLayout();
             this.kryptonSplitContainer3.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).BeginInit();
+            this.kryptonPanelQuery.SuspendLayout();
             this.SuspendLayout();
             // 
             // tree_MainMenu
@@ -263,7 +271,7 @@ namespace RUINORERP.UI.SysConfig
             // lblOID
             // 
             this.lblOID.AutoSize = true;
-            this.lblOID.Location = new System.Drawing.Point(783, 8);
+            this.lblOID.Location = new System.Drawing.Point(776, 14);
             this.lblOID.Name = "lblOID";
             this.lblOID.Size = new System.Drawing.Size(0, 12);
             this.lblOID.TabIndex = 29;
@@ -283,6 +291,7 @@ namespace RUINORERP.UI.SysConfig
             this.dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.CustomRowNo = false;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("dataGridView1.FieldNameList")));
             this.dataGridView1.IsShowSumRow = false;
@@ -291,7 +300,7 @@ namespace RUINORERP.UI.SysConfig
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowTemplate.Height = 23;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(844, 454);
+            this.dataGridView1.Size = new System.Drawing.Size(844, 457);
             this.dataGridView1.SumColumns = null;
             this.dataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.dataGridView1.SumRowCellFormat = "N2";
@@ -451,6 +460,7 @@ namespace RUINORERP.UI.SysConfig
             // 
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtSort);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.label8);
+            this.kryptonSplitContainer3.Panel1.Controls.Add(this.toolStrip1);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.txtBizType);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.label7);
             this.kryptonSplitContainer3.Panel1.Controls.Add(this.lblDiscription);
@@ -482,10 +492,27 @@ namespace RUINORERP.UI.SysConfig
             // 
             // kryptonSplitContainer3.Panel2
             // 
-            this.kryptonSplitContainer3.Panel2.Controls.Add(this.dataGridView1);
+            this.kryptonSplitContainer3.Panel2.Controls.Add(this.kryptonPanelQuery);
             this.kryptonSplitContainer3.Size = new System.Drawing.Size(844, 759);
             this.kryptonSplitContainer3.SplitterDistance = 300;
+            this.kryptonSplitContainer3.SplitterWidth = 2;
             this.kryptonSplitContainer3.TabIndex = 52;
+            // 
+            // txtSort
+            // 
+            this.txtSort.Location = new System.Drawing.Point(616, 50);
+            this.txtSort.Name = "txtSort";
+            this.txtSort.Size = new System.Drawing.Size(174, 21);
+            this.txtSort.TabIndex = 55;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(581, 53);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(29, 12);
+            this.label8.TabIndex = 54;
+            this.label8.Text = "排序";
             // 
             // txtBizType
             // 
@@ -546,21 +573,49 @@ namespace RUINORERP.UI.SysConfig
             this.label5.TabIndex = 43;
             this.label5.Text = "实体名称";
             // 
-            // txtSort
+            // toolStrip1
             // 
-            this.txtSort.Location = new System.Drawing.Point(616, 50);
-            this.txtSort.Name = "txtSort";
-            this.txtSort.Size = new System.Drawing.Size(174, 21);
-            this.txtSort.TabIndex = 55;
+            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLabel1,
+            this.txtMenuName});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 275);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.Size = new System.Drawing.Size(844, 25);
+            this.toolStrip1.TabIndex = 31;
+            this.toolStrip1.Text = "toolStrip1";
             // 
-            // label8
+            // toolStripLabel1
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(581, 53);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(29, 12);
-            this.label8.TabIndex = 54;
-            this.label8.Text = "排序";
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(46, 22);
+            this.toolStripLabel1.Text = "菜单名";
+            // 
+            // txtMenuName
+            // 
+            this.txtMenuName.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
+            this.txtMenuName.Name = "txtMenuName";
+            this.txtMenuName.Size = new System.Drawing.Size(200, 25);
+            this.txtMenuName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtMenuName_KeyPress);
+            // 
+            // kryptonPanelQuery
+            // 
+            this.kryptonPanelQuery.Controls.Add(this.groupLine1);
+            this.kryptonPanelQuery.Controls.Add(this.dataGridView1);
+            this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelQuery.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanelQuery.Name = "kryptonPanelQuery";
+            this.kryptonPanelQuery.Size = new System.Drawing.Size(844, 457);
+            this.kryptonPanelQuery.TabIndex = 31;
+            // 
+            // groupLine1
+            // 
+            this.groupLine1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupLine1.Location = new System.Drawing.Point(0, 456);
+            this.groupLine1.Name = "groupLine1";
+            this.groupLine1.Size = new System.Drawing.Size(844, 1);
+            this.groupLine1.TabIndex = 2;
             // 
             // UCMenuEdit
             // 
@@ -590,6 +645,10 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonSplitContainer3.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3)).EndInit();
             this.kryptonSplitContainer3.ResumeLayout(false);
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).EndInit();
+            this.kryptonPanelQuery.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -638,5 +697,10 @@ namespace RUINORERP.UI.SysConfig
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox txtSort;
         private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolStripTextBox txtMenuName;
+        internal Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
+        private WinLib.Line.GroupLine groupLine1;
     }
 }

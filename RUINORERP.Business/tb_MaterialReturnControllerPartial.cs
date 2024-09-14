@@ -85,7 +85,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-            ;
+                ;
                 _unitOfWorkManage.RollbackTran();
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
@@ -99,6 +99,7 @@ namespace RUINORERP.Business
         /// <summary>
         /// 审核 库存变化（增加）  超发可能要退，强制结案会退,
         /// 同时 对应的领料单，实发数也要减少,退回数量增加
+        /// 制令单对应的材料也要减少
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -121,6 +122,26 @@ namespace RUINORERP.Business
 
                 #region 审核 通过时
 
+                if (entity.tb_materialrequisition == null)
+                {
+                    entity.tb_materialrequisition = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisition>().Where(c => c.MR_ID == entity.MR_ID)
+                                     .Includes(a => a.tb_MaterialRequisitionDetails, b => b.tb_proddetail, c => c.tb_prod)
+                                     .Includes(a => a.tb_manufacturingorder, b => b.tb_proddetail, c => c.tb_prod)
+                                     .Includes(a => a.tb_manufacturingorder, b => b.tb_ManufacturingOrderDetails)
+                                     .SingleAsync();
+                }
+                else
+                {
+                    if (entity.tb_materialrequisition.tb_manufacturingorder == null)
+                    {
+                        entity.tb_materialrequisition.tb_manufacturingorder = await _unitOfWorkManage.GetDbClient()
+                                    .Queryable<tb_ManufacturingOrder>()
+                                    .Where(c => c.MOID == entity.tb_materialrequisition.MOID)
+                                     .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                                     .Includes(b => b.tb_ManufacturingOrderDetails)
+                                     .SingleAsync();
+                    }
+                }
                 //先获取到相关发料主子数据
                 if (entity.tb_materialrequisition != null)
                 {
@@ -131,6 +152,8 @@ namespace RUINORERP.Business
                          .ToListAsync();
                     }
                 }
+
+
 
                 //先获取到相关发料主子数据
                 if (entity.tb_materialrequisition.tb_manufacturingorder != null)
@@ -150,28 +173,11 @@ namespace RUINORERP.Business
                     foreach (var child in entity.tb_MaterialReturnDetails)
                     {
                         var Detail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
-
                         var prodInfo = Detail.tb_proddetail.tb_prod.CNName + Detail.tb_proddetail.tb_prod.Specifications;
-
-
-
-
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-
                         if (inv != null)
                         {
-                            if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
-                            {
-
-                                rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-
-                                _unitOfWorkManage.RollbackTran();
-                                rrs.Succeeded = false;
-                                return rrs;
-                            }
-
-
                             //更新库存
                             inv.Quantity = inv.Quantity + child.Quantity;
                             inv.NotOutQty += child.Quantity;
@@ -231,7 +237,6 @@ namespace RUINORERP.Business
                     rrs.Succeeded = false;
                     return rrs;
                 }
-
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rrs.ReturnObject = entity as T;
@@ -240,9 +245,8 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-              
+
                 _unitOfWorkManage.RollbackTran();
-              
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, "事务回滚");
                 return rrs;
@@ -278,6 +282,26 @@ namespace RUINORERP.Business
                     rs.Succeeded = false;
                     return rs;
                 }
+                if (entity.tb_materialrequisition == null)
+                {
+                    entity.tb_materialrequisition = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisition>().Where(c => c.MR_ID == entity.MR_ID)
+                                     .Includes(a => a.tb_MaterialRequisitionDetails, b => b.tb_proddetail, c => c.tb_prod)
+                                     .Includes(a => a.tb_manufacturingorder, b => b.tb_proddetail, c => c.tb_prod)
+                                     .Includes(a => a.tb_manufacturingorder, b => b.tb_ManufacturingOrderDetails)
+                                     .SingleAsync();
+                }
+                else
+                {
+                    if (entity.tb_materialrequisition.tb_manufacturingorder == null)
+                    {
+                        entity.tb_materialrequisition.tb_manufacturingorder = await _unitOfWorkManage.GetDbClient()
+                                    .Queryable<tb_ManufacturingOrder>()
+                                    .Where(c => c.MOID == entity.tb_materialrequisition.MOID)
+                                     .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                                     .Includes(b => b.tb_ManufacturingOrderDetails)
+                                     .SingleAsync();
+                    }
+                }
 
                 //先获取到相关发料主子数据
                 if (entity.tb_materialrequisition != null)
@@ -294,9 +318,7 @@ namespace RUINORERP.Business
                 foreach (var child in entity.tb_MaterialReturnDetails)
                 {
                     //var Detail = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID);
-
                     //var prodInfo = Detail.tb_proddetail.tb_prod.CNName + Detail.tb_proddetail.tb_prod.Specifications;
-
 
                     #region 库存表的更新 ，
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
@@ -310,6 +332,13 @@ namespace RUINORERP.Business
                         inv.Notes = "";//后面修改数据库是不需要？
                                        //inv.LatestStorageTime = System.DateTime.Now;
                         BusinessHelper.Instance.InitEntity(inv);
+                    }
+                    if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
+                    {
+                        rs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                        _unitOfWorkManage.RollbackTran();
+                        rs.Succeeded = false;
+                        return rs;
                     }
                     //更新在途库存
                     //反审，出库的要加回来，要卖的也要加回来
@@ -334,7 +363,6 @@ namespace RUINORERP.Business
                 }
 
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
-
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisitionDetail>(entity.tb_materialrequisition.tb_MaterialRequisitionDetails).ExecuteCommandAsync();
                 entity.tb_materialrequisition.TotalReQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ReturnQty);
                 //entity.tb_materialrequisition.TotalSendQty = entity.tb_materialrequisition.tb_MaterialRequisitionDetails.Sum(s => s.ActualSentQty);
@@ -361,7 +389,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-               
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;

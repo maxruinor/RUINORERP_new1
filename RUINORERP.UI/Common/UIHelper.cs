@@ -187,7 +187,7 @@ namespace RUINORERP.UI.Common
         }
 
 
- 
+
 
         /// <summary>
         /// 因为生成的高级查询DTO时，字段带了这个特性
@@ -325,7 +325,7 @@ namespace RUINORERP.UI.Common
                         FKRelationAttribute fkrattr = attr as FKRelationAttribute;
                         bdf.IsFKRelationAttribute = true;
                         bdf.fKRelationAttribute = fkrattr;
-                       // bdf.FKPrimarykey = fkrattr.FK_IDColName;
+                        // bdf.FKPrimarykey = fkrattr.FK_IDColName;
                         bdf.FKTableName = fkrattr.FKTableName;
                     }
 
@@ -436,7 +436,7 @@ namespace RUINORERP.UI.Common
                         FKRelationAttribute fkrattr = attr as FKRelationAttribute;
                         bdf.IsFKRelationAttribute = true;
                         bdf.fKRelationAttribute = fkrattr;
-                       // bdf.FKPrimarykey = fkrattr.FK_IDColName;
+                        // bdf.FKPrimarykey = fkrattr.FK_IDColName;
                         bdf.FKTableName = fkrattr.FKTableName;
                     }
                     entityAttr = attr as SugarColumn;
@@ -820,7 +820,7 @@ namespace RUINORERP.UI.Common
         #endregion
 
 
-        public  static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripSplitButton btnItem)
+        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripSplitButton btnItem)
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
@@ -895,7 +895,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        public static void ControlButton(tb_MenuInfo CurMenuInfo,ToolStripButton btnItem)
+        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripButton btnItem)
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
@@ -1042,7 +1042,7 @@ namespace RUINORERP.UI.Common
             //优先处理本身，比方 BOM_ID显示BOM_NO，只要传tb_BOM_S
             if (CacheHelper.Manager.NewTableList.ContainsKey(type.Name))
             {
-                var nkv= CacheHelper.Manager.NewTableList[type.Name];
+                var nkv = CacheHelper.Manager.NewTableList[type.Name];
                 if (nkv.Key == idColName)
                 {
                     string baseTableName = type.Name;
@@ -1053,7 +1053,7 @@ namespace RUINORERP.UI.Common
                         return NameValue;
                     }
                 }
-                
+
             }
 
             List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
@@ -1105,14 +1105,19 @@ namespace RUINORERP.UI.Common
             //定义两个字段为了怕后面修改，不使用字符串
             Expression<Func<tb_Employee, long>> Created_by;
             Expression<Func<tb_Employee, long>> Modified_by;
+            Expression<Func<tb_Employee, long>> Approver_by;
             Created_by = c => c.Created_by.Value;
             Modified_by = c => c.Modified_by.Value;
-            if (idColName == Created_by.GetMemberInfo().Name || idColName == Modified_by.GetMemberInfo().Name)
+            Approver_by = c => c.Employee_ID;
+
+            var Approver_byName = "Approver_by";//上面指定的是一个表达式，这里指的是一个字段名。即哪个字段显示的是ID实际要显示名称。
+            if (idColName == Created_by.GetMemberInfo().Name || idColName == Modified_by.GetMemberInfo().Name || idColName == Approver_byName)
             {
                 if (value.ToString() == "0")
                 {
                     return "";
                 }
+                //通过id找名称，知道哪一个表的情况下。在缓存里面找
                 string baseTableName = typeof(tb_Employee).Name;
                 object obj = CacheHelper.Instance.GetValue(baseTableName, value);
                 if (obj != null && obj.ToString() != "System.Object")

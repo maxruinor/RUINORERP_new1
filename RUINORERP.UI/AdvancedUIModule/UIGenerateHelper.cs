@@ -279,7 +279,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         pair = new KeyValuePair<string, string>();
                         if (queryField.HasSubFilter && CacheHelper.Manager.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
                         {
-                            #region 绑定下拉带子查询
+                            #region 绑定下拉带子查询条件
                             Type mytype = queryField.SubQueryTargetType;
                             //UI传入过滤条件 下拉可以显示不同的数据
                             ExpConverter expConverter = new ExpConverter();
@@ -299,13 +299,15 @@ namespace RUINORERP.UI.AdvancedUIModule
                         }
                         else
                         {
-                            #region 绑定下拉带子查询
+                            #region 绑定 checkbox，关联了外键才有显示下拉的内容
 
                             //绑定可忽略的那个chkbox
                             DataBindingHelper.BindData4CheckBox(newDto, queryField.FieldName + "_CmbMultiChoiceCanIgnore", choiceCanIgnore.chkCanIgnore, true);
-                            //绑定下拉
-                            Type mytype = queryField.SubQueryTargetType;
+                            //绑定下拉 mytype 相当于T，单据的表名
+                            Type mytype = queryField.QueryTargetType;
                             MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbChkRefWithLimited").MakeGenericMethod(new Type[] { mytype });
+                            //如果表名空。则可能到这里是没有 实体特殊的FK外键表名没有设置。外键关系丢失。没有生成
+                            //queryField.SubFilter.QueryTargetType.Name  这个是子表名是下拉的具体内容的。
                             object[] args1 = new object[6] { newDto, pair.Key, pair.Value, queryField.SubFilter.QueryTargetType.Name, choiceCanIgnore.chkMulti, null };
                             mf1.Invoke(dbh, args1);
                             #endregion

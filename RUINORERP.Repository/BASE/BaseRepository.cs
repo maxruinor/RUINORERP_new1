@@ -27,6 +27,7 @@ namespace RUINORERP.Repository.Base
         public BaseRepository(IUnitOfWorkManage unitOfWorkManage)
         {
             _unitOfWorkManage = unitOfWorkManage;
+            //_db = unitOfWorkManage.GetDbClient();
             _db = unitOfWorkManage.GetDbClient();
         }
 

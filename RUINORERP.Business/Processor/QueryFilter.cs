@@ -660,7 +660,6 @@ namespace RUINORERP.Business.Processor
 
             if (AddSubFilter)
             {
-                queryField.HasSubFilter = true;
                 AddSubFilterToQueryField(queryField, expSubFieldLimitCondition, typeof(R));
             }
             //上面没有调用其它方法来SET这里要添加
@@ -704,7 +703,6 @@ namespace RUINORERP.Business.Processor
 
             if (AddSubFilter)
             {
-                queryField.HasSubFilter = true;
                 AddSubFilterToQueryField(queryField, SubFieldLimitExp);
             }
 

@@ -255,7 +255,7 @@ namespace RUINORERP.UI.BaseForm
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
-                        ApprovalEntity ae= await Review(selectlist[0]);
+                        ApprovalEntity ae = await Review(selectlist[0]);
                     }
 
                     break;
@@ -1119,33 +1119,46 @@ namespace RUINORERP.UI.BaseForm
 
         protected virtual void Exit(object thisform)
         {
-            //保存配置
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Encoding = new UTF8Encoding(false);
-            settings.NewLineChars = Environment.NewLine;
-            settings.Indent = true;
-            string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, "QueryMC" + typeof(M).Name + "Persistence.xml");
-            using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
+            try
             {
-                ws.SaveElementToXml(xmlWriter);
-                xmlWriter.Close();
-            }
-            //保存超级用户的布局为默认布局
-            if (MainForm.Instance.AppContext.IsSuperUser)
-            {
-                //加载XML文件
-                XmlDocument xmldoc = new XmlDocument();
-                xmldoc.Load(xmlfilepath);
-                //获取XML字符串
-                string xmlStr = xmldoc.InnerXml;
-                //字符串转XML
-                //xmldoc.LoadXml(xmlStr);
-                CurMenuInfo.DefaultLayout = xmlStr;
-                int affcet = MainForm.Instance.AppContext.Db.Storageable<tb_MenuInfo>(CurMenuInfo).ExecuteCommand();
-                if (affcet > 0)
+                //保存配置
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Encoding = new UTF8Encoding(false);
+                settings.NewLineChars = Environment.NewLine;
+                settings.Indent = true;
+                string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, "QueryMC" + typeof(M).Name + "Persistence.xml");
+                if (ws != null)
                 {
-
+                    using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
+                    {
+                        ws.SaveElementToXml(xmlWriter);
+                        xmlWriter.Close();
+                    }
                 }
+
+                //保存超级用户的布局为默认布局
+                if (MainForm.Instance.AppContext.IsSuperUser && System.IO.File.Exists(xmlfilepath))
+                {
+                    //加载XML文件
+                    XmlDocument xmldoc = new XmlDocument();
+                    xmldoc.Load(xmlfilepath);
+                    //获取XML字符串
+                    string xmlStr = xmldoc.InnerXml;
+                    //字符串转XML
+                    //xmldoc.LoadXml(xmlStr);
+                    CurMenuInfo.DefaultLayout = xmlStr;
+                    int affcet = MainForm.Instance.AppContext.Db.Storageable<tb_MenuInfo>(CurMenuInfo).ExecuteCommand();
+                    if (affcet > 0)
+                    {
+
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+
             }
             //退出
             CloseTheForm(thisform);
@@ -1619,7 +1632,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                 {
-                   // MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
+                    // MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
                 }
                 _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
             }

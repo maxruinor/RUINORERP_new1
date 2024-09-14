@@ -440,13 +440,13 @@ namespace RUINORERP.UI.MRP.MP
                     return false;
                 }
 
-        
+
                 if (EditEntity.ApprovalStatus == null)
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 }
 
- 
+
                 ReturnMainSubResults<tb_MaterialReturn> SaveResult = new ReturnMainSubResults<tb_MaterialReturn>();
                 if (NeedValidated)
                 {
@@ -800,6 +800,8 @@ protected override void Print()
 
             var SourceBill = await MainForm.Instance.AppContext.Db.Queryable<tb_MaterialRequisition>().Where(c => c.MR_ID == id)
           .Includes(a => a.tb_MaterialRequisitionDetails, b => b.tb_proddetail, c => c.tb_prod)
+          .Includes(a => a.tb_manufacturingorder, b => b.tb_proddetail, c => c.tb_prod)
+          .Includes(a => a.tb_manufacturingorder, b => b.tb_ManufacturingOrderDetails)
           .SingleAsync();
             //新增时才可以转单
             if (SourceBill != null)
@@ -840,6 +842,7 @@ protected override void Print()
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PrintStatus = 0;
                 entity.Outgoing = SourceBill.Outgoing;
+                entity.tb_materialrequisition = SourceBill;//退料得先知道是哪个领料单退的。审核时需要这些数据
                 if (SourceBill.CustomerVendor_ID.HasValue)
                 {
                     entity.CustomerVendor_ID = SourceBill.CustomerVendor_ID.Value;

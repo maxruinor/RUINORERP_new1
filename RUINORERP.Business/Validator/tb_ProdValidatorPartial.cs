@@ -30,7 +30,7 @@ namespace RUINORERP.Business
             _controller = controller;
             RuleFor(tb_Product => tb_Product.Category_ID).NotEmpty().WithMessage("类别不能为空。");
             RuleFor(tb_Product => tb_Product.ProductNo).NotEmpty().WithMessage("品号不能为空。").Must(UniqueProductNo).WithMessage("这个品号已经存在。"); ;
-            RuleFor(x => x.CNName).NotEmpty().WithMessage("品名必须输入。").Must(UniqueName).WithMessage("这个品名已经存在。");
+            //RuleFor(x => x.CNName).NotEmpty().WithMessage("品名必须输入。").Must(UniqueName).WithMessage("这个品名已经存在。");
             RuleFor(tb_Prod => tb_Prod.PropertyType).NotNull().WithMessage("产品类型:不能为空。");
             RuleFor(x => x.PropertyType).NotEmpty().WithMessage("属性类型必须输入。");
             RuleFor(tb_Prod => tb_Prod.Unit_ID).Must(CheckForeignKeyValue).WithMessage("单位:下拉选择值不正确。");

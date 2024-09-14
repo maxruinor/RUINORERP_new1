@@ -263,6 +263,7 @@ namespace SourceGrid.Cells.Models
 
     /// <summary>
     /// Model that implements the IImage interface, used to read the Image directly from the Value of the cell.
+    /// 用于直接保存到数据库这种情况的图片。
     /// </summary>
     public class ValueImage : IImage
     {
@@ -306,8 +307,9 @@ namespace SourceGrid.Cells.Models
         {
             CellImageName = Guid.NewGuid().ToString() + ".jpg";
         }
-
-        private DevAge.ComponentModel.Validator.ValidatorTypeConverter imageConverter = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
+        //这一行确定了这个值的类型，所以这里不用再写一个转换器了
+        private DevAge.ComponentModel.Validator.ValidatorTypeConverter imageConverter =
+            new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(string));
         #region IImage Members
 
         public System.Drawing.Image GetImage(CellContext cellContext)

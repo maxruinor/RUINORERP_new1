@@ -122,7 +122,6 @@ namespace RUINORERP.Business
               
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
-                _logger.Error("tb_FM_OtherExpense" + "事务回滚");
                 rrs.ErrorMsg = ex.Message;
                 rrs.Succeeded = false;
                 return rrs;

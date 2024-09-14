@@ -278,6 +278,46 @@ namespace SourceGrid.Cells.Models
         }
         #endregion
     }
+
+
+    /// <summary>
+    /// 为了对应 远程图片单元格实现的。里面有一个转换器后面再看否也重新写一个。
+    /// </summary>
+    public class ValueImageWeb : IImage
+    {
+        /// <summary>
+        /// 创建这个细包时就给一个默认的名称，唯一的
+        /// </summary>
+        public string CellImageName { get; set; }
+
+        /// <summary>
+        /// 保存图片的hash值，用于判断图片是否已经存在并且没有改变
+        /// </summary>
+        public string CellImageHash { get; set; }
+
+        /// <summary>
+        /// 单元格的图片数据，以base64的形式保存
+        /// </summary>
+        public byte[] CellImageBytes { get; set; }
+
+
+        public static readonly ValueImageWeb Default = new ValueImageWeb();
+        public ValueImageWeb()
+        {
+            CellImageName = Guid.NewGuid().ToString() + ".jpg";
+        }
+
+        private DevAge.ComponentModel.Validator.ValidatorTypeConverter imageConverter = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
+        #region IImage Members
+
+        public System.Drawing.Image GetImage(CellContext cellContext)
+        {
+            object val = cellContext.Cell.Model.ValueModel.GetValue(cellContext);
+            return (System.Drawing.Image)imageConverter.ObjectToValue(val);
+        }
+        #endregion
+    }
+
 }
 
 

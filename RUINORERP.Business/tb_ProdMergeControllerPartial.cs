@@ -272,9 +272,10 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+              
                 _unitOfWorkManage.RollbackTran();
                 rs.Succeeded = false;
+                _logger.Error(ex);
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rs;
             }

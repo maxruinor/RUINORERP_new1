@@ -517,6 +517,20 @@ namespace RUINORERP.UI.UCSourceGrid
                                         }
                                         currContext.Tag = v_prod;
                                     }
+                                    else if (dc.CustomFormat == CustomFormatType.WebImage)
+                                    {
+                                        currContext.DisplayText = "";
+                                        if (cellvalue != null)
+                                        {
+                                            currContext.Cell.View = new SourceGrid.Cells.Views.SingleImageWeb();
+                                            currContext.Value = cellvalue;
+                                        }
+                                        else
+                                        {
+                                            currContext.Cell.View = sgdefine.ViewNormal;
+                                        }
+                                        currContext.Tag = v_prod;
+                                    }
                                     else
                                     {
                                         //如果是与值不一样的名称显示，这种情况。1）行rowdata中已经是真正的数据。
@@ -1218,9 +1232,12 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     //处理图片列 ，的特殊情况
                     #region 图片cell
-                    c = new SourceGrid.Cells.CheckBox(null, true);
+                    if (define[i].CustomFormat == CustomFormatType.Image)
+                    {
+                        c = new SourceGrid.Cells.ImageWebCell(null);
+                    }
+             
                     #endregion
-
 
                     if (!string.IsNullOrEmpty(define[i].ColCaption))
                     {

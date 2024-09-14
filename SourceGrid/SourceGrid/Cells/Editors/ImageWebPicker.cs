@@ -14,7 +14,7 @@ using SourceGrid.Cells;
 namespace SourceGrid.Cells.Editors
 {
     /// <summary>
-    ///  Web型的图片选择器
+    ///  Web型的图片选择器, 第一列都是一样的。所以只是一个过桥。数据得以cell为单位保存
     /// </summary>
     [System.ComponentModel.ToolboxItem(false)]
     public class ImageWebPicker : EditorControlBase
@@ -247,12 +247,12 @@ namespace SourceGrid.Cells.Editors
                 // 检查剪贴板中是否有图像
                 if (Clipboard.ContainsImage())
                 {
-
-
                     // 获取图像
                     System.Drawing.Image image = Clipboard.GetImage();
                     SetImageToPath(image);
+                    ValueType = typeof(string);
                     Control.Value = fileName;
+
                 }
                 else if (Clipboard.ContainsText())
                 {
@@ -272,55 +272,40 @@ namespace SourceGrid.Cells.Editors
 
         private void SetImageToPath(System.Drawing.Image image)
         {
-            string NewHash = string.Empty;
-            if (string.IsNullOrEmpty(fileName))
-            {
-                fileName = Guid.NewGuid().ToString() + ".jpg";
-            }
-            else
-            {
-                //是否存在
-                if (File.Exists(AbsolutelocPath))
-                {
-                    NewHash = ImagePickerHelper.GenerateHash(image);
-                    if (string.IsNullOrEmpty(Imagehash))
-                    {
-                        Imagehash = NewHash;
-                        return;
-                    }
-                    else if (!ImagePickerHelper.AreHashesEqual(Imagehash, NewHash))
-                    {
-                        Imagehash = NewHash;
-                        return;
-                    }
-                }
-            }
+
+            var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+            fileName = valueImageWeb.CellImageName;
+
+
             if (image != null)
-            {
-                // 处理图像，例如保存到文件
-                byte[] buffByte = GetByteImage(image);
-                //Control.Value = GetByteImage(image);// GetImage(image);
-                // 判断图片大小是否超过 10MB
-                if (buffByte.Length > 10000 * 1024)
+            {           //是否存在 不管？ 传入最新则比较。不一样就覆盖
+                        //if (File.Exists(AbsolutelocPath))
+                        //{
+                        //NewHash = ImageHashHelper.GenerateHash(image);
+                        //if (string.IsNullOrEmpty(Imagehash) || !ImageHashHelper.AreHashesEqual(Imagehash, NewHash))
+                        //{
+                        //    Imagehash = NewHash;
+                        //    ImageProcessor.SaveImageAsFile(image, AbsolutelocPath);
+                        //    return;
+                        //}
+                        //}
+                        //else
+                        //{
+
+                //}
+                #region 
+                byte[] buffByte = ImageProcessor.CompressImage(image);
+                string NewHash = ImageHashHelper.GenerateHash(buffByte);
+                #endregion
+                if (string.IsNullOrEmpty(valueImageWeb.CellImageHash) || !ImageHashHelper.AreHashesEqual(valueImageWeb.CellImageHash, NewHash))
                 {
-                    // 压缩图片
-                    ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
-                    EncoderParameters encoderParams = new EncoderParameters(1);
-                    encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 75L);
-                    image = (System.Drawing.Image)new System.Drawing.Bitmap(image, new System.Drawing.Size(1000, 1000));
-                    image.Save(AbsolutelocPath, jpegCodec, encoderParams);
-                    byte[] NewBuffByte =GetByteImage(image);
-                    NewHash = ImagePickerHelper.GenerateHash(NewBuffByte);
-                }
-                else
-                {
-                    image.Save(AbsolutelocPath, ImageFormat.Jpeg);
-                    NewHash = ImagePickerHelper.GenerateHash(buffByte);
-                }
-         
-                if (Imagehash != NewHash)
-                {
-                    Imagehash = NewHash;
+                    valueImageWeb.CellImageHash = NewHash;
+                    //将图片保存到内存中。用于后面的显示，或保存到本地临时文件夹中，或上传到服务器
+                    byte[] destination = new byte[buffByte.Length];
+                    Buffer.BlockCopy(buffByte, 0, destination, 0, buffByte.Length);
+                    valueImageWeb.CellImageBytes = destination;
+                    //ImageProcessor.SaveBytesAsImage(buffByte, AbsolutelocPath);
                 }
                 ValueType = typeof(string);
             }
@@ -349,9 +334,10 @@ namespace SourceGrid.Cells.Editors
                     if (filePath.ToLower().EndsWith(".png") || filePath.ToLower().EndsWith(".jpg") || filePath.ToLower().EndsWith(".jpeg") || filePath.ToLower().EndsWith(".bmp"))
                     {
                         var img = System.Drawing.Image.FromFile(filePath);
+
                         SetImageToPath(img);
-                        Control.Value = fileName;
                         ValueType = typeof(string);
+                        Control.Value = fileName;
                     }
                     else
                     {
@@ -360,84 +346,8 @@ namespace SourceGrid.Cells.Editors
                 }
             }
         }
-        //private System.Drawing.Image GetImage(string pathName)
-        //{
-        //    System.Drawing.Image img = System.Drawing.Image.FromFile(pathName);
-        //    return GetImage(img);
-        //}
-        //private System.Drawing.Image GetImage(System.Drawing.Image img)
-        //{
-        //    System.Drawing.Image NewImg = null;
-        //    // 创建一个内存流
-        //    using (MemoryStream memoryStream = new MemoryStream())
-        //    {
-        //        // 将图像保存到内存流中，指定图像格式
-        //        img.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Jpeg);
-
-        //        // 将内存流中的字节数组转换为byte[]
-        //        byte[] buffByte = memoryStream.ToArray();
-        //        // 判断图片大小是否超过 500KB
-        //        if (buffByte.Length > 500 * 1024)
-        //        {
-        //            // 压缩图片
-        //            ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
-        //            EncoderParameters encoderParams = new EncoderParameters(1);
-        //            encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
-        //            img = (System.Drawing.Image)new System.Drawing.Bitmap(img, new System.Drawing.Size(800, 600));
-        //            img.Save("compressed.jpg", jpegCodec, encoderParams);
-
-        //            // 重新读取压缩后的图片
-        //            NewImg = System.Drawing.Image.FromFile("compressed.jpg");
-        //            MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        //            // 将压缩后的图片转换为 byte[] 数组
-        //            // byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
-
-        //            // 在这里将 compressedImageBytes 保存到数据库中
-        //            //_EditEntity.Images = compressedImageBytes;
-        //        }
-        //        else
-        //        {
-        //            NewImg = img;
-        //        }
-        //        // 此时buffByte包含了图像的字节数据
-        //        // 你可以对buffByte进行进一步的操作，比如保存到文件或发送到网络
-
-        //        // 释放Image资源
-        //        img.Dispose();
-        //    }
-        //    /*
-        //    //将图像读入到字节数组
-        //    System.IO.FileStream fs = new System.IO.FileStream(pathName, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-        //    byte[] buffByte = new byte[fs.Length];
-        //    fs.Read(buffByte, 0, (int)fs.Length);
-        //    fs.Close();
-        //    fs = null;
-        //    // 判断图片大小是否超过 500KB
-        //    if (buffByte.Length > 500 * 1024)
-        //    {
-        //        // 压缩图片
-        //        ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
-        //        EncoderParameters encoderParams = new EncoderParameters(1);
-        //        encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
-        //        img = (System.Drawing.Image)new System.Drawing.Bitmap(img, new System.Drawing.Size(800, 600));
-        //        img.Save("compressed.jpg", jpegCodec, encoderParams);
-
-        //        // 重新读取压缩后的图片
-        //        img = System.Drawing.Image.FromFile("compressed.jpg");
-        //        MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        //        // 将压缩后的图片转换为 byte[] 数组
-        //        // byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
-
-        //        // 在这里将 compressedImageBytes 保存到数据库中
-        //        //_EditEntity.Images = compressedImageBytes;
-        //    }
-        //    else
-        //    {
-        //        // _EditEntity.Images = buffByte;
-        //    }*/
-        //    return NewImg;
-        //}
-
+     
+        
         /// <summary>
         /// Gets the control used for editing the cell.
         /// </summary>
@@ -453,11 +363,11 @@ namespace SourceGrid.Cells.Editors
         #endregion
 
 
-        public override bool SetCellTagValue(CellContext cellContext, object p_NewTagValue)
-        {
-            Control.Tag = p_NewTagValue;
-            return base.SetCellTagValue(cellContext, p_NewTagValue); ;
-        }
+        //public override bool SetCellTagValue(CellContext cellContext, object p_NewTagValue)
+        //{
+        //    Control.Tag = p_NewTagValue;
+        //    return base.SetCellTagValue(cellContext, p_NewTagValue); ;
+        //}
         public override object GetEditedValue()
         {
             string path = string.Empty;
@@ -469,38 +379,7 @@ namespace SourceGrid.Cells.Editors
                 SetImageToPath(img);
                 ValueType = typeof(string);
                 Control.Value = fileName;
-                /*// 将图像转换为字节数组     
-                // 将图像转换为字节数组
-                byte[] buffByte = GetByteImage(img);
 
-                // 判断图片大小是否超过 500KB
-                if (buffByte.Length > 10000 * 1024)
-                {
-                    // 压缩图片
-                    ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
-                    EncoderParameters encoderParams = new EncoderParameters(1);
-                    encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, 50L);
-
-                    using (var ms = new MemoryStream())
-                    {
-                        img.Save(ms, jpegCodec, encoderParams);
-                        byte[] compressedImageBytes = ms.ToArray();
-
-                        // 显示压缩提示
-                        MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                        // 返回压缩后的字节数组
-                        return compressedImageBytes;
-                    }
-                }
-                else
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        img.Save(ms, img.RawFormat);
-                        return ms.ToArray();
-                    }
-                }*/
             }
             else if (val is byte[])
             {

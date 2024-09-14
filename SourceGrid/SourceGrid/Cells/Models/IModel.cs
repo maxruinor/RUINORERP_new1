@@ -7,6 +7,7 @@ namespace SourceGrid.Cells.Models
 	/// </summary>
 	public interface IModel
 	{
+
 	}
 }
 

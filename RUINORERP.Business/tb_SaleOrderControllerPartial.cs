@@ -295,8 +295,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+               
+                _unitOfWorkManage.RollbackTran(); 
                 _logger.Error(ex);
-                _unitOfWorkManage.RollbackTran();
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;
@@ -521,10 +522,11 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+             
                 _unitOfWorkManage.RollbackTran();
                 BizTypeMapper mapper = new BizTypeMapper();
                 rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;
+                _logger.Error(ex);
                 rmrs.Succeeded = false;
             }
             return rmrs;

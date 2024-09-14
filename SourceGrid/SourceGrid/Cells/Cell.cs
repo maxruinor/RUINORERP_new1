@@ -32,7 +32,7 @@ namespace SourceGrid.Cells
 
             Model.AddModel(new Models.ToolTip());
             Model.AddModel(new Models.Image());
-
+            Model.AddModel(new Models.ValueImageWeb()); //TODO: 添加一种模式，用于显示图片和文字
             Value = cellValue;
             //DisplayText=
         }
@@ -282,14 +282,14 @@ namespace SourceGrid.Cells
         }
         #endregion
 
-        #region Image
+        #region Image 针对图片特殊处理了
         private Models.Image ImageModel
         {
             get { return (Models.Image)Model.FindModel(typeof(Models.Image)); }
         }
 
         /// <summary>
-        /// Gets or sets the Image associeted with the Cell. Internally use a Models.Image class.
+        /// 获取或设置与单元格关联的图像。内部使用模型。图像类。
         /// </summary>
         public System.Drawing.Image Image
         {

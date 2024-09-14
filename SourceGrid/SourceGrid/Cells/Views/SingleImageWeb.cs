@@ -8,36 +8,38 @@ using DevAge.Drawing.VisualElements;
 using System.Drawing.Imaging;
 using SourceGrid.Cells.Editors;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace SourceGrid.Cells.Views
 {
     /// <summary>
     /// 单独的一个图片格子。区别于他原来提供的。这种方式，公用设置属性会将值全设置为一个样。得每次给值 都重新设置
+    /// 重新写一个适用于WEB远程的显示图片的用法
     /// </summary>
     [Serializable]
-    public class SingleImage : Cell
+    public class SingleImageWeb : Cell
     {
 
-
+        private string m_Hash = string.Empty;
 
         #region Constructors
 
         /// <summary>
         /// Use default setting
         /// </summary>
-        public SingleImage()
+        public SingleImageWeb()
         {
             ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Covering;
-
+            m_Hash = Guid.NewGuid().ToString();
         }
 
         private System.Drawing.Image _GridImage;
-        public SingleImage(System.Drawing.Image image)
+        public SingleImageWeb(System.Drawing.Image image)
         {
             _GridImage = image;
         }
 
-        private string ShowImageHash = string.Empty;
+
 
         protected override void PrepareView(CellContext context)
         {
@@ -81,34 +83,34 @@ namespace SourceGrid.Cells.Views
                 }
 
             }
-            //else if (context.Value is string && GridImage == null)
-            //{
-            //    if (context.Cell.Editor != null)
-            //    {
-            //        if (context.Cell.Editor is ImageWebPicker webPicker)
-            //        {
-            //            if (System.IO.File.Exists(webPicker.AbsolutelocPath) && !string.IsNullOrEmpty(webPicker.Imagehash))
-            //            {
-            //                if (string.IsNullOrEmpty(ShowImageHash) || GridImage == null)
-            //                {
-            //                    GridImage = System.Drawing.Image.FromFile(webPicker.AbsolutelocPath);
-            //                }
-            //                else if (!ShowImageHash.Equals(webPicker.Imagehash, StringComparison.OrdinalIgnoreCase))//如果不相等
-            //                {
-            //                    GridImage = System.Drawing.Image.FromFile(webPicker.AbsolutelocPath);
-            //                }
-            //                if (GridImage != null)
-            //                {
-            //                    ShowImageHash = ImagePickerHelper.GenerateHash(GridImage);
-            //                }
-            //            }
-            //        }
-            //        else
-            //        {
-            //            //从web下载图片
-            //        }
-            //    }
-            //}
+            else if (context.Value is string && GridImage == null)
+            {
+                if (context.Cell.Editor != null)
+                {
+                    if (context.Cell.Editor is ImageWebPicker webPicker)
+                    {
+                        var model = context.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                        SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                        string fileName = valueImageWeb.CellImageName;
+
+                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0 && !string.IsNullOrEmpty(valueImageWeb.CellImageHash))
+                        {
+                            if (GridImage == null)
+                            {
+                                GridImage = ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes);
+                            }
+                            //if (GridImage != null)
+                            //{
+                            //    valueImageWeb.CellImageHash = ImageHashHelper.GenerateHash(GridImage);
+                            //}
+                        }
+                    }
+                    else
+                    {
+                        //从web下载图片
+                    }
+                }
+            }
 
         }
 
@@ -139,7 +141,7 @@ namespace SourceGrid.Cells.Views
         /// Copy constructor.  This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
         /// </summary>
         /// <param name="other"></param>
-        public SingleImage(SingleImage other)
+        public SingleImageWeb(SingleImageWeb other)
             : base(other)
         {
             mImage = (DevAge.Drawing.VisualElements.IVisualElement)other.OneImage.Clone();
@@ -182,7 +184,7 @@ namespace SourceGrid.Cells.Views
         /// <returns></returns>
         public override object Clone()
         {
-            return new SingleImage(this);
+            return new SingleImageWeb(this);
         }
         #endregion
     }

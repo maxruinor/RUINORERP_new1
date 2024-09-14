@@ -23,10 +23,11 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_SaleOrderValidator : BaseValidatorGeneric<tb_SaleOrder>
     {
-        private void Initialize()
+        public override void Initialize()
         {
             // 这里添加额外的初始化代码
-            RuleFor(x => x.TotalAmount).GreaterThan(0).WithMessage("总金额：要大于零。");
+            RuleFor(x => x.tb_SaleOrderDetails).Must(list => list.Count > 0).WithMessage("销售明细不能为空。");
+            //RuleFor(x => x.TotalAmount).GreaterThan(0).WithMessage("总金额：要大于零。"); 可全是赠品品订单。
             RuleFor(x => x.TotalQty).GreaterThan(0).WithMessage("总数量：要大于零。");
             RuleFor(x => x.PlatformOrderNo).NotEmpty().When(c => c.IsFromPlatform).WithMessage("平台单时，平台订单号不能为空。");
         }

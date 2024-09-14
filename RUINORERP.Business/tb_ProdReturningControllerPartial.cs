@@ -81,9 +81,12 @@ namespace RUINORERP.Business
                         {
                             rs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
-                            rs.ErrorMsg = $"归还明细中有产品不属性选择的借出单!请检查数据后重试！";
-                            _logger.LogInformation(rs.ErrorMsg);
-
+                            rs.ErrorMsg = $"归还明细中有产品不属于对应的借出单!请检查数据后重试！";
+                            if (_appContext.SysConfig.ShowDebugInfo)
+                            {
+                                _logger.LogInformation(rs.ErrorMsg);
+                            }
+                       
                             return rs;
                         }
                     }
@@ -238,8 +241,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+          
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.Succeeded = false;
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rs;

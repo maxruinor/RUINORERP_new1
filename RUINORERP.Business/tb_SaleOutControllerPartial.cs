@@ -114,9 +114,6 @@ namespace RUINORERP.Business
                     return rrs;
                 }
 
-
-
-
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
@@ -143,7 +140,11 @@ namespace RUINORERP.Business
                             rrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
                             rrs.ErrorMsg = $"出库明细中有产品不属性当前销售订单!请检查数据后重试！";
-                            _logger.LogInformation(rrs.ErrorMsg);
+                            if (_appContext.SysConfig.ShowDebugInfo)
+                            {
+                                _logger.LogInformation(rrs.ErrorMsg);
+                            }
+                            
 
                             return rrs;
                         }

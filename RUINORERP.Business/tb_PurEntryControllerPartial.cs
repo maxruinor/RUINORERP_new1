@@ -68,6 +68,8 @@ namespace RUINORERP.Business
                 if (entity.tb_purorder == null)
                 {
                     rs.ErrorMsg = $"没有找到对应的采购订单!请检查数据后重试！";
+                    _unitOfWorkManage.RollbackTran();
+                    rs.Succeeded = false;
                     return rs;
                 }
 
@@ -338,10 +340,8 @@ namespace RUINORERP.Business
                 if (entity.tb_PurEntryRes != null
                     && (entity.tb_PurEntryRes.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_PurEntryRes.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
-
                     rs.ErrorMsg = "存在已确认或已完结，或已审核的采购入库退回单，不能反审核  ";
-                    _unitOfWorkManage.RollbackTran();
-                    rs.Succeeded = false;
+                    return rs;
                 }
 
 
@@ -463,7 +463,10 @@ namespace RUINORERP.Business
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
                                 MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
+                                if (_appContext.SysConfig.ShowDebugInfo)
+                                {
+                                    _logger.LogInformation(msg);
+                                }
                                 return rs;
                             }
                             #endregion
@@ -474,7 +477,10 @@ namespace RUINORERP.Business
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量，审核失败！";
                                 MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
+                                if (_appContext.SysConfig.ShowDebugInfo)
+                                {
+                                    _logger.LogInformation(msg);
+                                }
                                 return rs;
                             }
                             else
@@ -499,7 +505,10 @@ namespace RUINORERP.Business
                                 string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量，审核失败！";
                                 MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
+                                if (_appContext.SysConfig.ShowDebugInfo)
+                                {
+                                    _logger.LogInformation(msg);
+                                }
                                 return rs;
                             }
                             else
@@ -553,7 +562,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-            
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;

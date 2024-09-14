@@ -172,8 +172,8 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 return rs;
             }

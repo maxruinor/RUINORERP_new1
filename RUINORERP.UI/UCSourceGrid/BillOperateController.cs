@@ -788,7 +788,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 //如果有图片值才设置，不然还是和其它一样
                 if (sender.Value != null)
                 {
-                    sender.Cell.View = new SourceGrid.Cells.Views.SingleImage();
+                    sender.Cell.View = new SourceGrid.Cells.Views.SingleImageWeb();
                 }
                 else
                 {

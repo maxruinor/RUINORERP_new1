@@ -371,6 +371,8 @@ namespace RUINORERP.Business
                 {
                     //return false;
                     rs.ErrorMsg = "有结案的单据，已经跳过反审";
+                    _unitOfWorkManage.RollbackTran();
+                    rs.Succeeded = false;
                     return rs;
                 }
 

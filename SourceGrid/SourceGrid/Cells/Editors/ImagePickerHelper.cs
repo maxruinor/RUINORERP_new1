@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -12,8 +15,10 @@ using System.Threading.Tasks;
     /// <summary>
     /// 用于比较图片哈希值的帮助类
     /// </summary>
-    public  class ImagePickerHelper
+    public  class ImageHashHelper
     {
+
+     
         public static bool AreHashesEqual(string hash1, string hash2)
         {
             return hash1.Equals(hash2, StringComparison.OrdinalIgnoreCase);
@@ -60,7 +65,6 @@ using System.Threading.Tasks;
                 return GenerateHash(ms.ToArray());
             }
         }
-       
 
         public static bool AreImagesEqual(string filePath1, string filePath2)
         {

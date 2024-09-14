@@ -341,6 +341,7 @@
     <Compile Include="SourceGrid\Cells\Editors\Factory.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImagePicker.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImagePickerHelper.cs" />
+    <Compile Include="SourceGrid\Cells\Editors\ImageProcessor.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImageWebPicker.cs" />
     <Compile Include="SourceGrid\Cells\Editors\NumericUpDown.cs" />
     <Compile Include="SourceGrid\Cells\Editors\RichTextBox.cs" />
@@ -356,6 +357,7 @@
     <Compile Include="SourceGrid\Cells\Header.cs" />
     <Compile Include="SourceGrid\Cells\ICell.cs" />
     <Compile Include="SourceGrid\Cells\ICellVirtual.cs" />
+    <Compile Include="SourceGrid\Cells\ImageWeb.cs" />
     <Compile Include="SourceGrid\Cells\Image.cs" />
     <Compile Include="SourceGrid\Cells\Link.cs" />
     <Compile Include="SourceGrid\Cells\Models\ICheckBox.cs" />
@@ -378,6 +380,7 @@
     <Compile Include="SourceGrid\Cells\Views\Header.cs" />
     <Compile Include="SourceGrid\Cells\Views\IView.cs" />
     <Compile Include="SourceGrid\Cells\Views\Link.cs" />
+    <Compile Include="SourceGrid\Cells\Views\SingleImageWeb.cs" />
     <Compile Include="SourceGrid\Cells\Views\SingleImage.cs" />
     <Compile Include="SourceGrid\Cells\Views\MultiImages.cs" />
     <Compile Include="SourceGrid\Cells\Views\RichTextBox.cs" />

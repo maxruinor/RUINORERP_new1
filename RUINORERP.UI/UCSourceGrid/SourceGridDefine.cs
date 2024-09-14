@@ -226,10 +226,20 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
         #region 全局背景色设置
+        SourceGrid.Cells.Views.SingleImageWeb _ImagesWebViewModel = new SourceGrid.Cells.Views.SingleImageWeb();
+        /// <summary>
+        /// 临时用于图片列 远程下载用
+        /// </summary>
+        public SourceGrid.Cells.Views.SingleImageWeb ImagesWebViewModel
+        {
+            get => _ImagesWebViewModel;
+            set => _ImagesWebViewModel = value;
+        }
+
 
         SourceGrid.Cells.Views.SingleImage _ImagesViewModel = new SourceGrid.Cells.Views.SingleImage();
         /// <summary>
-        /// 临时用于图片列
+        /// 临时用于图片列 byte[]类型存储于DB中
         /// </summary>
         public SourceGrid.Cells.Views.SingleImage ImagesViewModel
         {

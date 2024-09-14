@@ -18,7 +18,7 @@ namespace SourceGrid.Cells.Views
     public class SingleImage : Cell
     {
 
-        
+
 
         #region Constructors
 
@@ -28,7 +28,7 @@ namespace SourceGrid.Cells.Views
         public SingleImage()
         {
             ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Covering;
-            
+
         }
 
         private System.Drawing.Image _GridImage;
@@ -36,6 +36,8 @@ namespace SourceGrid.Cells.Views
         {
             _GridImage = image;
         }
+
+        private string ShowImageHash = string.Empty;
 
         protected override void PrepareView(CellContext context)
         {
@@ -78,6 +80,34 @@ namespace SourceGrid.Cells.Views
                     GridImage = context.Value as System.Drawing.Image;
                 }
 
+            }
+            else if (context.Value is string && GridImage == null)
+            {
+                if (context.Cell.Editor != null)
+                {
+                    if (context.Cell.Editor is ImageWebPicker webPicker)
+                    {
+                        if (System.IO.File.Exists(webPicker.AbsolutelocPath) && !string.IsNullOrEmpty(webPicker.Imagehash))
+                        {
+                            if (string.IsNullOrEmpty(ShowImageHash) || GridImage == null)
+                            {
+                                GridImage = System.Drawing.Image.FromFile(webPicker.AbsolutelocPath);
+                            }
+                            else if (!ShowImageHash.Equals(webPicker.Imagehash, StringComparison.OrdinalIgnoreCase))//如果不相等
+                            {
+                                GridImage = System.Drawing.Image.FromFile(webPicker.AbsolutelocPath);
+                            }
+                            if (GridImage != null)
+                            {
+                                ShowImageHash = ImagePickerHelper.GenerateHash(GridImage);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //从web下载图片
+                    }
+                }
             }
 
         }

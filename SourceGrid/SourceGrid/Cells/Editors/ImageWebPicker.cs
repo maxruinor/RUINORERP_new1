@@ -277,6 +277,24 @@ namespace SourceGrid.Cells.Editors
             {
                 fileName = Guid.NewGuid().ToString() + ".jpg";
             }
+            else
+            {
+                //是否存在
+                if (File.Exists(AbsolutelocPath))
+                {
+                    NewHash = ImagePickerHelper.GenerateHash(image);
+                    if (string.IsNullOrEmpty(Imagehash))
+                    {
+                        Imagehash = NewHash;
+                        return;
+                    }
+                    else if (!ImagePickerHelper.AreHashesEqual(Imagehash, NewHash))
+                    {
+                        Imagehash = NewHash;
+                        return;
+                    }
+                }
+            }
             if (image != null)
             {
                 // 处理图像，例如保存到文件
@@ -290,19 +308,21 @@ namespace SourceGrid.Cells.Editors
                     EncoderParameters encoderParams = new EncoderParameters(1);
                     encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 75L);
                     image = (System.Drawing.Image)new System.Drawing.Bitmap(image, new System.Drawing.Size(1000, 1000));
-                    NewHash = ImagePickerHelper.GenerateHash(image);
-                    if (Imagehash != NewHash)
-                    {
-                        Imagehash = NewHash;
-                        image.Save(AbsolutelocPath, jpegCodec, encoderParams);
-                    }
-                    ValueType = typeof(string);
+                    image.Save(AbsolutelocPath, jpegCodec, encoderParams);
+                    byte[] NewBuffByte =GetByteImage(image);
+                    NewHash = ImagePickerHelper.GenerateHash(NewBuffByte);
                 }
                 else
                 {
                     image.Save(AbsolutelocPath, ImageFormat.Jpeg);
-                    ValueType = typeof(string);
+                    NewHash = ImagePickerHelper.GenerateHash(buffByte);
                 }
+         
+                if (Imagehash != NewHash)
+                {
+                    Imagehash = NewHash;
+                }
+                ValueType = typeof(string);
             }
         }
 

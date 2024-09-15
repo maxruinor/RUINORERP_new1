@@ -735,7 +735,13 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.CellContext processContext = new SourceGrid.CellContext(this.grid, pt);
                     if (item.CustomFormat == CustomFormatType.Image)
                     {
-                       // processContext.Cell.View = CurrGridDefine.ViewNormal;
+                        processContext.Value = null;
+                        processContext.Cell.View = ViewNormal;
+                    }
+                    if (item.CustomFormat == CustomFormatType.WebImage)
+                    {
+                        processContext.Tag = null;
+                        processContext.Cell.View = ViewNormal;
                     }
                     if (!item.IsRowHeaderCol)
                     {

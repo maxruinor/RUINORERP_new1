@@ -1202,7 +1202,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.提交:
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-                    Submit();
+                    await Submit();
                     break;
                 //case MenuItemEnums.高级查询:
                 //    AdvQuery();
@@ -1244,7 +1244,7 @@ namespace RUINORERP.UI.BaseForm
                     break;
             }
 
-            
+
         }
 
 
@@ -1589,7 +1589,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 OnBindDataToUIEvent(NewEditEntity);
             }
-           
+
             ToolBarEnabledControl(MenuItemEnums.新增);
         }
 
@@ -1775,12 +1775,13 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 提交
         /// </summary>
-        protected async override void Submit()
+        protected async override Task<bool> Submit()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
+            bool submitrs = false;
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0)
@@ -1793,7 +1794,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         MainForm.Instance.uclog.AddLog("单据已经是【完结】或【确认】状态，提交失败。");
                     }
-                    return;
+                    return false;
                 }
                 else
                 {
@@ -1803,7 +1804,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     ReturnResults<T> rmr = new ReturnResults<T>();
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                    //rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+                  
                     rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                     if (rmr.Succeeded)
                     {
@@ -1908,10 +1909,12 @@ namespace RUINORERP.UI.BaseForm
                                 }
                             }
                         }
+                        submitrs = true;
                     }
                     else
                     {
                         MainForm.Instance.uclog.AddLog($"提交失败，请重试;或联系管理员。\r\n 错误信息：{rmr.ErrorMsg}", UILogType.错误);
+                        submitrs = false;
                     }
                 }
 
@@ -1936,14 +1939,20 @@ namespace RUINORERP.UI.BaseForm
                     if (rmr.Succeeded)
                     {
                         ToolBarEnabledControl(MenuItemEnums.提交);
-                        AuditLogHelper.Instance.CreateAuditLog<T>("先保存再提交", rmr.ReturnObject);
+                        AuditLogHelper.Instance.CreateAuditLog<T>("保存-提交", rmr.ReturnObject);
                         //这里推送到审核，启动工作流 后面优化
                         // OriginalData od = ActionForClient.工作流提交(pkid, (int)BizType.盘点单);
                         // MainForm.Instance.ecs.AddSendData(od);
+                        submitrs = true;
+                        return true;
                     }
                 }
-
+                else
+                {
+                    return false;
+                }
             }
+            return submitrs;
         }
 
 

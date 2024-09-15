@@ -51,7 +51,7 @@ namespace SourceGrid.Cells.Views
             if (context.Cell is SourceGrid.Cells.Image || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
             {
                 //end by watson 2024-08-28 TODO:
-                PrepareVisualElementImage(context);
+                //PrepareVisualElementImage(context);
 
                 //Read the image
                 if (context.Value is byte[])

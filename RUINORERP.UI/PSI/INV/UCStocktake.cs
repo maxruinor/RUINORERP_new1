@@ -529,11 +529,11 @@ namespace RUINORERP.UI.PSI.INV
         }
 
 
-        protected override void Submit()
+        protected override async Task<bool> Submit()
         {
             if (EditEntity == null)
             {
-                return;
+                return false;
             }
 
             switch (EditEntity.Adjust_Type)
@@ -545,7 +545,7 @@ namespace RUINORERP.UI.PSI.INV
                     {
                         if (MessageBox.Show("系统检测到您实际盘点差异数据减少，？\r\n你确定选择的【调整类型】正确吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
                         {
-                            return;
+                            return false;
                         }
                     }
                     break;
@@ -554,7 +554,7 @@ namespace RUINORERP.UI.PSI.INV
                     {
                         if (MessageBox.Show("系统检测到您盘点差异数据有增加，？\r\n你确定选择的【调整类型】正确吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
                         {
-                            return;
+                            return false;
                         }
                     }
                     break;
@@ -562,10 +562,7 @@ namespace RUINORERP.UI.PSI.INV
                     break;
             }
 
-
-
-            base.Submit();
-
+           return await base.Submit();
         }
 
 

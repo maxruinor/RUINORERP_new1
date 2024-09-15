@@ -254,7 +254,8 @@ namespace SourceGrid.Cells.Editors
             {
                 throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
             }
-
+            // 确保文件所在的目录存在
+            EnsureDirectoryExists(filePath);
             // 确保字节数组不为空
             if (imageBytes == null || imageBytes.Length == 0)
             {

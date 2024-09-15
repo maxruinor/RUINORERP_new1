@@ -443,9 +443,11 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
-        protected virtual void Submit()
-        {
 
+        protected async virtual Task<bool> Submit()
+        {
+            await Task.Delay(0);
+            return false;
         }
 
         protected virtual void Query()

@@ -73,6 +73,21 @@ namespace SourceGrid.Cells.Models
         /// <param name="newValue">new value of this model</param>
         public void SetValue(CellContext cellContext, object newValue)
         {
+            // 如果新值与当前值相同，或者新值为 null 且当前值也是 null，不做任何操作
+            //if (newValue == null ? m_Value == null : newValue.Equals(m_Value))
+            //{
+            //    return;
+            //}
+            //if (newValue == null)
+            //{
+            //    m_Value = null;
+            //    return;
+            //}
+            //if (!string.IsNullOrEmpty(newValue.ToString()))
+            //{
+            //    if (IsNewValueEqual(newValue) == true)
+            //        return;
+            //}
             if (IsNewValueEqual(newValue) == true)
                 return;
             ValueChangeEventArgs valArgs = new ValueChangeEventArgs(m_Value, newValue);
@@ -83,8 +98,12 @@ namespace SourceGrid.Cells.Models
                 cellContext.Grid.Controller.OnValueChanged(cellContext, EventArgs.Empty);
         }
 
+
+
+
         public bool IsNewValueEqual(object newValue)
         {
+
             if (newValue == m_Value)
                 return true;
             object valueModel = m_Value;
@@ -92,7 +111,6 @@ namespace SourceGrid.Cells.Models
                 valueModel = string.Empty;
             if (newValue == null)
                 newValue = string.Empty;
-
             return newValue.Equals(valueModel);
         }
 
@@ -284,7 +302,7 @@ namespace SourceGrid.Cells.Models
     /// <summary>
     /// 为了对应 远程图片单元格实现的。里面有一个转换器后面再看否也重新写一个。
     /// </summary>
-    public class ValueImageWeb : IImage
+    public class ValueImageWeb : IImageWeb
     {
         /// <summary>
         /// 创建这个细包时就给一个默认的名称，唯一的
@@ -312,6 +330,11 @@ namespace SourceGrid.Cells.Models
             new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(string));
         #region IImage Members
 
+        /// <summary>
+        /// 获取图片,方式 要变为下载 或本地缓存 获取
+        /// </summary>
+        /// <param name="cellContext"></param>
+        /// <returns></returns>
         public System.Drawing.Image GetImage(CellContext cellContext)
         {
             object val = cellContext.Cell.Model.ValueModel.GetValue(cellContext);

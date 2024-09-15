@@ -202,8 +202,20 @@ namespace SourceGrid.Cells.Views
             System.Drawing.Image img = null;
             Models.IImage imgModel = (Models.IImage)context.Cell.Model.FindModel(typeof(Models.IImage));
             if (imgModel != null)
+            {
                 img = imgModel.GetImage(context);
-            ElementImage.Value = img;
+                ElementImage.Value = img;
+                return;
+            }
+
+            Models.IImageWeb imgWebModel = (Models.IImageWeb)context.Cell.Model.FindModel(typeof(Models.IImageWeb));
+            if (imgWebModel != null)
+            {
+                img = imgWebModel.GetImage(context);
+                ElementImage.Value = img;
+                return;
+            }
+
             //context.Value = img;
             //ElementImage.AnchorArea = AnchorArea.HasBottom
         }

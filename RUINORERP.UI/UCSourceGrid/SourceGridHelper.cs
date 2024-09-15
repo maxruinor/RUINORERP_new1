@@ -581,14 +581,14 @@ namespace RUINORERP.UI.UCSourceGrid
             List<C> _details, Expression<Func<C, long?>> BizKeyTargetColExp) where C : class
         {
             sgdefine.BindingSourceLines.Clear();
-            //清空明细表格
-            #region
-            //先清空 不包含 列头和总计
-            SourceGrid.RangeRegion rr = new SourceGrid.RangeRegion(new SourceGrid.Position(grid1.Rows.Count - 1, grid1.Columns.Count));
             for (int ii = 0; ii < grid1.Rows.Count; ii++)
             {
                 grid1.Rows[ii].RowData = null;
             }
+            //清空明细表格
+            #region
+            //先清空 不包含 列头和总计
+            SourceGrid.RangeRegion rr = new SourceGrid.RangeRegion(new SourceGrid.Position(grid1.Rows.Count - 1, grid1.Columns.Count));
             grid1.ClearValues(rr);
 
             //先清空
@@ -600,10 +600,11 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
                     currContext.Value = null;
                     //如果是图片列。但不是总计行。则清空为平常的样式
-                    if (dc.CustomFormat == CustomFormatType.Image && pt.Row != grid1.Rows.Count - 1)
+                    if ((dc.CustomFormat == CustomFormatType.Image || dc.CustomFormat == CustomFormatType.WebImage) && pt.Row != grid1.Rows.Count - 1)
                     {
                         currContext.Cell.View = sgdefine.ViewNormal;
                     }
+                    
                     if (dc.ColName == "Selected")
                     {
                         grid1[pt] = new SourceGrid.Cells.Cell("");
@@ -623,6 +624,10 @@ namespace RUINORERP.UI.UCSourceGrid
                         {
                             grid1[pt].Value = "总计";
                         }
+                    }
+                    else
+                    {
+                        grid1.ClearValues( new RangeRegion(pt));
                     }
                 }
             }
@@ -909,6 +914,10 @@ namespace RUINORERP.UI.UCSourceGrid
                 SourceGrid.Cells.ColumnHeader columnHeader = new SourceGrid.Cells.ColumnHeader();
                 columnHeader.View = viewColumnHeader;
                 columnHeader.Value = griddefine[i].ColCaption;
+                if (columnHeader.Value == null)
+                {
+                    columnHeader.Value = "";
+                }
                 //暂时默认所有列不自动排序  如果排序则全乱了。总计 和提前插入的空白行都以及数据修改全乱
                 columnHeader.AutomaticSortEnabled = false;
 
@@ -1232,11 +1241,14 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     //处理图片列 ，的特殊情况
                     #region 图片cell
-                    if (define[i].CustomFormat == CustomFormatType.Image)
+                    if (define[i].CustomFormat == CustomFormatType.WebImage)
                     {
                         c = new SourceGrid.Cells.ImageWebCell(null);
                     }
-             
+                    if (define[i].CustomFormat == CustomFormatType.Image)
+                    {
+                        c = new SourceGrid.Cells.Image(null);
+                    }
                     #endregion
 
                     if (!string.IsNullOrEmpty(define[i].ColCaption))

@@ -39,6 +39,7 @@ using Krypton.Toolkit;
 using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;
 using RUINORERP.UI.SysConfig;
+using SourceGrid.Cells.Editors;
 
 namespace RUINORERP.UI.FM
 {
@@ -196,6 +197,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TotalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage, CustomFormatType.Image);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImagePath, CustomFormatType.WebImage);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridData = EditEntity;
@@ -345,7 +347,7 @@ namespace RUINORERP.UI.FM
                                     if (grid1[i, colindex].Tag != null && grid1[i, colindex].Tag is byte[])
                                     {
                                         byte[] imageBytes = (byte[])grid1[i, colindex].Tag;
-                                        System.IO.File.WriteAllBytes(imagePath, imageBytes);
+                                        ImageProcessor.SaveBytesAsImage(imageBytes, imagePath);
                                     }
                                 }
                             }
@@ -369,22 +371,26 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        /// <summary>
-        /// 采购入库审核成功后。如果有对应的采购订单引入，则将其结案，并把数量回写？
-        /// </summary>
-        /// <returns></returns>
-        protected async override Task<ApprovalEntity> Review()
+  
+
+        protected override async Task<bool> Submit()
         {
-            ApprovalEntity ae = await base.Review();
-            if (ae.ApprovalResults)
+            bool rs = await base.Submit();
+            if (rs)
             {
-                EditEntity.DataStatus = (int)DataStatus.完结;
-                await AppContext.Db.Updateable(EditEntity).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+                ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+                var temppath = configManager.GetValue("WebServerUrl");
+                if (string.IsNullOrEmpty(temppath))
+                {
+                    MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
+                }
+                //await AppContext.Db.Updateable(EditEntity).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
+
                 string filePath = @"C:\path\to\your\image.jpg";
                 string uploadUrl = "http://example.com/upload";
                 await ImageUploader.UploadImageAsync(filePath, uploadUrl);
             }
-            return ae;
+            return true;
         }
 
         private void chkClaimEmployee_CheckedChanged(object sender, EventArgs e)

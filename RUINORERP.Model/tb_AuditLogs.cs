@@ -183,7 +183,7 @@ namespace RUINORERP.Model
         /// 备注说明
         /// </summary>
         [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注说明")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=100,IsNullable = true,ColumnDescription = "备注说明" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=8000,IsNullable = true,ColumnDescription = "备注说明" )]
         public string Notes
         { 
             get{return _Notes;}

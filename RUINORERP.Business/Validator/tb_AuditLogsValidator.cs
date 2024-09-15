@@ -36,7 +36,7 @@ namespace RUINORERP.Business
  RuleFor(tb_AuditLogs =>tb_AuditLogs.ObjectNo).MaximumLength(25).WithMessage("单据编号:不能超过最大长度,25.");
  RuleFor(tb_AuditLogs =>tb_AuditLogs.OldState).MaximumLength(50).WithMessage("操作前状态:不能超过最大长度,50.");
  RuleFor(tb_AuditLogs =>tb_AuditLogs.NewState).MaximumLength(50).WithMessage("操作后状态:不能超过最大长度,50.");
- RuleFor(tb_AuditLogs =>tb_AuditLogs.Notes).MaximumLength(50).WithMessage("备注说明:不能超过最大长度,50.");
+ RuleFor(tb_AuditLogs =>tb_AuditLogs.Notes).MaximumLength(8000).WithMessage("备注说明:不能超过最大长度,8000.");
        	
            	        Initialize();
      }

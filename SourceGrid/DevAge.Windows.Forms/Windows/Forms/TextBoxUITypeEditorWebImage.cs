@@ -11,11 +11,11 @@ namespace DevAge.Windows.Forms
     /// <summary>
     /// A TextBoxTypedButton that uase the UITypeEditor associated with the type.
     /// </summary>
-    public class TextBoxUITypeEditor : DevAgeTextBoxButton, IServiceProvider, System.Windows.Forms.Design.IWindowsFormsEditorService, ITypeDescriptorContext
+    public class TextBoxUITypeEditorWebImage : DevAgeTextBoxButton, IServiceProvider, System.Windows.Forms.Design.IWindowsFormsEditorService, ITypeDescriptorContext
     {
         private System.ComponentModel.IContainer components = null;
 
-        public TextBoxUITypeEditor()
+        public TextBoxUITypeEditorWebImage()
         {
             // This call is required by the Windows Form Designer.
             InitializeComponent();
@@ -105,12 +105,16 @@ namespace DevAge.Windows.Forms
 
             if (m_UITypeEditor == null && Validator != null)
             {
-                object tmp = System.ComponentModel.TypeDescriptor.GetEditor(Validator.ValueType, typeof(UITypeEditor));
+                //如果是web下载的那个 实际是string。要特殊处理
+                //object tmp = System.ComponentModel.TypeDescriptor.GetEditor(Validator.ValueType, typeof(UITypeEditor));
+                object tmp = System.ComponentModel.TypeDescriptor.GetEditor(typeof(System.Drawing.Image), typeof(UITypeEditor));
                 if (tmp is UITypeEditor)
-                {
-                    m_UITypeEditor = (UITypeEditor)tmp;
-                }
-      
+                    if (tmp is UITypeEditor)
+                    {
+                        m_UITypeEditor = (UITypeEditor)tmp;
+                    }
+
+
             }
         }
 

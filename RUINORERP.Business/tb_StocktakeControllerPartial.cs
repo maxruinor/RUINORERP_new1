@@ -97,6 +97,7 @@ namespace RUINORERP.Business
                             Opening = true;
                             inv = new tb_Inventory();
                             inv.Location_ID = entity.Location_ID;
+                            inv.ProdDetailID = child.ProdDetailID;
                             inv.Quantity = inv.Quantity + child.DiffQty;
                             inv.InitInventory = (int)inv.Quantity;
                             inv.Notes = "";//后面修改数据库是不需要？

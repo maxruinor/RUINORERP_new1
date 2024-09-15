@@ -176,6 +176,7 @@ namespace RUINORERP.Business
                         inv.Quantity = inv.Quantity + child.Qty;
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Location_ID = child.Location_ID;
+                        inv.ProdDetailID = child.ProdDetailID;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
                     }

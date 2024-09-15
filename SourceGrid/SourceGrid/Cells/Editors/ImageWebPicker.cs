@@ -25,17 +25,19 @@ namespace SourceGrid.Cells.Editors
         /// <summary>
         /// Construct an Editor of type ImagePicker.
         /// </summary>
-        public ImageWebPicker() : base(typeof(byte[]))
+        //public ImageWebPicker() : base(typeof(byte[]))
+        //{
+        //}
+        ///web下载图片 只是显示图片名称
+        public ImageWebPicker() : base(typeof(string))
         {
         }
+
+
         #endregion
 
         public System.Drawing.Image PickerImage { get; set; }
 
-        /// <summary>
-        /// 用来保存图片哈希值，用于比较图片是否更改
-        /// </summary>
-        public string Imagehash { get; set; }
 
 
         private string _fileName = string.Empty;
@@ -228,9 +230,13 @@ namespace SourceGrid.Cells.Editors
         /// <returns></returns>
         protected override Control CreateControl()
         {
-            DevAge.Windows.Forms.TextBoxUITypeEditor editor = new DevAge.Windows.Forms.TextBoxUITypeEditor();
+            //DevAge.Windows.Forms.TextBoxUITypeEditor editor = new DevAge.Windows.Forms.TextBoxUITypeEditor();
+            DevAge.Windows.Forms.TextBoxUITypeEditorWebImage editor = new DevAge.Windows.Forms.TextBoxUITypeEditorWebImage();
+
             editor.BorderStyle = DevAge.Drawing.BorderStyle.None;
-            editor.Validator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
+            //editor.Validator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
+            editor.Validator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(string));
+
             editor.ContextMenuStrip = GetContextMenu();
             editor.TextBox.AllowDrop = true;
             editor.TextBox.DragDrop += Editor_DragDrop;
@@ -346,16 +352,16 @@ namespace SourceGrid.Cells.Editors
                 }
             }
         }
-     
-        
+
+
         /// <summary>
         /// Gets the control used for editing the cell.
         /// </summary>
-        public new DevAge.Windows.Forms.TextBoxUITypeEditor Control
+        public new DevAge.Windows.Forms.TextBoxUITypeEditorWebImage Control
         {
             get
             {
-                return (DevAge.Windows.Forms.TextBoxUITypeEditor)base.Control;
+                return (DevAge.Windows.Forms.TextBoxUITypeEditorWebImage)base.Control;
             }
         }
 
@@ -363,11 +369,11 @@ namespace SourceGrid.Cells.Editors
         #endregion
 
 
-        //public override bool SetCellTagValue(CellContext cellContext, object p_NewTagValue)
-        //{
-        //    Control.Tag = p_NewTagValue;
-        //    return base.SetCellTagValue(cellContext, p_NewTagValue); ;
-        //}
+        public override bool SetCellTagValue(CellContext cellContext, object p_NewTagValue)
+        {
+            Control.Tag = p_NewTagValue;
+            return base.SetCellTagValue(cellContext, p_NewTagValue); ;
+        }
         public override object GetEditedValue()
         {
             string path = string.Empty;
@@ -457,33 +463,29 @@ namespace SourceGrid.Cells.Editors
 
         public override object GetEditedTagValue()
         {
-            object val = Control.Tag;
-            if (val == null)
+            var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+            Control.Tag = valueImageWeb.CellImageBytes;
+            if (valueImageWeb.CellImageBytes != null)
             {
-                return null;
+                return valueImageWeb.CellImageBytes;
             }
+            else
+            {
 
-            else if (val is System.Drawing.Image)
+            }
+            object val = Control.Value;
+            if (val is System.Drawing.Image)
             {
                 DevAge.ComponentModel.Validator.ValidatorTypeConverter imageValidator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
                 return imageValidator.ValueToObject(val, typeof(byte[]));
-
-                //Stranamente questo codice in caso di ico va in eccezione!
-                //				System.Drawing.Image img = (System.Drawing.Image)val;
-                //				using (System.IO.MemoryStream memStream = new System.IO.MemoryStream())
-                //				{
-                //					img.Save(memStream, System.Drawing.Imaging.ImageCodecInfo.);
-                //
-                //					return memStream.ToArray();
-                //				}
             }
             else if (val is byte[])
                 return val;
             else if (val is string)
             {
-                fileName = (string)val;
             }
-            return val;
+            return val;  
         }
     }
 

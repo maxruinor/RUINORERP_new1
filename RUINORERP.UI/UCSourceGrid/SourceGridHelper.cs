@@ -2835,6 +2835,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                 case CustomFormatType.Image:
 
                                     break;
+                                case CustomFormatType.WebImage:
+
+                                    break;
                                 default:
                                     break;
                             }

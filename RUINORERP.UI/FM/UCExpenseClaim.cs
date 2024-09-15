@@ -38,6 +38,7 @@ using RUINORERP.Business.AutoMapper;
 using Krypton.Toolkit;
 using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;
+using RUINORERP.UI.SysConfig;
 
 namespace RUINORERP.UI.FM
 {
@@ -242,9 +243,9 @@ namespace RUINORERP.UI.FM
             }
 
             // 获取应用程序的执行目录下的 temp 文件夹路径
-           // string tempPath = DirectoryHelper.GetTempPath();
+            // string tempPath = DirectoryHelper.GetTempPath();
             // 生成唯一的文件名
-           // string newFileName = Guid.NewGuid().ToString() + ".jpg"; // 假设保存为 JPG 格式
+            // string newFileName = Guid.NewGuid().ToString() + ".jpg"; // 假设保存为 JPG 格式
             //sgh.SetCellValue<tb_FM_ExpenseClaimDetail>(sgd, c => c.EvidenceImagePath, newFileName);
         }
 
@@ -290,6 +291,13 @@ namespace RUINORERP.UI.FM
             {
                 return false;
             }
+            ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+            var temppath = configManager.GetValue("LocImageDirectory");
+            if (string.IsNullOrEmpty(temppath))
+            {
+                MainForm.Instance.uclog.AddLog("请先配置图片存储路径", UILogType.错误);
+                return false;
+            }
             var eer = errorProviderForAllInput.GetError(txtClaimlAmount);
             bindingSourceSub.EndEdit();
             List<tb_FM_ExpenseClaimDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_ExpenseClaimDetail>;
@@ -297,7 +305,6 @@ namespace RUINORERP.UI.FM
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.TotalAmount > 0).ToList();
-                //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
@@ -322,10 +329,27 @@ namespace RUINORERP.UI.FM
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        //上传图片
+                        int colindex = sgd.DefineColumns.FirstOrDefault(c => c.ColName == "EvidenceImagePath").ColIndex;
+                        //保存图片到本地临时目录
                         foreach (var item in EditEntity.tb_FM_ExpenseClaimDetails)
                         {
-                            string imagePath = System.IO.Path.Combine(Application.StartupPath, item.EvidenceImagePath);
+                            for (int i = 0; i < grid1.RowsCount; i++)
+                            {
+                                if (grid1[i, colindex].Value == null)
+                                {
+                                    continue;
+                                }
+                                if (grid1[i, colindex].Value.ToString() == item.EvidenceImagePath)
+                                {
+                                    string imagePath = System.IO.Path.Combine(Application.StartupPath + @"\temp\", item.EvidenceImagePath);
+                                    if (grid1[i, colindex].Tag != null && grid1[i, colindex].Tag is byte[])
+                                    {
+                                        byte[] imageBytes = (byte[])grid1[i, colindex].Tag;
+                                        System.IO.File.WriteAllBytes(imagePath, imageBytes);
+                                    }
+                                }
+                            }
+
                             await HttpHelper.UploadImageAsync(AppContext.WebServerUrl, item.EvidenceImagePath);
                         }
 
@@ -356,9 +380,6 @@ namespace RUINORERP.UI.FM
             {
                 EditEntity.DataStatus = (int)DataStatus.完结;
                 await AppContext.Db.Updateable(EditEntity).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
-
-
-
                 string filePath = @"C:\path\to\your\image.jpg";
                 string uploadUrl = "http://example.com/upload";
                 await ImageUploader.UploadImageAsync(filePath, uploadUrl);

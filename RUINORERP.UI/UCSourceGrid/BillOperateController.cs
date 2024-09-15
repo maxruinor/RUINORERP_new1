@@ -311,6 +311,13 @@ namespace RUINORERP.UI.UCSourceGrid
                     }
 
                     break;
+                case CustomFormatType.WebImage:
+                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
+                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Tag = sender.Tag;
+                    break;
+                case CustomFormatType.Image:
+                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
+                    break;
                 default:
                     break;
             }
@@ -885,7 +892,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         sender.Cell.View = CurrGridDefine.ViewNormal;
                     }
                 }
-                
+
             }
 
             //这里计算是一些公共的，针对具体单据的计算 需要用一个事件抛出来处理

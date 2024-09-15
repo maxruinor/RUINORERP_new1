@@ -5,58 +5,62 @@ using System.Windows.Forms;
 
 namespace SourceGrid.Cells
 {
-	/// <summary>
-	/// Represents a Cell to use with Grid control.
-	/// </summary>
-	public interface ICell : ICellVirtual
-	{
-		#region Value, DisplayText, ToolTipText, Image, Tag
+    /// <summary>
+    /// Represents a Cell to use with Grid control.
+    /// </summary>
+    public interface ICell : ICellVirtual
+    {
+        #region Value, DisplayText, ToolTipText, Image, Tag
 
-		/// <summary>
-		/// Gets the string representation of the Cell.Value property (default Value.ToString())
-		/// </summary>
-		string DisplayText
-		{
-			get;
-			set;
-		}
+        /// <summary>
+        /// Gets the string representation of the Cell.Value property (default Value.ToString())
+        /// </summary>
+        string DisplayText
+        {
+            get;
+            set;
+        }
 
-		/// <summary>
-		/// Gets or sets the value of the cell 
-		/// </summary>
-		object Value
-		{
-			get;
-			set;
-		}
+        /// <summary>
+        /// Gets or sets the value of the cell 
+        /// </summary>
+        object Value
+        {
+            get;
+            set;
+        }
 
-		/// <summary>
-		/// Gets or sets additional info for this cell
-		/// </summary>
-		object Tag
-		{
-			get;
-			set;
-		}
+        /// <summary>
+        /// 获取或设置此单元格的其他信息
+        /// 特殊情况的处理。比较远程web下载的图片，本地读取后，只保存了字节数组，需要通过此属性获取
+        /// </summary>
+        object Tag
+        {
+            get;
+            set;
+        }
 
-		/// <summary>
-		/// Gets or sets the ToolTipText
-		/// </summary>
-		string ToolTipText
-		{
-			get;
-			set;
-		}
+        /// <summary>
+        /// Gets or sets the ToolTipText
+        /// </summary>
+        string ToolTipText
+        {
+            get;
+            set;
+        }
 
-		/// <summary>
-		/// Gets or set the image of the cell.
-		/// </summary>
-		System.Drawing.Image Image
-		{
-			get;
-			set;
-		}
-		#endregion
+        /// <summary>
+        /// Gets or set the image of the cell.
+        /// </summary>
+        System.Drawing.Image Image
+        {
+            get;
+            set;
+        }
+ 
+
+
+        #endregion
 
         #region LinkToGrid
         /// <summary>
@@ -106,32 +110,32 @@ namespace SourceGrid.Cells
         }
         #endregion
 
-		#region Row/Col Span
-		/// <summary>
-		/// ColSpan for merge operation, calculated using the current range.
-		/// </summary>
-		int ColumnSpan
-		{
-			get;
-			set;
-		}
-		/// <summary>
-		/// RowSpan for merge operation, calculated using the current range.
-		/// </summary>
-		int RowSpan
-		{
-			get;
-			set;
-		}
-		
-		/// <summary>
-		/// Setting a col/row spann is a costly operation, so it's better
-		/// if you set these two at the same time.
-		/// Prefer this method to <c>RowSpan</c> and <c>ColSpan</c> property setters
-		/// </summary>
-		/// <param name="rowSpan"></param>
-		/// <param name="colSpan"></param>
-		void SetSpan(int rowSpan, int colSpan);
-		#endregion
-	}
+        #region Row/Col Span
+        /// <summary>
+        /// ColSpan for merge operation, calculated using the current range.
+        /// </summary>
+        int ColumnSpan
+        {
+            get;
+            set;
+        }
+        /// <summary>
+        /// RowSpan for merge operation, calculated using the current range.
+        /// </summary>
+        int RowSpan
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Setting a col/row spann is a costly operation, so it's better
+        /// if you set these two at the same time.
+        /// Prefer this method to <c>RowSpan</c> and <c>ColSpan</c> property setters
+        /// </summary>
+        /// <param name="rowSpan"></param>
+        /// <param name="colSpan"></param>
+        void SetSpan(int rowSpan, int colSpan);
+        #endregion
+    }
 }

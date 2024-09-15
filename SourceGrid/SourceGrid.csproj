@@ -214,6 +214,9 @@
     </Compile>
     <Compile Include="DevAge.Windows.Forms\Windows\Forms\PositionRecorder.cs" />
     <Compile Include="DevAge.Windows.Forms\Windows\Forms\SendCharExact.cs" />
+    <Compile Include="DevAge.Windows.Forms\Windows\Forms\TextBoxUITypeEditorWebImage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="DevAge.Windows.Forms\Windows\Forms\TextBoxUITypeEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -463,6 +466,9 @@
     <None Include="DevAge.Windows.Forms\Res\SortUp.ico" />
     <EmbeddedResource Include="DevAge.Windows.Forms\Windows\Forms\frmPictureViewer.resx">
       <DependentUpon>frmPictureViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DevAge.Windows.Forms\Windows\Forms\TextBoxUITypeEditorWebImage.resx">
+      <DependentUpon>TextBoxUITypeEditorWebImage.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SourceGrid.Extensions\Res\Add.ico" />
     <EmbeddedResource Include="SourceGrid.Extensions\Res\ArrowDown.ICO" />

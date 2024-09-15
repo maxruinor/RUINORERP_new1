@@ -101,7 +101,8 @@ namespace RUINORERP.Business
                             inv.Quantity = inv.Quantity + child.Qty;
                             inv.InitInventory = (int)inv.Quantity;
                             inv.Location_ID = child.Location_ID;
-
+                            inv.ProdDetailID = child.ProdDetailID;
+                            inv.LatestStorageTime = DateTime.Now;
                             BusinessHelper.Instance.InitEntity(inv);
                         }
                         /*

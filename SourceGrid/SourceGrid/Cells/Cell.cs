@@ -296,6 +296,8 @@ namespace SourceGrid.Cells
             get { return ImageModel.ImageValue; }
             set { ImageModel.ImageValue = value; }
         }
+ 
+
         #endregion
     }
 }

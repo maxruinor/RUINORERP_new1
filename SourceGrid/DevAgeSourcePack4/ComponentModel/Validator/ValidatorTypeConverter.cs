@@ -75,8 +75,8 @@ namespace DevAge.ComponentModel.Validator
             else if (e.Value is string) //?importante fare prima il caso stringa per gestire correttamente il null
             {
                 string tmp = (string)e.Value;
-                if (IsNullString(tmp))
-                    e.Value = null;
+                if (IsNullString(tmp) && e.DestinationType.IsAssignableFrom(typeof(string)))
+                    e.Value = "";//TODO: by watson 注意 本来这里应该返回null，但是因为string类型不支持null，所以这里返回空字符串。
                 else if (e.DestinationType.IsAssignableFrom(e.Value.GetType())) //se la stringa non ?nulla e il tipo di destinazione ?sempre una string allora non faccio nessuna conversione
                 {
                 }
@@ -153,7 +153,7 @@ namespace DevAge.ComponentModel.Validator
                     }
                     else
                     {
-                        if ( DataPrecision <= CultureInfo.NumberFormat.CurrencyDecimalDigits)
+                        if (DataPrecision <= CultureInfo.NumberFormat.CurrencyDecimalDigits)
                         {
                             fat = "{0:C" + DataPrecision + "}";
                             e.Value = string.Format(fat, tempMoney);
@@ -162,7 +162,7 @@ namespace DevAge.ComponentModel.Validator
                         {
                             e.Value = m_TypeConverter.ConvertTo(EmptyTypeDescriptorContext.Empty, CultureInfo, e.Value, e.DestinationType);
                         }
-                    
+
                     }
 
                 }

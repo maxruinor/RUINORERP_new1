@@ -1,4 +1,5 @@
 using System;
+using System.CodeDom.Compiler;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.ComponentModel.Design.Serialization;
@@ -429,13 +430,15 @@ namespace DevAge.ComponentModel.Validator
 			else if (e.ConvertingStatus == ConvertingStatus.Completed)
 				return;
 
-			if (e.Value is string) //?importante fare prima il caso stringa per gestire correttamente il null
-			{
-				string tmp = (string)e.Value;
-				if (IsNullString(tmp))
-					e.Value = null;
-			}			
-		}
+			if (e.Value is string) //?首先做字符串大小写以正确处理null很重要
+            {
+                //TODO: by watson 注意 本来这里应该返回null，但是因为string类型不支持null，所以这里返回空字符串。
+                //string tmp = (string)e.Value;
+                //e.Value=
+                //if (IsNullString(tmp))
+                //	e.Value = null;
+            }
+        }
 		/// <summary>
 		/// Fired when converting a object to the value specified. Called from method ObjectToValue and IsValidObject
 		/// </summary>

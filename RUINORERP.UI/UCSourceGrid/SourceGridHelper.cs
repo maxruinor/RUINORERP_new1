@@ -585,6 +585,13 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 grid1.Rows[ii].RowData = null;
             }
+            List<int> deleteRows = new List<int>();
+            for (int r = 1; r < grid1.Rows.Count - 1; r++)
+            {
+                deleteRows.Add(grid1.Rows[r].Index);
+            }
+            DeleteRow(sgdefine, deleteRows.ToArray());
+            /*
             //清空明细表格
             #region
             //先清空 不包含 列头和总计
@@ -604,7 +611,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         currContext.Cell.View = sgdefine.ViewNormal;
                     }
-                    
+
                     if (dc.ColName == "Selected")
                     {
                         grid1[pt] = new SourceGrid.Cells.Cell("");
@@ -627,14 +634,14 @@ namespace RUINORERP.UI.UCSourceGrid
                     }
                     else
                     {
-                        grid1.ClearValues( new RangeRegion(pt));
+                        grid1.ClearValues(new RangeRegion(pt));
                     }
                 }
             }
 
             #endregion
-
-            //var detailItems = ((IEnumerable<dynamic>)_details).ToList();
+            */
+     
             int i = 1;
             InsertItemData<C>(grid1, sgdefine, _details, BizKeyTargetColExp, i, true);
         }
@@ -931,6 +938,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (griddefine[i].NeverVisible)
                 {
                     grid.Columns[i].Visible = false;
+                    continue;
                 }
                 else
                 {
@@ -956,9 +964,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     SetColumnEditor(griddefine[i]);
                 }
 
-
                 grid[0, i] = columnHeader;
-
 
                 if (!griddefine[i].IsRowHeaderCol || griddefine[i].NeverVisible)
                 {
@@ -1522,7 +1528,11 @@ namespace RUINORERP.UI.UCSourceGrid
                         if (grid[r, c].Editor == null)
                         {
                             grid[r, c].Editor = define[c].EditorForColumn;
-                            grid[r, c].Editor.EnableEdit = true;
+                            if (grid[r, c].Editor != null)
+                            {
+                                grid[r, c].Editor.EnableEdit = true;
+                            }
+
                         }
                     }
                     else

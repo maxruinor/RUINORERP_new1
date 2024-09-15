@@ -208,10 +208,18 @@ namespace RUINORERP.UI.PSI.INV
                                     EditEntity.tb_ProdMergeDetails[i].Qty = (bOM_SDetail.UsedQty * EditEntity.MergeTargetQty).ToInt();
                                 }
                             }
-
-                            //同步到明细UI表格中？
-                            sgh.SynchronizeUpdateCellValue<tb_ProdMergeDetail>(sgd, c => c.Qty, EditEntity.tb_ProdMergeDetails);
                         }
+                        else
+                        {
+                            //请注意，如果没有配方时，子件数量默认为1。
+                            MessageBox.Show("没有配方时，子件数量默认为1。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            for (int i = 0; i < EditEntity.tb_ProdMergeDetails.Count; i++)
+                            {
+                                EditEntity.tb_ProdMergeDetails[i].Qty = 1;
+                            }
+                        }
+                        //同步到明细UI表格中？
+                        sgh.SynchronizeUpdateCellValue<tb_ProdMergeDetail>(sgd, c => c.Qty, EditEntity.tb_ProdMergeDetails);
                     }
 
 
@@ -692,6 +700,13 @@ protected async override void ReReview()
         {
             if (cmbBOM_ID.SelectedValue == null || cmbBOM_ID.SelectedValue.ToString() == "-1")
             {
+                if (cmbBOM_ID.Items != null)
+                {
+                    if (cmbBOM_ID.Items.Count > 1)
+                    {
+                        MessageBox.Show("请选择要组合的配方");
+                    }
+                }
                 return;
             }
             if (EditEntity.tb_ProdMergeDetails == null)
@@ -781,5 +796,7 @@ protected async override void ReReview()
         {
             LoadItemsFromBOM();
         }
+
+     
     }
 }

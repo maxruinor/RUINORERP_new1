@@ -68,7 +68,10 @@ namespace RUINORERP.UI.SysConfig
             var configEntries = await ctr.QueryAsync();
             foreach (var entry in configEntries)
             {
-                _configCache[entry.ConfigKey] = entry.ConfigValue;
+                if(!_configCache.ContainsKey(entry.ConfigKey))
+                {
+                    _configCache.Add(entry.ConfigKey, entry.ConfigValue);
+                }
             }
 
         }

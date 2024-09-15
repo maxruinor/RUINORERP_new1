@@ -132,7 +132,7 @@
             // 
             // lblSpecifications
             // 
-            this.lblSpecifications.Location = new System.Drawing.Point(316, 43);
+            this.lblSpecifications.Location = new System.Drawing.Point(319, 46);
             this.lblSpecifications.Name = "lblSpecifications";
             this.lblSpecifications.Size = new System.Drawing.Size(62, 20);
             this.lblSpecifications.TabIndex = 173;
@@ -140,7 +140,7 @@
             // 
             // lblproperty
             // 
-            this.lblproperty.Location = new System.Drawing.Point(316, 74);
+            this.lblproperty.Location = new System.Drawing.Point(319, 72);
             this.lblproperty.Name = "lblproperty";
             this.lblproperty.Size = new System.Drawing.Size(62, 20);
             this.lblproperty.TabIndex = 174;
@@ -148,7 +148,7 @@
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(316, 96);
+            this.kryptonLabel2.Location = new System.Drawing.Point(319, 96);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel2.TabIndex = 171;
@@ -165,7 +165,7 @@
             // 
             // lblBOM_ID
             // 
-            this.lblBOM_ID.Location = new System.Drawing.Point(599, 49);
+            this.lblBOM_ID.Location = new System.Drawing.Point(45, 131);
             this.lblBOM_ID.Name = "lblBOM_ID";
             this.lblBOM_ID.Size = new System.Drawing.Size(62, 20);
             this.lblBOM_ID.TabIndex = 165;
@@ -175,15 +175,15 @@
             // 
             this.cmbBOM_ID.DropDownWidth = 100;
             this.cmbBOM_ID.IntegralHeight = false;
-            this.cmbBOM_ID.Location = new System.Drawing.Point(672, 45);
+            this.cmbBOM_ID.Location = new System.Drawing.Point(118, 127);
             this.cmbBOM_ID.Name = "cmbBOM_ID";
-            this.cmbBOM_ID.Size = new System.Drawing.Size(143, 21);
+            this.cmbBOM_ID.Size = new System.Drawing.Size(149, 21);
             this.cmbBOM_ID.TabIndex = 166;
             this.cmbBOM_ID.SelectedIndexChanged += new System.EventHandler(this.cmbBOM_ID_SelectedIndexChanged);
             // 
             // lblBOM_No
             // 
-            this.lblBOM_No.Location = new System.Drawing.Point(599, 74);
+            this.lblBOM_No.Location = new System.Drawing.Point(586, 49);
             this.lblBOM_No.Name = "lblBOM_No";
             this.lblBOM_No.Size = new System.Drawing.Size(62, 20);
             this.lblBOM_No.TabIndex = 167;
@@ -191,14 +191,14 @@
             // 
             // txtBOM_No
             // 
-            this.txtBOM_No.Location = new System.Drawing.Point(672, 70);
+            this.txtBOM_No.Location = new System.Drawing.Point(652, 43);
             this.txtBOM_No.Name = "txtBOM_No";
             this.txtBOM_No.Size = new System.Drawing.Size(143, 23);
             this.txtBOM_No.TabIndex = 168;
             // 
             // lblBOM_Name
             // 
-            this.lblBOM_Name.Location = new System.Drawing.Point(599, 99);
+            this.lblBOM_Name.Location = new System.Drawing.Point(586, 74);
             this.lblBOM_Name.Name = "lblBOM_Name";
             this.lblBOM_Name.Size = new System.Drawing.Size(62, 20);
             this.lblBOM_Name.TabIndex = 169;
@@ -206,7 +206,7 @@
             // 
             // txtBOM_Name
             // 
-            this.txtBOM_Name.Location = new System.Drawing.Point(672, 95);
+            this.txtBOM_Name.Location = new System.Drawing.Point(652, 70);
             this.txtBOM_Name.Name = "txtBOM_Name";
             this.txtBOM_Name.Size = new System.Drawing.Size(143, 23);
             this.txtBOM_Name.TabIndex = 170;
@@ -246,7 +246,7 @@
             // 
             // lblLocation_ID
             // 
-            this.lblLocation_ID.Location = new System.Drawing.Point(45, 75);
+            this.lblLocation_ID.Location = new System.Drawing.Point(45, 72);
             this.lblLocation_ID.Name = "lblLocation_ID";
             this.lblLocation_ID.Size = new System.Drawing.Size(62, 20);
             this.lblLocation_ID.TabIndex = 157;
@@ -256,7 +256,7 @@
             // 
             this.cmbLocation_ID.DropDownWidth = 100;
             this.cmbLocation_ID.IntegralHeight = false;
-            this.cmbLocation_ID.Location = new System.Drawing.Point(118, 71);
+            this.cmbLocation_ID.Location = new System.Drawing.Point(118, 69);
             this.cmbLocation_ID.Name = "cmbLocation_ID";
             this.cmbLocation_ID.Size = new System.Drawing.Size(149, 21);
             this.cmbLocation_ID.TabIndex = 158;
@@ -264,7 +264,7 @@
             // 
             // lblMergeTargetQty
             // 
-            this.lblMergeTargetQty.Location = new System.Drawing.Point(45, 131);
+            this.lblMergeTargetQty.Location = new System.Drawing.Point(586, 96);
             this.lblMergeTargetQty.Name = "lblMergeTargetQty";
             this.lblMergeTargetQty.Size = new System.Drawing.Size(62, 20);
             this.lblMergeTargetQty.TabIndex = 147;
@@ -272,21 +272,21 @@
             // 
             // txtMergeTargetQty
             // 
-            this.txtMergeTargetQty.Location = new System.Drawing.Point(118, 127);
+            this.txtMergeTargetQty.Location = new System.Drawing.Point(652, 96);
             this.txtMergeTargetQty.Name = "txtMergeTargetQty";
-            this.txtMergeTargetQty.Size = new System.Drawing.Size(149, 23);
+            this.txtMergeTargetQty.Size = new System.Drawing.Size(143, 23);
             this.txtMergeTargetQty.TabIndex = 148;
             // 
             // txtSpecifications
             // 
-            this.txtSpecifications.Location = new System.Drawing.Point(384, 43);
+            this.txtSpecifications.Location = new System.Drawing.Point(384, 42);
             this.txtSpecifications.Name = "txtSpecifications";
             this.txtSpecifications.Size = new System.Drawing.Size(152, 23);
             this.txtSpecifications.TabIndex = 152;
             // 
             // txtproperty
             // 
-            this.txtproperty.Location = new System.Drawing.Point(384, 68);
+            this.txtproperty.Location = new System.Drawing.Point(384, 69);
             this.txtproperty.Multiline = true;
             this.txtproperty.Name = "txtproperty";
             this.txtproperty.Size = new System.Drawing.Size(152, 21);
@@ -309,7 +309,7 @@
             // 
             // txtProdDetailID
             // 
-            this.txtProdDetailID.Location = new System.Drawing.Point(118, 98);
+            this.txtProdDetailID.Location = new System.Drawing.Point(118, 97);
             this.txtProdDetailID.Name = "txtProdDetailID";
             this.txtProdDetailID.ReadOnly = true;
             this.txtProdDetailID.Size = new System.Drawing.Size(149, 23);
@@ -328,11 +328,11 @@
             // 
             // lblProdDetailID
             // 
-            this.lblProdDetailID.Location = new System.Drawing.Point(71, 97);
+            this.lblProdDetailID.Location = new System.Drawing.Point(48, 101);
             this.lblProdDetailID.Name = "lblProdDetailID";
-            this.lblProdDetailID.Size = new System.Drawing.Size(36, 20);
+            this.lblProdDetailID.Size = new System.Drawing.Size(59, 20);
             this.lblProdDetailID.TabIndex = 115;
-            this.lblProdDetailID.Values.Text = "母件";
+            this.lblProdDetailID.Values.Text = "母件SKU";
             // 
             // lblNotes
             // 
@@ -347,7 +347,7 @@
             this.txtNotes.Location = new System.Drawing.Point(118, 154);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(445, 43);
+            this.txtNotes.Size = new System.Drawing.Size(943, 43);
             this.txtNotes.TabIndex = 104;
             // 
             // lblPrintStatus

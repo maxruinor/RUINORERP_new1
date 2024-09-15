@@ -181,6 +181,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             {
                                 case "datetime":
                                     // _editor = new SourceGrid.Cells.Editors.TextBoxUITypeEditor(typeof(DateTime));
+                                    col.CustomFormat = CustomFormatType.DateTime;
                                     break;
                                 case "money":
                                     col.CustomFormat = CustomFormatType.CurrencyFormat;
@@ -1070,6 +1071,8 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 图片路径形式保存，会上传图片到服务器的
         /// </summary>
         WebImage,
+
+        DateTime,
     }
 
 }

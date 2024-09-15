@@ -151,7 +151,7 @@ namespace SourceGrid.Cells
             {
                 //      return GetContext().DisplayText;
                 //}
-                if (!string.IsNullOrEmpty(_DisplayText))
+                if (string.IsNullOrEmpty(_DisplayText))
                 {
 
                     return Value.ToString();

@@ -133,20 +133,20 @@ namespace RUINORERP.UI.UCSourceGrid
             base.OnValueChanged(sender, e);
             // string val = "Value of cell {0} is '{1}'";
             //MainForm.Instance.uclog.AddLog("CellChanged", string.Format(val, sender.Position, sender.Value));
-            if (sender.Value == null || sender.Value.IsNullOrEmpty())
-            {
-                //清空关联值
-                //CurrGridDefine.SetDependTargetValue(null, sender.Position, null, CurrGridDefine[sender.Position.Column].ColName);
-                return;
-            }
-            else
-            {
-                //如果是关联列就跳过,如果是指向  导向列，即可指向明细的列则更新值
-                //if (CurrGridDefine.DependQuery.RelatedCols.Any(c => c.ColIndex == sender.Position.Column && !c.GuideToTargetColumn))
-                //{
-                //    return;
-                //}
-            }
+            //if (sender.Value == null || sender.Value.IsNullOrEmpty())
+            //{
+            //    //清空关联值
+            //    //CurrGridDefine.SetDependTargetValue(null, sender.Position, null, CurrGridDefine[sender.Position.Column].ColName);
+            //    return;
+            //}
+            //else
+            //{
+            //    //如果是关联列就跳过,如果是指向  导向列，即可指向明细的列则更新值
+            //    //if (CurrGridDefine.DependQuery.RelatedCols.Any(c => c.ColIndex == sender.Position.Column && !c.GuideToTargetColumn))
+            //    //{
+            //    //    return;
+            //    //}
+            //}
             if (!CurrGridDefine[sender.Position.Column].GuideToTargetColumn || CurrGridDefine[sender.Position.Column].IsRowHeaderCol)
             {
                 //如果不是单据明细值的变化不需要处理
@@ -161,8 +161,54 @@ namespace RUINORERP.UI.UCSourceGrid
             var setcurrentObj = CurrGridDefine.grid.Rows[sender.Position.Row].RowData;
             if (setcurrentObj != null)
             {
-
                 ReflectionHelper.SetPropertyValue(setcurrentObj, CurrGridDefine[sender.Position.Column].ColName, realTypeVal);
+                #region 处理特殊情况  比方 时间值为：{0001-01-01 0:00:00}
+                switch (CurrGridDefine[sender.Position.Column].CustomFormat)
+                {
+                    case CustomFormatType.DateTime:
+                        if (realTypeVal.ToString() == "0001-01-01 0:00:00"|| realTypeVal.ToString() =="1900-01-01 0:00:00")
+                        {
+                            //如果可空，则NULL，否则指定为最小时间 1975？
+                            var propertyInfo = setcurrentObj.GetPropertyValue(CurrGridDefine[sender.Position.Column].ColName);
+                            //判断属性是否可以为null
+                            if (propertyInfo != null)
+                            {
+
+                            }
+                        }
+                        break;
+
+
+
+
+
+                    case CustomFormatType.Bool:
+                        ReflectionHelper.SetPropertyValue(setcurrentObj, CurrGridDefine[sender.Position.Column].ColName, realTypeVal);
+                        bool bl = realTypeVal.ToBool();
+                        if (bl == true)
+                        {
+                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = "是";
+                        }
+                        else
+                        {
+                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = "否";
+                        }
+
+                        break;
+                    case CustomFormatType.WebImage:
+                        CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
+                        CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Tag = sender.Tag;
+                        break;
+                    case CustomFormatType.Image:
+                        CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
+                        break;
+                    case CustomFormatType.DefaultFormat:
+                    default:
+                        ReflectionHelper.SetPropertyValue(setcurrentObj, CurrGridDefine[sender.Position.Column].ColName, realTypeVal);
+                        break;
+                }
+                #endregion
+
             }
             else
             {
@@ -267,61 +313,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             #endregion
 
-            #region 处理显示格式
 
-            switch (CurrGridDefine[sender.Position.Column].CustomFormat)
-            {
-                case CustomFormatType.DefaultFormat:
-                    break;
-                case CustomFormatType.PercentFormat:
-
-                    object cellvalue = CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value;
-                    if (cellvalue != null)
-                    {
-                        //实际上面转换过一次了。
-                        var realvalue = cellvalue.ChangeType_ByConvert(CurrGridDefine[sender.Position.Column].ColPropertyInfo.PropertyType);
-                        if (CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Editor != null)
-                        {
-                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Editor.ValueToDisplayString(realvalue);
-                        }
-
-                    }
-
-                    break;
-                case CustomFormatType.CurrencyFormat:
-
-                    //var ColCurrencyTypeConverter = new DevAge.ComponentModel.Converter.CurrencyTypeConverter(typeof(decimal));???还使用吗？
-                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = realTypeVal;
-                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = string.Format("{0:C}", realTypeVal);
-
-                    break;
-                case CustomFormatType.DecimalPrecision:
-                    break;
-
-
-                case CustomFormatType.Bool:
-                    bool bl = realTypeVal.ToBool();
-                    if (bl == true)
-                    {
-                        CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = "是";
-                    }
-                    else
-                    {
-                        CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = "否";
-                    }
-
-                    break;
-                case CustomFormatType.WebImage:
-                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
-                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Tag = sender.Tag;
-                    break;
-                case CustomFormatType.Image:
-                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
-                    break;
-                default:
-                    break;
-            }
-            #endregion
 
 
             #region  总计  要放最后，因为其他计算会用到的结果值
@@ -348,7 +340,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.CurrencyFormat)
                 {
                     CurrGridDefine.grid[CurrGridDefine.grid.RowsCount - 1, sender.Position.Column].DisplayText = string.Format("{0:C}", totalTemp);//这样才显示了货币符号
-                    //CurrGridDefine.grid[CurrGridDefine.grid.RowsCount - 1, sender.Position.Column].Value = string.Format("{0:C}", totalTemp); //这样才显示了货币符号
+                                                                                                                                                   //CurrGridDefine.grid[CurrGridDefine.grid.RowsCount - 1, sender.Position.Column].Value = string.Format("{0:C}", totalTemp); //这样才显示了货币符号
                 }
 
             }
@@ -362,7 +354,41 @@ namespace RUINORERP.UI.UCSourceGrid
                 OnCalculateColumnValue(currentObj, CurrGridDefine, sender.Position);
             }
 
+            #region 主要处理显示的格式，因为经过了计算 必要时覆盖上面的赋值过程
 
+            switch (CurrGridDefine[sender.Position.Column].CustomFormat)
+            {
+
+                case CustomFormatType.DefaultFormat:
+                    break;
+                case CustomFormatType.DateTime:
+                    break;
+                case CustomFormatType.PercentFormat:
+                    object cellvalue = CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value;
+                    if (cellvalue != null)
+                    {
+                        //实际上面转换过一次了。
+                        var realvalue = cellvalue.ChangeType_ByConvert(CurrGridDefine[sender.Position.Column].ColPropertyInfo.PropertyType);
+                        if (CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Editor != null)
+                        {
+                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Editor.ValueToDisplayString(realvalue);
+                        }
+                    }
+
+                    break;
+                case CustomFormatType.CurrencyFormat:
+
+                    //var ColCurrencyTypeConverter = new DevAge.ComponentModel.Converter.CurrencyTypeConverter(typeof(decimal));???还使用吗？
+                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = realTypeVal;
+                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = string.Format("{0:C}", realTypeVal);
+
+                    break;
+                case CustomFormatType.DecimalPrecision:
+                    break;
+                default:
+                    break;
+            }
+            #endregion
         }
 
 

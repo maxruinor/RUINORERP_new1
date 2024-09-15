@@ -64,6 +64,7 @@ using Google.Protobuf.Collections;
 using ExCSS;
 using RUINORERP.Model.Models;
 using RUINORERP.Business.CommService;
+using RUINORERP.UI.SysConfig;
 
 
 
@@ -1225,40 +1226,33 @@ namespace RUINORERP.UI
                 Thread.Sleep(100);
                 //System.Timers.Timer AutoTaskTimer = new System.Timers.Timer(3600000);//每隔一个小时执行一次，没用winfrom自带的
                 //System.Timers.Timer AutoTaskTimer = new System.Timers.Timer(1800000);//每隔半个小时执行一次，没用winfrom自带的
-
                 //AutoTaskTimer.Elapsed += AutoTaskTimer_Elapsed;//委托，要执行的方法
                 //AutoTaskTimer.AutoReset = true;//获取该定时器自动执行
                 //AutoTaskTimer.Enabled = true;//这个一定要写，要不然定时器不会执行的
-
-
                 /*
                 voidHandler handler = new voidHandler(LoadEvent);
                 //异步操作接口(注意BeginInvoke方法的不同！)
                 IAsyncResult result = handler.BeginInvoke(new AsyncCallback(callback), "AsycState:OK");
                 Thread.Sleep(2000);
                 */
-
                 ////加载完成后，才执行
                 //frmMainCenter center = new frmMainCenter();
                 // center.WindowState = FormWindowState.Maximized;
                 //center.MdiParent = frmMain.Instance;
                 //center.Show();
                 //TX();
-
                 //this.tbr_Toolbar.ButtonClick += new System.Windows.Forms.ToolBarButtonClickEventHandler(this.tbr_Toolbar_ButtonClick);
-
-
                 this.menuStripMain.Items.Clear();
                 //MenuPowerHelper p = new MenuPowerHelper();
                 MenuPowerHelper p = Startup.GetFromFac<MenuPowerHelper>();
                 MenuList = p.AddMenu(this.menuStripMain);
                 p.OtherEvent += p_OtherEvent;
                 p.MainMenu = this.menuStripMain;
+                ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
                 voidHandler handler = new voidHandler(LoadEvent);
                 //异步操作接口(注意BeginInvoke方法的不同！)
                 IAsyncResult result = handler.BeginInvoke(new AsyncCallback(callback), "AsycState:OK");
                 Thread.Sleep(100);
-
                 //for csla 
                 //if (AuthenticationType == "Windows")
                 if (false)

@@ -123,6 +123,21 @@ namespace RUINORERP.UI.FM
             txtstatus.ReadOnly = true;
             if (entity.tb_FM_ExpenseClaimDetails != null && entity.tb_FM_ExpenseClaimDetails.Count > 0)
             {
+                //新建和草稿时子表编辑也可以保存。
+                foreach (var item in entity.tb_FM_ExpenseClaimDetails)
+                {
+                    item.PropertyChanged += (sender, s1) =>
+                    {
+                        //权限允许
+                        if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
+                        {
+                            entity.ActionStatus = ActionStatus.修改;
+                            base.ToolBarEnabledControl(MenuItemEnums.修改);
+                            chkClaimEmployee.Enabled = true;
+                        }
+                    };
+                }
+
                 sgh.LoadItemDataToGrid<tb_FM_ExpenseClaimDetail>(grid1, sgd, entity.tb_FM_ExpenseClaimDetails, c => c.ClaimSubID);
             }
             else
@@ -371,7 +386,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-  
+
 
         protected override async Task<bool> Submit()
         {

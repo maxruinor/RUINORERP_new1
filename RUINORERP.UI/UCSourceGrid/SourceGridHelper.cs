@@ -483,6 +483,18 @@ namespace RUINORERP.UI.UCSourceGrid
                                         ReflectionHelper.SetPropertyValue(currentObj, dc.ColName, cellvalue);
                                     }
                                 }
+
+                                #region 处理特殊列
+                                //如果是产品图片时，显示出来
+                                if (dc.CustomFormat == CustomFormatType.Image)
+                                {
+                                    grid1[pt].View = new SourceGrid.Cells.Views.SingleImage();
+                                }
+                                if (dc.CustomFormat == CustomFormatType.WebImage)
+                                {
+                                    grid1[pt].View = new SourceGrid.Cells.Views.SingleImageWeb();
+                                }
+                                #endregion
                             }
 
                         }
@@ -585,13 +597,15 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 grid1.Rows[ii].RowData = null;
             }
+            /*
             List<int> deleteRows = new List<int>();
             for (int r = 1; r < grid1.Rows.Count - 1; r++)
             {
                 deleteRows.Add(grid1.Rows[r].Index);
             }
-            DeleteRow(sgdefine, deleteRows.ToArray());
-            /*
+            DeleteRow(sgdefine, deleteRows.ToArray());*/
+
+
             //清空明细表格
             #region
             //先清空 不包含 列头和总计
@@ -640,8 +654,8 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
             #endregion
-            */
-     
+
+
             int i = 1;
             InsertItemData<C>(grid1, sgdefine, _details, BizKeyTargetColExp, i, true);
         }

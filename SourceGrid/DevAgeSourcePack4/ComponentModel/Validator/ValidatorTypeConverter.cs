@@ -76,12 +76,42 @@ namespace DevAge.ComponentModel.Validator
             {
                 string tmp = (string)e.Value;
                 if (IsNullString(tmp) && e.DestinationType.IsAssignableFrom(typeof(string)))
-                    e.Value = "";//TODO: by watson 注意 本来这里应该返回null，但是因为string类型不支持null，所以这里返回空字符串。
-                else if (e.DestinationType.IsAssignableFrom(e.Value.GetType())) //se la stringa non ?nulla e il tipo di destinazione ?sempre una string allora non faccio nessuna conversione
                 {
+                    e.Value = "";//TODO: by watson 注意 本来这里应该返回null，但是因为string类型不支持null，所以这里返回空字符串。
+                }
+                else if (IsNullString(tmp) && !e.DestinationType.IsAssignableFrom(e.Value.GetType()))
+                {
+                    #region 引用类型转换为空字符串，值类型转换为默认值，实际是全部转换为null了。要先判断值类型，再判断引用类型才对。
+                    // 尝试将引用类型的属性设置为 null
+                    if (e.Value.GetType().IsClass)
+                    {
+                        e.Value = null;
+                    }
+                    // 值类型的属性不能设置为 null，这里可以进行特殊处理，例如重置为默认值
+                    else if (e.Value.GetType().IsValueType)
+                    {
+                        // 重置为默认值
+                        e.Value = Activator.CreateInstance(e.Value.GetType());
+                    }
+                    #endregion
+                }
+                else if (e.DestinationType.IsAssignableFrom(e.Value.GetType())) //如果目标类型与值类型相同，则直接返回值
+                {
+
+
                 }
                 else if (IsStringConversionSupported())
+                {
+                    //try
+                    //{
                     e.Value = m_TypeConverter.ConvertFromString(EmptyTypeDescriptorContext.Empty, CultureInfo, tmp);
+                    //}
+                    //catch (Exception ex)
+                    //{
+
+                    //}
+
+                }
                 else
                     throw new ApplicationException("此类型的验证器不支持字符串转换。");
             }
@@ -99,8 +129,11 @@ namespace DevAge.ComponentModel.Validator
                 if (m_TypeConverter is StringConverter)
                     e.Value = SourceGridConvert.To<string>(e.Value);
                 else
-                    // otherwise just do normal conversion
+                // 否则，只需进行正常转换
+                {
                     e.Value = m_TypeConverter.ConvertFrom(EmptyTypeDescriptorContext.Empty, CultureInfo, e.Value);
+                }
+
             }
         }
         /// <summary>

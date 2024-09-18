@@ -391,13 +391,36 @@ namespace RUINORERP.Common.Extensions
             return obj.GetType().GetProperty(propertyName, BindingFlags) != null;
         }
 
-        /// <summary>
-        /// 获取某属性值
-        /// </summary>
-        /// <param name="obj">对象</param>
-        /// <param name="propertyName">属性名</param>
-        /// <returns></returns>
-        public static object GetPropertyValue(this object obj, string propertyName)
+
+        public static PropertyInfo GetPropertyInfo<T>(this T obj, string propertyName)
+        {
+            if (obj == null)
+            {
+                throw new ArgumentNullException(nameof(obj));
+            }
+
+            Type type = obj.GetType();
+            return type.GetProperty(propertyName);
+        }
+        public static PropertyInfo GetPropertyInfo(this Type type, string propertyName)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            return type.GetProperty(propertyName);
+        }
+    
+
+
+    /// <summary>
+    /// 获取某属性值
+    /// </summary>
+    /// <param name="obj">对象</param>
+    /// <param name="propertyName">属性名</param>
+    /// <returns></returns>
+    public static object GetPropertyValue(this object obj, string propertyName)
         {
             return obj.GetType().GetProperty(propertyName, BindingFlags)?.GetValue(obj);
         }
@@ -533,12 +556,84 @@ namespace RUINORERP.Common.Extensions
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("转换错误:" + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             }
             return resObj;
         }
 
+        /// <summary>
+        /// 将一个对象中的指定属性名的属性设置为null（值类型重置为默认值)
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="propertyName"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static void SetPropertyInfoToNull(this object obj, string propertyName)
+        {
+            if (obj == null)
+            {
+                throw new ArgumentNullException(nameof(obj));
+            }
+
+            Type type = obj.GetType();
+            PropertyInfo[] properties = type.GetProperties();
+
+            foreach (PropertyInfo property in properties)
+            {
+                // 检查是否可以写入（可设置值）并且不是索引器或只读属性
+                if (property.CanWrite && property.Name == propertyName)
+                {
+                    // 尝试将引用类型的属性设置为 null
+                    if (property.PropertyType.IsClass || Nullable.GetUnderlyingType(property.PropertyType) != null)
+                    {
+                        property.SetValue(obj, null, null);
+                    }
+                    // 值类型的属性不能设置为 null，这里可以进行特殊处理，例如重置为默认值
+                    else if (property.PropertyType.IsValueType)
+                    {
+                        // 重置为默认值
+                        property.SetValue(obj, Activator.CreateInstance(property.PropertyType), null);
+                    }
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将一个对象中的指定属性名的属性设置为null（值类型重置为默认值)
+        /// 这个方法有点小问题。但是在这里确实可以按照这逻辑使用，就是如果要null值设置，可以当做直接返回的意思。
+        /// 修改的方法就是先判断值类型。else就是null值设置
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="propertyName"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static void SetPropertyInfoToNull(this object obj, PropertyInfo property)
+        {
+            if (obj == null)
+            {
+                throw new ArgumentNullException(nameof(obj));
+            }
+            if (property == null)
+            {
+                throw new ArgumentNullException(nameof(property));
+            }
+            // 检查是否可以写入（可设置值）并且不是索引器或只读属性
+            if (property.CanWrite)
+            {
+                // 尝试将引用类型的属性设置为 null
+                if (property.PropertyType.IsClass || Nullable.GetUnderlyingType(property.PropertyType) != null)
+                {
+                    property.SetValue(obj, null, null);
+                }
+                // 值类型的属性不能设置为 null，这里可以进行特殊处理，例如重置为默认值
+                else if (property.PropertyType.IsValueType)
+                {
+                    // 重置为默认值
+                    property.SetValue(obj, Activator.CreateInstance(property.PropertyType), null);
+                }
+            }
+        }
+  
 
         /// <summary>
         /// GenericTypeExtensions这个类中已经使用

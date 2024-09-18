@@ -20,6 +20,7 @@ using Mysqlx;
 using ZXing.Common;
 using SourceGrid.Cells.Editors;
 using NPOI.SS.UserModel;
+using System.Reflection;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -131,14 +132,13 @@ namespace RUINORERP.UI.UCSourceGrid
         public override void OnValueChanged(SourceGrid.CellContext sender, EventArgs e)
         {
             base.OnValueChanged(sender, e);
-            // string val = "Value of cell {0} is '{1}'";
-            //MainForm.Instance.uclog.AddLog("CellChanged", string.Format(val, sender.Position, sender.Value));
-            //if (sender.Value == null || sender.Value.IsNullOrEmpty())
-            //{
-            //    //清空关联值
-            //    //CurrGridDefine.SetDependTargetValue(null, sender.Position, null, CurrGridDefine[sender.Position.Column].ColName);
-            //    return;
-            //}
+
+            if (sender.Value == null && CurrGridDefine[sender.Position.Column].IsPrimaryBizKeyColumn)
+            {
+                //清空关联值
+                CurrGridDefine.SetDependTargetValue(null, sender.Position, null, CurrGridDefine[sender.Position.Column].ColName);
+                return;
+            }
             //else
             //{
             //    //如果是关联列就跳过,如果是指向  导向列，即可指向明细的列则更新值
@@ -153,20 +153,27 @@ namespace RUINORERP.UI.UCSourceGrid
                 return;
             }
 
-            //将UI值转换后赋值给对象 很重要
-            var realTypeVal = sender.Value.ChangeType_ByConvert(CurrGridDefine[sender.Position.Column].ColPropertyInfo.PropertyType);
-            //var realTypeVal = Convert.ChangeType(sender.Value, CurrGridDefine[sender.Position.Column].ColPropertyInfo.PropertyType);
 
             //要把当前合法的值给到 真正的对象
             var setcurrentObj = CurrGridDefine.grid.Rows[sender.Position.Row].RowData;
             if (setcurrentObj != null)
             {
+                //将UI值转换后赋值给对象 很重要
+                //如果sender.value=null ，如果是将业务主键都置为null。则对应数据行清空。其它全部置为null
+                if (sender.Value == null)
+                {
+                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = null;
+                    PropertyInfo propertyInfo = setcurrentObj.GetType().GetPropertyInfo(CurrGridDefine[sender.Position.Column].ColName);
+                    setcurrentObj.SetPropertyInfoToNull(propertyInfo);
+                    return;
+                }
+                var realTypeVal = sender.Value.ChangeType_ByConvert(CurrGridDefine[sender.Position.Column].ColPropertyInfo.PropertyType);
                 ReflectionHelper.SetPropertyValue(setcurrentObj, CurrGridDefine[sender.Position.Column].ColName, realTypeVal);
                 #region 处理特殊情况  比方 时间值为：{0001-01-01 0:00:00}
                 switch (CurrGridDefine[sender.Position.Column].CustomFormat)
                 {
                     case CustomFormatType.DateTime:
-                        if (realTypeVal.ToString() == "0001-01-01 0:00:00"|| realTypeVal.ToString() =="1900-01-01 0:00:00")
+                        if (realTypeVal.ToString() == "0001-01-01 0:00:00" || realTypeVal.ToString() == "1900-01-01 0:00:00")
                         {
                             //如果可空，则NULL，否则指定为最小时间 1975？
                             var propertyInfo = setcurrentObj.GetPropertyValue(CurrGridDefine[sender.Position.Column].ColName);
@@ -177,11 +184,6 @@ namespace RUINORERP.UI.UCSourceGrid
                             }
                         }
                         break;
-
-
-
-
-
                     case CustomFormatType.Bool:
                         ReflectionHelper.SetPropertyValue(setcurrentObj, CurrGridDefine[sender.Position.Column].ColName, realTypeVal);
                         bool bl = realTypeVal.ToBool();
@@ -212,6 +214,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             else
             {
+                CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = null;
                 return;
             }
 
@@ -379,8 +382,8 @@ namespace RUINORERP.UI.UCSourceGrid
                 case CustomFormatType.CurrencyFormat:
 
                     //var ColCurrencyTypeConverter = new DevAge.ComponentModel.Converter.CurrencyTypeConverter(typeof(decimal));???还使用吗？
-                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = realTypeVal;
-                    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = string.Format("{0:C}", realTypeVal);
+                    //CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = realTypeVal;
+                    //CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = string.Format("{0:C}", realTypeVal);
 
                     break;
                 case CustomFormatType.DecimalPrecision:

@@ -108,6 +108,7 @@ namespace DevAge.Windows.Forms
                 //如果是web下载的那个 实际是string。要特殊处理
                 //object tmp = System.ComponentModel.TypeDescriptor.GetEditor(Validator.ValueType, typeof(UITypeEditor));
                 object tmp = System.ComponentModel.TypeDescriptor.GetEditor(typeof(System.Drawing.Image), typeof(UITypeEditor));
+                // object tmp = System.ComponentModel.TypeDescriptor.GetEditor(typeof(System.Drawing.Image), typeof(TextBoxUITypeEditorWebImage));
                 if (tmp is UITypeEditor)
                     if (tmp is UITypeEditor)
                     {

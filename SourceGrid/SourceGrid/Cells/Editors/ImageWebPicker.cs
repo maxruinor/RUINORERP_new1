@@ -230,7 +230,7 @@ namespace SourceGrid.Cells.Editors
         /// <returns></returns>
         protected override Control CreateControl()
         {
-            //DevAge.Windows.Forms.TextBoxUITypeEditor editor = new DevAge.Windows.Forms.TextBoxUITypeEditor();
+           // DevAge.Windows.Forms.TextBoxUITypeEditor editor = new DevAge.Windows.Forms.TextBoxUITypeEditor();
             DevAge.Windows.Forms.TextBoxUITypeEditorWebImage editor = new DevAge.Windows.Forms.TextBoxUITypeEditorWebImage();
 
             editor.BorderStyle = DevAge.Drawing.BorderStyle.None;

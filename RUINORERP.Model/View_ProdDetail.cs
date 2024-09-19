@@ -813,6 +813,10 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(ProdBaseID))]
         public virtual tb_Prod tb_prod { get; set; }
 
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
+        public virtual tb_ProdDetail tb_proddetail { get; set; }
         #endregion
 
 

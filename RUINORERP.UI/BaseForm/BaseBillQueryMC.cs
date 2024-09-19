@@ -8,6 +8,7 @@ using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
 using OfficeOpenXml;
 using RUINOR.Core;
 using RUINORERP.AutoMapper;
@@ -28,6 +29,7 @@ using RUINORERP.UI.Common;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
 using RUINORERP.UI.UserCenter;
+using SqlSugar;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -37,6 +39,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -55,7 +58,7 @@ namespace RUINORERP.UI.BaseForm
     /// </summary>
     /// <typeparam name="M"></typeparam>
     /// <typeparam name="C"></typeparam>
-    public partial class BaseBillQueryMC<M, C> : BaseQuery where M : class
+    public partial class BaseBillQueryMC<M, C> : BaseQuery where M : class where C : class
     {
 
         private QueryFilter _QueryConditionFilter = new QueryFilter();
@@ -1419,7 +1422,8 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        private void _UCBillMasterQuery_OnSelectDataRow(object entity)
+
+        private async void _UCBillMasterQuery_OnSelectDataRow(object entity, object bizKey)
         {
             if (entity == null)
             {
@@ -1429,16 +1433,61 @@ namespace RUINORERP.UI.BaseForm
             List<C> list = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(obj, typeof(C).Name + "s") as List<C>;
             if (list == null)
             {
-                return;
-                //特殊情况时
-                if (typeof(M).Name == "tb_ProdctionDemand")
+                //M主为视图C子为表时
+                if (typeof(M).Name.Contains("View"))
                 {
+                    string ChildFKColName = string.Empty;
+                    string MasterPKColName = string.Empty;
+                    foreach (var field in typeof(C).GetProperties())
+                    {
+                        //获取指定类型的自定义特性
+                        object[] attrs = field.GetCustomAttributes(false);
+                        foreach (var attr in attrs)
+                        {
+                            if (attr is FKRelationAttribute)
+                            {
+                                FKRelationAttribute fkrattr = attr as FKRelationAttribute;
+                                if (fkrattr.FKTableName == typeof(C).Name.Replace("Detail", ""))
+                                {
+                                    ChildFKColName = field.Name;
+                                    MasterPKColName = fkrattr.FK_IDColName;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    string pkid = obj.GetType().GetProperty(MasterPKColName).GetValue(obj).ToString();
 
+                    //设置动态表达式
+                    StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
+
+                    //子表都是通过主表的主键关联的。与单号无关
+                    BaseController<C> ctrDetail = Startup.GetFromFacByName<BaseController<C>>(typeof(C).Name + "Controller");
+
+                    var conModels = new List<IConditionalModel>();
+                    conModels.Add(new ConditionalModel
+                    {
+                        FieldName = ChildFKColName,
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = pkid
+                    });
+
+                   var listDeatails =await ctrDetail.BaseGetQueryableAsync()
+                    .Where(conModels).ToListAsync();
+                    if (listDeatails != null)
+                    {
+                        _UCBillChildQuery.bindingSourceChild.DataSource = listDeatails;
+                        _UCBillChildQuery.newSumDataGridViewChild.DataSource = listDeatails;
+                        ShowChildSum();
+                    }
                 }
             }
-            _UCBillChildQuery.bindingSourceChild.DataSource = list.ToBindingSortCollection();
-            _UCBillChildQuery.newSumDataGridViewChild.DataSource = list.ToBindingSortCollection();
-            ShowChildSum();
+            else
+            {
+                _UCBillChildQuery.bindingSourceChild.DataSource = list.ToBindingSortCollection();
+                _UCBillChildQuery.newSumDataGridViewChild.DataSource = list.ToBindingSortCollection();
+                ShowChildSum();
+            }
 
             //相关引用单据明细
             if (OnQueryRelatedChild != null)

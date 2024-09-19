@@ -339,37 +339,13 @@ namespace RUINORERP.UI.FM
                     return false;
                 }
 
-
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
                 if (NeedValidated)
                 {
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        int colindex = sgd.DefineColumns.FirstOrDefault(c => c.ColName == "EvidenceImagePath").ColIndex;
-                        //保存图片到本地临时目录
-                        foreach (var item in EditEntity.tb_FM_ExpenseClaimDetails)
-                        {
-                            for (int i = 0; i < grid1.RowsCount; i++)
-                            {
-                                if (grid1[i, colindex].Value == null)
-                                {
-                                    continue;
-                                }
-                                if (grid1[i, colindex].Value.ToString() == item.EvidenceImagePath)
-                                {
-                                    string imagePath = System.IO.Path.Combine(Application.StartupPath + @"\temp\", item.EvidenceImagePath);
-                                    if (grid1[i, colindex].Tag != null && grid1[i, colindex].Tag is byte[])
-                                    {
-                                        byte[] imageBytes = (byte[])grid1[i, colindex].Tag;
-                                        ImageProcessor.SaveBytesAsImage(imageBytes, imagePath);
-                                    }
-                                }
-                            }
-
-                            await HttpHelper.UploadImageAsync(AppContext.WebServerUrl, item.EvidenceImagePath);
-                        }
-
+                        await SaveImage(false);
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ClaimNo}。");
                     }
                     else
@@ -387,6 +363,84 @@ namespace RUINORERP.UI.FM
         }
 
 
+        private async Task<bool> SaveImage(bool RemoteSave)
+        {
+            bool result = true;
+            foreach (tb_FM_ExpenseClaimDetail detail in EditEntity.tb_FM_ExpenseClaimDetails)
+            {
+                PropertyInfo[] props = typeof(tb_FM_ExpenseClaimDetail).GetProperties();
+                foreach (PropertyInfo prop in props)
+                {
+                    var col = sgd[prop.Name];
+                    if (col != null)
+                    {
+                        if (col.CustomFormat == CustomFormatType.WebImage)
+                        {
+                            //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
+                            int totalRowsFlag = grid1.RowsCount;
+                            if (grid1.HasSummary)
+                            {
+                                totalRowsFlag--;
+                            }
+                            for (int i = 1; i < totalRowsFlag; i++)
+                            {
+                                if (grid1[i, col.ColIndex].Value == null)
+                                {
+                                    continue;
+                                }
+                                string fileName = string.Empty;
+                                if (grid1[i, col.ColIndex].Value.ToString().Contains(".jpg") && grid1[i, col.ColIndex].Value.ToString() == detail.GetPropertyValue(prop.Name).ToString())
+                                {
+                                    fileName = grid1[i, col.ColIndex].Value.ToString();
+                                    fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
+
+                                    var model = grid1[i, col.ColIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                                    SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+
+                                    if (grid1[i, col.ColIndex].Tag == null && valueImageWeb.CellImageBytes != null)
+                                    {
+                                        //保存到本地
+                                        if (EditEntity.DataStatus == (int)DataStatus.草稿)
+                                        {
+                                            //保存在本地临时目录
+                                            ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
+                                            grid1[i, col.ColIndex].Tag = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
+                                        }
+                                        else
+                                        {
+                                            //上传到服务器，删除本地
+                                            //实际应该可以直接传二进制数据，但是暂时没有实现，所以先保存到本地，再上传
+                                            //ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
+                                            string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/"
+                                                , grid1[i, col.ColIndex].Value.ToString(), valueImageWeb.CellImageBytes, "upload");
+                                            //string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, "upload");
+                                            if (true)
+                                            {
+                                                MainForm.Instance.PrintInfoLog(uploadRsult);
+                                            }
+
+
+                                        }
+                                    }
+
+                                }
+
+                                //UploadImage("http://127.0.0.1/upload", "D:/test.jpg", "upload");
+                                // string uploadRsult = await HttpHelper.UploadImageAsync(AppContext.WebServerUrl + @"/upload", fileName, "amw");
+                                //                            string uploadRsult = await HttpHelper.UploadImage(AppContext.WebServerUrl + @"/upload", fileName, "upload");
+
+                            }
+
+
+                        }
+                    }
+                }
+
+
+            }
+            return result;
+        }
+
 
         protected override async Task<bool> Submit()
         {
@@ -399,21 +453,77 @@ namespace RUINORERP.UI.FM
                 {
                     MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
                 }
-                //await AppContext.Db.Updateable(EditEntity).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
-
-                string filePath = @"C:\path\to\your\image.jpg";
-                string uploadUrl = "http://example.com/upload";
-                await ImageUploader.UploadImageAsync(filePath, uploadUrl);
+                await SaveImage(true);
             }
             return true;
         }
 
-        private void chkClaimEmployee_CheckedChanged(object sender, EventArgs e)
+        protected override async Task<bool> DeleteRemoteImages()
         {
-            //if (EditEntity != null && chkClaimEmployee.Checked)
-            //{
-            //    listCols.SetCol_DefaultValue<tb_FM_ExpenseClaimDetail>(c => c.Employee_ID, EditEntity.Employee_ID);
-            //}
+            if (EditEntity == null || EditEntity.tb_FM_ExpenseClaimDetails == null)
+            {
+                return false;
+            }
+
+            bool result = true;
+            foreach (tb_FM_ExpenseClaimDetail detail in EditEntity.tb_FM_ExpenseClaimDetails)
+            {
+                PropertyInfo[] props = typeof(tb_FM_ExpenseClaimDetail).GetProperties();
+                foreach (PropertyInfo prop in props)
+                {
+                    var col = sgd[prop.Name];
+                    if (col != null)
+                    {
+                        if (col.CustomFormat == CustomFormatType.WebImage)
+                        {
+                            //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
+                            int totalRowsFlag = grid1.RowsCount;
+                            if (grid1.HasSummary)
+                            {
+                                totalRowsFlag--;
+                            }
+                            for (int i = 1; i < totalRowsFlag; i++)
+                            {
+                                if (grid1[i, col.ColIndex].Value == null)
+                                {
+                                    continue;
+                                }
+                                string fileName = string.Empty;
+                                if (grid1[i, col.ColIndex].Value.ToString().Contains(".jpg") && grid1[i, col.ColIndex].Value.ToString() == detail.GetPropertyValue(prop.Name).ToString())
+                                {
+                                    fileName = grid1[i, col.ColIndex].Value.ToString();
+                                    fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
+
+                                    //保存在本地临时目录 删除
+                                    if (System.IO.File.Exists(fileName))
+                                    {
+                                        System.IO.File.Delete(fileName);
+                                    }
+
+                                    //上传到服务器，删除本地
+
+                                    string deleteRsult = await HttpHelper.DeleteImageAsync("http://192.168.0.99:8080/upload/" + "deleteImages", fileName, "delete123");
+                                    MainForm.Instance.PrintInfoLog(deleteRsult);
+
+
+
+
+                                }
+
+                                //UploadImage("http://127.0.0.1/upload", "D:/test.jpg", "upload");
+                                // string uploadRsult = await HttpHelper.UploadImageAsync(AppContext.WebServerUrl + @"/upload", fileName, "amw");
+                                //                            string uploadRsult = await HttpHelper.UploadImage(AppContext.WebServerUrl + @"/upload", fileName, "upload");
+
+                            }
+
+
+                        }
+                    }
+                }
+
+
+            }
+            return result;
         }
     }
 }

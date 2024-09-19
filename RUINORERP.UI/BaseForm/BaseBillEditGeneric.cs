@@ -1724,6 +1724,19 @@ namespace RUINORERP.UI.BaseForm
             return rmr;
         }
 
+        /// <summary>
+        /// 删除远程的图片
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        protected async virtual Task<bool> DeleteRemoteImages()
+        {
+            await Task.Delay(0);
+            return false;
+        }
+
+
+
 
         protected async virtual Task<ReturnResults<T>> Delete()
         {
@@ -1754,6 +1767,10 @@ namespace RUINORERP.UI.BaseForm
                             MainForm.Instance.logger.LogInformation($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
                         }
                         bindingSourceSub.Clear();
+
+                        //删除远程图片及本地图片
+                        await DeleteRemoteImages();
+
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
 
@@ -1804,7 +1821,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     ReturnResults<T> rmr = new ReturnResults<T>();
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                  
+
                     rmr = await ctr.BaseSaveOrUpdate(EditEntity);
                     if (rmr.Succeeded)
                     {

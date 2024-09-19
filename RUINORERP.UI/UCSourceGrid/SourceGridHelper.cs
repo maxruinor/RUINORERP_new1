@@ -493,6 +493,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 if (dc.CustomFormat == CustomFormatType.WebImage)
                                 {
                                     grid1[pt].View = new SourceGrid.Cells.Views.SingleImageWeb();
+
                                 }
                                 #endregion
                             }

@@ -833,17 +833,38 @@ namespace RUINORERP.UI.UCSourceGrid
                 return (SourceGridDefineColumnItem)base[index];
             }
         }
+
+        private Dictionary<string, SourceGridDefineColumnItem> _columnItemsByName = new Dictionary<string, SourceGridDefineColumnItem>();
+        public void Add(SourceGridDefineColumnItem item)
+        {
+            base.Add(item);
+            if (!string.IsNullOrEmpty(item.ColName))
+            {
+                _columnItemsByName[item.ColName] = item;
+            }
+        }
         public SourceGridDefineColumnItem this[string name]
         {
             get
             {
-                for (int i = 0; i < this.Count; i++)
+                if (_columnItemsByName.TryGetValue(name, out SourceGridDefineColumnItem item))
                 {
-                    if (this[i].ColCaption == name) return this[i];
+                    return item;
                 }
                 return null;
             }
         }
+        //public SourceGridDefineColumnItem this[string name]
+        //{
+        //    get
+        //    {
+        //        for (int i = 0; i < this.Count; i++)
+        //        {
+        //            if (this[i].ColCaption == name) return this[i];
+        //        }
+        //        return null;
+        //    }
+        //}
 
         public SourceGridDefineColumnItem GetColumnDefineInfo<T>(Expression<Func<T, object>> TargetCol)
         {

@@ -172,7 +172,7 @@ namespace SourceGrid.Cells.Editors
         }
 
         /// <summary>
-        /// Variable that indicate if the InternalEndEdit method is already called. Is used because the InternalEndEdit can be called by a the Control_Validated or directly by the user.
+        /// 变量，指示是否已调用InternalEndEdit方法。之所以使用，是因为InternalEndEdit可以由Control_Validated调用，也可以由用户直接调用。
         /// </summary>
         private bool mIsInsideEndEdit = false;
 

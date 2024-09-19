@@ -22,7 +22,7 @@ using NPOI.Util;
 
 namespace RUINORERP.UI.MRP.BOM
 {
-    [MenuAttrAssemblyInfo("BOM清单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
+    [MenuAttrAssemblyInfo("产品配方查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
     public partial class UCBillOfMaterialsQuery : BaseBillQueryMC<View_BOM, tb_BOM_SDetail>
     {
         public UCBillOfMaterialsQuery()
@@ -70,7 +70,7 @@ namespace RUINORERP.UI.MRP.BOM
                     if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
                     {
                         BaseController<tb_BOM_S> ctr = Startup.GetFromFacByName<BaseController<tb_BOM_S>>(typeof(tb_BOM_S).Name + "Controller");
-                        var mybom = await ctr.BaseQueryByIdNavAsync(item.BOM_ID.Value);
+                        var mybom = await ctr.BaseQueryByIdNavAsync(item.BOM_ID);
                         bool rs = await ctr.BaseDeleteByNavAsync(mybom as tb_BOM_S);
                         if (rs)
                         {

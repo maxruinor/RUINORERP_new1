@@ -52,6 +52,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>()
                 .Includes(c => c.tb_prod, d => d.tb_Packings, e => e.tb_BoxRuleses)
                 .Includes(c => c.tb_prod, d => d.tb_Packings, e => e.tb_PackingDetails)
+                .Includes(c => c.tb_bom_s, e => e.tb_BOM_SDetails)
                 .Includes(c => c.tb_Packing_forSku, e => e.tb_BoxRuleses)
                 .Includes(c => c.tb_Packing_forSku, e => e.tb_PackingDetails)
                 .IncludesAllFirstLayer()//自动导航

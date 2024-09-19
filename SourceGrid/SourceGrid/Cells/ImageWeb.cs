@@ -28,7 +28,7 @@ namespace SourceGrid.Cells
     public class ImageWebCell : Cell
     {
 
-  
+
 
         #region Constructor
         /// <summary>
@@ -47,7 +47,7 @@ namespace SourceGrid.Cells
             Model.RemoveModel(Model.FindModel(typeof(Models.Image)));//感觉这行可以删除 注释掉,但是调试发现会加载这个类型。确实要删除。为什么会添加进到这个容器。后面看
 
             //Then I add a new IImage model that takes the image directly from the value.
-            Model.AddModel(Models.ValueImageWeb.Default);
+            //Model.AddModel(Models.ValueImageWeb.Default); 基类已经添加。这里不重复添加
 
             Editor = Editors.ImageWebPicker.Default;
         }

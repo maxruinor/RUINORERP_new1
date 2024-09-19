@@ -1279,6 +1279,12 @@
     <Compile Include="MRP\BOM\UCBillOfMaterialsTracker.Designer.cs">
       <DependentUpon>UCBillOfMaterialsTracker.cs</DependentUpon>
     </Compile>
+    <Compile Include="MRP\BOM\UCBillOfMaterialsService.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\BOM\UCBillOfMaterialsService.Designer.cs">
+      <DependentUpon>UCBillOfMaterialsService.cs</DependentUpon>
+    </Compile>
     <Compile Include="MRP\PPLAN\UCProduceRequirement.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2445,6 +2451,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MRP\BOM\UCBillOfMaterialsTracker.resx">
       <DependentUpon>UCBillOfMaterialsTracker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\BOM\UCBillOfMaterialsService.resx">
+      <DependentUpon>UCBillOfMaterialsService.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MRP\PPLAN\UCProduceRequirement.resx">
       <DependentUpon>UCProduceRequirement.cs</DependentUpon>

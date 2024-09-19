@@ -104,6 +104,11 @@ namespace SourceGrid.Cells.Views
                             //    valueImageWeb.CellImageHash = ImageHashHelper.GenerateHash(GridImage);
                             //}
                         }
+                        else
+                        {
+                            //т╤Ёлобтьм╪ф╛
+
+                        }
                     }
                     else
                     {

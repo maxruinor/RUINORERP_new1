@@ -3,6 +3,7 @@ using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -124,7 +125,6 @@ namespace RUINORERP.UI.Common
             e.Handled = true;
         }
 
-
         public void DrawPattern(DataGridViewCellPaintingEventArgs e, Color color)
         {
             //SolidBrush brush = new SolidBrush(Color.DarkGreen); // 选择你的颜色
@@ -165,6 +165,36 @@ namespace RUINORERP.UI.Common
                 // 阻止DataGridView继续绘制该单元格
                 e.Handled = true;
             }
+        }
+
+
+        public void DrawPatternTick(DataGridViewCellPaintingEventArgs e, Color color)
+        {
+            // 创建一个画笔用于填充勾的颜色
+            SolidBrush brush = new SolidBrush(color);
+            // 创建一个钢笔用于勾的边框
+            Pen pen = new Pen(brush);
+
+            // 定义勾的尺寸和位置
+            int 勾的宽度 = 6; // 勾的宽度
+            int 勾的高度 = 10; // 勾的高度
+            int 勾的X = e.CellBounds.Left + (e.CellBounds.Width - 勾的宽度) / 2; // 勾的X坐标
+            int 勾的Y = e.CellBounds.Top + (e.CellBounds.Height - 勾的高度) / 2; // 勾的Y坐标
+
+            // 创建一个GraphicsPath对象用于定义勾的路径
+            GraphicsPath path = new GraphicsPath();
+            // 定义勾的起点
+            path.StartFigure();
+            path.AddLine(勾的X, 勾的Y + 勾的高度 / 2, 勾的X + 勾的宽度 / 2, 勾的Y);
+            path.AddLine(勾的X + 勾的宽度 / 2, 勾的Y, 勾的X + 勾的宽度, 勾的Y + 勾的高度 / 2);
+            path.CloseFigure();
+
+            // 绘制勾
+            e.Graphics.FillPath(brush, path);
+            e.Graphics.DrawPath(pen, path);
+
+            // 阻止DataGridView继续绘制该单元格
+            e.Handled = true;
         }
 
     }

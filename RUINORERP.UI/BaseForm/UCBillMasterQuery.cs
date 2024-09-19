@@ -15,6 +15,8 @@ using RUINORERP.Model;
 using FastReport.DevComponents.DotNetBar.Controls;
 using RUINORERP.Common.Extensions;
 using SHControls.DataGrid;
+using SqlSugar;
+using System.Linq.Dynamic.Core;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -103,7 +105,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        public delegate void SelectDataRowHandler(object entity);
+        public delegate void SelectDataRowHandler(object entity, object bizKey = null);
 
         [Browsable(true), Description("双击将数据载入到明细外部事件")]
         public event SelectDataRowHandler OnSelectDataRow;
@@ -112,7 +114,6 @@ namespace RUINORERP.UI.BaseForm
         {
             if (OnSelectDataRow != null && newSumDataGridViewMaster.CurrentRow != null)
             {
-                //
                 OnSelectDataRow(bindingSourceMaster.Current);
             }
         }
@@ -137,11 +138,12 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
+            object bizkey = null;
             if (newSumDataGridViewMaster.CurrentRow != null && newSumDataGridViewMaster.CurrentCell != null)
             {
                 if (newSumDataGridViewMaster.CurrentRow.DataBoundItem != null)
                 {
-                    GridRelated.GuideToForm(newSumDataGridViewMaster.Columns[e.ColumnIndex].Name, newSumDataGridViewMaster.CurrentRow);
+                    bizkey = GridRelated.GuideToForm(newSumDataGridViewMaster.Columns[e.ColumnIndex].Name, newSumDataGridViewMaster.CurrentRow);
                 }
 
             }
@@ -149,6 +151,7 @@ namespace RUINORERP.UI.BaseForm
             if (newSumDataGridViewMaster.RowCount == 1 && OnSelectDataRow != null && newSumDataGridViewMaster.CurrentRow != null)
             {
                 OnSelectDataRow(bindingSourceMaster.Current);
+                 
                 return;
             }
         }

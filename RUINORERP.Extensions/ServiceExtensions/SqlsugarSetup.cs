@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core.CustomTypeProviders;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls.WebParts;
 using Microsoft.Extensions.Caching.Memory;
@@ -21,6 +25,9 @@ namespace RUINORERP.Extensions
     /// </summary>
     public static class SqlsugarSetup
     {
+
+
+
         public delegate void CheckHandler(string sql);
 
         [Browsable(true), Description("引发外部事件")]
@@ -32,7 +39,7 @@ namespace RUINORERP.Extensions
         {
             var logProvider = new Log4NetProviderByCustomeDb("Log4net.config", configuration.GetSection("ConnectString").Value, AppContextData);
             var logger = logProvider.CreateLogger("SqlsugarSetup");
-
+            StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
             var memoryCache = new MemoryCache(new MemoryCacheOptions());
             SqlSugarScope sqlSugar = new SqlSugarScope(new ConnectionConfig()
             {
@@ -40,12 +47,11 @@ namespace RUINORERP.Extensions
                 ConnectionString = configuration[dbName],
                 IsAutoCloseConnection = true,
                 InitKeyType = InitKeyType.Attribute,//就改这一行
-     
-              ConfigureExternalServices = new ConfigureExternalServices()
-                {
-                    DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache)
-                }
 
+                ConfigureExternalServices = new ConfigureExternalServices()
+                {
+                    DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache),
+                }
             },
                 db =>
                 {
@@ -220,5 +226,21 @@ namespace RUINORERP.Extensions
         }
 
     }
+
+
+    public class SqlSugarTypeProvider : DefaultDynamicLinqCustomTypeProvider
+    {
+        public SqlSugarTypeProvider(ParsingConfig config, bool cacheCustomTypes = true) : base(config, cacheCustomTypes)
+        {
+        }
+
+        public override HashSet<Type> GetCustomTypes()
+        {
+            var customTypes = base.GetCustomTypes();
+            customTypes.Add(typeof(SqlFunc));
+            return customTypes;
+        }
+    }
+
 }
 

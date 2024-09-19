@@ -64,7 +64,7 @@ namespace RUINORERP.UI.MRP.BOM
     报废和返工成本：由于生产过程中的缺陷或错误导致的报废品和返工所需的成本。
      
      */
-    [MenuAttrAssemblyInfo("产品物料清单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
+    [MenuAttrAssemblyInfo("产品配方清单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
     public partial class UCBillOfMaterials : BaseBillEditGeneric<tb_BOM_S, tb_BOM_SQueryDto>
     {
         public UCBillOfMaterials()

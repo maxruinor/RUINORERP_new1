@@ -72,3 +72,12 @@ GO
 UPDATE tb_SaleOrder set CustomerVendor_ID=1742450060072980480 WHERE CustomerVendor_ID =1742468592378712064
 UPDATE tb_SaleOut set CustomerVendor_ID=1742450060072980480 WHERE CustomerVendor_ID =1742468592378712064
 UPDATE tb_StockOut set  CustomerVendor_ID=1747521040147419136 WHERE CustomerVendor_ID =1798964468835815424
+
+
+
+
+--检测出产品中设置的默认配方不属于他自己的配方
+SELECT TOP
+	  1000 * FROM	[View_ProdDetail] [it] 
+WHERE	 BOM_ID IS NOT NULL
+	 AND ProdDetailID NOT IN (SELECT ProdDetailID FROM tb_BOM_S WHERE BOM_ID=IT.BOM_ID )

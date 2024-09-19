@@ -435,7 +435,7 @@
             this.chkClaimEmployee.Size = new System.Drawing.Size(101, 20);
             this.chkClaimEmployee.TabIndex = 161;
             this.chkClaimEmployee.Values.Text = "制单人报销";
-            this.chkClaimEmployee.CheckedChanged += new System.EventHandler(this.chkClaimEmployee_CheckedChanged);
+            
             // 
             // UCExpenseClaim
             // 

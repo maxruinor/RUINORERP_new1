@@ -38,8 +38,11 @@ namespace RUINORERP.WebServerConsole
             {
                 var files = rq.ParseBody(args);
 
+                //这里写死的。实际可能要配置性的。
+                string ServerImagesDir = Path.Combine(webDir, "ERPImages");
+
                 foreach (var f in files.Values)
-                    f.Save(Path.Combine(webDir, f.FileName), true);
+                    f.Save(Path.Combine(ServerImagesDir, f.FileName), true);
 
 
                 var txtRp = "Form fields: " + String.Join(";  ", args.Select(x => $"'{x.Key}: {x.Value}'")) + "\n" +
@@ -62,7 +65,12 @@ namespace RUINORERP.WebServerConsole
                 var txt = Templating.RenderFile(Path.Combine(webDir, "UrlParsingResponse.thtml"), args); //populate template
                 rp.AsText(GetUsers(rq));
             });
-
+            //4) 删除图片
+            Route.Add("/deleteImages/", (rq, rp, args) =>
+            {
+                //to override/stylize default error response define a custom error function: Route.Error = (rq, rp, ex) => { };
+              
+            });
 
             //------------------- start server -------------------           
             var port = 8080;

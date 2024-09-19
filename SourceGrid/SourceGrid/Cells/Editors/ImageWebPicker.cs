@@ -230,7 +230,7 @@ namespace SourceGrid.Cells.Editors
         /// <returns></returns>
         protected override Control CreateControl()
         {
-           // DevAge.Windows.Forms.TextBoxUITypeEditor editor = new DevAge.Windows.Forms.TextBoxUITypeEditor();
+            // DevAge.Windows.Forms.TextBoxUITypeEditor editor = new DevAge.Windows.Forms.TextBoxUITypeEditor();
             DevAge.Windows.Forms.TextBoxUITypeEditorWebImage editor = new DevAge.Windows.Forms.TextBoxUITypeEditorWebImage();
 
             editor.BorderStyle = DevAge.Drawing.BorderStyle.None;
@@ -374,17 +374,44 @@ namespace SourceGrid.Cells.Editors
             Control.Tag = p_NewTagValue;
             return base.SetCellTagValue(cellContext, p_NewTagValue); ;
         }
+
+        /// <summary>
+        /// This method is called just before the edit start. You can use this method to customize the editor with the cell informations.
+        /// </summary>
+        /// <param name="cellContext"></param>
+        /// <param name="editorControl"></param>
+        protected override void OnStartingEdit(CellContext cellContext, Control editorControl)
+        {
+            base.OnStartingEdit(cellContext, editorControl);
+            DevAge.Windows.Forms.TextBoxUITypeEditorWebImage l_TxtBox = (DevAge.Windows.Forms.TextBoxUITypeEditorWebImage)editorControl;
+            l_TxtBox.TextBox.WordWrap = cellContext.Cell.View.WordWrap;
+            l_TxtBox.TextBox.TextAlign = DevAge.Windows.Forms.Utilities.ContentToHorizontalAlignment(cellContext.Cell.View.TextAlignment);
+            //to set the scroll of the textbox to the initial position (otherwise the textbox use the previous scroll position)
+            l_TxtBox.TextBox.SelectionStart = 0;
+            l_TxtBox.TextBox.SelectionLength = 0;
+        }
+
+
         public override object GetEditedValue()
         {
-            string path = string.Empty;
-            object val = Control.Value;
+            var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+            if (Control.Tag == null && valueImageWeb.CellImageBytes != null)
+            {
+                return valueImageWeb.CellImageName;
+            }
+            else
+            {
+
+            }
+            object val = Control.Tag;
             if (val == null)
                 return null;
             else if (val is System.Drawing.Image img)
             {
                 SetImageToPath(img);
-                ValueType = typeof(string);
-                Control.Value = fileName;
+                //ValueType = typeof(string);
+                Control.Tag = null;//清空。让第二个单元格可以选择新的图片。
 
             }
             else if (val is byte[])
@@ -404,8 +431,7 @@ namespace SourceGrid.Cells.Editors
                 //Control.Value = val;//= newIamgeFilePath;
                 return val;
             }
-            path = Control.Value.ToString();
-            return path;
+            return Control.Value;
         }
 
 
@@ -463,6 +489,12 @@ namespace SourceGrid.Cells.Editors
 
         public override object GetEditedTagValue()
         {
+            return Control.Tag;
+        }
+
+        /*
+        public override object GetEditedTagValue()
+        {
             var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
             Control.Tag = valueImageWeb.CellImageBytes;
@@ -487,6 +519,7 @@ namespace SourceGrid.Cells.Editors
             }
             return val;  
         }
+        */
     }
 
 

@@ -198,8 +198,19 @@ namespace RUINORERP.UI.UCSourceGrid
 
                         break;
                     case CustomFormatType.WebImage:
-                        CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
-                        CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Tag = sender.Tag;
+                        var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                        SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+                        {
+                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
+                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Tag = valueImageWeb.CellImageBytes;
+                        }
+                        //else
+                        //{
+                        //    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = null;
+                        //    CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Tag = null;
+                        //}
+
                         break;
                     case CustomFormatType.Image:
                         CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
@@ -861,6 +872,19 @@ namespace RUINORERP.UI.UCSourceGrid
 
         public override void OnEditStarting(CellContext sender, CancelEventArgs e)
         {
+            //这个远程图片列，值为图片名称，是自动生成的。
+            if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebImage)
+            {
+                if (sender.Value == null || string.IsNullOrEmpty(sender.Value.ToString()))
+                {
+                    var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                    sender.Value = valueImageWeb.CellImageName;
+                }
+
+                sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
+                sender.Cell.Editor.ApplyEdit();
+            }
         }
         public override void OnEditStarted(CellContext sender, EventArgs e)
         {
@@ -881,7 +905,11 @@ namespace RUINORERP.UI.UCSourceGrid
                         //因为是清空。所以图片也要恢复成默认视图
                         sender.Cell.View = CurrGridDefine.ViewNormal;
                     }
-
+                    if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebImage)
+                    {
+                        //因为是清空。所以图片也要恢复成默认视图
+                        sender.Cell.View = CurrGridDefine.ViewNormal;
+                    }
                 }
                 return;
             }
@@ -910,7 +938,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     //如果图片存在，则显示图片
                     if (System.IO.File.Exists(webPicker.AbsolutelocPath))
                     {
-                        sender.Cell.View = CurrGridDefine.ImagesViewModel;
+                        sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
                     }
                     else if (false)
                     {

@@ -9,7 +9,7 @@ using System.Drawing.Design;
 namespace DevAge.Windows.Forms
 {
     /// <summary>
-    /// A TextBoxTypedButton that uase the UITypeEditor associated with the type.
+    /// TextBoxTypedButton，作为与类型关联的UITypeEditor。至少是一个窗体时，他是公共的的一个对象。所以注意他的值只是临时中转
     /// </summary>
     public class TextBoxUITypeEditorWebImage : DevAgeTextBoxButton, IServiceProvider, System.Windows.Forms.Design.IWindowsFormsEditorService, ITypeDescriptorContext
     {
@@ -19,8 +19,34 @@ namespace DevAge.Windows.Forms
         {
             // This call is required by the Windows Form Designer.
             InitializeComponent();
-
+            this.DialogOpen += new EventHandler(Control_DialogOpen);
         }
+
+
+        private void Control_DialogOpen(object sender, EventArgs e)
+        {
+            // 创建 OpenFileDialog 实例
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+
+            // 设置允许用户选择的文件类型
+            openFileDialog.Filter = "Image Files(*.jpg;*.jpeg;*.gif;*.bmp;*.png)|*.jpg;*.jpeg;*.gif;*.bmp;*.png";
+
+            // 设置标题
+            openFileDialog.Title = "请选择图片文件。";
+
+            // 显示对话框
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                // 获取选中的文件路径
+                SelectedFilePath = openFileDialog.FileName;
+                //this.Tag = System.IO.File.ReadAllBytes(selectedFilePath);
+                //this.Tag = System.Drawing.Image.FromFile(selectedFilePath);
+            }
+        }
+
+
+        private byte[] ImagesBytes ;
+        private string SelectedFilePath = string.Empty;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -53,27 +79,30 @@ namespace DevAge.Windows.Forms
             try
             {
                 OnDialogOpen(EventArgs.Empty);
+              
+                /*
                 if (m_UITypeEditor != null)
                 {
-                    UITypeEditorEditStyle style = m_UITypeEditor.GetEditStyle();
-                    if (style == UITypeEditorEditStyle.DropDown ||
-                        style == UITypeEditorEditStyle.Modal)
+                    //UITypeEditorEditStyle style = m_UITypeEditor.Get();
+                    //if (style == UITypeEditorEditStyle.DropDown ||
+                    //    style == UITypeEditorEditStyle.Modal)
+                    //{
+                    object editObject;
+                    //Try to read the actual value, if the function failed I edit the default value
+                    if (IsValidValue(out editObject) == false)
                     {
-                        object editObject;
-                        //Try to read the actual value, if the function failed I edit the default value
-                        if (IsValidValue(out editObject) == false)
-                        {
-                            if (Validator != null)
-                                editObject = Validator.DefaultValue;
-                            else
-                                editObject = null;
-                        }
-
-                        object tmp = m_UITypeEditor.EditValue(this, this, editObject);
-                        Value = tmp;
+                        if (Validator != null)
+                            editObject = Validator.DefaultValue;
+                        else
+                            editObject = null;
                     }
-                }
 
+                    //object tmp = m_UITypeEditor.EditValue(this, this, editObject);
+                    object tmp = editObject;
+                    Value = tmp;
+                    //}
+                }
+                */
                 OnDialogClosed(EventArgs.Empty);
             }
             catch (Exception err)
@@ -82,13 +111,25 @@ namespace DevAge.Windows.Forms
             }
         }
 
-        private UITypeEditor m_UITypeEditor;
+        //private UITypeEditor m_UITypeEditor;
+
+        ///// <summary>
+        ///// 获取或设置要使用的UITypeEditor。如果指定了验证器，则指定TypeDescriptor。GetEditor方法基于验证器使用。值类型。
+        ///// </summary>
+        //[DefaultValue(null), Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        //public UITypeEditor UITypeEditor
+        //{
+        //    get { return m_UITypeEditor; }
+        //    set { m_UITypeEditor = value; }
+        //}
+
+        private TextBoxUITypeEditorWebImage m_UITypeEditor;
 
         /// <summary>
-        /// Gets or sets the UITypeEditor to use. If you have specified a validator the TypeDescriptor.GetEditor method is used based on the Validator.ValueType.
+        /// 获取或设置要使用的UITypeEditor。如果指定了验证器，则指定TypeDescriptor。GetEditor方法基于验证器使用。值类型。
         /// </summary>
         [DefaultValue(null), Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public UITypeEditor UITypeEditor
+        public TextBoxUITypeEditorWebImage UITypeEditor
         {
             get { return m_UITypeEditor; }
             set { m_UITypeEditor = value; }
@@ -107,13 +148,20 @@ namespace DevAge.Windows.Forms
             {
                 //如果是web下载的那个 实际是string。要特殊处理
                 //object tmp = System.ComponentModel.TypeDescriptor.GetEditor(Validator.ValueType, typeof(UITypeEditor));
-                object tmp = System.ComponentModel.TypeDescriptor.GetEditor(typeof(System.Drawing.Image), typeof(UITypeEditor));
-                // object tmp = System.ComponentModel.TypeDescriptor.GetEditor(typeof(System.Drawing.Image), typeof(TextBoxUITypeEditorWebImage));
-                if (tmp is UITypeEditor)
-                    if (tmp is UITypeEditor)
-                    {
-                        m_UITypeEditor = (UITypeEditor)tmp;
-                    }
+                //object tmp = System.ComponentModel.TypeDescriptor.GetEditor(typeof(System.Drawing.Image), typeof(UITypeEditor));
+                //
+                m_UITypeEditor=new TextBoxUITypeEditorWebImage();
+                //object tmp = new TextBoxUITypeEditorWebImage();
+
+                //    if (tmp is TextBoxUITypeEditorWebImage)
+                //    {
+                //        m_UITypeEditor = (TextBoxUITypeEditorWebImage)tmp;
+                //    }
+                //if (tmp is UITypeEditor)
+                //    if (tmp is UITypeEditor)
+                //    {
+                //        m_UITypeEditor = (UITypeEditor)tmp;
+                //    }
 
 
             }

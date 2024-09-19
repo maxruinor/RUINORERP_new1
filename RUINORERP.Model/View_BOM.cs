@@ -34,7 +34,7 @@ namespace RUINORERP.Model
         }
 
     
-        private long? _BOM_ID;
+        private long _BOM_ID;
         
         
         /// <summary>
@@ -42,9 +42,9 @@ namespace RUINORERP.Model
         /// </summary>
 
         [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "标准配方")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" ,IsNullable = true,ColumnDescription = "标准配方" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" ,IsNullable = true,ColumnDescription = "标准配方", IsPrimaryKey = true)]
         [Display(Name = "标准配方")]
-        public long? BOM_ID 
+        public long BOM_ID 
         { 
             get{return _BOM_ID;}            set{                SetProperty(ref _BOM_ID, value);                }
         }
@@ -607,13 +607,15 @@ namespace RUINORERP.Model
         }
 
 
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
+        public virtual tb_BOM_S tb_bom_s { get; set; }
 
 
 
-
-
-//如果为false,则不可以。
-private bool PK_FK_ID_Check()
+        //如果为false,则不可以。
+        private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;

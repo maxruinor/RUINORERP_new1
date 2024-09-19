@@ -30,9 +30,9 @@ namespace RUINORERP.UI.Common
     {
         public GridViewRelated()
         {
-           
-                menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-           
+
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
         }
         MenuPowerHelper menuPowerHelper;
 
@@ -256,20 +256,6 @@ namespace RUINORERP.UI.Common
 
 
 
-        /*
-               /// <summary>
-        /// 关联单据的列,前面是引用单号列名，后面是 表名+原始单号列名
-        /// 例如：如果在出库单中打开订单：则入订单类型，出库表中的引用订单的单号列名|订单自己的列名
-        /// </summary>
-        public ConcurrentDictionary<string, string> RelatedBillCols { get; set; } = new ConcurrentDictionary<string, string>();
-         */
-
-        //  RelatedBillCols.TryAdd(expRefBillNoColName.GetMemberInfo().Name, typeof(T).Name + "|" + expSourceBillNoColName.GetMemberInfo().Name);
-
-        /*
-            base.RelatedBillEditCol = (c => c.PPNo);
-            base.SetRelatedBillCols<tb_SaleOrder>(c => c.SOrderNo, r => r.SaleOrderNo);
-         */
 
         /// <summary>
         /// 用于要打开的窗体是由源来中的一个列名决定ID或编号，目标表名是由源表格中某一列的值来决定
@@ -277,8 +263,9 @@ namespace RUINORERP.UI.Common
         /// <param name="GridViewColumnFieldName"></param>
         /// <param name="CurrentRowEntity"></param>
         /// <param name="IsFromGridValue">是否从Grid中取值,只是用这个参数来区别一下没有实际作用,后面优化吧</param
-        public void GuideToForm(string GridViewColumnFieldName, object CurrentRowEntity)
+        public object GuideToForm(string GridViewColumnFieldName, object CurrentRowEntity)
         {
+            object bizKey=null;
             tb_MenuInfo RelatedMenuInfo = null;
 
             if (ComplexType)
@@ -315,9 +302,12 @@ namespace RUINORERP.UI.Common
                         var billno = CurrentRowEntity.GetPropertyValue(relatedRelationship.SourceUniqueField);
                         if (billno == null)
                         {
-                            return;
+                            return null;
                         }
-
+                        else
+                        {
+                            bizKey = billno;
+                        }
                         OpenTargetEntity(RelatedMenuInfo, tableName, billno);
                     }
 
@@ -356,9 +346,12 @@ namespace RUINORERP.UI.Common
                         var billno = CurrentRowEntity.GetPropertyValue(relatedRelationship.SourceUniqueField);
                         if (billno == null)
                         {
-                            return;
+                            return null;
                         }
-
+                        else
+                        {
+                            bizKey = billno;
+                        }
                         OpenTargetEntity(RelatedMenuInfo, tableName, billno);
                     }
 
@@ -366,19 +359,25 @@ namespace RUINORERP.UI.Common
                 #endregion
 
             }
-
+            return bizKey;
         }
 
 
-
-        public void GuideToForm(string GridViewColumnFieldName, DataGridViewRow CurrentRow)
+        /// <summary>
+        /// 顺便传回业务主键 可能是ID，可能是编号
+        /// </summary>
+        /// <param name="GridViewColumnFieldName"></param>
+        /// <param name="CurrentRow"></param>
+        /// <returns></returns>
+        public object GuideToForm(string GridViewColumnFieldName, DataGridViewRow CurrentRow)
         {
+            object bizKey = null;
             tb_MenuInfo RelatedMenuInfo = null;
             RelatedInfo relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
             if (relatedRelationship != null)
             {
                 RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-                if (CurrentRow.DataBoundItem is RUINORERP.Model.BaseEntity entity 
+                if (CurrentRow.DataBoundItem is RUINORERP.Model.BaseEntity entity
                     && relatedRelationship.TargetTableName.Key == relatedRelationship.SourceTableName
                     && !CurrentRow.DataBoundItem.GetType().Name.Contains("View_")//排除视图
                     )
@@ -395,10 +394,10 @@ namespace RUINORERP.UI.Common
                 else
                 {
                     //要查询取值,视图也适用于这里
-                    GuideToForm(GridViewColumnFieldName, CurrentRow.DataBoundItem);
+                    bizKey= GuideToForm(GridViewColumnFieldName, CurrentRow.DataBoundItem);
                 }
             }
-
+            return bizKey;
         }
 
 

@@ -721,17 +721,13 @@ namespace RUINORERP.UI
         /// <param name="services"></param>
         public static void InitAppcontextValue(ApplicationContext AppContextData)
         {
-
             AppContextData.Status = "init";
             if (AppContextData.log == null)
             {
                 AppContextData.log = new Logs();
             }
             AppContextData.log.IP = HLH.Lib.Net.IpAddressHelper.GetLocIP();
-
-
             AppContextData.SysConfig = new tb_SystemConfig();
-
         }
 
         private static void Host_OnStepError(WorkflowCore.Models.WorkflowInstance workflow, WorkflowCore.Models.WorkflowStep step, Exception exception)

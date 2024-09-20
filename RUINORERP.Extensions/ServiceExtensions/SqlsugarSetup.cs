@@ -51,7 +51,8 @@ namespace RUINORERP.Extensions
                 ConfigureExternalServices = new ConfigureExternalServices()
                 {
                     DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache),
-                }
+                },
+                MoreSettings = new ConnMoreSettings() { IsWithNoLockQuery = true, DisableNvarchar = true }
             },
                 db =>
                 {

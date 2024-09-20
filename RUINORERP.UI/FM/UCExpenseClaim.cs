@@ -502,7 +502,7 @@ namespace RUINORERP.UI.FM
 
                                     //上传到服务器，删除本地
 
-                                    string deleteRsult = await HttpHelper.DeleteImageAsync("http://192.168.0.99:8080/upload/" + "deleteImages", fileName, "delete123");
+                                    string deleteRsult = await HttpHelper.DeleteImageAsync("http://192.168.0.99:8080/" + "deleteImages", fileName, "delete123");
                                     MainForm.Instance.PrintInfoLog(deleteRsult);
 
 

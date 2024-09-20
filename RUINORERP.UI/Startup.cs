@@ -896,7 +896,6 @@ public IHost CslaDIPortBackup()
         private static void RegisterContextManager(IServiceCollection services)
         {
 
-
             services.AddSingleton<ApplicationContextAccessor>();
             services.AddSingleton(typeof(IContextManager), typeof(ApplicationContextManagerAsyncLocal));
             var contextManagerType = typeof(IContextManager);

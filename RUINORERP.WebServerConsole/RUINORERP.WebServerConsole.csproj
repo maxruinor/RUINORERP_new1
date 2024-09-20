@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Startup - 复制.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="appsettings.json" />
     <None Remove="log4net.config" />
     <None Remove="Site\barley.mp4" />
@@ -49,6 +53,8 @@
     <PackageReference Include="Aspose.Cells" Version="24.9.0" />
     <PackageReference Include="Autofac" Version="8.1.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Autofac.Extras.DynamicProxy" Version="7.1.0" />
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -65,6 +71,7 @@
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
     <ProjectReference Include="..\RUINORERP.Repository\RUINORERP.Repository.csproj" />
     <ProjectReference Include="..\RUINORERP.Services\RUINORERP.Services.csproj" />
+    <ProjectReference Include="..\RUINORERP.WF\RUINORERP.WF.csproj" />
     <ProjectReference Include="..\SimpleHTTP\SimpleHttp.csproj" />
   </ItemGroup>
 

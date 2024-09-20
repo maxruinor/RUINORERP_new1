@@ -384,6 +384,9 @@ namespace RUINORERP.UI.FM
                             }
                             for (int i = 1; i < totalRowsFlag; i++)
                             {
+                                var model = grid1[i, col.ColIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+
                                 if (grid1[i, col.ColIndex].Value == null)
                                 {
                                     continue;
@@ -394,8 +397,7 @@ namespace RUINORERP.UI.FM
                                     fileName = grid1[i, col.ColIndex].Value.ToString();
                                     fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
 
-                                    var model = grid1[i, col.ColIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                                    SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                                    
 
                                     if (grid1[i, col.ColIndex].Tag == null && valueImageWeb.CellImageBytes != null)
                                     {

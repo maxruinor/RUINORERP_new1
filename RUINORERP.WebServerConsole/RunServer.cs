@@ -16,10 +16,7 @@ namespace RUINORERP.WebServerConsole
     internal class RunServer : BackgroundService
     {
 
-        //public RunServer()
-        //{
-
-        //}
+        private ConfigManager configManager;
         private readonly ApplicationContext AppContext;
 
         public RunServer(ApplicationContext _AppContext)
@@ -30,6 +27,7 @@ namespace RUINORERP.WebServerConsole
         {
             try
             {
+                configManager = Startup.GetFromFac<ConfigManager>();
 
                 RunWebServer();
                 await Task.Delay(1000, stoppingToken);
@@ -39,9 +37,9 @@ namespace RUINORERP.WebServerConsole
                 LogHelper.Error(e);
             }
         }
-        public  void RunWebServer()
+        public void RunWebServer()
         {
-            ConfigManager configManager =AppContext.CreateInstance<ConfigManager>();
+
 
             string webDir = Path.Combine(Directory.GetCurrentDirectory(), "Site");
 
@@ -104,8 +102,12 @@ namespace RUINORERP.WebServerConsole
             //4) 删除图片
             Route.Add("/deleteImages/", (rq, rp, args) =>
             {
+                var serverDir = configManager.GetValue("ServerImageDirectory");
                 //to override/stylize default error response define a custom error function: Route.Error = (rq, rp, ex) => { };
+                if (System.IO.File.Exists(System.IO.Path.Combine(webDir + serverDir) + "/" + args["image"]))
+                {
 
+                }
             });
 
             var list = AppContext.Db.Queryable<tb_SysGlobalDynamicConfig>().ToList();

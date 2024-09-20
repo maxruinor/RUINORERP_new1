@@ -843,18 +843,18 @@ public IHost CslaDIPortBackup()
             string conn = AppSettings.GetValue("ConnectString");
             services.AddSqlsugarSetup(Program.AppContextData, configuration);
 
-
+            
 
             //  services.AddSingleton(typeof(AutoMapperConfig));
             // IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
             //services.AddScoped<IMapper, Mapper>();
             //services.AddSingleton<IMapper>(mapper);
-            //services.AddAutoMapperInstall();
+            
 
             //services.AddSingleton(IDefinitionLoader);
 
-            services.AddSingleton(typeof(RUINORERP.Business.AutoMapper.AutoMapperConfig));
-            IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            services.AddSingleton(typeof(AutoMapperConfig));
+            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
             services.AddScoped<IMapper, Mapper>();
             services.AddSingleton<IMapper>(mapper);
             services.AddAutoMapperSetup();

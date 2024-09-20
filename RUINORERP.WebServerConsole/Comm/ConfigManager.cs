@@ -63,7 +63,7 @@ namespace RUINORERP.WebServerConsole.Comm
             */
 
             // 从数据库加载配置项
-            tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig> ctr = Startup.AppContextData.CreateInstance<tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig>>();
+            tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig> ctr = Startup.GetFromFac<tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig>>();
             var configEntries = await ctr.QueryAsync();
             foreach (var entry in configEntries)
             {

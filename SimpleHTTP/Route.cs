@@ -103,7 +103,7 @@ namespace SimpleHttp
     {
         static OnBefore before = null;
         /// <summary>
-        /// Action executed before all route-methods.
+        /// 在所有路由方法之前执行的操作。
         /// <para>It may be null.</para>
         /// </summary>
         public static OnBefore Before

@@ -362,14 +362,16 @@ namespace RUINORERP.UI.UCSourceGrid
 
         /// <summary>
         /// 用于小计计算的公式组合（作用于值变化的时候）
+        /// 正向反向的区别是保存的公式在不同的集合中，并且正向是值改变就自动触发，反向是对应的列的值结束编辑时触发
         /// </summary>
-        public List<SubtotalFormula> SubtotalCalculate { get; set; } = new List<SubtotalFormula>();
+        public List<CalculateFormula> SubtotalCalculate { get; set; } = new List<CalculateFormula>();
 
 
         /// <summary>
         /// 用于小计计算的公式组合(反向，反向应用于编辑结束时)
+        /// 正向反向的区别是保存的公式在不同的集合中，并且正向是值改变就自动触发，反向是对应的列的值结束编辑时触发
         /// </summary>
-        public List<SubtotalFormula> SubtotalCalculateReverse { get; set; } = new List<SubtotalFormula>();
+        public List<CalculateFormula> SubtotalCalculateReverse { get; set; } = new List<CalculateFormula>();
 
 
 

@@ -306,15 +306,15 @@ namespace RUINORERP.UI.UCSourceGrid
                 //当前找
                 if (CurrGridDefine.SubtotalCalculate.Where(c => c.Parameter.Where(k => k == (CurrGridDefine[sender.Position.Column].ColName)).Any()).Any())
                 {
-                    List<SubtotalFormula> sflist = new List<SubtotalFormula>();
+                    List<CalculateFormula> sflist = new List<CalculateFormula>();
                     sflist = CurrGridDefine.SubtotalCalculate.Where(c => c.Parameter.Where(k => k == (CurrGridDefine[sender.Position.Column].ColName)).Any()).ToList();
                     ///一个结果列来自多个公式
-                    foreach (SubtotalFormula sf in sflist)
+                    foreach (CalculateFormula sf in sflist)
                     {
                         try
                         {
                             //正向计算
-                            Subtotal(sf, CurrGridDefine, sender.Position.Row,false);
+                            Subtotal(sf, CurrGridDefine, sender.Position.Row);
                         }
                         catch (Exception error)
                         {
@@ -414,12 +414,8 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="sf"></param>
         /// <param name="CurrGridDefine"></param>
         /// <param name="rowindex"></param>
-        private void Subtotal(SubtotalFormula sf, SourceGridDefine CurrGridDefine, int rowindex, bool Reverse)
+        private void Subtotal(CalculateFormula sf, SourceGridDefine CurrGridDefine, int rowindex)
         {
-            if (!Reverse)
-            {
-                return;
-            }
             if (sf != null)
             {
                 //这里如果能算出 逆运算式更好。
@@ -837,17 +833,18 @@ namespace RUINORERP.UI.UCSourceGrid
                 //    sf = CurrGridDefine.SubtotalCalculate.FirstOrDefault(c => c.Parameter.Where(k => k == (CurrGridDefine[sender.Position.Column].ColName)).Any());
                 //    Subtotal(sf, CurrGridDefine, sender.Position.Row);
                 //}
-                //当前找
+                //当前找 
+                //正向反向的区别是保存的公式在不同的集合中，并且正向是值改变就自动触发，反向是对应的列的值结束编辑时触发
                 if (CurrGridDefine.SubtotalCalculateReverse.Where(c => c.Parameter.Where(k => k == (CurrGridDefine[sender.Position.Column].ColName)).Any()).Any())
                 {
-                    List<SubtotalFormula> sflist = new List<SubtotalFormula>();
+                    List<CalculateFormula> sflist = new List<CalculateFormula>();
                     sflist = CurrGridDefine.SubtotalCalculateReverse.Where(c => c.Parameter.Where(k => k == (CurrGridDefine[sender.Position.Column].ColName)).Any()).ToList();
                     ///一个结果列来自多个公式
-                    foreach (SubtotalFormula sf in sflist)
+                    foreach (CalculateFormula sf in sflist)
                     {
                         try
                         {
-                            Subtotal(sf, CurrGridDefine, sender.Position.Row, true);
+                            Subtotal(sf, CurrGridDefine, sender.Position.Row);
                         }
                         catch (Exception error)
                         {

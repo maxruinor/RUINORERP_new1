@@ -14,12 +14,12 @@ namespace RUINORERP.UI.UCSourceGrid
 {
 
     /// <summary>
-    /// 小计公式
+    /// 计算公式
     /// 目标列就也是结果列，
     /// 一个目标列可能来自两组公式
     /// 计算公式可能是在一定条件下，才会参与计算
     /// </summary>
-    public class SubtotalFormula
+    public class CalculateFormula
     {
 
         /// <summary>
@@ -49,6 +49,10 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 保存原始的公式，因为以这个公式和目标或叫结果列为条件判断是否重复
         /// </summary>
         string originalExpression = string.Empty;
+
+        /// <summary>
+        /// 原始公式
+        /// </summary>
         public string OriginalExpression { get => originalExpression; set => originalExpression = value; }
 
 

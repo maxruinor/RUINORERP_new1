@@ -18,9 +18,9 @@ namespace RUINORERP.UI.Common
         //https://www.cnblogs.com/zhaoshujie/p/15817805.html
 
         [Obsolete]
-        public static SubtotalFormula ParserString_old(Expression<Func<T, T, object>> RsColNameExp)
+        public static CalculateFormula ParserString_old(Expression<Func<T, T, object>> RsColNameExp)
         {
-            SubtotalFormula sf = new SubtotalFormula();
+            CalculateFormula sf = new CalculateFormula();
             sf.OperandQty = 2;
             //if (RsColNameExp is UnaryExpression unaryExp)
             //{
@@ -90,9 +90,9 @@ namespace RUINORERP.UI.Common
 
         return "";*/
         }
-        public static SubtotalFormula ParserString(Expression<Func<T, T, T, object>> RsColNameExp)
+        public static CalculateFormula ParserString(Expression<Func<T, T, T, object>> RsColNameExp)
         {
-            SubtotalFormula sf = new SubtotalFormula();
+            CalculateFormula sf = new CalculateFormula();
             sf.OperandQty = 3;
             var unary = RsColNameExp.Body as UnaryExpression;
             string str = unary.Operand.ToString();
@@ -117,9 +117,9 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static SubtotalFormula ParserString(Expression<Func<T, T, object>> RsColNameExp)
+        public static CalculateFormula ParserString(Expression<Func<T, T, object>> RsColNameExp)
         {
-            SubtotalFormula sf = new SubtotalFormula();
+            CalculateFormula sf = new CalculateFormula();
             sf.OperandQty = 2;
             var unary = RsColNameExp.Body as UnaryExpression;
             string str = unary.Operand.ToString();
@@ -135,9 +135,9 @@ namespace RUINORERP.UI.Common
             return sf;
         }
 
-        public static SubtotalFormula ParserString(Expression<Func<T, object>> RsColNameExp)
+        public static CalculateFormula ParserString(Expression<Func<T, object>> RsColNameExp)
         {
-            SubtotalFormula sf = new SubtotalFormula();
+            CalculateFormula sf = new CalculateFormula();
             sf.OperandQty = 2;
             var unary = RsColNameExp.Body as UnaryExpression;
             string str = unary.Operand.ToString();
@@ -339,7 +339,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        private static void LoopAnalysis(Expression exp, SubtotalFormula sf)
+        private static void LoopAnalysis(Expression exp, CalculateFormula sf)
         {
             switch (exp.NodeType)
             {

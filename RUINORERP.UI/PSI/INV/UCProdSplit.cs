@@ -173,6 +173,13 @@ namespace RUINORERP.UI.PSI.INV
 
             DataBindingHelper.BindData4ControlByEnum<tb_ProdSplit>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
+            base.errorProviderForAllInput.DataSource = entity;
+            base.errorProviderForAllInput.ContainerControl = this;
+
+            //this.ValidateChildren();
+            this.AutoValidate = AutoValidate.EnableAllowFocusChange;
+            DataBindingHelper.BindData4ControlByEnum<tb_ProdSplit>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_ProdSplit>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
             if (entity.tb_ProdSplitDetails != null && entity.tb_ProdSplitDetails.Count > 0)
             {

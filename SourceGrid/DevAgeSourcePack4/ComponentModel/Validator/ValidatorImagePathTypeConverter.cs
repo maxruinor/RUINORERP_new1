@@ -11,13 +11,13 @@ namespace DevAge.ComponentModel.Validator
     /// <summary>
     /// A string editor that use a TypeConverter for conversion.
     /// </summary>
-    public class ValidatorImagePathTypeConverter : ValidatorBase
+    public class ValidatorTypeConverter : ValidatorBase
     {
         #region Constructor
         /// <summary>
         /// Constructor. Initialize the Validator with a null TypeConverter.
         /// </summary>
-        public ValidatorImagePathTypeConverter()
+        public ValidatorTypeConverter()
         {
             m_TypeConverter = null;
         }
@@ -26,7 +26,7 @@ namespace DevAge.ComponentModel.Validator
         /// Constructor. If the Type doesn't implements a TypeConverter no conversion is made.
         /// </summary>
         /// <param name="p_Type"></param>
-        public ValidatorImagePathTypeConverter(Type p_Type) : base(p_Type)
+        public ValidatorTypeConverter(Type p_Type) : base(p_Type)
         {
         }
         /// <summary>
@@ -34,7 +34,7 @@ namespace DevAge.ComponentModel.Validator
         /// </summary>
         /// <param name="p_Type">Cannot be null.</param>
         /// <param name="p_TypeConverter">Can be null to don't allow any conversion.</param>
-        public ValidatorImagePathTypeConverter(Type p_Type, System.ComponentModel.TypeConverter p_TypeConverter) : base(p_Type)
+        public ValidatorTypeConverter(Type p_Type, System.ComponentModel.TypeConverter p_TypeConverter) : base(p_Type)
         {
             TypeConverter = p_TypeConverter;
         }

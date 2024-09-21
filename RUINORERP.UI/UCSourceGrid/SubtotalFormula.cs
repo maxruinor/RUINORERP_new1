@@ -155,7 +155,10 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 compareValue = Enum.Parse(valueType, ConditionLeftValue.ToString());
             }
-
+            else
+            {
+                compareValue = ConditionRightValue;
+            }
 
             switch (binaryExpression.NodeType)
             {

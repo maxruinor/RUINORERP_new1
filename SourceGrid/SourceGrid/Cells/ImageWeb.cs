@@ -15,7 +15,17 @@ namespace SourceGrid.Cells.Virtual
         public ImageWeb()
         {
             Model.AddModel(Models.ValueImageWeb.Default);
-            Editor = Editors.ImageWebPicker.Default;
+
+            //如果用这行。则关闭后。丢失了编辑功能。应该是单例模式的原因
+            
+            if (Editor == null)
+            {
+                //Editor = Editors.ImageWebPickEditor.Default;
+                Editor = new Editors.ImageWebPickEditor(typeof(string));
+                Editor.EditableMode = EditableMode.Default;
+                Editor.AllowNull = true;
+                Editor.EnableEdit = true;
+            }
         }
     }
 }
@@ -49,7 +59,15 @@ namespace SourceGrid.Cells
             //Then I add a new IImage model that takes the image directly from the value.
             //Model.AddModel(Models.ValueImageWeb.Default); 基类已经添加。这里不重复添加
 
-            Editor = Editors.ImageWebPicker.Default;
+            //如果用这行。则关闭后。丢失了编辑功能。应该是单例模式的原因
+            if (Editor == null)
+            {
+                //Editor = Editors.ImageWebPickEditor.Default;
+                Editor = new Editors.ImageWebPickEditor(typeof(string));
+                Editor.EditableMode = EditableMode.Default;
+                Editor.AllowNull = true;
+                Editor.EnableEdit = true;
+            }
         }
         #endregion
     }

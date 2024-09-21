@@ -213,7 +213,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage, CustomFormatType.Image);
-            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImagePath, CustomFormatType.WebImage);
+            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImagePath, CustomFormatType.WebPathImage);
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridData = EditEntity;
             /*
@@ -374,7 +374,7 @@ namespace RUINORERP.UI.FM
                     var col = sgd[prop.Name];
                     if (col != null)
                     {
-                        if (col.CustomFormat == CustomFormatType.WebImage)
+                        if (col.CustomFormat == CustomFormatType.WebPathImage)
                         {
                             //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
                             int totalRowsFlag = grid1.RowsCount;
@@ -476,7 +476,7 @@ namespace RUINORERP.UI.FM
                     var col = sgd[prop.Name];
                     if (col != null)
                     {
-                        if (col.CustomFormat == CustomFormatType.WebImage)
+                        if (col.CustomFormat == CustomFormatType.WebPathImage)
                         {
                             //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
                             int totalRowsFlag = grid1.RowsCount;

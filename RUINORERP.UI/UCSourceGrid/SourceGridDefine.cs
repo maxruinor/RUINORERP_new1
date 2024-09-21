@@ -739,7 +739,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         processContext.Value = null;
                         processContext.Cell.View = ViewNormal;
                     }
-                    if (item.CustomFormat == CustomFormatType.WebImage)
+                    if (item.CustomFormat == CustomFormatType.WebPathImage)
                     {
                         processContext.Tag = null;
                         processContext.Cell.View = ViewNormal;
@@ -1091,7 +1091,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <summary>
         /// 图片路径形式保存，会上传图片到服务器的
         /// </summary>
-        WebImage,
+        WebPathImage,
 
         DateTime,
     }

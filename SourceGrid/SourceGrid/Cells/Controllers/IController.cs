@@ -80,30 +80,30 @@ namespace SourceGrid.Cells.Controllers
 		/// <param name="e"></param>
 		void OnClick (CellContext sender, EventArgs e);
 
-		/// <summary>
-		/// Fired before the cell leave the focus, you can put the e.Cancel = true to cancel the leave operation.
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		void OnFocusLeaving(CellContext sender, System.ComponentModel.CancelEventArgs e);
+        /// <summary>
+        /// 在单元格离开焦点之前被触发，您可以设置e。取消=true以取消离开操作。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void OnFocusLeaving(CellContext sender, System.ComponentModel.CancelEventArgs e);
 		/// <summary>
 		/// Fired when the cell has left the focus.
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
 		void OnFocusLeft(CellContext sender, EventArgs e);
-		/// <summary>
-		/// Fired when the focus is entering in the specified cell. You can put the e.Cancel = true to cancel the focus operation.
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		void OnFocusEntering(CellContext sender, System.ComponentModel.CancelEventArgs e);
-		/// <summary>
-		/// Fired when the focus enter in the specified cell.
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		void OnFocusEntered(CellContext sender, EventArgs e);
+        /// <summary>
+        /// 当焦点进入指定单元格时触发。您可以输入e.Cancel=true以取消聚焦操作。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void OnFocusEntering(CellContext sender, System.ComponentModel.CancelEventArgs e);
+        /// <summary>
+        /// 当焦点进入指定单元格时触发。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void OnFocusEntered(CellContext sender, EventArgs e);
 
 		/// <summary>
 		/// Fired before the value of the cell is changed.

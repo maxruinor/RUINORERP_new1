@@ -490,7 +490,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 {
                                     grid1[pt].View = new SourceGrid.Cells.Views.SingleImage();
                                 }
-                                if (dc.CustomFormat == CustomFormatType.WebImage)
+                                if (dc.CustomFormat == CustomFormatType.WebPathImage)
                                 {
                                     grid1[pt].View = new SourceGrid.Cells.Views.SingleImageWeb();
 
@@ -530,7 +530,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                         }
                                         currContext.Tag = v_prod;
                                     }
-                                    else if (dc.CustomFormat == CustomFormatType.WebImage)
+                                    else if (dc.CustomFormat == CustomFormatType.WebPathImage)
                                     {
                                         currContext.DisplayText = "";
                                         if (cellvalue != null)
@@ -622,7 +622,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
                     currContext.Value = null;
                     //如果是图片列。但不是总计行。则清空为平常的样式
-                    if ((dc.CustomFormat == CustomFormatType.Image || dc.CustomFormat == CustomFormatType.WebImage) && pt.Row != grid1.Rows.Count - 1)
+                    if ((dc.CustomFormat == CustomFormatType.Image || dc.CustomFormat == CustomFormatType.WebPathImage) && pt.Row != grid1.Rows.Count - 1)
                     {
                         currContext.Cell.View = sgdefine.ViewNormal;
                     }
@@ -1262,7 +1262,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     //处理图片列 ，的特殊情况
                     #region 图片cell
-                    if (define[i].CustomFormat == CustomFormatType.WebImage)
+                    if (define[i].CustomFormat == CustomFormatType.WebPathImage)
                     {
                         c = new SourceGrid.Cells.ImageWebCell(null);
                     }
@@ -1898,8 +1898,10 @@ namespace RUINORERP.UI.UCSourceGrid
                     break;
                 case CustomFormatType.DecimalPrecision:
                     break;
-                case CustomFormatType.WebImage:
-                    _editor = new SourceGrid.Cells.Editors.ImageWebPicker();
+                case CustomFormatType.WebPathImage:
+                    SourceGrid.Cells.Editors.ImageWebPickEditor imageWebPicker = new SourceGrid.Cells.Editors.ImageWebPickEditor(typeof(string));
+                    imageWebPicker.TypeConverter = new DevAge.ComponentModel.Converter.ImagePathTypeConverter(typeof(string));
+                    _editor = imageWebPicker;
                     break;
                 default:
                     break;
@@ -2773,7 +2775,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             case CustomFormatType.Image:
 
                                 break;
-                            case CustomFormatType.WebImage:
+                            case CustomFormatType.WebPathImage:
                                 //tag中保存图片的path name
                                 currentObj.SetPropertyValue(colName, TargetValue);
                                 sgdefine.grid[row.Index, dc.ColIndex].Tag = TargetValue;
@@ -2872,7 +2874,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 case CustomFormatType.Image:
 
                                     break;
-                                case CustomFormatType.WebImage:
+                                case CustomFormatType.WebPathImage:
 
                                     break;
                                 default:

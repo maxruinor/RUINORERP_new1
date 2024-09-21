@@ -721,6 +721,12 @@ namespace RUINORERP.UI.MRP.BOM
                 entity.ActionStatus = ActionStatus.加载;
                 if (entity.ProdDetailID > 0)
                 {
+                    if (entity.view_ProdDetail == null)
+                    {
+                        var detail = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == entity.ProdDetailID).Single();
+                        entity.view_ProdDetail = detail;
+                    }
+
                     txtProdDetailID.Text = entity.SKU.ToString();
                     txtSpec.Text = entity.view_ProdDetail.Specifications;
                     txtProp.Text = entity.view_ProdDetail.prop;
@@ -728,6 +734,7 @@ namespace RUINORERP.UI.MRP.BOM
 
                     BindToTree(entity);
                 }
+                
             }
             else
             {
@@ -1269,7 +1276,7 @@ namespace RUINORERP.UI.MRP.BOM
             {
                 return false;
             }
-           var eer = errorProviderForAllInput.GetError(txtBOM_Name);
+            var eer = errorProviderForAllInput.GetError(txtBOM_Name);
             bindingSourceSub.EndEdit();
             List<tb_BOM_SDetail> detailentity = bindingSourceSub.DataSource as List<tb_BOM_SDetail>;
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
@@ -1323,7 +1330,7 @@ namespace RUINORERP.UI.MRP.BOM
                     MessageBox.Show("BOM子件中不能包含目标母件本身。请检查数据后再保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
-          
+
 
                 EditEntity.tb_BOM_SDetailSecondaries.Clear();
 

@@ -227,11 +227,13 @@
     <Compile Include="DevAgeSourcePack4\ComponentModel\Converter\DateTimeTypeConverter.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\Converter\NumberTypeConverter.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\Converter\PercentTypeConverter.cs" />
+    <Compile Include="DevAgeSourcePack4\ComponentModel\Converter\ImagePathTypeConverter.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\Converter\RichTextTypeConverter.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\TypeDescriptorContext.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\ValidatingEvent.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\Validator\IValidator.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\Validator\ValidatorBase.cs" />
+    <Compile Include="DevAgeSourcePack4\ComponentModel\Validator\ValidatorImagePathTypeConverter.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\Validator\ValidatorTypeConverter.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\Validator\ComboxValueMapping.cs" />
     <Compile Include="DevAgeSourcePack4\ComponentModel\Validator\ValueMapping.cs" />

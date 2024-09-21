@@ -62,7 +62,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(274, 570);
+            this.btnOk.Location = new System.Drawing.Point(341, 570);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -71,7 +71,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(392, 570);
+            this.btnCancel.Location = new System.Drawing.Point(506, 570);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -109,20 +109,20 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(746, 607);
+            this.kryptonPanel1.Size = new System.Drawing.Size(936, 607);
             this.kryptonPanel1.TabIndex = 2;
             // 
             // lblDate
             // 
-            this.lblDate.Location = new System.Drawing.Point(37, 12);
+            this.lblDate.Location = new System.Drawing.Point(16, 14);
             this.lblDate.Name = "lblDate";
-            this.lblDate.Size = new System.Drawing.Size(35, 20);
+            this.lblDate.Size = new System.Drawing.Size(36, 20);
             this.lblDate.TabIndex = 13;
             this.lblDate.Values.Text = "时间";
             // 
             // dtpDate
             // 
-            this.dtpDate.Location = new System.Drawing.Point(79, 8);
+            this.dtpDate.Location = new System.Drawing.Point(52, 8);
             this.dtpDate.Name = "dtpDate";
             this.dtpDate.ShowCheckBox = true;
             this.dtpDate.Size = new System.Drawing.Size(235, 21);
@@ -130,178 +130,178 @@
             // 
             // lblLevel
             // 
-            this.lblLevel.Location = new System.Drawing.Point(37, 37);
+            this.lblLevel.Location = new System.Drawing.Point(16, 39);
             this.lblLevel.Name = "lblLevel";
-            this.lblLevel.Size = new System.Drawing.Size(35, 20);
+            this.lblLevel.Size = new System.Drawing.Size(36, 20);
             this.lblLevel.TabIndex = 15;
             this.lblLevel.Values.Text = "级别";
             // 
             // txtLevel
             // 
-            this.txtLevel.Location = new System.Drawing.Point(79, 33);
+            this.txtLevel.Location = new System.Drawing.Point(52, 33);
             this.txtLevel.Name = "txtLevel";
-            this.txtLevel.Size = new System.Drawing.Size(235, 20);
+            this.txtLevel.Size = new System.Drawing.Size(235, 23);
             this.txtLevel.TabIndex = 16;
             // 
             // lblLogger
             // 
-            this.lblLogger.Location = new System.Drawing.Point(24, 114);
+            this.lblLogger.Location = new System.Drawing.Point(3, 116);
             this.lblLogger.Name = "lblLogger";
-            this.lblLogger.Size = new System.Drawing.Size(48, 20);
+            this.lblLogger.Size = new System.Drawing.Size(49, 20);
             this.lblLogger.TabIndex = 17;
             this.lblLogger.Values.Text = "记录器";
             // 
             // txtLogger
             // 
-            this.txtLogger.Location = new System.Drawing.Point(79, 113);
+            this.txtLogger.Location = new System.Drawing.Point(52, 113);
             this.txtLogger.Name = "txtLogger";
-            this.txtLogger.Size = new System.Drawing.Size(235, 20);
+            this.txtLogger.Size = new System.Drawing.Size(235, 23);
             this.txtLogger.TabIndex = 18;
             // 
             // lblMessage
             // 
-            this.lblMessage.Location = new System.Drawing.Point(37, 145);
+            this.lblMessage.Location = new System.Drawing.Point(16, 147);
             this.lblMessage.Name = "lblMessage";
-            this.lblMessage.Size = new System.Drawing.Size(35, 20);
+            this.lblMessage.Size = new System.Drawing.Size(36, 20);
             this.lblMessage.TabIndex = 19;
             this.lblMessage.Values.Text = "消息";
             // 
             // txtMessage
             // 
-            this.txtMessage.Location = new System.Drawing.Point(79, 144);
+            this.txtMessage.Location = new System.Drawing.Point(52, 145);
             this.txtMessage.Multiline = true;
             this.txtMessage.Name = "txtMessage";
             this.txtMessage.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
-            this.txtMessage.Size = new System.Drawing.Size(655, 77);
+            this.txtMessage.Size = new System.Drawing.Size(836, 172);
             this.txtMessage.TabIndex = 20;
             // 
             // lblException
             // 
-            this.lblException.Location = new System.Drawing.Point(37, 227);
+            this.lblException.Location = new System.Drawing.Point(16, 229);
             this.lblException.Name = "lblException";
-            this.lblException.Size = new System.Drawing.Size(35, 20);
+            this.lblException.Size = new System.Drawing.Size(36, 20);
             this.lblException.TabIndex = 21;
             this.lblException.Values.Text = "异常";
             // 
             // txtException
             // 
-            this.txtException.Location = new System.Drawing.Point(79, 227);
+            this.txtException.Location = new System.Drawing.Point(52, 324);
             this.txtException.Multiline = true;
             this.txtException.Name = "txtException";
             this.txtException.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
-            this.txtException.Size = new System.Drawing.Size(655, 322);
+            this.txtException.Size = new System.Drawing.Size(836, 240);
             this.txtException.TabIndex = 22;
             // 
             // lblOperator
             // 
-            this.lblOperator.Location = new System.Drawing.Point(24, 63);
+            this.lblOperator.Location = new System.Drawing.Point(3, 65);
             this.lblOperator.Name = "lblOperator";
-            this.lblOperator.Size = new System.Drawing.Size(48, 20);
+            this.lblOperator.Size = new System.Drawing.Size(49, 20);
             this.lblOperator.TabIndex = 24;
             this.lblOperator.Values.Text = "操作者";
             // 
             // txtOperator
             // 
-            this.txtOperator.Location = new System.Drawing.Point(79, 59);
+            this.txtOperator.Location = new System.Drawing.Point(52, 59);
             this.txtOperator.Name = "txtOperator";
-            this.txtOperator.Size = new System.Drawing.Size(235, 20);
+            this.txtOperator.Size = new System.Drawing.Size(235, 23);
             this.txtOperator.TabIndex = 23;
             // 
             // lblModName
             // 
-            this.lblModName.Location = new System.Drawing.Point(24, 87);
+            this.lblModName.Location = new System.Drawing.Point(3, 89);
             this.lblModName.Name = "lblModName";
-            this.lblModName.Size = new System.Drawing.Size(48, 20);
+            this.lblModName.Size = new System.Drawing.Size(49, 20);
             this.lblModName.TabIndex = 25;
             this.lblModName.Values.Text = "模块名";
             // 
             // txtModName
             // 
-            this.txtModName.Location = new System.Drawing.Point(79, 84);
+            this.txtModName.Location = new System.Drawing.Point(52, 84);
             this.txtModName.Name = "txtModName";
-            this.txtModName.Size = new System.Drawing.Size(235, 20);
+            this.txtModName.Size = new System.Drawing.Size(235, 23);
             this.txtModName.TabIndex = 26;
             // 
             // lblPath
             // 
-            this.lblPath.Location = new System.Drawing.Point(417, 118);
+            this.lblPath.Location = new System.Drawing.Point(571, 120);
             this.lblPath.Name = "lblPath";
-            this.lblPath.Size = new System.Drawing.Size(35, 20);
+            this.lblPath.Size = new System.Drawing.Size(36, 20);
             this.lblPath.TabIndex = 27;
             this.lblPath.Values.Text = "路径";
             // 
             // txtPath
             // 
-            this.txtPath.Location = new System.Drawing.Point(462, 113);
+            this.txtPath.Location = new System.Drawing.Point(616, 115);
             this.txtPath.Name = "txtPath";
-            this.txtPath.Size = new System.Drawing.Size(272, 20);
+            this.txtPath.Size = new System.Drawing.Size(272, 23);
             this.txtPath.TabIndex = 28;
             // 
             // lblActionName
             // 
-            this.lblActionName.Location = new System.Drawing.Point(417, 16);
+            this.lblActionName.Location = new System.Drawing.Point(571, 18);
             this.lblActionName.Name = "lblActionName";
-            this.lblActionName.Size = new System.Drawing.Size(35, 20);
+            this.lblActionName.Size = new System.Drawing.Size(36, 20);
             this.lblActionName.TabIndex = 29;
             this.lblActionName.Values.Text = "动作";
             // 
             // txtActionName
             // 
-            this.txtActionName.Location = new System.Drawing.Point(462, 12);
+            this.txtActionName.Location = new System.Drawing.Point(616, 14);
             this.txtActionName.Name = "txtActionName";
-            this.txtActionName.Size = new System.Drawing.Size(272, 20);
+            this.txtActionName.Size = new System.Drawing.Size(272, 23);
             this.txtActionName.TabIndex = 30;
             // 
             // lblIP
             // 
-            this.lblIP.Location = new System.Drawing.Point(392, 41);
+            this.lblIP.Location = new System.Drawing.Point(546, 43);
             this.lblIP.Name = "lblIP";
-            this.lblIP.Size = new System.Drawing.Size(60, 20);
+            this.lblIP.Size = new System.Drawing.Size(62, 20);
             this.lblIP.TabIndex = 31;
             this.lblIP.Values.Text = "网络地址";
             // 
             // txtIP
             // 
-            this.txtIP.Location = new System.Drawing.Point(462, 37);
+            this.txtIP.Location = new System.Drawing.Point(616, 39);
             this.txtIP.Name = "txtIP";
-            this.txtIP.Size = new System.Drawing.Size(272, 20);
+            this.txtIP.Size = new System.Drawing.Size(272, 23);
             this.txtIP.TabIndex = 32;
             // 
             // lblMAC
             // 
-            this.lblMAC.Location = new System.Drawing.Point(392, 66);
+            this.lblMAC.Location = new System.Drawing.Point(546, 68);
             this.lblMAC.Name = "lblMAC";
-            this.lblMAC.Size = new System.Drawing.Size(60, 20);
+            this.lblMAC.Size = new System.Drawing.Size(62, 20);
             this.lblMAC.TabIndex = 33;
             this.lblMAC.Values.Text = "物理地址";
             // 
             // txtMAC
             // 
-            this.txtMAC.Location = new System.Drawing.Point(462, 62);
+            this.txtMAC.Location = new System.Drawing.Point(616, 64);
             this.txtMAC.Name = "txtMAC";
-            this.txtMAC.Size = new System.Drawing.Size(272, 20);
+            this.txtMAC.Size = new System.Drawing.Size(272, 23);
             this.txtMAC.TabIndex = 34;
             // 
             // lblMachineName
             // 
-            this.lblMachineName.Location = new System.Drawing.Point(404, 91);
+            this.lblMachineName.Location = new System.Drawing.Point(558, 93);
             this.lblMachineName.Name = "lblMachineName";
-            this.lblMachineName.Size = new System.Drawing.Size(48, 20);
+            this.lblMachineName.Size = new System.Drawing.Size(49, 20);
             this.lblMachineName.TabIndex = 35;
             this.lblMachineName.Values.Text = "电脑名";
             // 
             // txtMachineName
             // 
-            this.txtMachineName.Location = new System.Drawing.Point(462, 87);
+            this.txtMachineName.Location = new System.Drawing.Point(616, 89);
             this.txtMachineName.Name = "txtMachineName";
-            this.txtMachineName.Size = new System.Drawing.Size(272, 20);
+            this.txtMachineName.Size = new System.Drawing.Size(272, 23);
             this.txtMachineName.TabIndex = 36;
             // 
             // UCLogsEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(746, 607);
+            this.ClientSize = new System.Drawing.Size(936, 607);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCLogsEdit";
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();

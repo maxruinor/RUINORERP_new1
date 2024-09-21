@@ -323,7 +323,7 @@ namespace SourceGrid.Cells.Models
         public static readonly ValueImageWeb Default = new ValueImageWeb();
         public ValueImageWeb()
         {
-            CellImageName = Guid.NewGuid().ToString() + ".jpg";
+            //CellImageName = Guid.NewGuid().ToString() + ".jpg";
         }
         //这一行确定了这个值的类型，所以这里不用再写一个转换器了
         private DevAge.ComponentModel.Validator.ValidatorTypeConverter imageConverter =

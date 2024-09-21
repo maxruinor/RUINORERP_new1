@@ -15,11 +15,15 @@ namespace SourceGrid.Cells.Editors
 {
     /// <summary>
     ///  Web型的图片选择器, 第一列都是一样的。所以只是一个过桥。数据得以cell为单位保存
+    /// 创建列时的可编辑的列的编辑器。一列共用一个编辑器
     /// </summary>
     [System.ComponentModel.ToolboxItem(false)]
-    public class ImageWebPicker : EditorControlBase
+    public class ImageWebPickEditor : EditorControlBase
     {
-        public readonly static ImageWebPicker Default = new ImageWebPicker();
+
+
+
+        public readonly static ImageWebPickEditor Default = new ImageWebPickEditor(typeof(string));
 
         #region Constructor
         /// <summary>
@@ -29,8 +33,10 @@ namespace SourceGrid.Cells.Editors
         //{
         //}
         ///web下载图片 只是显示图片名称
-        public ImageWebPicker() : base(typeof(string))
+        //public ImageWebPickEditor() : base(typeof(string))
+        public ImageWebPickEditor(Type p_Type) : base(p_Type)
         {
+           
         }
 
 
@@ -56,11 +62,7 @@ namespace SourceGrid.Cells.Editors
             }
         }
 
-
-        /// <summary>
-        /// 绝对URL路径
-        /// </summary>
-        public string AbsoluteUrlPath { get { return _fileName; } }
+ 
 
         /// <summary>
         /// Temp绝对路径
@@ -74,11 +76,7 @@ namespace SourceGrid.Cells.Editors
         }
 
 
-
-        /// <summary>
-        /// 相对路径
-        /// </summary>
-        public string RelativePath { get { return _fileName; } }
+ 
 
 
         #region 添加了右键菜单
@@ -235,7 +233,7 @@ namespace SourceGrid.Cells.Editors
 
             editor.BorderStyle = DevAge.Drawing.BorderStyle.None;
             //editor.Validator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
-            editor.Validator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(string));
+            editor.Validator = new DevAge.ComponentModel.Validator.ValidatorImagePathTypeConverter(typeof(string));
 
             editor.ContextMenuStrip = GetContextMenu();
             editor.TextBox.AllowDrop = true;
@@ -391,11 +389,22 @@ namespace SourceGrid.Cells.Editors
             l_TxtBox.TextBox.SelectionLength = 0;
         }
 
-
         public override object GetEditedValue()
         {
             var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+            if (Control is DevAge.Windows.Forms.TextBoxUITypeEditorWebImage txtWebImage)
+            {
+                if (!string.IsNullOrEmpty(txtWebImage.SelectedFilePath))
+                {
+                    valueImageWeb.CellImageBytes = ImageProcessor.CompressImage(txtWebImage.SelectedFilePath);
+                    valueImageWeb.CellImageName = Guid.NewGuid().ToString() + ".jpg";
+                    Control.Tag = valueImageWeb.CellImageBytes;
+                    Control.Value = valueImageWeb.CellImageName;
+                    return valueImageWeb.CellImageName;
+                }
+            }
+
             if (Control.Tag == null && valueImageWeb.CellImageBytes != null)
             {
                 return valueImageWeb.CellImageName;

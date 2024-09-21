@@ -418,7 +418,7 @@ namespace RUINORERP.UI.MRP.MP
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
-             
+
                 EditEntity.tb_ProductionPlanDetails = details;
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -430,7 +430,7 @@ namespace RUINORERP.UI.MRP.MP
                     return false;
                 }
 
-           
+
                 if (EditEntity.ApprovalStatus == null)
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -814,7 +814,7 @@ namespace RUINORERP.UI.MRP.MP
                     }
                     else
                     {
-                        tipsMsg.Add($"{_SaleOrderDetail.tb_proddetail.tb_prod.CNName}：");
+                        tipsMsg.Add($"{_SaleOrderDetail.tb_proddetail.SKU}-{_SaleOrderDetail.tb_proddetail.tb_prod.CNName}：");
                         //后面优化？检测一下库存
                         tipsMsg.Add($"没有BOM配方。无法正常进行需求分析,请删除！");
                         tipsMsg.Add($"如是半成品配件，需要外采。请另下采购单。");

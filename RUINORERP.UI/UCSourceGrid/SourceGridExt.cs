@@ -563,9 +563,10 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     continue;
                 }
-                if (item.ColName == minfo.Name && !item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol == item && s.OriginalExpression == FormulaExp.Body.ToString()).Any())
-                {
 
+                //如果目标列和参数列一致，则不计算
+                if (item.ColName == minfo.Name && !item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol == item && s.OriginalExpression.ToString() == FormulaExp.Body.ToString()).Any())
+                {
                     SubtotalFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
                     expStr.TagetCol = item;
                     expStr.OriginalExpression = FormulaExp.Body.ToString();

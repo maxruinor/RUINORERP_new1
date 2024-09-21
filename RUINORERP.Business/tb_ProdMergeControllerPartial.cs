@@ -43,7 +43,7 @@ namespace RUINORERP.Business
         /// <param name="entitys"></param>
         /// <returns></returns>
 
-      
+
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
             tb_ProdMerge entity = ObjectEntity as tb_ProdMerge;
@@ -83,9 +83,16 @@ namespace RUINORERP.Business
                         {
                             if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Qty) < 0)
                             {
+                                if (child.tb_proddetail != null)
+                                {
+                                    rs.ErrorMsg = $"{child.tb_proddetail.SKU}库存为：{inv.Quantity}，组合消耗量为：{child.Qty}\r\n 系统设置不允许负库存， 请检查消耗数量与库存相关数据";
+                                }
+                                else
+                                {
+                                    rs.ErrorMsg = $"库存为：{inv.Quantity}，组合消耗量为：{child.Qty}\r\n 系统设置不允许负库存， 请检查消耗数量与库存相关数据";
+                                }
 
-                                // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                                rs.ErrorMsg = $"库存为：{inv.Quantity}，组合消耗量为：{child.Qty}\r\n 系统设置不允许负库存， 请检查消耗数量与库存相关数据";
+                                
                                 _unitOfWorkManage.RollbackTran();
                                 rs.Succeeded = false;
                                 return rs;
@@ -146,9 +153,9 @@ namespace RUINORERP.Business
                     }
                     //这部分是否能提出到上一级公共部分？
                     entity.DataStatus = (int)DataStatus.确认;
-                   // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                    // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                     //后面已经修改为
-                  ///  entity.ApprovalResults = approvalEntity.ApprovalResults;
+                    ///  entity.ApprovalResults = approvalEntity.ApprovalResults;
                     entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                     BusinessHelper.Instance.ApproverEntity(entity);
                     //只更新指定列
@@ -168,9 +175,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-       
+
                 _unitOfWorkManage.RollbackTran();
-               
+
                 rs.Succeeded = false;
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, "事务回滚");
@@ -272,7 +279,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-              
+
                 _unitOfWorkManage.RollbackTran();
                 rs.Succeeded = false;
                 _logger.Error(ex);

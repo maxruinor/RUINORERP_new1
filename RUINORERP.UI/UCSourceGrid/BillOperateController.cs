@@ -197,7 +197,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         }
 
                         break;
-                    case CustomFormatType.WebImage:
+                    case CustomFormatType.WebPathImage:
                         var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                         SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                         if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
@@ -313,7 +313,8 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         try
                         {
-                            Subtotal(sf, CurrGridDefine, sender.Position.Row);
+                            //正向计算
+                            Subtotal(sf, CurrGridDefine, sender.Position.Row,false);
                         }
                         catch (Exception error)
                         {
@@ -413,8 +414,12 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="sf"></param>
         /// <param name="CurrGridDefine"></param>
         /// <param name="rowindex"></param>
-        private void Subtotal(SubtotalFormula sf, SourceGridDefine CurrGridDefine, int rowindex)
+        private void Subtotal(SubtotalFormula sf, SourceGridDefine CurrGridDefine, int rowindex, bool Reverse)
         {
+            if (!Reverse)
+            {
+                return;
+            }
             if (sf != null)
             {
                 //这里如果能算出 逆运算式更好。
@@ -547,145 +552,6 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        /// <summary>
-        /// 通过公式计算小计等
-        /// 反向计算
-        /// </summary>
-        /// <param name="sf"></param>
-        /// <param name="CurrGridDefine"></param>
-        /// <param name="rowindex"></param>
-        private void SubtotalReverse(SubtotalFormula sf, SourceGridDefine CurrGridDefine, int rowindex)
-        {
-            if (sf != null)
-            {
-                //这里如果能算出 逆运算式更好。
-                //https://blog.sina.com.cn/s/blog_8442c8f70101cgx4.html
-                var currentObj = CurrGridDefine.grid.Rows[rowindex].RowData;
-                //如果存在计算条件，则先计算条件是不是满足
-                #region  计算公式
-                if (sf.CalcCondition != null && sf.CalcCondition.expCondition != null)
-                {
-                    bool isOK = sf.CalcCondition.GetConditionResult(currentObj);
-                    if (!isOK)
-                    {
-                        return;
-                    }
-                    else
-                    {
-
-                    }
-                }
-
-                #endregion
-
-                string newstr = sf.StringFormula;
-                for (int i = 0; i < sf.Parameter.Count; i++)
-                {
-                    newstr = newstr.Replace(sf.Parameter[i], "{" + i + "}");
-                }
-                string lastStr = string.Empty;
-                for (int i = 0; i < sf.Parameter.Count; i++)
-                {
-                    string subItem = ReflectionHelper.GetPropertyValue(currentObj, sf.Parameter[i]).ToString();
-                    decimal subDec = 0;
-                    {
-                        if (string.IsNullOrEmpty(subItem.ToString()))
-                        {
-                            subItem = "0";
-                        }
-                        if (decimal.TryParse(subItem.ToString(), out subDec))
-                        {
-                            subItem = subDec.ToString();
-                        }
-                        else
-                        {
-                            MainForm.Instance.uclog.AddLog(sf.Parameter[i] + "参数转换列时出错", Global.UILogType.错误);
-                        }
-                    }
-                    string p = "{" + i + "}";
-                    newstr = newstr.Replace(p, subItem);
-                }
-                DataTable dt = new DataTable();
-                object obj = dt.Compute(newstr, "");
-                //C# 判断数据是否为NaN的方法
-                if (obj.ToString() == "NaN")
-                {
-                    obj = 0;
-                }
-
-                #region 处理显示格式
-
-                switch (CurrGridDefine[sf.TagetCol.ColIndex].CustomFormat)
-                {
-
-                    case CustomFormatType.PercentFormat:
-
-                        //实际上面转换过一次了。
-                        var realvalue = obj.ChangeType_ByConvert(CurrGridDefine[sf.TagetCol.ColIndex].ColPropertyInfo.PropertyType);
-                        ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, realvalue);
-                        CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = realvalue;
-                        CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].DisplayText = CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Editor.ValueToDisplayString(realvalue);
-                        break;
-                    case CustomFormatType.CurrencyFormat:
-                        //var ColCurrencyTypeConverter = new DevAge.ComponentModel.Converter.CurrencyTypeConverter(typeof(decimal));
-                        int maxDecimalPlaces = AuthorizeController.GetMoneyDataPrecision(MainForm.Instance.AppContext);
-                        decimal amount = 0.00m;
-                        amount = RoundToNDecimalPlaces(obj, maxDecimalPlaces);
-                        CurrGridDefine.grid[rowindex, sf.TagetCol.ColIndex].Value = amount;
-                        CurrGridDefine.grid[rowindex, sf.TagetCol.ColIndex].DisplayText = string.Format("{0:C}", amount.ToString());
-                        break;
-                    case CustomFormatType.DecimalPrecision:
-                        ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, decimal.Parse(obj.ToString()));
-                        CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = decimal.Parse(obj.ToString());
-                        break;
-                    case CustomFormatType.DefaultFormat:
-                    default:
-                        ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, int.Parse(obj.ToString()));
-                        CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = int.Parse(obj.ToString());
-                        break;
-                }
-                #endregion
-
-                return;
-
-                System.Reflection.PropertyInfo pi = null;
-                pi = sf.TagetCol.ColPropertyInfo;
-                Type newcolType; ;
-                // We need to check whether the property is NULLABLE
-                if (pi.PropertyType.IsGenericType && pi.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                {
-                    // If it is NULLABLE, then get the underlying type. eg if "Nullable<int>" then this will return just "int"
-                    newcolType = pi.PropertyType.GetGenericArguments()[0];
-                }
-                else
-                {
-                    newcolType = pi.PropertyType;
-                }
-
-                switch (newcolType.FullName)
-                {
-                    case "System.Decimal":
-                        //decimal subDec = 0.00m;
-                        if (!decimal.TryParse(obj.ToString(), out decimal subDec))
-                        {
-                            MainForm.Instance.uclog.AddLog(obj.ToString() + "参数为数值时出错", Global.UILogType.错误);
-                        }
-                        else
-                        {
-
-                            ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, subDec);
-                            CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = subDec.ToString();
-                        }
-                        break;
-                    case "System.Int16":
-                    case "System.Int32":
-                    case "System.Int64":
-                        ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, int.Parse(obj.ToString()));
-                        CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = int.Parse(obj.ToString());
-                        break;
-                }
-            }
-        }
 
         #region 将小数保留到指定位数
         public static decimal RoundToNDecimalPlaces(object value, int numberOfDecimalPlaces)
@@ -829,7 +695,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     sender.Cell.View = CurrGridDefine.ViewNormal;
                 }
             }
-            else if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebImage)
+            else if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebPathImage)
             {
                 // sender.Cell.View = CurrGridDefine.ImagesViewModel;
                 //如果有图片值才设置，不然还是和其它一样
@@ -873,7 +739,7 @@ namespace RUINORERP.UI.UCSourceGrid
         public override void OnEditStarting(CellContext sender, CancelEventArgs e)
         {
             //这个远程图片列，值为图片名称，是自动生成的。
-            if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebImage)
+            if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebPathImage)
             {
                 if (sender.Value == null || string.IsNullOrEmpty(sender.Value.ToString()))
                 {
@@ -881,8 +747,12 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                     sender.Value = valueImageWeb.CellImageName;
                 }
+                else
+                {
+                    sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
+                }
 
-                sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
+
                 sender.Cell.Editor.ApplyEdit();
             }
         }
@@ -905,7 +775,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         //因为是清空。所以图片也要恢复成默认视图
                         sender.Cell.View = CurrGridDefine.ViewNormal;
                     }
-                    if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebImage)
+                    if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebPathImage)
                     {
                         //因为是清空。所以图片也要恢复成默认视图
                         sender.Cell.View = CurrGridDefine.ViewNormal;
@@ -931,9 +801,9 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 return;
             }
-            if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebImage)
+            if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebPathImage)
             {
-                if (sender.Cell.Editor != null && sender.Cell.Editor is ImageWebPicker webPicker)
+                if (sender.Cell.Editor != null && sender.Cell.Editor is ImageWebPickEditor webPicker)
                 {
                     //如果图片存在，则显示图片
                     if (System.IO.File.Exists(webPicker.AbsolutelocPath))
@@ -977,7 +847,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         try
                         {
-                            SubtotalReverse(sf, CurrGridDefine, sender.Position.Row);
+                            Subtotal(sf, CurrGridDefine, sender.Position.Row, true);
                         }
                         catch (Exception error)
                         {

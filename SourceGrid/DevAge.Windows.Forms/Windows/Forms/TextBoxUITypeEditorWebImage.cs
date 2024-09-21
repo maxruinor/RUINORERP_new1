@@ -9,17 +9,21 @@ using System.Drawing.Design;
 namespace DevAge.Windows.Forms
 {
     /// <summary>
-    /// TextBoxTypedButton，作为与类型关联的UITypeEditor。至少是一个窗体时，他是公共的的一个对象。所以注意他的值只是临时中转
+    /// TextBoxTypedButton，作为与类型关联的UITypeEditor。至少是一个窗体时，
+    /// 他是公共的的一个对象。所以注意他的值只是临时中转,因为他都是在创建列时创建的。
     /// </summary>
     public class TextBoxUITypeEditorWebImage : DevAgeTextBoxButton, IServiceProvider, System.Windows.Forms.Design.IWindowsFormsEditorService, ITypeDescriptorContext
     {
         private System.ComponentModel.IContainer components = null;
+
+        //public string seed;
 
         public TextBoxUITypeEditorWebImage()
         {
             // This call is required by the Windows Form Designer.
             InitializeComponent();
             this.DialogOpen += new EventHandler(Control_DialogOpen);
+           // seed = Guid.NewGuid().ToString();
         }
 
 
@@ -39,15 +43,17 @@ namespace DevAge.Windows.Forms
             {
                 // 获取选中的文件路径
                 SelectedFilePath = openFileDialog.FileName;
+
+                // var model = this.ImagesBytes.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                // SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+
                 //this.Tag = System.IO.File.ReadAllBytes(selectedFilePath);
                 //this.Tag = System.Drawing.Image.FromFile(selectedFilePath);
             }
         }
+ 
 
-
-        private byte[] ImagesBytes ;
-        private string SelectedFilePath = string.Empty;
-
+        public string SelectedFilePath = string.Empty;
         /// <summary>
         /// Clean up any resources being used.
         /// </summary>
@@ -79,7 +85,7 @@ namespace DevAge.Windows.Forms
             try
             {
                 OnDialogOpen(EventArgs.Empty);
-              
+
                 /*
                 if (m_UITypeEditor != null)
                 {
@@ -149,8 +155,12 @@ namespace DevAge.Windows.Forms
                 //如果是web下载的那个 实际是string。要特殊处理
                 //object tmp = System.ComponentModel.TypeDescriptor.GetEditor(Validator.ValueType, typeof(UITypeEditor));
                 //object tmp = System.ComponentModel.TypeDescriptor.GetEditor(typeof(System.Drawing.Image), typeof(UITypeEditor));
-                //
-                m_UITypeEditor=new TextBoxUITypeEditorWebImage();
+
+                //  var model = .Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                //  SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+
+
+                m_UITypeEditor = new TextBoxUITypeEditorWebImage();
                 //object tmp = new TextBoxUITypeEditorWebImage();
 
                 //    if (tmp is TextBoxUITypeEditorWebImage)

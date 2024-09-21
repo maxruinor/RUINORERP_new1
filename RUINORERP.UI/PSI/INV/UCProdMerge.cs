@@ -151,13 +151,20 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4TextBox<tb_ProdMerge>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4TextBox<tb_ProdMerge>(entity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text, false);
-
+            DataBindingHelper.BindData4CmbRelated<tb_BOM_S>(entity, k => k.BOM_ID, v => v.BOM_Name, cmbBOM_ID, false, false);
 
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, cmbLocation_ID);
             DataBindingHelper.BindData4TextBox<tb_ProdMerge>(entity, t => t.MergeNo, txtMergeNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_ProdMerge>(entity, t => t.MergeDate, dtpMergeDate, false);
+            base.errorProviderForAllInput.DataSource = entity;
+            base.errorProviderForAllInput.ContainerControl = this;
+
+            //this.ValidateChildren();
+            this.AutoValidate = AutoValidate.EnableAllowFocusChange;
+            DataBindingHelper.BindData4ControlByEnum<tb_ProdMerge>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_ProdMerge>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
 
 
@@ -260,7 +267,7 @@ namespace RUINORERP.UI.PSI.INV
                         // 不管选什么都先清空
                         txtBOM_Name.Text = string.Empty;
                         txtBOM_No.Text = string.Empty;
-                        if (vpprod.BOM_ID.HasValue && vpprod.BOM_ID > 0)
+                        if (vpprod.BOM_ID.HasValue && vpprod.BOM_ID > 0 && EditEntity.ActionStatus == ActionStatus.新增)
                         {
                             //给一个默认
                             cmbBOM_ID.SelectedValue = vpprod.BOM_ID.Value;
@@ -695,14 +702,25 @@ protected async override void ReReview()
 
 }
 */
-
+        /// <summary>
+        /// 从BOM中加载明细，注意单据新增加时，明细是空的，才加载
+        /// </summary>
         private void LoadItemsFromBOM()
         {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            if (EditEntity.ActionStatus != ActionStatus.新增)
+            {
+                return;
+            }
             if (cmbBOM_ID.SelectedValue == null || cmbBOM_ID.SelectedValue.ToString() == "-1")
             {
                 if (cmbBOM_ID.Items != null)
                 {
-                    if (cmbBOM_ID.Items.Count > 1)
+                    if (cmbBOM_ID.Items.Count > 2)//有一个是请选择
                     {
                         MessageBox.Show("请选择要组合的配方");
                     }
@@ -797,6 +815,6 @@ protected async override void ReReview()
             LoadItemsFromBOM();
         }
 
-     
+
     }
 }

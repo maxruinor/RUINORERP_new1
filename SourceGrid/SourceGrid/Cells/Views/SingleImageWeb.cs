@@ -33,10 +33,12 @@ namespace SourceGrid.Cells.Views
             m_Hash = Guid.NewGuid().ToString();
         }
 
+        public string seed;
         private System.Drawing.Image _GridImage;
         public SingleImageWeb(System.Drawing.Image image)
         {
             _GridImage = image;
+            seed=Guid.NewGuid().ToString();
         }
 
 
@@ -87,7 +89,7 @@ namespace SourceGrid.Cells.Views
             {
                 if (context.Cell.Editor != null)
                 {
-                    if (context.Cell.Editor is ImageWebPicker webPicker)
+                    if (context.Cell.Editor is ImageWebPickEditor webPicker)
                     {
                         var model = context.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                         SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;

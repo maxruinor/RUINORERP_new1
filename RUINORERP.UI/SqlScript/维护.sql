@@ -81,3 +81,20 @@ SELECT TOP
 	  1000 * FROM	[View_ProdDetail] [it] 
 WHERE	 BOM_ID IS NOT NULL
 	 AND ProdDetailID NOT IN (SELECT ProdDetailID FROM tb_BOM_S WHERE BOM_ID=IT.BOM_ID )
+
+
+
+	 ---连接池相关
+	 SELECT COUNT(*) as '当前连接数' FROM sys.dm_exec_sessions;---获取当前目前系统连接数明细汇总
+
+select   hostname 主机名,count(*) 连接数量  from   master.dbo.sysprocesses group by hostname order by count(*) desc  ---获取当前目前系统连接数明细
+
+SELECT @@MAX_CONNECTIONS ---获取默认系统连接数
+
+--查看当前数据库连接数详情信息？
+sp_who2
+
+exec sp_who 'sa';
+
+-- exec sp_who2 'sa';
+-- exec sp_who @loginame='sa';

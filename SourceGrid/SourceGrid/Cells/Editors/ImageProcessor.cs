@@ -21,7 +21,6 @@ namespace SourceGrid.Cells.Editors
                 return CompressImage(image);
             }
         }
-
  
         public static byte[] CompressImage(System.Drawing.Image image)
         {

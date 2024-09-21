@@ -46,7 +46,7 @@
             0});
             this.QueryShowColQty.Location = new System.Drawing.Point(157, 12);
             this.QueryShowColQty.Maximum = new decimal(new int[] {
-            6,
+            10,
             0,
             0,
             0});
@@ -77,7 +77,7 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(270, 398);
+            this.btnCancel.Location = new System.Drawing.Point(349, 560);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 13;
@@ -86,7 +86,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(103, 398);
+            this.btnOk.Location = new System.Drawing.Point(182, 560);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 12;
@@ -102,7 +102,7 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(485, 451);
+            this.kryptonPanel1.Size = new System.Drawing.Size(632, 635);
             this.kryptonPanel1.TabIndex = 14;
             // 
             // frmMenuPersonalization
@@ -111,7 +111,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(485, 451);
+            this.ClientSize = new System.Drawing.Size(632, 635);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "frmMenuPersonalization";
             this.Text = "菜单个性化设置";

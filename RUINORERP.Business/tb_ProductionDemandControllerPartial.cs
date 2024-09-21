@@ -1187,8 +1187,8 @@ namespace RUINORERP.Business
              bool needLoop = false)
         {
 
-
-            //一个中间件ID，生成一个制作令单
+            //需求分析单审核后才可以生成制令单，因为确定需求才生产
+            //一个中间件的详情ID和PCID即行号一行，生成一个制作令单
             tb_ManufacturingOrder ManufacturingOrder = mapper.Map<tb_ManufacturingOrder>(MakingItem);
             #region 
             //tb_BOM_SController<tb_BOM_S> ctrBOM = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();

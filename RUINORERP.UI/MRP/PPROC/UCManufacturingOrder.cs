@@ -37,6 +37,7 @@ using Krypton.Toolkit;
 using RUINORERP.UI.PSI.PUR;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.Business.CommService;
+using HLH.WinControl.MyTypeConverter;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -202,6 +203,30 @@ namespace RUINORERP.UI.MRP.MP
                     //LoadChildItems(entity.PDID.Value);
                 }
 
+                //影响子件的数量
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.ManufacturingQty))
+                {
+                    if (EditEntity.BOM_ID > 0 && EditEntity.tb_ManufacturingOrderDetails.Count > 0)
+                    {
+                        if (EditEntity.tb_bom_s == null)
+                        {
+                            EditEntity.tb_bom_s = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
+                            .Includes(c => c.tb_BOM_SDetails)
+                            .Where(c => c.BOM_ID == EditEntity.BOM_ID).Single();
+                        }
+                        for (int i = 0; i < EditEntity.tb_ManufacturingOrderDetails.Count; i++)
+                        {
+                            tb_BOM_SDetail bOM_SDetail = EditEntity.tb_bom_s.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == EditEntity.tb_ManufacturingOrderDetails[i].ProdDetailID);
+                            if (bOM_SDetail != null)
+                            {
+                                EditEntity.tb_ManufacturingOrderDetails[i].ShouldSendQty = (bOM_SDetail.UsedQty.ToInt() * EditEntity.ManufacturingQty);
+                            }
+                        }
+
+                        //同步到明细UI表格中？
+                        sgh.SynchronizeUpdateCellValue<tb_ManufacturingOrderDetail>(sgd, c => c.ShouldSendQty, EditEntity.tb_ManufacturingOrderDetails);
+                    }
+                }
 
                 //数据状态变化会影响按钮变化
                 if (s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.DataStatus))
@@ -490,7 +515,7 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     return false;
                 }
- 
+
                 if (EditEntity.ApprovalStatus == null)
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -976,5 +1001,7 @@ protected override void Print()
             lblCustomerVendor_ID.Visible = chkIsOutSourced.Checked;
             cmbCustomerVendor_ID_Out.Visible = chkIsOutSourced.Checked;
         }
+
+
     }
 }

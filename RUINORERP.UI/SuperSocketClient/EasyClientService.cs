@@ -189,7 +189,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 // tx.PushInt((int)SysStatmp);//系统当前时间  这里打开的话就会有这种错误  Too Fast Client Time  OST 1656993523 NST 1656993564 DST 41 OCT 17 NCT 91 DCT 74
                 tx.PushInt64(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
                 tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
-                tx.PushString(MainForm.Instance.AppContext.ClientInfo.Version);
+                tx.PushString(System.Environment.MachineName + ":" + MainForm.Instance.AppContext.ClientInfo.Version);
                 MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime = MainForm.GetLastInputTime();
                 tx.PushInt64(MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime);//电脑空闲时间
                 tx.PushString(MainForm.Instance.AppContext.log.Path);
@@ -333,7 +333,7 @@ namespace RUINORERP.UI.SuperSocketClient
                             break;
                         case ServerCmdEnum.用户登陆回复:
                             bool Successed = ClientService.用户登陆回复(od);
-                            LoginStatus= Successed;
+                            LoginStatus = Successed;
                             LoginSuccessed = Successed;
                             break;
                         case ServerCmdEnum.发送在线列表:

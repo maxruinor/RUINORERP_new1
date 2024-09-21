@@ -760,7 +760,7 @@ namespace RUINORERP.UI
 
                 //MainForm.Instance.logger.LogInformation("成功登陆服务器");
                 //记入审计日志
-                AuditLogHelper.Instance.CreateAuditLog("登陆", "成功登陆服务器");
+                AuditLogHelper.Instance.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;

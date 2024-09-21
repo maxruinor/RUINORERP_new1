@@ -593,6 +593,7 @@
             this.txtManufacturingQty.Name = "txtManufacturingQty";
             this.txtManufacturingQty.Size = new System.Drawing.Size(153, 23);
             this.txtManufacturingQty.TabIndex = 156;
+
             // 
             // lblEmployee_ID
             // 

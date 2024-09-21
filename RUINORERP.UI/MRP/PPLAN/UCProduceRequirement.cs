@@ -724,6 +724,12 @@ namespace RUINORERP.UI.MRP.MP
             //btnCreateProduction.ToolTipValues.Text = "创建生产单";//需求单据保存审核后才能生成制令单！并且确保不要重复生成。
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
+
+            System.Linq.Expressions.Expression<Func<tb_ProduceGoodsRecommendDetail, int?>> expRefBizType = (p) => p.RefBillType;
+
+            ColNameDataDicStockLess.TryAdd(expRefBizType.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType)));
+
+
             //提出来。因为下面两个加载
             Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
             .AndIF(true, w => w.CNName.Length > 0)
@@ -976,6 +982,7 @@ namespace RUINORERP.UI.MRP.MP
                     System.Windows.Forms.MessageBox.Show("采购建议中，相同的产品不能多行录入\r\n，库位或需求日期不一致要拆分为两个需求分析单!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
+
                 EditEntity.tb_PurGoodsRecommendDetails = PurDetails;
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -987,7 +994,7 @@ namespace RUINORERP.UI.MRP.MP
                     return false;
                 }
 
-                EditEntity.tb_PurGoodsRecommendDetails = PurDetails;
+
 
                 #endregion
 
@@ -1517,7 +1524,7 @@ protected async override Task<ApprovalEntity> ReReview()
             kryptonTreeGridViewStockLess.DataSource = dtAll;
             kryptonTreeGridViewStockLess.Columns[kryptonTreeGridViewStockLess.IdColumnName].Visible = false;
 
-
+            kryptonTreeGridViewStockLess.Columns[0].Width = 180;
         }
 
 
@@ -1536,6 +1543,8 @@ protected async override Task<ApprovalEntity> ReReview()
             colNames.TryAdd("ID", "ID");
             colNames.TryAdd("ParentId", "上级ID");
             colNames.TryAdd("Selected", "选择");
+
+
             //要排除的列头
             List<Expression<Func<BaseProductInfo, object>>> expressions = new List<Expression<Func<BaseProductInfo, object>>>();
             expressions.Add(c => c.ProductNo);
@@ -1576,6 +1585,8 @@ protected async override Task<ApprovalEntity> ReReview()
             kryptonTreeGridViewMaking.SetHideColumns(kryptonTreeGridViewMaking.ParentIdColumnName);
             kryptonTreeGridViewMaking.SetHideColumns<tb_ProduceGoodsRecommendDetail>(c => c.ProdDetailID);
             kryptonTreeGridViewMaking.SetHideColumns<tb_ProduceGoodsRecommendDetail>(c => c.BOM_ID);
+            kryptonTreeGridViewMaking.SetHideColumns<tb_ProduceGoodsRecommendDetail>(c => c.PDCID);
+            kryptonTreeGridViewMaking.SetHideColumns<tb_ProduceGoodsRecommendDetail>(c => c.RefBillID);
             kryptonTreeGridViewMaking.ReadOnly = false;
 
 
@@ -1614,6 +1625,8 @@ protected async override Task<ApprovalEntity> ReReview()
             //设置列的单元格背景色为浅绿色
             kryptonTreeGridViewMaking.Columns[expRequirementQty.GetMemberInfo().Name].DefaultCellStyle.BackColor = Color.LightGreen;
             kryptonTreeGridViewMaking.Columns[expSelected.GetMemberInfo().Name].DefaultCellStyle.BackColor = Color.LightGreen;
+            kryptonTreeGridViewMaking.Columns[0].Width = 180;
+            kryptonTreeGridViewMaking.Columns["Selected"].Width = 40;
 
             //如果自制品中的行 有生成过。则不可以选择。
             foreach (DataGridViewRow dr in kryptonTreeGridViewMaking.Rows)
@@ -1623,6 +1636,8 @@ protected async override Task<ApprovalEntity> ReReview()
                     try
                     {
                         long id = dr.Tag.ToLong();
+
+                        //treegrid控件中有一行代码是这样的。rootNode.Tag = dv[items][idColumnName].ToString().Trim(); 传入的ID列
                         //这个id只是为了树型结构的展现建的。不过，也是唯一的，并且保存在数据库中的
                         tb_ProduceGoodsRecommendDetail item = EditEntity.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ID == id);
                         if (item != null)
@@ -1635,7 +1650,6 @@ protected async override Task<ApprovalEntity> ReReview()
                                 kryptonTreeGridViewMaking.Rows[dr.Index].Cells["Selected"].Style.BackColor = Color.HotPink;
                                 kryptonTreeGridViewMaking.Rows[dr.Index].Cells["Selected"].Style.SelectionBackColor = Color.HotPink;
                                 kryptonTreeGridViewMaking.Rows[dr.Index].Cells["Selected"].ToolTipText = "已经生成过制令单，无法重复生成。或刷新后重试！";
-
                             }
                         }
                         //kryptonTreeGridViewMaking.Rows[dr.Index].Cells["Selected"].GetEditedFormattedValue
@@ -1646,6 +1660,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     }
                 }
             }
+
 
         }
 
@@ -1926,7 +1941,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 //实际以他是否有bom为标记找下级需要的材料
                 if (MakingProd.BOM_ID.HasValue)
                 {
-                    var nextlist =await GetNextBomToMakingItemNew(target.NeedQuantity, target.RequirementDate, MakingProd.ID.Value, target.BOM_ID.Value, AlreadyReducedQtyList, target.Location_ID);
+                    var nextlist = await GetNextBomToMakingItemNew(target.NeedQuantity, target.RequirementDate, MakingProd.ID.Value, target.BOM_ID.Value, AlreadyReducedQtyList, target.Location_ID);
                     MakingProditems.AddRange(nextlist);
                 }
                 MakingProditems.Add(MakingProd);
@@ -1977,7 +1992,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     subMaking.RecommendQty = subMaking.RequirementQty - detail.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == Location_ID).Sum(d => d.Quantity);//库存？
                     if (subMaking.BOM_ID.HasValue)
                     {
-                        var nextSublist =await GetNextBomToMakingItem(NeedQuantity, RequirementDate, subMaking.ID.Value, detail.tb_proddetail.BOM_ID.Value, AlreadyReducedQtyList, Location_ID);
+                        var nextSublist = await GetNextBomToMakingItem(NeedQuantity, RequirementDate, subMaking.ID.Value, detail.tb_proddetail.BOM_ID.Value, AlreadyReducedQtyList, Location_ID);
                         SubMakingProditems.AddRange(nextSublist);
                     }
 

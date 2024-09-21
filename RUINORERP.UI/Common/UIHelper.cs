@@ -509,6 +509,10 @@ namespace RUINORERP.UI.Common
             return GetFieldNameList(type);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="types"></param>
+        /// <returns></returns>
         public static ConcurrentDictionary<string, string> GetFieldNameList(params Type[] types)
         {
             ConcurrentDictionary<string, string> fieldNameList = new ConcurrentDictionary<string, string>();

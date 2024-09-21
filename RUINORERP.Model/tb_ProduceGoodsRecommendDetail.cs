@@ -41,7 +41,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDCID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDCID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "建议成品RowID" , IsPrimaryKey = true)]
         public long PDCID
         { 
             get{return _PDCID;}

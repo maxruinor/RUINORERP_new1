@@ -120,7 +120,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-              
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
@@ -185,7 +185,10 @@ namespace RUINORERP.Business
                 }
 
                 #region 并且更新需求分析时 自制品建议的生成单号等信息
-                tb_ProduceGoodsRecommendDetail pgrd = entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == entity.ProdDetailID && c.Location_ID == entity.Location_ID);
+                tb_ProduceGoodsRecommendDetail pgrd = entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == entity.ProdDetailID
+               && c.Location_ID == entity.Location_ID
+               && c.PDCID == entity.PDCID//生成时以建议成品明细中的主键PDCID来关联到制令单的一行。因为相同产品也可以多次生成制令单
+               );
                 if (pgrd != null)
                 {
                     pgrd.RefBillNO = string.Empty;
@@ -265,7 +268,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-             
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.Succeeded = false;
@@ -299,132 +302,135 @@ namespace RUINORERP.Business
 
                 //更新未发料量
                 #region 审核
-                
 
-                    #region 并且更新需求分析时 自制品建议的生成单号等信息
-                    if (entity.tb_productiondemand == null)
+
+                #region 并且更新需求分析时 自制品建议的生成单号等信息
+                if (entity.tb_productiondemand == null)
+                {
+                    entity.tb_productiondemand = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
+                                                 .Includes(e => e.tb_ProduceGoodsRecommendDetails)
+                                                .Where(c => c.PDID == entity.PDID).Single();
+                }
+                else
+                {
+                    //判断是否能反审?
+                    if (entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails == null)
                     {
-                        entity.tb_productiondemand = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
-                                                     .Includes(e => e.tb_ProduceGoodsRecommendDetails)
-                                                    .Where(c => c.PDID == entity.PDID).Single();
+                        entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProduceGoodsRecommendDetail>()
+                            .Where(c => c.PDID == entity.tb_productiondemand.PDID).ToList();
+                    }
+                }
+
+
+                tb_ProduceGoodsRecommendDetail pgrd = entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == entity.ProdDetailID
+                && c.Location_ID == entity.Location_ID
+                && c.PDCID == entity.PDCID//生成时以建议成品明细中的主键PDCID来关联到制令单的一行。因为相同产品也可以多次生成制令单
+                );
+                if (pgrd != null)
+                {
+                    pgrd.RefBillNO = entity.MONO;
+                    pgrd.RefBillID = entity.MOID;
+                    pgrd.RefBillType = (int)BizType.制令单;
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_ProduceGoodsRecommendDetail>(pgrd).ExecuteCommandAsync();
+                }
+                #endregion
+
+                #region 更新在制数量，这个是针对主表目标的更新
+                bool MainOpening = false;
+                tb_Inventory invMain = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
+                if (invMain == null)
+                {
+                    MainOpening = true;
+                    invMain = new tb_Inventory();
+                    invMain.ProdDetailID = entity.ProdDetailID;
+                    invMain.Location_ID = entity.Location_ID;
+                    invMain.Quantity = 0;
+                    invMain.InitInventory = 0;
+                    invMain.Notes = "制令单审核时，自动生成库存信息";
+                    BusinessHelper.Instance.InitEntity(invMain);
+                }
+                invMain.MakingQty += entity.ManufacturingQty.ToInt();
+
+                #endregion
+
+                BusinessHelper.Instance.EditEntity(invMain);
+
+                ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(invMain);
+                if (rr.Succeeded)
+                {
+                    if (MainOpening)
+                    {
+                        #region 处理期初
+                        //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
+                        tb_OpeningInventory oinv = new tb_OpeningInventory();
+                        oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
+                        oinv.Cost_price = rr.ReturnObject.Inv_Cost;
+                        oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
+                        oinv.InitInvDate = System.DateTime.Now;
+                        oinv.InitQty = 0;
+                        oinv.InitInvDate = System.DateTime.Now;
+                        oinv.Notes = "制令单审核时，自动生成期初信息";
+                        await ctrOPinv.AddReEntityAsync(oinv);
+                        #endregion
+                    }
+                }
+
+                foreach (tb_ManufacturingOrderDetail item in entity.tb_ManufacturingOrderDetails)
+                {
+                    #region 更新未发数量 是要在明细中体现的
+                    bool Opening = false;
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == item.ProdDetailID && i.Location_ID == item.Location_ID);
+                    if (inv != null)
+                    {
+                        inv.NotOutQty += item.ShouldSendQty.ToInt();
+                        BusinessHelper.Instance.EditEntity(inv);
                     }
                     else
                     {
-                        //判断是否能反审?
-                        if (entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails == null)
-                        {
-                            entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_ProduceGoodsRecommendDetail>()
-                                .Where(c => c.PDID == entity.tb_productiondemand.PDID).ToList();
-                        }
+                        Opening = true;
+                        inv = new tb_Inventory();
+                        inv.ProdDetailID = item.ProdDetailID;
+                        inv.Location_ID = item.Location_ID;
+                        inv.Quantity = 0;
+                        inv.InitInventory = 0;
+                        inv.Notes = "制令单审核时，自动生成库存信息";
+                        BusinessHelper.Instance.InitEntity(inv);
                     }
-
-
-                    tb_ProduceGoodsRecommendDetail pgrd = entity.tb_productiondemand.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == entity.ProdDetailID && c.Location_ID == entity.Location_ID);
-                    if (pgrd != null)
+                    ReturnResults<tb_Inventory> rv = await ctrinv.SaveOrUpdate(inv);
+                    if (rv.Succeeded)
                     {
-                        pgrd.RefBillNO = entity.MONO;
-                        pgrd.RefBillID = entity.MOID;
-                        pgrd.RefBillType = (int)BizType.制令单;
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_ProduceGoodsRecommendDetail>(pgrd).ExecuteCommandAsync();
-                    }
-                    #endregion
-
-                    #region 更新在制数量，这个是针对主表目标的更新
-                    bool MainOpening = false;
-                    tb_Inventory invMain = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
-                    if (invMain == null)
-                    {
-                        MainOpening = true;
-                        invMain = new tb_Inventory();
-                        invMain.ProdDetailID = entity.ProdDetailID;
-                        invMain.Location_ID = entity.Location_ID;
-                        invMain.Quantity = 0;
-                        invMain.InitInventory = 0;
-                        invMain.Notes = "制令单审核时，自动生成库存信息";
-                        BusinessHelper.Instance.InitEntity(invMain);
-                    }
-                    invMain.MakingQty += entity.ManufacturingQty.ToInt();
-
-                    #endregion
-
-                    BusinessHelper.Instance.EditEntity(invMain);
-
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(invMain);
-                    if (rr.Succeeded)
-                    {
-                        if (MainOpening)
+                        if (Opening)
                         {
                             #region 处理期初
                             //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                            tb_OpeningInventory oinv = new tb_OpeningInventory();
-                            oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                            oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                            oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                            oinv.InitInvDate = System.DateTime.Now;
-                            oinv.InitQty = 0;
-                            oinv.InitInvDate = System.DateTime.Now;
-                            oinv.Notes = "制令单审核时，自动生成期初信息";
-                            await ctrOPinv.AddReEntityAsync(oinv);
+                            tb_OpeningInventory oinvSub = new tb_OpeningInventory();
+                            oinvSub.Inventory_ID = rv.ReturnObject.Inventory_ID;
+                            oinvSub.Cost_price = rv.ReturnObject.Inv_Cost;
+                            oinvSub.Subtotal_Cost_Price = oinvSub.Cost_price * oinvSub.InitQty;
+                            oinvSub.InitInvDate = System.DateTime.Now;
+                            oinvSub.InitQty = 0;
+                            oinvSub.InitInvDate = System.DateTime.Now;
+                            oinvSub.Notes = "制令单审核时，自动生成期初信息";
+                            await ctrOPinv.AddReEntityAsync(oinvSub);
                             #endregion
                         }
                     }
-
-                    foreach (tb_ManufacturingOrderDetail item in entity.tb_ManufacturingOrderDetails)
-                    {
-                        #region 更新未发数量 是要在明细中体现的
-                        bool Opening = false;
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == item.ProdDetailID && i.Location_ID == item.Location_ID);
-                        if (inv != null)
-                        {
-                            inv.NotOutQty += item.ShouldSendQty.ToInt();
-                            BusinessHelper.Instance.EditEntity(inv);
-                        }
-                        else
-                        {
-                            Opening = true;
-                            inv = new tb_Inventory();
-                            inv.ProdDetailID = item.ProdDetailID;
-                            inv.Location_ID = item.Location_ID;
-                            inv.Quantity = 0;
-                            inv.InitInventory = 0;
-                            inv.Notes = "制令单审核时，自动生成库存信息";
-                            BusinessHelper.Instance.InitEntity(inv);
-                        }
-                        ReturnResults<tb_Inventory> rv = await ctrinv.SaveOrUpdate(inv);
-                        if (rv.Succeeded)
-                        {
-                            if (Opening)
-                            {
-                                #region 处理期初
-                                //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                                tb_OpeningInventory oinvSub = new tb_OpeningInventory();
-                                oinvSub.Inventory_ID = rv.ReturnObject.Inventory_ID;
-                                oinvSub.Cost_price = rv.ReturnObject.Inv_Cost;
-                                oinvSub.Subtotal_Cost_Price = oinvSub.Cost_price * oinvSub.InitQty;
-                                oinvSub.InitInvDate = System.DateTime.Now;
-                                oinvSub.InitQty = 0;
-                                oinvSub.InitInvDate = System.DateTime.Now;
-                                oinvSub.Notes = "制令单审核时，自动生成期初信息";
-                                await ctrOPinv.AddReEntityAsync(oinvSub);
-                                #endregion
-                            }
-                        }
-                        #endregion
-                    }
+                    #endregion
+                }
 
 
-                    //这部分是否能提出到上一级公共部分？
-                    entity.DataStatus = (int)DataStatus.确认;
-                    //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
-                    //后面已经修改为
-                   // entity.ApprovalResults = approvalEntity.ApprovalResults;
-                    entity.ApprovalStatus = (int)ApprovalStatus.已审核;
-                    BusinessHelper.Instance.ApproverEntity(entity);
-                    //只更新指定列
-                    // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(entity).ExecuteCommandAsync();
+                //这部分是否能提出到上一级公共部分？
+                entity.DataStatus = (int)DataStatus.确认;
+                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
+                //后面已经修改为
+                // entity.ApprovalResults = approvalEntity.ApprovalResults;
+                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+                //只更新指定列
+                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(entity).ExecuteCommandAsync();
 
-             
+
 
 
                 #endregion
@@ -439,11 +445,11 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                
+
                 _unitOfWorkManage.RollbackTran();
                 rs.ErrorMsg = ex.Message;
                 _logger.Error(ex, "事务回滚" + ex.Message);
-                
+
                 return rs;
             }
         }

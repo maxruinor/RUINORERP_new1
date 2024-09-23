@@ -214,12 +214,13 @@ namespace RUINORERP.UI.MRP.MP
                             .Includes(c => c.tb_BOM_SDetails)
                             .Where(c => c.BOM_ID == EditEntity.BOM_ID).Single();
                         }
+                        decimal bomOutQty = EditEntity.tb_bom_s.OutputQty;
                         for (int i = 0; i < EditEntity.tb_ManufacturingOrderDetails.Count; i++)
                         {
                             tb_BOM_SDetail bOM_SDetail = EditEntity.tb_bom_s.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == EditEntity.tb_ManufacturingOrderDetails[i].ProdDetailID);
                             if (bOM_SDetail != null)
                             {
-                                EditEntity.tb_ManufacturingOrderDetails[i].ShouldSendQty = (bOM_SDetail.UsedQty.ToInt() * EditEntity.ManufacturingQty);
+                                EditEntity.tb_ManufacturingOrderDetails[i].ShouldSendQty = (bOM_SDetail.UsedQty.ToInt() * (EditEntity.ManufacturingQty / bomOutQty)).ToInt();
                             }
                         }
 

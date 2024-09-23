@@ -207,26 +207,18 @@ namespace RUINORERP.UI.PSI.INV
                     {
                         if (EditEntity.BOM_ID > 0 && EditEntity.tb_ProdMergeDetails.Count > 0)
                         {
+                            decimal bomOutQty = EditEntity.tb_bom_s.OutputQty;
                             for (int i = 0; i < EditEntity.tb_ProdMergeDetails.Count; i++)
                             {
                                 tb_BOM_SDetail bOM_SDetail = EditEntity.tb_bom_s.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == EditEntity.tb_ProdMergeDetails[i].ProdDetailID);
                                 if (bOM_SDetail != null)
                                 {
-                                    EditEntity.tb_ProdMergeDetails[i].Qty = (bOM_SDetail.UsedQty * EditEntity.MergeTargetQty).ToInt();
+                                    EditEntity.tb_ProdMergeDetails[i].Qty = (bOM_SDetail.UsedQty * EditEntity.MergeTargetQty.ToDecimal() / bomOutQty).ToInt();
                                 }
                             }
+                            //同步到明细UI表格中？
+                            sgh.SynchronizeUpdateCellValue<tb_ProdMergeDetail>(sgd, c => c.Qty, EditEntity.tb_ProdMergeDetails);
                         }
-                        else
-                        {
-                            //请注意，如果没有配方时，子件数量默认为1。
-                            MessageBox.Show("没有配方时，子件数量默认为1。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            for (int i = 0; i < EditEntity.tb_ProdMergeDetails.Count; i++)
-                            {
-                                EditEntity.tb_ProdMergeDetails[i].Qty = 1;
-                            }
-                        }
-                        //同步到明细UI表格中？
-                        sgh.SynchronizeUpdateCellValue<tb_ProdMergeDetail>(sgd, c => c.Qty, EditEntity.tb_ProdMergeDetails);
                     }
 
 
@@ -267,7 +259,7 @@ namespace RUINORERP.UI.PSI.INV
                         // 不管选什么都先清空
                         txtBOM_Name.Text = string.Empty;
                         txtBOM_No.Text = string.Empty;
-                        if (vpprod.BOM_ID.HasValue && vpprod.BOM_ID > 0 && EditEntity.ActionStatus == ActionStatus.新增)
+                        if (vpprod.BOM_ID.HasValue && vpprod.BOM_ID > 0)
                         {
                             //给一个默认
                             cmbBOM_ID.SelectedValue = vpprod.BOM_ID.Value;
@@ -558,15 +550,15 @@ namespace RUINORERP.UI.PSI.INV
 
 
         /*
-protected async override Task<ApprovalEntity> Review()
-{
-    if (EditEntity == null)
-    {
+        protected async override Task<ApprovalEntity> Review()
+        {
+        if (EditEntity == null)
+        {
         return null;
-    }
-    //如果已经审核通过，则不能重复审核
-    if (EditEntity.ApprovalStatus.HasValue)
-    {
+        }
+        //如果已经审核通过，则不能重复审核
+        if (EditEntity.ApprovalStatus.HasValue)
+        {
         if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
         {
             if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
@@ -575,36 +567,36 @@ protected async override Task<ApprovalEntity> Review()
                 return null;
             }
         }
-    }
+        }
 
-    Command command = new Command();
-    //缓存当前编辑的对象。如果撤销就回原来的值
-    tb_ProdMerge oldobj = CloneHelper.DeepCloneObject<tb_ProdMerge>(EditEntity);
-    command.UndoOperation = delegate ()
-    {
+        Command command = new Command();
+        //缓存当前编辑的对象。如果撤销就回原来的值
+        tb_ProdMerge oldobj = CloneHelper.DeepCloneObject<tb_ProdMerge>(EditEntity);
+        command.UndoOperation = delegate ()
+        {
         //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
         CloneHelper.SetValues<tb_ProdMerge>(EditEntity, oldobj);
-    };
-    ApprovalEntity ae = await base.Review();
-    if (EditEntity == null)
-    {
+        };
+        ApprovalEntity ae = await base.Review();
+        if (EditEntity == null)
+        {
         return null;
-    }
-    if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-    {
+        }
+        if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
+        {
         return null;
-    }
+        }
 
-    // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-    //因为只需要更新主表
-    //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-    // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-    tb_ProdMergeController<tb_ProdMerge> ctr = Startup.GetFromFac<tb_ProdMergeController<tb_ProdMerge>>();
-    List<tb_ProdMerge> _StockIns = new List<tb_ProdMerge>();
-    _StockIns.Add(EditEntity);
-    ReturnResults<bool> rs = await ctr.AdjustingAsync(_StockIns, ae);
-    if (rs.Succeeded)
-    {
+        // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+        //因为只需要更新主表
+        //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
+        // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
+        tb_ProdMergeController<tb_ProdMerge> ctr = Startup.GetFromFac<tb_ProdMergeController<tb_ProdMerge>>();
+        List<tb_ProdMerge> _StockIns = new List<tb_ProdMerge>();
+        _StockIns.Add(EditEntity);
+        ReturnResults<bool> rs = await ctr.AdjustingAsync(_StockIns, ae);
+        if (rs.Succeeded)
+        {
         //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
         //{
 
@@ -622,27 +614,27 @@ protected async override Task<ApprovalEntity> Review()
             toolStripbtnReview.Enabled = true;
         }
         MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。");
-    }
-    else
-    {
+        }
+        else
+        {
         //审核失败 要恢复之前的值
         command.Undo();
         MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rs.ErrorMsg},请联系管理员！", Color.Red);
-    }
+        }
 
-    return ae;
-}
+        return ae;
+        }
 
 
-protected async override void ReReview()
-{
-    if (EditEntity == null)
-    {
+        protected async override void ReReview()
+        {
+        if (EditEntity == null)
+        {
         return;
-    }
-    //如果已经审核通过，则不能重复审核
-    if (EditEntity.ApprovalStatus.HasValue)
-    {
+        }
+        //如果已经审核通过，则不能重复审核
+        if (EditEntity.ApprovalStatus.HasValue)
+        {
         if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
         {
             if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
@@ -696,12 +688,12 @@ protected async override void ReReview()
 
             }
         }
-    }
+        }
 
 
 
-}
-*/
+        }
+        */
         /// <summary>
         /// 从BOM中加载明细，注意单据新增加时，明细是空的，才加载
         /// </summary>
@@ -712,10 +704,6 @@ protected async override void ReReview()
                 return;
             }
 
-            if (EditEntity.ActionStatus != ActionStatus.新增)
-            {
-                return;
-            }
             if (cmbBOM_ID.SelectedValue == null || cmbBOM_ID.SelectedValue.ToString() == "-1")
             {
                 if (cmbBOM_ID.Items != null)
@@ -730,6 +718,11 @@ protected async override void ReReview()
             if (EditEntity.tb_ProdMergeDetails == null)
             {
                 EditEntity.tb_ProdMergeDetails = new List<tb_ProdMergeDetail>();
+            }
+            //新建时才全新加载
+            if (EditEntity.tb_ProdMergeDetails.Count > 0)
+            {
+                return;
             }
             EditEntity.tb_ProdMergeDetails.Clear();
             //通过BOM_id找到明细加载

@@ -264,7 +264,7 @@
             // 
             // lblMergeTargetQty
             // 
-            this.lblMergeTargetQty.Location = new System.Drawing.Point(586, 96);
+            this.lblMergeTargetQty.Location = new System.Drawing.Point(318, 122);
             this.lblMergeTargetQty.Name = "lblMergeTargetQty";
             this.lblMergeTargetQty.Size = new System.Drawing.Size(62, 20);
             this.lblMergeTargetQty.TabIndex = 147;
@@ -272,9 +272,9 @@
             // 
             // txtMergeTargetQty
             // 
-            this.txtMergeTargetQty.Location = new System.Drawing.Point(652, 96);
+            this.txtMergeTargetQty.Location = new System.Drawing.Point(384, 122);
             this.txtMergeTargetQty.Name = "txtMergeTargetQty";
-            this.txtMergeTargetQty.Size = new System.Drawing.Size(143, 23);
+            this.txtMergeTargetQty.Size = new System.Drawing.Size(152, 23);
             this.txtMergeTargetQty.TabIndex = 148;
             // 
             // txtSpecifications
@@ -398,7 +398,7 @@
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtMergeSourceTotalQty);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblMergeSourceTotalQty);
             this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 531);
-            this.kryptonSplitContainer2.SplitterDistance = 417;
+            this.kryptonSplitContainer2.SplitterDistance = 441;
             this.kryptonSplitContainer2.TabIndex = 2;
             // 
             // grid1
@@ -410,21 +410,21 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1133, 417);
+            this.grid1.Size = new System.Drawing.Size(1133, 441);
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
             // txtMergeSourceTotalQty
             // 
-            this.txtMergeSourceTotalQty.Location = new System.Drawing.Point(798, 19);
+            this.txtMergeSourceTotalQty.Location = new System.Drawing.Point(798, 31);
             this.txtMergeSourceTotalQty.Name = "txtMergeSourceTotalQty";
             this.txtMergeSourceTotalQty.Size = new System.Drawing.Size(100, 23);
             this.txtMergeSourceTotalQty.TabIndex = 150;
             // 
             // lblMergeSourceTotalQty
             // 
-            this.lblMergeSourceTotalQty.Location = new System.Drawing.Point(686, 19);
+            this.lblMergeSourceTotalQty.Location = new System.Drawing.Point(717, 34);
             this.lblMergeSourceTotalQty.Name = "lblMergeSourceTotalQty";
             this.lblMergeSourceTotalQty.Size = new System.Drawing.Size(75, 20);
             this.lblMergeSourceTotalQty.TabIndex = 149;

@@ -121,6 +121,7 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4TextBox<tb_MaterialRequisition>(entity, t => t.TotalPrice.ToString(), txtTotalPrice, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_MaterialRequisition>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_MaterialRequisition>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_MaterialRequisition>(entity, t => t.ExpectedQuantity, txtExpectedQuantity, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_MaterialRequisition>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CheckBox<tb_MaterialRequisition>(entity, t => t.ReApply, chkReApply, false);
             DataBindingHelper.BindData4TextBox<tb_MaterialRequisition>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
@@ -191,8 +192,33 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     ToolBarEnabledControl(entity);
                 }
-                //如果客户有变化，带出对应有业务员
-
+                //预计产量是来自于制令单，如果修改则要同步修改明细的发料数量
+                //影响明细的数量
+                if (s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.ExpectedQuantity))
+                {
+                    if (EditEntity.tb_manufacturingorder.tb_bom_s == null && EditEntity.tb_manufacturingorder.BOM_ID > 0)
+                    {
+                        EditEntity.tb_manufacturingorder.tb_bom_s = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
+                        .Includes(a => a.tb_BOM_SDetails)
+                        .Where(c => c.BOM_ID == EditEntity.tb_manufacturingorder.BOM_ID).Single();
+                    }
+                    if (EditEntity.tb_manufacturingorder.tb_bom_s != null
+                    && EditEntity.tb_manufacturingorder.tb_bom_s.BOM_ID > 0
+                    && EditEntity.tb_manufacturingorder.tb_bom_s.tb_BOM_SDetails.Count > 0)
+                    {
+                        decimal bomOutQty = EditEntity.tb_manufacturingorder.tb_bom_s.OutputQty;
+                        for (int i = 0; i < EditEntity.tb_MaterialRequisitionDetails.Count; i++)
+                        {
+                            tb_BOM_SDetail bOM_SDetail = EditEntity.tb_manufacturingorder.tb_bom_s.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == EditEntity.tb_MaterialRequisitionDetails[i].ProdDetailID);
+                            if (bOM_SDetail != null)
+                            {
+                                EditEntity.tb_MaterialRequisitionDetails[i].ActualSentQty = (bOM_SDetail.UsedQty * (EditEntity.ExpectedQuantity / bomOutQty)).ToInt();
+                            }
+                        }
+                    }
+                    //同步到明细UI表格中？
+                     sgh.SynchronizeUpdateCellValue<tb_MaterialRequisitionDetail>(sgd, c => c.ActualSentQty, EditEntity.tb_MaterialRequisitionDetails);
+                }
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
                 {
@@ -426,7 +452,7 @@ namespace RUINORERP.UI.MRP.MP
             {
                 return false;
             }
-            var eer = errorProviderForAllInput.GetError(txtTotalQuantity);
+            var eer = errorProviderForAllInput.GetError(txtExpectedQuantity);
 
             bindingSourceSub.EndEdit();
 
@@ -486,7 +512,7 @@ namespace RUINORERP.UI.MRP.MP
                     return false;
                 }
 
-          
+
                 if (EditEntity.ApprovalStatus == null)
                 {
                     EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -712,8 +738,6 @@ namespace RUINORERP.UI.MRP.MP
         /// <param name="id"></param>
         private async void LoadChildItems(long? id)
         {
-
-
             //生成制令单  以目标为基准。
             tb_ManufacturingOrderController<tb_ManufacturingOrder> ctr = Startup.GetFromFac<tb_ManufacturingOrderController<tb_ManufacturingOrder>>();
 
@@ -744,8 +768,6 @@ namespace RUINORERP.UI.MRP.MP
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
                     tb_ManufacturingOrderDetail _SourceBillDetail = SourceBill.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.Location_ID == details[i].Location_ID);
-
-
                     details[i].ShouldSendQty = (_SourceBillDetail.ShouldSendQty + _SourceBillDetail.WastageQty - _SourceBillDetail.ActualSentQty).ToInt();
                     var inv = _SourceBillDetail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == details[i].Location_ID);
                     if (inv != null)
@@ -788,6 +810,7 @@ namespace RUINORERP.UI.MRP.MP
                     MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 entity.tb_manufacturingorder = SourceBill;
+                entity.ExpectedQuantity = SourceBill.ManufacturingQty - SourceBill.QuantityDelivered;
                 entity.tb_MaterialRequisitionDetails = NewDetails;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -810,8 +833,7 @@ namespace RUINORERP.UI.MRP.MP
                                     .Includes(a => a.tb_productionplan)
                                     .SingleAsync();
 
-                    //entity.DepartmentID
-                    //entity.CustomerVendor_ID
+
                     if (productionDemand.tb_productionplan != null)
                     {
                         entity.ProjectGroup_ID = productionDemand.tb_productionplan.ProjectGroup_ID;
@@ -820,15 +842,6 @@ namespace RUINORERP.UI.MRP.MP
 
                 }
 
-                //if (SourceBill.PreStartDate.HasValue)
-                //{
-                //    entity.DeliveryDate = SourceBill.DeliveryDate.Value;
-                //}
-                //else
-                //{
-                //    entity.RequirementDate = System.DateTime.Now.AddDays(10);//这是不是一个平均时间。将来可以根据数据优化？   
-                //    entity.PlanDate = System.DateTime.Now;
-                //}
 
 
 

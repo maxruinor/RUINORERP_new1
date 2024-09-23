@@ -1972,8 +1972,10 @@ protected async override Task<ApprovalEntity> ReReview()
 
             List<tb_BOM_SDetail> bomDetailsOnlyWithBOM = new List<tb_BOM_SDetail>();
             bomDetailsOnlyWithBOM = await sDetailController.QueryByNavWithSubBom(c => c.BOM_ID == BOM_ID);
+
             foreach (tb_BOM_SDetail detail in bomDetailsOnlyWithBOM)
             {
+                decimal bomOutQty = detail.tb_bom_s.OutputQty;
                 if (detail.tb_proddetail.BOM_ID.HasValue)
                 {
                     tb_ProduceGoodsRecommendDetail subMaking = new tb_ProduceGoodsRecommendDetail();
@@ -1986,7 +1988,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     subMaking.Location_ID = Location_ID;
                     //  subMaking.PreEndDate=
                     //subMaking.UnitCost
-                    decimal needQty = NeedQuantity * detail.UsedQty;
+                    decimal needQty = NeedQuantity * detail.UsedQty / bomOutQty;
                     subMaking.PlanNeedQty = needQty.ToInt();//配方用量和实际请制量决定
                     subMaking.RequirementQty = needQty.ToInt();//配方用量和实际请制量决定
                     subMaking.RecommendQty = subMaking.RequirementQty - detail.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == Location_ID).Sum(d => d.Quantity);//库存？
@@ -2030,6 +2032,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     tb_BOM_SDetail detail = bomDetailsOnlyWithBOM.Where(c => c.ProdDetailID == SubItem.ProdDetailID).FirstOrDefault();
                     if (detail != null)
                     {
+                        decimal bomOutQty = detail.tb_bom_s.OutputQty;
                         #region 生成一个中间件
                         tb_ProduceGoodsRecommendDetail subMaking = new tb_ProduceGoodsRecommendDetail();
                         subMaking.ID = SubItem.ID;
@@ -2040,7 +2043,7 @@ protected async override Task<ApprovalEntity> ReReview()
                         subMaking.Location_ID = Location_ID;
                         //subMaking.PreEndDate= SubItem.RequirementDate
                         subMaking.UnitCost = detail.MaterialCost;
-                        decimal needQty = NeedQuantity * detail.UsedQty;
+                        decimal needQty = NeedQuantity * detail.UsedQty / bomOutQty;
 
                         subMaking.PlanNeedQty = needQty.ToInt();//配方用量和实际请制量决定
                         subMaking.RequirementQty = needQty.ToInt();//配方用量和实际请制量决定
@@ -2496,12 +2499,13 @@ protected async override Task<ApprovalEntity> ReReview()
             List<tb_BOM_SDetail> subBomDetails = await sDetailController.QueryByNavWithSubBom(c => c.BOM_ID == row.BOM_ID);
             //Prow.BOM_ID.ToBool
             //要通过上级BOM找到BOM明细再算出对应的数量,里面可能存在已经累计过的。相同的物料。这里只是算出差值。直接减掉。
+            decimal bomOutQty = Prow.tb_bom_s.OutputQty;
             foreach (var item in EditEntity.tb_PurGoodsRecommendDetails)
             {
                 tb_BOM_SDetail sDetail = subBomDetails.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
                 if (sDetail != null)
                 {
-                    decimal totalDiffQty = sDetail.UsedQty * DiffQty;
+                    decimal totalDiffQty = sDetail.UsedQty * DiffQty / bomOutQty;
                     item.RequirementQty = item.RequirementQty - totalDiffQty.ToInt();
                     item.RecommendQty = item.RecommendQty - totalDiffQty.ToInt();
 

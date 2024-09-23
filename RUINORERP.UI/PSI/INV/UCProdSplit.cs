@@ -216,12 +216,13 @@ namespace RUINORERP.UI.PSI.INV
                 {
                     if (EditEntity.BOM_ID > 0 && EditEntity.tb_ProdSplitDetails.Count > 0)
                     {
+                        decimal bomOutQty = EditEntity.tb_bom_s.OutputQty;
                         for (int i = 0; i < EditEntity.tb_ProdSplitDetails.Count; i++)
                         {
                             tb_BOM_SDetail bOM_SDetail = EditEntity.tb_bom_s.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == EditEntity.tb_ProdSplitDetails[i].ProdDetailID);
                             if (bOM_SDetail != null)
                             {
-                                EditEntity.tb_ProdSplitDetails[i].Qty = (bOM_SDetail.UsedQty * EditEntity.SplitParentQty).ToInt();
+                                EditEntity.tb_ProdSplitDetails[i].Qty = (bOM_SDetail.UsedQty * EditEntity.SplitParentQty.ToDecimal() / bomOutQty).ToInt();
                             }
                         }
 
@@ -337,7 +338,7 @@ namespace RUINORERP.UI.PSI.INV
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 
-             listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdSplitDetail, InventoryInfo>(c => c.ProdDetailID, true);
+            listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdSplitDetail, InventoryInfo>(c => c.ProdDetailID, true);
 
             listCols.SetCol_NeverVisible<tb_ProdSplitDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdSplitDetail>(c => c.SplitSub_ID);
@@ -537,7 +538,7 @@ namespace RUINORERP.UI.PSI.INV
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
                 //   其他输入条码验证
-          
+
                 ReturnMainSubResults<tb_ProdSplit> SaveResult = new ReturnMainSubResults<tb_ProdSplit>();
                 if (NeedValidated)
                 {
@@ -551,7 +552,7 @@ namespace RUINORERP.UI.PSI.INV
                         MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}，请重试;或联系管理员。", Color.Red);
                     }
                 }
-           
+
                 return SaveResult.Succeeded;
             }
             return false;
@@ -708,10 +709,29 @@ namespace RUINORERP.UI.PSI.INV
     */
         private void LoadItemsFromBOM()
         {
-
+            if (EditEntity == null)
+            {
+                return;
+            }
+            if (cmbBOM_ID.SelectedValue == null || cmbBOM_ID.SelectedValue.ToString() == "-1")
+            {
+                if (cmbBOM_ID.Items != null)
+                {
+                    if (cmbBOM_ID.Items.Count > 2)//有一个是请选择
+                    {
+                        MessageBox.Show("请选择要拆分的配方");
+                    }
+                }
+                return;
+            }
             if (EditEntity.tb_ProdSplitDetails == null)
             {
                 EditEntity.tb_ProdSplitDetails = new List<tb_ProdSplitDetail>();
+            }
+            //新建时才全新加载
+            if (EditEntity.tb_ProdSplitDetails.Count > 0)
+            {
+                return;
             }
             EditEntity.tb_ProdSplitDetails.Clear();
             //通过BOM_id找到明细加载
@@ -739,11 +759,12 @@ namespace RUINORERP.UI.PSI.INV
                     {
                         List<tb_ProdSplitDetail> details = new List<tb_ProdSplitDetail>();
                         IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                        decimal bomOutQty = EditEntity.tb_bom_s.OutputQty;
                         foreach (var item in RowDetails)
                         {
                             tb_ProdSplitDetail bOM_SDetail = mapper.Map<tb_ProdSplitDetail>(item);
                             bOM_SDetail.Location_ID = EditEntity.Location_ID;
-                            bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID).UsedQty * EditEntity.SplitParentQty).ToInt();
+                            bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID).UsedQty * EditEntity.SplitParentQty / bomOutQty).ToInt();
 
                             details.Add(bOM_SDetail);
                         }

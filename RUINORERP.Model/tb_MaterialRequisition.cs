@@ -238,7 +238,20 @@ namespace RUINORERP.Model
             SetProperty(ref _TotalCost, value);
             }
         }
-
+        private int? _ExpectedQuantity = 0;
+        /// <summary>
+        /// 预计产量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExpectedQuantity", ColDesc = "预计产量")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "ExpectedQuantity", DecimalDigits = 0, IsNullable = true, ColumnDescription = "预计产量")]
+        public int? ExpectedQuantity
+        {
+            get { return _ExpectedQuantity; }
+            set
+            {
+                SetProperty(ref _ExpectedQuantity, value);
+            }
+        }
         private int _TotalSendQty= ((0));
         /// <summary>
         /// 实发总数

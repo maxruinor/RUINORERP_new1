@@ -134,7 +134,7 @@ namespace RUINORERP.Business
                         {
                             rrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
-                            rrs.ErrorMsg = $"领料明细中有产品不属性当前制令单明细!请检查数据后重试！";
+                            rrs.ErrorMsg = $"领料明细中，有不属于当前制令单的明细!请检查数据后重试！";
                             _logger.LogInformation(rrs.ErrorMsg);
                             return rrs;
                         }

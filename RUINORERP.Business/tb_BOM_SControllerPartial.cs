@@ -123,7 +123,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_ProdDetailController<tb_ProdDetail> ctrDetail = _appContext.GetRequiredService<tb_ProdDetailController<tb_ProdDetail>>();
                 tb_BOM_SController<tb_BOM_S> ctrinv = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-              //  BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+                //  BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
                 if (entity == null)
                 {
@@ -161,11 +161,11 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-               
+
                 _unitOfWorkManage.RollbackTran();
-              
-                    _logger.Error(ex,"事务回滚");
-              
+
+                _logger.Error(ex, "事务回滚");
+
                 return rmrs;
             }
 
@@ -181,7 +181,7 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rs = new ReturnResults<T>();
             tb_BOM_S entity = ObjectEntity as tb_BOM_S;
-      
+
             try
             {
                 // 开启事务，保证数据一致性
@@ -217,13 +217,13 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rs.ReturnObject=entity as T;
+                rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
                 return rs;
             }
             catch (Exception ex)
             {
-          
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.Succeeded = false;
@@ -235,18 +235,19 @@ namespace RUINORERP.Business
         public async override Task<List<T>> GetPrintDataSource(long mainid)
         {
             List<tb_BOM_S> list = await _appContext.Db.CopyNew().Queryable<tb_BOM_S>().Where(m => m.BOM_ID == mainid)
-                                        .Includes(a => a.tb_proddetail)
+                                        .Includes(a => a.tb_proddetail, b => b.tb_prod, c => c.tb_producttype)
                                         .Includes(a => a.tb_bomconfighistory)
-                                        .Includes(a => a.tb_BOM_SDetailSecondaries)
+                                        //.Includes(a => a.tb_BOM_SDetailSecondaries)暂时不用
                                         .Includes(a => a.tb_department)
-                                        .Includes(a => a.tb_BOM_SDetails)
-                                        .Includes(a => a.tb_BOM_SDetailSecondaries)
+                                        .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
+                                        //.Includes(a => a.tb_BOM_SDetailSecondaries)
                                         .Includes(a => a.tb_files)
                                         .Includes(a => a.view_ProdDetail)
                                         .Includes(a => a.tb_ProductionDemandDetails)
                                         .Includes(a => a.tb_ProduceGoodsRecommendDetails)
                                         .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                                         .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_unit)
+                                        .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_producttype)
                                         .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                                         .ToListAsync();
 

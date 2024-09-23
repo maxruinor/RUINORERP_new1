@@ -16,6 +16,8 @@ namespace SourceGrid.Cells.Editors
     /// <summary>
     ///  Web型的图片选择器, 第一列都是一样的。所以只是一个过桥。数据得以cell为单位保存
     /// 创建列时的可编辑的列的编辑器。一列共用一个编辑器
+    /// 对话框选择图片文件，和内存中粘贴，以及拖入的图片处理。都是通过这个编辑器来实现的
+    /// 并且保存在当前的control.tag和model中
     /// </summary>
     [System.ComponentModel.ToolboxItem(false)]
     public class ImageWebPickEditor : EditorControlBase
@@ -36,7 +38,7 @@ namespace SourceGrid.Cells.Editors
         //public ImageWebPickEditor() : base(typeof(string))
         public ImageWebPickEditor(Type p_Type) : base(p_Type)
         {
-           
+
         }
 
 
@@ -62,7 +64,7 @@ namespace SourceGrid.Cells.Editors
             }
         }
 
- 
+
 
         /// <summary>
         /// Temp绝对路径
@@ -76,7 +78,7 @@ namespace SourceGrid.Cells.Editors
         }
 
 
- 
+
 
 
         #region 添加了右键菜单
@@ -274,14 +276,20 @@ namespace SourceGrid.Cells.Editors
             }
         }
 
+        /// <summary>
+        /// 拖入或内存中图片转换。
+        /// 如果
+        /// </summary>
+        /// <param name="image"></param>
         private void SetImageToPath(System.Drawing.Image image)
         {
-
             var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-            fileName = valueImageWeb.CellImageName;
-
-
+            if (string.IsNullOrEmpty(valueImageWeb.CellImageName))
+            {
+                valueImageWeb.CellImageName = Guid.NewGuid().ToString() + ".jpg";
+                fileName = valueImageWeb.CellImageName;
+            }
             if (image != null)
             {           //是否存在 不管？ 传入最新则比较。不一样就覆盖
                         //if (File.Exists(AbsolutelocPath))
@@ -309,6 +317,9 @@ namespace SourceGrid.Cells.Editors
                     byte[] destination = new byte[buffByte.Length];
                     Buffer.BlockCopy(buffByte, 0, destination, 0, buffByte.Length);
                     valueImageWeb.CellImageBytes = destination;
+                    Control.Tag = destination;
+                    //如果先对话框。再拖拽，则对话框会覆盖拖拽的值。所以这里要清空对话框返回的路径。
+
                     //ImageProcessor.SaveBytesAsImage(buffByte, AbsolutelocPath);
                 }
                 ValueType = typeof(string);
@@ -389,30 +400,42 @@ namespace SourceGrid.Cells.Editors
             l_TxtBox.TextBox.SelectionLength = 0;
         }
 
+        /// <summary>
+        /// 对话框会直接到这里
+        /// </summary>
+        /// <returns></returns>
         public override object GetEditedValue()
         {
             var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+
+            //这里取值。要判断比较哪个最新通过哈希值比较一下。
             if (Control is DevAge.Windows.Forms.TextBoxUITypeEditorWebImage txtWebImage)
             {
                 if (!string.IsNullOrEmpty(txtWebImage.SelectedFilePath))
                 {
-                    valueImageWeb.CellImageBytes = ImageProcessor.CompressImage(txtWebImage.SelectedFilePath);
-                    valueImageWeb.CellImageName = Guid.NewGuid().ToString() + ".jpg";
-                    Control.Tag = valueImageWeb.CellImageBytes;
-                    Control.Value = valueImageWeb.CellImageName;
+                    byte[] NewbuffByte = ImageProcessor.CompressImage(txtWebImage.SelectedFilePath);
+                    string NewHash = ImageHashHelper.GenerateHash(NewbuffByte);
+
+                    //看原来有不有哈希值或新旧是否相同，如果不同则更新
+                    if (string.IsNullOrEmpty(valueImageWeb.CellImageHash) || !ImageHashHelper.AreHashesEqual(valueImageWeb.CellImageHash, NewHash))
+                    {
+                        valueImageWeb.CellImageHash = NewHash;
+                        //将图片保存到内存中。用于后面的显示，或保存到本地临时文件夹中，或上传到服务器
+                        byte[] destination = new byte[NewbuffByte.Length];
+                        Buffer.BlockCopy(NewbuffByte, 0, destination, 0, NewbuffByte.Length);
+                        valueImageWeb.CellImageBytes = destination;
+                        Control.Tag = destination;
+                        txtWebImage.SelectedFilePath = string.Empty;//用完了清空。
+                    }
+                    else
+                    {
+                        Control.Tag = NewbuffByte;
+                    }
                     return valueImageWeb.CellImageName;
                 }
             }
-
-            if (Control.Tag == null && valueImageWeb.CellImageBytes != null)
-            {
-                return valueImageWeb.CellImageName;
-            }
-            else
-            {
-
-            }
+            //三种形式都将byte[]保存到tag中
             object val = Control.Tag;
             if (val == null)
                 return null;
@@ -423,12 +446,19 @@ namespace SourceGrid.Cells.Editors
                 Control.Tag = null;//清空。让第二个单元格可以选择新的图片。
 
             }
-            else if (val is byte[])
+            else if (val is byte[] buffByte)
             {
-                byte[] bytes = val as byte[];
-                using (MemoryStream ms = new MemoryStream(bytes))
+                //实际上比较一下。如果还是相同的图片不用赋值
+                string NewHash = ImageHashHelper.GenerateHash(buffByte);
+
+                //看原来有不有哈希值或新旧是否相同，如果不同则更新
+                if (string.IsNullOrEmpty(valueImageWeb.CellImageHash) || !ImageHashHelper.AreHashesEqual(valueImageWeb.CellImageHash, NewHash))
                 {
-                    PickerImage = System.Drawing.Image.FromStream(ms, true);
+                    byte[] bytes = val as byte[];
+                    using (MemoryStream ms = new MemoryStream(bytes))
+                    {
+                        PickerImage = System.Drawing.Image.FromStream(ms, true);
+                    }
                 }
                 return val;
             }
@@ -440,6 +470,14 @@ namespace SourceGrid.Cells.Editors
                 //Control.Value = val;//= newIamgeFilePath;
                 return val;
             }
+
+            if (string.IsNullOrEmpty(valueImageWeb.CellImageName))
+            {
+                valueImageWeb.CellImageName = Guid.NewGuid().ToString() + ".jpg";
+                fileName = valueImageWeb.CellImageName;
+                Control.Value = valueImageWeb.CellImageName;
+            }
+
             return Control.Value;
         }
 

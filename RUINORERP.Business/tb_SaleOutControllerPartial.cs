@@ -82,7 +82,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-           
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
@@ -139,12 +139,12 @@ namespace RUINORERP.Business
                         {
                             rrs.Succeeded = false;
                             _unitOfWorkManage.RollbackTran();
-                            rrs.ErrorMsg = $"出库明细中有产品不属性当前销售订单!请检查数据后重试！";
+                            rrs.ErrorMsg = $"出库明细中有产品不属于当前销售订单!请检查数据后重试！";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
                                 _logger.LogInformation(rrs.ErrorMsg);
                             }
-                            
+
 
                             return rrs;
                         }
@@ -162,7 +162,7 @@ namespace RUINORERP.Business
                             if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
                             {
 
-                               // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                                // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
                                 rrs.ErrorMsg = $"库存为：{inv.Quantity}，拟销售量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
                                 _unitOfWorkManage.RollbackTran();
                                 rrs.Succeeded = false;
@@ -342,7 +342,7 @@ namespace RUINORERP.Business
                     int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
                     if (last > 0)
                     {
-                        
+
                     }
                     else
                     {
@@ -363,7 +363,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                
+
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, "事务回滚");
                 return rrs;

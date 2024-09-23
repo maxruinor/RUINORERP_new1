@@ -131,7 +131,7 @@ namespace RUINORERP.UI.UCSourceGrid
         //这里是任何变动都会执行
         public override void OnValueChanged(SourceGrid.CellContext sender, EventArgs e)
         {
-            base.OnValueChanged(sender, e);
+       
 
             if (sender.Value == null && CurrGridDefine[sender.Position.Column].IsPrimaryBizKeyColumn)
             {
@@ -404,6 +404,8 @@ namespace RUINORERP.UI.UCSourceGrid
                     break;
             }
             #endregion
+
+            //base.OnValueChanged(sender, e);
         }
 
 

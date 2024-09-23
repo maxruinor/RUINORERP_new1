@@ -80,7 +80,7 @@ namespace RUINORERP.Business
                     {
                         rs.Succeeded = false;
                         _unitOfWorkManage.RollbackTran();
-                        rs.ErrorMsg = $"入库明细中有产品不属性当前订单!请检查数据后重试！";
+                        rs.ErrorMsg = $"入库明细中有产品不属于当前订单!请检查数据后重试！";
                         return rs;
                     }
                 }

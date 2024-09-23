@@ -151,7 +151,15 @@ namespace RUINORERP.UI.PSI.PUR
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PurOrder_ID.HasValue && entity.PurOrder_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurEntry>(c => c.PurOrder_ID))
                 {
-                    LoadPurOrder(entity.PurOrder_ID);
+                    try
+                    {
+                        LoadPurOrder(entity.PurOrder_ID);
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog("加载采购订单失败！" + ex.Message, UILogType.错误);
+                    }
+
                 }
 
 
@@ -261,10 +269,9 @@ namespace RUINORERP.UI.PSI.PUR
 
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.UnitPrice * b.Discount * c.Quantity, c => c.SubtotalAmount);
-            //listCols.SetCol_Formula<tb_PurEntryDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurEntryDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
             //反算成交价
-            listCols.SetCol_Formula<tb_PurEntryDetail>((a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);
+            listCols.SetCol_FormulaReverse<tb_PurEntryDetail>((a) => a.Quantity != 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.prop, t => t.property);

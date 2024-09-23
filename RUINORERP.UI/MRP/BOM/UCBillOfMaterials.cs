@@ -296,9 +296,12 @@ namespace RUINORERP.UI.MRP.BOM
 
                                 // 获取指定列,第一列设置宽一些
                                 var column = excelSheet.Column(1);
+                                if (MaxLevelList.Count > 0)
+                                {
+                                    // 设置列宽
+                                    column.Width = MaxLevelList.Max() * 20;
+                                }
 
-                                // 设置列宽
-                                column.Width = MaxLevelList.Max() * 20;
                                 // 保存更改
                                 package.Save();
                                 #endregion
@@ -734,7 +737,7 @@ namespace RUINORERP.UI.MRP.BOM
 
                     BindToTree(entity);
                 }
-                
+
             }
             else
             {

@@ -1367,8 +1367,10 @@ namespace RUINORERP.UI.BaseForm
                     //审核失败 要恢复之前的值
                     command.Undo();
                     ae.ApprovalResults = false;
+                    ToolBarEnabledControl(EditEntity);
                     AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults},{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
+             
                 }
             }
             return ae;
@@ -1453,6 +1455,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //审核失败 要恢复之前的值
                     command.Undo();
+                    ToolBarEnabledControl(EditEntity);
                     AuditLogHelper.Instance.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                 }

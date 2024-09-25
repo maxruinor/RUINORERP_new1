@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Krypton.Toolkit;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.UI.Common;
 
 using System.ComponentModel;

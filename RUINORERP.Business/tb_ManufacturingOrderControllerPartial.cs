@@ -38,8 +38,18 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_ManufacturingOrderController<T> : BaseController<T> where T : class
     {
-        public async Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_ManufacturingOrder> entitys)
+
+
+        /// <summary>
+        /// 批量结案
+        /// 结案时 如果没有完全完成的。则未发量这些数量要减去。结案后不需要计算未发量了
+        /// </summary>
+        /// <param name="entitys"></param>
+        /// <returns></returns>
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
+            List<tb_ManufacturingOrder> entitys = new List<tb_ManufacturingOrder>();
+            entitys = NeedCloseCaseList as List<tb_ManufacturingOrder>;
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -66,7 +76,6 @@ namespace RUINORERP.Business
                     tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                     for (int c = 0; c < entitys[m].tb_ManufacturingOrderDetails.Count; c++)
                     {
-
                         #region 库存表的更新 ，
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID
                         && i.Location_ID == entitys[m].tb_ManufacturingOrderDetails[c].Location_ID);
@@ -104,7 +113,10 @@ namespace RUINORERP.Business
 
                     //这部分是否能提出到上一级公共部分？
                     entitys[m].DataStatus = (int)DataStatus.完结;
-                    entitys[m].CloseCaseOpinions = "强制结案";
+                    if (string.IsNullOrEmpty(entitys[m].CloseCaseOpinions))
+                    {
+                        entitys[m].CloseCaseOpinions = "强制结案";
+                    }
                     BusinessHelper.Instance.EditEntity(entitys[m]);
                     //后面是不是要做一个审核历史记录表？
 
@@ -120,7 +132,6 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;

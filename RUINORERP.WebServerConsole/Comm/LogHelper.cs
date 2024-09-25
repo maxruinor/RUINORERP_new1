@@ -11,7 +11,7 @@ namespace RUINORERP.WebServerConsole.Comm
         {
             if (Logger == null)
             {
-                var LogRepository = LogManager.CreateRepository("YT");
+                var LogRepository = LogManager.CreateRepository("RUINORMAXWebServer");
                 XmlConfigurator.Configure(LogRepository, new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "log4net.config"));
                 Logger = LogManager.GetLogger(LogRepository.Name, "logError");
             }

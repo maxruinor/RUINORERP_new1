@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer1 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
+            System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer2 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCBillOfMaterials));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.txtProdDetailID = new Krypton.Toolkit.KryptonTextBox();
@@ -53,7 +53,6 @@
             this.txtOutProductionAllCosts = new Krypton.Toolkit.KryptonTextBox();
             this.txtOutManuCost = new Krypton.Toolkit.KryptonTextBox();
             this.lblOutManuCost = new Krypton.Toolkit.KryptonLabel();
-            this.txtstatus = new Krypton.Toolkit.KryptonLabel();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
             this.lblis_enabled = new Krypton.Toolkit.KryptonLabel();
@@ -85,7 +84,6 @@
             this.lblBOM_Name = new Krypton.Toolkit.KryptonLabel();
             this.txtBOM_Name = new Krypton.Toolkit.KryptonTextBox();
             this.lblProdDetailID = new Krypton.Toolkit.KryptonLabel();
-            this.lblReview = new Krypton.Toolkit.KryptonLabel();
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonDockableNavigator1 = new Krypton.Docking.KryptonDockableNavigator();
@@ -108,6 +106,8 @@
             this.kryptonTreeGridViewBOMDetail = new Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView();
             this.kryptonTreeView1 = new Krypton.Toolkit.KryptonTreeView();
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
+            this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
+            this.lblReview = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -161,6 +161,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDataStatus);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblReview);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtProdDetailID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel5);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtProp);
@@ -174,7 +176,6 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalMaterialCost);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonGroupBox2);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonGroupBox1);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtstatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblNotes);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtNotes);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblis_enabled);
@@ -206,7 +207,6 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblBOM_Name);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtBOM_Name);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblProdDetailID);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblReview);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lbl盘点单);
             this.kryptonSplitContainer1.Panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.kryptonSplitContainer1_Panel1_Paint);
             // 
@@ -394,14 +394,6 @@
             this.lblOutManuCost.Size = new System.Drawing.Size(49, 20);
             this.lblOutManuCost.TabIndex = 106;
             this.lblOutManuCost.Values.Text = "托工费";
-            // 
-            // txtstatus
-            // 
-            this.txtstatus.Location = new System.Drawing.Point(660, 22);
-            this.txtstatus.Name = "txtstatus";
-            this.txtstatus.Size = new System.Drawing.Size(6, 2);
-            this.txtstatus.TabIndex = 128;
-            this.txtstatus.Values.Text = "";
             // 
             // lblNotes
             // 
@@ -649,16 +641,6 @@
             this.lblProdDetailID.TabIndex = 92;
             this.lblProdDetailID.Values.Text = "母件SKU";
             // 
-            // lblReview
-            // 
-            this.lblReview.Location = new System.Drawing.Point(699, 6);
-            this.lblReview.Name = "lblReview";
-            this.lblReview.Size = new System.Drawing.Size(155, 47);
-            this.lblReview.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
-            this.lblReview.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblReview.TabIndex = 87;
-            this.lblReview.Values.Text = "审核状态";
-            // 
             // lbl盘点单
             // 
             this.lbl盘点单.LabelStyle = Krypton.Toolkit.LabelStyle.TitlePanel;
@@ -758,7 +740,7 @@
             // 
             // kryptonSplitContainerLeft
             // 
-            this.kryptonSplitContainerLeft.Cursor = System.Windows.Forms.Cursors.VSplit;
+            this.kryptonSplitContainerLeft.Cursor = System.Windows.Forms.Cursors.Default;
             this.kryptonSplitContainerLeft.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonSplitContainerLeft.Location = new System.Drawing.Point(0, 25);
             this.kryptonSplitContainerLeft.Name = "kryptonSplitContainerLeft";
@@ -808,9 +790,9 @@
             this.columnHeader3,
             this.columnHeader4,
             this.columnHeader5});
-            treeListViewItemCollectionComparer1.Column = 0;
-            treeListViewItemCollectionComparer1.SortOrder = System.Windows.Forms.SortOrder.Ascending;
-            this.treeListView1.Comparer = treeListViewItemCollectionComparer1;
+            treeListViewItemCollectionComparer2.Column = 0;
+            treeListViewItemCollectionComparer2.SortOrder = System.Windows.Forms.SortOrder.Ascending;
+            this.treeListView1.Comparer = treeListViewItemCollectionComparer2;
             this.treeListView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeListView1.GridLines = true;
             this.treeListView1.HideSelection = false;
@@ -900,6 +882,26 @@
             this.kryptonTreeView1.Sorted = true;
             this.kryptonTreeView1.TabIndex = 3;
             // 
+            // lblDataStatus
+            // 
+            this.lblDataStatus.Location = new System.Drawing.Point(734, 7);
+            this.lblDataStatus.Name = "lblDataStatus";
+            this.lblDataStatus.Size = new System.Drawing.Size(125, 38);
+            this.lblDataStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblDataStatus.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblDataStatus.TabIndex = 145;
+            this.lblDataStatus.Values.Text = "数据状态";
+            // 
+            // lblReview
+            // 
+            this.lblReview.Location = new System.Drawing.Point(593, 7);
+            this.lblReview.Name = "lblReview";
+            this.lblReview.Size = new System.Drawing.Size(125, 38);
+            this.lblReview.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblReview.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F);
+            this.lblReview.TabIndex = 144;
+            this.lblReview.Values.Text = "审核状态";
+            // 
             // UCBillOfMaterials
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -962,7 +964,6 @@
 
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
         private Krypton.Toolkit.KryptonLabel lbl盘点单;
-        private Krypton.Toolkit.KryptonLabel lblReview;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer2;
         private SourceGrid.Grid grid1;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainerLeft;
@@ -1007,7 +1008,6 @@
         private Krypton.Toolkit.KryptonTextBox txtDailyQty;
         private Krypton.Toolkit.KryptonLabel lblNotes;
         private Krypton.Toolkit.KryptonTextBox txtNotes;
-        private Krypton.Toolkit.KryptonLabel txtstatus;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox2;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
@@ -1037,5 +1037,7 @@
         private System.Windows.Forms.ImageList imageList1;
         private Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView kryptonTreeGridViewBOMDetail;
         private System.Windows.Forms.ColumnHeader columnHeaderSKU;
+        private Krypton.Toolkit.KryptonLabel lblDataStatus;
+        private Krypton.Toolkit.KryptonLabel lblReview;
     }
 }

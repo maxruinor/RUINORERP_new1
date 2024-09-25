@@ -10,19 +10,21 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-    namespace SourceGrid.Cells.Editors
+namespace SourceGrid.Cells.Editors
 {
     /// <summary>
     /// 用于比较图片哈希值的帮助类
     /// </summary>
-    public  class ImageHashHelper
+    public class ImageHashHelper
     {
 
-     
+
         public static bool AreHashesEqual(string hash1, string hash2)
         {
             return hash1.Equals(hash2, StringComparison.OrdinalIgnoreCase);
         }
+
+
         public static string GenerateHash(byte[] data)
         {
             using (MD5 md5 = MD5.Create())

@@ -48,13 +48,14 @@
             this.toolStripbtnReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnReverseReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton付款调整 = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnFunction = new System.Windows.Forms.ToolStripDropDownButton();
             this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
-            this.toolStripButton付款调整 = new System.Windows.Forms.ToolStripButton();
+            this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -207,6 +208,14 @@
             this.toolStripButton结案.Size = new System.Drawing.Size(53, 22);
             this.toolStripButton结案.Text = "结案";
             // 
+            // toolStripButton付款调整
+            // 
+            this.toolStripButton付款调整.Image = global::RUINORERP.UI.Properties.Resources.US_Dollar;
+            this.toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton付款调整.Name = "toolStripButton付款调整";
+            this.toolStripButton付款调整.Size = new System.Drawing.Size(79, 22);
+            this.toolStripButton付款调整.Text = "付款调整";
+            // 
             // toolStripbtnFunction
             // 
             this.toolStripbtnFunction.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -243,13 +252,10 @@
             // 
             this.errorProviderForAllInput.ContainerControl = this;
             // 
-            // toolStripButton付款调整
+            // bw
             // 
-            this.toolStripButton付款调整.Image = global::RUINORERP.UI.Properties.Resources.US_Dollar;
-            this.toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton付款调整.Name = "toolStripButton付款调整";
-            this.toolStripButton付款调整.Size = new System.Drawing.Size(79, 22);
-            this.toolStripButton付款调整.Text = "付款调整";
+            this.bwRemoting.WorkerReportsProgress = true;
+            this.bwRemoting.WorkerSupportsCancellation = true;
             // 
             // BaseBillEdit
             // 
@@ -295,5 +301,6 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         public System.Windows.Forms.ToolStripSplitButton toolStripbtnPrint;
         public System.Windows.Forms.ToolStripButton toolStripButton付款调整;
+        private System.ComponentModel.BackgroundWorker bwRemoting;
     }
 }

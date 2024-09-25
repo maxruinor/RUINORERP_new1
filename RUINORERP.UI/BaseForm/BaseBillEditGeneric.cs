@@ -26,7 +26,6 @@ using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.AdvancedUIModule;
 using Krypton.Navigator;
-using RUINORERP.Model.QueryDto;
 using System.Linq.Expressions;
 using RUINORERP.Common.Extensions;
 using System.Collections;
@@ -55,10 +54,10 @@ using RUINORERP.UI.SS;
 namespace RUINORERP.UI.BaseForm
 {
     /// <summary>
-    /// 单据类型的编辑
+    /// 单据类型的编辑 主表T子表C
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public partial class BaseBillEditGeneric<T, Q> : BaseBillEdit where T : class
+    public partial class BaseBillEditGeneric<T, C> : BaseBillEdit where T : class
     {
         public BaseBillEditGeneric()
         {
@@ -1254,6 +1253,82 @@ namespace RUINORERP.UI.BaseForm
         //注册时处理了所以用上面不加小尾巴
         //BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller`1");
 
+        /// <summary>
+        /// 结案处理
+        /// 一般会自动结案，但是有些需要人工结案
+        /// </summary>
+        /// <returns></returns>
+        protected override async Task<bool> CloseCaseAsync()
+        {
+            if (EditEntity == null)
+            {
+                return false;
+            }
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            ApprovalEntity ae = new ApprovalEntity();
+            ae.BillID = pkid;
+            CommBillData cbd = bcf.GetBillData<T>(EditEntity);
+            ae.BillNo = cbd.BillNo;
+            ae.bizType = cbd.BizType;
+            ae.bizName = cbd.BizName;
+            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            frm.BindData(ae);
+            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
+            {
+                List<T> needCloseCases = new List<T>();
+                if (ReflectionHelper.ExistPropertyName<T>("CloseCaseOpinions"))
+                {
+                    EditEntity.SetPropertyValue("CloseCaseOpinions", frm.txtOpinion.Text);
+                }
+                //已经审核的并且通过的情况才能结案
+                if (ReflectionHelper.ExistPropertyName<T>("DataStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+                {
+                    // 确认状态下 已经审核并且通过
+                    if (EditEntity.GetPropertyValue("DataStatus").ToInt() == (int)DataStatus.确认
+                        && EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
+                        && EditEntity.GetPropertyValue("ApprovalResults") != null
+                        && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
+                        )
+                    {
+                        needCloseCases.Add(EditEntity);
+                    }
+                }
+
+                if (needCloseCases.Count == 0)
+                {
+                    MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
+                    return false;
+                }
+
+                ReturnResults<bool> rs = new ReturnResults<bool>();
+                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                rs = await ctr.BatchCloseCaseAsync(needCloseCases);
+                if (rs.Succeeded)
+                {
+                    //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+                    //{
+
+                    //}
+                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                    //MainForm.Instance.ecs.AddSendData(od);
+                    Refreshs();
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog($"{ae.BillNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
 
         /// <summary>
@@ -1370,7 +1445,7 @@ namespace RUINORERP.UI.BaseForm
                     ToolBarEnabledControl(EditEntity);
                     AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults},{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
-             
+
                 }
             }
             return ae;
@@ -1520,6 +1595,90 @@ namespace RUINORERP.UI.BaseForm
             bool result = await AutoSaveDataAsync();
         }
 
+
+        /// <summary>
+        /// 保存图片到服务器。所有图片都保存到服务器。即使草稿换电脑还可以看到
+        /// </summary>
+        /// <param name="RemoteSave"></param>
+        /// <returns></returns>
+        public async Task<bool> SaveFileToServer(SourceGridDefine sgd, List<C> Details)
+        {
+            bool result = true;
+            foreach (C detail in Details)
+            {
+                PropertyInfo[] props = typeof(C).GetProperties();
+                foreach (PropertyInfo prop in props)
+                {
+                    var col = sgd[prop.Name];
+                    if (col != null)
+                    {
+                        if (col.CustomFormat == CustomFormatType.WebPathImage)
+                        {
+                            //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
+                            int totalRowsFlag = sgd.grid.RowsCount;
+                            if (sgd.grid.HasSummary)
+                            {
+                                totalRowsFlag--;
+                            }
+                            for (int i = 1; i < totalRowsFlag; i++)
+                            {
+                                var model = sgd.grid[i, col.ColIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+
+                                if (sgd.grid[i, col.ColIndex].Value == null)
+                                {
+                                    continue;
+                                }
+                                string oldfileName = string.Empty;
+                                string newfileName = string.Empty;
+                                //比较是否更新了图片数据
+                                string newhash = valueImageWeb.GetImageHash();
+                                if (!valueImageWeb.GetImageName().Equals(newhash, StringComparison.OrdinalIgnoreCase) && sgd.grid[i, col.ColIndex].Value.ToString() == valueImageWeb.CellImageHashName)
+                                {
+                                    oldfileName = valueImageWeb.GetImageName() + ".jpg";
+                                    newfileName = valueImageWeb.GetImageHash() + ".jpg";
+                                    if (valueImageWeb.CellImageBytes != null)
+                                    {
+
+                                        //如果服务器有旧文件 。可以先删除
+                                        if (true)
+                                        {
+
+                                        }
+                                        //如果服务器存在，即多次保存时不用重复上传了。
+                                        //if (true)
+                                        //{
+
+                                        //}
+
+                                        //上传到服务器，删除本地
+                                        //实际应该可以直接传二进制数据，但是暂时没有实现，所以先保存到本地，再上传
+                                        //ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
+                                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                        string uploadRsult = await httpWebService.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", newfileName, valueImageWeb.CellImageBytes, "upload");
+                                        //string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, "upload");
+                                        if (true)
+                                        {
+                                            MainForm.Instance.PrintInfoLog(uploadRsult);
+                                        }
+                                    }
+                                }
+
+                                //UploadImage("http://127.0.0.1/upload", "D:/test.jpg", "upload");
+                                // string uploadRsult = await HttpHelper.UploadImageAsync(AppContext.WebServerUrl + @"/upload", fileName, "amw");
+                                //                            string uploadRsult = await HttpHelper.UploadImage(AppContext.WebServerUrl + @"/upload", fileName, "upload");
+
+                            }
+
+
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+
         protected override void Add()
         {
             List<T> list = new List<T>();
@@ -1553,8 +1712,8 @@ namespace RUINORERP.UI.BaseForm
             if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
             {
                 BusinessHelper.Instance.EditEntity(EditEntity);
+                EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
                 base.Modify();
-                ToolBarEnabledControl(MenuItemEnums.修改);
                 AuditLogHelper.Instance.CreateAuditLog<T>("修改", EditEntity);
             }
             else
@@ -1562,6 +1721,7 @@ namespace RUINORERP.UI.BaseForm
                 EditEntity.SetPropertyValue(typeof(ActionStatus).Name, ActionStatus.修改);
                 toolStripbtnModify.Enabled = false;
             }
+            ToolBarEnabledControl(MenuItemEnums.修改);
         }
 
 

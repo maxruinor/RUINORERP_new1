@@ -1,5 +1,5 @@
 ﻿using RUINORERP.Global;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
@@ -264,8 +264,7 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                 
                 }
                 else
                 {

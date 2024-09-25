@@ -34,6 +34,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 领料单(包括生产和托工)
     /// </summary>
+    /// 
     public partial class tb_MaterialRequisitionController<T> : BaseController<T> where T : class
     {
         /// <summary>
@@ -43,8 +44,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_MaterialRequisition> entitys)
+
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
+            List<tb_MaterialRequisition> entitys = new List<tb_MaterialRequisition>();
+            entitys = NeedCloseCaseList as List<tb_MaterialRequisition>;
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -60,7 +64,10 @@ namespace RUINORERP.Business
 
                         //这部分是否能提出到上一级公共部分？
                         entity.DataStatus = (int)DataStatus.完结;
-                        entity.ApprovalOpinions += "批量完结结案";
+                        //if (string.IsNullOrEmpty(entity.cl))
+                        //{
+                        //    entity.ApprovalOpinions += "批量完结结案";
+                        //}
                         BusinessHelper.Instance.EditEntity(entity);
                         //只更新指定列
                         var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(entity).UpdateColumns(it => new { it.DataStatus, it.Modified_by, it.Modified_at }).ExecuteCommandAsync();
@@ -76,7 +83,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
@@ -325,9 +332,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-            
+
                 _unitOfWorkManage.RollbackTran();
-                
+
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, "事务回滚");
                 return rrs;
@@ -521,7 +528,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-             
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;

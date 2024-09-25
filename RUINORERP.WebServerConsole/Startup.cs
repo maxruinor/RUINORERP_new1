@@ -330,7 +330,7 @@ public IHost CslaDIPortBackup()
             //        .SingleInstance()
             //        .PropertiesAutowired();
 
-
+          
 
             ConfigureContainer(builder);
 
@@ -393,12 +393,12 @@ public IHost CslaDIPortBackup()
             string conn = AppSettings.GetValue("ConnectString");
 
             Program.InitAppcontextValue(Program.AppContextData);
-            Services.AddLogging(logBuilder =>
-            {
-                logBuilder.ClearProviders();
-                //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
-                logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", conn, Program.AppContextData));
-            });
+            //Services.AddLogging(logBuilder =>
+            //{
+            //    logBuilder.ClearProviders();
+            //    logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
+            //    //logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", conn, Program.AppContextData));
+            //});
 
             // by watson 2024-6-28
 
@@ -575,7 +575,7 @@ public IHost CslaDIPortBackup()
              //.Build();
              //测试服务 
              //services.AddHostedService<DemoService>();
-             services.AddHostedService<RunServer>();
+             //services.AddHostedService<RunServer>();
          }).Build();
 
             return hostBuilder;
@@ -594,7 +594,11 @@ public IHost CslaDIPortBackup()
             services.AddSingleton<IWorkflowRegistry, WorkflowRegistry>();
             services.AddSingleton<IWorkflowHost, WorkflowHost>();
 
-
+            // 注册log4net日志服务
+            services.AddSingleton<ILoggerService, Log4NetService>();
+            services.AddSingleton<IAuthorizationService, AuthorizationService>();
+            services.AddSingleton<IAuthenticationService, AuthenticationService>();
+            
             //services.AddScoped(typeof(UserControl));
             //services.AddScoped(typeof(BaseListWithTree));
 

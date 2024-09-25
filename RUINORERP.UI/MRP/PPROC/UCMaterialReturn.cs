@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using SqlSugar;
@@ -151,8 +151,7 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                 }
 
                 //如果是制令单引入变化则加载明细及相关数据

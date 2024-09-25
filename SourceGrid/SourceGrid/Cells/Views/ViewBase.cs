@@ -245,7 +245,11 @@ namespace SourceGrid.Cells.Views
                 return Size.Ceiling(measureSize);
             }
 		}
-		#endregion
+
+        public abstract void Refresh(CellContext cellContext);
+
+
+        #endregion
 
         /// <summary>
         /// Background of the cell. Usually it is an instance of BackgroundSolid

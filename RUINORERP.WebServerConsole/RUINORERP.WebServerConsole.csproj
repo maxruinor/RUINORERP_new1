@@ -5,9 +5,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>computer_48x48.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="RunServer.cs" />
     <Compile Remove="Startup - 复制.cs" />
   </ItemGroup>
 
@@ -15,6 +17,7 @@
     <None Remove="appsettings.json" />
     <None Remove="log4net.config" />
     <None Remove="Site\barley.mp4" />
+    <None Remove="Site\favicon.ico" />
     <None Remove="Site\FormParsing.html" />
     <None Remove="Site\Index.html" />
     <None Remove="Site\UrlParsingResponse.thtml" />
@@ -29,7 +32,11 @@
     <Content Include="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="computer_48x48.ico" />
     <Content Include="Site\barley.mp4">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\favicon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Site\FormParsing.html">

@@ -38,8 +38,10 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_BuyingRequisition> entitys)
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
+            List<tb_BuyingRequisition> entitys = new List<tb_BuyingRequisition>();
+            entitys = NeedCloseCaseList as List<tb_BuyingRequisition>;
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -55,9 +57,11 @@ namespace RUINORERP.Business
                         {
                             //明细已交？写回。?
                         }
-
                         entity.DataStatus = (int)DataStatus.完结;
-                        entity.CloseCaseOpinions = "结案了";
+                        if (string.IsNullOrEmpty(entity.CloseCaseOpinions))
+                        {
+                            entity.CloseCaseOpinions = "手动结案";
+                        }
                         BusinessHelper.Instance.EditEntity(entity);
                         //只更新指定列
                         var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_BuyingRequisition>(entity).UpdateColumns(it => new
@@ -79,7 +83,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-        
+
                 _unitOfWorkManage.RollbackTran();
                 rs.ErrorMsg = ex.Message;
                 _logger.Error(ex);

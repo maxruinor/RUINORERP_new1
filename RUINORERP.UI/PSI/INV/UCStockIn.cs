@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using SourceGrid;
@@ -42,7 +42,7 @@ using RUINORERP.Business.Security;
 namespace RUINORERP.UI.PSI.INV
 {
     [MenuAttrAssemblyInfo("其他入库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.其他入库单)]
-    public partial class UCStockIn : BaseBillEditGeneric<tb_StockIn, tb_StockInQueryDto>
+    public partial class UCStockIn : BaseBillEditGeneric<tb_StockIn, tb_StockInDetail>
     {
         public UCStockIn()
         {
@@ -143,8 +143,7 @@ namespace RUINORERP.UI.PSI.INV
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                 }
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)

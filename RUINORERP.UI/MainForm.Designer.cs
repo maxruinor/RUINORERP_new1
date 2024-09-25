@@ -81,6 +81,7 @@ namespace RUINORERP.UI
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.statusTimer = new System.Windows.Forms.Timer(this.components);
+            this.btntsbRefresh = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             this.kryptonPage5.SuspendLayout();
@@ -426,7 +427,8 @@ namespace RUINORERP.UI
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripBtnUpdate,
             this.toolBtnlogOff,
-            this.toolBtnExit});
+            this.toolBtnExit,
+            this.btntsbRefresh});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1044, 25);
@@ -589,6 +591,16 @@ namespace RUINORERP.UI
             this.statusTimer.Interval = 5000;
             this.statusTimer.Tick += new System.EventHandler(this.statusTimer_Tick);
             // 
+            // btntsbRefresh
+            // 
+            this.btntsbRefresh.Image = global::RUINORERP.UI.Properties.Resources.Refresh;
+            this.btntsbRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btntsbRefresh.Name = "btntsbRefresh";
+            this.btntsbRefresh.Padding = new System.Windows.Forms.Padding(50, 0, 0, 0);
+            this.btntsbRefresh.Size = new System.Drawing.Size(103, 22);
+            this.btntsbRefresh.Text = "刷新";
+            this.btntsbRefresh.Click += new System.EventHandler(this.btntsbRefresh_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -686,6 +698,7 @@ namespace RUINORERP.UI
         private System.Windows.Forms.Timer timer1;
         public System.Windows.Forms.ToolStripStatusLabel lblStatusGlobal;
         private System.Windows.Forms.Timer statusTimer;
+        private System.Windows.Forms.ToolStripButton btntsbRefresh;
     }
 }
 

@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using SqlSugar;
@@ -39,7 +39,7 @@ using RUINORERP.UI.PSI.PUR;
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.销售管理, BizType.销售出库单)]
-    public partial class UCSaleOut : BaseBillEditGeneric<tb_SaleOut, tb_SaleOutQueryDto>
+    public partial class UCSaleOut : BaseBillEditGeneric<tb_SaleOut, tb_SaleOutDetail>
     {
         public UCSaleOut()
         {
@@ -173,8 +173,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                 
                 }
 
 

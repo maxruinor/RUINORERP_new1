@@ -1,5 +1,5 @@
 ﻿using RUINORERP.Model;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.UI.BaseForm;
 
 namespace RUINORERP.UI.PSI.INV

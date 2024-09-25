@@ -13,16 +13,37 @@ namespace RUINORERP.WebServerConsole
 
             if (tasks == null)
                 throw new ArgumentNullException(nameof(tasks));
-
-            Task.Run(() =>
+            Console.WriteLine("\nCtrl+C was pressed. Canceling tasks...");
+            // 注册 Ctrl+C 事件处理
+            Console.CancelKeyPress += (sender, eArgs) =>
             {
-                Console.WriteLine("------Press [Enter] to stop------");
-                Console.ReadLine();
+                eArgs.Cancel = true; // 防止进程被终止
+                cts.Cancel();
+            };
 
-                cancelTasks(cts);
-            });
-
-            waitTasks(tasks);
+            try
+            {
+                // 等待所有任务完成或取消信号
+                Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite, cts.Token)).Wait();
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("Tasks were canceled.");
+            }
+            catch (AggregateException ex)
+            {
+                foreach (var innerEx in ex.InnerExceptions)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Error: " + innerEx.Message);
+                    Console.ResetColor();
+                }
+            }
+            finally
+            {
+                cts.Dispose();
+                Console.CancelKeyPress -= (sender, eArgs) => { }; // 取消注册
+            }
         }
 
         static void cancelTasks(CancellationTokenSource cts)

@@ -10,7 +10,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Dto;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.UCSourceGrid;
@@ -31,7 +31,7 @@ using SourceGridHelper = RUINORERP.UI.UCSourceGrid.SourceGridHelper;
 namespace RUINORERP.UI.PSI.PUR
 {
     [MenuAttrAssemblyInfo("缴库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.缴库单)]
-    public partial class UCFinishedGoodsInv : BaseBillEditGeneric<tb_FinishedGoodsInv, tb_FinishedGoodsInvQueryDto>
+    public partial class UCFinishedGoodsInv : BaseBillEditGeneric<tb_FinishedGoodsInv, tb_FinishedGoodsInvDetail>
     {
         public UCFinishedGoodsInv()
         {
@@ -142,8 +142,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.MOID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FinishedGoodsInv>(c => c.MOID))

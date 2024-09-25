@@ -38,7 +38,7 @@ namespace SimpleHttp
 
 
         /// <summary>
-        /// Writes the specified file content to the response.
+        /// 将指定的文件内容写入响应。
         /// <para>Response is closed and can not be longer modified.</para>
         /// <para>Built-in support for 'byte-range' response, 'ETag' and 'Last-Modified'.</para>
         /// </summary>

@@ -32,23 +32,19 @@ namespace RUINORERP.UI.MRP.BOM
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer1 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCBillOfMaterialsService));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCBillOfMaterialsService));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonSplitContainerQuery = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelProd = new Krypton.Toolkit.KryptonPanel();
-            this.txtBrand = new Krypton.Toolkit.KryptonTextBox();
-            this.kryptonLabel13 = new Krypton.Toolkit.KryptonLabel();
             this.txtName = new Krypton.Toolkit.KryptonTextBox();
             this.chkIncludingChild = new Krypton.Toolkit.KryptonCheckBox();
             this.lblcategory_ID = new Krypton.Toolkit.KryptonLabel();
-            this.cmbdepartment = new Krypton.Toolkit.KryptonComboBox();
             this.txtShortCode = new Krypton.Toolkit.KryptonTextBox();
-            this.kryptonLabel6 = new Krypton.Toolkit.KryptonLabel();
             this.lblShortCode = new Krypton.Toolkit.KryptonLabel();
             this.lblName = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel5 = new Krypton.Toolkit.KryptonLabel();
@@ -73,6 +69,8 @@ namespace RUINORERP.UI.MRP.BOM
             this.kryptonLabel15 = new Krypton.Toolkit.KryptonLabel();
             this.txtFilesName = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
+            this.chkMultiBOMProd = new Krypton.Toolkit.KryptonCheckBox();
+            this.kryptonLabel7 = new Krypton.Toolkit.KryptonLabel();
             this.btnQueryForGoods = new Krypton.Toolkit.KryptonButton();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.txtMaxRows = new Krypton.Toolkit.KryptonNumericUpDown();
@@ -80,23 +78,22 @@ namespace RUINORERP.UI.MRP.BOM
             this.kryptonPage产品 = new Krypton.Navigator.KryptonPage();
             this.newSumDataGridView产品 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonBOM = new Krypton.Navigator.KryptonPage();
-            this.treeListView1 = new System.Windows.Forms.TreeListView();
-            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeaderSKU = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader型号 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader6 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.kryptonPanelBOM = new Krypton.Toolkit.KryptonPanel();
+            this.txtBOM_Name = new Krypton.Toolkit.KryptonTextBox();
+            this.txtSKUName = new Krypton.Toolkit.KryptonTextBox();
+            this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel12 = new Krypton.Toolkit.KryptonLabel();
+            this.txtSKUCode = new Krypton.Toolkit.KryptonTextBox();
+            this.cmbParentProdType = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel16 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel18 = new Krypton.Toolkit.KryptonLabel();
+            this.txtBOM_NO = new Krypton.Toolkit.KryptonTextBox();
+            this.newSumDataGridViewMain = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonPage产品组合 = new Krypton.Navigator.KryptonPage();
             this.newSumDataGridView产品组合 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.newSumDataGridViewBOM = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.bindingSourceProdDetail = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceBOM = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceGroup = new System.Windows.Forms.BindingSource(this.components);
@@ -105,8 +102,7 @@ namespace RUINORERP.UI.MRP.BOM
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.bsBoms = new System.Windows.Forms.BindingSource(this.components);
-            this.chkMultiBOMProd = new Krypton.Toolkit.KryptonCheckBox();
-            this.kryptonLabel7 = new Krypton.Toolkit.KryptonLabel();
+            this.bindingSourceBomMain = new System.Windows.Forms.BindingSource(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -127,7 +123,6 @@ namespace RUINORERP.UI.MRP.BOM
             this.kryptonSplitContainerQuery.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelProd)).BeginInit();
             this.kryptonPanelProd.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbdepartment)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.txtType_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelGroup)).BeginInit();
             this.kryptonPanelGroup.SuspendLayout();
@@ -138,6 +133,10 @@ namespace RUINORERP.UI.MRP.BOM
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridView产品)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonBOM)).BeginInit();
             this.kryptonBOM.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelBOM)).BeginInit();
+            this.kryptonPanelBOM.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbParentProdType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewMain)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage产品组合)).BeginInit();
             this.kryptonPage产品组合.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridView产品组合)).BeginInit();
@@ -147,6 +146,7 @@ namespace RUINORERP.UI.MRP.BOM
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceGroup)).BeginInit();
             this.contextMenuStrip2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bsBoms)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceBomMain)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -203,8 +203,10 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             // kryptonSplitContainerQuery.Panel2
             // 
+            this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.chkMultiBOMProd);
             this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.btnQueryForGoods);
             this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.kryptonLabel2);
+            this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.kryptonLabel7);
             this.kryptonSplitContainerQuery.Panel2.Controls.Add(this.txtMaxRows);
             this.kryptonSplitContainerQuery.Size = new System.Drawing.Size(1118, 167);
             this.kryptonSplitContainerQuery.SplitterDistance = 893;
@@ -213,16 +215,11 @@ namespace RUINORERP.UI.MRP.BOM
             // kryptonPanelProd
             // 
             this.kryptonPanelProd.AutoSize = true;
-            this.kryptonPanelProd.Controls.Add(this.chkMultiBOMProd);
-            this.kryptonPanelProd.Controls.Add(this.kryptonLabel7);
-            this.kryptonPanelProd.Controls.Add(this.txtBrand);
-            this.kryptonPanelProd.Controls.Add(this.kryptonLabel13);
+            this.kryptonPanelProd.Controls.Add(this.kryptonPanelBOM);
             this.kryptonPanelProd.Controls.Add(this.txtName);
             this.kryptonPanelProd.Controls.Add(this.chkIncludingChild);
             this.kryptonPanelProd.Controls.Add(this.lblcategory_ID);
-            this.kryptonPanelProd.Controls.Add(this.cmbdepartment);
             this.kryptonPanelProd.Controls.Add(this.txtShortCode);
-            this.kryptonPanelProd.Controls.Add(this.kryptonLabel6);
             this.kryptonPanelProd.Controls.Add(this.lblShortCode);
             this.kryptonPanelProd.Controls.Add(this.lblName);
             this.kryptonPanelProd.Controls.Add(this.kryptonLabel5);
@@ -240,30 +237,15 @@ namespace RUINORERP.UI.MRP.BOM
             this.kryptonPanelProd.Controls.Add(this.lblNo);
             this.kryptonPanelProd.Controls.Add(this.kryptonLabel1);
             this.kryptonPanelProd.Controls.Add(this.txtNo);
-            this.kryptonPanelProd.Dock = System.Windows.Forms.DockStyle.Top;
+            this.kryptonPanelProd.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelProd.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelProd.Name = "kryptonPanelProd";
-            this.kryptonPanelProd.Size = new System.Drawing.Size(893, 133);
+            this.kryptonPanelProd.Size = new System.Drawing.Size(893, 136);
             this.kryptonPanelProd.TabIndex = 160;
-            // 
-            // txtBrand
-            // 
-            this.txtBrand.Location = new System.Drawing.Point(712, 29);
-            this.txtBrand.Name = "txtBrand";
-            this.txtBrand.Size = new System.Drawing.Size(126, 23);
-            this.txtBrand.TabIndex = 175;
-            // 
-            // kryptonLabel13
-            // 
-            this.kryptonLabel13.Location = new System.Drawing.Point(671, 30);
-            this.kryptonLabel13.Name = "kryptonLabel13";
-            this.kryptonLabel13.Size = new System.Drawing.Size(36, 20);
-            this.kryptonLabel13.TabIndex = 174;
-            this.kryptonLabel13.Values.Text = "品牌";
             // 
             // txtName
             // 
-            this.txtName.Location = new System.Drawing.Point(318, 2);
+            this.txtName.Location = new System.Drawing.Point(339, 2);
             this.txtName.Name = "txtName";
             this.txtName.Size = new System.Drawing.Size(163, 23);
             this.txtName.TabIndex = 135;
@@ -284,29 +266,12 @@ namespace RUINORERP.UI.MRP.BOM
             this.lblcategory_ID.TabIndex = 139;
             this.lblcategory_ID.Values.Text = "类别";
             // 
-            // cmbdepartment
-            // 
-            this.cmbdepartment.DropDownWidth = 205;
-            this.cmbdepartment.IntegralHeight = false;
-            this.cmbdepartment.Location = new System.Drawing.Point(712, 5);
-            this.cmbdepartment.Name = "cmbdepartment";
-            this.cmbdepartment.Size = new System.Drawing.Size(126, 21);
-            this.cmbdepartment.TabIndex = 157;
-            // 
             // txtShortCode
             // 
             this.txtShortCode.Location = new System.Drawing.Point(55, 55);
             this.txtShortCode.Name = "txtShortCode";
             this.txtShortCode.Size = new System.Drawing.Size(151, 23);
             this.txtShortCode.TabIndex = 137;
-            // 
-            // kryptonLabel6
-            // 
-            this.kryptonLabel6.Location = new System.Drawing.Point(671, 7);
-            this.kryptonLabel6.Name = "kryptonLabel6";
-            this.kryptonLabel6.Size = new System.Drawing.Size(36, 20);
-            this.kryptonLabel6.TabIndex = 156;
-            this.kryptonLabel6.Values.Text = "部门";
             // 
             // lblShortCode
             // 
@@ -318,7 +283,7 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             // lblName
             // 
-            this.lblName.Location = new System.Drawing.Point(277, 3);
+            this.lblName.Location = new System.Drawing.Point(301, 3);
             this.lblName.Name = "lblName";
             this.lblName.Size = new System.Drawing.Size(36, 20);
             this.lblName.TabIndex = 134;
@@ -334,7 +299,7 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             // kryptonLabel4
             // 
-            this.kryptonLabel4.Location = new System.Drawing.Point(660, 59);
+            this.kryptonLabel4.Location = new System.Drawing.Point(291, 109);
             this.kryptonLabel4.Name = "kryptonLabel4";
             this.kryptonLabel4.Size = new System.Drawing.Size(46, 20);
             this.kryptonLabel4.TabIndex = 151;
@@ -350,9 +315,9 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             // txtSKU码
             // 
-            this.txtSKU码.Location = new System.Drawing.Point(712, 58);
+            this.txtSKU码.Location = new System.Drawing.Point(340, 106);
             this.txtSKU码.Name = "txtSKU码";
-            this.txtSKU码.Size = new System.Drawing.Size(126, 23);
+            this.txtSKU码.Size = new System.Drawing.Size(162, 23);
             this.txtSKU码.TabIndex = 152;
             // 
             // txtProp
@@ -381,14 +346,14 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             this.txtType_ID.DropDownWidth = 205;
             this.txtType_ID.IntegralHeight = false;
-            this.txtType_ID.Location = new System.Drawing.Point(319, 80);
+            this.txtType_ID.Location = new System.Drawing.Point(340, 80);
             this.txtType_ID.Name = "txtType_ID";
             this.txtType_ID.Size = new System.Drawing.Size(162, 21);
             this.txtType_ID.TabIndex = 142;
             // 
             // lblType_ID
             // 
-            this.lblType_ID.Location = new System.Drawing.Point(251, 81);
+            this.lblType_ID.Location = new System.Drawing.Point(275, 81);
             this.lblType_ID.Name = "lblType_ID";
             this.lblType_ID.Size = new System.Drawing.Size(62, 20);
             this.lblType_ID.TabIndex = 141;
@@ -396,14 +361,14 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             // txtModel
             // 
-            this.txtModel.Location = new System.Drawing.Point(318, 28);
+            this.txtModel.Location = new System.Drawing.Point(339, 28);
             this.txtModel.Name = "txtModel";
             this.txtModel.Size = new System.Drawing.Size(163, 23);
             this.txtModel.TabIndex = 133;
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(277, 27);
+            this.kryptonLabel3.Location = new System.Drawing.Point(301, 27);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel3.TabIndex = 132;
@@ -411,7 +376,7 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             // txtBarCode
             // 
-            this.txtBarCode.Location = new System.Drawing.Point(319, 55);
+            this.txtBarCode.Location = new System.Drawing.Point(340, 55);
             this.txtBarCode.Name = "txtBarCode";
             this.txtBarCode.Size = new System.Drawing.Size(162, 23);
             this.txtBarCode.TabIndex = 138;
@@ -426,7 +391,7 @@ namespace RUINORERP.UI.MRP.BOM
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(277, 56);
+            this.kryptonLabel1.Location = new System.Drawing.Point(301, 56);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel1.TabIndex = 136;
@@ -501,6 +466,22 @@ namespace RUINORERP.UI.MRP.BOM
             this.kryptonLabel8.TabIndex = 136;
             this.kryptonLabel8.Values.Text = "文件名称";
             // 
+            // chkMultiBOMProd
+            // 
+            this.chkMultiBOMProd.Location = new System.Drawing.Point(139, 67);
+            this.chkMultiBOMProd.Name = "chkMultiBOMProd";
+            this.chkMultiBOMProd.Size = new System.Drawing.Size(19, 13);
+            this.chkMultiBOMProd.TabIndex = 177;
+            this.chkMultiBOMProd.Values.Text = "";
+            // 
+            // kryptonLabel7
+            // 
+            this.kryptonLabel7.Location = new System.Drawing.Point(60, 65);
+            this.kryptonLabel7.Name = "kryptonLabel7";
+            this.kryptonLabel7.Size = new System.Drawing.Size(75, 20);
+            this.kryptonLabel7.TabIndex = 176;
+            this.kryptonLabel7.Values.Text = "多配方产品";
+            // 
             // btnQueryForGoods
             // 
             this.btnQueryForGoods.Location = new System.Drawing.Point(60, 23);
@@ -558,7 +539,7 @@ namespace RUINORERP.UI.MRP.BOM
             this.kryptonPage产品,
             this.kryptonBOM,
             this.kryptonPage产品组合});
-            this.kryptonNavigator1.SelectedIndex = 0;
+            this.kryptonNavigator1.SelectedIndex = 1;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1118, 313);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -582,8 +563,8 @@ namespace RUINORERP.UI.MRP.BOM
             this.newSumDataGridView产品.AllowUserToAddRows = false;
             this.newSumDataGridView产品.AllowUserToDeleteRows = false;
             this.newSumDataGridView产品.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle4.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridView产品.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridView产品.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
             this.newSumDataGridView产品.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -615,114 +596,140 @@ namespace RUINORERP.UI.MRP.BOM
             // kryptonBOM
             // 
             this.kryptonBOM.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.kryptonBOM.Controls.Add(this.treeListView1);
+            this.kryptonBOM.Controls.Add(this.newSumDataGridViewMain);
             this.kryptonBOM.Flags = 65534;
             this.kryptonBOM.LastVisibleSet = true;
             this.kryptonBOM.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonBOM.Name = "kryptonBOM";
-            this.kryptonBOM.Size = new System.Drawing.Size(1116, 421);
+            this.kryptonBOM.Size = new System.Drawing.Size(1116, 286);
             this.kryptonBOM.Text = "BOM";
             this.kryptonBOM.ToolTipTitle = "Page ToolTip";
             this.kryptonBOM.UniqueName = "6FBE127FB8EF4FCAC1976C4AE1CB7B7D";
-            this.kryptonBOM.Visible = false;
             // 
-            // treeListView1
+            // kryptonPanelBOM
             // 
-            this.treeListView1.AllowColumnReorder = true;
-            this.treeListView1.CheckBoxes = System.Windows.Forms.CheckBoxesTypes.Recursive;
-            this.treeListView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeaderSKU,
-            this.columnHeader2,
-            this.columnHeader型号,
-            this.columnHeader3,
-            this.columnHeader4,
-            this.columnHeader5,
-            this.columnHeader6,
-            this.columnHeader7,
-            this.columnHeader8,
-            this.columnHeader9,
-            this.columnHeader10});
-            treeListViewItemCollectionComparer1.Column = 0;
-            treeListViewItemCollectionComparer1.SortOrder = System.Windows.Forms.SortOrder.Ascending;
-            this.treeListView1.Comparer = treeListViewItemCollectionComparer1;
-            this.treeListView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeListView1.GridLines = true;
-            this.treeListView1.HideSelection = false;
-            this.treeListView1.LabelEdit = true;
-            this.treeListView1.Location = new System.Drawing.Point(0, 0);
-            this.treeListView1.Name = "treeListView1";
-            this.treeListView1.ShowItemToolTips = true;
-            this.treeListView1.Size = new System.Drawing.Size(1116, 421);
-            this.treeListView1.SmallImageList = this.imageList1;
-            this.treeListView1.TabIndex = 1;
-            this.treeListView1.UseCompatibleStateImageBehavior = false;
-            this.treeListView1.BeforeExpand += new System.Windows.Forms.TreeListViewCancelEventHandler(this.treeListView1_BeforeExpand);
-            this.treeListView1.BeforeCollapse += new System.Windows.Forms.TreeListViewCancelEventHandler(this.treeListView1_BeforeCollapse);
-            this.treeListView1.DoubleClick += new System.EventHandler(this.treeListView1_DoubleClick);
+            this.kryptonPanelBOM.AutoSize = true;
+            this.kryptonPanelBOM.Controls.Add(this.txtBOM_Name);
+            this.kryptonPanelBOM.Controls.Add(this.txtSKUName);
+            this.kryptonPanelBOM.Controls.Add(this.kryptonLabel9);
+            this.kryptonPanelBOM.Controls.Add(this.kryptonLabel10);
+            this.kryptonPanelBOM.Controls.Add(this.kryptonLabel12);
+            this.kryptonPanelBOM.Controls.Add(this.txtSKUCode);
+            this.kryptonPanelBOM.Controls.Add(this.cmbParentProdType);
+            this.kryptonPanelBOM.Controls.Add(this.kryptonLabel16);
+            this.kryptonPanelBOM.Controls.Add(this.kryptonLabel18);
+            this.kryptonPanelBOM.Controls.Add(this.txtBOM_NO);
+            this.kryptonPanelBOM.Location = new System.Drawing.Point(195, 23);
+            this.kryptonPanelBOM.Name = "kryptonPanelBOM";
+            this.kryptonPanelBOM.Size = new System.Drawing.Size(625, 103);
+            this.kryptonPanelBOM.TabIndex = 161;
             // 
-            // columnHeader1
+            // txtBOM_Name
             // 
-            this.columnHeader1.Text = "名称";
-            this.columnHeader1.Width = 200;
+            this.txtBOM_Name.Location = new System.Drawing.Point(339, 2);
+            this.txtBOM_Name.Name = "txtBOM_Name";
+            this.txtBOM_Name.Size = new System.Drawing.Size(163, 23);
+            this.txtBOM_Name.TabIndex = 135;
             // 
-            // columnHeaderSKU
+            // txtSKUName
             // 
-            this.columnHeaderSKU.Text = "SKU";
-            this.columnHeaderSKU.Width = 102;
+            this.txtSKUName.Location = new System.Drawing.Point(90, 33);
+            this.txtSKUName.Name = "txtSKUName";
+            this.txtSKUName.Size = new System.Drawing.Size(151, 23);
+            this.txtSKUName.TabIndex = 137;
             // 
-            // columnHeader2
+            // kryptonLabel9
             // 
-            this.columnHeader2.Text = "属性";
-            this.columnHeader2.Width = 109;
+            this.kryptonLabel9.Location = new System.Drawing.Point(25, 36);
+            this.kryptonLabel9.Name = "kryptonLabel9";
+            this.kryptonLabel9.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel9.TabIndex = 136;
+            this.kryptonLabel9.Values.Text = "母件名称";
             // 
-            // columnHeader型号
+            // kryptonLabel10
             // 
-            this.columnHeader型号.Text = "型号";
+            this.kryptonLabel10.Location = new System.Drawing.Point(271, 4);
+            this.kryptonLabel10.Name = "kryptonLabel10";
+            this.kryptonLabel10.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel10.TabIndex = 134;
+            this.kryptonLabel10.Values.Text = "配方名称";
             // 
-            // columnHeader3
+            // kryptonLabel12
             // 
-            this.columnHeader3.Text = "规格";
-            this.columnHeader3.Width = 111;
+            this.kryptonLabel12.Location = new System.Drawing.Point(262, 37);
+            this.kryptonLabel12.Name = "kryptonLabel12";
+            this.kryptonLabel12.Size = new System.Drawing.Size(72, 20);
+            this.kryptonLabel12.TabIndex = 151;
+            this.kryptonLabel12.Values.Text = "母件SKU码";
             // 
-            // columnHeader4
+            // txtSKUCode
             // 
-            this.columnHeader4.Text = "类型";
+            this.txtSKUCode.Location = new System.Drawing.Point(340, 36);
+            this.txtSKUCode.Name = "txtSKUCode";
+            this.txtSKUCode.Size = new System.Drawing.Size(162, 23);
+            this.txtSKUCode.TabIndex = 152;
             // 
-            // columnHeader5
+            // cmbParentProdType
             // 
-            this.columnHeader5.Text = "实际库存";
+            this.cmbParentProdType.DropDownWidth = 205;
+            this.cmbParentProdType.IntegralHeight = false;
+            this.cmbParentProdType.Location = new System.Drawing.Point(90, 71);
+            this.cmbParentProdType.Name = "cmbParentProdType";
+            this.cmbParentProdType.Size = new System.Drawing.Size(412, 21);
+            this.cmbParentProdType.TabIndex = 142;
             // 
-            // columnHeader6
+            // kryptonLabel16
             // 
-            this.columnHeader6.Text = "拟销数量";
+            this.kryptonLabel16.Location = new System.Drawing.Point(25, 72);
+            this.kryptonLabel16.Name = "kryptonLabel16";
+            this.kryptonLabel16.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel16.TabIndex = 141;
+            this.kryptonLabel16.Values.Text = "母件类型";
             // 
-            // columnHeader7
+            // kryptonLabel18
             // 
-            this.columnHeader7.Text = "在制数量";
+            this.kryptonLabel18.Location = new System.Drawing.Point(25, 5);
+            this.kryptonLabel18.Name = "kryptonLabel18";
+            this.kryptonLabel18.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel18.TabIndex = 132;
+            this.kryptonLabel18.Values.Text = "配方编号";
             // 
-            // columnHeader8
+            // txtBOM_NO
             // 
-            this.columnHeader8.Text = "在途数量";
+            this.txtBOM_NO.Location = new System.Drawing.Point(90, 4);
+            this.txtBOM_NO.Name = "txtBOM_NO";
+            this.txtBOM_NO.Size = new System.Drawing.Size(150, 23);
+            this.txtBOM_NO.TabIndex = 133;
             // 
-            // columnHeader9
+            // newSumDataGridViewMain
             // 
-            this.columnHeader9.Text = "未发数量";
-            // 
-            // columnHeader10
-            // 
-            this.columnHeader10.Text = "预警数量";
-            // 
-            // imageList1
-            // 
-            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
-            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
-            this.imageList1.Images.SetKeyName(0, "1.ico");
-            this.imageList1.Images.SetKeyName(1, "4.ico");
-            this.imageList1.Images.SetKeyName(2, "6.ico");
-            this.imageList1.Images.SetKeyName(3, "7.ico");
-            this.imageList1.Images.SetKeyName(4, "9.ico");
-            this.imageList1.Images.SetKeyName(5, "279.GIF");
+            this.newSumDataGridViewMain.AllowUserToAddRows = false;
+            this.newSumDataGridViewMain.AllowUserToDeleteRows = false;
+            this.newSumDataGridViewMain.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle5.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridViewMain.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle5;
+            this.newSumDataGridViewMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.newSumDataGridViewMain.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.newSumDataGridViewMain.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.newSumDataGridViewMain.CustomRowNo = false;
+            this.newSumDataGridViewMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.newSumDataGridViewMain.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridViewMain.FieldNameList")));
+            this.newSumDataGridViewMain.IsShowSumRow = false;
+            this.newSumDataGridViewMain.Location = new System.Drawing.Point(0, 0);
+            this.newSumDataGridViewMain.Name = "newSumDataGridViewMain";
+            this.newSumDataGridViewMain.ReadOnly = true;
+            this.newSumDataGridViewMain.RowTemplate.Height = 23;
+            this.newSumDataGridViewMain.Size = new System.Drawing.Size(1116, 286);
+            this.newSumDataGridViewMain.SumColumns = null;
+            this.newSumDataGridViewMain.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.newSumDataGridViewMain.SumRowCellFormat = "N2";
+            this.newSumDataGridViewMain.TabIndex = 1;
+            this.newSumDataGridViewMain.UseCustomColumnDisplay = true;
+            this.newSumDataGridViewMain.UseSelectedColumn = false;
+            this.newSumDataGridViewMain.Use是否使用内置右键功能 = true;
+            this.newSumDataGridViewMain.XmlFileName = "";
             // 
             // kryptonPage产品组合
             // 
@@ -732,7 +739,7 @@ namespace RUINORERP.UI.MRP.BOM
             this.kryptonPage产品组合.LastVisibleSet = true;
             this.kryptonPage产品组合.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPage产品组合.Name = "kryptonPage产品组合";
-            this.kryptonPage产品组合.Size = new System.Drawing.Size(1116, 421);
+            this.kryptonPage产品组合.Size = new System.Drawing.Size(1116, 286);
             this.kryptonPage产品组合.Text = "配方文档";
             this.kryptonPage产品组合.ToolTipTitle = "Page ToolTip";
             this.kryptonPage产品组合.UniqueName = "827BA60CAD844C8272B7DAF507A171DF";
@@ -743,8 +750,8 @@ namespace RUINORERP.UI.MRP.BOM
             this.newSumDataGridView产品组合.AllowUserToAddRows = false;
             this.newSumDataGridView产品组合.AllowUserToDeleteRows = false;
             this.newSumDataGridView产品组合.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridView产品组合.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle4.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridView产品组合.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             this.newSumDataGridView产品组合.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -759,7 +766,7 @@ namespace RUINORERP.UI.MRP.BOM
             this.newSumDataGridView产品组合.ReadOnly = true;
             this.newSumDataGridView产品组合.RowTemplate.Height = 23;
             this.newSumDataGridView产品组合.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.newSumDataGridView产品组合.Size = new System.Drawing.Size(1116, 421);
+            this.newSumDataGridView产品组合.Size = new System.Drawing.Size(1116, 286);
             this.newSumDataGridView产品组合.SumColumns = null;
             this.newSumDataGridView产品组合.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.newSumDataGridView产品组合.SumRowCellFormat = "N2";
@@ -804,6 +811,17 @@ namespace RUINORERP.UI.MRP.BOM
             this.newSumDataGridViewBOM.XmlFileName = "";
             this.newSumDataGridViewBOM.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.KryptonDataGridViewBOM_CellPainting);
             // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageList1.Images.SetKeyName(0, "1.ico");
+            this.imageList1.Images.SetKeyName(1, "4.ico");
+            this.imageList1.Images.SetKeyName(2, "6.ico");
+            this.imageList1.Images.SetKeyName(3, "7.ico");
+            this.imageList1.Images.SetKeyName(4, "9.ico");
+            this.imageList1.Images.SetKeyName(5, "279.GIF");
+            // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -824,22 +842,6 @@ namespace RUINORERP.UI.MRP.BOM
             this.toolStripMenuItem1.Size = new System.Drawing.Size(165, 22);
             this.toolStripMenuItem1.Text = "指定为默认配方";
             this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
-            // 
-            // chkMultiBOMProd
-            // 
-            this.chkMultiBOMProd.Location = new System.Drawing.Point(712, 92);
-            this.chkMultiBOMProd.Name = "chkMultiBOMProd";
-            this.chkMultiBOMProd.Size = new System.Drawing.Size(19, 13);
-            this.chkMultiBOMProd.TabIndex = 177;
-            this.chkMultiBOMProd.Values.Text = "";
-            // 
-            // kryptonLabel7
-            // 
-            this.kryptonLabel7.Location = new System.Drawing.Point(629, 86);
-            this.kryptonLabel7.Name = "kryptonLabel7";
-            this.kryptonLabel7.Size = new System.Drawing.Size(75, 20);
-            this.kryptonLabel7.TabIndex = 176;
-            this.kryptonLabel7.Values.Text = "多配方产品";
             // 
             // UCBillOfMaterialsService
             // 
@@ -872,7 +874,6 @@ namespace RUINORERP.UI.MRP.BOM
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelProd)).EndInit();
             this.kryptonPanelProd.ResumeLayout(false);
             this.kryptonPanelProd.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbdepartment)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.txtType_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelGroup)).EndInit();
             this.kryptonPanelGroup.ResumeLayout(false);
@@ -884,6 +885,11 @@ namespace RUINORERP.UI.MRP.BOM
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridView产品)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonBOM)).EndInit();
             this.kryptonBOM.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelBOM)).EndInit();
+            this.kryptonPanelBOM.ResumeLayout(false);
+            this.kryptonPanelBOM.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbParentProdType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewMain)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage产品组合)).EndInit();
             this.kryptonPage产品组合.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridView产品组合)).EndInit();
@@ -893,6 +899,7 @@ namespace RUINORERP.UI.MRP.BOM
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceGroup)).EndInit();
             this.contextMenuStrip2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bsBoms)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceBomMain)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -933,21 +940,9 @@ namespace RUINORERP.UI.MRP.BOM
         private Krypton.Toolkit.KryptonTextBox txtModel;
         private Krypton.Toolkit.KryptonLabel kryptonLabel4;
         private Krypton.Toolkit.KryptonTextBox txtSKU码;
-        private System.Windows.Forms.TreeListView treeListView1;
-        private System.Windows.Forms.ColumnHeader columnHeader1;
-        private System.Windows.Forms.ColumnHeader columnHeader2;
-        private System.Windows.Forms.ColumnHeader columnHeader3;
-        private System.Windows.Forms.ColumnHeader columnHeader4;
         private System.Windows.Forms.ImageList imageList1;
         private Krypton.Toolkit.KryptonLabel kryptonLabel5;
         private Krypton.Toolkit.KryptonTextBox txtProp;
-        private System.Windows.Forms.ColumnHeader columnHeader5;
-        private ColumnHeader columnHeader6;
-        private ColumnHeader columnHeader7;
-        private ColumnHeader columnHeader8;
-        private ColumnHeader columnHeader9;
-        private ColumnHeader columnHeader10;
-        private Krypton.Toolkit.KryptonLabel kryptonLabel6;
         private ContextMenuStrip contextMenuStrip1;
         internal Krypton.Toolkit.KryptonPanel kryptonPanelProd;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainerQuery;
@@ -960,16 +955,24 @@ namespace RUINORERP.UI.MRP.BOM
         private Krypton.Toolkit.KryptonCheckBox chkProdBundle_enabled;
         private UControls.NewSumDataGridView newSumDataGridView产品组合;
         private Krypton.Toolkit.KryptonCheckBox chkProdBundle_available;
-        private ColumnHeader columnHeaderSKU;
-        private ColumnHeader columnHeader型号;
-        private Krypton.Toolkit.KryptonTextBox txtBrand;
-        private Krypton.Toolkit.KryptonLabel kryptonLabel13;
-        private Krypton.Toolkit.KryptonComboBox cmbdepartment;
         private UControls.NewSumDataGridView newSumDataGridViewBOM;
         private ContextMenuStrip contextMenuStrip2;
         private ToolStripMenuItem toolStripMenuItem1;
         private BindingSource bsBoms;
         private Krypton.Toolkit.KryptonCheckBox chkMultiBOMProd;
         private Krypton.Toolkit.KryptonLabel kryptonLabel7;
+        internal UControls.NewSumDataGridView newSumDataGridViewMain;
+        private BindingSource bindingSourceBomMain;
+        internal Krypton.Toolkit.KryptonPanel kryptonPanelBOM;
+        private Krypton.Toolkit.KryptonTextBox txtBOM_Name;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel10;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel12;
+        private Krypton.Toolkit.KryptonTextBox txtSKUCode;
+        private Krypton.Toolkit.KryptonComboBox cmbParentProdType;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel16;
+        private Krypton.Toolkit.KryptonTextBox txtSKUName;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel9;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel18;
+        private Krypton.Toolkit.KryptonTextBox txtBOM_NO;
     }
 }

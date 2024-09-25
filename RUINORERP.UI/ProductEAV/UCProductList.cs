@@ -18,7 +18,7 @@ using RUINORERP.Business;
 using RUINORERP.Extensions.Middlewares;
 using AutoMapper;
 using RUINORERP.Business.AutoMapper;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.Model.Base;
 using System.Linq.Expressions;
 using RUINORERP.Common.Extensions;

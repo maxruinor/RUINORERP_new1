@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using SourceGrid;
@@ -134,8 +134,7 @@ namespace RUINORERP.UI.ProductEAV
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {
-                entity.ActionStatus = ActionStatus.修改;
-                base.ToolBarEnabledControl(MenuItemEnums.修改);
+                
 
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)

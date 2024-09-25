@@ -26,7 +26,7 @@ using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.AdvancedUIModule;
 using Krypton.Navigator;
-using RUINORERP.Model.QueryDto;
+
 using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
@@ -234,8 +234,7 @@ namespace RUINORERP.UI.PSI.INV
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
 
                     //if (s2.PropertyName == entity.GetPropertyName<tb_Stocktake>(c => c.Location_ID))
                     //{

@@ -1,6 +1,6 @@
 ﻿namespace RUINORERP.UI.BaseForm
 {
-    partial class BaseBillEditGeneric<T,Q>
+    partial class BaseBillEditGeneric<T,C>
     {
         /// <summary> 
         /// 必需的设计器变量。

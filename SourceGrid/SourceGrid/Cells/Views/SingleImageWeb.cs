@@ -9,6 +9,7 @@ using System.Drawing.Imaging;
 using SourceGrid.Cells.Editors;
 using System.Runtime.CompilerServices;
 using System.Linq;
+using System.Runtime.Remoting.Contexts;
 
 namespace SourceGrid.Cells.Views
 {
@@ -20,7 +21,7 @@ namespace SourceGrid.Cells.Views
     public class SingleImageWeb : Cell
     {
 
-        private string m_Hash = string.Empty;
+
 
         #region Constructors
 
@@ -30,22 +31,22 @@ namespace SourceGrid.Cells.Views
         public SingleImageWeb()
         {
             ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Covering;
-            m_Hash = Guid.NewGuid().ToString();
+          
         }
 
-        public string seed;
+    
         private System.Drawing.Image _GridImage;
         public SingleImageWeb(System.Drawing.Image image)
         {
             _GridImage = image;
-            seed=Guid.NewGuid().ToString();
+           
         }
 
 
 
         protected override void PrepareView(CellContext context)
         {
-            base.PrepareView(context);
+           // base.PrepareView(context);
             //start by watson 2024-1-11
             if (context.Value == null)
             {
@@ -93,18 +94,14 @@ namespace SourceGrid.Cells.Views
                     {
                         var model = context.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                         SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-                        string fileName = valueImageWeb.CellImageName;
+                        string fileName = valueImageWeb.CellImageHashName;
 
-                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0 && !string.IsNullOrEmpty(valueImageWeb.CellImageHash))
+                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0 && !string.IsNullOrEmpty(fileName))
                         {
                             if (GridImage == null)
                             {
                                 GridImage = ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes);
                             }
-                            //if (GridImage != null)
-                            //{
-                            //    valueImageWeb.CellImageHash = ImageHashHelper.GenerateHash(GridImage);
-                            //}
                         }
                         else
                         {
@@ -121,6 +118,78 @@ namespace SourceGrid.Cells.Views
 
         }
 
+       /// <summary>
+       /// 强制显示图片
+       /// </summary>
+        public override void Refresh(CellContext context)
+        {
+            if (context.Value == null)
+            {
+                return;
+            }
+            //显示图片  要是图片列才处理
+            if (context.Cell is SourceGrid.Cells.Image || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
+            {
+                //end by watson 2024-08-28 TODO:
+                //PrepareVisualElementImage(context);
+
+                //Read the image
+                if (context.Value is byte[])
+                {
+                    //将图像读入到字节数组
+                    byte[] buffByte = context.Value as byte[];
+                    System.Drawing.Image img = null;
+                    // 使用 MemoryStream 从字节数组创建流
+                    using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
+                    {
+                        // 从流中创建 Image 对象
+                        img = System.Drawing.Image.FromStream(stream);
+                        if (img != null)
+                        {
+                            GridImage = img;
+                            // context.Cell = new SourceGrid.Cells.Image(img);
+                            //context.Cell.View = new SourceGrid.Cells.Views.SingleImage(img);
+                        }
+                    }
+                }
+
+                if (context.Value is Bitmap || context.Value is System.Drawing.Image)
+                {
+                    // 使用 MemoryStream 从字节数组创建流
+                    GridImage = context.Value as System.Drawing.Image;
+                }
+
+            }
+            else if (context.Value is string && GridImage == null)
+            {
+                if (context.Cell.Editor != null)
+                {
+                    if (context.Cell.Editor is ImageWebPickEditor webPicker)
+                    {
+                        var model = context.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                        SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                        string fileName = valueImageWeb.CellImageHashName;
+
+                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0 && !string.IsNullOrEmpty(fileName))
+                        {
+                            if (GridImage == null)
+                            {
+                                GridImage = ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes);
+                            }
+                        }
+                        else
+                        {
+                            //远程下载图片
+
+                        }
+                    }
+                    else
+                    {
+                        //从web下载图片
+                    }
+                }
+            }
+        }
 
         protected override void OnDraw(GraphicsCache graphics, RectangleF area)
         {

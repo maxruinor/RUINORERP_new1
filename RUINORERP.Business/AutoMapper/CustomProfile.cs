@@ -2,7 +2,7 @@
 using RUINORERP.Model;
 using RUINORERP.Model.Dto;
 using RUINORERP.Model.Models;
-using RUINORERP.Model.QueryDto;
+
 using System;
 using System.Collections.Generic;
 using System.Text;

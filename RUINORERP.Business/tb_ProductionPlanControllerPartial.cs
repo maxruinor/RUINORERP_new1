@@ -10,7 +10,7 @@ using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
 using RUINORERP.Extensions.Middlewares;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.Global;
 using RUINORERP.Model.Base;
 using SqlSugar;
@@ -125,9 +125,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-        
+
                 _unitOfWorkManage.RollbackTran();
-                rmrs.ErrorMsg =  "事务回滚=>" + ex.Message;
+                rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, "事务回滚");
                 rmrs.Succeeded = false;
                 return rmrs;
@@ -185,12 +185,12 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                 
+
                 return true;
             }
             catch (Exception ex)
             {
-        
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, "事务回滚");
                 return false;
@@ -205,8 +205,12 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_ProductionPlan> entitys)
+        /// 
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
+            List<tb_ProductionPlan> entitys = new List<tb_ProductionPlan>();
+            entitys = NeedCloseCaseList as List<tb_ProductionPlan>;
+
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {

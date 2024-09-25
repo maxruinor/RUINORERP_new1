@@ -42,6 +42,7 @@ namespace RUINORERP.UI.MRP.BOM
 
     /// <summary>
     /// 产品清单的多版本时。默认清单的指定，以及清单的版本，文件等维护
+    /// 即 查询产品表。条件是他有BOM并且有多个版本时。显示出来，并且可以指定默认版本
     /// </summary>
     [MenuAttrAssemblyInfo("产品配方维护", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
     public partial class UCBillOfMaterialsService : BaseUControl
@@ -153,14 +154,18 @@ namespace RUINORERP.UI.MRP.BOM
                     TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
                 // 检查是否需要标记的行
                 // 例如，检查行的数据是否为默认的配方
-                if (newSumDataGridView产品.CurrentRow.DataBoundItem is View_ProdDetail prodDetail &&
-                    newSumDataGridViewBOM.Rows[e.RowIndex].DataBoundItem is tb_BOM_S bom)
+                if (newSumDataGridView产品.CurrentRow != null)
                 {
-                    if (bom.ProdDetailID == prodDetail.ProdDetailID)
+                    if (newSumDataGridView产品.CurrentRow.DataBoundItem is View_ProdDetail prodDetail &&
+                        newSumDataGridViewBOM.Rows[e.RowIndex].DataBoundItem is tb_BOM_S bom)
                     {
-                        GDIHelper.Instance.DrawPattern(e, Color.DarkGreen);
+                        if (bom.ProdDetailID == prodDetail.ProdDetailID)
+                        {
+                            GDIHelper.Instance.DrawPattern(e, Color.DarkGreen);
+                        }
                     }
                 }
+
 
                 e.Handled = true;
 
@@ -328,7 +333,7 @@ namespace RUINORERP.UI.MRP.BOM
                         Query产品组合();
                         break;
                     case "kryptonBOM":
-                        QueryToBOM();
+                        QueryBOM();
                         break;
                     default:
                         break;
@@ -381,7 +386,6 @@ namespace RUINORERP.UI.MRP.BOM
         internal void InitListData()
         {
             newSumDataGridView产品.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
             newSumDataGridView产品.XmlFileName = "UCBillOfMaterialsService_" + typeof(View_ProdDetail).Name;
             newSumDataGridView产品.FieldNameList = UIHelper.GetFieldNameColList(typeof(View_ProdDetail));
             newSumDataGridView产品.DataSource = null;
@@ -390,16 +394,14 @@ namespace RUINORERP.UI.MRP.BOM
 
 
             newSumDataGridView产品组合.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
-            newSumDataGridView产品组合.XmlFileName = "UCBillOfMaterialsService_" + typeof(tb_Files).Name;
+            newSumDataGridView产品组合.XmlFileName = "UCBillOfMaterialsServiceRelated_" + typeof(tb_Files).Name;
             newSumDataGridView产品组合.FieldNameList = UIHelper.GetFieldNameColList(typeof(tb_Files));
             newSumDataGridView产品组合.DataSource = null;
             bindingSourceGroup.DataSource = new List<tb_Files>();
             newSumDataGridView产品组合.DataSource = bindingSourceGroup;
 
-
+            #region 双击产品显示的BOM表格
             newSumDataGridViewBOM.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
             newSumDataGridViewBOM.XmlFileName = "UCBillOfMaterialsService_" + typeof(tb_BOM_S).Name;
             newSumDataGridViewBOM.FieldNameList = UIHelper.GetFieldNameColList(typeof(tb_BOM_S));
 
@@ -416,10 +418,32 @@ namespace RUINORERP.UI.MRP.BOM
             newSumDataGridViewBOM.DataSource = null;
             bsBoms.DataSource = new List<tb_BOM_S>();
             newSumDataGridViewBOM.DataSource = bsBoms;
+            #endregion
 
+            kryptonPanelBOM.Visible = false;
+
+            #region 查询BOM的表格
+            newSumDataGridViewMain.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            newSumDataGridViewMain.XmlFileName = "UCBillOfMaterialsServiceMain_" + typeof(View_BOM).Name;
+            newSumDataGridViewMain.FieldNameList = UIHelper.GetFieldNameColList(typeof(View_BOM));
+
+            //这里设置了指定列不可见
+            List<Expression<Func<View_BOM, object>>> ChildRelatedInvisibleMainCols = new List<Expression<Func<View_BOM, object>>>();
+            ChildRelatedInvisibleMainCols.Add(C => C.BOM_ID);
+            ChildRelatedInvisibleMainCols.Add(C => C.ProdDetailID);
+            List<string> InvisibleMianCols = ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleMainCols);
+            foreach (var item in InvisibleMianCols)
+            {
+                KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
+                newSumDataGridViewMain.FieldNameList.TryRemove(item, out kv);
+            }
+            newSumDataGridViewMain.DataSource = null;
+            bindingSourceBomMain.DataSource = new List<View_BOM>();
+            newSumDataGridViewMain.DataSource = bindingSourceBomMain;
+            #endregion
         }
 
-        private Expression<Func<View_ProdDetail, bool>> GetQueryExp()
+        private Expression<Func<View_ProdDetail, bool>> GetQueryProdExp()
         {
             tb_ProdCategoriesController<tb_ProdCategories> categoriesController = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
             List<long> cateids = new List<long>();
@@ -431,11 +455,10 @@ namespace RUINORERP.UI.MRP.BOM
            .AndIF(txtName.Text.Trim().Length > 0, w => w.CNName.Contains(txtName.Text.Trim()))
            .AndIF(txtModel.Text.Trim().Length > 0, w => w.Model.Contains(txtModel.Text.Trim()))
            .AndIF(txtType_ID.SelectedValue != null && txtType_ID.SelectedValue.ToString() != "-1", w => w.Type_ID == long.Parse(txtType_ID.SelectedValue.ToString()))
-           .AndIF(cmbdepartment.SelectedValue != null && cmbdepartment.SelectedValue.ToString() != "-1", w => w.DepartmentID == long.Parse(cmbdepartment.SelectedValue.ToString()))
 
            .AndIF(txtShortCode.Text.Trim().Length > 0, w => w.ShortCode.Contains(txtShortCode.Text.Trim()))
            .AndIF(txtProp.Text.Trim().Length > 0, w => w.prop.Contains(txtProp.Text.Trim()))
-           .AndIF(txtBrand.Text.Trim().Length > 0, w => w.Brand.Contains(txtBrand.Text.Trim()))
+
            .AndIF(txtBarCode.Text.Trim().Length > 0, w => w.BarCode.Contains(txtBarCode.Text.Trim()))
            .AndIF(txtSKU码.Text.Trim().Length > 0, w => w.SKU.Contains(txtSKU码.Text.Trim()))
            .AndIF(txtNo.Text.Trim().Length > 0, w => w.ProductNo.Contains(txtNo.Text.Trim()))
@@ -448,7 +471,23 @@ namespace RUINORERP.UI.MRP.BOM
             return exp;
         }
 
-
+        private Expression<Func<View_BOM, bool>> GetQueryBOMExp()
+        {
+            tb_ProdCategoriesController<tb_ProdCategories> categoriesController = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
+            List<long> cateids = new List<long>();
+            if (chkIncludingChild.Checked && txtcategory_ID.Text.Length > 0 && txtcategory_ID.TreeView.SelectedNode != null)
+            {
+                cateids = categoriesController.GetChildids(long.Parse(txtcategory_ID.TreeView.SelectedNode.Name));
+            }
+            Expression<Func<View_BOM, bool>> exp = Expressionable.Create<View_BOM>() //创建表达式
+           .AndIF(cmbParentProdType.SelectedValue != null && cmbParentProdType.SelectedValue.ToString() != "-1", w => w.Type_ID == long.Parse(cmbParentProdType.SelectedValue.ToString()))
+           .AndIF(txtBOM_Name.Text.Trim().Length > 0, w => w.BOM_Name.Contains(txtBOM_Name.Text.Trim()))
+           .AndIF(txtSKUCode.Text.Trim().Length > 0, w => w.SKU.Contains(txtSKUCode.Text.Trim()))
+           .AndIF(txtBOM_NO.Text.Trim().Length > 0, w => w.BOM_No.Contains(txtBOM_NO.Text.Trim()))
+           .AndIF(txtSKUName.Text.Trim().Length > 0, w => w.CNName.Contains(txtSpecifications.Text.Trim()))
+           .ToExpression();
+            return exp;
+        }
 
         ConcurrentDictionary<string, string> cds = UIHelper.GetFieldNameList<View_ProdDetail>();
         private void Query产品()
@@ -461,7 +500,7 @@ namespace RUINORERP.UI.MRP.BOM
                 .Includes(c => c.tb_prod)
                 .Includes(c => c.tb_proddetail)
                 .Includes(c => c.tb_bom_s, e => e.tb_BOM_SDetails)
-                .Take(maxrow).Where(GetQueryExp())
+                .Take(maxrow).Where(GetQueryProdExp())
                 .WhereIF(chkMultiBOMProd.Checked, it => SqlFunc.Subqueryable<tb_BOM_S>()
                 .Where(x => x.ProdDetailID == it.ProdDetailID).Count() > 1)
                 .Where(it => SqlFunc.Subqueryable<tb_BOM_S>()
@@ -472,7 +511,7 @@ namespace RUINORERP.UI.MRP.BOM
             bindingSourceProdDetail.DataSource = list.ToBindingSortCollection();
         }
 
-        private void QueryToBOM()
+        private void QueryBOM()
         {
             tb_ProdCategoriesController<tb_ProdCategories> categoriesController = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
             List<long> cateids = new List<long>();
@@ -481,97 +520,15 @@ namespace RUINORERP.UI.MRP.BOM
                 cateids = categoriesController.GetChildids(long.Parse(txtcategory_ID.TreeView.SelectedNode.Name));
             }
             int maxrow = int.Parse(txtMaxRows.Value.ToString());
-            var querySqlQueryable = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_ProdDetail>().Take(maxrow)
+            var querySqlQueryable = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_BOM>().Take(maxrow)
                 .IncludesAllFirstLayer()//自动导航
-                .Where(GetQueryExp());
+                .WhereIF(chkMultiBOMProd.Checked, it => SqlFunc.Subqueryable<tb_BOM_S>()
+                .Where(x => x.ProdDetailID == it.ProdDetailID).Count() > 1)
+                .Where(GetQueryBOMExp());
             var list = querySqlQueryable.ToList();
-            treeListView1.Items.Clear();
-            AddItems(list);
-
+            bindingSourceBomMain.DataSource = list.ToBindingSortCollection();
             // 原文链接：https://blog.csdn.net/m0_53104033/article/details/129006538
         }
-        private void AddItems(List<View_ProdDetail> listDetails)
-        {
-            List<long> allIds = listDetails.Select(c => c.ProdDetailID).ToList();
-            var listboms = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_BOM_S>()
-                    .RightJoin<tb_ProdDetail>((a, b) => a.ProdDetailID == b.ProdDetailID)
-                    // .Includes(a => a.tb_producttype)
-                    .Includes(a => a.tb_BOM_SDetails)
-                    .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
-                    .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
-                    .Where(a => allIds.ToArray().Contains(a.ProdDetailID))
-                    .ToList();
-            foreach (View_ProdDetail row in listDetails)
-            {
-                TreeListViewItem itemRow = new TreeListViewItem(row.CNName, 0);
-                itemRow.Tag = row;
-                itemRow.SubItems.Add(row.SKU); //subitems只是从属于itemRow的子项。目前是四列
-                itemRow.SubItems.Add(row.prop); //subitems只是从属于itemRow的子项。目前是四列
-                itemRow.SubItems.Add(row.Model);
-                ////一定会有值
-                //tb_BOM_S bOM_S = listboms.Where(c => c.ProdDetailID == row.ProdDetailID).FirstOrDefault();
-                //itemRow.SubItems[0].Tag = bOM_S;
-                itemRow.SubItems.Add(row.Specifications);
-                string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", row.Type_ID);
-                itemRow.SubItems.Add(prodType);
-                itemRow.SubItems.Add(row.Quantity.ToString());
-                itemRow.SubItems.Add(row.Sale_Qty.ToString());
-                itemRow.SubItems.Add(row.MakingQty.ToString());
-                itemRow.SubItems.Add(row.On_the_way_Qty.ToString());
-                itemRow.SubItems.Add(row.NotOutQty.ToString());
-                itemRow.SubItems.Add(row.Alert_Quantity.ToString());
-                treeListView1.Items.Add(itemRow);
-                tb_BOM_S bOM_S = listboms.Where(c => c.ProdDetailID == row.ProdDetailID).FirstOrDefault();
-                Loadbom(bOM_S, row.ProdDetailID, itemRow);
-            }
-        }
-
-
-        private void Loadbom(tb_BOM_S bOM_S, long ProdDetailID, TreeListViewItem listViewItem)
-        {
-            if (bOM_S != null && bOM_S.tb_BOM_SDetails != null)
-            {
-                listViewItem.ImageIndex = 1;//如果有配方，则图标不一样
-                foreach (var BOM_SDetail in bOM_S.tb_BOM_SDetails)
-                {
-                    TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdDetail.CNName, 0);
-                    itemSub.Tag = BOM_SDetail.view_ProdDetail;
-                    itemSub.SubItems.Add(BOM_SDetail.SKU);//subitems只是从属于itemRow的子项。目前是四列
-                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.prop);//subitems只是从属于itemRow的子项。目前是四列
-                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Model);
-                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Specifications);
-                    string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdDetail.Type_ID);
-                    itemSub.SubItems.Add(prodType);
-                    if (BOM_SDetail.view_ProdDetail != null)
-                    {
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Quantity.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Sale_Qty.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.MakingQty.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.On_the_way_Qty.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.NotOutQty.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Alert_Quantity.ToString());
-                    }
-                    else
-                    {
-                        itemSub.SubItems.Add("0".ToString());
-                        itemSub.SubItems.Add("0".ToString());
-                        itemSub.SubItems.Add("0".ToString());
-                        itemSub.SubItems.Add("0".ToString());
-                        itemSub.SubItems.Add("0".ToString());
-                        itemSub.SubItems.Add("0".ToString());
-                    }
-
-                    listViewItem.Items.Add(itemSub);
-                    if (BOM_SDetail.tb_bom_s != null)
-                    {
-                        itemSub.SubItems[0].Tag = BOM_SDetail.tb_bom_s;
-                    }
-                }
-            }
-        }
-
-
-
 
         private void Query产品组合()
         {
@@ -638,10 +595,6 @@ namespace RUINORERP.UI.MRP.BOM
         #endregion
 
 
-
-
-
-
         /// <summary>
         /// 是否显示选择列，能多行选中。
         /// </summary>
@@ -687,7 +640,7 @@ namespace RUINORERP.UI.MRP.BOM
             list = await mca.QueryAsync();
             UIProdCateHelper.BindToTreeViewNoRootNode(list, txtcategory_ID.TreeView);
             DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v => v.TypeName, txtType_ID);
-            DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, cmbdepartment);
+            DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v => v.TypeName, cmbParentProdType);
 
             InitListData();
 
@@ -696,8 +649,7 @@ namespace RUINORERP.UI.MRP.BOM
             newSumDataGridView产品组合.ContextMenuStrip = newContextMenuStrip;
 
 
-            newSumDataGridViewBOM.ContextMenuStrip = newSumDataGridView产品.GetContextMenu(contextMenuStrip2); ;
-
+            newSumDataGridViewBOM.ContextMenuStrip = newSumDataGridViewBOM.GetContextMenu(contextMenuStrip2); ;
 
             if (QueryValue != null && QueryValue.ToString().Length > 0)
             {
@@ -720,11 +672,26 @@ namespace RUINORERP.UI.MRP.BOM
 
         private void SetPage()
         {
-            if (kryptonNavigator1.SelectedPage == kryptonPage产品 || kryptonNavigator1.SelectedPage == kryptonBOM)
+            if (kryptonNavigator1.SelectedPage == kryptonBOM)
             {
+                kryptonPanelBOM.Visible = true;
+                kryptonPanelBOM.Location = kryptonPanelProd.Location;
+                kryptonPanelBOM.Dock = DockStyle.Fill;
+                kryptonPanelBOM.Size = kryptonPanelProd.Size;
+                kryptonPanelProd.Visible = false;
                 kryptonPanelGroup.Visible = false;
                 kryptonPanelProd.Visible = true;
                 kryptonPanelProd.Dock = DockStyle.Fill;
+                newSumDataGridViewBOM.Visible = false;
+            }
+
+            if (kryptonNavigator1.SelectedPage == kryptonPage产品)
+            {
+                kryptonPanelBOM.Visible = false;
+                kryptonPanelGroup.Visible = false;
+                kryptonPanelProd.Visible = true;
+                kryptonPanelProd.Dock = DockStyle.Fill;
+                newSumDataGridViewBOM.Visible = true;
                 //kryptonDataGridView产品.ContextMenuStrip = contextMenuStrip1;
                 //newSumDataGridView产品.Use是否使用内置右键功能 = true;
                 //newSumDataGridView产品.SetContextMenu(contextMenuStrip1);
@@ -733,6 +700,7 @@ namespace RUINORERP.UI.MRP.BOM
             }
             if (kryptonNavigator1.SelectedPage == kryptonPage产品组合)
             {
+                kryptonPanelBOM.Visible = false;
                 kryptonPanelGroup.Visible = true;
                 kryptonPanelProd.Visible = false;
                 kryptonPanelGroup.Dock = DockStyle.Fill;
@@ -803,7 +771,6 @@ namespace RUINORERP.UI.MRP.BOM
         }
 
 
-
         private void kryptonDataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             //如果双击的是行头，则是否要弹出箱规信息呢？
@@ -827,107 +794,11 @@ namespace RUINORERP.UI.MRP.BOM
         }
 
 
-
-
-
-
-        private void btnOk_Click(object sender, EventArgs e)
-        {
-            QueryGetRs();
-        }
-
-
-        private void QueryGetRs()
-        {
-            if (kryptonNavigator1.SelectedPage != null)
-            {
-                switch (kryptonNavigator1.SelectedPage.Name)
-                {
-                    case "kryptonPage产品":
-
-                        break;
-                    case "kryptonPage产品组合":
-
-                        break;
-                    case "kryptonBOM":
-
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-
-
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-            //退出
-            Form frm = (this as Control).Parent.Parent as Form;
-            frm.DialogResult = DialogResult.OK;
-            frm.Close();
-            return;
-        }
-
         private void chkMultiSelect_CheckedChanged(object sender, EventArgs e)
         {
 
             newSumDataGridView产品.UseSelectedColumn = MultipleChoices;
         }
-
-        private void treeListView1_BeforeExpand(object sender, TreeListViewCancelEventArgs e)
-        {
-            if (e.Item.Items.Count > 0)
-            {
-                foreach (TreeListViewItem item in e.Item.Items)
-                {
-                    if (item.SubItems[0].Tag != null)
-                    {
-                        if (item.SubItems[0].Tag is tb_BOM_S bom)
-                        {
-                            e.Item.ImageIndex = 1;
-                        }
-                    }
-                }
-            }
-        }
-
-        private void treeListView1_BeforeCollapse(object sender, TreeListViewCancelEventArgs e)
-        {
-
-        }
-
-        private void treeListView1_DoubleClick(object sender, EventArgs e)
-        {
-
-            if (treeListView1.SelectedItems != null)
-            {
-                foreach (TreeListViewItem item in treeListView1.SelectedItems)
-                {
-                    if (!QueryObjects.Contains((View_ProdDetail)item.Tag))
-                    {
-                        QueryObjects.Add((View_ProdDetail)item.Tag);
-                    }
-                }
-            }
-            if (QueryObjects.Count > 0)
-            {
-                if (!string.IsNullOrEmpty(QueryField))
-                {
-                    QueryValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(QueryObjects[0], QueryField).ToString();
-                }
-            }
-
-            //退出
-            Form frm = (this as Control).Parent.Parent as Form;
-            if (frm == null)
-            {
-                return;
-            }
-            frm.DialogResult = DialogResult.OK;
-            frm.Close();
-            return;
-        }
-
 
 
         private void newSumDataGridView产品组合_CellDoubleClick(object sender, DataGridViewCellEventArgs e)

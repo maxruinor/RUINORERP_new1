@@ -25,7 +25,7 @@ namespace RUINORERP.Extensions.AOP
             string beforeExe_msg = string.Format("AOP方法执行前:拦截[{0}]类下的方法[{1}]的参数是[{2}]",
                 invocation.InvocationTarget.GetType(),
                 invocation.Method.Name, string.Join(", ", invocation.Arguments.Select(a => (a ?? "").ToString()).ToArray()));
-            System.Console.WriteLine(beforeExe_msg);
+            //System.Console.WriteLine(beforeExe_msg);
             #endregion
 
             var method = invocation.MethodInvocationTarget ?? invocation.Method;

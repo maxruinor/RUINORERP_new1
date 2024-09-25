@@ -23,7 +23,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.IServices.BASE;
 using RUINORERP.Model.Context;
 using System.Linq;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.Global;
 using RUINORERP.Business.Security;
 

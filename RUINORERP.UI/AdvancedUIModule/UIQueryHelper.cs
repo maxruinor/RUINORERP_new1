@@ -1,7 +1,7 @@
 ﻿using Krypton.Toolkit;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.UI.Common;
 using System;
 using System.Collections.Generic;

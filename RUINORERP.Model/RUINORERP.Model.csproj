@@ -5,8 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="QueryDto\**" />
     <Compile Remove="QueryDto_back\**" />
+    <EmbeddedResource Remove="QueryDto\**" />
     <EmbeddedResource Remove="QueryDto_back\**" />
+    <None Remove="QueryDto\**" />
     <None Remove="QueryDto_back\**" />
   </ItemGroup>
 

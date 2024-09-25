@@ -235,6 +235,13 @@ namespace RUINORERP.Business
             //return await querySqlQueryable.ToListAsync();
         }
 
+
+        public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> entitys)
+        {
+            ReturnResults<bool> result = new ReturnResults<bool>();
+            await Task.Delay(0); // 模拟异步操作
+            return result;
+        }
         public virtual Task<List<T>> BaseQueryAsync()
         {
             //子类重写

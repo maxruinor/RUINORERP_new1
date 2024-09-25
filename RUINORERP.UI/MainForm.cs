@@ -65,6 +65,7 @@ using ExCSS;
 using RUINORERP.Model.Models;
 using RUINORERP.Business.CommService;
 using RUINORERP.UI.SysConfig;
+using RUINORERP.Common.Helper;
 
 
 
@@ -381,7 +382,7 @@ namespace RUINORERP.UI
             MainForm.Instance.uclog.AddLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
-            
+
             var rslist = CacheHelper.Manager.CacheEntityList.Get(nameof(tb_MenuInfo));
             if (rslist != null)
             {
@@ -765,6 +766,8 @@ namespace RUINORERP.UI
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
                     MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
+
+                   // LoginWebServer();
                 }
 
             }
@@ -820,7 +823,7 @@ namespace RUINORERP.UI
                 return;
             }
             MainForm.Instance.AppContext.IsOnline = true;
-           await InitConfig();
+            await InitConfig();
             LoadUIMenus();
             LoadUIForIM_LogPages();
         }
@@ -2002,7 +2005,7 @@ namespace RUINORERP.UI
                     ClearUI();
                     AppContext.CurUserInfo.UserModList.Clear();
                     PTPrincipal.GetAllAuthorizationInfo(AppContext, AppContext.CurUserInfo.UserInfo, roleInfo);
-                   await InitConfig();
+                    await InitConfig();
                     LoadUIMenus();
                     LoadUIForIM_LogPages();
                     this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";
@@ -2043,5 +2046,19 @@ namespace RUINORERP.UI
             statusTimer.Stop();
             this.lblStatusGlobal.Visible = false;
         }
+
+        private void btntsbRefresh_Click(object sender, EventArgs e)
+        {
+            LoginWebServer();
+        }
+
+        private async void LoginWebServer()
+        {
+            HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+            ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+            var webServerUrl = configManager.GetValue("WebServerUrl");
+            await httpWebService.Login(MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName, MainForm.Instance.AppContext.CurUserInfo.UserInfo.Password, webServerUrl + @"/login");
+        }
+
     }
 }

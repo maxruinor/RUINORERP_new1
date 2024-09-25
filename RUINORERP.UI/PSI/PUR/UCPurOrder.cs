@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using SourceGrid;
@@ -43,7 +43,7 @@ using ZXing.Common;
 namespace RUINORERP.UI.PSI.PUR
 {
     [MenuAttrAssemblyInfo("采购订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购订单)]
-    public partial class UCPurOrder : BaseBillEditGeneric<tb_PurOrder, tb_PurOrderQueryDto>
+    public partial class UCPurOrder : BaseBillEditGeneric<tb_PurOrder, tb_PurOrderDetail>
     {
         public UCPurOrder()
         {
@@ -152,8 +152,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                 }
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.PreDeliveryDate))

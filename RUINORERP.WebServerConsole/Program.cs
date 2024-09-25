@@ -24,7 +24,7 @@ using RUINORERP.WF.BizOperation;
 
 namespace RUINORERP.WebServerConsole
 {
-  static  class Program
+    static class Program
     {
         private static ApplicationContext _AppContextData;
         public static ApplicationContext AppContextData
@@ -55,7 +55,7 @@ namespace RUINORERP.WebServerConsole
         //{
         //    //            var host = Startup.CreateHostBuilder(args).Build();
         //    var host = Startup.CreateHost();
-            
+
         //        MyServiceProvider = host.Services;
         //    Startup.AppContextData.SetServiceProvider(MyServiceProvider);
         //    Startup.AutofacContainerScope = MyServiceProvider.GetAutofacRoot();
@@ -96,11 +96,11 @@ namespace RUINORERP.WebServerConsole
                     }
                 }
 
-               
- 
-                
 
- 
+
+
+
+
 
 
                 ///=====----
@@ -128,16 +128,17 @@ namespace RUINORERP.WebServerConsole
                         BusinessHelper.Instance.SetContext(AppContextData);
 
                         //myhost.Start(); // 启动主机但不开始监听请求
-                      
+                        WebServer webserver = Startup.GetFromFac<WebServer>();
+                        webserver.RunWebServer();
                         // 执行其他初始化任务
-                        myhost.Run(); // 现在开始监听请求
+                       // myhost.Run(); // 现在开始监听请求
 
 
                     }
                     catch (Exception ex)
                     {
                         var s = ex.Message;
-                       
+
                         Console.Write(ex.StackTrace);
                     }
 
@@ -255,9 +256,9 @@ namespace RUINORERP.WebServerConsole
 
         private static void Host_OnStepError(WorkflowCore.Models.WorkflowInstance workflow, WorkflowCore.Models.WorkflowStep step, Exception exception)
         {
-           Console.WriteLine("工作流", exception.Message);
+            Console.WriteLine("工作流", exception.Message);
         }
-        
+
     }
 }
 

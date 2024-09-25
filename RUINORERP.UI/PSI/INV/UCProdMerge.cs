@@ -24,7 +24,6 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using SourceGrid;
@@ -222,8 +221,7 @@ namespace RUINORERP.UI.PSI.INV
                     }
 
 
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                     if (entity.ProdDetailID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProdMerge>(c => c.ProdDetailID))
                     {
 

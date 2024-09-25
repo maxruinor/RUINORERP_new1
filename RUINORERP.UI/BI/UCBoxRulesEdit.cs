@@ -43,7 +43,6 @@ namespace RUINORERP.UI.BI
             }
             else
             {
-                entity.ActionStatus = ActionStatus.修改;
                 entity.Modified_at = DateTime.Now;
                 entity.Modified_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
             }

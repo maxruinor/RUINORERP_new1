@@ -10,7 +10,6 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Dto;
-using RUINORERP.Model.QueryDto;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.UCSourceGrid;
@@ -29,7 +28,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.PSI.PUR
 {
     [MenuAttrAssemblyInfo("采购入库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购入库单)]
-    public partial class UCPurEntry : BaseBillEditGeneric<tb_PurEntry, tb_PurEntryQueryDto>
+    public partial class UCPurEntry : BaseBillEditGeneric<tb_PurEntry, tb_PurEntryDetail>
     {
         public UCPurEntry()
         {
@@ -145,8 +144,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PurOrder_ID.HasValue && entity.PurOrder_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurEntry>(c => c.PurOrder_ID))

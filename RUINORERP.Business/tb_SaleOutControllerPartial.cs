@@ -23,7 +23,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.IServices.BASE;
 using RUINORERP.Model.Context;
 using System.Linq;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.Global;
 using System.Windows.Forms;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
@@ -42,8 +42,12 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_SaleOut> entitys)
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
+            List<tb_SaleOut> entitys = new List<tb_SaleOut>();
+            entitys = NeedCloseCaseList as List<tb_SaleOut>;
+
+
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {

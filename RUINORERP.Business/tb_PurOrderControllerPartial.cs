@@ -40,8 +40,12 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_PurOrder> entitys)
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
+            List<tb_PurOrder> entitys = new List<tb_PurOrder>();
+            entitys = NeedCloseCaseList as List<tb_PurOrder>;
+
+
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -110,7 +114,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
- 
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
@@ -207,17 +211,17 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 //_logger.Info(approvalEntity.bizName + "审核事务成功");
-                rmrs.ReturnObject= entity as T; 
+                rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-          
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, "事务回滚");
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
-           
+
                 return rmrs;
             }
 
@@ -311,7 +315,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-        
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;

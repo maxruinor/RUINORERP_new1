@@ -285,43 +285,34 @@ namespace SourceGrid.Cells.Editors
         {
             var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-            if (string.IsNullOrEmpty(valueImageWeb.CellImageName))
-            {
-                valueImageWeb.CellImageName = Guid.NewGuid().ToString() + ".jpg";
-                fileName = valueImageWeb.CellImageName;
-            }
-            if (image != null)
-            {           //是否存在 不管？ 传入最新则比较。不一样就覆盖
-                        //if (File.Exists(AbsolutelocPath))
-                        //{
-                        //NewHash = ImageHashHelper.GenerateHash(image);
-                        //if (string.IsNullOrEmpty(Imagehash) || !ImageHashHelper.AreHashesEqual(Imagehash, NewHash))
-                        //{
-                        //    Imagehash = NewHash;
-                        //    ImageProcessor.SaveImageAsFile(image, AbsolutelocPath);
-                        //    return;
-                        //}
-                        //}
-                        //else
-                        //{
 
-                //}
+            if (image != null)
+            {
                 #region 
                 byte[] buffByte = ImageProcessor.CompressImage(image);
+
+                //得到图片的hash值
                 string NewHash = ImageHashHelper.GenerateHash(buffByte);
                 #endregion
-                if (string.IsNullOrEmpty(valueImageWeb.CellImageHash) || !ImageHashHelper.AreHashesEqual(valueImageWeb.CellImageHash, NewHash))
+                //if (string.IsNullOrEmpty(valueImageWeb.CellImageHashName) 
+                //    || !ImageHashHelper.AreHashesEqual(valueImageWeb.CellImageHashName, NewHash))
+                //{
+                if (!AreHashesEqual(valueImageWeb.GetImageHash(), NewHash))
                 {
-                    valueImageWeb.CellImageHash = NewHash;
+                    valueImageWeb.SetImageNewHash(NewHash);
                     //将图片保存到内存中。用于后面的显示，或保存到本地临时文件夹中，或上传到服务器
                     byte[] destination = new byte[buffByte.Length];
                     Buffer.BlockCopy(buffByte, 0, destination, 0, buffByte.Length);
                     valueImageWeb.CellImageBytes = destination;
                     Control.Tag = destination;
                     //如果先对话框。再拖拽，则对话框会覆盖拖拽的值。所以这里要清空对话框返回的路径。
-
-                    //ImageProcessor.SaveBytesAsImage(buffByte, AbsolutelocPath);
+                    byte[] bytes = destination as byte[];
+                    using (MemoryStream ms = new MemoryStream(bytes))
+                    {
+                        PickerImage = System.Drawing.Image.FromStream(ms, true);
+                    }
                 }
+                Control.Value = valueImageWeb.GetImageHash();
                 ValueType = typeof(string);
             }
         }
@@ -418,24 +409,25 @@ namespace SourceGrid.Cells.Editors
                     string NewHash = ImageHashHelper.GenerateHash(NewbuffByte);
 
                     //看原来有不有哈希值或新旧是否相同，如果不同则更新
-                    if (string.IsNullOrEmpty(valueImageWeb.CellImageHash) || !ImageHashHelper.AreHashesEqual(valueImageWeb.CellImageHash, NewHash))
+                    if (!AreHashesEqual(valueImageWeb.GetImageHash(), NewHash))
                     {
-                        valueImageWeb.CellImageHash = NewHash;
                         //将图片保存到内存中。用于后面的显示，或保存到本地临时文件夹中，或上传到服务器
                         byte[] destination = new byte[NewbuffByte.Length];
                         Buffer.BlockCopy(NewbuffByte, 0, destination, 0, NewbuffByte.Length);
                         valueImageWeb.CellImageBytes = destination;
+                        valueImageWeb.SetImageNewHash(NewHash);
                         Control.Tag = destination;
-                        txtWebImage.SelectedFilePath = string.Empty;//用完了清空。
                     }
-                    else
-                    {
-                        Control.Tag = NewbuffByte;
-                    }
-                    return valueImageWeb.CellImageName;
+                    txtWebImage.SelectedFilePath = string.Empty;//用完了清空。
+                    //return valueImageWeb.CellImageName;
                 }
             }
             //三种形式都将byte[]保存到tag中
+            if (Control.Value != null && !string.IsNullOrEmpty(Control.Value.ToString()) && valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+            {
+                Control.Tag = valueImageWeb.CellImageBytes;
+            }
+
             object val = Control.Tag;
             if (val == null)
                 return null;
@@ -450,17 +442,20 @@ namespace SourceGrid.Cells.Editors
             {
                 //实际上比较一下。如果还是相同的图片不用赋值
                 string NewHash = ImageHashHelper.GenerateHash(buffByte);
-
                 //看原来有不有哈希值或新旧是否相同，如果不同则更新
-                if (string.IsNullOrEmpty(valueImageWeb.CellImageHash) || !ImageHashHelper.AreHashesEqual(valueImageWeb.CellImageHash, NewHash))
+                if (!AreHashesEqual(valueImageWeb.GetImageHash(), NewHash))
                 {
-                    byte[] bytes = val as byte[];
-                    using (MemoryStream ms = new MemoryStream(bytes))
+                    byte[] NewbuffByte = val as byte[];
+                    byte[] destination = new byte[NewbuffByte.Length];
+                    Buffer.BlockCopy(NewbuffByte, 0, destination, 0, NewbuffByte.Length);
+                    valueImageWeb.CellImageBytes = destination;
+                    valueImageWeb.SetImageNewHash(NewHash);
+                    Control.Tag = destination;
+                    using (MemoryStream ms = new MemoryStream(NewbuffByte))
                     {
                         PickerImage = System.Drawing.Image.FromStream(ms, true);
                     }
                 }
-                return val;
             }
             else if (val is string)
             {
@@ -470,15 +465,35 @@ namespace SourceGrid.Cells.Editors
                 //Control.Value = val;//= newIamgeFilePath;
                 return val;
             }
-
-            if (string.IsNullOrEmpty(valueImageWeb.CellImageName))
-            {
-                valueImageWeb.CellImageName = Guid.NewGuid().ToString() + ".jpg";
-                fileName = valueImageWeb.CellImageName;
-                Control.Value = valueImageWeb.CellImageName;
-            }
-
+            Control.Value = valueImageWeb.CellImageHashName;
             return Control.Value;
+        }
+
+
+        //比较两个byte[]是否相同，使用哈希值来比较
+        /// <summary>
+        /// 比较两个byte[]是否相同，使用哈希值来比较
+        /// </summary>
+        /// <param name="hash1"></param>
+        /// <param name="hash2"></param>
+        /// <returns></returns>
+        public static bool AreHashesEqual(string hash1, string hash2)
+        {
+            //如果哈希值为空，认为两个byte[]相同
+            if (string.IsNullOrEmpty(hash1) && string.IsNullOrEmpty(hash2))
+            {
+                return true;
+            }
+            if (!string.IsNullOrEmpty(hash1) && string.IsNullOrEmpty(hash2))
+            {
+                return false;
+            }
+            if (string.IsNullOrEmpty(hash1) && !string.IsNullOrEmpty(hash2))
+            {
+                return false;
+            }
+            //如果哈希值相同，则认为两个byte[]相同
+            return ImageHashHelper.AreHashesEqual(hash1, hash2);
         }
 
 

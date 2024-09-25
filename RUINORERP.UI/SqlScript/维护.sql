@@ -98,3 +98,7 @@ exec sp_who 'sa';
 
 -- exec sp_who2 'sa';
 -- exec sp_who @loginame='sa';
+
+
+--------找出BOM表中的母件的SKU和ID 可能不对应的情况。
+SELECT SKU from  tb_BOM_S GROUP BY SKU HAVING COUNT(SKU)>1   --如果有行数则不对。之前是BOM母件的SKU和产品ID没有对应上。

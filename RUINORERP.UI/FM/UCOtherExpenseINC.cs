@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using SourceGrid;
@@ -41,7 +41,7 @@ using NPOI.SS.Formula.Functions;
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("其他费用收入", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收付账款, BizType.其他费用收入)]
-    public partial class UCOtherExpenseINC : BaseBillEditGeneric<tb_FM_OtherExpense, tb_FM_OtherExpenseQueryDto>
+    public partial class UCOtherExpenseINC : BaseBillEditGeneric<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>
     {
         public UCOtherExpenseINC()
         {
@@ -149,8 +149,6 @@ namespace RUINORERP.UI.FM
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
                 }
 
                 //显示 打印状态 如果是草稿状态 不显示打印

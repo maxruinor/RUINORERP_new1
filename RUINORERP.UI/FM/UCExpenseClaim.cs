@@ -24,7 +24,6 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using SourceGrid;
@@ -44,7 +43,7 @@ using SourceGrid.Cells.Editors;
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("费用报销单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收付账款, BizType.费用报销单)]
-    public partial class UCExpenseClaim : BaseBillEditGeneric<tb_FM_ExpenseClaim, tb_FM_ExpenseClaimQueryDto>
+    public partial class UCExpenseClaim : BaseBillEditGeneric<tb_FM_ExpenseClaim, tb_FM_ExpenseClaimDetail>
     {
         public UCExpenseClaim()
         {
@@ -131,8 +130,6 @@ namespace RUINORERP.UI.FM
                         //权限允许
                         if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                         {
-                            entity.ActionStatus = ActionStatus.修改;
-                            base.ToolBarEnabledControl(MenuItemEnums.修改);
                             chkClaimEmployee.Enabled = true;
                         }
                     };
@@ -152,8 +149,6 @@ namespace RUINORERP.UI.FM
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
                     chkClaimEmployee.Enabled = true;
                 }
 
@@ -328,7 +323,29 @@ namespace RUINORERP.UI.FM
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
+
                 EditEntity.tb_FM_ExpenseClaimDetails = details;
+                //处理图片
+                foreach (tb_FM_ExpenseClaimDetail detail in EditEntity.tb_FM_ExpenseClaimDetails)
+                {
+                    PropertyInfo[] props = typeof(tb_FM_ExpenseClaimDetail).GetProperties();
+                    foreach (PropertyInfo prop in props)
+                    {
+                        var col = sgd[prop.Name];
+                        if (col != null)
+                        {
+                            if (col.CustomFormat == CustomFormatType.WebPathImage)
+                            {
+                                //string newvalue = detail.GetPropertyValue(prop.Name).ToString();
+                                // newvalue = newvalue.Replace(temppath,")"
+                                //detail.SetPropertyValue(prop.Name, newvalue);
+                            }
+                        }
+                    }
+                }
+
+
+
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {
@@ -345,7 +362,7 @@ namespace RUINORERP.UI.FM
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        await SaveImage(false);
+                        await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ClaimNo}。");
                     }
                     else
@@ -362,7 +379,11 @@ namespace RUINORERP.UI.FM
             }
         }
 
-
+        /// <summary>
+        /// 保存图片到服务器。所有图片都保存到服务器。即使草稿换电脑还可以看到
+        /// </summary>
+        /// <param name="RemoteSave"></param>
+        /// <returns></returns>
         private async Task<bool> SaveImage(bool RemoteSave)
         {
             bool result = true;
@@ -395,36 +416,33 @@ namespace RUINORERP.UI.FM
                                 if (grid1[i, col.ColIndex].Value.ToString().Contains(".jpg") && grid1[i, col.ColIndex].Value.ToString() == detail.GetPropertyValue(prop.Name).ToString())
                                 {
                                     fileName = grid1[i, col.ColIndex].Value.ToString();
-                                    fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
-
-                                    
-
-                                    if (grid1[i, col.ColIndex].Tag == null && valueImageWeb.CellImageBytes != null)
+                                    //  fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
+                                    //if (grid1[i, col.ColIndex].Tag == null && valueImageWeb.CellImageBytes != null)
+                                    if (valueImageWeb.CellImageBytes != null)
                                     {
                                         //保存到本地
-                                        if (EditEntity.DataStatus == (int)DataStatus.草稿)
+                                        //if (EditEntity.DataStatus == (int)DataStatus.草稿)
+                                        //{
+                                        //    //保存在本地临时目录
+                                        //    ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
+                                        //    grid1[i, col.ColIndex].Tag = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
+                                        //}
+                                        //else
+                                        //{
+                                        //上传到服务器，删除本地
+                                        //实际应该可以直接传二进制数据，但是暂时没有实现，所以先保存到本地，再上传
+                                        //ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
+                                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                        string uploadRsult = await httpWebService.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, valueImageWeb.CellImageBytes, "upload");
+                                        //string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, "upload");
+                                        if (true)
                                         {
-                                            //保存在本地临时目录
-                                            ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
-                                            grid1[i, col.ColIndex].Tag = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
+                                            MainForm.Instance.PrintInfoLog(uploadRsult);
                                         }
-                                        else
-                                        {
-                                            //上传到服务器，删除本地
-                                            //实际应该可以直接传二进制数据，但是暂时没有实现，所以先保存到本地，再上传
-                                            //ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
-                                            string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/"
-                                                , grid1[i, col.ColIndex].Value.ToString(), valueImageWeb.CellImageBytes, "upload");
-                                            //string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, "upload");
-                                            if (true)
-                                            {
-                                                MainForm.Instance.PrintInfoLog(uploadRsult);
-                                            }
 
 
-                                        }
+                                        //}
                                     }
-
                                 }
 
                                 //UploadImage("http://127.0.0.1/upload", "D:/test.jpg", "upload");
@@ -437,11 +455,10 @@ namespace RUINORERP.UI.FM
                         }
                     }
                 }
-
-
             }
             return result;
         }
+
 
 
         protected override async Task<bool> Submit()
@@ -455,7 +472,6 @@ namespace RUINORERP.UI.FM
                 {
                     MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
                 }
-                await SaveImage(true);
             }
             return true;
         }
@@ -503,8 +519,8 @@ namespace RUINORERP.UI.FM
                                     }
 
                                     //上传到服务器，删除本地
-
-                                    string deleteRsult = await HttpHelper.DeleteImageAsync("http://192.168.0.99:8080/" + "deleteImages", fileName, "delete123");
+                                    HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                    string deleteRsult = await httpWebService.DeleteImageAsync( fileName, "delete123");
                                     MainForm.Instance.PrintInfoLog(deleteRsult);
 
 

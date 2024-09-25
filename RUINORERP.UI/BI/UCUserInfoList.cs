@@ -15,7 +15,7 @@ using RUINORERP.Common.CollectionExtension;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.Model.Base;
 using RUINORERP.Business.AutoMapper;
 using AutoMapper;

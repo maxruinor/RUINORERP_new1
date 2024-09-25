@@ -45,15 +45,31 @@ namespace SimpleHttp
         /// <param name="useHttps">True to add 'https://' prefix insteaad of 'http://'.</param>
         /// <param name="maxHttpConnectionCount">Maximum HTTP connection count, after which the incoming requests will wait (sockets are not included).</param>
         /// <returns>Server listening task.</returns>
-        public static async Task ListenAsync(int port, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync, bool useHttps = false, byte maxHttpConnectionCount = 32)
+        public static async Task ListenAsync(int port, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync, string msg, bool useHttps = false, byte maxHttpConnectionCount = 32)
         {
-            if (port < 0 || port > UInt16.MaxValue)
-                throw new NotSupportedException($"The provided port value must in the range: [0..{UInt16.MaxValue}");
-          
-            var s = useHttps ? "s" : String.Empty;
-            await ListenAsync($"http{s}://192.168.0.99:{port}/", token, onHttpRequestAsync, maxHttpConnectionCount);
-            //await ListenAsync($"http{s}://127.0.0.1:{port}/", token, onHttpRequestAsync, maxHttpConnectionCount);//localhost也可以访问
-            // await ListenAsync($"http{s}://+:{port}/", token, onHttpRequestAsync, maxHttpConnectionCount);
+            
+            try
+            {
+                if (port < 0 || port > UInt16.MaxValue)
+                    throw new NotSupportedException($"The provided port value must in the range: [0..{UInt16.MaxValue}");
+
+                var s = useHttps ? "s" : String.Empty;
+                await ListenAsync($"http{s}://192.168.0.99:{port}/", token, onHttpRequestAsync, maxHttpConnectionCount);
+
+                //await ListenAsync($"http{s}://127.0.0.1:{port}/", token, onHttpRequestAsync, maxHttpConnectionCount);//localhost也可以访问
+                // await ListenAsync($"http{s}://+:{port}/", token, onHttpRequestAsync, maxHttpConnectionCount);
+            }
+            catch (Exception ex)
+            {
+                msg = ex.Message;
+                // 设置文字颜色为红色
+                Console.ForegroundColor = ConsoleColor.Red;
+                // 输出红色文字
+                Console.WriteLine(msg);
+                // 重置文字颜色为默认值
+                Console.ResetColor();
+            }
+
         }
 
         /// <summary>
@@ -77,7 +93,8 @@ namespace SimpleHttp
                 throw new ArgumentException(nameof(maxHttpConnectionCount), "The value must be greater or equal than 1.");
 
             var listener = new HttpListener();
-            try { 
+            try
+            {
 
                 listener.Prefixes.Add(httpListenerPrefix);
             }

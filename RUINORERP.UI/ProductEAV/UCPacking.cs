@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using SqlSugar;
@@ -42,7 +42,7 @@ using RUINORERP.Global.Model;
 namespace RUINORERP.UI.ProductEAV
 {
     [MenuAttrAssemblyInfo("包装信息", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料, BizType.包装信息)]
-    public partial class UCPacking : BaseBillEditGeneric<tb_Packing, tb_PackingQueryDto>
+    public partial class UCPacking : BaseBillEditGeneric<tb_Packing, tb_PackingDetail>
     {
         public UCPacking()
         {
@@ -174,8 +174,7 @@ namespace RUINORERP.UI.ProductEAV
                 //权限允许
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_Packing>(c => c.Length) ||
                       s2.PropertyName == entity.GetPropertyName<tb_Packing>(c => c.Width) ||
@@ -226,8 +225,7 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
 
-                entity.ActionStatus = ActionStatus.修改;
-                base.ToolBarEnabledControl(MenuItemEnums.修改);
+                
 
             };
 

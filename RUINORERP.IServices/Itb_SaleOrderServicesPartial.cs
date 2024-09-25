@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using RUINORERP.IServices.BASE;
 using System.Threading.Tasks;
 using RUINORERP.Model;
-using RUINORERP.Model.QueryDto;
+
 
 
 namespace RUINORERP.IServices
@@ -22,6 +22,6 @@ namespace RUINORERP.IServices
     /// </summary>
     public partial interface Itb_SaleOrderServices : IBaseServices<tb_SaleOrder>
     {
-        Task<List<tb_SaleOrder>> QueryAsync(tb_SaleOrderQueryDto QueryCriteria, Pagination pagination);
+      //  Task<List<tb_SaleOrder>> QueryAsync(tb_SaleOrderQueryDto QueryCriteria, Pagination pagination);
     }
 }

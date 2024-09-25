@@ -1115,6 +1115,7 @@
     <Compile Include="Common\GridDefineColumnItem.cs" />
     <Compile Include="Common\GridHelper.cs" />
     <Compile Include="Common\GUIUtils.cs" />
+    <Compile Include="Common\HttpWebService.cs" />
     <Compile Include="Common\ImageHelper.cs" />
     <Compile Include="Common\ImageUploader.cs" />
     <Compile Include="Common\InitModuleMenu.cs" />

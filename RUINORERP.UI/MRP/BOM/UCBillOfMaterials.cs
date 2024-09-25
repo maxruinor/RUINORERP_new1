@@ -24,7 +24,6 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using SourceGrid;
@@ -65,7 +64,7 @@ namespace RUINORERP.UI.MRP.BOM
      
      */
     [MenuAttrAssemblyInfo("产品配方清单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.MRP基本资料, BizType.BOM物料清单)]
-    public partial class UCBillOfMaterials : BaseBillEditGeneric<tb_BOM_S, tb_BOM_SQueryDto>
+    public partial class UCBillOfMaterials : BaseBillEditGeneric<tb_BOM_S, tb_BOM_SDetail>
     {
         public UCBillOfMaterials()
         {
@@ -73,9 +72,6 @@ namespace RUINORERP.UI.MRP.BOM
             base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
             kryptonDockableNavigator1.SelectedPage = kryptonPage1;
             //            kryptonNavigator1.SelectedPage = kryptonPageMain;
-
-
-
         }
 
         private void ExportExcel_Click(object sender, EventArgs e)
@@ -741,6 +737,7 @@ namespace RUINORERP.UI.MRP.BOM
             }
             else
             {
+                entity = new tb_BOM_S();
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
                 entity.Effective_at = System.DateTime.Now;
@@ -750,6 +747,12 @@ namespace RUINORERP.UI.MRP.BOM
                 entity.is_available = true;
                 entity.SKU = string.Empty;
                 entity.ProdDetailID = 0;
+                entity.BOM_ID = 0;
+                entity.BOM_S_VERID = 0;
+                entity.Doc_ID = 0;
+                entity.BOM_Name = string.Empty;
+                entity.TotalMaterialQty = 0;
+                entity.property = string.Empty;
                 if (entity.tb_BOM_SDetails != null && entity.tb_BOM_SDetails.Count > 0)
                 {
                     entity.tb_BOM_SDetails.ForEach(c => c.BOM_ID = 0);
@@ -781,7 +784,7 @@ namespace RUINORERP.UI.MRP.BOM
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.DailyQty.ToString(), txtDailyQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.SelfProductionAllCosts.ToString(), txtSelfProductionAllCosts, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(entity, t => t.DataStatus, txtstatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
             if (entity.tb_BOM_SDetails != null && entity.tb_BOM_SDetails.Count > 0)
@@ -820,20 +823,23 @@ namespace RUINORERP.UI.MRP.BOM
                     ///视图指定成实体表，为了显示关联数据
                     DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(entity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
                 }
-                //权限允许
-                if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
-                {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
 
-                    if (entity.ProdDetailID > 0 && s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.ProdDetailID))
+                //权限允许,草稿新建或修改状态时，才允许修改（修改要未审核或审核未通过）
+                if (((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
+                )
+                {
+                    if (entity.ProdDetailID > 0 &&
+                    (s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.ProdDetailID) ||
+                    s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.SKU)))
                     {
                         //视图来的，没有导航查询到相关数据
                         //find bomid
                         kryptonTreeView1.TreeView.Nodes.Clear();
-                        BaseController<tb_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<tb_ProdDetail>>(typeof(tb_ProdDetail).Name + "Controller");
-                        var bomprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
-                        if (bomprod.BOM_ID != null)
+                        //BaseController<tb_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<tb_ProdDetail>>(typeof(tb_ProdDetail).Name + "Controller");
+                        //var bomprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+                        BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
+                        var vp = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+                        if (vp.BOM_ID != null)
                         {
                             if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                             {
@@ -843,60 +849,36 @@ namespace RUINORERP.UI.MRP.BOM
                                     MainForm.Instance.uclog.AddLog("当前选中产品已经有配方", UILogType.错误);
                                     return;
                                 }
-                                else
-                                {
-                                    //加载关联数据
-                                    if (txtProdDetailID.ButtonSpecs.Count > 0 && txtProdDetailID.ButtonSpecs[0].Tag != null)
-                                    {
-                                        if (txtProdDetailID.ButtonSpecs[0].Tag is View_ProdDetail vp)
-                                        {
-                                            // DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.Specifications, txtSpec, BindDataType4TextBox.Text, false);
-                                            txtSpec.Text = vp.Specifications;
-                                            // entity.Specifications = vp.Specifications;
 
-                                            entity.property = vp.prop;
-                                            entity.BOM_Name = vp.CNName + "-" + vp.prop;
-                                            entity.SKU = vp.SKU;
-                                            cmbType.SelectedValue = vp.Type_ID;
-                                        }
-                                    }
-                                }
+
+
                             }
                             else
                             {
-                                //tb_BOM_SController<tb_BOM_S> ctrBOM = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
-                                //var bom = await ctrBOM.BaseQueryByIdNavAsync(bomprod.BOM_ID);
-                                // UIPordBOMHelper.BindToTreeView(bom, bom.tb_BOM_SDetails, kryptonTreeView1.TreeView);
                                 BindToTree(entity);
                             }
                         }
+                        //加载母件关联的显示用的数据
+                        txtSpec.Text = vp.Specifications;
+                        entity.property = vp.prop;
+                        entity.BOM_Name = vp.CNName + "-" + vp.prop;
+                        entity.SKU = vp.SKU;
+                        cmbType.SelectedValue = vp.Type_ID;
 
+                        //加载关联数据
+                        //if (txtProdDetailID.ButtonSpecs.Count > 0 && txtProdDetailID.ButtonSpecs[0].Tag != null)
+                        // {
+                        //     if (txtProdDetailID.ButtonSpecs[0].Tag is View_ProdDetail vp)
+                        //     {
+                        //         txtSpec.Text = vp.Specifications;
+                        //         entity.property = vp.prop;
+                        //         entity.BOM_Name = vp.CNName + "-" + vp.prop;
+                        //         entity.SKU = vp.SKU;
+                        //         entity.ProdDetailID = vp.ProdDetailID;
+                        //         cmbType.SelectedValue = vp.Type_ID;
+                        //     }
+                        // }
                     }
-                    //加载关联数据
-                    if (txtProdDetailID.ButtonSpecs.Count > 0 && txtProdDetailID.ButtonSpecs[0].Tag != null)
-                    {
-                        if (txtProdDetailID.ButtonSpecs[0].Tag is View_ProdDetail vp)
-                        {
-                            //entity.Specifications = vp.Specifications;
-                            txtSpec.Text = vp.Specifications;
-                            entity.property = vp.prop;
-                            entity.BOM_Name = vp.CNName + "-" + vp.prop;
-                            entity.SKU = vp.SKU;
-                            //entity.Type_ID = vp.Type_ID;
-                            cmbType.SelectedValue = vp.Type_ID;
-                        }
-                    }
-                    //if (entity.CustomerVendor_ID.HasValue && entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
-                    //{
-                    //    var obj = CacheHelper.Instance.GetEntity<tb_ProdDetail>(entity.CustomerVendor_ID);
-                    //    if (obj != null && obj.ToString() != "System.Object")
-                    //    {
-                    //        if (obj is tb_CustomerVendor cv)
-                    //        {
-                    //            EditEntity.Employee_ID = cv.Employee_ID;
-                    //        }
-                    //    }
-                    //}
                 }
 
             };
@@ -1407,135 +1389,7 @@ namespace RUINORERP.UI.MRP.BOM
             return ae;
         }
 
-        /*
-        protected async override Task<ApprovalEntity> Review()
-        {
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            //如果已经审核通过，则不能重复审核
-            if (EditEntity.ApprovalStatus.HasValue)
-            {
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                {
-                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                    {
-                        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                        return null;
-                    }
-                }
-            }
 
-            Command command = new Command();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_BOM_S oldobj = CloneHelper.DeepCloneObject<tb_BOM_S>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_BOM_S>(EditEntity, oldobj);
-            };
-            ApprovalEntity ae = await base.Review();
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-
-            tb_BOM_SController<tb_BOM_S> ctr = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
-            bool Succeeded = await ctr.ApproveAsync(EditEntity, ae);
-            if (Succeeded)
-            {
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.审核);
-                //如果审核结果为不通过时，审核不是灰色。
-                if (!ae.ApprovalResults)
-                {
-                    toolStripbtnReview.Enabled = true;
-                }
-                else
-                {
-                    UIPordBOMHelper.BindToTreeViewNoRootNode(EditEntity.tb_BOM_SDetails, kryptonTreeView1.TreeView);
-                    MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。");
-                }
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
-            }
-
-            return ae;
-        }
-        */
-        /*
-        protected async override Task<ApprovalEntity> ReReview()
-        {
-            ApprovalEntity ae = new ApprovalEntity();
-            if (EditEntity == null)
-            {
-                return ae;
-            }
-
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return ae;
-            }
-
-
-            if (EditEntity.tb_BOM_SDetails == null || EditEntity.tb_BOM_SDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据。", UILogType.警告);
-                return ae;
-            }
-
-            Command command = new Command();
-
-            tb_BOM_S oldobj = CloneHelper.DeepCloneObject<tb_BOM_S>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                CloneHelper.SetValues<tb_BOM_S>(EditEntity, oldobj);
-            };
-            tb_BOM_SController<tb_BOM_S> ctr = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
-            bool Succeeded = await ctr.ReverseApproveAsync(EditEntity);
-            if (Succeeded)
-            {
-
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.反审);
-                toolStripbtnReview.Enabled = true;
-
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{EditEntity.BOM_No}反审失败,请联系管理员！", Color.Red);
-            }
-            return ae;
-        }
-
-        */
         private void kryptonSplitContainer1_Panel1_Paint(object sender, PaintEventArgs e)
         {
 

@@ -90,7 +90,7 @@ namespace SimpleHttp
         /// </summary>
         /// <param name="route"></param>
         public RouteNotFoundException(string route)
-            :base($"Route {route} not found.")
+            : base($"Route {route} not found.")
         { }
     }
 
@@ -108,7 +108,8 @@ namespace SimpleHttp
         /// </summary>
         public static OnBefore Before
         {
-            get { return before; } set { before = value; }
+            get { return before; }
+            set { before = value; }
         }
 
         static OnError error = null;
@@ -132,7 +133,7 @@ namespace SimpleHttp
             Methods = new List<(ShouldProcessFunc, HttpActionAsync)>();
             Error = (rq, rp, ex) =>
             {
-                if(rp.StatusCode >= 200 && rp.StatusCode <= 299)
+                if (rp.StatusCode >= 200 && rp.StatusCode <= 299)
                     rp.StatusCode = (int)HttpStatusCode.BadRequest;
 
                 rp.AsText(ex.Message, "text/plain");
@@ -188,7 +189,10 @@ namespace SimpleHttp
                 response.StatusCode = (int)HttpStatusCode.NotFound;
                 Error?.Invoke(request, response, new RouteNotFoundException(request.Url.PathAndQuery));
             }
-            catch { }
+            catch (Exception noRouteEx)
+            {
+                Console.WriteLine("no route" + noRouteEx.Message);
+            }
         }
 
         #region Add (pattern)
@@ -266,11 +270,12 @@ namespace SimpleHttp
         /// <param name="action">Action executed if the specified pattern matches the URL path.</param>
         public static void Add(ShouldProcessFunc shouldProcess, HttpAction action)
         {
-            Methods.Add((shouldProcess, (rq, rp, args) => 
-            { 
+            Methods.Add((shouldProcess, (rq, rp, args) =>
+            {
                 action(rq, rp, args);
                 return Task.FromResult(true);
-            }));
+            }
+            ));
         }
 
         #endregion

@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using SqlSugar;
@@ -42,7 +42,8 @@ using RUINORERP.Business.CommService;
 namespace RUINORERP.UI.MRP.MP
 {
     [MenuAttrAssemblyInfo("生产领料单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.生产领料单)]
-    public partial class UCMaterialRequisition : BaseBillEditGeneric<tb_MaterialRequisition, tb_MaterialRequisitionQueryDto>
+    public partial class UCMaterialRequisition : BaseBillEditGeneric<tb_MaterialRequisition, tb_MaterialRequisitionDetail
+        >
     {
         public UCMaterialRequisition()
         {
@@ -157,8 +158,7 @@ namespace RUINORERP.UI.MRP.MP
                     {
                         if ((entity.ActionStatus == ActionStatus.加载 && entity.ApprovalStatus == (int)ApprovalStatus.未审核) && s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisitionDetail>(c => c.ActualSentQty))
                         {
-                            entity.ActionStatus = ActionStatus.修改;
-                            base.ToolBarEnabledControl(MenuItemEnums.修改);
+                            
                         }
                     };
                 }
@@ -177,8 +177,7 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                 }
 
                 //如果是制令单引入变化则加载明细及相关数据

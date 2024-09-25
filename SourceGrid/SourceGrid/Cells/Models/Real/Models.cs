@@ -305,15 +305,106 @@ namespace SourceGrid.Cells.Models
     public class ValueImageWeb : IImageWeb
     {
         /// <summary>
-        /// 创建这个细包时就给一个默认的名称，唯一的
+        /// 创建这个cell时就给一个默认的名称，唯一的
+        /// 保存图片的hash值，用于判断图片是否已经存在并且没有改变
+        /// 为了方便比较是否修改过。直接用hash值作为名称。并不长。
+        /// TODO:重点: 因为修改后。要删除旧文件。所以文件名保存了新旧新的hash值。如果hash值相同，则不删除。不同则上传新的删除旧的。
+        /// 格式为: oldhash_newhash 
         /// </summary>
-        public string CellImageName { get; set; }
+        /// 
+        ///旧的hash值，除了第一次和数据库取出。其它都是修改newhash.实际作用是文件名。用于判断是否修改过
+        public string oldhash = string.Empty;
+
+
+        public string newhash = string.Empty;
+
+        private string _CellImageHashName;
 
         /// <summary>
-        /// 保存图片的hash值，用于判断图片是否已经存在并且没有改变
+        /// 保存了新旧两个hash值，用于判断图片是否已经存在并且没有改变.oldhash同时也是文件名oldhash_newhash
         /// </summary>
-        public string CellImageHash { get; set; }
+        public string CellImageHashName
+        {
+            get
+            {
+                return _CellImageHashName;
+            }
+            set
+            {
+                this._CellImageHashName = value;
+                if (string.IsNullOrEmpty(oldhash))
+                {
+                    oldhash=_CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(0,CellImageHashName.IndexOf("_")) : "";
+                }
+                if (string.IsNullOrEmpty(newhash))
+                {
+                    newhash=_CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : "";
+                }
+          
+            }
+        }
 
+
+        public string GetImageName()
+        {
+            return oldhash;
+            if (!string.IsNullOrEmpty(CellImageHashName))
+            {
+                return CellImageHashName.IndexOf("_") > 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("_")) : CellImageHashName;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 主要是获取hash值，用于判断图片是否已经存在并且没有改变 newhash
+        /// </summary>
+        /// <returns></returns>
+        public string GetImageHash()
+        {
+            if (!string.IsNullOrEmpty(CellImageHashName))
+            {
+                return CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : CellImageHashName;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        public void UpdateImageName()
+        {
+            oldhash = newhash;
+            CellImageHashName = oldhash + "_" + newhash;
+        }
+
+        public void SetImageNewHash(string ParaNewHash)
+        {
+            newhash = ParaNewHash;
+            CellImageHashName = oldhash + "_" + newhash;
+        }
+
+
+        /// <summary>
+        /// 第一次设置，新建时或数据库取出时加载用
+        /// 实际就数据库。因为默认已经是空白
+        /// </summary>
+        /// <param name="ParaOldhash"></param>
+        public void SetImageOldHash(string ParaOldhash)
+        {
+            if (string.IsNullOrEmpty(ParaOldhash))
+            {
+                //oldhash = 新建时，否则来自数据库
+                oldhash = string.Empty;
+            }
+            else
+            {
+                oldhash = ParaOldhash;
+            }
+            CellImageHashName = oldhash + "_" + newhash;
+        }
         /// <summary>
         /// 单元格的图片数据，以base64的形式保存
         /// </summary>

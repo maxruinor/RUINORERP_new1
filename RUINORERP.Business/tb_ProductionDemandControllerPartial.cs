@@ -10,7 +10,7 @@ using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
 using RUINORERP.Extensions.Middlewares;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.Global;
 using RUINORERP.Model.Base;
 using SqlSugar;
@@ -44,7 +44,7 @@ namespace RUINORERP.Business
         /// <param name="entity"></param>
         /// <returns></returns>
         /// 
-        
+
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
@@ -113,7 +113,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
@@ -130,8 +130,13 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_ProductionDemand> entitys)
+
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
+            List<tb_ProductionDemand> entitys = new List<tb_ProductionDemand>();
+            entitys = NeedCloseCaseList as List<tb_ProductionDemand>;
+
+
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -164,7 +169,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-            
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;

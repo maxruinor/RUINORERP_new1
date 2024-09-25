@@ -30,19 +30,17 @@ namespace RUINORERP.WebServerConsole
                 configManager = Startup.GetFromFac<ConfigManager>();
 
                 RunWebServer();
-                await Task.Delay(1000, stoppingToken);
+               await Task.Delay(1000, stoppingToken);
             }
             catch (Exception e)
             {
                 LogHelper.Error(e);
             }
         }
-        public void RunWebServer()
+        public async void RunWebServer()
         {
 
-
             string webDir = Path.Combine(Directory.GetCurrentDirectory(), "Site");
-
             //------------------- define routes -------------------
             Route.Before = (rq, rp) => { Console.WriteLine($"Requested: {rq.Url.PathAndQuery}"); return false; };
 
@@ -118,7 +116,7 @@ namespace RUINORERP.WebServerConsole
 
             var cts = new CancellationTokenSource();
             var ts = HttpServer.ListenAsync(port, cts.Token, Route.OnHttpRequestAsync, useHttps: false);
-            AppExit.WaitFor(cts, ts);
+           await AppExit.WaitForAsync(cts, ts);
         }
 
         private static string GetUsers(HttpListenerRequest arg)

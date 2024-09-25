@@ -16,7 +16,7 @@ using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business;
 using RUINORERP.Global;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.BI

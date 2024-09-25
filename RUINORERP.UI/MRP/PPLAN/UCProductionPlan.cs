@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using SqlSugar;
@@ -39,7 +39,7 @@ using RUINORERP.UI.PSI.PUR;
 namespace RUINORERP.UI.MRP.MP
 {
     [MenuAttrAssemblyInfo("生产计划单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制造规划, BizType.生产计划单)]
-    public partial class UCProductionPlan : BaseBillEditGeneric<tb_ProductionPlan, tb_ProductionPlanQueryDto>
+    public partial class UCProductionPlan : BaseBillEditGeneric<tb_ProductionPlan, tb_ProductionPlanDetail>
     {
         public UCProductionPlan()
         {
@@ -145,8 +145,7 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                 }
 
                 //如果是销售订单引入变化则加载明细及相关数据

@@ -26,7 +26,7 @@ using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.AdvancedUIModule;
 using Krypton.Navigator;
-using RUINORERP.Model.QueryDto;
+
 using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
@@ -43,7 +43,7 @@ using RUINORERP.Business.Security;
 namespace RUINORERP.UI.PSI.INV
 {
     [MenuAttrAssemblyInfo("其他出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.其他出库单)]
-    public partial class UCStockOut : BaseBillEditGeneric<tb_StockOut, tb_StockOutQueryDto>
+    public partial class UCStockOut : BaseBillEditGeneric<tb_StockOut, tb_StockOutDetail>
     {
         public UCStockOut()
         {
@@ -137,8 +137,7 @@ namespace RUINORERP.UI.PSI.INV
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                 }
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {

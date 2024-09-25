@@ -24,7 +24,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.Model.QueryDto;
+
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using SourceGrid;
@@ -41,7 +41,7 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("其他费用支出", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收付账款, BizType.其他费用支出)]
-    public partial class UCOtherExpenseOut : BaseBillEditGeneric<tb_FM_OtherExpense, tb_FM_OtherExpenseQueryDto>
+    public partial class UCOtherExpenseOut : BaseBillEditGeneric<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>
     {
         public UCOtherExpenseOut()
         {
@@ -149,8 +149,7 @@ namespace RUINORERP.UI.FM
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    entity.ActionStatus = ActionStatus.修改;
-                    base.ToolBarEnabledControl(MenuItemEnums.修改);
+                    
                 }
 
                 //显示 打印状态 如果是草稿状态 不显示打印
@@ -334,8 +333,8 @@ namespace RUINORERP.UI.FM
                 }
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TotalAmount);
-      
-                 
+
+
                 ReturnMainSubResults<tb_FM_OtherExpense> SaveResult = new ReturnMainSubResults<tb_FM_OtherExpense>();
                 if (NeedValidated)
                 {
@@ -350,7 +349,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
                 return SaveResult.Succeeded;
-              
+
             }
             return false;
         }

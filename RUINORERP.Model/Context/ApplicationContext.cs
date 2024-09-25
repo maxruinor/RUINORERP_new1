@@ -24,22 +24,15 @@ namespace RUINORERP.Model.Context
         public List<tb_MenuInfo> UserMenuList;
 
         #region 全局变量
+        public Dictionary<string, string> _DynamicConfigCache { get; set; }
 
 
         /// <summary>
-        /// web服务器地址
+        /// web服务器身份验证
         /// </summary>
-        public string WebServerUrl { get; set; } = "http://192.168.0.99:8080";
+        public string SessionId { get; set; }
 
-        /// <summary>
-        /// 服务器图片目录地址
-        /// </summary>
-        public string ImageDirectoryPath { get; set; }
 
-        /// <summary>
-        /// 服务器文件目录地址
-        /// </summary>
-        public string FileDirectoryPath { get; set; }
 
         #endregion
 

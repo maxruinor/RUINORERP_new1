@@ -44,8 +44,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_MaterialReturn> entitys)
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
+            List<tb_MaterialReturn> entitys = new List<tb_MaterialReturn>();
+            entitys = NeedCloseCaseList as List<tb_MaterialReturn>;
+
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -66,7 +69,6 @@ namespace RUINORERP.Business
 
                         //这部分是否能提出到上一级公共部分？
                         entity.DataStatus = (int)DataStatus.完结;
-                        entity.ApprovalOpinions += "批量完结结案";
                         BusinessHelper.Instance.EditEntity(entity);
                         //只更新指定列
                         var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).UpdateColumns(it => new { it.DataStatus, it.Modified_by, it.Modified_at }).ExecuteCommandAsync();

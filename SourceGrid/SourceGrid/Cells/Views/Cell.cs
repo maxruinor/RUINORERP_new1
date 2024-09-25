@@ -70,6 +70,10 @@ namespace SourceGrid.Cells.Views
                 yield return ElementText;
         }
 
+        public override void Refresh(CellContext context)
+        {
+            // 在这里实现您的刷新逻辑
+        }
         protected override void PrepareView(CellContext context)
         {
             base.PrepareView(context);
@@ -109,6 +113,7 @@ namespace SourceGrid.Cells.Views
             }
             */
         }
+
 
         protected override void OnDraw(GraphicsCache graphics, RectangleF area)
         {

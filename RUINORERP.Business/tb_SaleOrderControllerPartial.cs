@@ -10,7 +10,7 @@ using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
 using RUINORERP.Extensions.Middlewares;
-using RUINORERP.Model.QueryDto;
+
 using RUINORERP.Global;
 using RUINORERP.Model.Base;
 using SqlSugar;
@@ -25,12 +25,12 @@ namespace RUINORERP.Business
 {
     public partial class tb_SaleOrderController<T>
     {
-        public virtual async Task<List<tb_SaleOrder>> QueryAsync(tb_SaleOrderQueryDto QueryCriteria, Pagination pagination)
-        {
-            List<tb_SaleOrder> list = await _tb_SaleOrderServices.QueryAsync(QueryCriteria, pagination);
-            MyCacheManager.Instance.UpdateEntityList<tb_SaleOrder>(list);
-            return list;
-        }
+        //public virtual async Task<List<tb_SaleOrder>> QueryAsync(tb_SaleOrderQueryDto QueryCriteria, Pagination pagination)
+        //{
+        //    List<tb_SaleOrder> list = await _tb_SaleOrderServices.QueryAsync(QueryCriteria, pagination);
+        //    MyCacheManager.Instance.UpdateEntityList<tb_SaleOrder>(list);
+        //    return list;
+        //}
 
 
         /// <summary>
@@ -204,14 +204,14 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-               
+
                 return true;
             }
             catch (Exception ex)
             {
-       
+
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex,approvalEntity.bizName + "事务回滚");
+                _logger.Error(ex, approvalEntity.bizName + "事务回滚");
                 return false;
             }
 
@@ -226,8 +226,12 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<bool>> BatchCloseCaseAsync(List<tb_SaleOrder> entitys)
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
+            List<tb_SaleOrder> entitys = new List<tb_SaleOrder>();
+            entitys = NeedCloseCaseList as List<tb_SaleOrder>;
+
+
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
@@ -295,8 +299,8 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-               
-                _unitOfWorkManage.RollbackTran(); 
+
+                _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
@@ -403,12 +407,10 @@ namespace RUINORERP.Business
                 //更新拟销售量减少
 
 
-
                 //判断是否能反审?
                 if (entity.tb_SaleOuts != null
                     && (entity.tb_SaleOuts.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_SaleOuts.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
-
                     rmrs.ErrorMsg = "存在已确认或已完结，或已审核的销售出库单，不能反审核  ";
                     _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
@@ -522,7 +524,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-             
+
                 _unitOfWorkManage.RollbackTran();
                 BizTypeMapper mapper = new BizTypeMapper();
                 rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_SaleOrder)).ToString() + "事务回滚=>" + ex.Message;

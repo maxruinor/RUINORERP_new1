@@ -40,8 +40,57 @@ namespace RUINORERP.UI.BaseForm
         {
             InitializeComponent();
             toolStripButton付款调整.Visible = false;
-
+            bwRemoting.DoWork += bwRemoting_DoWork;
+            bwRemoting.RunWorkerCompleted += bwRemoting_RunWorkerCompleted;
+            bwRemoting.ProgressChanged += bwRemoting_progressChanged;
         }
+
+        private void bwRemoting_progressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void bwRemoting_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            // 检查上传是否成功
+            if (e.Result is bool && (bool)e.Result)
+            {
+                // 上传成功，关闭窗体
+                //this.Close();
+            }
+            else
+            {
+                // 上传失败，提示用户
+                MessageBox.Show("上传失败，请重试。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        private void bwRemoting_DoWork(object sender, DoWorkEventArgs e)
+        {
+            // 在这里执行上传操作
+            // 例如，使用 FTP 上传文件
+            bool uploadSuccess = UploadFile((string)e.Argument);
+            e.Result = uploadSuccess;
+        }
+
+        private bool UploadFile(string filePath)
+        {
+            try
+            {
+                // 这里添加你的上传逻辑，例如使用 FTP 客户端上传文件
+                // 如果上传成功返回 true，否则返回 false
+                return true; // 假设上传成功
+            }
+            catch (Exception ex)
+            {
+                // 处理异常
+                MessageBox.Show(ex.Message, "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+
+
+
+
         public tb_MenuInfo CurMenuInfo { get; set; }
         public void ControlButton(ToolStripMenuItem btnItem)
         {

@@ -767,7 +767,7 @@ namespace RUINORERP.UI
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
                     MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
 
-                   // LoginWebServer();
+                    // LoginWebServer();
                 }
 
             }
@@ -2057,7 +2057,16 @@ namespace RUINORERP.UI
             HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
             ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
             var webServerUrl = configManager.GetValue("WebServerUrl");
-            await httpWebService.Login(MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName, MainForm.Instance.AppContext.CurUserInfo.UserInfo.Password, webServerUrl + @"/login");
+            bool islogin = await httpWebService.Login(MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName, MainForm.Instance.AppContext.CurUserInfo.UserInfo.Password, webServerUrl + @"/login");
+            if (islogin)
+            {
+                MainForm.Instance.uclog.AddLog($"{webServerUrl}登陆成功。");
+                var ulid = Ulid.NewUlid();
+                var ulidString = ulid.ToString();
+                Console.WriteLine($"Generated ULID: {ulidString}");
+            }
+
+
         }
 
     }

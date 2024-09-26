@@ -2,6 +2,7 @@
 using MySqlX.XDevAPI;
 using NPOI.SS.Formula.Functions;
 using NSoup.Helper;
+using Org.BouncyCastle.Asn1.Ocsp;
 using RUINORERP.Business;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.UI.SysConfig;
@@ -43,7 +44,7 @@ namespace RUINORERP.UI.Common
 
 
         }
-
+        #region 登陆
         /// <summary>
         /// 登陆webserver
         /// </summary>
@@ -51,7 +52,7 @@ namespace RUINORERP.UI.Common
         /// <param name="password"></param>
         /// <param name="loginUrl"></param>
         /// <returns></returns>
-        public async Task Login(string username, string password, string loginUrl = "http://yourserver.com/login")
+        public async Task<bool> Login(string username, string password, string loginUrl = "http://yourserver.com/login")
         {
             bool result = false;
             // 检查用户名和密码
@@ -62,7 +63,6 @@ namespace RUINORERP.UI.Common
 
             // 发送登录请求到服务端
             var response = await SendLoginRequest(username, password, loginUrl);
-
             if (response.IsSuccessStatusCode)
             {
                 // 获取服务端设置的Cookie
@@ -75,8 +75,7 @@ namespace RUINORERP.UI.Common
                     {
                         var sessionId = sessionCookie.Split(';')[0].Split('=')[1];
                         // 存储 Cookie，可以选择存储在内存中，或者持久化到本地
-                        StoreCookie(sessionId);
-                        result = true;
+                        result = StoreCookie(sessionId);
                     }
                 }
             }
@@ -84,7 +83,7 @@ namespace RUINORERP.UI.Common
             {
                 MessageBox.Show("Login failed. Please check your username and password.");
             }
-            // return result;
+            return result;
         }
 
         private async Task<HttpResponseMessage> SendLoginRequest(string username, string password, string loginUrl = "http://yourserver.com/login")
@@ -114,33 +113,21 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        private void StoreCookie(string sessionId)
+        private bool StoreCookie(string sessionId)
         {
             // 存储Cookie逻辑，可以存储在内存中，或者持久化到本地
             _appContext.SessionId = sessionId;
+            return true;
         }
 
 
-        private async Task<HttpResponseMessage> SendRequestWithSessionId(string sessionId)
-        {
-            using (var client = new HttpClient())
-            {
-                // 添加SessionID到Cookie
-                var cookie = new CookieContainer();
-                cookie.Add(new Uri("http://yourserver.com"), new Cookie("sessionId", sessionId));
+        #endregion
 
 
-                // 发送请求
-                var response = await client.GetAsync("http://yourserver.com/protected_resource");
-                return response;
-            }
-        }
-
-
-        public async Task<string> DeleteImageAsync(string imagePath, string token = null)
+        public async Task<string> DeleteImageAsync(string imagefileName, string token = null)
         {
             string serviceAddress = _configManager.GetValue("WebServerUrl");
-            serviceAddress += "/deleteImages";
+            serviceAddress += "/deleteImages";//与服务器对应 写死的只处理删除图片
             try
             {
                 // 构建请求
@@ -151,15 +138,8 @@ namespace RUINORERP.UI.Common
                 // 构建请求
                 var request = new HttpRequestMessage(HttpMethod.Delete, serviceAddress);
                 // 如果需要在请求中包含图片路径信息，可以通过请求头或请求内容添加
-                request.Headers.TryAddWithoutValidation("ImagePath", imagePath);
-                // 添加SessionID到Cookie
-                var cookieContainer = new CookieContainer();
-                cookieContainer.Add(new Uri("http://yourserver.com"), new Cookie("sessionId", _appContext.SessionId));
-
-                if (cookieContainer != null)
-                {
-                    handler.CookieContainer = cookieContainer;
-                }
+                request.Headers.TryAddWithoutValidation("fileName", imagefileName);//后缀.jpg在服务器添加了。
+                handler.CookieContainer = GetCookieContainer();
                 // 发送 DELETE 请求
                 var response = await httpClient.SendAsync(request);
                 if (response.IsSuccessStatusCode)
@@ -177,30 +157,19 @@ namespace RUINORERP.UI.Common
                 return null;
             }
         }
-        public static async Task<byte[]> DownloadImageAsync(string serviceAddress)
-        {
-            try
-            {
-                using var httpClient = new HttpClient();
-                httpClient.Timeout = new TimeSpan(0, 0, 60);
 
-                // 发送 GET 请求
-                var response = await httpClient.GetAsync(serviceAddress);
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadAsByteArrayAsync();
-                }
-                else
-                {
-                    Console.WriteLine($"Error: {response.StatusCode}");
-                    return null;
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                return null;
-            }
+
+        /// <summary>
+        ///   添加SessionID到Cookie
+        /// </summary>
+        private CookieContainer GetCookieContainer()
+        {
+            // 添加SessionID到Cookie
+            var cookieContainer = new CookieContainer();
+            string webServerUrl = _configManager.GetValue("WebServerUrl");
+            cookieContainer.Add(new Uri(webServerUrl), new Cookie("sessionId", _appContext.SessionId));
+
+            return cookieContainer;
         }
 
         /// <summary>
@@ -256,16 +225,11 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        /// <summary>
-        /// 应该要完善 添加验证
-        /// </summary>
-        /// <param name="uploadUrl"></param>
-        /// <param name="imgPath"></param>
-        /// <param name="fileparameter"></param>
-        /// <returns></returns>
-        public static async Task<string> UploadImageAsyncOK(string uploadUrl, string imgPath, string fileparameter = "file")
+        public async Task<string> UploadImageAsync(string fileName, byte[] imgbytes, string fileparameter = "file")
         {
-            if (string.IsNullOrEmpty(imgPath) || !File.Exists(imgPath))
+            string uploadUrl = _configManager.GetValue("WebServerUrl");
+            uploadUrl += "/upload/";
+            if (imgbytes == null || imgbytes.Length == 0)
             {
                 return "Error: Image file not found";
             }
@@ -278,26 +242,21 @@ namespace RUINORERP.UI.Common
 
                 string boundary = DateTime.Now.Ticks.ToString("X"); // 随机分隔线
                 request.ContentType = "multipart/form-data;charset=utf-8;boundary=" + boundary;
+                // 添加SessionID到Cookie
+                request.CookieContainer = GetCookieContainer();
+
                 byte[] itemBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "\r\n");
                 byte[] endBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
 
-                int pos = imgPath.LastIndexOf("/");
-                //string fileName = imgPath.Substring(pos + 1);
-                string fileName = new System.IO.FileInfo(imgPath).Name;
 
                 //请求头部信息
                 StringBuilder sbHeader = new StringBuilder(string.Format("Content-Disposition:form-data;name=\"" + fileparameter + "\";filename=\"{0}\"\r\nContent-Type:application/octet-stream\r\n\r\n", fileName));
                 byte[] postHeaderBytes = Encoding.UTF8.GetBytes(sbHeader.ToString());
 
-                FileStream fs = new FileStream(imgPath, FileMode.Open, FileAccess.Read);
-                byte[] bArr = new byte[fs.Length];
-                fs.Read(bArr, 0, bArr.Length);
-                fs.Close();
-
                 Stream postStream = await request.GetRequestStreamAsync();
                 postStream.Write(itemBoundaryBytes, 0, itemBoundaryBytes.Length);
                 postStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
-                postStream.Write(bArr, 0, bArr.Length);
+                postStream.Write(imgbytes, 0, imgbytes.Length);
                 postStream.Write(endBoundaryBytes, 0, endBoundaryBytes.Length);
                 postStream.Close();
 
@@ -328,13 +287,7 @@ namespace RUINORERP.UI.Common
                 string boundary = DateTime.Now.Ticks.ToString("X"); // 随机分隔线
                 request.ContentType = "multipart/form-data;charset=utf-8;boundary=" + boundary;
                 // 添加SessionID到Cookie
-                var cookieContainer = new CookieContainer();
-                cookieContainer.Add(new Uri("http://yourserver.com"), new Cookie("sessionId", _appContext.SessionId));
-
-                if (cookieContainer != null)
-                {
-                    request.CookieContainer = cookieContainer;
-                }
+                request.CookieContainer = GetCookieContainer();
 
                 byte[] itemBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "\r\n");
                 byte[] endBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
@@ -450,15 +403,21 @@ namespace RUINORERP.UI.Common
         */
 
         //下载图片文件
-        public async Task<byte[]> DownloadImgFileAsync(string serviceAddress)
+        public async Task<byte[]> DownloadImgFileAsync(string fileNameNoExtName)
         {
-            string imageUrl = "http://192.168.0.99:8080/ERPImages/" + serviceAddress + ".jpg";
+            var WebServerUrl = _configManager.GetValue("WebServerUrl");
+            var ServerImageDirectory = _configManager.GetValue("ServerImageDirectory");
+            string imageUrl = WebServerUrl + "/" + ServerImageDirectory + "/" + fileNameNoExtName + ".jpg";
             byte[] result = new byte[0];
             try
             {
-                using (HttpClient client = new HttpClient())
+                // 构建请求
+                var handler = new HttpClientHandler();
+
+                using (HttpClient client = new HttpClient(handler))
                 {
-                    client.Timeout = TimeSpan.FromSeconds(3); // 设置 3 秒超时
+                    client.Timeout = TimeSpan.FromSeconds(5); // 设置 5 秒超时
+                    handler.CookieContainer = GetCookieContainer();
                     // 发送GET请求
                     HttpResponseMessage response = await client.GetAsync(imageUrl);
                     response.EnsureSuccessStatusCode();
@@ -470,7 +429,7 @@ namespace RUINORERP.UI.Common
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error loading image: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //MessageBox.Show("Error loading image: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return result;
         }

@@ -297,7 +297,7 @@ namespace SourceGrid.Cells.Editors
                 //if (string.IsNullOrEmpty(valueImageWeb.CellImageHashName) 
                 //    || !ImageHashHelper.AreHashesEqual(valueImageWeb.CellImageHashName, NewHash))
                 //{
-                if (!AreHashesEqual(valueImageWeb.GetImageHash(), NewHash))
+                if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
                 {
                     valueImageWeb.SetImageNewHash(NewHash);
                     //将图片保存到内存中。用于后面的显示，或保存到本地临时文件夹中，或上传到服务器
@@ -312,7 +312,7 @@ namespace SourceGrid.Cells.Editors
                         PickerImage = System.Drawing.Image.FromStream(ms, true);
                     }
                 }
-                Control.Value = valueImageWeb.GetImageHash();
+                Control.Value = valueImageWeb.CellImageHashName;
                 ValueType = typeof(string);
             }
         }
@@ -409,7 +409,7 @@ namespace SourceGrid.Cells.Editors
                     string NewHash = ImageHashHelper.GenerateHash(NewbuffByte);
 
                     //看原来有不有哈希值或新旧是否相同，如果不同则更新
-                    if (!AreHashesEqual(valueImageWeb.GetImageHash(), NewHash))
+                    if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
                     {
                         //将图片保存到内存中。用于后面的显示，或保存到本地临时文件夹中，或上传到服务器
                         byte[] destination = new byte[NewbuffByte.Length];
@@ -443,7 +443,7 @@ namespace SourceGrid.Cells.Editors
                 //实际上比较一下。如果还是相同的图片不用赋值
                 string NewHash = ImageHashHelper.GenerateHash(buffByte);
                 //看原来有不有哈希值或新旧是否相同，如果不同则更新
-                if (!AreHashesEqual(valueImageWeb.GetImageHash(), NewHash))
+                if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
                 {
                     byte[] NewbuffByte = val as byte[];
                     byte[] destination = new byte[NewbuffByte.Length];

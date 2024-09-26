@@ -309,14 +309,16 @@ namespace SourceGrid.Cells.Models
         /// 保存图片的hash值，用于判断图片是否已经存在并且没有改变
         /// 为了方便比较是否修改过。直接用hash值作为名称。并不长。
         /// TODO:重点: 因为修改后。要删除旧文件。所以文件名保存了新旧新的hash值。如果hash值相同，则不删除。不同则上传新的删除旧的。
-        /// 格式为: oldhash_newhash 
+        /// 格式为: oldhash_newhash 无后缀 默认.jpg
         /// </summary>
         /// 
         ///旧的hash值，除了第一次和数据库取出。其它都是修改newhash.实际作用是文件名。用于判断是否修改过
         public string oldhash = string.Empty;
 
-
+        //以新的为标准，旧的是用来比较的。
         public string newhash = string.Empty;
+
+        public string realName = string.Empty;
 
         private string _CellImageHashName;
 
@@ -332,37 +334,37 @@ namespace SourceGrid.Cells.Models
             set
             {
                 this._CellImageHashName = value;
+                int realnameIndex = _CellImageHashName.IndexOf("-");
                 if (string.IsNullOrEmpty(oldhash))
                 {
-                    oldhash=_CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(0,CellImageHashName.IndexOf("_")) : "";
+                    oldhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(realnameIndex + 1, CellImageHashName.IndexOf("_") - realnameIndex - 1) : "";
                 }
                 if (string.IsNullOrEmpty(newhash))
                 {
-                    newhash=_CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : "";
+                    newhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : "";
                 }
-          
+                if (string.IsNullOrEmpty(realName))
+                {
+                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : Ulid.NewUlid().ToString();
+                    if (string.IsNullOrEmpty(realName))
+                    {
+                        realName = Ulid.NewUlid().ToString();
+                    }
+                }
             }
         }
 
 
-        public string GetImageName()
+        public string GetImageoldHash()
         {
             return oldhash;
-            if (!string.IsNullOrEmpty(CellImageHashName))
-            {
-                return CellImageHashName.IndexOf("_") > 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("_")) : CellImageHashName;
-            }
-            else
-            {
-                return string.Empty;
-            }
         }
 
         /// <summary>
         /// 主要是获取hash值，用于判断图片是否已经存在并且没有改变 newhash
         /// </summary>
         /// <returns></returns>
-        public string GetImageHash()
+        public string GetImageNewHash()
         {
             if (!string.IsNullOrEmpty(CellImageHashName))
             {
@@ -374,37 +376,56 @@ namespace SourceGrid.Cells.Models
             }
         }
 
-        public void UpdateImageName()
+        public string GetNewRealfileName()
         {
-            oldhash = newhash;
-            CellImageHashName = oldhash + "_" + newhash;
+            return realName + "-" + newhash;
+        }
+
+        public string GetOldRealfileName()
+        {
+            return realName + "-" + oldhash;
+        }
+
+        /// <summary>
+        /// 当newhash改变时，更新hash值，这时应该是图片上传成功。要覆盖旧名，新旧一样。方便后面更新
+        /// </summary>
+        /// <param name="_newhash"></param>
+        public void UpdateImageName(string _newhash)
+        {
+            oldhash = _newhash;
+            CellImageHashName = realName + "-" + oldhash + "_" + newhash;
         }
 
         public void SetImageNewHash(string ParaNewHash)
         {
             newhash = ParaNewHash;
-            CellImageHashName = oldhash + "_" + newhash;
+            int realnameIndex = 0;
+            if (!string.IsNullOrEmpty(_CellImageHashName))
+            {
+                realnameIndex = _CellImageHashName.IndexOf("-");
+                if (string.IsNullOrEmpty(oldhash))
+                {
+                    oldhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(realnameIndex + 1, CellImageHashName.IndexOf("_") - realnameIndex - 1) : "";
+                }
+                if (string.IsNullOrEmpty(newhash))
+                {
+                    newhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : "";
+                }
+                if (string.IsNullOrEmpty(realName))
+                {
+                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : Ulid.NewUlid().ToString();
+                }
+            }
+   
+            if (string.IsNullOrEmpty(realName))
+            {
+                realName = Ulid.NewUlid().ToString();
+            }
+
+            CellImageHashName = realName + "-" + oldhash + "_" + newhash;
         }
 
 
-        /// <summary>
-        /// 第一次设置，新建时或数据库取出时加载用
-        /// 实际就数据库。因为默认已经是空白
-        /// </summary>
-        /// <param name="ParaOldhash"></param>
-        public void SetImageOldHash(string ParaOldhash)
-        {
-            if (string.IsNullOrEmpty(ParaOldhash))
-            {
-                //oldhash = 新建时，否则来自数据库
-                oldhash = string.Empty;
-            }
-            else
-            {
-                oldhash = ParaOldhash;
-            }
-            CellImageHashName = oldhash + "_" + newhash;
-        }
         /// <summary>
         /// 单元格的图片数据，以base64的形式保存
         /// </summary>
@@ -414,7 +435,7 @@ namespace SourceGrid.Cells.Models
         public static readonly ValueImageWeb Default = new ValueImageWeb();
         public ValueImageWeb()
         {
-            //CellImageName = Guid.NewGuid().ToString() + ".jpg";
+            //realName = Ulid.NewUlid().ToString(); 
         }
         //这一行确定了这个值的类型，所以这里不用再写一个转换器了
         private DevAge.ComponentModel.Validator.ValidatorTypeConverter imageConverter =

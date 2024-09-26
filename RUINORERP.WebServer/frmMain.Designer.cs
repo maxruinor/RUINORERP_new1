@@ -28,12 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             logViewer1 = new LogViewer();
             statusStrip1 = new StatusStrip();
             toolStrip1 = new ToolStrip();
-            toolStripButton1 = new ToolStripButton();
-            toolStripButton2 = new ToolStripButton();
+            btnStartServer = new ToolStripButton();
+            btnStopServer = new ToolStripButton();
             toolStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -61,29 +60,30 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new ToolStripItem[] { toolStripButton1, toolStripButton2 });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { btnStartServer, btnStopServer });
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(803, 25);
             toolStrip1.TabIndex = 2;
             toolStrip1.Text = "toolStrip1";
             // 
-            // toolStripButton1
+            // btnStartServer
             // 
-            toolStripButton1.Image = (Image)resources.GetObject("toolStripButton1.Image");
-            toolStripButton1.ImageTransparentColor = Color.Magenta;
-            toolStripButton1.Name = "toolStripButton1";
-            toolStripButton1.Size = new Size(52, 22);
-            toolStripButton1.Text = "启动";
+            btnStartServer.Image = Properties.Resources.player_play;
+            btnStartServer.ImageTransparentColor = Color.Magenta;
+            btnStartServer.Name = "btnStartServer";
+            btnStartServer.Size = new Size(52, 22);
+            btnStartServer.Text = "启动";
+            btnStartServer.Click += btnStartServer_Click;
             // 
-            // toolStripButton2
+            // btnStopServer
             // 
-            toolStripButton2.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            toolStripButton2.Image = (Image)resources.GetObject("toolStripButton2.Image");
-            toolStripButton2.ImageTransparentColor = Color.Magenta;
-            toolStripButton2.Name = "toolStripButton2";
-            toolStripButton2.Size = new Size(23, 22);
-            toolStripButton2.Text = "toolStripButton2";
+            btnStopServer.Image = Properties.Resources.player_stop;
+            btnStopServer.ImageTransparentColor = Color.Magenta;
+            btnStopServer.Name = "btnStopServer";
+            btnStopServer.Size = new Size(52, 22);
+            btnStopServer.Text = "停止";
+            btnStopServer.Click += btnStopServer_Click;
             // 
             // frmMain
             // 
@@ -94,7 +94,7 @@
             Controls.Add(logViewer1);
             Controls.Add(statusStrip1);
             Name = "frmMain";
-            Text = "frmMain";
+            Text = "Web服务器";
             FormClosing += frmMain_FormClosing;
             Load += frmMain_Load;
             toolStrip1.ResumeLayout(false);
@@ -108,7 +108,7 @@
         internal LogViewer logViewer1;
         private StatusStrip statusStrip1;
         private ToolStrip toolStrip1;
-        private ToolStripButton toolStripButton1;
-        private ToolStripButton toolStripButton2;
+        private ToolStripButton btnStartServer;
+        private ToolStripButton btnStopServer;
     }
 }

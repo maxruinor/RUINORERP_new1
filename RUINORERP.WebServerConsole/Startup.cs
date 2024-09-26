@@ -392,7 +392,7 @@ public IHost CslaDIPortBackup()
             /// 
             string conn = AppSettings.GetValue("ConnectString");
 
-            Program.InitAppcontextValue(Program.AppContextData);
+           // Program.InitAppcontextValue(Program.AppContextData);
             //Services.AddLogging(logBuilder =>
             //{
             //    logBuilder.ClearProviders();

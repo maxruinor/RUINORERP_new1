@@ -247,6 +247,9 @@ namespace RUINORERP.UI.UCSourceGrid
             get => _ImagesViewModel;
             set => _ImagesViewModel = value;
         }
+
+        #region 全局性的单元格样式可以在这统一设置。像图片这个就不可以。得一个cell一个new
+
         /// <summary>
         /// 全局隔行显示背景色(货币列右对齐显示文字使用）
         /// </summary>
@@ -273,6 +276,7 @@ namespace RUINORERP.UI.UCSourceGrid
             get => viewNormal;
             set => viewNormal = value;
         }
+        #endregion
 
         /// <summary>
         /// 编辑时的背景色天蓝 
@@ -290,7 +294,7 @@ namespace RUINORERP.UI.UCSourceGrid
             DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
 
             //CellBackColorAlternate viewNormal = new CellBackColorAlternate(Color.Khaki, Color.DarkKhaki);
-            //正常时的背景色等样式
+            //正常时的背景色等样式 //这间隔颜色在三个地方设置了。不要轻易动
             CellBackColorAlternate viewNormal = new CellBackColorAlternate(Color.White, Color.LightCyan);
             viewNormal.Border = cellBorder;
             this.viewNormal = viewNormal;
@@ -744,7 +748,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (item.CustomFormat == CustomFormatType.WebPathImage)
                     {
                         processContext.Tag = null;
-                        processContext.Cell.View = ViewNormal;
+                        //processContext.Cell.View = ViewNormal;
                     }
                     if (!item.IsRowHeaderCol)
                     {
@@ -856,17 +860,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 return null;
             }
         }
-        //public SourceGridDefineColumnItem this[string name]
-        //{
-        //    get
-        //    {
-        //        for (int i = 0; i < this.Count; i++)
-        //        {
-        //            if (this[i].ColCaption == name) return this[i];
-        //        }
-        //        return null;
-        //    }
-        //}
+
 
         public SourceGridDefineColumnItem GetColumnDefineInfo<T>(Expression<Func<T, object>> TargetCol)
         {
@@ -880,30 +874,6 @@ namespace RUINORERP.UI.UCSourceGrid
             return sgdci;
         }
 
-
-        //[Obsolete]
-        //public SourceGridDefine(SourceGrid.Grid grid)
-        //{
-        //    init();
-        //    grid = _grid;
-        //    SetSelection(grid);
-        //    /*
-        //    SourceGridDefineColumnItem[] cols;
-
-        //    for (int i = 0; i < cols.Length; i++)
-        //    {
-
-        //        //按标题数字计算列宽
-        //        if (cols[i].ColCaption.Length > 0)
-        //        {
-        //            cols[i].width = cols[i].ColCaption.Length * 40;
-        //            cols[i].ParentGridDefine = this;
-        //        }
-
-        //        this.Add(cols[i]);
-        //    }
-        //    */
-        //}
 
 
         /// <summary>
@@ -974,8 +944,6 @@ namespace RUINORERP.UI.UCSourceGrid
             Background = FirstBackground;
         }
     }
-
-
 
     /// <summary>
     /// 奇偶行的背景色

@@ -215,13 +215,41 @@ namespace SimpleHttp
 
             if (mime == null)
                 throw new ArgumentNullException(nameof(mime));
+            try
+            {
+                var data = Encoding.ASCII.GetBytes(txt);
+                response.ContentLength64 = data.Length;
+                if (response.StatusCode == 404)
+                {
+                    mime = "text/html";
+                    Console.WriteLine("404: " + response.StatusDescription);
+                }
+                response.ContentType = mime;
+                response.OutputStream.Write(data, 0, data.Length);
+            }
+            catch (ArgumentException ex)
+            {
+                // 处理异常，例如记录日志或设置错误响应
+                Console.WriteLine($"mime类型:{mime},不对;txt：{txt} " + ex.Message);
+                // 根据需要设置适当的HTTP响应状态码
+                response.StatusCode = 400; // Bad Request
+            }
 
+            /*
+             * 以下是一些常见的 MIME 类型：
 
-            var data = Encoding.ASCII.GetBytes(txt);
-
-            response.ContentLength64 = data.Length;
-            response.ContentType = mime;
-            response.OutputStream.Write(data, 0, data.Length);
+text/html：HTML 文档
+text/plain：纯文本
+text/css：CSS 文件
+application/javascript：JavaScript 文件
+image/jpeg：JPEG 图像
+image/png：PNG 图像
+image/gif：GIF 图像
+application/pdf：PDF 文件
+application/json：JSON 数据
+application/xml：XML 数据
+multipart/form-data：用于表单数据的多部分类型
+             */
         }
 
         /// <summary>

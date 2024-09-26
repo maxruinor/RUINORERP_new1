@@ -752,6 +752,7 @@ namespace RUINORERP.UI.MRP.BOM
                 entity.Doc_ID = 0;
                 entity.BOM_Name = string.Empty;
                 entity.TotalMaterialQty = 0;
+                entity.ProdDetailID = 0;
                 entity.property = string.Empty;
                 if (entity.tb_BOM_SDetails != null && entity.tb_BOM_SDetails.Count > 0)
                 {

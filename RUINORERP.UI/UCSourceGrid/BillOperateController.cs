@@ -21,6 +21,8 @@ using ZXing.Common;
 using SourceGrid.Cells.Editors;
 using NPOI.SS.UserModel;
 using System.Reflection;
+using SourceGrid.Cells.Views;
+using SourceGrid.Cells.Models;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -131,8 +133,6 @@ namespace RUINORERP.UI.UCSourceGrid
         //这里是任何变动都会执行
         public override async void OnValueChanged(SourceGrid.CellContext sender, EventArgs e)
         {
-
-
             if (sender.Value == null && CurrGridDefine[sender.Position.Column].IsPrimaryBizKeyColumn)
             {
                 //清空关联值
@@ -202,24 +202,23 @@ namespace RUINORERP.UI.UCSourceGrid
                         SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                         if (sender.Value != null && !string.IsNullOrEmpty(sender.Value.ToString()) && string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
                         {
-
                             valueImageWeb.CellImageHashName = sender.Value.ToString();
-
                             HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                            //string deleteRsult = await httpWebService.DownloadImgFileAsync("http://192.168.0.99:8080/" + "deleteImages", fileName, "delete123");
-                            valueImageWeb.CellImageBytes = await httpWebService.DownloadImgFileAsync(valueImageWeb.GetImageHash());
+                            valueImageWeb.CellImageBytes = await httpWebService.DownloadImgFileAsync(valueImageWeb.GetNewRealfileName());
                         }
-                        //if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
-                        //{
-                        //    valueImageWeb.CellImageBytes = await HttpHelper.DownloadImgFileAsync(valueImageWeb.CellImageHashName);
-                        //}
-
                         if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
                         {
                             CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
                             CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Tag = valueImageWeb.CellImageBytes;
                             //刷新单元格图片显示外观
-                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].View.Refresh(sender);
+                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].View = new SourceGrid.Cells.Views.SingleImageWeb(ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes));
+                            //if (CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].View is SingleImageWeb imageWebview)
+                            //{
+                            //    imageWebview.OnLoadImage -= ImageWebview_OnLoadImage;
+                            //    imageWebview.OnLoadImage += ImageWebview_OnLoadImage;
+                            //    CurrGridDefine.grid.GetCell(sender.Position).View.Refresh(sender);
+                            //}
+                            ////CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].View.Refresh(sender);
                         }
 
                         break;
@@ -417,6 +416,11 @@ namespace RUINORERP.UI.UCSourceGrid
             #endregion
 
             //base.OnValueChanged(sender, e);
+        }
+
+        private void ImageWebview_OnLoadImage(System.Drawing.Image GridImage, byte[] ImageBytes)
+        {
+            GridImage = ImageProcessor.ByteArrayToImage(ImageBytes);
         }
 
 
@@ -659,7 +663,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 sh.SetRowEditable(CurrGridDefine.grid, new int[] { sender.Position.Row }, CurrGridDefine);
                 if (sender.Cell.Editor != null)
                 {
-                    sender.Cell.View = SourceGridDefine.editView;
+                    //   sender.Cell.View = SourceGridDefine.editView;
                 }
 
             }
@@ -708,14 +712,14 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 // sender.Cell.View = CurrGridDefine.ImagesViewModel;
                 //如果有图片值才设置，不然还是和其它一样
-                if (sender.Value != null)
-                {
-                    sender.Cell.View = new SourceGrid.Cells.Views.SingleImageWeb();
-                }
-                else
-                {
-                    sender.Cell.View = CurrGridDefine.ViewNormal;
-                }
+                //if (sender.Value != null)
+                //{
+                //    sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
+                //}
+                //else
+                //{
+                //    sender.Cell.View = CurrGridDefine.ViewNormal;
+                //}
             }
             else
             {
@@ -756,10 +760,10 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                     sender.Value = valueImageWeb.CellImageHashName;
                 }
-                else
-                {
-                    sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
-                }
+                //else
+                //{
+                //    sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
+                //}
 
 
                 sender.Cell.Editor.ApplyEdit();
@@ -787,7 +791,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebPathImage)
                     {
                         //因为是清空。所以图片也要恢复成默认视图
-                        sender.Cell.View = CurrGridDefine.ViewNormal;
+                        //sender.Cell.View = CurrGridDefine.ViewNormal;
                     }
                 }
                 return;
@@ -817,7 +821,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     //如果图片存在，则显示图片
                     if (System.IO.File.Exists(webPicker.AbsolutelocPath))
                     {
-                        sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
+                        //sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
                     }
                     else if (false)
                     {
@@ -825,7 +829,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     }
                     else
                     {
-                        sender.Cell.View = CurrGridDefine.ViewNormal;
+                        //sender.Cell.View = CurrGridDefine.ViewNormal;
                     }
                 }
 

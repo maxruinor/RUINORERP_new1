@@ -39,6 +39,7 @@ using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;
 using RUINORERP.UI.SysConfig;
 using SourceGrid.Cells.Editors;
+using RUINORERP.UI.MRP.MP;
 
 namespace RUINORERP.UI.FM
 {
@@ -51,7 +52,7 @@ namespace RUINORERP.UI.FM
             base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
 
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_FM_ExpenseClaim entity)
+        public void UCStockIn_OnBindDataToUIEvent(object entity)
         {
             BindData(entity as tb_FM_ExpenseClaim);
         }
@@ -130,11 +131,11 @@ namespace RUINORERP.UI.FM
                         //权限允许
                         if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                         {
+                            EditEntity.ActionStatus = ActionStatus.修改;
                             chkClaimEmployee.Enabled = true;
                         }
                     };
                 }
-
                 sgh.LoadItemDataToGrid<tb_FM_ExpenseClaimDetail>(grid1, sgd, entity.tb_FM_ExpenseClaimDetails, c => c.ClaimSubID);
             }
             else
@@ -145,13 +146,14 @@ namespace RUINORERP.UI.FM
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {
-
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    EditEntity.ActionStatus = ActionStatus.修改;
                     chkClaimEmployee.Enabled = true;
                 }
 
+                base.ToolBarEnabledControl(entity);
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
                 {
@@ -170,8 +172,14 @@ namespace RUINORERP.UI.FM
                     toolStripbtnPrint.Enabled = false;
                 }
             };
+            // 模拟按下 Tab 键
+            SendKeys.Send("{TAB}");//为了显示远程图片列
         }
 
+        private void Grid1_BindingContextChanged(object sender, EventArgs e)
+        {
+
+        }
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
@@ -362,7 +370,19 @@ namespace RUINORERP.UI.FM
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
+                        bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
+                        if (uploadImg)
+                        {
+                            //更新图片名后保存到数据库
+                            int ImgCounter = await MainForm.Instance.AppContext.Db.Updateable<tb_FM_ExpenseClaimDetail>(EditEntity.tb_FM_ExpenseClaimDetails)
+                                .UpdateColumns(t => new { t.EvidenceImagePath })
+                                .ExecuteCommandAsync();
+                            if (ImgCounter > 0)
+                            {
+                                MainForm.Instance.PrintInfoLog($"图片保存成功,{ImgCounter}。");
+                            }
+
+                        }
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ClaimNo}。");
                     }
                     else
@@ -476,13 +496,12 @@ namespace RUINORERP.UI.FM
             return true;
         }
 
-        protected override async Task<bool> DeleteRemoteImages()
+        public override async Task<bool> DeleteRemoteImages()
         {
             if (EditEntity == null || EditEntity.tb_FM_ExpenseClaimDetails == null)
             {
                 return false;
             }
-
             bool result = true;
             foreach (tb_FM_ExpenseClaimDetail detail in EditEntity.tb_FM_ExpenseClaimDetails)
             {
@@ -494,52 +513,34 @@ namespace RUINORERP.UI.FM
                     {
                         if (col.CustomFormat == CustomFormatType.WebPathImage)
                         {
-                            //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
-                            int totalRowsFlag = grid1.RowsCount;
-                            if (grid1.HasSummary)
+
+                            if (detail.GetPropertyValue(prop.Name) != null
+                                && detail.GetPropertyValue(prop.Name).ToString().Contains(".jpg"))
                             {
-                                totalRowsFlag--;
-                            }
-                            for (int i = 1; i < totalRowsFlag; i++)
-                            {
-                                if (grid1[i, col.ColIndex].Value == null)
+                                string imageNameValue = detail.GetPropertyValue(prop.Name).ToString();
+                                //比较是否更新了图片数据
+                                //old_new 无后缀文件名
+                                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
+                                valueImageWeb.CellImageHashName = imageNameValue;
+                                string oldfileName = valueImageWeb.GetOldRealfileName();
+                                string newfileName = valueImageWeb.GetNewRealfileName();
+                                string TempFileName = string.Empty;
+                                //fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
+                                //保存在本地临时目录 删除
+                                if (System.IO.File.Exists(TempFileName))
                                 {
-                                    continue;
+                                    System.IO.File.Delete(TempFileName);
                                 }
-                                string fileName = string.Empty;
-                                if (grid1[i, col.ColIndex].Value.ToString().Contains(".jpg") && grid1[i, col.ColIndex].Value.ToString() == detail.GetPropertyValue(prop.Name).ToString())
-                                {
-                                    fileName = grid1[i, col.ColIndex].Value.ToString();
-                                    fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
-
-                                    //保存在本地临时目录 删除
-                                    if (System.IO.File.Exists(fileName))
-                                    {
-                                        System.IO.File.Delete(fileName);
-                                    }
-
-                                    //上传到服务器，删除本地
-                                    HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                                    string deleteRsult = await httpWebService.DeleteImageAsync( fileName, "delete123");
-                                    MainForm.Instance.PrintInfoLog(deleteRsult);
-
-
-
-
-                                }
-
-                                //UploadImage("http://127.0.0.1/upload", "D:/test.jpg", "upload");
-                                // string uploadRsult = await HttpHelper.UploadImageAsync(AppContext.WebServerUrl + @"/upload", fileName, "amw");
-                                //                            string uploadRsult = await HttpHelper.UploadImage(AppContext.WebServerUrl + @"/upload", fileName, "upload");
-
+                                //上传到服务器，删除本地
+                                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                string deleteRsult = await httpWebService.DeleteImageAsync(newfileName, "delete123");
+                                MainForm.Instance.PrintInfoLog(deleteRsult);
                             }
-
-
                         }
                     }
+
                 }
-
-
+                return result;
             }
             return result;
         }

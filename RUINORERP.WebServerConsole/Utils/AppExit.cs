@@ -18,13 +18,21 @@ namespace RUINORERP.WebServerConsole
             Console.CancelKeyPress += (sender, eArgs) =>
             {
                 eArgs.Cancel = true; // 防止进程被终止
-                cts.Cancel();
+                //cts.Cancel();
+                cancelTasks(cts);
             };
 
+            //Task.Run(() =>
+            //{
+            //    Console.WriteLine("------Press [Enter] to stop------");
+            //    Console.ReadLine();
+
+            //    cancelTasks(cts);
+            //});
             try
             {
                 // 等待所有任务完成或取消信号
-                Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite, cts.Token)).Wait();
+                waitTasks(tasks);
             }
             catch (OperationCanceledException)
             {
@@ -44,6 +52,7 @@ namespace RUINORERP.WebServerConsole
                 cts.Dispose();
                 Console.CancelKeyPress -= (sender, eArgs) => { }; // 取消注册
             }
+          
         }
 
         static void cancelTasks(CancellationTokenSource cts)

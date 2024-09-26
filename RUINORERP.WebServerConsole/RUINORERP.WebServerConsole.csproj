@@ -6,11 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationIcon>computer_48x48.ico</ApplicationIcon>
+    <StartupObject>RUINORERP.WebServerConsole.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Program_old.cs" />
     <Compile Remove="RunServer.cs" />
     <Compile Remove="Startup - 复制.cs" />
+    <Compile Remove="Utils\AppExit - 复制.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -37,7 +37,7 @@ namespace RUINORERP.Extensions
         ApplicationContext AppContextData, IConfiguration configuration,
             string dbName = "ConnectString")
         {
-            var logProvider = new Log4NetProviderByCustomeDb("Log4net.config", configuration.GetSection("ConnectString").Value, AppContextData);
+            var logProvider = new Log4NetProviderByCustomeDb("Log4net_db.config", configuration.GetSection("ConnectString").Value, AppContextData);
             var logger = logProvider.CreateLogger("SqlsugarSetup");
             StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
             var memoryCache = new MemoryCache(new MemoryCacheOptions());

@@ -311,7 +311,10 @@ namespace RUINORERP.UI
 
             grid2[grid2.Rows.Count - 1, 0] = new SourceGrid.Cells.Cell("总计", typeof(string));
             grid2[grid2.Rows.Count - 1, 4] = new SourceGrid.Cells.Cell("562125" + "圆整", typeof(string));
+
+            //这间隔颜色在三个地方设置了。不要轻易动
             CellBackColorAlternate viewNormal = new CellBackColorAlternate(Color.Khaki, Color.DarkKhaki);
+
             //viewNormal.Border = cellBorder;
             for (int c = 0; c < grid2.ColumnsCount; c++)
             {

@@ -14,16 +14,15 @@ using System.Runtime.Remoting.Contexts;
 namespace SourceGrid.Cells.Views
 {
     /// <summary>
-    /// 单独的一个图片格子。区别于他原来提供的。这种方式，公用设置属性会将值全设置为一个样。得每次给值 都重新设置
+    /// 单独的一个图片格子。区别于他原来提供的。这种方式，公用设置属性会将值全设置为一个样。得每次给值 都重新设置 所以用new每个cell
     /// 重新写一个适用于WEB远程的显示图片的用法
     /// </summary>
     [Serializable]
     public class SingleImageWeb : Cell
     {
-
-
-
         #region Constructors
+
+       
 
         /// <summary>
         /// Use default setting
@@ -31,22 +30,57 @@ namespace SourceGrid.Cells.Views
         public SingleImageWeb()
         {
             ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Covering;
-          
+            FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
+            SecondBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.LightCyan);
+            DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
+            DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
+            Border = cellBorder;
         }
 
-    
         private System.Drawing.Image _GridImage;
         public SingleImageWeb(System.Drawing.Image image)
         {
             _GridImage = image;
-           
+            FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
+            SecondBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.LightCyan);
+            DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
+            DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
+            Border = cellBorder;
         }
 
+        public delegate void LoadImageDelegate(System.Drawing.Image image, byte[] buffByte);
+
+        private DevAge.Drawing.VisualElements.IVisualElement mFirstBackground;
+        public DevAge.Drawing.VisualElements.IVisualElement FirstBackground
+        {
+            get { return mFirstBackground; }
+            set { mFirstBackground = value; }
+        }
+
+        private DevAge.Drawing.VisualElements.IVisualElement mSecondBackground;
+        public DevAge.Drawing.VisualElements.IVisualElement SecondBackground
+        {
+            get { return mSecondBackground; }
+            set { mSecondBackground = value; }
+        }
+
+
+        /// <summary>
+        /// 验证数据
+        /// </summary>
+        public event LoadImageDelegate OnLoadImage;
+
+        //不显示图片的原因是第一次加载时先执行了 PrepareView，再draw内容。但是目前是值的变化事件中用了刷新
 
 
         protected override void PrepareView(CellContext context)
         {
-           // base.PrepareView(context);
+             base.PrepareView(context);
+            if (Math.IEEERemainder(context.Position.Row, 2) == 0)
+                Background = FirstBackground;
+            else
+                Background = SecondBackground;
+
             //start by watson 2024-1-11
             if (context.Value == null)
             {
@@ -118,9 +152,9 @@ namespace SourceGrid.Cells.Views
 
         }
 
-       /// <summary>
-       /// 强制显示图片
-       /// </summary>
+        /// <summary>
+        /// 强制显示图片
+        /// </summary>
         public override void Refresh(CellContext context)
         {
             if (context.Value == null)
@@ -204,6 +238,14 @@ namespace SourceGrid.Cells.Views
                 if (GridImage != null)
                 {
                     graphics.Graphics.DrawImage(GridImage, Rectangle.Round(area)); //Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                }
+                else
+                {
+                    if (OnLoadImage != null)
+                    {
+                        OnLoadImage(GridImage, null);
+                        graphics.Graphics.DrawImage(GridImage, Rectangle.Round(area)); //Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                    }
                 }
             }
         }

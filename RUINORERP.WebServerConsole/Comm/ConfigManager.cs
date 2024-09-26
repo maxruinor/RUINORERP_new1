@@ -1,4 +1,5 @@
 ﻿using RUINORERP.Business;
+using RUINORERP.Common;
 using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
@@ -61,10 +62,10 @@ namespace RUINORERP.WebServerConsole.Comm
                 //  appSettings.Value;
             }
             */
-
+            
             // 从数据库加载配置项
-            tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig> ctr = Startup.GetFromFac<tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig>>();
-            var configEntries = await ctr.QueryAsync();
+            
+             var configEntries=  SqlSugarHelper.Db.Queryable<tb_SysGlobalDynamicConfig>().ToList();
             foreach (var entry in configEntries)
             {
                 if(!_configCache.ContainsKey(entry.ConfigKey))

@@ -50,6 +50,8 @@ using ImageHelper = RUINORERP.UI.Common.ImageHelper;
 using Netron.GraphLib;
 using Newtonsoft.Json;
 using RUINORERP.UI.SS;
+using MathNet.Numerics.LinearAlgebra.Factorization;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -1624,60 +1626,44 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 var model = sgd.grid[i, col.ColIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                                 SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-
                                 if (sgd.grid[i, col.ColIndex].Value == null)
                                 {
                                     continue;
                                 }
-                                string oldfileName = string.Empty;
-                                string newfileName = string.Empty;
+
                                 //比较是否更新了图片数据
-                                string newhash = valueImageWeb.GetImageHash();
-                                if (!valueImageWeb.GetImageName().Equals(newhash, StringComparison.OrdinalIgnoreCase) && sgd.grid[i, col.ColIndex].Value.ToString() == valueImageWeb.CellImageHashName)
+                                string newhash = valueImageWeb.GetImageNewHash();
+                                if (valueImageWeb.CellImageBytes != null && !valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase) && sgd.grid[i, col.ColIndex].Value.ToString() == valueImageWeb.CellImageHashName)
                                 {
-                                    oldfileName = valueImageWeb.GetImageName() + ".jpg";
-                                    newfileName = valueImageWeb.GetImageHash() + ".jpg";
-                                    if (valueImageWeb.CellImageBytes != null)
+                                    string oldfileName = valueImageWeb.GetOldRealfileName();
+                                    string newfileName = valueImageWeb.GetNewRealfileName();
+
+                                    HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                    //如果服务器有旧文件 。可以先删除
+                                    if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
                                     {
-
-                                        //如果服务器有旧文件 。可以先删除
-                                        if (true)
-                                        {
-
-                                        }
-                                        //如果服务器存在，即多次保存时不用重复上传了。
-                                        //if (true)
-                                        //{
-
-                                        //}
-
-                                        //上传到服务器，删除本地
-                                        //实际应该可以直接传二进制数据，但是暂时没有实现，所以先保存到本地，再上传
-                                        //ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
-                                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                                        string uploadRsult = await httpWebService.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", newfileName, valueImageWeb.CellImageBytes, "upload");
-                                        //string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, "upload");
-                                        if (true)
-                                        {
-                                            MainForm.Instance.PrintInfoLog(uploadRsult);
-                                        }
+                                        string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
+                                        MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
                                     }
+                                    ////上传新文件时要加后缀名
+                                    string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
+                                    if (uploadRsult.Contains("UploadSuccessful"))
+                                    {
+                                        valueImageWeb.UpdateImageName(newhash);
+                                        sgd.grid[i, col.ColIndex].Value = valueImageWeb.CellImageHashName;
+                                        detail.SetPropertyValue(col.ColName, valueImageWeb.CellImageHashName);
+                                        //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
+                                        MainForm.Instance.PrintInfoLog("UploadSuccessful:" + newfileName);
+                                    }
+
                                 }
-
-                                //UploadImage("http://127.0.0.1/upload", "D:/test.jpg", "upload");
-                                // string uploadRsult = await HttpHelper.UploadImageAsync(AppContext.WebServerUrl + @"/upload", fileName, "amw");
-                                //                            string uploadRsult = await HttpHelper.UploadImage(AppContext.WebServerUrl + @"/upload", fileName, "upload");
-
                             }
-
-
                         }
                     }
                 }
             }
             return result;
         }
-
 
         protected override void Add()
         {
@@ -1892,13 +1878,11 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        protected async virtual Task<bool> DeleteRemoteImages()
+        public async virtual Task<bool> DeleteRemoteImages()
         {
             await Task.Delay(0);
             return false;
         }
-
-
 
 
         protected async virtual Task<ReturnResults<T>> Delete()

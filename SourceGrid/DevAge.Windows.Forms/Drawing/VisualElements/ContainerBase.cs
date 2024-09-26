@@ -237,7 +237,7 @@ namespace DevAge.Drawing.VisualElements
         {
             SizeF clienSize = new SizeF(0, 0);
 
-            //In this case the elements are drawed one over the another so to measure I must simply take the greatest
+            //在这种情况下，元素是一个接一个地画出来的，所以为了测量，我只能取最大的
             if (ElementsDrawMode == ElementsDrawMode.Covering)
             {
                 foreach (IVisualElement element in GetElements())
@@ -252,7 +252,7 @@ namespace DevAge.Drawing.VisualElements
                         clienSize.Height = elementSize.Height;
                 }
             }
-            //In this case the elements are drawed considering an alignment, so to measure I must consider the anchor area of the element and add the size to the if the alignment is set. This code reflect the drawing code
+            //在这种情况下，绘制元素时考虑了对齐，因此为了测量，我必须考虑元素的锚区域，并在设置对齐的情况下将大小添加到。此代码反映了图形代码
             else if (ElementsDrawMode == ElementsDrawMode.Align)
             {
                 AnchorArea previousAnchor = null;

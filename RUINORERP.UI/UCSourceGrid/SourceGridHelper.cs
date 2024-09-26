@@ -492,7 +492,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 }
                                 if (dc.CustomFormat == CustomFormatType.WebPathImage)
                                 {
-                                    grid1[pt].View = new SourceGrid.Cells.Views.SingleImageWeb();
+                                    //grid1[pt].View = sgdefine.ImagesWebViewModel ;
 
                                 }
                                 #endregion
@@ -535,12 +535,12 @@ namespace RUINORERP.UI.UCSourceGrid
                                         currContext.DisplayText = "";
                                         if (cellvalue != null)
                                         {
-                                            currContext.Cell.View = new SourceGrid.Cells.Views.SingleImageWeb();
+                                            // currContext.Cell.View = sgdefine.ImagesWebViewModel;
                                             currContext.Value = cellvalue;
                                         }
                                         else
                                         {
-                                            currContext.Cell.View = sgdefine.ViewNormal;
+                                            //  currContext.Cell.View = sgdefine.ViewNormal;
                                         }
                                         currContext.Tag = v_prod;
                                     }
@@ -624,7 +624,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     //如果是图片列。但不是总计行。则清空为平常的样式
                     if ((dc.CustomFormat == CustomFormatType.Image || dc.CustomFormat == CustomFormatType.WebPathImage) && pt.Row != grid1.Rows.Count - 1)
                     {
-                        currContext.Cell.View = sgdefine.ViewNormal;
+                        // currContext.Cell.View = sgdefine.ViewNormal;
                     }
 
                     if (dc.ColName == "Selected")
@@ -1265,6 +1265,8 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (define[i].CustomFormat == CustomFormatType.WebPathImage)
                     {
                         c = new SourceGrid.Cells.ImageWebCell(null);
+                        c.View = new SourceGrid.Cells.Views.SingleImageWeb();
+
                     }
                     if (define[i].CustomFormat == CustomFormatType.Image)
                     {

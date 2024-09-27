@@ -33,8 +33,11 @@
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonPanelbtusArea = new Krypton.Toolkit.KryptonPanel();
+            this.flowLayoutPanelButtonsArea = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelbtusArea)).BeginInit();
             this.SuspendLayout();
             // 
             // QueryShowColQty
@@ -44,7 +47,7 @@
             0,
             0,
             0});
-            this.QueryShowColQty.Location = new System.Drawing.Point(157, 12);
+            this.QueryShowColQty.Location = new System.Drawing.Point(161, 118);
             this.QueryShowColQty.Maximum = new decimal(new int[] {
             10,
             0,
@@ -68,7 +71,7 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(21, 13);
+            this.kryptonLabel1.Location = new System.Drawing.Point(25, 119);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(130, 20);
             this.kryptonLabel1.TabIndex = 1;
@@ -95,6 +98,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.flowLayoutPanelButtonsArea);
+            this.kryptonPanel1.Controls.Add(this.kryptonPanelbtusArea);
             this.kryptonPanel1.Controls.Add(this.QueryShowColQty);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
@@ -104,6 +109,20 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(632, 635);
             this.kryptonPanel1.TabIndex = 14;
+            // 
+            // kryptonPanelbtusArea
+            // 
+            this.kryptonPanelbtusArea.Location = new System.Drawing.Point(349, 21);
+            this.kryptonPanelbtusArea.Name = "kryptonPanelbtusArea";
+            this.kryptonPanelbtusArea.Size = new System.Drawing.Size(247, 191);
+            this.kryptonPanelbtusArea.TabIndex = 14;
+            // 
+            // flowLayoutPanelButtonsArea
+            // 
+            this.flowLayoutPanelButtonsArea.Location = new System.Drawing.Point(29, 178);
+            this.flowLayoutPanelButtonsArea.Name = "flowLayoutPanelButtonsArea";
+            this.flowLayoutPanelButtonsArea.Size = new System.Drawing.Size(200, 168);
+            this.flowLayoutPanelButtonsArea.TabIndex = 15;
             // 
             // frmMenuPersonalization
             // 
@@ -119,6 +138,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelbtusArea)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -129,5 +149,7 @@
         private Krypton.Toolkit.KryptonButton btnOk;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
         public Krypton.Toolkit.KryptonNumericUpDown QueryShowColQty;
+        internal Krypton.Toolkit.KryptonPanel kryptonPanelbtusArea;
+        public System.Windows.Forms.FlowLayoutPanel flowLayoutPanelButtonsArea;
     }
 }

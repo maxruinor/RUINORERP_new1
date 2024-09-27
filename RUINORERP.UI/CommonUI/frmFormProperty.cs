@@ -24,20 +24,7 @@ namespace RUINORERP.UI.CommonUI
 {
     public partial class frmFormProperty : frmBase
     {
-        /// <summary>
-        /// 菜单信息 以菜单为标准
-        /// </summary>
-        public tb_MenuInfo MenuInfo { get; set; }
-
-        public object Entity { get; set; }
-
-        public delegate void SaveToXmlDelegate(frmFormProperty frm, object Obj);
-        public event SaveToXmlDelegate OnSaveToXml;
-
-        public delegate void FromToXmlDelegate(frmFormProperty frm);
-        public event FromToXmlDelegate OnFromToXml;
-
-
+       
         public frmFormProperty()
         {
             InitializeComponent();
@@ -45,11 +32,7 @@ namespace RUINORERP.UI.CommonUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            if (_entity.CloseCaseOpinions.IsNullOrEmpty())
-            {
-                MessageBox.Show("请填写手动结案原因");
-                return;
-            }
+             
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
@@ -65,72 +48,11 @@ namespace RUINORERP.UI.CommonUI
 
         }
 
-        private ApprovalEntity _entity;
-        public void BindData(ApprovalEntity entity)
-        {
-            _entity = entity;
-            //DataBindingHelper.BindData4TextBox<ApprovalEntity>(entity, t => t.BillNo, txtBillNO, BindDataType4TextBox.Text, false);
-            ////这个只是显示给用户看。不会修改
-            //DataBindingHelper.BindData4TextBox<ApprovalEntity>(entity, t => t.bizName, txtBillType, BindDataType4TextBox.Text, false);
-            //txtBillType.ReadOnly = true;
-            //entity.ApprovalResults = true;
-            //DataBindingHelper.BindData4TextBox<ApprovalEntity>(entity, t => t.CloseCaseOpinions, txtOpinion, BindDataType4TextBox.Text, false);
-            //errorProviderForAllInput.DataSource = entity;
-        }
+ 
 
-        RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
-        private void btnSaveFormData_Click(object sender, EventArgs e)
-        {
-            if (OnSaveToXml != null)
-            {
-                OnSaveToXml(this, Entity);
-            }
-        }
+        
 
 
-        public void Serialize<T>(T entity)
-        {
-            string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data_", MenuInfo.CaptionCN);
-            System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
-            //判断目录是否存在
-            if (!System.IO.Directory.Exists(fi.Directory.FullName))
-            {
-                System.IO.Directory.CreateDirectory(fi.Directory.FullName);
-            }
-            //SerializationHelper.Serialize(entity, PathwithFileName, false);
-            string json = JsonConvert.SerializeObject(entity, new JsonSerializerSettings
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-            });
-            File.WriteAllText(PathwithFileName, json);
-        }
-
-        public T Deserialize<T>() where T : class
-        {
-            string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data_", MenuInfo.CaptionCN);
-            System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
-            //判断目录是否存在
-            if (!System.IO.Directory.Exists(fi.Directory.FullName))
-            {
-                System.IO.Directory.CreateDirectory(fi.Directory.FullName);
-            }
-            if (System.IO.File.Exists(PathwithFileName))
-            {
-                //  Entity = SerializationHelper.Deserialize(PathwithFileName, false) as T;
-                string json = File.ReadAllText(PathwithFileName);
-                Entity = JsonConvert.DeserializeObject<T>(json) as T;
-            }
-            return Entity as T;
-        }
-
-
-        private void btnLoadFormData_Click(object sender, EventArgs e)
-        {
-            if (OnFromToXml != null)
-            {
-                OnFromToXml(this);
-            }
-
-        }
+       
     }
 }

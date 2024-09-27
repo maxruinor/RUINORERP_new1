@@ -1047,7 +1047,7 @@ namespace RUINORERP.UI.SysConfig
             if (dataGridView2.Rows[e.RowIndex].DataBoundItem is tb_P4Field)
             {
                 tb_P4Field pf = dataGridView2.Rows[e.RowIndex].DataBoundItem as tb_P4Field;
-                if (pf.tb_fieldinfo != null && colDbName == pf.GetPropertyName<tb_P4Field>(c => c.FieldInfo_ID)) 
+                if (pf.tb_fieldinfo != null && colDbName == pf.GetPropertyName<tb_P4Field>(c => c.FieldInfo_ID))
                 {
                     e.Value = pf.tb_fieldinfo.FieldText;
                 }
@@ -1270,7 +1270,8 @@ namespace RUINORERP.UI.SysConfig
                     .Includes(t => t.tb_menuinfo)
                     .ToListAsync();
 
-            if (objlist.Count == 0)
+            if (objlist.Count == 0 ||
+                (objlist.Count > 0 && MessageBox.Show("您确定添加字段吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button1) == DialogResult.Yes))
             {
                 Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
                 Type[] ModelTypes = dalAssemble.GetExportedTypes();

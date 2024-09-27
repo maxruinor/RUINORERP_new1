@@ -497,9 +497,6 @@ namespace RUINORERP.UI.BaseForm
         }
         protected virtual void Property()
         {
-            //RptDesignForm frm = new RptDesignForm();
-            //frm.ReportTemplateFile = "SOB.frx";
-            //frm.ShowDialog();
             MenuPersonalizedSettings();
         }
         protected virtual void MenuPersonalizedSettings()

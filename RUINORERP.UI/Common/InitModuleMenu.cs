@@ -469,10 +469,9 @@ namespace RUINORERP.UI.Common
                         info.IsChild = isChild;
                         info.ChildEntityName = childType;
                         BusinessHelper.Instance.InitEntity(info);
-                        tb_FieldInfo isexist = fieldController.IsExistEntity(e => e.EntityName == type.Name && e.FieldName == kv.Key && e.MenuID == menuInfo.MenuID && e.IsChild == isChild);
-                        if (isexist == null)
+                        bool isexist = fieldController.IsExist(e => e.EntityName == info.EntityName && e.FieldName == kv.Key && e.MenuID == menuInfo.MenuID && e.IsChild == isChild);
+                        if (!isexist)
                         {
-                            // fieldController.AddReEntity(info);
                             tb_FieldInfos.Add(info);
                         }
                     }

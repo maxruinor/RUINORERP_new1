@@ -46,7 +46,6 @@ namespace RUINORERP.UI.UserCenter
         MenuPersonalization mp = new MenuPersonalization();
         private void frmMenuPersonalization_Load(object sender, EventArgs e)
         {
-
             UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(MenuPathKey, out mp);
             if (mp == null)
             {

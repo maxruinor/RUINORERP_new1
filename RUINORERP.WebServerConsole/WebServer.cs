@@ -147,9 +147,9 @@ namespace RUINORERP.WebServerConsole
             Route.Before = (rq, rp) => { Console.WriteLine($"Requested: {rq.Url.PathAndQuery}"); return false; };
             Route.Error = HandleError;
             Route.Add("/", HandleHomePage, "GET");
-
-
-            Route.Add("/{action}/{paramA}-{paramB}", HandleUrlParsingDemo, "GET");
+            Route.Add("/{ERPImages}/", HandleViewImagesFiles, "GET");
+            //改为？号分割
+            Route.Add("/{action}/{paramA}?{paramB}", HandleUrlParsingDemo, "GET");///ERPImages/01J8Q1Y1A3SNCD545HFGGSSTQG-a71b4c9a927824741768f76a89624f32.jpg
             Route.Add("/upload/", HandleFormParsingUpload, "POST");
             Route.Add("/login", HandleLogin, "POST");
             Route.Add("/api/v1/users", HandleApiDemo, "GET");
@@ -255,6 +255,24 @@ namespace RUINORERP.WebServerConsole
             {
                 var txt = Templating.RenderFile(Path.Combine(webDir, "UrlParsingResponse.thtml"), args);
                 rp.AsText(txt);
+            }
+            catch (Exception ex)
+            {
+                LogError(ex);
+            }
+        }
+
+        private void HandleViewImagesFiles(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
+        {
+            try
+            {
+                string filePath = Path.Combine(webDir, rq.Url.LocalPath.TrimStart('/'));
+                if (File.Exists(filePath))
+                {
+                    args["file"] = filePath;
+                    rp.AsFile(rq, args["file"]);
+                }
+
             }
             catch (Exception ex)
             {
@@ -376,7 +394,7 @@ namespace RUINORERP.WebServerConsole
                 }
 
                 var serverDir = _configManager.GetValue("ServerImageDirectory");
-                string fileName = rq.Headers["fileName"].ToString() ;
+                string fileName = rq.Headers["fileName"].ToString();
                 string imagePath = Path.Combine(webDir, serverDir, fileName);
                 imagePath += ".jpg";//文件后缀
                 if (File.Exists(imagePath))

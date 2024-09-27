@@ -137,6 +137,8 @@ namespace RUINORERP.UI.FM
                     };
                 }
                 sgh.LoadItemDataToGrid<tb_FM_ExpenseClaimDetail>(grid1, sgd, entity.tb_FM_ExpenseClaimDetails, c => c.ClaimSubID);
+                // 模拟按下 Tab 键
+                SendKeys.Send("{TAB}");//为了显示远程图片列
             }
             else
             {
@@ -172,8 +174,7 @@ namespace RUINORERP.UI.FM
                     toolStripbtnPrint.Enabled = false;
                 }
             };
-            // 模拟按下 Tab 键
-            SendKeys.Send("{TAB}");//为了显示远程图片列
+           
         }
 
         private void Grid1_BindingContextChanged(object sender, EventArgs e)
@@ -515,7 +516,7 @@ namespace RUINORERP.UI.FM
                         {
 
                             if (detail.GetPropertyValue(prop.Name) != null
-                                && detail.GetPropertyValue(prop.Name).ToString().Contains(".jpg"))
+                                && detail.GetPropertyValue(prop.Name).ToString().Contains("-"))
                             {
                                 string imageNameValue = detail.GetPropertyValue(prop.Name).ToString();
                                 //比较是否更新了图片数据

@@ -8,7 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace DevAge.Windows.Forms
+
+namespace RUINORERP.UI.ToolForm
 {
 
    /// <summary>

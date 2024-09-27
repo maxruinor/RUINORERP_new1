@@ -157,7 +157,7 @@ namespace RUINORERP.UI.UCSourceGrid
             //要把当前合法的值给到 真正的对象
             var setcurrentObj = CurrGridDefine.grid.Rows[sender.Position.Row].RowData;
             if (setcurrentObj != null)
-            {
+                {
                 //将UI值转换后赋值给对象 很重要
                 //如果sender.value=null ，如果是将业务主键都置为null。则对应数据行清空。其它全部置为null
                 if (sender.Value == null)
@@ -211,7 +211,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = sender.Value;
                             CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Tag = valueImageWeb.CellImageBytes;
                             //刷新单元格图片显示外观
-                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].View = new SourceGrid.Cells.Views.SingleImageWeb(ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes));
+                            CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].View = new SourceGrid.Cells.Views.RemoteImageView(ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes));
                             //if (CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].View is SingleImageWeb imageWebview)
                             //{
                             //    imageWebview.OnLoadImage -= ImageWebview_OnLoadImage;
@@ -699,14 +699,14 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 // sender.Cell.View = CurrGridDefine.ImagesViewModel;
                 //如果有图片值才设置，不然还是和其它一样
-                if (sender.Value != null)
-                {
-                    sender.Cell.View = new SourceGrid.Cells.Views.SingleImage();
-                }
-                else
-                {
-                    sender.Cell.View = CurrGridDefine.ViewNormal;
-                }
+                //if (sender.Value != null)
+                //{
+                //    sender.Cell.View = new SourceGrid.Cells.Views.SingleImage();
+                //}
+                //else
+                //{
+                //    sender.Cell.View = CurrGridDefine.ViewNormal;
+                //}
             }
             else if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebPathImage)
             {

@@ -401,7 +401,7 @@
     <Compile Include="SourceGrid\Cells\Views\Header.cs" />
     <Compile Include="SourceGrid\Cells\Views\IView.cs" />
     <Compile Include="SourceGrid\Cells\Views\Link.cs" />
-    <Compile Include="SourceGrid\Cells\Views\SingleImageWeb.cs" />
+    <Compile Include="SourceGrid\Cells\Views\RemoteImageView.cs" />
     <Compile Include="SourceGrid\Cells\Views\SingleImage.cs" />
     <Compile Include="SourceGrid\Cells\Views\MultiImages.cs" />
     <Compile Include="SourceGrid\Cells\Views\RichTextBox.cs" />

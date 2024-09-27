@@ -18,8 +18,6 @@ namespace SourceGrid.Cells.Views
     public class SingleImage : Cell
     {
 
-
-
         #region Constructors
 
         /// <summary>
@@ -28,13 +26,35 @@ namespace SourceGrid.Cells.Views
         public SingleImage()
         {
             ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Covering;
-
+            FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
+            SecondBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.LightCyan);
+            DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
+            DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
+            Border = cellBorder;
         }
 
         private System.Drawing.Image _GridImage;
         public SingleImage(System.Drawing.Image image)
         {
             _GridImage = image;
+            FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
+            SecondBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.LightCyan);
+            DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
+            DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
+            Border = cellBorder;
+        }
+        private DevAge.Drawing.VisualElements.IVisualElement mFirstBackground;
+        public DevAge.Drawing.VisualElements.IVisualElement FirstBackground
+        {
+            get { return mFirstBackground; }
+            set { mFirstBackground = value; }
+        }
+
+        private DevAge.Drawing.VisualElements.IVisualElement mSecondBackground;
+        public DevAge.Drawing.VisualElements.IVisualElement SecondBackground
+        {
+            get { return mSecondBackground; }
+            set { mSecondBackground = value; }
         }
 
         private string ShowImageHash = string.Empty;

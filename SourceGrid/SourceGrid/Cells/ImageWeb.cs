@@ -1,35 +1,5 @@
 using System;
 using System.Windows.Forms;
-
-namespace SourceGrid.Cells.Virtual
-{
-    /// <summary>
-    /// A Cell with an Image. Write and read byte[] values.
-    /// 远程下载的图片单元格
-    /// </summary>
-    public class ImageWeb : CellVirtual
-    {
-        /// <summary>
-        /// Constructor using a ValueImage model to read he image directly from the value of the cell.
-        /// </summary>
-        public ImageWeb()
-        {
-            Model.AddModel(Models.ValueImageWeb.Default);
-
-            //如果用这行。则关闭后。丢失了编辑功能。应该是单例模式的原因
-            
-            if (Editor == null)
-            {
-                //Editor = Editors.ImageWebPickEditor.Default;
-                Editor = new Editors.ImageWebPickEditor(typeof(string));
-                Editor.EditableMode = EditableMode.Default;
-                Editor.AllowNull = true;
-                Editor.EnableEdit = true;
-            }
-        }
-    }
-}
-
 namespace SourceGrid.Cells
 {
     /// <summary>
@@ -72,3 +42,33 @@ namespace SourceGrid.Cells
         #endregion
     }
 }
+
+//namespace SourceGrid.Cells.Virtual
+//{
+//    /// <summary>
+//    /// A Cell with an Image. Write and read byte[] values.
+//    /// 远程下载的图片单元格
+//    /// </summary>
+//    public class ImageWeb : CellVirtual
+//    {
+//        /// <summary>
+//        /// Constructor using a ValueImage model to read he image directly from the value of the cell.
+//        /// </summary>
+//        public ImageWeb()
+//        {
+//            Model.AddModel(Models.ValueImageWeb.Default);
+
+//            //如果用这行。则关闭后。丢失了编辑功能。应该是单例模式的原因
+
+//            if (Editor == null)
+//            {
+//                //Editor = Editors.ImageWebPickEditor.Default;
+//                Editor = new Editors.ImageWebPickEditor(typeof(string));
+//                Editor.EditableMode = EditableMode.Default;
+//                Editor.AllowNull = true;
+//                Editor.EnableEdit = true;
+//            }
+//        }
+//    }
+//}
+

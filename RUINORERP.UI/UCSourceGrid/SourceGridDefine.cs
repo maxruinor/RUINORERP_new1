@@ -227,26 +227,8 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
         #region 全局背景色设置
-        SourceGrid.Cells.Views.SingleImageWeb _ImagesWebViewModel = new SourceGrid.Cells.Views.SingleImageWeb();
-        /// <summary>
-        /// 临时用于图片列 远程下载用
-        /// </summary>
-        public SourceGrid.Cells.Views.SingleImageWeb ImagesWebViewModel
-        {
-            get => _ImagesWebViewModel;
-            set => _ImagesWebViewModel = value;
-        }
 
-
-        SourceGrid.Cells.Views.SingleImage _ImagesViewModel = new SourceGrid.Cells.Views.SingleImage();
-        /// <summary>
-        /// 临时用于图片列 byte[]类型存储于DB中
-        /// </summary>
-        public SourceGrid.Cells.Views.SingleImage ImagesViewModel
-        {
-            get => _ImagesViewModel;
-            set => _ImagesViewModel = value;
-        }
+     
 
         #region 全局性的单元格样式可以在这统一设置。像图片这个就不可以。得一个cell一个new
 
@@ -293,7 +275,7 @@ namespace RUINORERP.UI.UCSourceGrid
             DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
             DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
 
-            //CellBackColorAlternate viewNormal = new CellBackColorAlternate(Color.Khaki, Color.DarkKhaki);
+          
             //正常时的背景色等样式 //这间隔颜色在三个地方设置了。不要轻易动
             CellBackColorAlternate viewNormal = new CellBackColorAlternate(Color.White, Color.LightCyan);
             viewNormal.Border = cellBorder;

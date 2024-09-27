@@ -102,3 +102,26 @@ exec sp_who 'sa';
 
 --------找出BOM表中的母件的SKU和ID 可能不对应的情况。
 SELECT SKU from  tb_BOM_S GROUP BY SKU HAVING COUNT(SKU)>1   --如果有行数则不对。之前是BOM母件的SKU和产品ID没有对应上。
+
+
+
+--------权限中的字段数据添加时重复了。要删除重复的。优化保留启用可用修改过的数据
+WITH CTE AS (
+    SELECT
+        MenuID,
+        EntityName,
+        FieldName,
+        FieldText,
+        ClassPath,
+        IsForm,
+        IsEnabled,
+        IsChild,
+        ChildEntityName,
+        ROW_NUMBER() OVER (PARTITION BY MenuID, EntityName, FieldName, FieldText, ClassPath, IsForm, IsEnabled, IsChild, ChildEntityName ORDER BY (SELECT NULL)) AS rn
+    FROM
+        tb_FieldInfo
+    WHERE
+        MenuID = 1740601443896922112 
+        AND IsChild = 1
+)
+DELETE FROM CTE WHERE rn > 1;

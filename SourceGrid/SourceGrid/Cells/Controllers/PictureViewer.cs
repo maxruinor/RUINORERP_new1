@@ -5,9 +5,9 @@ using System.IO;
 namespace SourceGrid.Cells.Controllers
 {
     /// <summary>
-    ///  一个图片预览控制器 
+    ///  一个图片预览控制器 鼠标移动在上面时显示图片.但是显示的位置并不是在鼠标的位置
     /// </summary>
-    public class PictureViewer : ControllerBase
+    public class PictureViewerController : ControllerBase
     {
         /// <summary>
         /// Default tooltiptext
@@ -61,34 +61,32 @@ namespace SourceGrid.Cells.Controllers
             if (sender.Value != null)
             {
                 if (sender.Value is System.Drawing.Image)
-                { 
-                
+                {
+                    // 如果 sender.Value 已经是 Image，直接使用它
+                    PickerImage = sender.Value as System.Drawing.Image;
+                    frmPictureViewer.PictureBoxViewer.Image = PickerImage;
                 }
                 else if (sender.Value is byte[])
                 {
+                    // 如果 sender.Value 是 byte[]，从 byte[] 创建 Image
                     byte[] bytes = sender.Value as byte[];
                     using (MemoryStream ms = new MemoryStream(bytes))
                     {
                         PickerImage = System.Drawing.Image.FromStream(ms, true);
                     }
                     frmPictureViewer.PictureBoxViewer.Image = PickerImage;
-                    frmPictureViewer.Show();
                 }
+
+                // 获取鼠标当前位置
+                System.Drawing.Point cursorPosition = System.Windows.Forms.Cursor.Position;
+
+                // 设置 frmPictureViewer 窗体的位置
+                frmPictureViewer.Location = new System.Drawing.Point(cursorPosition.X, cursorPosition.Y);
+
+                // 显示窗体
+                frmPictureViewer.Show();
             }
-            //Models.IToolTipText toolTip;
-            //if ((toolTip = (Models.IToolTipText)sender.Cell.Model.FindModel(typeof(Models.IToolTipText))) != null)
-            //{
-            //    string text = toolTip.GetToolTipText(sender);
-            //    if (text != null && text.Length > 0)
-            //    {
-            //        sender.Grid.ToolTipText = text;
-            //        sender.Grid.ToolTip.ToolTipTitle = ToolTipTitle;
-            //        if (BackColor.IsEmpty == false)
-            //            sender.Grid.ToolTip.BackColor = BackColor;
-            //        if (ForeColor.IsEmpty == false)
-            //            sender.Grid.ToolTip.ForeColor = ForeColor;
-            //    }
-            //}
+
         }
 
         /// <summary>

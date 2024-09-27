@@ -52,6 +52,8 @@ using Newtonsoft.Json;
 using RUINORERP.UI.SS;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using NPOI.SS.Formula.Functions;
+using SourceGrid;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -74,8 +76,32 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
+            KryptonButton button保存当前单据 = new KryptonButton();
+            button保存当前单据.Text = "保存当前单据";
+            button保存当前单据.Click += button保存当前单据_Click;
+
+            KryptonButton button加载最新数据 = new KryptonButton();
+            button加载最新数据.Text = "加载最新数据";
+            button加载最新数据.Click += button加载最新数据_Click;
+
+            frm.flowLayoutPanelButtonsArea.Controls.Add(button保存当前单据);
+            frm.flowLayoutPanelButtonsArea.Controls.Add(button加载最新数据);
         }
 
+        private void button加载最新数据_Click(object sender, EventArgs e)
+        {
+            RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
+            manager.Deserialize<T>(CurMenuInfo.CaptionCN);
+            OnBindDataToUIEvent(EditEntity);
+            MainForm.Instance.uclog.AddLog("成功加载上次的数据。");
+        }
+
+        private async void button保存当前单据_Click(object sender, EventArgs e)
+        {
+            await AutoSaveDataAsync();
+        }
+
+        RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
 
         /// <summary>
         /// 绑定数据到UI
@@ -1563,38 +1589,16 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-
+        frmFormProperty frm = new frmFormProperty();
         protected override void Property()
         {
-            frmFormProperty frm = new frmFormProperty();
-            frm.MenuInfo = CurMenuInfo;
-            frm.OnSaveToXml += Frm_OnSaveToXml;
-            frm.OnFromToXml += Frm_OnFromToXml;
-            frm.Entity = EditEntity as T;
             if (frm.ShowDialog() == DialogResult.OK)
             {
                 //保存属性
                 ToolBarEnabledControl(MenuItemEnums.属性);
-                EditEntity = frm.Entity as T;
                 //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
             }
             base.Property();
-        }
-
-        private void Frm_OnFromToXml(frmFormProperty frm)
-        {
-            frm.Deserialize<T>();
-            EditEntity = frm.Entity as T;
-            // BindData(EditEntity as BaseEntity);
-            OnBindDataToUIEvent(EditEntity);
-            MainForm.Instance.uclog.AddLog("成功加载上次的数据。");
-        }
-
-        private async void Frm_OnSaveToXml(frmFormProperty frm, object Obj)
-        {
-            //bool rs = await Save(false);
-            //frm.Serialize<T>(Obj as T);
-            bool result = await AutoSaveDataAsync();
         }
 
 
@@ -1606,6 +1610,7 @@ namespace RUINORERP.UI.BaseForm
         public async Task<bool> SaveFileToServer(SourceGridDefine sgd, List<C> Details)
         {
             bool result = true;
+            List<SourceGridDefineColumnItem> ImgCols = new List<SourceGridDefineColumnItem>();
             foreach (C detail in Details)
             {
                 PropertyInfo[] props = typeof(C).GetProperties();
@@ -1614,56 +1619,72 @@ namespace RUINORERP.UI.BaseForm
                     var col = sgd[prop.Name];
                     if (col != null)
                     {
-                        if (col.CustomFormat == CustomFormatType.WebPathImage)
+                        if (col.CustomFormat == CustomFormatType.WebPathImage && !ImgCols.Contains(col))
                         {
-                            //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
-                            int totalRowsFlag = sgd.grid.RowsCount;
-                            if (sgd.grid.HasSummary)
-                            {
-                                totalRowsFlag--;
-                            }
-                            for (int i = 1; i < totalRowsFlag; i++)
-                            {
-                                var model = sgd.grid[i, col.ColIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-                                if (sgd.grid[i, col.ColIndex].Value == null)
-                                {
-                                    continue;
-                                }
-
-                                //比较是否更新了图片数据
-                                string newhash = valueImageWeb.GetImageNewHash();
-                                if (valueImageWeb.CellImageBytes != null && !valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase) && sgd.grid[i, col.ColIndex].Value.ToString() == valueImageWeb.CellImageHashName)
-                                {
-                                    string oldfileName = valueImageWeb.GetOldRealfileName();
-                                    string newfileName = valueImageWeb.GetNewRealfileName();
-
-                                    HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                                    //如果服务器有旧文件 。可以先删除
-                                    if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
-                                    {
-                                        string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
-                                        MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
-                                    }
-                                    ////上传新文件时要加后缀名
-                                    string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
-                                    if (uploadRsult.Contains("UploadSuccessful"))
-                                    {
-                                        valueImageWeb.UpdateImageName(newhash);
-                                        sgd.grid[i, col.ColIndex].Value = valueImageWeb.CellImageHashName;
-                                        detail.SetPropertyValue(col.ColName, valueImageWeb.CellImageHashName);
-                                        //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
-                                        MainForm.Instance.PrintInfoLog("UploadSuccessful:" + newfileName);
-                                    }
-
-                                }
-                            }
+                            ImgCols.Add(col);
                         }
                     }
                 }
             }
+            result = await UploadImageAsync(ImgCols, sgd.grid, Details);
             return result;
         }
+
+        private async Task<bool> UploadImageAsync(List<SourceGridDefineColumnItem> ImgCols, Grid grid, List<C> Details)
+        {
+            bool rs = false;
+            //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
+            int totalRowsFlag = grid.RowsCount;
+            if (grid.HasSummary)
+            {
+                totalRowsFlag--;//减去一行总计行
+            }
+            for (int i = 1; i < totalRowsFlag; i++)
+            {
+                foreach (var col in ImgCols)
+                {
+                    if (grid[i, col.ColIndex].Value == null)
+                    {
+                        continue;
+                    }
+                    var model = grid[i, col.ColIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                    //比较是否更新了图片数据
+                    string newhash = valueImageWeb.GetImageNewHash();
+                    if (valueImageWeb.CellImageBytes != null && !valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase)
+                        && grid[i, col.ColIndex].Value.ToString() == valueImageWeb.CellImageHashName)
+                    {
+                        string oldfileName = valueImageWeb.GetOldRealfileName();
+                        string newfileName = valueImageWeb.GetNewRealfileName();
+
+                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                        //如果服务器有旧文件 。可以先删除
+                        if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
+                        {
+                            string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
+                            MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
+                        }
+                        ////上传新文件时要加后缀名
+                        string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
+                        if (uploadRsult.Contains("UploadSuccessful"))
+                        {
+                            valueImageWeb.UpdateImageName(newhash);
+                            grid[i, col.ColIndex].Value = valueImageWeb.CellImageHashName;
+
+                            string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
+                            object PKValue = editEntity.GetPropertyValue(detailPKName);
+                            var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
+                            detail.SetPropertyValue(col.ColName, valueImageWeb.CellImageHashName);
+
+                            //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
+                            MainForm.Instance.PrintInfoLog("UploadSuccessful:" + newfileName);
+                        }
+                    }
+                }
+            }
+            return rs;
+        }
+
 
         protected override void Add()
         {

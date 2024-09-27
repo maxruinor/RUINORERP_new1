@@ -396,8 +396,8 @@ namespace RUINORERP.UI.ProductEAV
                     Image image = Image.FromStream(buf, true);
                     if (image != null)
                     {
-                        frmShowImage frmShow = new frmShowImage();
-                        frmShow.kryptonPictureBox1.Image = image;
+                        frmPictureViewer frmShow = new frmPictureViewer();
+                        frmShow.PictureBoxViewer.Image = image;
                         frmShow.ShowDialog();
                     }
                 }
@@ -1537,8 +1537,8 @@ namespace RUINORERP.UI.ProductEAV
                     Image image = Image.FromStream(buf, true);
                     if (image != null)
                     {
-                        frmShowImage frmShow = new frmShowImage();
-                        frmShow.kryptonPictureBox1.Image = image;
+                        frmPictureViewer frmShow = new frmPictureViewer();
+                        frmShow.PictureBoxViewer.Image = image;
                         frmShow.ShowDialog();
                     }
                 }

@@ -30,14 +30,15 @@
         {
             this.components = new System.ComponentModel.Container();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.btnLoadFormData = new Krypton.Toolkit.KryptonButton();
+            this.btnSaveFormData = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.timerForToolTip = new System.Windows.Forms.Timer(this.components);
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.toolTipBase = new System.Windows.Forms.ToolTip(this.components);
             this.bindingSourceEdit = new System.Windows.Forms.BindingSource(this.components);
-            this.btnSaveFormData = new Krypton.Toolkit.KryptonButton();
-            this.btnLoadFormData = new Krypton.Toolkit.KryptonButton();
+            this.flowLayoutPanelButtonsArea = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
@@ -46,6 +47,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.flowLayoutPanelButtonsArea);
             this.kryptonPanel1.Controls.Add(this.btnLoadFormData);
             this.kryptonPanel1.Controls.Add(this.btnSaveFormData);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
@@ -55,6 +57,24 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(604, 450);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // btnLoadFormData
+            // 
+            this.btnLoadFormData.Location = new System.Drawing.Point(230, 58);
+            this.btnLoadFormData.Name = "btnLoadFormData";
+            this.btnLoadFormData.Size = new System.Drawing.Size(90, 25);
+            this.btnLoadFormData.TabIndex = 15;
+            this.btnLoadFormData.Values.Text = "加载最新数据";
+ 
+            // 
+            // btnSaveFormData
+            // 
+            this.btnSaveFormData.Location = new System.Drawing.Point(230, 12);
+            this.btnSaveFormData.Name = "btnSaveFormData";
+            this.btnSaveFormData.Size = new System.Drawing.Size(90, 25);
+            this.btnSaveFormData.TabIndex = 14;
+            this.btnSaveFormData.Values.Text = "保存当前单据";
+           
             // 
             // btnCancel
             // 
@@ -83,23 +103,12 @@
             // 
             this.errorProviderForAllInput.ContainerControl = this;
             // 
-            // btnSaveFormData
+            // flowLayoutPanelButtonsArea
             // 
-            this.btnSaveFormData.Location = new System.Drawing.Point(22, 12);
-            this.btnSaveFormData.Name = "btnSaveFormData";
-            this.btnSaveFormData.Size = new System.Drawing.Size(90, 25);
-            this.btnSaveFormData.TabIndex = 14;
-            this.btnSaveFormData.Values.Text = "保存当前单据";
-            this.btnSaveFormData.Click += new System.EventHandler(this.btnSaveFormData_Click);
-            // 
-            // btnLoadFormData
-            // 
-            this.btnLoadFormData.Location = new System.Drawing.Point(22, 58);
-            this.btnLoadFormData.Name = "btnLoadFormData";
-            this.btnLoadFormData.Size = new System.Drawing.Size(90, 25);
-            this.btnLoadFormData.TabIndex = 15;
-            this.btnLoadFormData.Values.Text = "加载最新数据";
-            this.btnLoadFormData.Click += new System.EventHandler(this.btnLoadFormData_Click);
+            this.flowLayoutPanelButtonsArea.Location = new System.Drawing.Point(12, 12);
+            this.flowLayoutPanelButtonsArea.Name = "flowLayoutPanelButtonsArea";
+            this.flowLayoutPanelButtonsArea.Size = new System.Drawing.Size(151, 168);
+            this.flowLayoutPanelButtonsArea.TabIndex = 16;
             // 
             // frmFormProperty
             // 
@@ -113,7 +122,7 @@
             this.Name = "frmFormProperty";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "表单属性";
+            this.Text = "菜单属性";
             this.Load += new System.EventHandler(this.frmApproval_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
@@ -133,5 +142,6 @@
         internal System.Windows.Forms.BindingSource bindingSourceEdit;
         private Krypton.Toolkit.KryptonButton btnLoadFormData;
         private Krypton.Toolkit.KryptonButton btnSaveFormData;
+        public System.Windows.Forms.FlowLayoutPanel flowLayoutPanelButtonsArea;
     }
 }

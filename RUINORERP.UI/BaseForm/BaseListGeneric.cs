@@ -38,6 +38,7 @@ using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.Model.Models;
 using System.Diagnostics;
 using RUINORERP.Global.Model;
+using RUINORERP.UI.CommonUI;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -341,7 +342,7 @@ namespace RUINORERP.UI.BaseForm
         {
         }
 
-        
+
         public void ControlButton(ToolStripMenuItem btnItem)
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
@@ -417,7 +418,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
- 
+
 
         protected Result ComPare<C>(C t, C s)
         {
@@ -675,7 +676,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.保存:
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-                   await Save();
+                    await Save();
                     break;
                 //case MenuItemEnums.高级查询:
                 //    AdvQuery();
@@ -692,7 +693,7 @@ namespace RUINORERP.UI.BaseForm
                     Selected();
                     break;
                 case MenuItemEnums.属性:
-                    MenuPersonalizedSettings();
+                    Property();
                     break;
                 case MenuItemEnums.帮助:
                     SysHelp(CurMenuInfo.CaptionCN);
@@ -700,30 +701,17 @@ namespace RUINORERP.UI.BaseForm
                 default:
                     break;
             }
+        }
 
-            /*
-            if (p_Text == "新增" || p_Text == "F9") Add();
-            if (p_Text == "修改" || p_Text == "F10") Modify();
-            if (p_Text == "删除" || p_Text == "Del") Delete();
-            if (p_Text == "保存" || p_Text == "F12")
+        protected frmFormProperty frm = new frmFormProperty();
+        protected virtual void Property()
+        {
+            if (frm.ShowDialog() == DialogResult.OK)
             {
-                Save();
-                //if (ReceiptCheck() == false) { return; }
-                //ReceiptSave();
+                //保存属性
+                ToolBarEnabledControl(MenuItemEnums.属性);
+                //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
             }
-            //if (p_Text == "放弃" || p_Text == "Escape") ReceiptCancel();
-            //if (p_Text == "预览" || p_Text == "F6") ReceiptPreview();
-            // if (p_Text == "高级查询") AdvancedQuery();
-            // if (p_Text == "刷新") ReceiptRefresh();
-            if (p_Text == "查询") Query();
-            //if (p_Text == "首页" || p_Text == "Home") FirstPage();
-            //if (p_Text == "上页" || p_Text == "PageUp") UpPage();
-            //if (p_Text == "下页" || p_Text == "PageDown") DownPage();
-            //if (p_Text == "末页" || p_Text == "End") LastPage(); 导出Excel
-            //if (p_Text == "导出Excel") base.OutFastOfDataGridView(this.dataGridView1);
-
-            if (p_Text == "关闭" || p_Text == "Esc" || p_Text == "退出") CloseTheForm();
-            */
         }
 
         /// <summary>
@@ -1345,7 +1333,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
             }
-  
+
             List<T> list = await ctr.BaseQuerySimpleByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<T>;
 
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);

@@ -1102,6 +1102,8 @@
     <Compile Include="Common\BarCodeHelper.cs" />
     <Compile Include="Common\CacheHelper.cs" />
     <Compile Include="Common\AuditLogHelper.cs" />
+    <Compile Include="Common\DuplicateFinder.cs" />
+    <Compile Include="Common\EnumerableExtensions.cs" />
     <Compile Include="Common\GDIHelper.cs" />
     <Compile Include="Common\GridViewRelated.cs" />
     <Compile Include="Common\CommonHelper.cs" />
@@ -1784,6 +1786,12 @@
     <Compile Include="SysConfig\UCWorkCenterConfig.Designer.cs">
       <DependentUpon>UCWorkCenterConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToolForm\frmPictureViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolForm\frmPictureViewer.Designer.cs">
+      <DependentUpon>frmPictureViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="ToolForm\frmSelectItemFromGrid.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1795,12 +1803,6 @@
     </Compile>
     <Compile Include="ToolForm\frmShowColumns.Designer.cs">
       <DependentUpon>frmShowColumns.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ToolForm\frmShowImage.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ToolForm\frmShowImage.Designer.cs">
-      <DependentUpon>frmShowImage.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolForm\TaskbarNotifier.cs">
       <SubType>Form</SubType>
@@ -2695,14 +2697,14 @@
     <EmbeddedResource Include="SysConfig\UCWorkCenterConfig.resx">
       <DependentUpon>UCWorkCenterConfig.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ToolForm\frmPictureViewer.resx">
+      <DependentUpon>frmPictureViewer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ToolForm\frmSelectItemFromGrid.resx">
       <DependentUpon>frmSelectItemFromGrid.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolForm\frmShowColumns.resx">
       <DependentUpon>frmShowColumns.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ToolForm\frmShowImage.resx">
-      <DependentUpon>frmShowImage.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolForm\TaskbarNotifier.resx">
       <DependentUpon>TaskbarNotifier.cs</DependentUpon>

@@ -485,10 +485,10 @@ namespace RUINORERP.UI.UCSourceGrid
                                 }
 
                                 #region 处理特殊列
-                                //如果是产品图片时，显示出来
+                                //如果是产品图片时，显示出来 之前是因为背景色。现在全部处理了。不用特殊处理。定义时已经定义好。
                                 if (dc.CustomFormat == CustomFormatType.Image)
                                 {
-                                    grid1[pt].View = new SourceGrid.Cells.Views.SingleImage();
+                                    //grid1[pt].View = new SourceGrid.Cells.Views.SingleImage();
                                 }
                                 if (dc.CustomFormat == CustomFormatType.WebPathImage)
                                 {
@@ -521,12 +521,12 @@ namespace RUINORERP.UI.UCSourceGrid
                                         currContext.DisplayText = "";
                                         if (cellvalue != null)
                                         {
-                                            currContext.Cell.View = new SourceGrid.Cells.Views.SingleImage();
+                                           // currContext.Cell.View = new SourceGrid.Cells.Views.SingleImage();
                                             currContext.Value = cellvalue;
                                         }
                                         else
                                         {
-                                            currContext.Cell.View = sgdefine.ViewNormal;
+                                           // currContext.Cell.View = sgdefine.ViewNormal;
                                         }
                                         currContext.Tag = v_prod;
                                     }
@@ -622,11 +622,19 @@ namespace RUINORERP.UI.UCSourceGrid
                     SourceGrid.CellContext currContext = new SourceGrid.CellContext(dc.ParentGridDefine.grid, pt);
                     currContext.Value = null;
                     //如果是图片列。但不是总计行。则清空为平常的样式
-                    if ((dc.CustomFormat == CustomFormatType.Image || dc.CustomFormat == CustomFormatType.WebPathImage) && pt.Row != grid1.Rows.Count - 1)
+                    if ((dc.CustomFormat == CustomFormatType.Image) && pt.Row != grid1.Rows.Count - 1)
                     {
                         // currContext.Cell.View = sgdefine.ViewNormal;
                     }
-
+                    if ((dc.CustomFormat == CustomFormatType.WebPathImage) && pt.Row != grid1.Rows.Count - 1)
+                    {
+                        if ((currContext.Cell.View is SourceGrid.Cells.Views.RemoteImageView) == false)
+                        {
+                            currContext.Cell.View = new SourceGrid.Cells.Views.RemoteImageView();
+                            PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(currContext.Cell as Cell, sgdefine);
+                            currContext.Cell.AddController(popupMenu);
+                        }
+                    }
                     if (dc.ColName == "Selected")
                     {
                         grid1[pt] = new SourceGrid.Cells.Cell("");
@@ -1156,7 +1164,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     //toolTipController.ToolTipIcon = ToolTipIcon.Info;
                     //toolTipController.IsBalloon = true;
 
-                    PictureViewer pictureViewer = new PictureViewer();
+                    PictureViewerController pictureViewer = new PictureViewerController();
 
                     //目前只加到要手输入的，非关联字段上
                     CustomKeyEvent tabkeyController = new CustomKeyEvent();
@@ -1240,7 +1248,10 @@ namespace RUINORERP.UI.UCSourceGrid
                         case "System.Int64":
                             break;
                         case "System.Byte[]":
-                            // c = new SourceGrid.Cells.Image(null);新加行时 不用要图片，这个图片列，好像是背景。会相同
+                            c = new SourceGrid.Cells.Image(null);
+                            c.View = new SourceGrid.Cells.Views.SingleImage();
+                            //PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
+                            //c.AddController(popupMenu);
                             c.AddController(pictureViewer);
                             break;
                         case "System.Boolean":
@@ -1265,12 +1276,17 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (define[i].CustomFormat == CustomFormatType.WebPathImage)
                     {
                         c = new SourceGrid.Cells.ImageWebCell(null);
-                        c.View = new SourceGrid.Cells.Views.SingleImageWeb();
-
+                        c.View = new SourceGrid.Cells.Views.RemoteImageView();
+                        PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
+                        c.AddController(popupMenu);
                     }
                     if (define[i].CustomFormat == CustomFormatType.Image)
                     {
                         c = new SourceGrid.Cells.Image(null);
+                        c.View = new SourceGrid.Cells.Views.SingleImage();
+                        //PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
+                        //c.AddController(popupMenu);
+                        c.AddController(pictureViewer);
                     }
                     #endregion
 
@@ -2982,7 +2998,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     System.Drawing.Image temp = RUINORERP.Common.Helper.ImageHelper.ConvertByteToImg(newValue as Byte[]);
                     processContext.Value = temp;
-                    processContext.Cell.View = new SourceGrid.Cells.Views.SingleImage(temp);
+                    //processContext.Cell.View = new SourceGrid.Cells.Views.SingleImage(temp);
                     continue;
                 }
                 if ((!object.Equals(processContext.Value, newValue)) || isbatch)

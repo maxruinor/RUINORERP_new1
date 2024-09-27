@@ -2,8 +2,11 @@
 using RUINORERP.UI.ToolForm;
 using RUINORERP.UI.UControls;
 using SourceGrid;
+using SourceGrid.Cells.Editors;
+using SourceGrid.Cells.Views;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.Remoting.Contexts;
@@ -169,7 +172,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
         frmShowColumns frm = new frmShowColumns();
-         
+
         private void SiCustom_Click(object sender, EventArgs e)
         {
             frm.XmlFileName = _xmlfileName;
@@ -317,7 +320,7 @@ namespace RUINORERP.UI.UCSourceGrid
             sgdefine.UseCalculateTotalValue(grid.Tag as SourceGridDefine);
 
             grid.Selection.ResetSelection(true);
-      
+
             //插入一行新的空行
             sh.InsertRow(grid, sgdefine, true);
 
@@ -666,7 +669,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     switch (txt)
                     {
                         case "删除选中行":
-                            sh.DeleteRow(_sgdefine,deleteRows.ToArray());
+                            sh.DeleteRow(_sgdefine, deleteRows.ToArray());
                             break;
                         case "显示多选":
                             if (selected != null)
@@ -727,5 +730,134 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
     }
+
+
+    /// <summary>
+    /// 远程图片单元视图的右键菜单
+    /// </summary>
+    public class PopupMenuForRemoteImageView : SourceGrid.Cells.Controllers.ControllerBase
+    {
+        private Grid grid;
+        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SourceGridDefineColumnItem> kv);
+        /// <summary>
+        /// 验证行数据
+        /// </summary>
+        public event ColumnsVisibleDelegate OnColumnsVisible;
+        ContextMenuStrip MyMenu = new ContextMenuStrip();
+        SourceGrid.Cells.Cell _cell;
+
+        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
+
+        SourceGridDefine sgdefine;
+        public PopupMenuForRemoteImageView(SourceGrid.Cells.Cell cell, SourceGridDefine _sgdefine)
+        {
+            MyMenu.ShowCheckMargin = false;
+            MyMenu.ShowImageMargin = false;
+            MyMenu.MinimumSize = new Size(120, 0); // 设置最小宽度为 120，高度不限
+                                                   // 为 ContextMenuStrip 控件添加 Opening 事件处理程序
+            MyMenu.Opening += new CancelEventHandler(MyMenu_Opening);
+
+            //ToolStripSeparator ss = new ToolStripSeparator();
+            //MyMenu.Items.Add(ss);
+            ToolStripMenuItem siCustom = new ToolStripMenuItem("查看大图");
+            _cell = cell;
+            siCustom.Tag = cell;
+            siCustom.Click += SiCustom_Click;
+            MyMenu.Items.Add(siCustom);
+            grid = _sgdefine.grid;
+            sgdefine = _sgdefine;
+            MyMenu.Width = 100;
+        }
+
+        private void SiCustom_Click(object sender, EventArgs e)
+        {
+            System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
+            SourceGrid.Cells.Cell cell = (SourceGrid.Cells.Cell)item.Tag;
+            if (cell.View is RemoteImageView)
+            {
+                RemoteImageView imageView = cell.View as RemoteImageView;
+                if (imageView != null)
+                {
+                    if (imageView.GridImage != null)
+                    {
+                        var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                        SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+                        {
+                            frmPictureViewer frmPictureViewer = new frmPictureViewer();
+                            frmPictureViewer.PictureBoxViewer.Image = ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes);
+                            frmPictureViewer.ShowDialog();
+                        }
+                    }
+                }
+
+            }
+            //return;
+            ////强制重绘
+            grid.Refresh();
+
+        }
+
+        public override void OnClick(CellContext sender, EventArgs e)
+        {
+            base.OnClick(sender, e);
+        }
+
+        public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
+        {
+            base.OnMouseUp(sender, e);
+
+            if (e.Button == MouseButtons.Right)
+                MyMenu.Show(sender.Grid, new Point(e.X, e.Y));
+        }
+
+
+      
+
+        private void MyMenu_Opening(object sender, CancelEventArgs e)
+        {
+            // 假设我们有一个条件判断，例如某个控件的状态
+            bool shouldShowMenu = CheckConditionToShowMenu();
+            // 如果不满足条件，则取消显示菜单
+            if (!shouldShowMenu)
+            {
+                e.Cancel = true;
+            }
+        }
+
+        // 这里是你的条件检查逻辑
+        private bool CheckConditionToShowMenu()
+        {
+            //如果图片为空则不显示右键菜单
+            bool rs = false;
+            SourceGrid.Cells.Cell cell = _cell;
+            if (cell.View is RemoteImageView)
+            {
+                RemoteImageView imageView = cell.View as RemoteImageView;
+                if (imageView != null)
+                {
+                    if (imageView.GridImage != null)
+                    {
+                        var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                        SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+                        {
+                            rs= true;
+                        }
+                        else
+                        {
+                            rs= false;
+                        }
+                    }
+                }
+
+            }
+            return rs;  
+        }
+
+    }
+
+
+
 
 }

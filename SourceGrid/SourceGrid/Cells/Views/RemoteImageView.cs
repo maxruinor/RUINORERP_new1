@@ -18,16 +18,16 @@ namespace SourceGrid.Cells.Views
     /// 重新写一个适用于WEB远程的显示图片的用法
     /// </summary>
     [Serializable]
-    public class SingleImageWeb : Cell
+    public class RemoteImageView : Cell
     {
         #region Constructors
 
-       
+
 
         /// <summary>
         /// Use default setting
         /// </summary>
-        public SingleImageWeb()
+        public RemoteImageView()
         {
             ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Covering;
             FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
@@ -38,7 +38,7 @@ namespace SourceGrid.Cells.Views
         }
 
         private System.Drawing.Image _GridImage;
-        public SingleImageWeb(System.Drawing.Image image)
+        public RemoteImageView(System.Drawing.Image image)
         {
             _GridImage = image;
             FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
@@ -75,7 +75,7 @@ namespace SourceGrid.Cells.Views
 
         protected override void PrepareView(CellContext context)
         {
-             base.PrepareView(context);
+            base.PrepareView(context);
             if (Math.IEEERemainder(context.Position.Row, 2) == 0)
                 Background = FirstBackground;
             else
@@ -259,7 +259,7 @@ namespace SourceGrid.Cells.Views
         /// Copy constructor.  This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
         /// </summary>
         /// <param name="other"></param>
-        public SingleImageWeb(SingleImageWeb other)
+        public RemoteImageView(RemoteImageView other)
             : base(other)
         {
             mImage = (DevAge.Drawing.VisualElements.IVisualElement)other.OneImage.Clone();
@@ -302,7 +302,7 @@ namespace SourceGrid.Cells.Views
         /// <returns></returns>
         public override object Clone()
         {
-            return new SingleImageWeb(this);
+            return new RemoteImageView(this);
         }
         #endregion
     }

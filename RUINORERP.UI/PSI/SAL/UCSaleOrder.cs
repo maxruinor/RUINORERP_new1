@@ -57,12 +57,12 @@ namespace RUINORERP.UI.PSI.SAL
 
         private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_SaleOrder entity)
         {
-            BindData(entity as BaseEntity);
+            BindData(entity as tb_SaleOrder);
         }
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as BaseEntity);
+            BindData(Entity as tb_SaleOrder);
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
 
-        public override void BindData(BaseEntity entityPara)
+        public override void BindData(tb_SaleOrder entityPara)
         {
             tb_SaleOrder entity = entityPara as tb_SaleOrder;
             if (entity == null)

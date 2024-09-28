@@ -54,12 +54,12 @@ namespace RUINORERP.UI.MRP.MP
 
         private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_MaterialRequisition entity)
         {
-            BindData(entity as BaseEntity);
+            BindData(entity as tb_MaterialRequisition);
         }
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as BaseEntity);
+            BindData(Entity as tb_MaterialRequisition);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace RUINORERP.UI.MRP.MP
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(BaseEntity entityPara)
+        public override void BindData(tb_MaterialRequisition entityPara)
         {
             tb_MaterialRequisition entity = entityPara as tb_MaterialRequisition;
             if (entity == null)

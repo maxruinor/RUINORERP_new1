@@ -168,7 +168,7 @@ namespace RUINORERP.UI.Common
             {
                 if (var.CaptionCN.Contains("异常"))
                 {
-                   
+
                 }
 
                 if (var.CaptionCN.Contains("审计"))
@@ -452,9 +452,10 @@ namespace RUINORERP.UI.Common
                                 {
                                     //var ss = Startup.GetFromFac<RUINORERP.UI.PSI.INV.UCStocktake>();
                                     var menu = Startup.GetFromFacByName<BaseBillEdit>(pr.FormName);
-                                    if (menu is BaseBillEdit)
+                                    if (menu is BaseBillEdit bbe)
                                     {
                                         menu.CurMenuInfo = pr;
+                                        
                                     }
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
@@ -508,6 +509,21 @@ namespace RUINORERP.UI.Common
                         }
 
                         //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
+                        //if (page.Controls[0].GetType().BaseType.Name.Contains("BaseBillEditGeneric"))
+                        //{
+                        //    var billEditGeneric = Startup.GetFromFacByName<BaseBillEdit>(pr.FormName);
+                        //    //billEdit.LoadDataToUI(entity);
+                        //    // 延迟后在 UI 线程上执行 BindData
+                        //    await Task.Delay(500);
+                        //    billEditGeneric.Invoke(new Action(() => billEditGeneric.LoadDataToUI(entity)));
+                        //    /* LoadDataToUI只能在UI线程中调用，所以需要使用Task.Run来切换到UI线程
+                        //    await Task.Delay(1000); // 2000 表示2秒，单位为毫秒
+
+                        //    // 延迟完成后执行 BindData 方法
+                        //    await Task.Run(() => billEdit.LoadDataToUI(entity));*/
+                        //}
+
+                        //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
                         if (page.Controls[0] is BaseBillEdit billEdit)
                         {
                             //billEdit.LoadDataToUI(entity);
@@ -516,7 +532,6 @@ namespace RUINORERP.UI.Common
                             billEdit.Invoke(new Action(() => billEdit.LoadDataToUI(entity)));
                             /* LoadDataToUI只能在UI线程中调用，所以需要使用Task.Run来切换到UI线程
                             await Task.Delay(1000); // 2000 表示2秒，单位为毫秒
-
                             // 延迟完成后执行 BindData 方法
                             await Task.Run(() => billEdit.LoadDataToUI(entity));*/
                         }

@@ -87,6 +87,8 @@ namespace RUINORERP.UI.BaseForm
 
             frm.flowLayoutPanelButtonsArea.Controls.Add(button保存当前单据);
             frm.flowLayoutPanelButtonsArea.Controls.Add(button加载最新数据);
+
+            this.OnBindDataToUIEvent += BindData;
         }
 
         RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
@@ -108,12 +110,15 @@ namespace RUINORERP.UI.BaseForm
         /// 绑定数据到UI
         /// </summary>
         /// <param name="entity"></param>
-        public virtual void BindData(BaseEntity entity)
+        public virtual void BindData(T entity)
         {
             ToolBarEnabledControl(entity);
         }
 
-
+        internal override void LoadDataToUI(object Entity)
+        {
+            BindData(Entity as T);
+        }
 
         /// <summary>
         /// 控制字段是否显示，添加到里面的是不显示的
@@ -1761,7 +1766,14 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
-            result = await UploadImageAsync(ImgCols, sgd.grid, Details);
+            try
+            {
+                result = await UploadImageAsync(ImgCols, sgd.grid, Details);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+            }
             return result;
         }
 

@@ -59,12 +59,12 @@ namespace RUINORERP.UI.ProductEAV
 
         private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_Packing entity)
         {
-            BindData(entity as BaseEntity);
+            BindData(entity as tb_Packing);
         }
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as BaseEntity);
+            BindData(Entity as tb_Packing);
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(BaseEntity entityPara)
+        public override void BindData(tb_Packing entityPara)
         {
 
             tb_Packing entity = entityPara as tb_Packing;

@@ -157,7 +157,7 @@ namespace RUINORERP.UI.UCSourceGrid
             //要把当前合法的值给到 真正的对象
             var setcurrentObj = CurrGridDefine.grid.Rows[sender.Position.Row].RowData;
             if (setcurrentObj != null)
-                {
+            {
                 //将UI值转换后赋值给对象 很重要
                 //如果sender.value=null ，如果是将业务主键都置为null。则对应数据行清空。其它全部置为null
                 if (sender.Value == null)
@@ -204,7 +204,14 @@ namespace RUINORERP.UI.UCSourceGrid
                         {
                             valueImageWeb.CellImageHashName = sender.Value.ToString();
                             HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                            valueImageWeb.CellImageBytes = await httpWebService.DownloadImgFileAsync(valueImageWeb.GetNewRealfileName());
+                            try
+                            {
+                                valueImageWeb.CellImageBytes = await httpWebService.DownloadImgFileAsync(valueImageWeb.GetNewRealfileName());
+                            }
+                            catch (Exception ex)
+                            {
+                                MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                            }
                         }
                         if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
                         {

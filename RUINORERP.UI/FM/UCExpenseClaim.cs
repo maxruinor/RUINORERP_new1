@@ -67,12 +67,12 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
         }
-        internal override void LoadDataToUI(object Entity)
-        {
-            BindData(Entity as tb_FM_ExpenseClaim);
-        }
-        public void BindData(tb_FM_ExpenseClaim entity)
-        {
+        //internal override void LoadDataToUI(object Entity)
+        //{
+        //    BindData(Entity as tb_FM_ExpenseClaim);
+        //}
+        public override void BindData(tb_FM_ExpenseClaim entity)
+            {
             if (entity == null)
             {
                 chkClaimEmployee.Enabled = false;
@@ -174,7 +174,7 @@ namespace RUINORERP.UI.FM
                     toolStripbtnPrint.Enabled = false;
                 }
             };
-           
+
         }
 
         private void Grid1_BindingContextChanged(object sender, EventArgs e)
@@ -334,6 +334,31 @@ namespace RUINORERP.UI.FM
                 }
 
                 EditEntity.tb_FM_ExpenseClaimDetails = details;
+
+                //如果主表的总金额和明细金额加总后不相等，则提示
+                if (NeedValidated && EditEntity.ClaimlAmount != details.Sum(c => c.TotalAmount))
+                {
+                    if (MessageBox.Show("总金额和明细金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                    {
+                        return false;
+                    }
+                }
+                if (NeedValidated && EditEntity.UntaxedAmount != details.Sum(c => c.UntaxedAmount))
+                {
+                    if (MessageBox.Show("未税总金额和明细未税金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                    {
+                        return false;
+                    }
+                }
+
+                if (NeedValidated && EditEntity.ApprovedAmount != details.Sum(c => c.TotalAmount))
+                {
+                    if (MessageBox.Show("核准总金额和明细金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                    {
+                        return false;
+                    }
+                }
+
                 //处理图片
                 foreach (tb_FM_ExpenseClaimDetail detail in EditEntity.tb_FM_ExpenseClaimDetails)
                 {
@@ -352,8 +377,6 @@ namespace RUINORERP.UI.FM
                         }
                     }
                 }
-
-
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))

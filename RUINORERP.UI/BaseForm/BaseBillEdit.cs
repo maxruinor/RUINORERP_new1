@@ -601,7 +601,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="Entity"></param>
         internal virtual void LoadDataToUI(object Entity)
         {
-
+            
         }
         #endregion
 

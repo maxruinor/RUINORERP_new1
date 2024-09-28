@@ -137,7 +137,7 @@ namespace RUINORERP.UI.PSI.INV
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
@@ -181,6 +181,8 @@ namespace RUINORERP.UI.PSI.INV
                 base.InitRequiredToControl(new tb_StockOutValidator(), kryptonPanelMainInfo.Controls);
             }
             ToolBarEnabledControl(entity);
+
+            ControlMasterColumnsInvisible();
         }
 
 
@@ -331,7 +333,7 @@ namespace RUINORERP.UI.PSI.INV
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
-                if (NeedValidated && details.Count == 0 )
+                if (NeedValidated && details.Count == 0)
                 {
                     MessageBox.Show("请录入有效明细记录！");
                     return false;

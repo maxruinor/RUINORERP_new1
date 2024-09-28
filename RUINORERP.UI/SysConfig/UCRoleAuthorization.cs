@@ -735,8 +735,15 @@ namespace RUINORERP.UI.SysConfig
                 pb.HideValue = false;
                 pb.IsChild = item.IsChild;
                 BusinessHelper.Instance.InitEntity(pb);
-
-                pblist.Add(pb);
+                bool isexist = ctrPField.IsExist(e => e.RoleID == pb.RoleID 
+                && e.FieldInfo_ID == pb.FieldInfo_ID
+                && e.MenuID == menuInfo.MenuID
+                && e.IsChild == pb.IsChild);
+                if (!isexist)
+                {
+                    pblist.Add(pb);
+                }
+            
             }
             if (pblist.Count == 0)
             {
@@ -1296,6 +1303,8 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
 
+
+            await InitFiledByRole(CurrentRole, mInfo);
         }
 
         private void TreeView1_AfterCheck(object sender, TreeViewEventArgs e)

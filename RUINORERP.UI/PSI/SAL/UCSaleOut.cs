@@ -255,6 +255,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             DataBindingHelper.InitFilterForControlByExp<tb_SaleOrder>(entity, txtSaleOrder, c => c.SOrderNo, queryFilter);
             ToolBarEnabledControl(entity);
+            ControlMasterColumnsInvisible();
         }
 
         public void InitDataTocmbbox()
@@ -344,6 +345,7 @@ namespace RUINORERP.UI.PSI.SAL
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
+           
         }
 
         private void Sgh_OnCalculateColumnValue(object rowObj, SourceGridDefine griddefine, SourceGrid.Position Position)

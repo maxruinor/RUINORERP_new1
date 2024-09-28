@@ -11,6 +11,7 @@ using Org.BouncyCastle.Math;
 using RUINORERP.Business;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
@@ -41,7 +42,6 @@ namespace RUINORERP.UI.ProductEAV
     [MenuAttrAssemblyInfo("产品查询", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
     public partial class UCProdQuery : BaseUControl
     {
-
         /*
          目前这个是用于一个公用的查询模板，对于一些特殊情况下的调用。用枚举类型来区别一下。
         公共查询入口 ，将来可以扩展为多个查询入口，如我的收藏产品，我的产品，我的供应商产品等
@@ -484,6 +484,16 @@ namespace RUINORERP.UI.ProductEAV
             FieldNameList1 = UIHelper.GetFieldNameColList(typeof(View_ProdDetail));
             newSumDataGridView产品.XmlFileName = "QueryFormGeneric_" + typeof(View_ProdDetail).Name;
             newSumDataGridView产品.FieldNameList = FieldNameList1;
+
+            List<Expression<Func<View_ProdDetail, object>>> ProdInvisibleCols = new List<Expression<Func<View_ProdDetail, object>>>();
+            ProdInvisibleCols.Add(c => c.Inv_Cost);
+            var InvisibleCols = ExpressionHelper.ExpressionListToStringList(ProdInvisibleCols);
+            //这里设置了指定列不可见
+            foreach (var item in InvisibleCols)
+            {
+                KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
+                newSumDataGridView产品.FieldNameList.TryRemove(item, out kv);
+            }
             newSumDataGridView产品.DataSource = null;
             bindingSourceProdDetail.DataSource = new List<View_ProdDetail>();
             newSumDataGridView产品.DataSource = bindingSourceProdDetail;

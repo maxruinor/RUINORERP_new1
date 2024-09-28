@@ -1102,6 +1102,7 @@
     <Compile Include="Common\BarCodeHelper.cs" />
     <Compile Include="Common\CacheHelper.cs" />
     <Compile Include="Common\AuditLogHelper.cs" />
+    <Compile Include="Common\CustomTupleEqualityComparer.cs" />
     <Compile Include="Common\DuplicateFinder.cs" />
     <Compile Include="Common\EnumerableExtensions.cs" />
     <Compile Include="Common\GDIHelper.cs" />

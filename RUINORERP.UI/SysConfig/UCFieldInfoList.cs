@@ -50,27 +50,37 @@ namespace RUINORERP.UI.BI
             List<tb_FieldInfo> list = new List<tb_FieldInfo>();
             list = ListDataSoure.Cast<tb_FieldInfo>().ToList();
             string pkName = UIHelper.GetPrimaryKeyColName(typeof(tb_FieldInfo));
+            //var keySelector1 = list.Select(p =>
+            //{
+            //    PropertyInfo[] properties = typeof(tb_FieldInfo).GetProperties()
+            //        .Where(prop => prop.GetCustomAttribute<SugarColumn>()?.IsIgnore == false && prop.Name != pkName)
+            //        .ToArray();
+            //    var values = properties.Select(prop => prop.GetValue(p)).ToArray();
+            //    return Tuple.Create(values);
+            //});
 
-            // 创建分组键选择器
-            Func<tb_FieldInfo, object> keySelector = p =>
+            // 使用 GroupBy 筛选出重复数据,排除掉主键，将其它所有列【SugarColumn】有效的，都参与比较
+            // 创建一个用于获取所有键属性值的匿名函数
+            // 创建分组键选择器(Tuple) 一个对象中，哪些字段属性参与比较
+            Func<tb_FieldInfo, Tuple<object[]>> keySelector2 = p =>
             {
                 PropertyInfo[] properties = typeof(tb_FieldInfo).GetProperties()
                     .Where(prop => prop.GetCustomAttribute<SugarColumn>()?.IsIgnore == false && prop.Name != pkName)
                     .ToArray();
-                var keyValues = properties.Select(prop => prop.GetValue(p)).ToArray();
-                return keyValues.Length == 1 ? keyValues[0] : Tuple.Create(keyValues);
+                var values = properties.Select(prop => prop.GetValue(p)).ToArray();
+                return Tuple.Create(values);
             };
+            
+            // 使用自定义比较器进行分组
+            var duplicatesList = list.GroupBy(
+                keySelector2,
+                new CustomTupleEqualityComparer<Tuple<object[]>>(new string[] { pkName }) // 使用适当的比较器
+            ).Where(g => g.Count() > 1)
+             .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
+            .SelectMany(g => g)
+            .ToList();
 
-            // 使用 GroupBy 筛选出重复数据,排除掉主键，将其它所有列【SugarColumn】有效的，都参与比较
-            List<tb_FieldInfo> duplicatesList = list.GroupBy(
-                      keySelector,
-                    new CustomSugarColumnEqualityComparer<object>(new string[] { pkName })
-                ).Where(g => g.Count() > 1)
-                .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
-                .SelectMany(g => g)
-                .ToList();
-
-            ListDataSoure.DataSource = duplicatesList;
+            ListDataSoure.DataSource = duplicatesList.ToBindingSortCollection<tb_FieldInfo>();
             dataGridView1.DataSource = ListDataSoure;
         }
 

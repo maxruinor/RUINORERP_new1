@@ -323,6 +323,11 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     foreach (var item in col.ParentGridDefine.grid.Rows)
                     {
+                        if (col.ParentGridDefine.grid[item.Index, col.ColIndex] == null)
+                        {
+                            continue;
+                        }
+
                         if (col.ParentGridDefine.grid[item.Index, col.ColIndex].Editor != null)
                         {
 
@@ -633,10 +638,10 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (item.ColName == minfo.Name)
                 {
 
-                 bool isSame = item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol.ColName == minfo.Name
-                 && s.OriginalExpression.ToString() == FormulaExp.Body.ToString()
-                 && s.CalcCondition.expCondition.ToString() == ConditionExpression.Body.ToString() //反算时一定有条件
-                ).Any();
+                    bool isSame = item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol.ColName == minfo.Name
+                    && s.OriginalExpression.ToString() == FormulaExp.Body.ToString()
+                    && s.CalcCondition.expCondition.ToString() == ConditionExpression.Body.ToString() //反算时一定有条件
+                   ).Any();
                     if (isSame)
                     {
                         continue;

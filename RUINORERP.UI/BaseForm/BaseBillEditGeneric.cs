@@ -55,6 +55,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using NPOI.SS.Formula.Functions;
 using SourceGrid;
 
+
 namespace RUINORERP.UI.BaseForm
 {
     /// <summary>
@@ -88,10 +89,11 @@ namespace RUINORERP.UI.BaseForm
             frm.flowLayoutPanelButtonsArea.Controls.Add(button加载最新数据);
         }
 
+        RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
         private void button加载最新数据_Click(object sender, EventArgs e)
         {
-            RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
-            manager.Deserialize<T>(CurMenuInfo.CaptionCN);
+            //RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
+            EditEntity = manager.Deserialize<T>(CurMenuInfo.CaptionCN);
             OnBindDataToUIEvent(EditEntity);
             MainForm.Instance.uclog.AddLog("成功加载上次的数据。");
         }
@@ -101,7 +103,6 @@ namespace RUINORERP.UI.BaseForm
             await AutoSaveDataAsync();
         }
 
-        RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
 
         /// <summary>
         /// 绑定数据到UI
@@ -156,6 +157,145 @@ namespace RUINORERP.UI.BaseForm
 
                 }
             }
+        }
+
+
+        /// <summary>
+        /// 设置主表字段是否显示
+        /// </summary>
+        /// <param name="kryptonPanelMainInfo"></param>
+        public void ControlMasterColumnsInvisible()
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if (CurMenuInfo.tb_P4Fields != null)
+                {
+                    foreach (var item in CurMenuInfo.tb_P4Fields)
+                    {
+                        if (item != null)
+                        {
+                            if (item.tb_fieldinfo != null)
+                            {
+                                //设置不可见
+                                if (!item.IsVisble && !item.tb_fieldinfo.IsChild)
+                                {
+                                    KryptonTextBox txtTextBox = FindTextBox(this, item.tb_fieldinfo.FieldName);
+                                    if (txtTextBox != null)
+                                    {
+                                        txtTextBox.Visible = false;
+                                    }
+                                    KryptonLabel lbl = FindLabel(this, item.tb_fieldinfo.FieldText);
+                                    if (lbl != null)
+                                    {
+                                        lbl.Visible = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private KryptonTextBox FindTextBox(Control parentControl, string dataMember)
+        {
+            // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+            if (parentControl is KryptonTextBox textBox && textBox.DataBindings.Count > 0)
+            {
+                foreach (Binding binding in textBox.DataBindings)
+                {
+                    if (binding.BindingMemberInfo.BindingMember == dataMember)
+                    {
+                        return textBox;
+                    }
+                }
+            }
+
+            // 递归检查所有子控件
+            KryptonTextBox foundTextBox = FindTextBoxInControls(parentControl.Controls, dataMember);
+            if (foundTextBox != null)
+            {
+                return foundTextBox;
+            }
+
+            return null;
+        }
+
+        private KryptonTextBox FindTextBoxInControls(Control.ControlCollection controls, string dataMember)
+        {
+            foreach (Control control in controls)
+            {
+                // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+                if (control is KryptonTextBox textBox && textBox.DataBindings.Count > 0)
+                {
+                    foreach (Binding binding in textBox.DataBindings)
+                    {
+                        if (binding.BindingMemberInfo.BindingMember == dataMember)
+                        {
+                            return textBox;
+                        }
+                    }
+                }
+
+                // 如果当前控件有子控件，继续递归检查
+                if (control.HasChildren)
+                {
+                    KryptonTextBox foundTextBox = FindTextBoxInControls(control.Controls, dataMember);
+                    if (foundTextBox != null)
+                    {
+                        return foundTextBox;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private KryptonLabel FindLabel(Control parentControl, string LabelText)
+        {
+            // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+            if (parentControl is KryptonLabel lbl && lbl.Text.Length > 0)
+            {
+
+                if (lbl.Text == LabelText)
+                {
+                    return lbl;
+                }
+
+            }
+            // 递归检查所有子控件
+            KryptonLabel foundLabel = FindLabelInControls(parentControl.Controls, LabelText);
+            if (foundLabel != null)
+            {
+                return foundLabel;
+            }
+
+            return null;
+        }
+
+        private KryptonLabel FindLabelInControls(Control.ControlCollection controls, string LabelText)
+        {
+            foreach (Control control in controls)
+            {
+                // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+                if (control is KryptonLabel lbl && lbl.Text.Length > 0)
+                {
+                    if (lbl.Text == LabelText)
+                    {
+                        return lbl;
+                    }
+                }
+
+                // 如果当前控件有子控件，继续递归检查
+                if (control.HasChildren)
+                {
+                    KryptonLabel foundTextBox = FindLabelInControls(control.Controls, LabelText);
+                    if (foundTextBox != null)
+                    {
+                        return foundTextBox;
+                    }
+                }
+            }
+            return null;
         }
 
 
@@ -215,11 +355,6 @@ namespace RUINORERP.UI.BaseForm
         */
 
         #region 帮助信息提示
-
-
-
-
-
 
 
         public void InitHelpInfoToControl(System.Windows.Forms.Control.ControlCollection Controls)
@@ -2449,7 +2584,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     #region 自动保存单据数据  后面优化可以多个单?限制5个？
                     await Save(false);
-                    string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data_", CurMenuInfo.CaptionCN);
+                    string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data", CurMenuInfo.CaptionCN);
                     System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
                     //判断目录是否存在
                     if (!System.IO.Directory.Exists(fi.Directory.FullName))

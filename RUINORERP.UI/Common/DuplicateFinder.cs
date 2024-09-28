@@ -135,13 +135,22 @@ namespace RUINORERP.UI.Common
                 _ignoredProperties = ignoredProperties;
             }
 
+            /// <summary>
+            /// 判断两个对象是否相等
+            /// </summary>
+            /// <param name="x">是一个只有一行数据的元组类型</param>
+            /// <param name="y"></param>
+            /// <returns></returns>
             public bool Equals(T x, T y)
             {
+                if (x == null || y == null)
+                    return false;
+
+
                 if (ReferenceEquals(x, y))
                     return true;
 
-                if (x == null || y == null)
-                    return false;
+
 
                 if (x.GetType() != y.GetType())
                     return false;
@@ -223,6 +232,7 @@ namespace RUINORERP.UI.Common
                 return sugarColumnAttribute != null;
             }
         }
+
 
         public static class GroupingKeySelector
         {

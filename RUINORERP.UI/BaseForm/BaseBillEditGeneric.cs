@@ -115,6 +115,12 @@ namespace RUINORERP.UI.BaseForm
             ToolBarEnabledControl(entity);
         }
 
+        protected override void ToolBarEnabledControl(object entity)
+        {
+            base.ToolBarEnabledControl(entity);
+            ControlMasterColumnsInvisible();
+        }
+
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as T);
@@ -189,12 +195,14 @@ namespace RUINORERP.UI.BaseForm
                                     {
                                         txtTextBox.Visible = false;
                                     }
-                                    KryptonLabel lbl = FindLabel(this, item.tb_fieldinfo.FieldText);
+                                    KryptonLabel lbl = FindLabel(this, item.tb_fieldinfo.FieldText, item.tb_fieldinfo.FieldName);
                                     if (lbl != null)
                                     {
                                         lbl.Visible = false;
                                     }
                                 }
+
+
                             }
                         }
                     }
@@ -202,14 +210,27 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+        #region 查找控件
+
         private KryptonTextBox FindTextBox(Control parentControl, string dataMember)
         {
             // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
-            if (parentControl is KryptonTextBox textBox && textBox.DataBindings.Count > 0)
+            if (parentControl is KryptonTextBox textBox)
             {
-                foreach (Binding binding in textBox.DataBindings)
+                if (textBox.DataBindings.Count > 0)
                 {
-                    if (binding.BindingMemberInfo.BindingMember == dataMember)
+                    foreach (Binding binding in textBox.DataBindings)
+                    {
+                        if (binding.BindingMemberInfo.BindingMember == dataMember)
+                        {
+                            return textBox;
+                        }
+                    }
+                }
+                else
+                {
+                    //按名称来查找
+                    if (textBox.Name == "txt" + dataMember)
                     {
                         return textBox;
                     }
@@ -231,11 +252,22 @@ namespace RUINORERP.UI.BaseForm
             foreach (Control control in controls)
             {
                 // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
-                if (control is KryptonTextBox textBox && textBox.DataBindings.Count > 0)
+                if (control is KryptonTextBox textBox)
                 {
-                    foreach (Binding binding in textBox.DataBindings)
+                    if(textBox.DataBindings.Count > 0)
                     {
-                        if (binding.BindingMemberInfo.BindingMember == dataMember)
+                        foreach (Binding binding in textBox.DataBindings)
+                        {
+                            if (binding.BindingMemberInfo.BindingMember == dataMember)
+                            {
+                                return textBox;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //按名称来查找
+                        if (textBox.Name == "txt" + dataMember)
                         {
                             return textBox;
                         }
@@ -255,20 +287,29 @@ namespace RUINORERP.UI.BaseForm
             return null;
         }
 
-        private KryptonLabel FindLabel(Control parentControl, string LabelText)
+        /// <summary>
+        /// 显示的文字找不到就按名称的规则查找
+        /// </summary>
+        /// <param name="parentControl"></param>
+        /// <param name="LabelText"></param>
+        /// <param name="LabelName"></param>
+        /// <returns></returns>
+        private KryptonLabel FindLabel(Control parentControl, string LabelText,string LabelName)
         {
             // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
             if (parentControl is KryptonLabel lbl && lbl.Text.Length > 0)
             {
-
                 if (lbl.Text == LabelText)
                 {
                     return lbl;
                 }
-
+                if (lbl.Name== "lbl"+LabelName)
+                {
+                    return lbl;
+                }
             }
             // 递归检查所有子控件
-            KryptonLabel foundLabel = FindLabelInControls(parentControl.Controls, LabelText);
+            KryptonLabel foundLabel = FindLabelInControls(parentControl.Controls, LabelText, LabelName);
             if (foundLabel != null)
             {
                 return foundLabel;
@@ -277,7 +318,7 @@ namespace RUINORERP.UI.BaseForm
             return null;
         }
 
-        private KryptonLabel FindLabelInControls(Control.ControlCollection controls, string LabelText)
+        private KryptonLabel FindLabelInControls(Control.ControlCollection controls, string LabelText, string LabelName)
         {
             foreach (Control control in controls)
             {
@@ -288,12 +329,16 @@ namespace RUINORERP.UI.BaseForm
                     {
                         return lbl;
                     }
+                    if (lbl.Name == "lbl" + LabelName)
+                    {
+                        return lbl;
+                    }
                 }
 
                 // 如果当前控件有子控件，继续递归检查
                 if (control.HasChildren)
                 {
-                    KryptonLabel foundTextBox = FindLabelInControls(control.Controls, LabelText);
+                    KryptonLabel foundTextBox = FindLabelInControls(control.Controls, LabelText, LabelName);
                     if (foundTextBox != null)
                     {
                         return foundTextBox;
@@ -303,6 +348,8 @@ namespace RUINORERP.UI.BaseForm
             return null;
         }
 
+
+        #endregion
 
         public virtual void ShowPrintStatus(KryptonLabel lblPrintStatus, BaseEntity entity)
         {
@@ -1853,7 +1900,7 @@ namespace RUINORERP.UI.BaseForm
 
             ToolBarEnabledControl(MenuItemEnums.新增);
             //bindingSourceEdit.CancelEdit();
-
+            ControlMasterColumnsInvisible();
         }
 
         protected override void Modify()

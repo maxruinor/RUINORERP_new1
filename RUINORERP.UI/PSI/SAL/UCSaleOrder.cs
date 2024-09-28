@@ -52,13 +52,9 @@ namespace RUINORERP.UI.PSI.SAL
             InitializeComponent();
             toolStripButton付款调整.Visible = true;
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
-            base.OnBindDataToUIEvent += UcSaleOrderEdit_OnBindDataToUIEvent;
+            
         }
 
-        private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_SaleOrder entity)
-        {
-            BindData(entity as tb_SaleOrder);
-        }
 
         internal override void LoadDataToUI(object Entity)
         {

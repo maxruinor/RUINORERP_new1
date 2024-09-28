@@ -69,7 +69,7 @@ namespace RUINORERP.UI.MRP.BOM
         public UCBillOfMaterials()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
+             
             kryptonDockableNavigator1.SelectedPage = kryptonPage1;
             //            kryptonNavigator1.SelectedPage = kryptonPageMain;
         }
@@ -668,11 +668,7 @@ namespace RUINORERP.UI.MRP.BOM
 
 
 
-        private void UCStockIn_OnBindDataToUIEvent(tb_BOM_S entity)
-        {
-            BindData(entity as tb_BOM_S);
-            //加载树
-        }
+     
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -706,7 +702,7 @@ namespace RUINORERP.UI.MRP.BOM
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
 
-        public void BindData(tb_BOM_S entity)
+        public override void BindData(tb_BOM_S entity)
         {
             if (entity == null)
             {

@@ -350,7 +350,7 @@ namespace RUINORERP.UI.BaseForm
         /// 根据单据实体属性状态来对应显示各种按钮控制
         /// </summary>
         /// <param name="entity"></param>
-        internal void ToolBarEnabledControl(object entity)
+        protected virtual void ToolBarEnabledControl(object entity)
         {
             if (entity == null)
             {

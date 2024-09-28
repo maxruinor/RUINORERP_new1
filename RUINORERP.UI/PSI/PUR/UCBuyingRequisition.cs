@@ -54,13 +54,10 @@ namespace RUINORERP.UI.PSI.PUR
         public UCBuyingRequisition()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
+            
 
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_BuyingRequisition entity)
-        {
-            BindData(entity as tb_BuyingRequisition);
-        }
+   
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_BuyingRequisition);
@@ -86,7 +83,7 @@ namespace RUINORERP.UI.PSI.PUR
 
         }
 
-        public void BindData(tb_BuyingRequisition entity)
+        public override void BindData(tb_BuyingRequisition entity)
         {
             if (entity == null)
             {

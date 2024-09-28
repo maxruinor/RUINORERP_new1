@@ -48,13 +48,9 @@ namespace RUINORERP.UI.PSI.INV
         public UCStockOut()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockOut_OnBindDataToUIEvent;
         }
 
-        private void UCStockOut_OnBindDataToUIEvent(tb_StockOut entity)
-        {
-            BindData(entity as tb_StockOut);
-        }
+   
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_StockOut);
@@ -83,7 +79,7 @@ namespace RUINORERP.UI.PSI.INV
 
         //private tb_StockOut _EditEntity;
         //public tb_StockOut EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public void BindData(tb_StockOut entity)
+        public override void BindData(tb_StockOut entity)
         {
             if (entity == null)
             {

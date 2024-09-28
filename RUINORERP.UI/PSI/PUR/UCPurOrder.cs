@@ -48,13 +48,10 @@ namespace RUINORERP.UI.PSI.PUR
         public UCPurOrder()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
+            
 
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_PurOrder entity)
-        {
-            BindData(entity as tb_PurOrder);
-        }
+ 
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_PurOrder);
@@ -81,7 +78,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
         }
 
-        public void BindData(tb_PurOrder entity)
+        public override void BindData(tb_PurOrder entity)
         {
             if (entity == null)
             {

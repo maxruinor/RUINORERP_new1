@@ -50,12 +50,8 @@ namespace RUINORERP.UI.PSI.INV
         public UCProdSplit()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_ProdSplit entity)
-        {
-            BindData(entity as tb_ProdSplit);
-        }
+  
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_ProdSplit);

@@ -48,12 +48,9 @@ namespace RUINORERP.UI.PSI.INV
         public UCProdMerge()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
+   
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_ProdMerge entity)
-        {
-            BindData(entity as tb_ProdMerge);
-        }
+    
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_ProdMerge);

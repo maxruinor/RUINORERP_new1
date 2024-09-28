@@ -54,7 +54,7 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionDemand>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
-            base.OnBindDataToUIEvent += UcSaleOrderEdit_OnBindDataToUIEvent;
+             
         }
 
 
@@ -78,13 +78,6 @@ namespace RUINORERP.UI.MRP.MP
             //                .ToExpression();//注意 这一句 不能少
             //QueryConditionFilter.SetFieldLimitCondition(lambda);
         }
-
-        private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_ProductionDemand entity)
-        {
-            ClearData();
-            BindData(entity);
-        }
-
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -873,8 +866,8 @@ namespace RUINORERP.UI.MRP.MP
 
         protected override void Cancel()
         {
-            base.Cancel();
             ClearData();
+            base.Cancel();
         }
 
 
@@ -888,7 +881,6 @@ namespace RUINORERP.UI.MRP.MP
             MakingDetails.Clear();
             kryptonTreeGridViewMaking.DataSource = null;
             kryptonTreeGridViewMaking.GridNodes.Clear();
-
             kryptonTreeGridViewStockLess.DataSource = null;
             kryptonTreeGridViewStockLess.GridNodes.Clear();
         }

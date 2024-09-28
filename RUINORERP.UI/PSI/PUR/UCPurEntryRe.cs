@@ -50,13 +50,9 @@ namespace RUINORERP.UI.PSI.PUR
         public UCPurEntryRe()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
+            
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_PurEntryRe entity)
-        {
-            BindData(entity as tb_PurEntryRe);
-        }
-
+ 
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_PurEntryRe);
@@ -81,7 +77,7 @@ namespace RUINORERP.UI.PSI.PUR
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurEntryRe).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public void BindData(tb_PurEntryRe entity)
+        public override void BindData(tb_PurEntryRe entity)
         {
             if (entity == null)
             {

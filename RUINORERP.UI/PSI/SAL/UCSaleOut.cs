@@ -45,15 +45,11 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOut>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
-            base.OnBindDataToUIEvent += UcSaleOrderEdit_OnBindDataToUIEvent;
+            
             base.toolStripButton结案.Visible = true;
         }
 
-        private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_SaleOut entity)
-        {
-            BindData(entity);
-
-        }
+     
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -70,7 +66,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        public void BindData(tb_SaleOut entity)
+        public override void BindData(tb_SaleOut entity)
         {
             if (entity == null)
             {
@@ -98,12 +94,8 @@ namespace RUINORERP.UI.PSI.SAL
                         entity.tb_SaleOutDetails.ForEach(c => c.SaleOut_MainID = 0);
                         entity.tb_SaleOutDetails.ForEach(c => c.SaleOutDetail_ID = 0);
                     }
-
                 }
-
-
             }
-
             if (entity.ApprovalStatus.HasValue)
             {
                 lblReview.Text = ((ApprovalStatus)entity.ApprovalStatus).ToString();
@@ -255,7 +247,6 @@ namespace RUINORERP.UI.PSI.SAL
 
             DataBindingHelper.InitFilterForControlByExp<tb_SaleOrder>(entity, txtSaleOrder, c => c.SOrderNo, queryFilter);
             ToolBarEnabledControl(entity);
-            ControlMasterColumnsInvisible();
         }
 
         public void InitDataTocmbbox()

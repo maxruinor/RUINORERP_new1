@@ -49,13 +49,8 @@ namespace RUINORERP.UI.FM
         public UCExpenseClaim()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
-
         }
-        public void UCStockIn_OnBindDataToUIEvent(object entity)
-        {
-            BindData(entity as tb_FM_ExpenseClaim);
-        }
+   
 
         /// <summary>
         /// 加载下拉值
@@ -72,7 +67,7 @@ namespace RUINORERP.UI.FM
         //    BindData(Entity as tb_FM_ExpenseClaim);
         //}
         public override void BindData(tb_FM_ExpenseClaim entity)
-            {
+        {
             if (entity == null)
             {
                 chkClaimEmployee.Enabled = false;

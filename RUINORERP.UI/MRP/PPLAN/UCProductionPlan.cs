@@ -45,14 +45,10 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionPlan>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
-            base.OnBindDataToUIEvent += UcSaleOrderEdit_OnBindDataToUIEvent;
+             
         }
 
-        private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_ProductionPlan entity)
-        {
-            BindData(entity as tb_ProductionPlan);
-        }
-
+ 
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_ProductionPlan);

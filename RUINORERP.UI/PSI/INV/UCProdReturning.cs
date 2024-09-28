@@ -51,12 +51,8 @@ namespace RUINORERP.UI.PSI.INV
         public UCProdReturning()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_ProdReturning entity)
-        {
-            BindData(entity as tb_ProdReturning);
-        }
+   
         internal override void LoadDataToUI(object Entity)
         {
          
@@ -80,7 +76,7 @@ namespace RUINORERP.UI.PSI.INV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdReturning).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public void BindData(tb_ProdReturning entity)
+        public override void BindData(tb_ProdReturning entity)
         {
            
             if (entity == null)

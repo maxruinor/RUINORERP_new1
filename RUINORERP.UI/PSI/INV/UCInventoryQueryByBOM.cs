@@ -506,7 +506,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-        public void BindData()
+        public  void BindData()
         {
             View_ProdDetail entity = QueryObject as View_ProdDetail;
             if (entity == null)

@@ -731,7 +731,7 @@ namespace RUINORERP.UI.MRP.BOM
         /// 这里字段是用来可以主动设置查询条件的
         /// 其它 的实际是可以不设置
         /// </summary>
-        public void BindData()
+        public  void BindData()
         {
             View_ProdDetail entity = QueryObject as View_ProdDetail;
             if (entity == null)

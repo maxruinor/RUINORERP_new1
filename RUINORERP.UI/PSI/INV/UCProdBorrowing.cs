@@ -50,13 +50,9 @@ namespace RUINORERP.UI.PSI.INV
         public UCProdBorrowing()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockOut_OnBindDataToUIEvent;
         }
 
-        private void UCStockOut_OnBindDataToUIEvent(tb_ProdBorrowing entity)
-        {
-            BindData(entity as tb_ProdBorrowing);
-        }
+ 
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_ProdBorrowing);
@@ -86,7 +82,7 @@ namespace RUINORERP.UI.PSI.INV
 
         //private tb_ProdBorrowing _EditEntity;
         //public tb_ProdBorrowing EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public void BindData(tb_ProdBorrowing entity)
+        public override void BindData(tb_ProdBorrowing entity)
         {
             if (entity == null)
             {

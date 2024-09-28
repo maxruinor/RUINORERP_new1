@@ -53,7 +53,6 @@ namespace RUINORERP.UI.PSI.INV
         public UCStocktake()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStocktake_OnBindDataToUIEvent;
         }
 
         private void UCStocktake_OnBindDataToUIEvent(tb_Stocktake entity)
@@ -148,8 +147,8 @@ namespace RUINORERP.UI.PSI.INV
                     //设置一下默认的枚举
 
                     entity.CheckMode = (int)CheckMode.一般盘点;
-                    entity.Adjust_Type = (int)Adjust_Type.全部; 
-          
+                    entity.Adjust_Type = (int)Adjust_Type.全部;
+
 
                     if (entity.tb_StocktakeDetails != null && entity.tb_StocktakeDetails.Count > 0)
                     {
@@ -198,14 +197,14 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CheckNo, txtCheckNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CarryingTotalQty.ToString(), txtCarryingTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CarryingTotalAmount.ToString(), txtCarryingTotalAmount, BindDataType4TextBox.Money, true);
-           
-             
-           
+
+
+
             DataBindingHelper.BindData4DataTime<tb_Stocktake>(entity, t => t.Check_date, dtpcheck_date, false);
             DataBindingHelper.BindData4DataTime<tb_Stocktake>(entity, t => t.CarryingDate, dtpCarryingDate, false);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.DiffTotalAmount.ToString(), txtDiffAmount, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4Label<tb_Stocktake>(entity, t => t.DiffTotalQty.ToString(), lblDiffQty, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.DiffTotalAmount.ToString(), txtDiffTotalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.DiffTotalQty.ToString(), txtDiffTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CheckTotalQty.ToString(), txtCheckTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_Stocktake>(entity, t => t.CheckTotalAmount.ToString(), txtCheckTotalAmount, BindDataType4TextBox.Money, false);
 
@@ -234,7 +233,7 @@ namespace RUINORERP.UI.PSI.INV
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
 
                     //if (s2.PropertyName == entity.GetPropertyName<tb_Stocktake>(c => c.Location_ID))
                     //{
@@ -296,11 +295,11 @@ namespace RUINORERP.UI.PSI.INV
             //object ReturnSumInst = Activator.CreateInstance(combinedType);
 
             ///显示列表对应的中文
-           // ConcurrentQueue<KeyValuePair<string, PropertyInfo>> Ddc = EmitHelper.GetfieldNameList(combinedType);
+            // ConcurrentQueue<KeyValuePair<string, PropertyInfo>> Ddc = EmitHelper.GetfieldNameList(combinedType);
 
 
 
-             listCols = new List<SourceGridDefineColumnItem>();
+            listCols = new List<SourceGridDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_StocktakeDetail>(c => c.ProdDetailID, true);
 
@@ -329,7 +328,6 @@ namespace RUINORERP.UI.PSI.INV
             }
             ControlChildColumnsInvisible(listCols);
 
-
             //如果选择了库位,则只会显示这个库位下面的货架 这个逻辑将来来处理
 
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
@@ -343,27 +341,8 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.CheckSubtotalAmount);
             listCols.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.CarryingSubtotalAmount);
 
-
-
-
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridData = EditEntity;
-            /*
-            //具体审核权限的人才显示成本？
-            if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
-            {
-                listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.DiffSubtotalAmount, true, c => c.DiffQty, c => c.Cost);
-                listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CheckSubtotalAmount, true, c => c.CheckQty, c => c.Cost);
-                listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CarryingSubtotalAmount, true, c => c.CarryinglQty, c => c.Cost);
-            }
-            else
-            {
-                listCols.SetCol_NeverVisible<tb_StocktakeDetail>(c => c.Cost);
-                listCols.SetCol_NeverVisible<tb_StocktakeDetail>(c => c.CarryingSubtotalAmount);
-                listCols.SetCol_NeverVisible<tb_StocktakeDetail>(c => c.DiffSubtotalAmount);
-                listCols.SetCol_NeverVisible<tb_StocktakeDetail>(c => c.CheckSubtotalAmount);
-
-            }*/
 
             //  listCols.SetCol_Formula<tb_StocktakeDetail>((a, b, c) => (a.CarryinglQty * b.CarryinglQty * c.CarryinglQty), F => F.CarryinglQty);
             listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CheckQty);
@@ -391,9 +370,6 @@ namespace RUINORERP.UI.PSI.INV
             sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Quantity, t => t.CarryinglQty);
             // sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.STOCK, t => t.CarryinglQty);
 
-
-
-
             //应该只提供一个结构
             List<tb_StocktakeDetail> lines = new List<tb_StocktakeDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
@@ -412,6 +388,8 @@ namespace RUINORERP.UI.PSI.INV
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             //sgd.BindingSourceLines.ListChanged += BindingSourceLines_ListChanged;
             // bindingSourceSub.AddingNew += BindingSourceSub_AddingNew;
+            //控件主表的字段显示权限
+            base.ControlMasterColumnsInvisible();
         }
 
         private void Grid1_Enter(object sender, EventArgs e)
@@ -559,7 +537,7 @@ namespace RUINORERP.UI.PSI.INV
                     break;
             }
 
-           return await base.Submit();
+            return await base.Submit();
         }
 
 
@@ -604,7 +582,7 @@ namespace RUINORERP.UI.PSI.INV
             {
                 return false;
             }
-            var eer = errorProviderForAllInput.GetError(txtDiffAmount);
+            var eer = errorProviderForAllInput.GetError(txtDiffTotalAmount);
 
             bindingSourceSub.EndEdit();
             //List<tb_StocktakeDetail> oldOjb = new List<tb_StocktakeDetail>(details.ToArray());

@@ -33,12 +33,9 @@ namespace RUINORERP.UI.PSI.PUR
         public UCPurEntry()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
+            
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_PurEntry entity)
-        {
-            BindData(entity as tb_PurEntry);
-        }
+   
 
         /// <summary>
         /// 用于其它UI传入的数据载入。并不是刷新数据
@@ -74,7 +71,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
 
-        public void BindData(tb_PurEntry entity)
+        public override void BindData(tb_PurEntry entity)
         {
             if (entity == null)
             {

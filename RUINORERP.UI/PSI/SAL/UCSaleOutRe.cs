@@ -48,7 +48,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOutRe>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
-            base.OnBindDataToUIEvent += UcSaleOrderEdit_OnBindDataToUIEvent;
+            
 
         }
 
@@ -60,11 +60,6 @@ namespace RUINORERP.UI.PSI.SAL
             return;
         }
 
-        private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_SaleOutRe entity)
-        {
-            BindData(entity);
-
-        }
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -72,7 +67,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        public void BindData(tb_SaleOutRe entity)
+        public override void BindData(tb_SaleOutRe entity)
         {
             if (entity == null)
             {

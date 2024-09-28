@@ -49,12 +49,8 @@ namespace RUINORERP.UI.ProductEAV
         public UCProdBundle()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_ProdBundle entity)
-        {
-            BindData(entity as tb_ProdBundle);
-        }
+  
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_ProdBundle);
@@ -78,7 +74,7 @@ namespace RUINORERP.UI.ProductEAV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdBundle).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public void BindData(tb_ProdBundle entity)
+        public override void BindData(tb_ProdBundle entity)
         {
             if (entity == null)
             {

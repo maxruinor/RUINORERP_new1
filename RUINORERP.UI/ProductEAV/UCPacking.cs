@@ -48,7 +48,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Packing>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
-            base.OnBindDataToUIEvent += UcSaleOrderEdit_OnBindDataToUIEvent;
+            
             toolStripButton结案.Visible = false;
             toolStripBtnReverseReview.Visible = false;
             toolStripbtnReview.Visible = false;
@@ -57,10 +57,7 @@ namespace RUINORERP.UI.ProductEAV
             txtSKU.Enabled = false;
         }
 
-        private void UcSaleOrderEdit_OnBindDataToUIEvent(tb_Packing entity)
-        {
-            BindData(entity as tb_Packing);
-        }
+    
 
         internal override void LoadDataToUI(object Entity)
         {

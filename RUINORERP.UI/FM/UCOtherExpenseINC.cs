@@ -46,13 +46,10 @@ namespace RUINORERP.UI.FM
         public UCOtherExpenseINC()
         {
             InitializeComponent();
-            base.OnBindDataToUIEvent += UCStockIn_OnBindDataToUIEvent;
+             
 
         }
-        private void UCStockIn_OnBindDataToUIEvent(tb_FM_OtherExpense entity)
-        {
-            BindData(entity as tb_FM_OtherExpense);
-        }
+     
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -73,7 +70,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
         }
 
-        public void BindData(tb_FM_OtherExpense entity)
+        public override void BindData(tb_FM_OtherExpense entity)
         {
             if (entity == null)
             {

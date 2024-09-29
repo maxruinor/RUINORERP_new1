@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.CommonUI
+﻿namespace RUINORERP.UI.FormProperty
 {
     partial class frmFormProperty
     {

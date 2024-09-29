@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 
-namespace RUINORERP.UI.CommonUI
+namespace RUINORERP.UI.FormProperty
 {
     public partial class frmFormProperty : frmBase
     {

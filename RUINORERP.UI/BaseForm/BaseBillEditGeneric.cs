@@ -54,6 +54,7 @@ using MathNet.Numerics.LinearAlgebra.Factorization;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using NPOI.SS.Formula.Functions;
 using SourceGrid;
+using RUINORERP.UI.FormProperty;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -62,7 +63,7 @@ namespace RUINORERP.UI.BaseForm
     /// 单据类型的编辑 主表T子表C
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public partial class BaseBillEditGeneric<T, C> : BaseBillEdit where T : class
+    public partial class BaseBillEditGeneric<T, C> : BaseBillEdit where T : class where C : class
     {
         public BaseBillEditGeneric()
         {
@@ -76,19 +77,56 @@ namespace RUINORERP.UI.BaseForm
 
                 }
             }
+            this.OnBindDataToUIEvent += BindData;
 
             KryptonButton button保存当前单据 = new KryptonButton();
             button保存当前单据.Text = "保存当前单据";
             button保存当前单据.Click += button保存当前单据_Click;
+            frm.flowLayoutPanelButtonsArea.Controls.Add(button保存当前单据);
 
             KryptonButton button加载最新数据 = new KryptonButton();
             button加载最新数据.Text = "加载最新数据";
             button加载最新数据.Click += button加载最新数据_Click;
-
-            frm.flowLayoutPanelButtonsArea.Controls.Add(button保存当前单据);
             frm.flowLayoutPanelButtonsArea.Controls.Add(button加载最新数据);
 
-            this.OnBindDataToUIEvent += BindData;
+            KryptonButton button快速录入数据 = new KryptonButton();
+            button快速录入数据.Text = "快速录入数据";
+            button快速录入数据.Click += button快速录入数据_Click;
+
+            frm.flowLayoutPanelButtonsArea.Controls.Add(button快速录入数据);
+
+
+
+
+        }
+
+        private void button快速录入数据_Click(object sender, EventArgs e)
+        {
+            frm.Close();
+            frmQuicklyInputGeneric<C> frmQuicklyInput = new frmQuicklyInputGeneric<C>();
+            frmQuicklyInput.OnApplyQuicklyInputData += OnApplyQuicklyInputData;
+            frmQuicklyInput.CurMenuInfo = CurMenuInfo;
+            if (EditEntity == null)
+            {
+                Add();
+            }
+            var details = EditEntity.GetPropertyValue(typeof(C).Name + "s");
+            if (details == null)
+            {
+                details = new List<C>();
+            }
+            frmQuicklyInput.lines = details as List<C>;
+            if (frmQuicklyInput.ShowDialog() == DialogResult.OK)
+            {
+                EditEntity.SetPropertyValue(typeof(C).Name + "s", frmQuicklyInput.lines);
+                OnBindDataToUIEvent(EditEntity);
+            }
+        }
+
+        private void OnApplyQuicklyInputData(List<C> lines)
+        {
+            EditEntity.SetPropertyValue(typeof(C).Name + "s", lines);
+            OnBindDataToUIEvent(EditEntity);
         }
 
         RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
@@ -254,7 +292,7 @@ namespace RUINORERP.UI.BaseForm
                 // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
                 if (control is KryptonTextBox textBox)
                 {
-                    if(textBox.DataBindings.Count > 0)
+                    if (textBox.DataBindings.Count > 0)
                     {
                         foreach (Binding binding in textBox.DataBindings)
                         {
@@ -294,7 +332,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="LabelText"></param>
         /// <param name="LabelName"></param>
         /// <returns></returns>
-        private KryptonLabel FindLabel(Control parentControl, string LabelText,string LabelName)
+        private KryptonLabel FindLabel(Control parentControl, string LabelText, string LabelName)
         {
             // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
             if (parentControl is KryptonLabel lbl && lbl.Text.Length > 0)
@@ -303,7 +341,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     return lbl;
                 }
-                if (lbl.Name== "lbl"+LabelName)
+                if (lbl.Name == "lbl" + LabelName)
                 {
                     return lbl;
                 }

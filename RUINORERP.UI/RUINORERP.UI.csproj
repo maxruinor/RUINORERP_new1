@@ -1068,10 +1068,10 @@
     <Compile Include="BusinessFlow\FlowDesign.Designer.cs">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </Compile>
-    <Compile Include="CommonUI\frmFormProperty.cs">
+    <Compile Include="FormProperty\frmFormProperty.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="CommonUI\frmFormProperty.Designer.cs">
+    <Compile Include="FormProperty\frmFormProperty.Designer.cs">
       <DependentUpon>frmFormProperty.cs</DependentUpon>
     </Compile>
     <Compile Include="CommonUI\frmReApproval.cs">
@@ -1205,6 +1205,18 @@
     </Compile>
     <Compile Include="Form2.Designer.cs">
       <DependentUpon>Form2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormProperty\frmQuicklyInput.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormProperty\frmQuicklyInput.Designer.cs">
+      <DependentUpon>frmQuicklyInput.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormProperty\frmQuicklyInputGeneric.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormProperty\frmQuicklyInputGeneric.Designer.cs">
+      <DependentUpon>frmQuicklyInputGeneric.cs</DependentUpon>
     </Compile>
     <Compile Include="FrmAddUnit.cs">
       <SubType>Form</SubType>
@@ -2378,7 +2390,7 @@
     <EmbeddedResource Include="BusinessFlow\FlowDesign.resx">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CommonUI\frmFormProperty.resx">
+    <EmbeddedResource Include="FormProperty\frmFormProperty.resx">
       <DependentUpon>frmFormProperty.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmReApproval.resx">
@@ -2425,6 +2437,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form2.resx">
       <DependentUpon>Form2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormProperty\frmQuicklyInput.resx">
+      <DependentUpon>frmQuicklyInput.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormProperty\frmQuicklyInputGeneric.resx">
+      <DependentUpon>frmQuicklyInputGeneric.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrmLogin.resx">
       <DependentUpon>FrmLogin.cs</DependentUpon>

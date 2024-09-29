@@ -144,7 +144,10 @@ namespace RUINORERP.UI.UControls
         /// <param name="qs"></param>
         public void SaveColumnsList(List<ColumnDisplayController> columnDisplays)
         {
-
+            if (this.XmlFileNamecdc == null)
+            {
+                this.XmlFileNamecdc = "defaultColfilecdc_1.xml";
+            }
             string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\ColumnsConfig", this.XmlFileNamecdc.ToString());
             System.IO.FileInfo fi = new FileInfo(PathwithFileName);
             //判断目录是否存在

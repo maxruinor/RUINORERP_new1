@@ -221,7 +221,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     {
                         ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
                         await serverAuthorizer.LongRunningOperationAsync(this, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
-                        UITools.SuperSleep(1000);
+                        UITools.SuperSleep(800);
                         if (this.LoginStatus)
                         {
                             MainForm.Instance.logger.LogInformation("成功恢复与服务器的连接。");

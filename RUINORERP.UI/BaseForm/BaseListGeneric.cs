@@ -39,6 +39,7 @@ using RUINORERP.Model.Models;
 using System.Diagnostics;
 using RUINORERP.Global.Model;
 using RUINORERP.UI.CommonUI;
+using RUINORERP.UI.FormProperty;
 
 namespace RUINORERP.UI.BaseForm
 {

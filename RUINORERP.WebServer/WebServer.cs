@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using RUINORERP.Model.Context;
 using RUINORERP.Model;
-using SimpleHttp;
+using RUINORERP.SimpleHttp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -122,12 +122,11 @@ namespace RUINORERP.WebServer
                 Console.WriteLine("Running HTTP server on: " + port);
                 _logger.LogInformation("Running HTTP server on: " + port);
                 string msg = string.Empty;
-
                 var ts = HttpServer.ListenAsync(port, cts.Token, Route.OnHttpRequestAsync, msg, useHttps: false);
                 if (!string.IsNullOrEmpty(msg))
                 {
                     _logger.LogInformation("Running HTTP server on: " + port);
-                    Console.WriteLine(msg);
+                    _logger.LogInformation("msg: " + msg);
                 }
                 AppExit.WaitFor(cts, ts);
             }
@@ -137,30 +136,19 @@ namespace RUINORERP.WebServer
             }
         }
 
-        private void ConfigureRoutes()
+     private void ConfigureRoutes()
         {
             Route.Before = (rq, rp) => { Console.WriteLine($"Requested: {rq.Url.PathAndQuery}"); return false; };
             Route.Error = HandleError;
             Route.Add("/", HandleHomePage, "GET");
-            // 2) 服务静态文件
-            Route.Add((rq, args) =>
-            {
-                string filePath = Path.Combine(webDir, rq.Url.LocalPath.TrimStart('/'));
-                if (File.Exists(filePath))
-                {
-                    args["file"] = filePath;
-                    return true;
-                }
-                return false;
-            }, (rq, rp, args) => rp.AsFile(rq, args["file"]));
-
-
-            Route.Add("/{action}/{paramA}-{paramB}", HandleUrlParsingDemo, "GET");
+            Route.Add("/{ERPImages}/", HandleViewImagesFiles, "GET");
+            //改为？号分割
+            Route.Add("/{action}/{paramA}?{paramB}", HandleUrlParsingDemo, "GET");///ERPImages/01J8Q1Y1A3SNCD545HFGGSSTQG-a71b4c9a927824741768f76a89624f32.jpg
             Route.Add("/upload/", HandleFormParsingUpload, "POST");
             Route.Add("/login", HandleLogin, "POST");
             Route.Add("/api/v1/users", HandleApiDemo, "GET");
             Route.Add("/delete", HandleDelete, "DELETE"); // 删除路由，仅处理DELETE请求
-            Route.Add("/deleteImages/", HandleDeleteImages);
+            Route.Add("/deleteImages", HandleDeleteImages, "DELETE");
             Route.Add("/favicon.ico", (rq, rp, args) =>
             {
                 rp.AsFile(rq, Path.Combine(webDir, "favicon.ico"));
@@ -173,20 +161,20 @@ namespace RUINORERP.WebServer
 
 
             // 6) 删除图片
-            Route.Add("/deleteImages/", (rq, rp, args) =>
-            {
-                var serverDir = _configManager.GetValue("ServerImageDirectory");
-                string imagePath = Path.Combine(webDir, serverDir, args["image"]);
-                if (File.Exists(imagePath))
-                {
-                    File.Delete(imagePath);
-                    rp.AsText("Image deleted successfully.");
-                }
-                else
-                {
-                    rp.AsText("Image not found.", HttpStatusCode.NotFound.GetDescription());
-                }
-            });
+            //Route.Add("/deleteImages/", (rq, rp, args) =>
+            //{
+            //    var serverDir = _configManager.GetValue("ServerImageDirectory");
+            //    string imagePath = Path.Combine(webDir, serverDir, args["image"]);
+            //    if (File.Exists(imagePath))
+            //    {
+            //        File.Delete(imagePath);
+            //        rp.AsText("Image deleted successfully.");
+            //    }
+            //    else
+            //    {
+            //        rp.AsText("Image not found.", HttpStatusCode.NotFound.GetDescription());
+            //    }
+            //});
             // 7) 未找到的路由
             Route.Add("", (rq, rp, args) =>
             {
@@ -198,18 +186,31 @@ namespace RUINORERP.WebServer
             {
                 rp.AsText($"500 Internal Server Error: {ex.Message}", HttpStatusCode.InternalServerError.GetDescription());
             };
+
+            // 2) 服务静态文件 放到最后 包含上面有没有没有处理的情况
+            Route.Add((rq, args) =>
+            {
+                string filePath = Path.Combine(webDir, rq.Url.LocalPath.TrimStart('/'));
+                if (File.Exists(filePath))
+                {
+                    args["file"] = filePath;
+                    return true;
+                }
+                return false;
+            }, (rq, rp, args) => rp.AsFile(rq, args["file"]));
+
         }
         // 封装异常处理
         private void HandleError(HttpListenerRequest rq, HttpListenerResponse rp, Exception ex)
         {
             _logger.LogError($"Error processing request: {ex.Message}", ex);
             rp.AsText($"500 Internal Server Error: {ex.Message}", HttpStatusCode.InternalServerError.GetDescription());
+            frmMain.Instance.PrintInfoLog($"Error processing request: {ex.Message}");
         }
 
-        public void StopWebServer()
-        {
-            cts.Cancel();
-        }
+
+
+
 
         private async void HandleHomePage(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
@@ -219,6 +220,7 @@ namespace RUINORERP.WebServer
                 if (!isAuthenticated)
                 {
                     rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
+                    frmMain.Instance.PrintInfoLog("Unauthorized");
                     return;
                 }
                 // 2) 服务静态文件
@@ -256,6 +258,24 @@ namespace RUINORERP.WebServer
             }
         }
 
+        private void HandleViewImagesFiles(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
+        {
+            try
+            {
+                string filePath = Path.Combine(webDir, rq.Url.LocalPath.TrimStart('/'));
+                if (File.Exists(filePath))
+                {
+                    args["file"] = filePath;
+                    rp.AsFile(rq, args["file"]);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                LogError(ex);
+            }
+        }
+
         // 安全的文件上传处理
         private async void HandleFormParsingUpload(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
@@ -281,11 +301,19 @@ namespace RUINORERP.WebServer
                     }
 
                     // 清理文件名以防止路径遍历攻击
-                    string safeFileName = GetSafeFileName(f.FileName);
-                    f.Save(Path.Combine(serverImagesDir, safeFileName), true);
+                    string safeFileName = GetSafeFileName(f.FileName);//斜/会被去掉
+                    string lastPath = Path.Combine(serverImagesDir, f.FileName);
+                    System.IO.FileInfo fileInfo = new FileInfo(lastPath);
+                    if (!fileInfo.Directory.Exists)
+                    {
+                        System.IO.Directory.CreateDirectory(fileInfo.DirectoryName);
+                    }
+                    f.Save(lastPath, true);
                 }
 
-                var txtRp = "Form fields: " + String.Join(";  ", args.Select(x => $"'{x.Key}: {x.Value}'")) +
+                //Upload successful这个是返回给客户端的文本标记上传成功。要对应！！TODO:
+
+                var txtRp = "UploadSuccessful Form fields: " + String.Join(";  ", args.Select(x => $"'{x.Key}: {x.Value}'")) +
                             "Files:       " + String.Join(";  ", files.Select(x => $"'{x.Key}: {x.Value.FileName}, {x.Value.ContentType}'"));
 
                 rp.AsText($"<pre>{txtRp}</pre>");
@@ -332,8 +360,16 @@ namespace RUINORERP.WebServer
         }
 
         // DELETE请求处理示例
-        void HandleDelete(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
+        private async void HandleDelete(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
+            bool isAuthenticated = await _authService.Authenticate(rq, rp);
+            if (!isAuthenticated)
+            {
+                rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
+                return;
+            }
+
+
             // 获取要删除的资源ID
             // var id = GetResourceId(rq);
             // 执行删除操作
@@ -343,17 +379,26 @@ namespace RUINORERP.WebServer
 
         async void HandleLogin(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
-            AuthenticationService authenticationService = Startup.GetFromFac<AuthenticationService>();
+            AuthenticationService authenticationService = new AuthenticationService();
             bool result = await authenticationService.LoginAsync(rq, rp);
         }
 
         // 删除图片
-        private void HandleDeleteImages(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
+        private async void HandleDeleteImages(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
             try
             {
+                bool isAuthenticated = await _authService.Authenticate(rq, rp);
+                if (!isAuthenticated)
+                {
+                    rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
+                    return;
+                }
+
                 var serverDir = _configManager.GetValue("ServerImageDirectory");
-                string imagePath = Path.Combine(webDir, serverDir, args["image"]);
+                string fileName = rq.Headers["fileName"].ToString();
+                string imagePath = Path.Combine(webDir, serverDir, fileName);
+                imagePath += ".jpg";//文件后缀
                 if (File.Exists(imagePath))
                 {
                     File.Delete(imagePath);
@@ -406,6 +451,11 @@ namespace RUINORERP.WebServer
         private void LogError(Exception ex)
         {
             _logger.LogError("", ex);
+        }
+
+        internal void StopWebServer()
+        {
+            cts.Cancel();
         }
     }
 }

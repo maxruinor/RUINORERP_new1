@@ -10,6 +10,12 @@ namespace RUINORERP.WebServer
 {
     public class Log4NetService : ILoggerService
     {
+
+        public Log4NetService()
+        {
+              
+        }
+
         private readonly ILog _log = LogManager.GetLogger(typeof(Log4NetService));
 
         public void LogInformation(string message)

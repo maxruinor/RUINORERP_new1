@@ -23,9 +23,10 @@ namespace RUINORERP.WebServer
             }
         }
         public RUINORERP.Model.Context.ApplicationContext AppContext { set; get; }
-        public ILogger<frmMain> _logger { get; set; }
+        //public ILogger<frmMain> _logger { get; set; }
+        public ILoggerService _logger { get; set; }
 
-        public frmMain(ILogger<frmMain> logger)
+        public frmMain(ILoggerService logger)
         {
             InitializeComponent();
             _instance = this;
@@ -39,7 +40,6 @@ namespace RUINORERP.WebServer
             Application.DoEvents();
             // timerServerInfo.Start();
             btnStartServer.Enabled = false;
-
             try
             {
                 PrintInfoLog("开始启动服务器");
@@ -47,26 +47,29 @@ namespace RUINORERP.WebServer
 
                 //启动socket
                 frmMain.Instance.PrintInfoLog("StartServerUI Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
-                Task.Run(() => { StartServer(); });
+                await Task.Run(() =>
+                {
+                    webserver.RunWebServer();
+                    //StartServer(); 
+                });
 
 
             }
             catch (Exception ex)
             {
                 //log4netHelper.error("StartServer总异常", ex);
-                _logger.LogInformation(ex, "StartServer总异常");
+                _logger.LogError("总异常",ex);
                 Console.WriteLine("StartServer总异常" + ex.Message);
                 //throw;
             }
         }
 
-
+        WebServer webserver = Startup.GetFromFac<WebServer>();
         async Task StartServer()
         {
             frmMain.Instance.PrintInfoLog("StartServer Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
             try
             {
-                WebServer webserver = Startup.GetFromFac<WebServer>();
                 webserver.RunWebServer();
             }
             catch (Exception e)
@@ -114,13 +117,20 @@ namespace RUINORERP.WebServer
 
         private void btnStopServer_Click(object sender, EventArgs e)
         {
-            WebServer webserver = Startup.GetFromFac<WebServer>();
             webserver.StopWebServer();
+            btnStopServer.Enabled = false;
+            btnStartServer.Enabled = true;
+            PrintInfoLog("停止服务器");
+            Application.DoEvents();
+            Application.Exit();
         }
 
         private void btnStartServer_Click(object sender, EventArgs e)
         {
             StartServerUI();
+            btnStopServer.Enabled = true;
+            btnStartServer.Enabled = false;
+            PrintInfoLog("启动服务器");
         }
     }
 }

@@ -1826,6 +1826,65 @@ namespace RUINORERP.UI.BaseForm
             base.Property();
         }
 
+        /*
+        /// <summary>
+        /// 删除远程的图片
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async virtual Task<bool> DeleteRemoteImages()
+        {
+            if (EditEntity == null || EditEntity.GetPropertyValue(typeof(T) + "Details") == null)
+            {
+                return false;
+            }
+            bool result = true;
+            List<C> details = EditEntity.GetPropertyValue(typeof(T) + "Details") as List<C>;
+            if (details == null)
+            {
+                return false;
+            }
+            foreach (C detail in details)
+            {
+                PropertyInfo[] props = typeof(C).GetProperties();
+                foreach (PropertyInfo prop in props)
+                {
+                    var col = sgd[prop.Name];//子类提上来用？
+                    if (col != null)
+                    {
+                        if (col.CustomFormat == CustomFormatType.WebPathImage)
+                        {
+                            if (detail.GetPropertyValue(prop.Name) != null
+                                && detail.GetPropertyValue(prop.Name).ToString().Contains("-"))
+                            {
+                                string imageNameValue = detail.GetPropertyValue(prop.Name).ToString();
+                                //比较是否更新了图片数据
+                                //old_new 无后缀文件名
+                                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
+                                valueImageWeb.CellImageHashName = imageNameValue;
+                                string oldfileName = valueImageWeb.GetOldRealfileName();
+                                string newfileName = valueImageWeb.GetNewRealfileName();
+                                string TempFileName = string.Empty;
+                                //fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
+                                //保存在本地临时目录 删除
+                                if (System.IO.File.Exists(TempFileName))
+                                {
+                                    System.IO.File.Delete(TempFileName);
+                                }
+                                //上传到服务器，删除本地
+                                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                string deleteRsult = await httpWebService.DeleteImageAsync(newfileName, "delete123");
+                                MainForm.Instance.PrintInfoLog(deleteRsult);
+                            }
+                        }
+                    }
+
+                }
+            }
+            return result;
+        }
+        */
+
 
         /// <summary>
         /// 保存图片到服务器。所有图片都保存到服务器。即使草稿换电脑还可以看到
@@ -1864,7 +1923,7 @@ namespace RUINORERP.UI.BaseForm
 
         private async Task<bool> UploadImageAsync(List<SourceGridDefineColumnItem> ImgCols, Grid grid, List<C> Details)
         {
-            bool rs = false;
+            bool rs = true;
             //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
             int totalRowsFlag = grid.RowsCount;
             if (grid.HasSummary)
@@ -1883,40 +1942,48 @@ namespace RUINORERP.UI.BaseForm
                     SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                     //比较是否更新了图片数据
                     string newhash = valueImageWeb.GetImageNewHash();
-                    if (valueImageWeb.CellImageBytes != null && !valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase)
-                        && grid[i, col.ColIndex].Value.ToString() == valueImageWeb.CellImageHashName)
+                    if (valueImageWeb.CellImageBytes != null )
                     {
-                        string oldfileName = valueImageWeb.GetOldRealfileName();
-                        string newfileName = valueImageWeb.GetNewRealfileName();
+                        #region 需要上传
 
-                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                        //如果服务器有旧文件 。可以先删除
-                        if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
+                        if (!valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase)
+                        && grid[i, col.ColIndex].Value.ToString() == valueImageWeb.CellImageHashName)
                         {
-                            string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
-                            MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
-                        }
-                        ////上传新文件时要加后缀名
-                        string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
-                        if (uploadRsult.Contains("UploadSuccessful"))
-                        {
-                            valueImageWeb.UpdateImageName(newhash);
-                            grid[i, col.ColIndex].Value = valueImageWeb.CellImageHashName;
+                            string oldfileName = valueImageWeb.GetOldRealfileName();
+                            string newfileName = valueImageWeb.GetNewRealfileName();
+                            HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                            //如果服务器有旧文件 。可以先删除
+                            if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
+                            {
+                                string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
+                                MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
+                            }
+                            ////上传新文件时要加后缀名
+                            string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
+                            if (uploadRsult.Contains("UploadSuccessful"))
+                            {
+                                valueImageWeb.UpdateImageName(newhash);
+                                grid[i, col.ColIndex].Value = valueImageWeb.CellImageHashName;
 
-                            string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
-                            object PKValue = editEntity.GetPropertyValue(detailPKName);
-                            var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
-                            detail.SetPropertyValue(col.ColName, valueImageWeb.CellImageHashName);
-
-                            //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
-                            MainForm.Instance.PrintInfoLog("UploadSuccessful:" + newfileName);
+                                string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
+                                object PKValue = grid[i, col.ColIndex].Row.RowData.GetPropertyValue(detailPKName);
+                                var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
+                                detail.SetPropertyValue(col.ColName, valueImageWeb.CellImageHashName);
+                                rs = true;
+                                //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
+                                MainForm.Instance.PrintInfoLog("UploadSuccessful:" + newfileName);
+                            }
+                            else
+                            {
+                                rs = false;
+                            }
                         }
+                        #endregion
                     }
                 }
             }
             return rs;
         }
-
 
         protected override void Add()
         {
@@ -2015,15 +2082,12 @@ namespace RUINORERP.UI.BaseForm
 
             #endregion
         }
-
-
         protected bool Validator(T EditEntity)
         {
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             bool vd = base.ShowInvalidMessage(ctr.BaseValidator(EditEntity));
             return vd;
         }
-
 
         /// <summary>
         /// 验证明细

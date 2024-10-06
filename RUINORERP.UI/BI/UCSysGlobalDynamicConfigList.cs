@@ -51,7 +51,7 @@ namespace RUINORERP.UI.BI
         }
 
 
-        LogsController<tb_SysGlobalDynamicConfig> pctr = Startup.GetFromFac<LogsController<tb_SysGlobalDynamicConfig>>();
+        tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig> pctr = Startup.GetFromFac<tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig>>();
         protected async override void Delete()
         {
             //动态参数不能轻易删除。需要提示，谨慎操作

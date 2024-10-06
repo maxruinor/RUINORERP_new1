@@ -7,6 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <StartupObject>RUINORERP.WebServer.Program</StartupObject>
+    <ApplicationIcon>server.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +20,13 @@
     <None Remove="appsettings.json" />
     <None Remove="log4net.config" />
     <None Remove="Log4net_db.config" />
+    <None Remove="Site\barley.mp4" />
+    <None Remove="Site\favicon.ico" />
+    <None Remove="Site\FormParsing.html" />
+    <None Remove="Site\Index.html" />
+    <None Remove="Site\UrlParsingResponse.thtml" />
+    <None Remove="Site\video-licence.txt" />
+    <None Remove="Site\VideoPlaying.html" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +37,28 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Log4net_db.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="server.ico" />
+    <Content Include="Site\barley.mp4">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\favicon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\FormParsing.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\Index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\UrlParsingResponse.thtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\video-licence.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Site\VideoPlaying.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -55,7 +85,7 @@
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
     <ProjectReference Include="..\RUINORERP.Repository\RUINORERP.Repository.csproj" />
     <ProjectReference Include="..\RUINORERP.Services\RUINORERP.Services.csproj" />
-    <ProjectReference Include="..\SimpleHTTP\SimpleHttp.csproj" />
+    <ProjectReference Include="..\RUINORERP.SimpleHttp\RUINORERP.SimpleHttp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
 using NPOI.SS.Formula.Functions;
 using OfficeOpenXml;
+using Org.BouncyCastle.Asn1.X509.Qualified;
 using RUINOR.Core;
 using RUINORERP.AutoMapper;
 using RUINORERP.Business;
@@ -22,12 +23,14 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
+using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
+using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.UI.UserCenter;
 using SqlSugar;
 using System;
@@ -365,7 +368,17 @@ namespace RUINORERP.UI.BaseForm
         }
         #endregion
 
+        /// <summary>
+        /// 删除远程的图片
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async virtual Task<bool> DeleteRemoteImages(M EditEntity)
+        {
+            await Task.Delay(0);
+            return false;
 
+        }
 
         protected async virtual void Delete(List<M> Datas)
         {
@@ -390,6 +403,9 @@ namespace RUINORERP.UI.BaseForm
                         bool rs = await ctr.BaseDeleteByNavAsync(item as M);
                         if (rs)
                         {
+                            //删除远程图片及本地图片
+                            //await DeleteRemoteImages();
+
                             counter++;
                             MainForm.Instance.logger.LogInformation($"查询列表中删除:{typeof(M).Name}，主键值：{PKValue.ToString()} ");
                         }
@@ -1102,6 +1118,14 @@ namespace RUINORERP.UI.BaseForm
         {
             //M 主表的主键不显示
             //下面已经统一处理了。
+
+            //ChildRelatedInvisibleCols
+
+
+            //找到子表中对应的主表的主键列，设置为不可见,下面统一处理了。
+
+
+
         }
 
         /// <summary>
@@ -1472,8 +1496,8 @@ namespace RUINORERP.UI.BaseForm
                         FieldValue = pkid
                     });
 
-                   var listDeatails =await ctrDetail.BaseGetQueryableAsync()
-                    .Where(conModels).ToListAsync();
+                    var listDeatails = await ctrDetail.BaseGetQueryableAsync()
+                     .Where(conModels).ToListAsync();
                     if (listDeatails != null)
                     {
                         _UCBillChildQuery.bindingSourceChild.DataSource = listDeatails;
@@ -1621,6 +1645,21 @@ namespace RUINORERP.UI.BaseForm
             _UCBillChildQuery.entityType = typeof(C);
             List<string> childlist = ExpressionHelper.ExpressionListToStringList(ChildSummaryCols);
             _UCBillChildQuery.InvisibleCols = ExpressionHelper.ExpressionListToStringList(ChildInvisibleCols);
+            List<BaseDtoField> tempChildFiledList = UIHelper.GetDtoFieldNameList<C>();//<M>
+            foreach (var item in tempChildFiledList)
+            {
+                if (item.FKTableName == null)
+                {
+                    continue;
+                }
+                if (item.FKTableName.Replace("Detail", "") == typeof(M).Name)
+                {
+                    if (!_UCBillChildQuery.InvisibleCols.Contains(item.FieldName))
+                    {
+                        _UCBillChildQuery.InvisibleCols.Add(item.FieldName);
+                    }
+                }
+            }
             _UCBillChildQuery.DefaultHideCols = new List<string>();
             ControlColumnsInvisible(_UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
             _UCBillChildQuery.SummaryCols = childlist;
@@ -1638,11 +1677,17 @@ namespace RUINORERP.UI.BaseForm
             _UCBillChildQuery_Related = new UCBillChildQuery();
             _UCBillChildQuery_Related.Name = "_UCBillChildQuery_Related";
             _UCBillChildQuery_Related.entityType = ChildRelatedEntityType;
+
             List<string> childlist = ExpressionHelper.ExpressionListToStringList(ChildRelatedSummaryCols);
-            _UCBillChildQuery_Related.InvisibleCols = ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleCols);
+            _UCBillChildQuery_Related.SummaryCols = childlist;
+            if (_UCBillChildQuery_Related.InvisibleCols == null)
+            {
+                _UCBillChildQuery_Related.InvisibleCols = new List<string>();
+            }
+            _UCBillChildQuery_Related.InvisibleCols.AddRange(ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleCols));
             _UCBillChildQuery_Related.DefaultHideCols = new List<string>();
             ControlColumnsInvisible(_UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
-            _UCBillChildQuery_Related.SummaryCols = childlist;
+
             _UCBillChildQuery_Related.ColNameDataDictionary = ChildColNameDataDictionary;
             KryptonPage page = NewPage("关联信息", 1, _UCBillChildQuery_Related);
             // Document pages cannot be docked or auto hidden

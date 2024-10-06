@@ -50,7 +50,7 @@ namespace RUINORERP.UI.FM
         {
             InitializeComponent();
         }
-   
+
 
         /// <summary>
         /// 加载下拉值
@@ -96,6 +96,9 @@ namespace RUINORERP.UI.FM
                 {
                     entity.ClaimNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.费用报销单);
                 }
+
+                //新增时，默认币别为人民币
+
             }
 
 
@@ -211,9 +214,10 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TotalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
-            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage, CustomFormatType.Image);
+//            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage, CustomFormatType.Image);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImagePath, CustomFormatType.WebPathImage);
             sgd = new SourceGridDefine(grid1, listCols, true);
+
             sgd.GridData = EditEntity;
             /*
             //具体审核权限的人才显示
@@ -223,6 +227,9 @@ namespace RUINORERP.UI.FM
                 //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.TransactionPrice);
                 //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.SubtotalPirceAmount);
             }*/
+
+
+            //listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage);//后面会删除这一列
             listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.TotalAmount);
             listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount);
@@ -307,13 +314,6 @@ namespace RUINORERP.UI.FM
             {
                 return false;
             }
-            ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
-            var temppath = configManager.GetValue("LocImageDirectory");
-            if (string.IsNullOrEmpty(temppath))
-            {
-                MainForm.Instance.uclog.AddLog("请先配置图片存储路径", UILogType.错误);
-                return false;
-            }
             var eer = errorProviderForAllInput.GetError(txtClaimlAmount);
             bindingSourceSub.EndEdit();
             List<tb_FM_ExpenseClaimDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_ExpenseClaimDetail>;
@@ -354,25 +354,6 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-                //处理图片
-                foreach (tb_FM_ExpenseClaimDetail detail in EditEntity.tb_FM_ExpenseClaimDetails)
-                {
-                    PropertyInfo[] props = typeof(tb_FM_ExpenseClaimDetail).GetProperties();
-                    foreach (PropertyInfo prop in props)
-                    {
-                        var col = sgd[prop.Name];
-                        if (col != null)
-                        {
-                            if (col.CustomFormat == CustomFormatType.WebPathImage)
-                            {
-                                //string newvalue = detail.GetPropertyValue(prop.Name).ToString();
-                                // newvalue = newvalue.Replace(temppath,")"
-                                //detail.SetPropertyValue(prop.Name, newvalue);
-                            }
-                        }
-                    }
-                }
-
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {
@@ -382,26 +363,31 @@ namespace RUINORERP.UI.FM
                 {
                     return false;
                 }
-
+                //处理图片
+                bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
+                if (uploadImg)
+                {
+                    ////更新图片名后保存到数据库
+                    //int ImgCounter = await MainForm.Instance.AppContext.Db.Updateable<tb_FM_ExpenseClaimDetail>(EditEntity.tb_FM_ExpenseClaimDetails)
+                    //    .UpdateColumns(t => new { t.EvidenceImagePath })
+                    //    .ExecuteCommandAsync();
+                    //if (ImgCounter > 0)
+                    //{
+                    MainForm.Instance.PrintInfoLog($"图片保存成功,。");
+                    //}
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("图片上传出错。");
+                    return false;
+                }
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
                 if (NeedValidated)
                 {
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
-                        if (uploadImg)
-                        {
-                            //更新图片名后保存到数据库
-                            int ImgCounter = await MainForm.Instance.AppContext.Db.Updateable<tb_FM_ExpenseClaimDetail>(EditEntity.tb_FM_ExpenseClaimDetails)
-                                .UpdateColumns(t => new { t.EvidenceImagePath })
-                                .ExecuteCommandAsync();
-                            if (ImgCounter > 0)
-                            {
-                                MainForm.Instance.PrintInfoLog($"图片保存成功,{ImgCounter}。");
-                            }
 
-                        }
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ClaimNo}。");
                     }
                     else
@@ -472,7 +458,9 @@ namespace RUINORERP.UI.FM
                                         //实际应该可以直接传二进制数据，但是暂时没有实现，所以先保存到本地，再上传
                                         //ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
                                         HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                                        string uploadRsult = await httpWebService.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, valueImageWeb.CellImageBytes, "upload");
+                                        ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+                                        var upladurl = configManager.GetValue("WebServerUploadUrl");
+                                        string uploadRsult = await httpWebService.UploadImageAsyncOK(upladurl, fileName, valueImageWeb.CellImageBytes, "upload");
                                         //string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, "upload");
                                         if (true)
                                         {
@@ -532,7 +520,6 @@ namespace RUINORERP.UI.FM
                     {
                         if (col.CustomFormat == CustomFormatType.WebPathImage)
                         {
-
                             if (detail.GetPropertyValue(prop.Name) != null
                                 && detail.GetPropertyValue(prop.Name).ToString().Contains("-"))
                             {
@@ -559,7 +546,6 @@ namespace RUINORERP.UI.FM
                     }
 
                 }
-                return result;
             }
             return result;
         }

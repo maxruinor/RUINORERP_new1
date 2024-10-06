@@ -201,7 +201,6 @@ namespace RUINORERP.Business
                 //  _logger.Error(approvalEntity.bizName + "事务回滚");
                 return rs;
             }
-
         }
 
         public async override Task<List<T>> GetPrintDataSource(long ID)

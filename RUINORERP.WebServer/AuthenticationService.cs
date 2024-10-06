@@ -1,4 +1,4 @@
-﻿using SimpleHttp;
+﻿using RUINORERP.SimpleHttp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,14 +21,33 @@ namespace RUINORERP.WebServer
     {
         public async Task<bool> Authenticate(HttpListenerRequest request, HttpListenerResponse response)
         {
+            if (request.Cookies["sessionId"] == null)
+            {
+                return false;
+            }
+
+            string sessionId = request.Cookies["sessionId"].Value;
+            if (SessionStorage.Exists(sessionId))
+            {
+                var userState = SessionStorage.Get(sessionId);
+                // 处理请求
+            }
+            else
+            {
+                response.StatusCode = 401; // Unauthorized
+                //response.Close(); // 关闭连接后后面无法访问
+                return false;
+            }
+
             // 实现身份验证逻辑，例如检查请求头中的令牌
-            return await LoginAsync(request, response);
-            //return true; // 假设用户已通过身份验证
+
+            return true; // 假设用户已通过身份验证
         }
 
         // 伪代码示例
         public void LoginByQueryString(HttpListenerRequest request, HttpListenerResponse response)
         {
+
             string username = request.QueryString["username"];
             string password = request.QueryString["password"];
 
@@ -69,6 +88,7 @@ namespace RUINORERP.WebServer
                     {
                         // 创建Session
                         string sessionId = Guid.NewGuid().ToString();
+                        SessionStorage.Add(sessionId, new { Username = username }, 30); //会话超时设置为30分钟
                         Cookie sessionCookie = new Cookie("sessionId", sessionId);
 
                         // 设置Cookie过期时间为24小时

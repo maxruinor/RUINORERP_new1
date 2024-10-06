@@ -74,7 +74,7 @@ namespace RUINORERP.UI.PSI.INV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdMerge).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public async void BindData(tb_ProdMerge entity)
+        public async override void BindData(tb_ProdMerge entity)
         {
             if (entity == null)
             {

@@ -63,6 +63,11 @@ namespace RUINORERP.UI.Common
 
             // 发送登录请求到服务端
             var response = await SendLoginRequest(username, password, loginUrl);
+            if (response == null)
+            {
+                MessageBox.Show("web服务器连接失败，请检查网络连接，或联系管理员确认服务器是否正常运行。");
+                return false;
+            }
             if (response.IsSuccessStatusCode)
             {
                 // 获取服务端设置的Cookie
@@ -409,7 +414,7 @@ namespace RUINORERP.UI.Common
             string imageUrl = WebServerUrl + "/" + ServerImageDirectory + "/" + fileNameNoExtName + ".jpg";
             byte[] result = new byte[0];
             try
-            {
+                {
                 // 构建请求
                 var handler = new HttpClientHandler();
 

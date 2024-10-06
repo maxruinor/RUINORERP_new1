@@ -3,7 +3,7 @@ using Autofac;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using RUINORERP.Model.Context;
-using SimpleHttp;
+using RUINORERP.SimpleHttp;
 using System.Net;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;

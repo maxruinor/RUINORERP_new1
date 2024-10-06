@@ -34,6 +34,8 @@ namespace RUINORERP.UI.FM
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ClaimNo);
+            //有远程图片列的时候，图片删除还没有处理好。暂时不使用这个功能
+            toolStripButtonDelete.Visible = false;
         }
 
 
@@ -45,6 +47,9 @@ namespace RUINORERP.UI.FM
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
+            System.Linq.Expressions.Expression<Func<tb_FM_ExpenseClaim, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
 
 
         }
@@ -57,8 +62,8 @@ namespace RUINORERP.UI.FM
                              //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                              //.AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                              .And(t => t.isdeleted == false)
-                            // .And(t => t.Is_enabled == true)
-                            //报销人员限制，财务不限制 暂时不实现 后面实现
+                             // .And(t => t.Is_enabled == true)
+                             //报销人员限制，财务不限制 暂时不实现 后面实现
                              .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                             .ToExpression();//注意 这一句 不能少
             base.LimitQueryConditions = lambda;

@@ -12,4 +12,5 @@ namespace RUINORERP.WebServer
         void LogError(string message, Exception exception);
         // 可以添加更多的日志级别方法
     }
+
 }

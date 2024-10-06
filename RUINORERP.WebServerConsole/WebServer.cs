@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using RUINORERP.Model.Context;
 using RUINORERP.Model;
 using RUINORERP.WebServerConsole.Comm;
-using SimpleHttp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +11,9 @@ using System.Text;
 using System.Threading.Tasks;
 using log4net.Core;
 using Microsoft.VisualBasic;
+using RUINORERP.SimpleHttp;
+using System.IO;
+using System.Threading;
 
 namespace RUINORERP.WebServerConsole
 {
@@ -23,21 +25,30 @@ namespace RUINORERP.WebServerConsole
         private readonly ConfigManager _configManager;
         private readonly ApplicationContext _appContext;
         private readonly ILoggerService _logger; // 假设引入了日志库
-        private readonly IAuthenticationService _authService;
-        private readonly IAuthorizationService _authzService;
+                                                 //private readonly IAuthenticationService _authService;
+                                                 //private readonly IAuthorizationService _authzService;
+
+        //public WebServer(ApplicationContext appContext, ConfigManager configManager,
+        //    ILoggerService logger, IAuthenticationService authService, IAuthorizationService authzService)
+        //{
+
+        public WebServer()
+        {
+
+        }
 
         public WebServer(ApplicationContext appContext, ConfigManager configManager,
-            ILoggerService logger, IAuthenticationService authService, IAuthorizationService authzService)
+          ILoggerService logger)
         {
             _appContext = appContext;
             _configManager = configManager;
             _logger = logger;
-            _authService = authService;
-            _authzService = authzService;
+            //_authService = authService;
+            //_authzService = authzService;
         }
 
 
-        public async void RunWebServer()
+        public void RunWebServer()
         {
             //------------------- define routes -------------------
             #region
@@ -113,32 +124,30 @@ namespace RUINORERP.WebServerConsole
 
             try
             {
-                _sysGlobalDynamicConfigs = _appContext.Db.Queryable<tb_SysGlobalDynamicConfig>().ToList();
+                _sysGlobalDynamicConfigs = SqlSugarHelper.Db.Queryable<tb_SysGlobalDynamicConfig>().ToList();
 
                 ConfigureRoutes();
                 //------------------- start server -------------------           
                 var port = 8081;
                 Console.WriteLine("Running HTTP server on: " + port);
-                _logger.LogInformation("Running HTTP server on: " + port);
+                //_logger.LogInformation("Running HTTP server on: " + port);
                 string msg = string.Empty;
                 CancellationTokenSource cts = new CancellationTokenSource();
-                var ts = HttpServer.ListenAsync(port, cts.Token, Route.OnHttpRequestAsync, msg, useHttps: false);
+                var ts = HttpServer.ListenAsync("192.168.0.99",port, cts.Token, Route.OnHttpRequestAsync, msg, useHttps: false);
                 if (!string.IsNullOrEmpty(msg))
                 {
-                    _logger.LogInformation("Running HTTP server on: " + port);
+                    //_logger.LogInformation("Running HTTP server on: " + port);
                     Console.WriteLine(msg);
                 }
 
-
                 AppExit.WaitFor(cts, ts);
-
-
 
             }
 
             catch (Exception exx)
             {
-                _logger.LogError("错误exx", exx);
+                Console.WriteLine("错误exx", exx.Message);
+                //_logger.LogError("错误exx", exx);
             }
         }
 
@@ -221,12 +230,12 @@ namespace RUINORERP.WebServerConsole
         {
             try
             {
-                bool isAuthenticated = await _authService.Authenticate(rq, rp);
-                if (!isAuthenticated)
-                {
-                    rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
-                    return;
-                }
+                //bool isAuthenticated = await _authService.Authenticate(rq, rp);
+                //if (!isAuthenticated)
+                //{
+                //rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
+                //return;
+                //}
                 // 2) 服务静态文件
                 string filePath = Path.Combine(webDir, rq.Url.LocalPath.TrimStart('/'));
                 if (File.Exists(filePath))
@@ -285,12 +294,12 @@ namespace RUINORERP.WebServerConsole
         {
             try
             {
-                bool isAuthenticated = await _authService.Authenticate(rq, rp);
-                if (!isAuthenticated)
-                {
-                    rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
-                    return;
-                }
+                //bool isAuthenticated = await _authService.Authenticate(rq, rp);
+                //if (!isAuthenticated)
+                //{
+                rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
+                return;
+                //}
 
                 var files = rq.ParseBody(args);
                 string serverImagesDir = Path.Combine(webDir, "ERPImages");
@@ -305,8 +314,14 @@ namespace RUINORERP.WebServerConsole
                     }
 
                     // 清理文件名以防止路径遍历攻击
-                    string safeFileName = GetSafeFileName(f.FileName);
-                    f.Save(Path.Combine(serverImagesDir, safeFileName), true);
+                    string safeFileName = GetSafeFileName(f.FileName);//斜/会被去掉
+                    string lastPath = Path.Combine(serverImagesDir, f.FileName);
+                    System.IO.FileInfo fileInfo = new FileInfo(lastPath);
+                    if (!fileInfo.Directory.Exists)
+                    {
+                        System.IO.Directory.CreateDirectory(fileInfo.DirectoryName);
+                    }
+                    f.Save(lastPath, true);
                 }
 
                 //Upload successful这个是返回给客户端的文本标记上传成功。要对应！！TODO:
@@ -360,12 +375,12 @@ namespace RUINORERP.WebServerConsole
         // DELETE请求处理示例
         private async void HandleDelete(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
-            bool isAuthenticated = await _authService.Authenticate(rq, rp);
-            if (!isAuthenticated)
-            {
-                rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
-                return;
-            }
+            //bool isAuthenticated = await _authService.Authenticate(rq, rp);
+            //if (!isAuthenticated)
+            //{
+            rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
+            return;
+            //}
 
 
             // 获取要删除的资源ID
@@ -377,8 +392,8 @@ namespace RUINORERP.WebServerConsole
 
         async void HandleLogin(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
-            AuthenticationService authenticationService = new AuthenticationService();
-            bool result = await authenticationService.LoginAsync(rq, rp);
+            //AuthenticationService authenticationService = new AuthenticationService();
+            //bool result = await authenticationService.LoginAsync(rq, rp);
         }
 
         // 删除图片
@@ -386,12 +401,12 @@ namespace RUINORERP.WebServerConsole
         {
             try
             {
-                bool isAuthenticated = await _authService.Authenticate(rq, rp);
-                if (!isAuthenticated)
-                {
-                    rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
-                    return;
-                }
+                //bool isAuthenticated = await _authService.Authenticate(rq, rp);
+                //if (!isAuthenticated)
+                //{
+                rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
+                return;
+                //}
 
                 var serverDir = _configManager.GetValue("ServerImageDirectory");
                 string fileName = rq.Headers["fileName"].ToString();

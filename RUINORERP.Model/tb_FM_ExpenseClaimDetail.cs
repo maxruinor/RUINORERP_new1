@@ -267,20 +267,7 @@ namespace RUINORERP.Model
             SetProperty(ref _UntaxedAmount, value);
             }
         }
-
-        private byte[] _EvidenceImage;
-        /// <summary>
-        /// 凭证图
-        /// </summary>
-        [AdvQueryAttribute(ColName = "EvidenceImage",ColDesc = "凭证图")] 
-        [SugarColumn(ColumnDataType = "image", SqlParameterDbType ="Binary",  ColumnName = "EvidenceImage" ,Length=2147483647,IsNullable = true,ColumnDescription = "凭证图" )]
-        public byte[] EvidenceImage
-        { 
-            get{return _EvidenceImage;}
-            set{
-            SetProperty(ref _EvidenceImage, value);
-            }
-        }
+        
 
         private string _EvidenceImagePath;
         /// <summary>

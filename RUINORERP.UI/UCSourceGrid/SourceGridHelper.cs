@@ -1164,7 +1164,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     //toolTipController.ToolTipIcon = ToolTipIcon.Info;
                     //toolTipController.IsBalloon = true;
 
-                    PictureViewerController pictureViewer = new PictureViewerController();
+                    //PictureViewerController pictureViewer = new PictureViewerController();
 
                     //目前只加到要手输入的，非关联字段上
                     CustomKeyEvent tabkeyController = new CustomKeyEvent();
@@ -1252,7 +1252,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             c.View = new SourceGrid.Cells.Views.SingleImage();
                             //PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
                             //c.AddController(popupMenu);
-                            c.AddController(pictureViewer);
+                            //c.AddController(pictureViewer);
                             break;
                         case "System.Boolean":
                             c = new SourceGrid.Cells.CheckBox(null, true);
@@ -1286,7 +1286,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         c.View = new SourceGrid.Cells.Views.SingleImage();
                         //PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
                         //c.AddController(popupMenu);
-                        c.AddController(pictureViewer);
+                       // c.AddController(pictureViewer);
                     }
                     #endregion
 

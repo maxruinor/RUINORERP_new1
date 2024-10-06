@@ -735,6 +735,7 @@ namespace RUINORERP.UI.MRP.BOM
             {
                 entity = new tb_BOM_S();
                 entity.DataStatus = (int)DataStatus.草稿;
+                entity.ActionStatus= ActionStatus.新增;
                 entity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
                 entity.Effective_at = System.DateTime.Now;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;

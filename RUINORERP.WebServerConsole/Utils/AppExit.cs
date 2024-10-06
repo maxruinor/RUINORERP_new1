@@ -6,7 +6,7 @@ namespace RUINORERP.WebServerConsole
 {
     static class AppExit
     {
-        public static void WaitFor(CancellationTokenSource cts, params Task[] tasks)
+        public async static void WaitFor(CancellationTokenSource cts, params Task[] tasks)
         {
             if (cts == null)
                 throw new ArgumentNullException(nameof(cts));
@@ -52,7 +52,7 @@ namespace RUINORERP.WebServerConsole
                 cts.Dispose();
                 Console.CancelKeyPress -= (sender, eArgs) => { }; // 取消注册
             }
-          
+
         }
 
         static void cancelTasks(CancellationTokenSource cts)
@@ -66,7 +66,9 @@ namespace RUINORERP.WebServerConsole
             try
             {
                 foreach (var t in tasks) //enables exception handling
+                {
                     t.Wait();
+                }
             }
             catch (Exception ex)
             {

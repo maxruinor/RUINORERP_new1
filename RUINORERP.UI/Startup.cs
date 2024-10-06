@@ -400,6 +400,7 @@ public IHost CslaDIPortBackup()
             {
                 logBuilder.ClearProviders();
                 //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
+                //引用的long4net.dll要版本一样。
                 logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", conn, Program.AppContextData));
             });
 

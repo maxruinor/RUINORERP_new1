@@ -4,11 +4,8 @@ using System.Linq;
 using Autofac;
 using Autofac.Extras.DynamicProxy;
 using System.IO;
-using RUINORERP.Common.DI;
-using RUINORERP.Common.Helper;
 using log4net;
-using RUINORERP.Common.Global;
-using RUINORERP.Extensions.AOP;
+ 
  
 
 namespace RUINORERP.WebServerConsole
@@ -123,22 +120,7 @@ namespace RUINORERP.WebServerConsole
             #endregion
 
 
-            //var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
-            //builder.RegisterAssemblyTypes(dalAssemble)
-            //      .AsImplementedInterfaces().AsSelf()
-            //      .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-            //      .PropertiesAutowired();//允许属性注入
-
-            //var dalAssembleCore = Assembly.LoadFrom("RUINOR.Framework.Core.dll");
-            //builder.RegisterAssemblyTypes(dalAssembleCore)
-            //      .AsImplementedInterfaces().AsSelf()
-            //      .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-            //      .PropertiesAutowired();//允许属性注入
-            //services.AddScoped<ICurrentUser, CurrentUser>();
-            //services.AddSingleton(typeof(AutoMapperConfig));
-            //services.AddScoped<IMapper, Mapper>();
-            //builder.RegisterType(ipmap)
-
+           
             log4net.Repository.ILoggerRepository repository = LogManager.CreateRepository("kxrz");
             log4net.Config.XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
             var loggerRepository = repository;

@@ -388,7 +388,7 @@ namespace RUINORERP.UI
             {
                 MainForm.Instance.AppContext.UserMenuList = rslist as List<tb_MenuInfo>;
             }
-
+            LoginWebServer();
         }
 
         private void kryptonDockableWorkspace1_ActivePageChanged(object sender, ActivePageChangedEventArgs e)
@@ -1633,6 +1633,7 @@ namespace RUINORERP.UI
                 MainForm.Instance.Invoke(new Action(() =>
                 {
                     uclog.AddLog("ex", msg + ex.Message);
+                    MainForm.Instance.logger.LogError(ex, "PrintInfoLog");
                 }));
 
             }
@@ -2054,18 +2055,24 @@ namespace RUINORERP.UI
 
         private async void LoginWebServer()
         {
-            HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-            ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
-            var webServerUrl = configManager.GetValue("WebServerUrl");
-            bool islogin = await httpWebService.Login(MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName, MainForm.Instance.AppContext.CurUserInfo.UserInfo.Password, webServerUrl + @"/login");
-            if (islogin)
+            try
             {
-                MainForm.Instance.uclog.AddLog($"{webServerUrl}登陆成功。");
-                var ulid = Ulid.NewUlid();
-                var ulidString = ulid.ToString();
-                Console.WriteLine($"Generated ULID: {ulidString}");
+                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+                var webServerUrl = configManager.GetValue("WebServerUrl");
+                bool islogin = await httpWebService.Login(MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName, MainForm.Instance.AppContext.CurUserInfo.UserInfo.Password, webServerUrl + @"/login");
+                if (islogin)
+                {
+                    MainForm.Instance.uclog.AddLog($"{webServerUrl}登陆成功。");
+                    //var ulid = Ulid.NewUlid();
+                    //var ulidString = ulid.ToString();
+                    //Console.WriteLine($"Generated ULID: {ulidString}");
+                }
             }
-
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "LoginWebServer");
+            }
 
         }
 

@@ -43,7 +43,6 @@
             logViewer1.Font = new Font("Consolas", 9F);
             logViewer1.Location = new Point(0, 303);
             logViewer1.Name = "logViewer1";
-            logViewer1.ReadOnly = true;
             logViewer1.ScrollBars = RichTextBoxScrollBars.Vertical;
             logViewer1.Size = new Size(803, 153);
             logViewer1.TabIndex = 0;

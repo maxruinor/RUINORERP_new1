@@ -16,7 +16,7 @@ namespace RUINORERP.WebServerConsole
         //用单例模式
         public static SqlSugarScope Db = new SqlSugarScope(new ConnectionConfig()
         {
-            ConnectionString = "Server=192.168.0.254;Database=erpnew;UID=sa;Password=SA!@#123sa;Max Pool Size=1000;MultipleActiveResultSets=True;",//连接符字串
+            ConnectionString = "Server=192.168.0.254;Database=erpnew;UID=sa;Password=SA!@#123sa;Max Pool Size=1000;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True;",//连接符字串
             DbType = DbType.SqlServer,//数据库类型
             IsAutoCloseConnection = true //不设成true要手动close
         },
@@ -27,7 +27,7 @@ namespace RUINORERP.WebServerConsole
           {
 
               //获取原生SQL推荐 5.1.4.63  性能OK
-              Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
+              //Console.WriteLine(UtilMethods.GetNativeSql(sql, pars));
 
               //获取无参数化SQL 对性能有影响，特别大的SQL参数多的，调试使用
               //Console.WriteLine(UtilMethods.GetSqlString(DbType.SqlServer,sql,pars))

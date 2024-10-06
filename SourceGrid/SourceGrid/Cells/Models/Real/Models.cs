@@ -345,10 +345,10 @@ namespace SourceGrid.Cells.Models
                 }
                 if (string.IsNullOrEmpty(realName))
                 {
-                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : Ulid.NewUlid().ToString();
+                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : System.DateTime.Now.ToString("yy")+"/"+System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
                     if (string.IsNullOrEmpty(realName))
                     {
-                        realName = Ulid.NewUlid().ToString();
+                        realName =System.DateTime.Now.ToString("yy")+ "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
                     }
                 }
             }
@@ -413,13 +413,13 @@ namespace SourceGrid.Cells.Models
                 }
                 if (string.IsNullOrEmpty(realName))
                 {
-                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : Ulid.NewUlid().ToString();
+                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : System.DateTime.Now.ToString("yy")+ "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
                 }
             }
    
             if (string.IsNullOrEmpty(realName))
             {
-                realName = Ulid.NewUlid().ToString();
+                realName = System.DateTime.Now.ToString("yy")+"/"+System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
             }
 
             CellImageHashName = realName + "-" + oldhash + "_" + newhash;
@@ -435,7 +435,7 @@ namespace SourceGrid.Cells.Models
         public static readonly ValueImageWeb Default = new ValueImageWeb();
         public ValueImageWeb()
         {
-            //realName = Ulid.NewUlid().ToString(); 
+             
         }
         //这一行确定了这个值的类型，所以这里不用再写一个转换器了
         private DevAge.ComponentModel.Validator.ValidatorTypeConverter imageConverter =

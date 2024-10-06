@@ -84,6 +84,7 @@ namespace SourceGrid.Cells.Views
             //start by watson 2024-1-11
             if (context.Value == null)
             {
+                GridImage = null;
                 return;
             }
             //显示图片  要是图片列才处理

@@ -13,18 +13,20 @@ namespace RUINORERP.WebServer
 
             if (tasks == null)
                 throw new ArgumentNullException(nameof(tasks));
-            Console.WriteLine("\nCtrl+C was pressed. Canceling tasks...");
-            // 注册 Ctrl+C 事件处理
-            Console.CancelKeyPress += (sender, eArgs) =>
-            {
-                eArgs.Cancel = true; // 防止进程被终止
-                cts.Cancel();
-            };
+            //Console.WriteLine("\nCtrl+C was pressed. Canceling tasks...");
+            //// 注册 Ctrl+C 事件处理
+            //Console.CancelKeyPress += (sender, eArgs) =>
+            //{
+            //    eArgs.Cancel = true; // 防止进程被终止
+            //    cts.Cancel();
+            //};
 
             try
             {
                 // 等待所有任务完成或取消信号
-                Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite, cts.Token)).Wait();
+                waitTasks(tasks);
+                // 等待所有任务完成或取消信号
+                //Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite, cts.Token)).Wait();
             }
             catch (OperationCanceledException)
             {
@@ -41,8 +43,10 @@ namespace RUINORERP.WebServer
             }
             finally
             {
+                cts.Cancel();
                 cts.Dispose();
-                Console.CancelKeyPress -= (sender, eArgs) => { }; // 取消注册
+                frmMain.Instance._logger.LogInformation("Application is exiting...canceling tasks...");
+                // Console.CancelKeyPress -= (sender, eArgs) => { }; // 取消注册
             }
         }
 
@@ -62,6 +66,7 @@ namespace RUINORERP.WebServer
             catch (Exception ex)
             {
                 writeError(ex);
+                frmMain.Instance._logger.LogError("waitTasks: ", ex);
             }
         }
 
@@ -75,6 +80,7 @@ namespace RUINORERP.WebServer
 
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Error: " + ex.Message);
+            frmMain.Instance._logger.LogError("Error: ", ex);
             Console.ResetColor();
         }
     }

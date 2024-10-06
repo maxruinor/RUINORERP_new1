@@ -1,42 +1,26 @@
 ﻿using System;
 using System.Threading;
-using SimpleHttp;
+using RUINORERP.SimpleHttp;
 using System.IO;
 using System.Linq;
-using RUINORERP.WebServerConsole;
-using RUINORERP.WebServerConsole.Comm;
-using RUINORERP.Model.Context;
 
 namespace RUINORERP.WebServerConsole
 {
     static class Program
     {
-        private static ApplicationContext _AppContextData;
-        public static ApplicationContext AppContextData
+        [STAThread]
+        static void Main(string[] args)
         {
-            get
-            {
-                if (_AppContextData == null)
-                {
-                    ApplicationContextManagerAsyncLocal applicationContextManagerAsyncLocal = new ApplicationContextManagerAsyncLocal();
-                    applicationContextManagerAsyncLocal.Flag = "test" + System.DateTime.Now.ToString();
-                    ApplicationContextAccessor applicationContextAccessor = new ApplicationContextAccessor(applicationContextManagerAsyncLocal);
-                    _AppContextData = new ApplicationContext(applicationContextAccessor);
-                    _AppContextData.Db = SqlSugarHelper.Db;
-                }
-                return _AppContextData;
-            }
-            set
-            {
-                _AppContextData = value;
-            }
+            Console.WriteLine("Running HTTP server on: ");
+            test();
         }
-        static void Main()
+
+        private static void test()
         {
-            ConfigManager _configManager = new ConfigManager();
-            ILoggerService loggerService = new Log4NetService();
-            WebServer webserver = new WebServer(AppContextData, _configManager, loggerService, new AuthenticationService(), new AuthorizationService());
-            webserver.RunWebServer();
+            WebServer server = new WebServer();
+            server.RunWebServer();
+            Console.ReadLine();
         }
+
     }
 }

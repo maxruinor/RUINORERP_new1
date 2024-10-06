@@ -1996,7 +1996,6 @@ namespace RUINORERP.UI.BaseForm
                 bindingSourceSub.Clear();
                 OnBindDataToUIEvent(EditEntity);
             }
-            // BindData(_EditEntity);
 
             if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
             {

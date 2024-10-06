@@ -69,7 +69,7 @@ namespace RUINORERP.UI.MRP.BOM
         public UCBillOfMaterials()
         {
             InitializeComponent();
-             
+
             kryptonDockableNavigator1.SelectedPage = kryptonPage1;
             //            kryptonNavigator1.SelectedPage = kryptonPageMain;
         }
@@ -668,7 +668,7 @@ namespace RUINORERP.UI.MRP.BOM
 
 
 
-     
+
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -735,7 +735,7 @@ namespace RUINORERP.UI.MRP.BOM
             {
                 entity = new tb_BOM_S();
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.ActionStatus= ActionStatus.新增;
+                entity.ActionStatus = ActionStatus.新增;
                 entity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
                 entity.Effective_at = System.DateTime.Now;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
@@ -800,31 +800,12 @@ namespace RUINORERP.UI.MRP.BOM
 
 
             //如果属性变化 则状态为修改
-            EditEntity.PropertyChanged += async (sender, s2) =>
+            entity.PropertyChanged += async (sender, s2) =>
             {
-                //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
-                //这样在新增加和修改时才会触发添加母件的快捷按钮
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.ActionStatus))
-                {
-                    base.InitRequiredToControl(new tb_BOM_SValidator(), kryptonSplitContainer1.Panel1.Controls);
-                    //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
-                    //  base.InitFilterForControl<View_ProdDetail, View_ProdDetailQueryDto>(entity, txtProdDetailID, c => c.CNName);
 
-                    //创建表达式  草稿 结案 和没有提交的都不显示
-                    var lambdaOrder = Expressionable.Create<View_ProdDetail>()
-                                    // .And(t => t.DataStatus == (int)DataStatus.确认)
-                                    .ToExpression();//注意 这一句 不能少
-
-                    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_ProdDetail).Name + "Processor");
-                    QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-
-                    ///视图指定成实体表，为了显示关联数据
-                    DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(entity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
-                }
 
                 //权限允许,草稿新建或修改状态时，才允许修改（修改要未审核或审核未通过）
-                if (((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
-                )
+                if (((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建)))
                 {
                     if (entity.ProdDetailID > 0 &&
                     (s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.ProdDetailID) ||
@@ -859,7 +840,15 @@ namespace RUINORERP.UI.MRP.BOM
                         //加载母件关联的显示用的数据
                         txtSpec.Text = vp.Specifications;
                         entity.property = vp.prop;
-                        entity.BOM_Name = vp.CNName + "-" + vp.prop;
+                        if (!string.IsNullOrEmpty(vp.prop))
+                        {
+                            entity.BOM_Name = vp.CNName + "-" + vp.prop;
+                        }
+                        else
+                        {
+                            entity.BOM_Name = vp.CNName;
+                        }
+                   
                         entity.SKU = vp.SKU;
                         cmbType.SelectedValue = vp.Type_ID;
 
@@ -885,17 +874,35 @@ namespace RUINORERP.UI.MRP.BOM
                 entity.tb_BOM_SDetails = new List<tb_BOM_SDetail>();
             }
             //如果明细中包含了母件。就是死循环。不能用树来显示
-            if (entity.tb_BOM_SDetails.Any(c => c.ProdDetailID == EditEntity.ProdDetailID))
+            if (entity.tb_BOM_SDetails.Any(c => c.ProdDetailID == entity.ProdDetailID))
             {
                 MessageBox.Show("BOM明细中包含了母件，请修复这个致命数据错误。系统已经跳过树形显示。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             LoadTreeData(TransToDataTableByTreeAsync(entity));
+
+            //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
+            //这样在新增加和修改时才会触发添加母件的快捷按钮
+            if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改))
+            {
+                base.InitRequiredToControl(new tb_BOM_SValidator(), kryptonSplitContainer1.Panel1.Controls);
+                //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
+                //  base.InitFilterForControl<View_ProdDetail, View_ProdDetailQueryDto>(entity, txtProdDetailID, c => c.CNName);
+
+                //创建表达式  草稿 结案 和没有提交的都不显示
+                var lambdaOrder = Expressionable.Create<View_ProdDetail>()
+                                // .And(t => t.DataStatus == (int)DataStatus.确认)
+                                .ToExpression();//注意 这一句 不能少
+
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_ProdDetail).Name + "Processor");
+                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+
+                ///视图指定成实体表，为了显示关联数据
+                DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(entity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
+            }
+
         }
-
-
-
 
         protected override void AddByCopy()
         {

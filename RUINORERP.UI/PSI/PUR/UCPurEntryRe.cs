@@ -77,7 +77,7 @@ namespace RUINORERP.UI.PSI.PUR
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurEntryRe).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public override void BindData(tb_PurEntryRe entity)
+        public override void BindData(tb_PurEntryRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {

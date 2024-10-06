@@ -81,11 +81,12 @@ namespace RUINORERP.UI.MRP.MP
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_ProductionDemand);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_ProductionDemand, actionStatus);
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_ProductionDemand entityPara)
+        public override void BindData(tb_ProductionDemand entityPara, ActionStatus actionStatus)
         {
             tb_ProductionDemand entity = entityPara as tb_ProductionDemand;
             if (entity == null)
@@ -1365,7 +1366,9 @@ protected async override Task<ApprovalEntity> ReReview()
                         entity.PDNo = EditEntity.PDNo;
                     }
                     BusinessHelper.Instance.InitEntity(entity);
-                    BindData(entity);
+
+                    ActionStatus actionStatus = ActionStatus.无操作;
+                    BindData(entity, actionStatus);
                 }
                 kryptonNavigator1.SelectedPage = KP分析目标;
             }

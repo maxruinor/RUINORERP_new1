@@ -55,7 +55,8 @@ namespace RUINORERP.UI.MRP.MP
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_MaterialRequisition);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_MaterialRequisition, actionStatus);
         }
 
         /// <summary>
@@ -68,7 +69,7 @@ namespace RUINORERP.UI.MRP.MP
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_MaterialRequisition entityPara)
+        public override void BindData(tb_MaterialRequisition entityPara, ActionStatus actionStatus)
         {
             tb_MaterialRequisition entity = entityPara as tb_MaterialRequisition;
             if (entity == null)
@@ -853,7 +854,9 @@ namespace RUINORERP.UI.MRP.MP
                     entity.MaterialRequisitionNO = EditEntity.MaterialRequisitionNO;
                 }
 
-                BindData(entity);
+
+                ActionStatus actionStatus = ActionStatus.无操作;
+                BindData(entity, actionStatus);
             }
         }
 

@@ -56,7 +56,7 @@ namespace  RUINORERP.Common.Extensions
                         if (dbValue != null)
                         {
                             Type memberType = theField.FieldType;
-                            dbValue = dbValue.ChangeType_ByConvert(memberType);
+                            dbValue = dbValue.ChangeTypeSafely(memberType);
                         }
 
                         theField.SetValue(_t, dbValue);
@@ -72,7 +72,7 @@ namespace  RUINORERP.Common.Extensions
                         if (dbValue != null)
                         {
                             Type memberType = theProperty.PropertyType;
-                            dbValue = dbValue.ChangeType_ByConvert(memberType);
+                            dbValue = dbValue.ChangeTypeSafely(memberType);
                         }
 
                         theProperty.SetValue(_t, dbValue);

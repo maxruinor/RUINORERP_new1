@@ -61,7 +61,9 @@ namespace RUINORERP.UI.ProductEAV
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_Packing);
+ 
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_Packing, actionStatus);
         }
 
         /// <summary>
@@ -74,7 +76,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_Packing entityPara)
+        public override void BindData(tb_Packing entityPara, ActionStatus actionStatus)
         {
 
             tb_Packing entity = entityPara as tb_Packing;
@@ -780,7 +782,9 @@ namespace RUINORERP.UI.ProductEAV
 
 
 
-                BindData(entity);
+
+                ActionStatus actionStatus = ActionStatus.无操作;
+                BindData(entity, actionStatus);
             }
         }
 

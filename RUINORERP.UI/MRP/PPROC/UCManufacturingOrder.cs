@@ -53,7 +53,8 @@ namespace RUINORERP.UI.MRP.MP
  
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_ManufacturingOrder);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_ManufacturingOrder, actionStatus);
         }
 
         /// <summary>
@@ -66,7 +67,7 @@ namespace RUINORERP.UI.MRP.MP
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_ManufacturingOrder entityPara)
+        public override void BindData(tb_ManufacturingOrder entityPara, ActionStatus actionStatus)
         {
             tb_ManufacturingOrder entity = entityPara as tb_ManufacturingOrder;
             if (entity == null)

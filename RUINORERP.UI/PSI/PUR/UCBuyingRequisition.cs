@@ -60,7 +60,8 @@ namespace RUINORERP.UI.PSI.PUR
    
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_BuyingRequisition);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_BuyingRequisition, actionStatus);
         }
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
@@ -83,7 +84,7 @@ namespace RUINORERP.UI.PSI.PUR
 
         }
 
-        public override void BindData(tb_BuyingRequisition entity)
+        public override void BindData(tb_BuyingRequisition entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {

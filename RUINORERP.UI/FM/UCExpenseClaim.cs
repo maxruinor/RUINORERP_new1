@@ -66,7 +66,7 @@ namespace RUINORERP.UI.FM
         //{
         //    BindData(Entity as tb_FM_ExpenseClaim);
         //}
-        public override void BindData(tb_FM_ExpenseClaim entity)
+        public override void BindData(tb_FM_ExpenseClaim entity,ActionStatus actionStatus)
         {
             if (entity == null)
             {

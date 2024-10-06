@@ -70,7 +70,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
         }
 
-        public override void BindData(tb_FM_OtherExpense entity)
+        public override void BindData(tb_FM_OtherExpense entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {

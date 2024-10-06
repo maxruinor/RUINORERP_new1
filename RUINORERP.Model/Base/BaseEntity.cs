@@ -22,7 +22,8 @@ namespace RUINORERP.Model
         新增,
         修改,
         删除,
-        加载
+        加载,
+        复制,
     }
 
     [Serializable()]

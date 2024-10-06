@@ -74,7 +74,7 @@ namespace RUINORERP.UI.ProductEAV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdBundle).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public override void BindData(tb_ProdBundle entity)
+        public override void BindData(tb_ProdBundle entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {

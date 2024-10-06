@@ -83,7 +83,7 @@ namespace RUINORERP.UI.PSI.INV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdSplit).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public async override void BindData(tb_ProdSplit entity)
+        public async override void BindData(tb_ProdSplit entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {

@@ -1419,8 +1419,6 @@ namespace RUINORERP.UI.Common
                 depa = new Binding("SelectedValue", entity, key, true, DataSourceUpdateMode.OnValidation);
             }
 
-
-
             //数据源的数据类型转换为控件要求的数据类型。
             depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
             //将控件的数据类型转换为数据源要求的数据类型。

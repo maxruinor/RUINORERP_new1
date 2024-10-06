@@ -51,7 +51,8 @@ namespace RUINORERP.UI.PSI.INV
   
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_StockIn);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_StockIn, actionStatus);
         }
 
         /// <summary>
@@ -73,7 +74,7 @@ namespace RUINORERP.UI.PSI.INV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_StockIn).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public override void BindData(tb_StockIn entity)
+        public override void BindData(tb_StockIn entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {

@@ -55,7 +55,8 @@ namespace RUINORERP.UI.PSI.INV
  
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_ProdBorrowing);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_ProdBorrowing, actionStatus);
         }
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace RUINORERP.UI.PSI.INV
 
         //private tb_ProdBorrowing _EditEntity;
         //public tb_ProdBorrowing EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public override void BindData(tb_ProdBorrowing entity)
+        public override void BindData(tb_ProdBorrowing entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {

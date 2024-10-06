@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Krypton.Toolkit;
 using Microsoft.Extensions.Logging;
+using Netron.GraphLib;
 using RUINOR.Core;
 using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
@@ -43,7 +44,8 @@ namespace RUINORERP.UI.PSI.PUR
         /// <param name="Entity"></param>
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_PurEntry);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_PurEntry, actionStatus);
         }
         /// <summary>
         /// 加载下拉值
@@ -71,7 +73,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
 
-        public override void BindData(tb_PurEntry entity)
+        public override void BindData(tb_PurEntry entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -686,7 +688,9 @@ namespace RUINORERP.UI.PSI.PUR
                     entity.PurOrder_NO = entity.PurOrder_NO;
                 }
                 BusinessHelper.Instance.InitEntity(entity);
-                BindData(entity);
+       
+                ActionStatus actionStatus = ActionStatus.无操作;
+                BindData(entity, actionStatus);
             }
         }
 

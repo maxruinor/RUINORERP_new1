@@ -562,6 +562,13 @@ namespace RUINORERP.UI.Common
                     case "tb_CartoonBox":
                         SetDictDataSource<tb_CartoonBox>(k => k.CartonID, v => v.CartonName);
                         break;
+                    case "tb_Files":
+                        SetDictDataSource<tb_Files>(k => k.Doc_ID, v => v.FileName);
+                        break;
+                    case "tb_BOMConfigHistory":
+                        SetDictDataSource<tb_BOMConfigHistory>(k => k.BOM_S_VERID, v => v.VerNo);
+                        break;
+
                     case "tb_BoxRules":
                         SetDictDataSource<tb_BoxRules>(k => k.BoxRules_ID, v => v.BoxRuleName);
                         break;
@@ -623,6 +630,8 @@ namespace RUINORERP.UI.Common
             "tb_FM_Subject",
             "tb_BoxRules",
             "tb_CartoonBox",
+            "tb_Files",
+            "tb_BOMConfigHistory",
             "tb_RolePropertyConfig",
             "tb_Unit_Conversion"
         };

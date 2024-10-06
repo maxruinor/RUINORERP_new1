@@ -167,7 +167,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     setcurrentObj.SetPropertyInfoToNull(propertyInfo);
                     return;
                 }
-                var realTypeVal = sender.Value.ChangeType_ByConvert(CurrGridDefine[sender.Position.Column].ColPropertyInfo.PropertyType);
+                var realTypeVal = sender.Value.ChangeTypeSafely(CurrGridDefine[sender.Position.Column].ColPropertyInfo.PropertyType);
                 ReflectionHelper.SetPropertyValue(setcurrentObj, CurrGridDefine[sender.Position.Column].ColName, realTypeVal);
                 #region 处理特殊情况  比方 时间值为：{0001-01-01 0:00:00}
                 switch (CurrGridDefine[sender.Position.Column].CustomFormat)
@@ -400,7 +400,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (cellvalue != null)
                     {
                         //实际上面转换过一次了。
-                        var realvalue = cellvalue.ChangeType_ByConvert(CurrGridDefine[sender.Position.Column].ColPropertyInfo.PropertyType);
+                        var realvalue = cellvalue.ChangeTypeSafely(CurrGridDefine[sender.Position.Column].ColPropertyInfo.PropertyType);
                         if (CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Editor != null)
                         {
                             CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].DisplayText = CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Editor.ValueToDisplayString(realvalue);
@@ -505,7 +505,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     case CustomFormatType.PercentFormat:
 
                         //实际上面转换过一次了。
-                        var realvalue = obj.ChangeType_ByConvert(CurrGridDefine[sf.TagetCol.ColIndex].ColPropertyInfo.PropertyType);
+                        var realvalue = obj.ChangeTypeSafely(CurrGridDefine[sf.TagetCol.ColIndex].ColPropertyInfo.PropertyType);
                         ReflectionHelper.SetPropertyValue(currentObj, sf.TagetCol.ColName, realvalue);
                         CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Value = realvalue;
                         CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].DisplayText = CurrGridDefine.grid[rowindex, CurrGridDefine[sf.TagetCol.ColIndex].ColIndex].Editor.ValueToDisplayString(realvalue);

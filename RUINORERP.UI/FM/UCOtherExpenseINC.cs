@@ -46,14 +46,15 @@ namespace RUINORERP.UI.FM
         public UCOtherExpenseINC()
         {
             InitializeComponent();
-             
+
 
         }
-     
+
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_FM_OtherExpense);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_FM_OtherExpense, actionStatus);
         }
 
         /// <summary>
@@ -70,7 +71,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
         }
 
-        public override void BindData(tb_FM_OtherExpense entity)
+        public override void BindData(tb_FM_OtherExpense entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -323,7 +324,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
                 return SaveResult.Succeeded;
-       
+
             }
             return false;
         }

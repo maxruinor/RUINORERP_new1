@@ -52,7 +52,8 @@ namespace RUINORERP.UI.MRP.MP
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_MaterialReturn);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_MaterialReturn, actionStatus);
         }
 
         /// <summary>
@@ -65,7 +66,7 @@ namespace RUINORERP.UI.MRP.MP
         }
 
         DateTime RequirementDate = System.DateTime.Now;
-        public override void BindData(tb_MaterialReturn entityPara)
+        public override void BindData(tb_MaterialReturn entityPara, ActionStatus actionStatus)
         {
             tb_MaterialReturn entity = entityPara as tb_MaterialReturn;
             if (entity == null)
@@ -864,7 +865,9 @@ protected override void Print()
                     entity.BillNo = EditEntity.BillNo;
                 }
 
-                BindData(entity);
+
+                ActionStatus actionStatus = ActionStatus.无操作;
+                BindData(entity, actionStatus);
             }
         }
 

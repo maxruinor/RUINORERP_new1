@@ -55,8 +55,8 @@ namespace RUINORERP.UI.PSI.INV
    
         internal override void LoadDataToUI(object Entity)
         {
-         
-            BindData(Entity as tb_ProdReturning);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_ProdReturning, actionStatus);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace RUINORERP.UI.PSI.INV
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdReturning).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
-        public override void BindData(tb_ProdReturning entity)
+        public override void BindData(tb_ProdReturning entity, ActionStatus actionStatus)
         {
            
             if (entity == null)
@@ -651,7 +651,10 @@ namespace RUINORERP.UI.PSI.INV
                 master.ActionStatus = ActionStatus.新增;
 
                 BusinessHelper.Instance.InitEntity(master);
-                BindData(master);
+               
+
+                ActionStatus actionStatus = ActionStatus.无操作;
+                BindData(master, actionStatus);
             }
         }
 

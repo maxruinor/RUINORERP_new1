@@ -563,6 +563,53 @@ namespace RUINORERP.Common.Extensions
         }
 
         /// <summary>
+        /// 代替ChangeType_ByConvert
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="targetType"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static object ChangeTypeSafely(this object obj, Type targetType)
+        {
+            if (obj == null || obj == DBNull.Value)
+            {
+                // 如果obj是null或DBNull.Value，尝试创建targetType的默认值
+                if (Nullable.GetUnderlyingType(targetType) != null || targetType.IsValueType)
+                {
+                    return Activator.CreateInstance(targetType);
+                }
+                return null;
+            }
+
+            if (obj is string strObj && string.IsNullOrEmpty(strObj))
+            {
+                // 如果obj是空字符串，特殊处理
+                if (targetType == typeof(decimal) || targetType == typeof(decimal?))
+                {
+                    return decimal.Zero;
+                }
+            }
+
+            try
+            {
+                if (targetType.IsGenericType && targetType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+                {
+                    NullableConverter nullableConverter = new NullableConverter(targetType);
+                    return nullableConverter.ConvertFrom(obj);
+                }
+                else
+                {
+                    return Convert.ChangeType(obj, targetType);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 抛出异常，让调用者处理
+                throw new InvalidOperationException("转换错误:"+$"无法将对象转换为类型 {targetType.FullName}", ex);
+            }
+        }
+
+        /// <summary>
         /// 将一个对象中的指定属性名的属性设置为null（值类型重置为默认值)
         /// </summary>
         /// <param name="obj"></param>

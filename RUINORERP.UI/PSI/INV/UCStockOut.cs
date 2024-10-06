@@ -79,7 +79,7 @@ namespace RUINORERP.UI.PSI.INV
 
         //private tb_StockOut _EditEntity;
         //public tb_StockOut EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public override void BindData(tb_StockOut entity)
+        public override void BindData(tb_StockOut entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
             {

@@ -45,7 +45,8 @@ namespace RUINORERP.UI.PSI.PUR
         /// <param name="Entity"></param>
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_FinishedGoodsInv);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_FinishedGoodsInv, actionStatus);
         }
         /// <summary>
         /// 加载下拉值
@@ -70,7 +71,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
 
-        public override void BindData(tb_FinishedGoodsInv entity)
+        public override void BindData(tb_FinishedGoodsInv entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -648,7 +649,9 @@ protected async override Task<ApprovalEntity> ReReview()
                     entity.DepartmentID = entity.DepartmentID;
                 }
                 BusinessHelper.Instance.InitEntity(entity);
-                BindData(entity);
+
+                ActionStatus actionStatus = ActionStatus.无操作;
+                BindData(entity, actionStatus);
             }
         }
 

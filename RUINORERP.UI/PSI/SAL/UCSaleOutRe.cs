@@ -67,7 +67,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        public override void BindData(tb_SaleOutRe entity)
+        public override void BindData(tb_SaleOutRe entity, ActionStatus actionStatus=ActionStatus.无操作)
         {
             if (entity == null)
             {

@@ -35,6 +35,7 @@ using Krypton.Toolkit;
 using RUINORERP.Business.Processor;
 using FastReport.Fonts;
 using RUINORERP.UI.PSI.PUR;
+using static StackExchange.Redis.Role;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -53,8 +54,10 @@ namespace RUINORERP.UI.PSI.SAL
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_SaleOut);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_SaleOut, actionStatus);
         }
+
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
@@ -66,7 +69,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        public override void BindData(tb_SaleOut entity)
+        public override void BindData(tb_SaleOut entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -794,7 +797,8 @@ namespace RUINORERP.UI.PSI.SAL
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             BusinessHelper.Instance.InitEntity(entity);
-            BindData(entity as tb_SaleOut);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(entity, actionStatus);
             return entity;
         }
 

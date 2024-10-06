@@ -52,13 +52,14 @@ namespace RUINORERP.UI.PSI.SAL
             InitializeComponent();
             toolStripButton付款调整.Visible = true;
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
-            
+
         }
 
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_SaleOrder);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_SaleOrder, actionStatus);
         }
 
         /// <summary>
@@ -128,7 +129,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
 
-        public override void BindData(tb_SaleOrder entityPara)
+        public override void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
         {
             tb_SaleOrder entity = entityPara as tb_SaleOrder;
             if (entity == null)
@@ -231,7 +232,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
 
                 //数据状态变化会影响按钮变化
@@ -400,8 +401,8 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.SubtotalTaxAmount, d => d.SubtotalUntaxedAmount);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.Cost * b.Quantity, c => c.SubtotalCostAmount);
-            
-            
+
+
 
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.Quantity);
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.CommissionAmount);

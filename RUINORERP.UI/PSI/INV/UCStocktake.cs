@@ -118,7 +118,7 @@ namespace RUINORERP.UI.PSI.INV
             //};
         }
 
-        public override void BindData(tb_Stocktake _BaseEntity)
+        public override void BindData(tb_Stocktake _BaseEntity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             tb_Stocktake entity = _BaseEntity as tb_Stocktake;
             if (entity == null)

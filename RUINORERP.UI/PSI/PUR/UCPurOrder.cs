@@ -54,7 +54,8 @@ namespace RUINORERP.UI.PSI.PUR
  
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_PurOrder);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_PurOrder, actionStatus);
         }
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
@@ -78,7 +79,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
         }
 
-        public override void BindData(tb_PurOrder entity)
+        public override void BindData(tb_PurOrder entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {

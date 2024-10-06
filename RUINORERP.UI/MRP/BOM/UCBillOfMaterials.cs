@@ -672,7 +672,8 @@ namespace RUINORERP.UI.MRP.BOM
 
         internal override void LoadDataToUI(object Entity)
         {
-            BindData(Entity as tb_BOM_S);
+            ActionStatus actionStatus = ActionStatus.无操作;
+            BindData(Entity as tb_BOM_S, actionStatus);
         }
 
 
@@ -702,92 +703,88 @@ namespace RUINORERP.UI.MRP.BOM
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
 
-        public override void BindData(tb_BOM_S entity)
+        public override void BindData(tb_BOM_S entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
                 return;
             }
             EditEntity = entity;
-
-            if (entity.BOM_ID > 0)
+            if (EditEntity.BOM_ID > 0 || actionStatus == ActionStatus.加载)
             {
-                entity.PrimaryKeyID = entity.BOM_ID;
-                entity.ActionStatus = ActionStatus.加载;
-                if (entity.ProdDetailID > 0)
+                EditEntity.PrimaryKeyID = EditEntity.BOM_ID;
+                EditEntity.ActionStatus = ActionStatus.加载;
+                if (EditEntity.ProdDetailID > 0)
                 {
-                    if (entity.view_ProdDetail == null)
+                    if (EditEntity.view_ProdDetail == null)
                     {
-                        var detail = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == entity.ProdDetailID).Single();
-                        entity.view_ProdDetail = detail;
+                        var detail = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == EditEntity.ProdDetailID).Single();
+                        EditEntity.view_ProdDetail = detail;
                     }
-
-                    txtProdDetailID.Text = entity.SKU.ToString();
-                    txtSpec.Text = entity.view_ProdDetail.Specifications;
-                    txtProp.Text = entity.view_ProdDetail.prop;
-                    cmbType.SelectedValue = entity.view_ProdDetail.Type_ID;
-
-                    BindToTree(entity);
+                    txtProdDetailID.Text = EditEntity.SKU.ToString();
+                    txtSpec.Text = EditEntity.view_ProdDetail.Specifications;
+                    txtProp.Text = EditEntity.view_ProdDetail.prop;
+                    cmbType.SelectedValue = EditEntity.view_ProdDetail.Type_ID;
+                    BindToTree(EditEntity);
                 }
-
             }
             else
             {
-                entity = new tb_BOM_S();
-                entity.DataStatus = (int)DataStatus.草稿;
-                entity.ActionStatus = ActionStatus.新增;
-                entity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
-                entity.Effective_at = System.DateTime.Now;
-                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                entity.ApprovalResults = false;
-                entity.is_enabled = true;
-                entity.is_available = true;
-                entity.SKU = string.Empty;
-                entity.ProdDetailID = 0;
-                entity.BOM_ID = 0;
-                entity.BOM_S_VERID = 0;
-                entity.Doc_ID = 0;
-                entity.BOM_Name = string.Empty;
-                entity.TotalMaterialQty = 0;
-                entity.ProdDetailID = 0;
-                entity.property = string.Empty;
-                if (entity.tb_BOM_SDetails != null && entity.tb_BOM_SDetails.Count > 0)
+                EditEntity = new tb_BOM_S();
+                EditEntity.DataStatus = (int)DataStatus.草稿;
+                EditEntity.ActionStatus = ActionStatus.新增;
+                EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
+                EditEntity.Effective_at = System.DateTime.Now;
+                EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                EditEntity.ApprovalResults = false;
+                EditEntity.is_enabled = true;
+                EditEntity.is_available = true;
+                EditEntity.SKU = string.Empty;
+                EditEntity.ProdDetailID = 0;
+                EditEntity.BOM_ID = 0;
+                //EditEntity.BOM_S_VERID = 0;
+                //EditEntity.Doc_ID = 0;
+                EditEntity.BOM_Name = string.Empty;
+                EditEntity.TotalMaterialQty = 0;
+                EditEntity.ProdDetailID = 0;
+                EditEntity.property = string.Empty;
+                if (EditEntity.tb_BOM_SDetails != null && EditEntity.tb_BOM_SDetails.Count > 0)
                 {
-                    entity.tb_BOM_SDetails.ForEach(c => c.BOM_ID = 0);
-                    entity.tb_BOM_SDetails.ForEach(c => c.SubID = 0);
+                    EditEntity.tb_BOM_SDetails.ForEach(c => c.BOM_ID = 0);
+                    EditEntity.tb_BOM_SDetails.ForEach(c => c.SubID = 0);
                 }
             }
 
             /*****/
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.TotalMaterialQty, txtTotalMaterialQty, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.BOM_Name, txtBOM_Name, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.property, txtProp, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.TotalMaterialQty, txtTotalMaterialQty, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.BOM_Name, txtBOM_Name, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.property, txtProp, BindDataType4TextBox.Text, false);
 
-            DataBindingHelper.BindData4Cmb<tb_Files>(entity, k => k.Doc_ID, v => v.FileName, cmbDoc_ID);
-            DataBindingHelper.BindData4Cmb<tb_BOMConfigHistory>(entity, k => k.BOM_S_VERID, v => v.VerNo, cmbBOM_S_VERID);
-            DataBindingHelper.BindData4DataTime<tb_BOM_S>(entity, t => t.Effective_at, dtpEffective_at, false);
-            DataBindingHelper.BindData4CheckBox<tb_BOM_S>(entity, t => t.is_enabled, chkis_enabled, false);
-            DataBindingHelper.BindData4CheckBox<tb_BOM_S>(entity, t => t.is_available, chkis_available, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.OutManuCost.ToString(), txtOutManuCost, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.ManufacturingCost.ToString(), txtLaborCost, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.TotalMaterialCost.ToString(), txtTotalMaterialCost, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.OutProductionAllCosts.ToString(), txtOutProductionAllCosts, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.OutputQty.ToString(), txtOutputQty, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.OutputQty.ToString(), txtPeopleQty, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.PeopleQty.ToString(), txtPeopleQty, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.WorkingHour.ToString(), txtWorkingHour, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.MachineHour.ToString(), txtMachineHour, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4DataTime<tb_BOM_S>(entity, t => t.ExpirationDate, dtpExpirationDate, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.DailyQty.ToString(), txtDailyQty, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.SelfProductionAllCosts.ToString(), txtSelfProductionAllCosts, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
-            DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
+            DataBindingHelper.BindData4Cmb<tb_Files>(EditEntity, k => k.Doc_ID, v => v.FileName, cmbDoc_ID);
+            DataBindingHelper.BindData4Cmb<tb_BOMConfigHistory>(EditEntity, k => k.BOM_S_VERID, v => v.VerNo, cmbBOM_S_VERID);
+            DataBindingHelper.BindData4DataTime<tb_BOM_S>(EditEntity, t => t.Effective_at, dtpEffective_at, false);
+            DataBindingHelper.BindData4CheckBox<tb_BOM_S>(EditEntity, t => t.is_enabled, chkis_enabled, false);
+            DataBindingHelper.BindData4CheckBox<tb_BOM_S>(EditEntity, t => t.is_available, chkis_available, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.OutManuCost.ToString(), txtOutManuCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.ManufacturingCost.ToString(), txtLaborCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.TotalMaterialCost.ToString(), txtTotalMaterialCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.OutProductionAllCosts.ToString(), txtOutProductionAllCosts, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.OutputQty.ToString(), txtOutputQty, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.OutputQty.ToString(), txtPeopleQty, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.PeopleQty.ToString(), txtPeopleQty, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.WorkingHour.ToString(), txtWorkingHour, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.MachineHour.ToString(), txtMachineHour, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4DataTime<tb_BOM_S>(EditEntity, t => t.ExpirationDate, dtpExpirationDate, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.DailyQty.ToString(), txtDailyQty, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.SelfProductionAllCosts.ToString(), txtSelfProductionAllCosts, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(EditEntity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(EditEntity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
-            if (entity.tb_BOM_SDetails != null && entity.tb_BOM_SDetails.Count > 0)
+            if (EditEntity.tb_BOM_SDetails != null && EditEntity.tb_BOM_SDetails.Count > 0)
             {
-                sgh.LoadItemDataToGrid<tb_BOM_SDetail>(grid1, sgd, entity.tb_BOM_SDetails, c => c.ProdDetailID);
+                sgh.LoadItemDataToGrid<tb_BOM_SDetail>(grid1, sgd, EditEntity.tb_BOM_SDetails, c => c.ProdDetailID);
             }
             else
             {
@@ -795,32 +792,32 @@ namespace RUINORERP.UI.MRP.BOM
             }
 
             //先绑定这个。InitFilterForControl 这个才生效, 一共三个来控制，这里分别是绑定ID和SKU。下面InitFilterForControlByExp 是生成快捷按钮
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, k => k.SKU, txtProdDetailID, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_BOM_S>(entity, v => v.ProdDetailID, txtProdDetailID, true);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, k => k.SKU, txtProdDetailID, BindDataType4TextBox.Text, true);
+            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_BOM_S>(EditEntity, v => v.ProdDetailID, txtProdDetailID, true);
 
 
             //如果属性变化 则状态为修改
-            entity.PropertyChanged += async (sender, s2) =>
+            EditEntity.PropertyChanged += async (sender, s2) =>
             {
 
 
                 //权限允许,草稿新建或修改状态时，才允许修改（修改要未审核或审核未通过）
-                if (((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建)))
+                if (((true && EditEntity.DataStatus == (int)DataStatus.草稿) || (true && EditEntity.DataStatus == (int)DataStatus.新建)))
                 {
-                    if (entity.ProdDetailID > 0 &&
-                    (s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.ProdDetailID) ||
-                    s2.PropertyName == entity.GetPropertyName<tb_BOM_S>(c => c.SKU)))
+                    if (EditEntity.ProdDetailID > 0 &&
+                    (s2.PropertyName == EditEntity.GetPropertyName<tb_BOM_S>(c => c.ProdDetailID) ||
+                    s2.PropertyName == EditEntity.GetPropertyName<tb_BOM_S>(c => c.SKU)))
                     {
                         //视图来的，没有导航查询到相关数据
                         //find bomid
                         kryptonTreeView1.TreeView.Nodes.Clear();
                         //BaseController<tb_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<tb_ProdDetail>>(typeof(tb_ProdDetail).Name + "Controller");
-                        //var bomprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+                        //var bomprod = await ctrProdDetail.BaseQueryByIdAsync(EditEntity.ProdDetailID);
                         BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
-                        var vp = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+                        var vp = await ctrProdDetail.BaseQueryByIdAsync(EditEntity.ProdDetailID);
                         if (vp.BOM_ID != null)
                         {
-                            if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
+                            if ((true && EditEntity.DataStatus == (int)DataStatus.草稿) || (true && EditEntity.DataStatus == (int)DataStatus.新建))
                             {
                                 //如果这个产品有配方了 
                                 if (MessageBox.Show("当前选中产品已经有配方,你确定需要对这个母件增加新的配方吗？\r\n如果是，则会更新当前母件的默认配方为您增加的配方", "警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly) == DialogResult.No)
@@ -834,22 +831,23 @@ namespace RUINORERP.UI.MRP.BOM
                             }
                             else
                             {
-                                BindToTree(entity);
+                                BindToTree(EditEntity);
                             }
                         }
                         //加载母件关联的显示用的数据
                         txtSpec.Text = vp.Specifications;
-                        entity.property = vp.prop;
+                        EditEntity.property = vp.prop;
                         if (!string.IsNullOrEmpty(vp.prop))
                         {
-                            entity.BOM_Name = vp.CNName + "-" + vp.prop;
+                            EditEntity.BOM_Name = vp.CNName + "-" + vp.prop;
                         }
                         else
                         {
-                            entity.BOM_Name = vp.CNName;
+                            EditEntity.BOM_Name = vp.CNName;
                         }
-                   
-                        entity.SKU = vp.SKU;
+
+                        EditEntity.SKU = vp.SKU;
+
                         cmbType.SelectedValue = vp.Type_ID;
 
                         //加载关联数据
@@ -858,10 +856,10 @@ namespace RUINORERP.UI.MRP.BOM
                         //     if (txtProdDetailID.ButtonSpecs[0].Tag is View_ProdDetail vp)
                         //     {
                         //         txtSpec.Text = vp.Specifications;
-                        //         entity.property = vp.prop;
-                        //         entity.BOM_Name = vp.CNName + "-" + vp.prop;
-                        //         entity.SKU = vp.SKU;
-                        //         entity.ProdDetailID = vp.ProdDetailID;
+                        //         EditEntity.property = vp.prop;
+                        //         EditEntity.BOM_Name = vp.CNName + "-" + vp.prop;
+                        //         EditEntity.SKU = vp.SKU;
+                        //         EditEntity.ProdDetailID = vp.ProdDetailID;
                         //         cmbType.SelectedValue = vp.Type_ID;
                         //     }
                         // }
@@ -869,26 +867,26 @@ namespace RUINORERP.UI.MRP.BOM
                 }
 
             };
-            if (entity.tb_BOM_SDetails == null)
+            if (EditEntity.tb_BOM_SDetails == null)
             {
-                entity.tb_BOM_SDetails = new List<tb_BOM_SDetail>();
+                EditEntity.tb_BOM_SDetails = new List<tb_BOM_SDetail>();
             }
             //如果明细中包含了母件。就是死循环。不能用树来显示
-            if (entity.tb_BOM_SDetails.Any(c => c.ProdDetailID == entity.ProdDetailID))
+            if (EditEntity.tb_BOM_SDetails.Any(c => c.ProdDetailID == EditEntity.ProdDetailID))
             {
                 MessageBox.Show("BOM明细中包含了母件，请修复这个致命数据错误。系统已经跳过树形显示。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            LoadTreeData(TransToDataTableByTreeAsync(entity));
+            LoadTreeData(TransToDataTableByTreeAsync(EditEntity));
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             //这样在新增加和修改时才会触发添加母件的快捷按钮
-            if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改))
+            if ((EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改))
             {
                 base.InitRequiredToControl(new tb_BOM_SValidator(), kryptonSplitContainer1.Panel1.Controls);
-                //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
-                //  base.InitFilterForControl<View_ProdDetail, View_ProdDetailQueryDto>(entity, txtProdDetailID, c => c.CNName);
+                //  base.InitEditItemToControl(EditEntity, kryptonPanel1.Controls);
+                //  base.InitFilterForControl<View_ProdDetail, View_ProdDetailQueryDto>(EditEntity, txtProdDetailID, c => c.CNName);
 
                 //创建表达式  草稿 结案 和没有提交的都不显示
                 var lambdaOrder = Expressionable.Create<View_ProdDetail>()
@@ -899,7 +897,7 @@ namespace RUINORERP.UI.MRP.BOM
                 QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
 
                 ///视图指定成实体表，为了显示关联数据
-                DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(entity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
+                DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(EditEntity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
             }
 
         }
@@ -955,6 +953,10 @@ namespace RUINORERP.UI.MRP.BOM
 
         private void AddItems(tb_BOM_S bom)
         {
+            if (bom==null)
+            {
+                return;
+            }
             TreeListViewItem itemRow = new TreeListViewItem(bom.BOM_Name, 0);
             itemRow.Tag = bom;
             itemRow.SubItems.Add(bom.property); //subitems只是从属于itemRow的子项。目前是四列

@@ -119,14 +119,14 @@ namespace RUINORERP.UI.BaseForm
             if (frmQuicklyInput.ShowDialog() == DialogResult.OK)
             {
                 EditEntity.SetPropertyValue(typeof(C).Name + "s", frmQuicklyInput.lines);
-                OnBindDataToUIEvent(EditEntity);
+                OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
             }
         }
 
         private void OnApplyQuicklyInputData(List<C> lines)
         {
             EditEntity.SetPropertyValue(typeof(C).Name + "s", lines);
-            OnBindDataToUIEvent(EditEntity);
+            OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
         }
 
         RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
@@ -134,7 +134,7 @@ namespace RUINORERP.UI.BaseForm
         {
             //RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
             EditEntity = manager.Deserialize<T>(CurMenuInfo.CaptionCN);
-            OnBindDataToUIEvent(EditEntity);
+            OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
             MainForm.Instance.uclog.AddLog("成功加载上次的数据。");
         }
 
@@ -148,7 +148,7 @@ namespace RUINORERP.UI.BaseForm
         /// 绑定数据到UI
         /// </summary>
         /// <param name="entity"></param>
-        public virtual void BindData(T entity)
+        public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             ToolBarEnabledControl(entity);
         }
@@ -1394,7 +1394,7 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
-        public delegate void BindDataToUIHander(T entity);
+        public delegate void BindDataToUIHander(T entity, ActionStatus actionStatus);
 
         [Browsable(true), Description("绑定数据对象到UI")]
         public event BindDataToUIHander OnBindDataToUIEvent;
@@ -1806,7 +1806,7 @@ namespace RUINORERP.UI.BaseForm
             if (OnBindDataToUIEvent != null)
             {
                 bindingSourceSub.Clear();
-                OnBindDataToUIEvent(EditEntity);
+                //OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
             }
 
             ToolBarEnabledControl(MenuItemEnums.取消);
@@ -1942,7 +1942,7 @@ namespace RUINORERP.UI.BaseForm
                     SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                     //比较是否更新了图片数据
                     string newhash = valueImageWeb.GetImageNewHash();
-                    if (valueImageWeb.CellImageBytes != null )
+                    if (valueImageWeb.CellImageBytes != null)
                     {
                         #region 需要上传
 
@@ -1994,7 +1994,7 @@ namespace RUINORERP.UI.BaseForm
             if (OnBindDataToUIEvent != null)
             {
                 bindingSourceSub.Clear();
-                OnBindDataToUIEvent(EditEntity);
+                OnBindDataToUIEvent(EditEntity, ActionStatus.新增);
             }
 
             if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
@@ -2055,7 +2055,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     NewEditEntity.SetPropertyValue("ApprovalResults", false);
                 }
-                OnBindDataToUIEvent(NewEditEntity);
+                OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
             }
 
             ToolBarEnabledControl(MenuItemEnums.新增);
@@ -2239,7 +2239,7 @@ namespace RUINORERP.UI.BaseForm
 
                         //加载一个空的显示的UI
                         bindingSourceSub.Clear();
-                        OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T);
+                        OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
                     }
                 }
                 else
@@ -2511,7 +2511,7 @@ namespace RUINORERP.UI.BaseForm
             if (OnBindDataToUIEvent != null)
             {
                 bindingSourceSub.Clear();
-                OnBindDataToUIEvent(entity as T);
+                OnBindDataToUIEvent(entity as T, ActionStatus.加载);
 
                 //如果 查出来的数据 能审核 能打印 等显示各种状态 TODO
                 ToolBarEnabledControl(entity);
@@ -2552,7 +2552,7 @@ namespace RUINORERP.UI.BaseForm
                                 editEntity = Activator.CreateInstance<T>();
                             }
                             bindingSourceSub.Clear();
-                            OnBindDataToUIEvent(EditEntity);
+                            OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
                             //if (pkentity.PrimaryKeyID > 0)
                             //{
                             //    //可以修改
@@ -2590,7 +2590,7 @@ namespace RUINORERP.UI.BaseForm
                                 {
                                     editEntity = Activator.CreateInstance<T>();
                                 }
-                                OnBindDataToUIEvent(EditEntity);
+                                OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
                                 //if (pkentity.PrimaryKeyID > 0)
                                 //{
                                 //    //可以修改

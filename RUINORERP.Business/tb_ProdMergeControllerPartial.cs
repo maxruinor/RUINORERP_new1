@@ -58,17 +58,24 @@ namespace RUINORERP.Business
 
                 //增加母件
                 tb_Inventory invMother = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
-                if (invMother != null)
+
+                if (invMother == null)
                 {
-                    //更新库存
+                    invMother = new tb_Inventory();
                     invMother.Quantity = invMother.Quantity + entity.MergeTargetQty;
-                    invMother.LatestOutboundTime = DateTime.Now;
-                    BusinessHelper.Instance.EditEntity(invMother);
+                    invMother.InitInventory = (int)entity.MergeTargetQty;
+                    invMother.Notes = "";//后面修改数据库是不需要？
+                    invMother.LatestStorageTime = DateTime.Now;
+                    BusinessHelper.Instance.InitEntity(invMother);
                 }
                 else
                 {
-                    throw new Exception("系统对应的仓库中没有母件库存,请检查数据！ ");
+                    //更新库存
+                    invMother.Quantity = invMother.Quantity + entity.MergeTargetQty;
+                    invMother.LatestStorageTime = DateTime.Now;
+                    BusinessHelper.Instance.EditEntity(invMother);
                 }
+
                 ReturnResults<tb_Inventory> rrm = await ctrinv.SaveOrUpdate(invMother);
                 if (rrm.Succeeded)
                 {
@@ -91,8 +98,6 @@ namespace RUINORERP.Business
                                 {
                                     rs.ErrorMsg = $"库存为：{inv.Quantity}，组合消耗量为：{child.Qty}\r\n 系统设置不允许负库存， 请检查消耗数量与库存相关数据";
                                 }
-
-                                
                                 _unitOfWorkManage.RollbackTran();
                                 rs.Succeeded = false;
                                 return rs;
@@ -103,6 +108,13 @@ namespace RUINORERP.Business
                         }
                         else
                         {
+                            if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Qty) < 0)
+                            {
+                                rs.ErrorMsg = $"当前子件{child.tb_proddetail.SKU},在对应仓库中没有库存数据。请检查数据。组合消耗量为：{child.Qty}\r\n 系统设置不允许负库存， 请检查消耗数量与库存相关数据";
+                                _unitOfWorkManage.RollbackTran();
+                                rs.Succeeded = false;
+                                return rs;
+                            }
                             Opening = true;
                             inv = new tb_Inventory();
                             inv.Quantity = inv.Quantity - child.Qty;
@@ -220,6 +232,7 @@ namespace RUINORERP.Business
                 ReturnResults<tb_Inventory> rrm = await ctrinv.SaveOrUpdate(invMother);
                 if (rrm.Succeeded)
                 {
+                    //子件增加
                     foreach (var child in entity.tb_ProdMergeDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，

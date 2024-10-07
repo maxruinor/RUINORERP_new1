@@ -40,6 +40,8 @@ using System.Diagnostics;
 using RUINORERP.Global.Model;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.UI.FormProperty;
+using System.Web.UI;
+using Control = System.Windows.Forms.Control;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -1543,6 +1545,15 @@ namespace RUINORERP.UI.BaseForm
                             //审计日志
                             AuditLogHelper.Instance.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
                             list.Add(rr.ReturnObject);
+
+                            //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                            //只处理需要缓存的表
+                            if (CacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
+                            {
+
+                            }
+
                         }
                         //tb_Unit Entity = await ctr.AddReEntityAsync(entity);
                         //如果新增 保存后。还是新增加状态，因为增加另一条。所以保存不为灰色。所以会重复增加

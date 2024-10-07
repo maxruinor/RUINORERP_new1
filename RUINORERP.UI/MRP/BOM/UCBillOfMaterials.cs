@@ -730,7 +730,10 @@ namespace RUINORERP.UI.MRP.BOM
             }
             else
             {
-                EditEntity = new tb_BOM_S();
+                if (true)
+                {
+
+                }
                 EditEntity.DataStatus = (int)DataStatus.草稿;
                 EditEntity.ActionStatus = ActionStatus.新增;
                 EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
@@ -746,7 +749,7 @@ namespace RUINORERP.UI.MRP.BOM
                 //EditEntity.Doc_ID = 0;
                 EditEntity.BOM_Name = string.Empty;
                 EditEntity.TotalMaterialQty = 0;
-                EditEntity.ProdDetailID = 0;
+        
                 EditEntity.property = string.Empty;
                 if (EditEntity.tb_BOM_SDetails != null && EditEntity.tb_BOM_SDetails.Count > 0)
                 {

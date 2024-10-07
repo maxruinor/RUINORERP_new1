@@ -222,17 +222,32 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _MaterialCost= ((0));
+        private decimal _UnitCost= ((0));
         /// <summary>
-        /// 物料成本 
+        /// 单位成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "MaterialCost",ColDesc = "物料成本 ")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "MaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "物料成本 " )]
-        public decimal MaterialCost
+        [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本")]
+        public decimal UnitCost
         { 
-            get{return _MaterialCost;}
+            get{return _UnitCost;}
             set{
-            SetProperty(ref _MaterialCost, value);
+            SetProperty(ref _UnitCost, value);
+            }
+        }
+
+        private decimal _SubtotalUnitCost = ((0));
+        /// <summary>
+        /// 成本小计
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SubtotalUnitCost", ColDesc = "成本小计")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "SubtotalUnitCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "成本小计")]
+        public decimal SubtotalUnitCost
+        {
+            get { return _SubtotalUnitCost; }
+            set
+            {
+                SetProperty(ref _SubtotalUnitCost, value);
             }
         }
 

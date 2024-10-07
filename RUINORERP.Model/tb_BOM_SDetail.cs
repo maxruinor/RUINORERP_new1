@@ -95,17 +95,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _Remarks;
+        private string _Summary;
         /// <summary>
-        /// 备注说明
+        /// 摘要
         /// </summary>
-        [AdvQueryAttribute(ColName = "Remarks",ColDesc = "备注说明")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Remarks" ,Length=200,IsNullable = true,ColumnDescription = "备注说明" )]
-        public string Remarks
+        [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=200,IsNullable = true,ColumnDescription = "摘要" )]
+        public string Summary
         { 
-            get{return _Remarks;}
+            get{return _Summary;}
             set{
-            SetProperty(ref _Remarks, value);
+            SetProperty(ref _Summary, value);
             }
         }
 
@@ -209,90 +209,34 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _MaterialCost= ((0));
+        private decimal _UnitCost= ((0));
         /// <summary>
-        /// 物料成本
+        /// 单位成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "MaterialCost",ColDesc = "物料成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "MaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "物料成本" )]
-        public decimal MaterialCost
+        [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本")]
+        public decimal UnitCost
         { 
-            get{return _MaterialCost;}
+            get{return _UnitCost;}
             set{
-            SetProperty(ref _MaterialCost, value);
+            SetProperty(ref _UnitCost, value);
             }
         }
 
-        private decimal _SubtotalMaterialCost= ((0));
+        private decimal _SubtotalUnitCost= ((0));
         /// <summary>
-        /// 物料小计
+        /// 成本小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalMaterialCost",ColDesc = "物料小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalMaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "物料小计" )]
-        public decimal SubtotalMaterialCost
+        [AdvQueryAttribute(ColName = "SubtotalUnitCost",ColDesc = "成本小计")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计")]
+        public decimal SubtotalUnitCost
         { 
-            get{return _SubtotalMaterialCost;}
+            get{return _SubtotalUnitCost;}
             set{
-            SetProperty(ref _SubtotalMaterialCost, value);
+            SetProperty(ref _SubtotalUnitCost, value);
             }
         }
-
-        private decimal _ManufacturingCost;
-        /// <summary>
-        /// 制造费
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ManufacturingCost",ColDesc = "制造费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ManufacturingCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "制造费" )]
-        public decimal ManufacturingCost
-        { 
-            get{return _ManufacturingCost;}
-            set{
-            SetProperty(ref _ManufacturingCost, value);
-            }
-        }
-
-        private decimal _OutManuCost;
-        /// <summary>
-        /// 托工费
-        /// </summary>
-        [AdvQueryAttribute(ColName = "OutManuCost",ColDesc = "托工费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OutManuCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "托工费" )]
-        public decimal OutManuCost
-        { 
-            get{return _OutManuCost;}
-            set{
-            SetProperty(ref _OutManuCost, value);
-            }
-        }
-
-        private decimal _SubtotalManufacturingCost;
-        /// <summary>
-        /// 制造费小计
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalManufacturingCost",ColDesc = "制造费小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalManufacturingCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "制造费小计" )]
-        public decimal SubtotalManufacturingCost
-        { 
-            get{return _SubtotalManufacturingCost;}
-            set{
-            SetProperty(ref _SubtotalManufacturingCost, value);
-            }
-        }
-
-        private decimal _SubtotalOutManuCost;
-        /// <summary>
-        /// 托工费小计
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalOutManuCost",ColDesc = "托工费小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalOutManuCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "托工费小计" )]
-        public decimal SubtotalOutManuCost
-        { 
-            get{return _SubtotalOutManuCost;}
-            set{
-            SetProperty(ref _SubtotalOutManuCost, value);
-            }
-        }
-
+        
         private string _PositionDesc;
         /// <summary>
         /// 位号描述
@@ -321,19 +265,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool? _IsOutWork;
-        /// <summary>
-        /// 是否托外
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsOutWork",ColDesc = "是否托外")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsOutWork" ,IsNullable = true,ColumnDescription = "是否托外" )]
-        public bool? IsOutWork
-        { 
-            get{return _IsOutWork;}
-            set{
-            SetProperty(ref _IsOutWork, value);
-            }
-        }
+        
 
         private long? _Child_BOM_Node_ID;
         /// <summary>
@@ -349,33 +281,8 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _TotalSelfProductionAllCost;
-        /// <summary>
-        /// 自产总成本
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalSelfProductionAllCost",ColDesc = "自产总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalSelfProductionAllCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "自产总成本" )]
-        public decimal TotalSelfProductionAllCost
-        { 
-            get{return _TotalSelfProductionAllCost;}
-            set{
-            SetProperty(ref _TotalSelfProductionAllCost, value);
-            }
-        }
-
-        private decimal _TotalOutsourcingAllCost;
-        /// <summary>
-        /// 外发总成本
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalOutsourcingAllCost",ColDesc = "外发总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalOutsourcingAllCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "外发总成本" )]
-        public decimal TotalOutsourcingAllCost
-        { 
-            get{return _TotalOutsourcingAllCost;}
-            set{
-            SetProperty(ref _TotalOutsourcingAllCost, value);
-            }
-        }
+  
+       
 
         private long? _Substitute;
         /// <summary>

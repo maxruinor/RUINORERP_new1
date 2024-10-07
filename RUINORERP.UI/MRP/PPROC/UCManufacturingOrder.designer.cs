@@ -58,11 +58,11 @@
             this.txtWorkingHour = new Krypton.Toolkit.KryptonTextBox();
             this.lblMachineHour = new Krypton.Toolkit.KryptonLabel();
             this.txtMachineHour = new Krypton.Toolkit.KryptonTextBox();
-            this.lblExternalProduceFee = new Krypton.Toolkit.KryptonLabel();
-            this.txtExternalProduceFee = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalManuFee = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalManuFee = new Krypton.Toolkit.KryptonTextBox();
             this.lblRequirementCustomers = new Krypton.Toolkit.KryptonLabel();
-            this.lblLaborCost = new Krypton.Toolkit.KryptonLabel();
-            this.txtLaborCost = new Krypton.Toolkit.KryptonTextBox();
+            this.lblApportionedCost = new Krypton.Toolkit.KryptonLabel();
+            this.txtApportionedCost = new Krypton.Toolkit.KryptonTextBox();
             this.lblPeopleQty = new Krypton.Toolkit.KryptonLabel();
             this.kryptonTextBox1 = new Krypton.Toolkit.KryptonTextBox();
             this.lblRefBillNO = new Krypton.Toolkit.KryptonLabel();
@@ -94,6 +94,10 @@
             this.grid1 = new SourceGrid.Grid();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
+            this.lblTotalMaterialCost = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalMaterialCost = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalProductionCost = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalProductionCost = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -141,6 +145,10 @@
             // 
             // kryptonPanelMainInfo
             // 
+            this.kryptonPanelMainInfo.Controls.Add(this.lblTotalProductionCost);
+            this.kryptonPanelMainInfo.Controls.Add(this.txtTotalProductionCost);
+            this.kryptonPanelMainInfo.Controls.Add(this.lblTotalMaterialCost);
+            this.kryptonPanelMainInfo.Controls.Add(this.txtTotalMaterialCost);
             this.kryptonPanelMainInfo.Controls.Add(this.kryptonLabel10);
             this.kryptonPanelMainInfo.Controls.Add(this.cmbProdType);
             this.kryptonPanelMainInfo.Controls.Add(this.txtQuantityDelivered);
@@ -169,11 +177,11 @@
             this.kryptonPanelMainInfo.Controls.Add(this.txtWorkingHour);
             this.kryptonPanelMainInfo.Controls.Add(this.lblMachineHour);
             this.kryptonPanelMainInfo.Controls.Add(this.txtMachineHour);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblExternalProduceFee);
-            this.kryptonPanelMainInfo.Controls.Add(this.txtExternalProduceFee);
+            this.kryptonPanelMainInfo.Controls.Add(this.lblTotalManuFee);
+            this.kryptonPanelMainInfo.Controls.Add(this.txtTotalManuFee);
             this.kryptonPanelMainInfo.Controls.Add(this.lblRequirementCustomers);
-            this.kryptonPanelMainInfo.Controls.Add(this.lblLaborCost);
-            this.kryptonPanelMainInfo.Controls.Add(this.txtLaborCost);
+            this.kryptonPanelMainInfo.Controls.Add(this.lblApportionedCost);
+            this.kryptonPanelMainInfo.Controls.Add(this.txtApportionedCost);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPeopleQty);
             this.kryptonPanelMainInfo.Controls.Add(this.kryptonTextBox1);
             this.kryptonPanelMainInfo.Controls.Add(this.lblRefBillNO);
@@ -242,7 +250,7 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(352, 164);
+            this.kryptonLabel1.Location = new System.Drawing.Point(352, 166);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(33, 20);
             this.kryptonLabel1.TabIndex = 206;
@@ -250,7 +258,7 @@
             // 
             // txtSKU
             // 
-            this.txtSKU.Location = new System.Drawing.Point(394, 163);
+            this.txtSKU.Location = new System.Drawing.Point(394, 166);
             this.txtSKU.Name = "txtSKU";
             this.txtSKU.Size = new System.Drawing.Size(100, 23);
             this.txtSKU.TabIndex = 207;
@@ -259,9 +267,9 @@
             // 
             this.cmbUnit.DropDownWidth = 100;
             this.cmbUnit.IntegralHeight = false;
-            this.cmbUnit.Location = new System.Drawing.Point(869, 164);
+            this.cmbUnit.Location = new System.Drawing.Point(644, 191);
             this.cmbUnit.Name = "cmbUnit";
-            this.cmbUnit.Size = new System.Drawing.Size(65, 21);
+            this.cmbUnit.Size = new System.Drawing.Size(129, 21);
             this.cmbUnit.TabIndex = 205;
             // 
             // cmbEmployee_ID
@@ -292,7 +300,7 @@
             // 
             // kryptonLabel8
             // 
-            this.kryptonLabel8.Location = new System.Drawing.Point(827, 164);
+            this.kryptonLabel8.Location = new System.Drawing.Point(602, 191);
             this.kryptonLabel8.Name = "kryptonLabel8";
             this.kryptonLabel8.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel8.TabIndex = 200;
@@ -405,7 +413,7 @@
             // 
             // lblWorkingHour
             // 
-            this.lblWorkingHour.Location = new System.Drawing.Point(354, 91);
+            this.lblWorkingHour.Location = new System.Drawing.Point(354, 68);
             this.lblWorkingHour.Name = "lblWorkingHour";
             this.lblWorkingHour.Size = new System.Drawing.Size(36, 20);
             this.lblWorkingHour.TabIndex = 179;
@@ -413,14 +421,14 @@
             // 
             // txtWorkingHour
             // 
-            this.txtWorkingHour.Location = new System.Drawing.Point(394, 90);
+            this.txtWorkingHour.Location = new System.Drawing.Point(394, 67);
             this.txtWorkingHour.Name = "txtWorkingHour";
             this.txtWorkingHour.Size = new System.Drawing.Size(100, 23);
             this.txtWorkingHour.TabIndex = 180;
             // 
             // lblMachineHour
             // 
-            this.lblMachineHour.Location = new System.Drawing.Point(354, 115);
+            this.lblMachineHour.Location = new System.Drawing.Point(354, 92);
             this.lblMachineHour.Name = "lblMachineHour";
             this.lblMachineHour.Size = new System.Drawing.Size(36, 20);
             this.lblMachineHour.TabIndex = 181;
@@ -428,25 +436,25 @@
             // 
             // txtMachineHour
             // 
-            this.txtMachineHour.Location = new System.Drawing.Point(394, 114);
+            this.txtMachineHour.Location = new System.Drawing.Point(394, 91);
             this.txtMachineHour.Name = "txtMachineHour";
             this.txtMachineHour.Size = new System.Drawing.Size(100, 23);
             this.txtMachineHour.TabIndex = 182;
             // 
-            // lblExternalProduceFee
+            // lblTotalManuFee
             // 
-            this.lblExternalProduceFee.Location = new System.Drawing.Point(328, 139);
-            this.lblExternalProduceFee.Name = "lblExternalProduceFee";
-            this.lblExternalProduceFee.Size = new System.Drawing.Size(62, 20);
-            this.lblExternalProduceFee.TabIndex = 183;
-            this.lblExternalProduceFee.Values.Text = "托工费用";
+            this.lblTotalManuFee.Location = new System.Drawing.Point(803, 165);
+            this.lblTotalManuFee.Name = "lblTotalManuFee";
+            this.lblTotalManuFee.Size = new System.Drawing.Size(62, 20);
+            this.lblTotalManuFee.TabIndex = 183;
+            this.lblTotalManuFee.Values.Text = "制造费用";
             // 
-            // txtExternalProduceFee
+            // txtTotalManuFee
             // 
-            this.txtExternalProduceFee.Location = new System.Drawing.Point(394, 138);
-            this.txtExternalProduceFee.Name = "txtExternalProduceFee";
-            this.txtExternalProduceFee.Size = new System.Drawing.Size(100, 23);
-            this.txtExternalProduceFee.TabIndex = 184;
+            this.txtTotalManuFee.Location = new System.Drawing.Point(869, 164);
+            this.txtTotalManuFee.Name = "txtTotalManuFee";
+            this.txtTotalManuFee.Size = new System.Drawing.Size(70, 23);
+            this.txtTotalManuFee.TabIndex = 184;
             // 
             // lblRequirementCustomers
             // 
@@ -456,24 +464,24 @@
             this.lblRequirementCustomers.TabIndex = 173;
             this.lblRequirementCustomers.Values.Text = "需求客户";
             // 
-            // lblLaborCost
+            // lblApportionedCost
             // 
-            this.lblLaborCost.Location = new System.Drawing.Point(341, 43);
-            this.lblLaborCost.Name = "lblLaborCost";
-            this.lblLaborCost.Size = new System.Drawing.Size(49, 20);
-            this.lblLaborCost.TabIndex = 175;
-            this.lblLaborCost.Values.Text = "人工费";
+            this.lblApportionedCost.Location = new System.Drawing.Point(328, 119);
+            this.lblApportionedCost.Name = "lblApportionedCost";
+            this.lblApportionedCost.Size = new System.Drawing.Size(62, 20);
+            this.lblApportionedCost.TabIndex = 175;
+            this.lblApportionedCost.Values.Text = "分摊成本";
             // 
-            // txtLaborCost
+            // txtApportionedCost
             // 
-            this.txtLaborCost.Location = new System.Drawing.Point(394, 42);
-            this.txtLaborCost.Name = "txtLaborCost";
-            this.txtLaborCost.Size = new System.Drawing.Size(100, 23);
-            this.txtLaborCost.TabIndex = 176;
+            this.txtApportionedCost.Location = new System.Drawing.Point(394, 115);
+            this.txtApportionedCost.Name = "txtApportionedCost";
+            this.txtApportionedCost.Size = new System.Drawing.Size(100, 23);
+            this.txtApportionedCost.TabIndex = 176;
             // 
             // lblPeopleQty
             // 
-            this.lblPeopleQty.Location = new System.Drawing.Point(354, 67);
+            this.lblPeopleQty.Location = new System.Drawing.Point(354, 44);
             this.lblPeopleQty.Name = "lblPeopleQty";
             this.lblPeopleQty.Size = new System.Drawing.Size(36, 20);
             this.lblPeopleQty.TabIndex = 177;
@@ -481,7 +489,7 @@
             // 
             // kryptonTextBox1
             // 
-            this.kryptonTextBox1.Location = new System.Drawing.Point(394, 66);
+            this.kryptonTextBox1.Location = new System.Drawing.Point(394, 43);
             this.kryptonTextBox1.Name = "kryptonTextBox1";
             this.kryptonTextBox1.Size = new System.Drawing.Size(100, 23);
             this.kryptonTextBox1.TabIndex = 178;
@@ -593,7 +601,6 @@
             this.txtManufacturingQty.Name = "txtManufacturingQty";
             this.txtManufacturingQty.Size = new System.Drawing.Size(153, 23);
             this.txtManufacturingQty.TabIndex = 156;
-
             // 
             // lblEmployee_ID
             // 
@@ -744,6 +751,36 @@
             this.lblApprovalOpinions.TabIndex = 76;
             this.lblApprovalOpinions.Values.Text = "审批意见";
             // 
+            // lblTotalMaterialCost
+            // 
+            this.lblTotalMaterialCost.Location = new System.Drawing.Point(315, 141);
+            this.lblTotalMaterialCost.Name = "lblTotalMaterialCost";
+            this.lblTotalMaterialCost.Size = new System.Drawing.Size(75, 20);
+            this.lblTotalMaterialCost.TabIndex = 211;
+            this.lblTotalMaterialCost.Values.Text = "总材料成本";
+            // 
+            // txtTotalMaterialCost
+            // 
+            this.txtTotalMaterialCost.Location = new System.Drawing.Point(394, 140);
+            this.txtTotalMaterialCost.Name = "txtTotalMaterialCost";
+            this.txtTotalMaterialCost.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalMaterialCost.TabIndex = 212;
+            // 
+            // lblTotalProductionCost
+            // 
+            this.lblTotalProductionCost.Location = new System.Drawing.Point(791, 190);
+            this.lblTotalProductionCost.Name = "lblTotalProductionCost";
+            this.lblTotalProductionCost.Size = new System.Drawing.Size(75, 20);
+            this.lblTotalProductionCost.TabIndex = 213;
+            this.lblTotalProductionCost.Values.Text = "生产总成本";
+            // 
+            // txtTotalProductionCost
+            // 
+            this.txtTotalProductionCost.Location = new System.Drawing.Point(869, 189);
+            this.txtTotalProductionCost.Name = "txtTotalProductionCost";
+            this.txtTotalProductionCost.Size = new System.Drawing.Size(145, 23);
+            this.txtTotalProductionCost.TabIndex = 214;
+            // 
             // UCManufacturingOrder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -820,16 +857,16 @@
         private Krypton.Toolkit.KryptonLabel lblRefBillNO;
         private Krypton.Toolkit.KryptonTextBox txtRefBillNO;
         private Krypton.Toolkit.KryptonLabel lblRequirementCustomers;
-        private Krypton.Toolkit.KryptonLabel lblLaborCost;
-        private Krypton.Toolkit.KryptonTextBox txtLaborCost;
+        private Krypton.Toolkit.KryptonLabel lblApportionedCost;
+        private Krypton.Toolkit.KryptonTextBox txtApportionedCost;
         private Krypton.Toolkit.KryptonLabel lblPeopleQty;
         private Krypton.Toolkit.KryptonTextBox kryptonTextBox1;
         private Krypton.Toolkit.KryptonLabel lblWorkingHour;
         private Krypton.Toolkit.KryptonTextBox txtWorkingHour;
         private Krypton.Toolkit.KryptonLabel lblMachineHour;
         private Krypton.Toolkit.KryptonTextBox txtMachineHour;
-        private Krypton.Toolkit.KryptonLabel lblExternalProduceFee;
-        private Krypton.Toolkit.KryptonTextBox txtExternalProduceFee;
+        private Krypton.Toolkit.KryptonLabel lblTotalManuFee;
+        private Krypton.Toolkit.KryptonTextBox txtTotalManuFee;
         private Krypton.Toolkit.KryptonLabel lblCustomerVendor_ID;
         private Krypton.Toolkit.KryptonComboBox cmbCustomerVendor_ID_Out;
         private Krypton.Toolkit.KryptonLabel lblIsOutSourced;
@@ -852,5 +889,9 @@
         private Krypton.Toolkit.KryptonTextBox txtSKU;
         private Krypton.Toolkit.KryptonLabel kryptonLabel10;
         private Krypton.Toolkit.KryptonComboBox cmbProdType;
+        private Krypton.Toolkit.KryptonLabel lblTotalMaterialCost;
+        private Krypton.Toolkit.KryptonTextBox txtTotalMaterialCost;
+        private Krypton.Toolkit.KryptonLabel lblTotalProductionCost;
+        private Krypton.Toolkit.KryptonTextBox txtTotalProductionCost;
     }
 }

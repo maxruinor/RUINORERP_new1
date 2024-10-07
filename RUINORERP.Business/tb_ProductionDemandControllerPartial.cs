@@ -26,6 +26,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using RUINORERP.Business.CommService;
+using System.Windows.Forms;
 
 namespace RUINORERP.Business
 {
@@ -1093,16 +1094,30 @@ namespace RUINORERP.Business
 
                 ManufacturingOrder.PeopleQty = bom.PeopleQty * item.RequirementQty;
                 ManufacturingOrder.Employee_ID = _appContext.CurUserInfo.Id;
-
+                MessageBox.Show("要确认成本的方式TODO");
                 if (bom.WorkingHour.HasValue)
                 {
                     ManufacturingOrder.WorkingHour = bom.WorkingHour.Value * item.RequirementQty;
                 }
+                if (bom.MachineHour.HasValue)
+                {
+                    ManufacturingOrder.MachineHour = bom.MachineHour.Value * item.RequirementQty;
+                }
+                if (ManufacturingOrder.IsOutSourced)
+                {
+                    ManufacturingOrder.ApportionedCost = bom.OutApportionedCost * item.RequirementQty;
+                   // ManufacturingOrder.TotalManuFee = bom.TotalManuFee * item.RequirementQty;
+                    //ManufacturingOrder.ApportionedCost = bom.OutApportionedCost * item.RequirementQty;
+                }
+                else
+                {
+                   ManufacturingOrder.ApportionedCost = bom.SelfApportionedCost * item.RequirementQty;
+                   // ManufacturingOrder.ApportionedCost = bom.OutApportionedCost * item.RequirementQty;
 
-                // ManufacturingOrder.ExternalProduceFee = bom.ExternalProduceFee * item.RequirementQty;
-                ManufacturingOrder.LaborCost = bom.ManufacturingCost * item.RequirementQty;
-                //ManufacturingOrder.tb_BuyingRequisitionDetails = BuyingDetails;
-                // ManufacturingOrder.PreEndDate = System.DateTime.Now;
+                   // ManufacturingOrder.ApportionedCost = bom.OutApportionedCost * item.RequirementQty;
+                }
+               
+                
                 ManufacturingOrder.ApprovalOpinions = string.Empty;
                 ManufacturingOrder.ApprovalResults = null;
                 ManufacturingOrder.ApprovalStatus = null;
@@ -1247,7 +1262,9 @@ namespace RUINORERP.Business
             ManufacturingOrder.SKU = MakingItem.tb_proddetail.SKU;
             ManufacturingOrder.Notes = MakingItem.Summary;
             ManufacturingOrder.Type_ID = MakingItem.tb_proddetail.tb_prod.Type_ID;
-
+            //人工成本 
+            //ManufacturingOrder.LaborCost = MakingItem.l;
+            // ManufacturingOrder.t = MakingItemBom.LaborCost;
             ManufacturingOrder.MONO = BizCodeGenerator.Instance.GetBizBillNo(BizType.制令单);
             ManufacturingOrder.PDID = demand.PDID;
             ManufacturingOrder.PDNO = demand.PDNo;
@@ -1471,16 +1488,15 @@ namespace RUINORERP.Business
                 mItemGoods.ActualSentQty = 0;
                 //不管是中间件还是原料都有上级BOM
                 mItemGoods.Prelevel_BOM_Desc = MakingItemBom.BOM_Name;
-
+                
                 //找次级中间件 在所有BOM中去找，通过目标BOM（成品）的明细对应的产品的BOMID,即下级BOM
                 tb_BOM_S MediumBomInfo = MediumBomInfoList.FirstOrDefault(c => c.BOM_ID == mItem.tb_proddetail.BOM_ID);
                 //中间件
                 if (MediumBomInfo != null)
                 {
                     //中间有BOM的制成品,只在子循环中引用
-
                     mItemGoods.CurrentIinventory = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Quantity);
-
+                    mItemGoods.UnitCost = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Inv_Cost);
                     //找下一级的材料。当前级就不需要。否则将当前级认为是中间半成品。要提供数量
                     if (needLoop)
                     {

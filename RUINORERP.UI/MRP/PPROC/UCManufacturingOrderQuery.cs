@@ -118,7 +118,7 @@ namespace RUINORERP.UI.MRP.MP
             base.MasterSummaryCols.Add(c => c.ManufacturingQty);
 
             base.ChildSummaryCols.Add(c => c.ShouldSendQty);
-            base.ChildSummaryCols.Add(c => c.MaterialCost);
+            base.ChildSummaryCols.Add(c => c.SubtotalUnitCost);
 
         }
 

@@ -103,8 +103,16 @@ namespace RUINORERP.UI.BI
                 t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)   //限制了销售只看到自己的客户,采购不限制
                             .ToExpression();//注意 这一句 不能少
 
-            //QueryConditionFilter.FilterLimitExpression = lambda;
-            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+            if (CurMenuInfo.CaptionCN.Contains("所有"))
+            {
+                QueryConditionFilter.FilterLimitExpressions.Clear();
+                QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+            }
+            else
+            {
+                QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+            }
+
 
 
 

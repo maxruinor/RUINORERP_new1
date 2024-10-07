@@ -1449,7 +1449,37 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.保存:
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-                    await Save(true);
+                    if (EditEntity != null)
+                    {
+                        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                        long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                        if (pkid > 0)
+                        {
+                            var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                            if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
+                            {
+                                toolStripbtnSubmit.Enabled = false;
+                                if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                {
+                                    MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
+                                }
+                            }
+                            else
+                            {
+                                await Save(true);
+                            }
+                        }
+                        else
+                        {
+                            await Save(true);
+                        }
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog("单据不能为空，保存失败。");
+                    }
+
+
                     break;
                 case MenuItemEnums.提交:
                     //操作前将数据收集

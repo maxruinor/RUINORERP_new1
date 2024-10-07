@@ -127,8 +127,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 是否可用
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsExclusive",ColDesc = "是否可用")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExclusive" ,IsNullable = false,ColumnDescription = "是否可用" )]
+        [AdvQueryAttribute(ColName = "IsExclusive",ColDesc = "责任人专属")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExclusive" ,IsNullable = false,ColumnDescription = "责任人专属")]
         public bool IsExclusive
         { 
             get{return _IsExclusive;}
@@ -154,7 +154,7 @@ namespace RUINORERP.Model
 
         private long? _Customer_id;
         /// <summary>
-        /// 
+        /// CRM中用到的
         /// </summary>
         [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
@@ -382,8 +382,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "BankAccount_id",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BankAccount_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "BankAccount_id",ColDesc = "银行账号")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BankAccount_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "银行账号")]
         [FKRelationAttribute("tb_BankAccount","BankAccount_id")]
         public long? BankAccount_id
         { 

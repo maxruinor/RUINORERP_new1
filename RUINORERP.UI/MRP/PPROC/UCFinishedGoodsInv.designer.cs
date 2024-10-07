@@ -29,16 +29,16 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.lblTotalNetMachineHours = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalNetMachineHours = new Krypton.Toolkit.KryptonTextBox();
             this.lblGeneEvidence = new Krypton.Toolkit.KryptonLabel();
             this.chkGeneEvidence = new Krypton.Toolkit.KryptonCheckBox();
             this.lblTotalNetWorkingHours = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalNetWorkingHours = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalApportionedCost = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalApportionedCost = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalTollFees = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalTollFees = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalLaborCost = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalLaborCost = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalManuFee = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalManuFee = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalProductionCost = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalProductionCost = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalMaterialCost = new Krypton.Toolkit.KryptonLabel();
@@ -97,16 +97,16 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalNetMachineHours);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalNetMachineHours);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblGeneEvidence);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkGeneEvidence);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalNetWorkingHours);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalNetWorkingHours);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalApportionedCost);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalApportionedCost);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalTollFees);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalTollFees);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalLaborCost);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalLaborCost);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalManuFee);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalManuFee);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalProductionCost);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalProductionCost);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalMaterialCost);
@@ -142,6 +142,22 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
             this.kryptonSplitContainer1.SplitterDistance = 196;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // lblTotalNetMachineHours
+            // 
+            this.lblTotalNetMachineHours.Location = new System.Drawing.Point(743, 47);
+            this.lblTotalNetMachineHours.Name = "lblTotalNetMachineHours";
+            this.lblTotalNetMachineHours.Size = new System.Drawing.Size(49, 20);
+            this.lblTotalNetMachineHours.TabIndex = 173;
+            this.lblTotalNetMachineHours.Values.Text = "总机时";
+            this.lblTotalNetMachineHours.Click += new System.EventHandler(this.lblTotalNetMachineHours_Click);
+            // 
+            // txtTotalNetMachineHours
+            // 
+            this.txtTotalNetMachineHours.Location = new System.Drawing.Point(797, 45);
+            this.txtTotalNetMachineHours.Name = "txtTotalNetMachineHours";
+            this.txtTotalNetMachineHours.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalNetMachineHours.TabIndex = 174;
             // 
             // lblGeneEvidence
             // 
@@ -189,39 +205,24 @@
             this.txtTotalApportionedCost.Size = new System.Drawing.Size(100, 23);
             this.txtTotalApportionedCost.TabIndex = 164;
             // 
-            // lblTotalTollFees
+            // lblTotalManuFee
             // 
-            this.lblTotalTollFees.Location = new System.Drawing.Point(514, 98);
-            this.lblTotalTollFees.Name = "lblTotalTollFees";
-            this.lblTotalTollFees.Size = new System.Drawing.Size(75, 20);
-            this.lblTotalTollFees.TabIndex = 165;
-            this.lblTotalTollFees.Values.Text = "总托工费用";
+            this.lblTotalManuFee.Location = new System.Drawing.Point(514, 98);
+            this.lblTotalManuFee.Name = "lblTotalManuFee";
+            this.lblTotalManuFee.Size = new System.Drawing.Size(75, 20);
+            this.lblTotalManuFee.TabIndex = 165;
+            this.lblTotalManuFee.Values.Text = "总制造费用";
             // 
-            // txtTotalTollFees
+            // txtTotalManuFee
             // 
-            this.txtTotalTollFees.Location = new System.Drawing.Point(594, 96);
-            this.txtTotalTollFees.Name = "txtTotalTollFees";
-            this.txtTotalTollFees.Size = new System.Drawing.Size(100, 23);
-            this.txtTotalTollFees.TabIndex = 166;
-            // 
-            // lblTotalLaborCost
-            // 
-            this.lblTotalLaborCost.Location = new System.Drawing.Point(734, 53);
-            this.lblTotalLaborCost.Name = "lblTotalLaborCost";
-            this.lblTotalLaborCost.Size = new System.Drawing.Size(62, 20);
-            this.lblTotalLaborCost.TabIndex = 167;
-            this.lblTotalLaborCost.Values.Text = "人工成本";
-            // 
-            // txtTotalLaborCost
-            // 
-            this.txtTotalLaborCost.Location = new System.Drawing.Point(797, 49);
-            this.txtTotalLaborCost.Name = "txtTotalLaborCost";
-            this.txtTotalLaborCost.Size = new System.Drawing.Size(100, 23);
-            this.txtTotalLaborCost.TabIndex = 168;
+            this.txtTotalManuFee.Location = new System.Drawing.Point(594, 96);
+            this.txtTotalManuFee.Name = "txtTotalManuFee";
+            this.txtTotalManuFee.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalManuFee.TabIndex = 166;
             // 
             // lblTotalProductionCost
             // 
-            this.lblTotalProductionCost.Location = new System.Drawing.Point(721, 78);
+            this.lblTotalProductionCost.Location = new System.Drawing.Point(721, 100);
             this.lblTotalProductionCost.Name = "lblTotalProductionCost";
             this.lblTotalProductionCost.Size = new System.Drawing.Size(75, 20);
             this.lblTotalProductionCost.TabIndex = 169;
@@ -229,14 +230,14 @@
             // 
             // txtTotalProductionCost
             // 
-            this.txtTotalProductionCost.Location = new System.Drawing.Point(797, 74);
+            this.txtTotalProductionCost.Location = new System.Drawing.Point(797, 96);
             this.txtTotalProductionCost.Name = "txtTotalProductionCost";
             this.txtTotalProductionCost.Size = new System.Drawing.Size(100, 23);
             this.txtTotalProductionCost.TabIndex = 170;
             // 
             // lblTotalMaterialCost
             // 
-            this.lblTotalMaterialCost.Location = new System.Drawing.Point(721, 103);
+            this.lblTotalMaterialCost.Location = new System.Drawing.Point(721, 75);
             this.lblTotalMaterialCost.Name = "lblTotalMaterialCost";
             this.lblTotalMaterialCost.Size = new System.Drawing.Size(75, 20);
             this.lblTotalMaterialCost.TabIndex = 171;
@@ -244,7 +245,7 @@
             // 
             // txtTotalMaterialCost
             // 
-            this.txtTotalMaterialCost.Location = new System.Drawing.Point(797, 99);
+            this.txtTotalMaterialCost.Location = new System.Drawing.Point(797, 71);
             this.txtTotalMaterialCost.Name = "txtTotalMaterialCost";
             this.txtTotalMaterialCost.Size = new System.Drawing.Size(100, 23);
             this.txtTotalMaterialCost.TabIndex = 172;
@@ -542,14 +543,14 @@
         private Krypton.Toolkit.KryptonTextBox txtTotalNetWorkingHours;
         private Krypton.Toolkit.KryptonLabel lblTotalApportionedCost;
         private Krypton.Toolkit.KryptonTextBox txtTotalApportionedCost;
-        private Krypton.Toolkit.KryptonLabel lblTotalTollFees;
-        private Krypton.Toolkit.KryptonTextBox txtTotalTollFees;
-        private Krypton.Toolkit.KryptonLabel lblTotalLaborCost;
-        private Krypton.Toolkit.KryptonTextBox txtTotalLaborCost;
+        private Krypton.Toolkit.KryptonLabel lblTotalManuFee;
+        private Krypton.Toolkit.KryptonTextBox txtTotalManuFee;
         private Krypton.Toolkit.KryptonLabel lblTotalProductionCost;
         private Krypton.Toolkit.KryptonTextBox txtTotalProductionCost;
         private Krypton.Toolkit.KryptonLabel lblTotalMaterialCost;
         private Krypton.Toolkit.KryptonTextBox txtTotalMaterialCost;
         private Krypton.Toolkit.KryptonLabel lblRef_BillNo;
+        private Krypton.Toolkit.KryptonLabel lblTotalNetMachineHours;
+        private Krypton.Toolkit.KryptonTextBox txtTotalNetMachineHours;
     }
 }

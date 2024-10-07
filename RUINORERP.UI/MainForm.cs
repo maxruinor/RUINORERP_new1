@@ -2067,6 +2067,7 @@ namespace RUINORERP.UI
                     //var ulid = Ulid.NewUlid();
                     //var ulidString = ulid.ToString();
                     //Console.WriteLine($"Generated ULID: {ulidString}");
+                    
                 }
             }
             catch (Exception ex)

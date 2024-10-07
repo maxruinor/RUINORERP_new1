@@ -114,23 +114,41 @@ namespace RUINORERP.Business
                     //采购订单时添加 。这里减掉在路上的数量
                     inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
 
-                    // 直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
+                    //直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
                     //平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                    //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                    //后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
+                    //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。适用范围：适用于存货的实物流转比较符合先进先出的假设，比如食品、药品等有保质期限制的商品，先购进的存货会先发出销售。
+
                     //数据来源可以是多种多样的，例如：
                     //采购价格：从供应商处购买产品或物品时的价格。
                     //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                     //市场价格：参考市场上类似产品或物品的价格。
 
-                    CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
-
-                    inv.Inv_Cost = child.TransactionPrice;//这里需要计算，根据系统设置中的算法计算。
-                    inv.CostFIFO = child.TransactionPrice;
-                    inv.CostMonthlyWA = child.TransactionPrice;
-                    inv.CostMovingWA = child.TransactionPrice;
+                    CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
+
+                    #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
+
+                    tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
+                    List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                    .Includes(b => b.tb_bom_s)
+                    .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
+                    foreach (tb_BOM_SDetail bomDetail in bomDetails)
+                    {
+                        //如果存在则更新 
+                        bomDetail.UnitCost = inv.Inv_Cost;
+                        bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                        if (bomDetail.tb_bom_s != null)
+                        {
+                            bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                            bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
+                            bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
+                        }
+                    }
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+
+                    #endregion
 
                     #endregion
 
@@ -150,6 +168,9 @@ namespace RUINORERP.Business
                     ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
 
                     #endregion
+
+
+
 
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
                     if (rr.Succeeded)
@@ -388,14 +409,31 @@ namespace RUINORERP.Business
                  生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                  市场价格：参考市场上类似产品或物品的价格。
                   */
-                    CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
-
-                    inv.Inv_Cost = child.TransactionPrice;//这里需要计算，根据系统设置中的算法计算。
-                    inv.CostFIFO = child.TransactionPrice;
-                    inv.CostMonthlyWA = child.TransactionPrice;
-                    inv.CostMovingWA = child.TransactionPrice;
+                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                    inv.LatestStorageTime = System.DateTime.Now;
+                    inv.LatestOutboundTime = System.DateTime.Now;
+                    #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
+
+                    tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
+                    List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                    .Includes(b => b.tb_bom_s)
+                    .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
+                    foreach (tb_BOM_SDetail bomDetail in bomDetails)
+                    {
+                        //如果存在则更新 
+                        bomDetail.UnitCost = inv.Inv_Cost;
+                        bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                        if (bomDetail.tb_bom_s != null)
+                        {
+                            bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                            bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
+                            bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
+                        }
+                    }
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+
+                    #endregion
 
                     #endregion
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);

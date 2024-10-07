@@ -482,19 +482,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _LaborCost= ((0));
-        /// <summary>
-        /// 人工费
-        /// </summary>
-        [AdvQueryAttribute(ColName = "LaborCost",ColDesc = "人工费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LaborCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "人工费" )]
-        public decimal LaborCost
-        { 
-            get{return _LaborCost;}
-            set{
-            SetProperty(ref _LaborCost, value);
-            }
-        }
+        
 
         private decimal _PeopleQty= ((0));
         /// <summary>
@@ -538,17 +526,62 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _ExternalProduceFee= ((0));
+        private decimal _ApportionedCost= ((0));
         /// <summary>
-        /// 托工费用
+        /// 分摊成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "ExternalProduceFee",ColDesc = "托工费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ExternalProduceFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "托工费用" )]
-        public decimal ExternalProduceFee
+        [AdvQueryAttribute(ColName = "ApportionedCost",ColDesc = "分摊成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ApportionedCost" , DecimalDigits = 5,IsNullable = false,ColumnDescription = "分摊成本")]
+        public decimal ApportionedCost
         { 
-            get{return _ExternalProduceFee;}
+            get{return _ApportionedCost;}
             set{
-            SetProperty(ref _ExternalProduceFee, value);
+            SetProperty(ref _ApportionedCost, value);
+            }
+        }
+
+        private decimal _TotalManuFee = ((0));
+        /// <summary>
+        /// 总制造费用
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalManuFee", ColDesc = "总制造费用")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalManuFee", DecimalDigits = 5, IsNullable = false, ColumnDescription = "总制造费用")]
+        public decimal TotalManuFee
+        {
+            get { return _TotalManuFee; }
+            set
+            {
+                SetProperty(ref _TotalManuFee, value);
+            }
+        }
+
+        private decimal _TotalMaterialCost = ((0));
+        /// <summary>
+        /// 总材料成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalMaterialCost", ColDesc = "总材料成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalMaterialCost", DecimalDigits = 5, IsNullable = false, ColumnDescription = "总材料成本")]
+        public decimal TotalMaterialCost
+        {
+            get { return _TotalMaterialCost; }
+            set
+            {
+                SetProperty(ref _TotalMaterialCost, value);
+            }
+        }
+
+        private decimal _TotalProductionCost = ((0));
+        /// <summary>
+        /// 生产总成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalProductionCost", ColDesc = "生产总成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalProductionCost", DecimalDigits = 5, IsNullable = false, ColumnDescription = "生产总成本")]
+        public decimal TotalProductionCost
+        {
+            get { return _TotalProductionCost; }
+            set
+            {
+                SetProperty(ref _TotalProductionCost, value);
             }
         }
 

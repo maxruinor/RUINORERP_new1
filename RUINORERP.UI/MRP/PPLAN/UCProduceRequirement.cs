@@ -2036,7 +2036,7 @@ protected async override Task<ApprovalEntity> ReReview()
                         subMaking.property = detail.view_ProdDetail.prop;
                         subMaking.Location_ID = Location_ID;
                         //subMaking.PreEndDate= SubItem.RequirementDate
-                        subMaking.UnitCost = detail.MaterialCost;
+                        subMaking.UnitCost = detail.UnitCost;
                         decimal needQty = NeedQuantity * detail.UsedQty / bomOutQty;
 
                         subMaking.PlanNeedQty = needQty.ToInt();//配方用量和实际请制量决定
@@ -2310,7 +2310,7 @@ protected async override Task<ApprovalEntity> ReReview()
             if (EditEntity.tb_productionplan != null)
             {
                 tb_SaleOrderController<tb_SaleOrder> ctrSO = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                if (EditEntity.tb_productionplan.tb_saleorder == null)
+                if (EditEntity.tb_productionplan.tb_saleorder == null && EditEntity.tb_productionplan.SOrder_ID!= null)
                 {
                     EditEntity.tb_productionplan.tb_saleorder = await ctrSO.BaseQueryByIdNavAsync(EditEntity.tb_productionplan.SOrder_ID);
                 }

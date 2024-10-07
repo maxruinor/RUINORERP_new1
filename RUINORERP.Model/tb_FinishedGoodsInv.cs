@@ -124,6 +124,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private bool _IsOutSourced = false;
+        /// <summary>
+        /// 是否托工
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsOutSourced", ColDesc = "是否托工")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsOutSourced", IsNullable = false, ColumnDescription = "是否托工")]
+        public bool IsOutSourced
+        {
+            get { return _IsOutSourced; }
+            set
+            {
+                SetProperty(ref _IsOutSourced, value);
+            }
+        }
+
         private DateTime? _Created_at;
         /// <summary>
         /// 创建时间
@@ -179,6 +194,7 @@ namespace RUINORERP.Model
             SetProperty(ref _Modified_by, value);
             }
         }
+        
 
         private string _Notes;
         /// <summary>
@@ -363,14 +379,29 @@ namespace RUINORERP.Model
             SetProperty(ref _GeneEvidence, value);
             }
         }
+        private decimal _TotalNetMachineHours = ((0));
+        /// <summary>
+        /// 总机时
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalNetMachineHours", ColDesc = "总机时")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "TotalNetMachineHours", DecimalDigits = 5, IsNullable = false, ColumnDescription = "总机时")]
+        public decimal TotalNetMachineHours
+        {
+            get { return _TotalNetMachineHours; }
+            set
+            {
+                SetProperty(ref _TotalNetMachineHours, value);
+            }
+        }
 
-        private int _TotalNetWorkingHours= ((0));
+
+        private decimal _TotalNetWorkingHours = ((0));
         /// <summary>
         /// 总工时
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalNetWorkingHours",ColDesc = "总工时")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalNetWorkingHours" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "总工时" )]
-        public int TotalNetWorkingHours
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal",  ColumnName = "TotalNetWorkingHours" , DecimalDigits = 5,IsNullable = false,ColumnDescription = "总工时" )]
+        public decimal TotalNetWorkingHours
         { 
             get{return _TotalNetWorkingHours;}
             set{
@@ -392,47 +423,20 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _TotalTollFees= ((0));
+        private decimal _TotalManuFee = ((0));
         /// <summary>
-        /// 总托工费用
+        /// 总制造费用
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalTollFees",ColDesc = "总托工费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTollFees" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总托工费用" )]
-        public decimal TotalTollFees
+        [AdvQueryAttribute(ColName = "TotalManuFee", ColDesc = "总制造费用")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalManuFee", DecimalDigits = 4,IsNullable = false,ColumnDescription = "总制造费用")]
+        public decimal TotalManuFee
         { 
-            get{return _TotalTollFees;}
+            get{return _TotalManuFee; }
             set{
-            SetProperty(ref _TotalTollFees, value);
+            SetProperty(ref _TotalManuFee, value);
             }
         }
-
-        private decimal _TotalLaborCost= ((0));
-        /// <summary>
-        /// 人工成本
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalLaborCost",ColDesc = "人工成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLaborCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "人工成本" )]
-        public decimal TotalLaborCost
-        { 
-            get{return _TotalLaborCost;}
-            set{
-            SetProperty(ref _TotalLaborCost, value);
-            }
-        }
-
-        private decimal _TotalProductionCost= ((0));
-        /// <summary>
-        /// 生产总成本
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalProductionCost",ColDesc = "生产总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalProductionCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "生产总成本" )]
-        public decimal TotalProductionCost
-        { 
-            get{return _TotalProductionCost;}
-            set{
-            SetProperty(ref _TotalProductionCost, value);
-            }
-        }
+       
 
         private decimal _TotalMaterialCost= ((0));
         /// <summary>
@@ -445,6 +449,21 @@ namespace RUINORERP.Model
             get{return _TotalMaterialCost;}
             set{
             SetProperty(ref _TotalMaterialCost, value);
+            }
+        }
+
+        private decimal _TotalProductionCost = ((0));
+        /// <summary>
+        /// 生产总成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalProductionCost", ColDesc = "生产总成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalProductionCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "生产总成本")]
+        public decimal TotalProductionCost
+        {
+            get { return _TotalProductionCost; }
+            set
+            {
+                SetProperty(ref _TotalProductionCost, value);
             }
         }
 

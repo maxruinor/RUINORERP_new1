@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:38
+// 时间：10/08/2024 01:29:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,11 +42,10 @@ namespace RUINORERP.Business
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
-//***** 
- RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.TotalNetWorkingHours).NotNull().WithMessage("总工时:不能为空。");
+ RuleFor(x => x.TotalNetMachineHours).PrecisionScale(15,5,true).WithMessage("总机时:小数位不能超过5。");
+ RuleFor(x => x.TotalNetWorkingHours).PrecisionScale(15,5,true).WithMessage("总工时:小数位不能超过5。");
  RuleFor(x => x.TotalApportionedCost).PrecisionScale(19,4,true).WithMessage("总分摊成本:小数位不能超过4。");
- RuleFor(x => x.TotalTollFees).PrecisionScale(19,4,true).WithMessage("总托工费用:小数位不能超过4。");
- RuleFor(x => x.TotalLaborCost).PrecisionScale(19,4,true).WithMessage("人工成本:小数位不能超过4。");
+ RuleFor(x => x.TotalManuFee).PrecisionScale(19,4,true).WithMessage("总制造费用:小数位不能超过4。");
  RuleFor(x => x.TotalProductionCost).PrecisionScale(19,4,true).WithMessage("生产总成本:小数位不能超过4。");
  RuleFor(x => x.TotalMaterialCost).PrecisionScale(19,4,true).WithMessage("总材料成本:小数位不能超过4。");
 //***** 

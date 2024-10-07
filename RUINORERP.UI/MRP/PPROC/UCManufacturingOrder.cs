@@ -50,7 +50,7 @@ namespace RUINORERP.UI.MRP.MP
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ManufacturingOrder>(typeof(Priority), e => e.Priority, cmbPriority, false);
         }
 
- 
+
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;
@@ -120,11 +120,12 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PDNO, txtRefBillNO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ManufacturingOrder>(entity, v => v.PDID, txtRefBillNO, true);
-            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.LaborCost.ToString(), txtLaborCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PeopleQty.ToString(), txtQuantityDelivered, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.WorkingHour.ToString(), txtWorkingHour, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.MachineHour.ToString(), txtMachineHour, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ExternalProduceFee.ToString(), txtExternalProduceFee, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.TotalMaterialCost.ToString(), txtTotalMaterialCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.TotalManuFee.ToString(), txtTotalManuFee, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.TotalProductionCost.ToString(), txtTotalProductionCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.SKU, txtSKU, BindDataType4TextBox.Text, false);
@@ -188,7 +189,7 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
 
                 //如果是销售订单引入变化则加载明细及相关数据
@@ -347,8 +348,9 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.OverSentQty);
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.WastageQty);
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.CurrentIinventory);
+            listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.SubtotalUnitCost);
 
-
+            listCols.SetCol_Formula<tb_ManufacturingOrderDetail>((a, b) => a.ActualSentQty * b.UnitCost, c => c.SubtotalUnitCost);
             //bomid的下拉值。受当前行选择时会改变下拉范围,由产品ID决定BOM显示
             sgh.SetCol_LimitedConditionsForSelectionRange<tb_ManufacturingOrderDetail>(sgd, t => t.ProdDetailID, f => f.BOM_ID);
 
@@ -444,8 +446,8 @@ namespace RUINORERP.UI.MRP.MP
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
-                //    EditEntity.ManufacturingQty = details.Sum(c => c.qy);
-                //EditEntity.TotalCompletedQuantity = details.Sum(c => c.CompletedQuantity);
+                EditEntity.TotalMaterialCost = details.Sum(c => c.SubtotalUnitCost);
+                EditEntity.TotalProductionCost = EditEntity.TotalMaterialCost + EditEntity.ApportionedCost + EditEntity.TotalManuFee;
             }
             catch (Exception ex)
             {

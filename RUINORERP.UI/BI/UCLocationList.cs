@@ -36,7 +36,8 @@ namespace RUINORERP.UI.BI
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_Location).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
             //清空过滤条件，因为这个基本数据 需要显示出来 
-            QueryConditionFilter.FilterLimitExpressions = new List<System.Linq.Expressions.LambdaExpression>();
+            QueryConditionFilter.FilterLimitExpressions.Clear();
+            //QueryConditionFilter.FilterLimitExpressions = new List<System.Linq.Expressions.LambdaExpression>();
         }
 
     }

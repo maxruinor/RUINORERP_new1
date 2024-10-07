@@ -209,31 +209,60 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _ManufacturingCost;
+        private decimal _TotalSelfManuCost;
         /// <summary>
-        /// 自产制造费用
+        /// 自制费用
         /// </summary>
-        [AdvQueryAttribute(ColName = "ManufacturingCost",ColDesc = "自产制造费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ManufacturingCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "自产制造费用" )]
-        public decimal ManufacturingCost
+        [AdvQueryAttribute(ColName = "TotalSelfManuCost", ColDesc = "自制费用")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalSelfManuCost", DecimalDigits = 4,IsNullable = false,ColumnDescription = "自制费用" )]
+        public decimal TotalSelfManuCost
         { 
-            get{return _ManufacturingCost;}
+            get{return _TotalSelfManuCost; }
             set{
-            SetProperty(ref _ManufacturingCost, value);
+            SetProperty(ref _TotalSelfManuCost, value);
             }
         }
 
-        private decimal _OutManuCost;
+        private decimal _TotalOutManuCost;
         /// <summary>
         /// 外发费用
         /// </summary>
-        [AdvQueryAttribute(ColName = "OutManuCost",ColDesc = "外发费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OutManuCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "外发费用" )]
-        public decimal OutManuCost
+        [AdvQueryAttribute(ColName = "TotalOutManuCost", ColDesc = "外发费用")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalOutManuCost", DecimalDigits = 4,IsNullable = false,ColumnDescription = "外发费用")]
+        public decimal TotalOutManuCost
         { 
-            get{return _OutManuCost;}
+            get{return _TotalOutManuCost; }
             set{
-            SetProperty(ref _OutManuCost, value);
+            SetProperty(ref _TotalOutManuCost, value);
+            }
+        }
+
+        private decimal _OutApportionedCost;
+        /// <summary>
+        /// 外发分摊费用
+        /// </summary>
+        [AdvQueryAttribute(ColName = "OutApportionedCost", ColDesc = "外发分摊费用")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "OutApportionedCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "外发分摊费用")]
+        public decimal OutApportionedCost
+        {
+            get { return _OutApportionedCost; }
+            set
+            {
+                SetProperty(ref _OutApportionedCost, value);
+            }
+        }
+        private decimal _SelfApportionedCost;
+        /// <summary>
+        /// 自制分摊费用
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SelfApportionedCost", ColDesc = "自制分摊费用")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SelfApportionedCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "自制分摊费用")]
+        public decimal SelfApportionedCost
+        {
+            get { return _SelfApportionedCost; }
+            set
+            {
+                SetProperty(ref _SelfApportionedCost, value);
             }
         }
 

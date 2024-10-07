@@ -112,8 +112,8 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4CheckBox<tb_FinishedGoodsInv>(entity, t => t.GeneEvidence, chkGeneEvidence, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalNetWorkingHours, txtTotalNetWorkingHours, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalApportionedCost.ToString(), txtTotalApportionedCost, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalTollFees.ToString(), txtTotalTollFees, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalLaborCost.ToString(), txtTotalLaborCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalManuFee.ToString(), txtTotalManuFee, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalNetMachineHours.ToString(), txtTotalNetMachineHours, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalProductionCost.ToString(), txtTotalProductionCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalMaterialCost.ToString(), txtTotalMaterialCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
@@ -234,12 +234,12 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnpaidQty);
 
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnitCost);
-            listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ProductionCost);
+            listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost);
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.MaterialCost);
-            listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.LaborCost);
+ 
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost);
             //listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.r, CustomFormatType.PercentFormat);
-            listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.LaborCost, CustomFormatType.PercentFormat);
+            
             listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.MaterialCost, CustomFormatType.CurrencyFormat);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
@@ -257,10 +257,11 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.UnpaidQty);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.PayableQty);
 
-            //  listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
-            //listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b, c) => a.UnitPrice * b.Discount * c.Quantity, c => c.SubtotalAmount);
-            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.PayableQty - b.Qty, c => c.UnpaidQty);
-            //listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
+            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.Qty * b.MaterialCost, c => c.SubtotalMaterialCost);
+            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a) =>a.SubtotalMaterialCost + a.ApportionedCost + a.ManuFee, c => c.ProductionAllCost);
+            //listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b, c) =>a.LaborCost+ a.SubtotalMaterialCost * b.ApportionedCost * c.ManuFee, c => c.ProductionAllCost);
+           // listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.PayableQty - b.Qty, c => c.UnpaidQty);
+           // listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
 
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_FinishedGoodsInvDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
@@ -655,5 +656,11 @@ protected async override Task<ApprovalEntity> ReReview()
             }
         }
 
+        private void lblTotalNetMachineHours_Click(object sender, EventArgs e)
+        {
+
+        }
+
+    
     }
 }

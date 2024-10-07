@@ -1,10 +1,10 @@
-﻿    
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/10/2024 20:24:11
+// 时间：10/08/2024 01:40:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -34,7 +34,7 @@ namespace RUINORERP.Model
         }
 
     
-        private long _BOM_ID;
+        private long? _BOM_ID;
         
         
         /// <summary>
@@ -42,9 +42,9 @@ namespace RUINORERP.Model
         /// </summary>
 
         [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "标准配方")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" ,IsNullable = true,ColumnDescription = "标准配方", IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" ,IsNullable = true,ColumnDescription = "标准配方" )]
         [Display(Name = "标准配方")]
-        public long BOM_ID 
+        public long? BOM_ID 
         { 
             get{return _BOM_ID;}            set{                SetProperty(ref _BOM_ID, value);                }
         }
@@ -87,7 +87,7 @@ namespace RUINORERP.Model
         /// </summary>
 
         [AdvQueryAttribute(ColName = "SKU",ColDesc = "母件SKU")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU" ,Length=80,IsNullable = true,ColumnDescription = "母件SKU" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU" ,Length=80,IsNullable = true,ColumnDescription = "母件SKU")]
         [Display(Name = "SKU")]
         public string SKU 
         { 
@@ -230,46 +230,76 @@ namespace RUINORERP.Model
             get{return _is_available;}            set{                SetProperty(ref _is_available, value);                }
         }
 
-        private decimal? _ManufacturingCost;
+        private decimal? _OutApportionedCost;
         
         
         /// <summary>
-        /// 自产制造成本
+        /// 外发分摊费用
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "ManufacturingCost",ColDesc = "自产制造成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ManufacturingCost" ,IsNullable = true,ColumnDescription = "自产制造成本" )]
-        [Display(Name = "自产制造成本")]
-        public decimal? ManufacturingCost 
+        [AdvQueryAttribute(ColName = "OutApportionedCost",ColDesc = "外发分摊费用")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OutApportionedCost" ,IsNullable = true,ColumnDescription = "外发分摊费用" )]
+        [Display(Name = "外发分摊费用")]
+        public decimal? OutApportionedCost 
         { 
-            get{return _ManufacturingCost;}            set{                SetProperty(ref _ManufacturingCost, value);                }
+            get{return _OutApportionedCost;}            set{                SetProperty(ref _OutApportionedCost, value);                }
         }
 
-        private decimal? _OutManuCost;
+        private decimal? _SelfApportionedCost;
         
         
         /// <summary>
-        /// 外发加工费用
+        /// 自制分摊费用
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "OutManuCost",ColDesc = "外发加工费用")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OutManuCost" ,IsNullable = true,ColumnDescription = "外发加工费用" )]
-        [Display(Name = "外发加工费用")]
-        public decimal? OutManuCost 
+        [AdvQueryAttribute(ColName = "SelfApportionedCost",ColDesc = "自制分摊费用")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SelfApportionedCost" ,IsNullable = true,ColumnDescription = "自制分摊费用" )]
+        [Display(Name = "自制分摊费用")]
+        public decimal? SelfApportionedCost 
         { 
-            get{return _OutManuCost;}            set{                SetProperty(ref _OutManuCost, value);                }
+            get{return _SelfApportionedCost;}            set{                SetProperty(ref _SelfApportionedCost, value);                }
+        }
+
+        private decimal? _TotalSelfManuCost;
+        
+        
+        /// <summary>
+        /// 自制费用
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "TotalSelfManuCost",ColDesc = "自制费用")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalSelfManuCost" ,IsNullable = true,ColumnDescription = "自制费用" )]
+        [Display(Name = "自制费用")]
+        public decimal? TotalSelfManuCost 
+        { 
+            get{return _TotalSelfManuCost;}            set{                SetProperty(ref _TotalSelfManuCost, value);                }
+        }
+
+        private decimal? _TotalOutManuCost;
+        
+        
+        /// <summary>
+        /// 外发费用
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "TotalOutManuCost",ColDesc = "外发费用")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalOutManuCost" ,IsNullable = true,ColumnDescription = "外发费用" )]
+        [Display(Name = "外发费用")]
+        public decimal? TotalOutManuCost 
+        { 
+            get{return _TotalOutManuCost;}            set{                SetProperty(ref _TotalOutManuCost, value);                }
         }
 
         private decimal? _TotalMaterialCost;
         
         
         /// <summary>
-        /// 物料成本
+        /// 总物料费用
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "TotalMaterialCost",ColDesc = "物料成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalMaterialCost" ,IsNullable = true,ColumnDescription = "物料成本" )]
-        [Display(Name = "物料成本")]
+        [AdvQueryAttribute(ColName = "TotalMaterialCost",ColDesc = "总物料费用")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalMaterialCost" ,IsNullable = true,ColumnDescription = "总物料费用" )]
+        [Display(Name = "总物料费用")]
         public decimal? TotalMaterialCost 
         { 
             get{return _TotalMaterialCost;}            set{                SetProperty(ref _TotalMaterialCost, value);                }
@@ -611,6 +641,7 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
         public virtual tb_BOM_S tb_bom_s { get; set; }
+
 
 
 

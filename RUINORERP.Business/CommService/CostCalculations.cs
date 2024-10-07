@@ -30,23 +30,67 @@ namespace RUINORERP.Business.CommService
         /// <param name="_appContext"></param>
         /// <param name="inv"></param>
         /// <param name="currentCostPrice"></param>
-        public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv,decimal currentCostPrice)
+        public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
         {
-            Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
 
+            Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
             switch (m)
             {
                 case 库存成本计算方式.先进先出法:
                     inv.CostFIFO = currentCostPrice;
+                    inv.Inv_Cost = inv.CostFIFO;
                     break;
-                case 库存成本计算方式.后进先出法:
+                case 库存成本计算方式.月加权平均:
+                    inv.CostMonthlyWA = currentCostPrice;
+                    inv.Inv_Cost = inv.CostMonthlyWA;
                     break;
-                case 库存成本计算方式.加权平均法:
-                    //inv.Inv_Cost
+                case 库存成本计算方式.移动加权平均法:
+                    inv.CostMovingWA = (currentCostPrice * currentQty + inv.CostMovingWA * inv.Quantity) / (currentQty + inv.Quantity);
+                    inv.Inv_Cost = inv.CostMovingWA;
                     break;
-                case 库存成本计算方式.移动平均法:
+                case 库存成本计算方式.实际成本法:
+                    inv.Inv_AdvCost = currentCostPrice;
+                    inv.Inv_Cost = inv.Inv_AdvCost;
+                    break;
 
+                default:
                     break;
+            }
+
+
+
+        }
+
+        /// <summary>
+        /// 反成本计算，反审核时使用
+        /// </summary>
+        /// <param name="_appContext"></param>
+        /// <param name="inv"></param>
+        /// <param name="currentQty"></param>
+        /// <param name="currentCostPrice"></param>
+        public static void AntiCostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
+        {
+
+            Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
+            switch (m)
+            {
+                case 库存成本计算方式.先进先出法:
+                    inv.CostFIFO = currentCostPrice;
+                    inv.Inv_Cost = inv.CostFIFO;
+                    break;
+                case 库存成本计算方式.月加权平均:
+                    inv.CostMonthlyWA = currentCostPrice;
+                    inv.Inv_Cost = inv.CostMonthlyWA;
+                    break;
+                case 库存成本计算方式.移动加权平均法:
+                    inv.CostMovingWA = (inv.CostMovingWA * inv.Quantity - currentCostPrice * currentQty) / (inv.Quantity - currentQty);
+                    inv.Inv_Cost = inv.CostMovingWA;
+                    break;
+                case 库存成本计算方式.实际成本法:
+                    inv.Inv_AdvCost = currentCostPrice;
+                    inv.Inv_Cost = inv.Inv_AdvCost;
+                    break;
+
                 default:
                     break;
             }

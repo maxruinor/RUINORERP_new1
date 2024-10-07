@@ -176,12 +176,10 @@ namespace RUINORERP.Business
                     //市场价格：参考市场上类似产品或物品的价格。
 
                     //TODO:这里需要根据系统设置中的算法计算。
-                    //  CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
+                   // child.UnitCost = child.MaterialCost+child.LaborCost+child.
 
-                    inv.Inv_Cost = child.UnitCost;//这里需要计算，根据系统设置中的算法计算。
-                                                  // inv.CostFIFO = child.TransactionPrice;
-                                                  // inv.CostMonthlyWA = child.TransactionPrice;
-                                                  // inv.CostMovingWA = child.TransactionPrice;
+                    CommService.CostCalculations.CostCalculation(_appContext, inv, child.Qty, child.UnitCost);
+                                               
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
 
@@ -305,7 +303,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-               
+
                 rs.Succeeded = false;
                 rs.ErrorMsg = ex.Message;
                 return rs;
@@ -484,7 +482,7 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-             
+
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;

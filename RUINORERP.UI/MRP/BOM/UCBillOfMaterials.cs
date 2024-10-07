@@ -730,10 +730,7 @@ namespace RUINORERP.UI.MRP.BOM
             }
             else
             {
-                if (true)
-                {
 
-                }
                 EditEntity.DataStatus = (int)DataStatus.草稿;
                 EditEntity.ActionStatus = ActionStatus.新增;
                 EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
@@ -749,7 +746,7 @@ namespace RUINORERP.UI.MRP.BOM
                 //EditEntity.Doc_ID = 0;
                 EditEntity.BOM_Name = string.Empty;
                 EditEntity.TotalMaterialQty = 0;
-        
+
                 EditEntity.property = string.Empty;
                 if (EditEntity.tb_BOM_SDetails != null && EditEntity.tb_BOM_SDetails.Count > 0)
                 {
@@ -769,30 +766,30 @@ namespace RUINORERP.UI.MRP.BOM
             DataBindingHelper.BindData4DataTime<tb_BOM_S>(EditEntity, t => t.Effective_at, dtpEffective_at, false);
             DataBindingHelper.BindData4CheckBox<tb_BOM_S>(EditEntity, t => t.is_enabled, chkis_enabled, false);
             DataBindingHelper.BindData4CheckBox<tb_BOM_S>(EditEntity, t => t.is_available, chkis_available, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.OutManuCost.ToString(), txtOutManuCost, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.ManufacturingCost.ToString(), txtLaborCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.OutApportionedCost.ToString(), txtOutApportionedCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.SelfApportionedCost.ToString(), txtSelfApportionedCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.TotalOutManuCost.ToString(), txtTotalOutManuCost, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.TotalSelfManuCost.ToString(), txtTotalSelfManuCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.TotalMaterialCost.ToString(), txtTotalMaterialCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.OutProductionAllCosts.ToString(), txtOutProductionAllCosts, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.SelfProductionAllCosts.ToString(), txtSelfProductionAllCosts, BindDataType4TextBox.Money, false);
+
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.OutputQty.ToString(), txtOutputQty, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.OutputQty.ToString(), txtPeopleQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.PeopleQty.ToString(), txtPeopleQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.WorkingHour.ToString(), txtWorkingHour, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.MachineHour.ToString(), txtMachineHour, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_BOM_S>(EditEntity, t => t.ExpirationDate, dtpExpirationDate, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.DailyQty.ToString(), txtDailyQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.SelfProductionAllCosts.ToString(), txtSelfProductionAllCosts, BindDataType4TextBox.Money, false);
+
             DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(EditEntity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_BOM_S>(EditEntity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
 
-            if (EditEntity.tb_BOM_SDetails != null && EditEntity.tb_BOM_SDetails.Count > 0)
+            if (EditEntity.tb_BOM_SDetails == null)
             {
-                sgh.LoadItemDataToGrid<tb_BOM_SDetail>(grid1, sgd, EditEntity.tb_BOM_SDetails, c => c.ProdDetailID);
+                EditEntity.tb_BOM_SDetails = new List<tb_BOM_SDetail>();
             }
-            else
-            {
-                sgh.LoadItemDataToGrid<tb_BOM_SDetail>(grid1, sgd, new List<tb_BOM_SDetail>(), c => c.ProdDetailID);
-            }
+            sgh.LoadItemDataToGrid<tb_BOM_SDetail>(grid1, sgd, EditEntity.tb_BOM_SDetails, c => c.ProdDetailID);
 
             //先绑定这个。InitFilterForControl 这个才生效, 一共三个来控制，这里分别是绑定ID和SKU。下面InitFilterForControlByExp 是生成快捷按钮
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, k => k.SKU, txtProdDetailID, BindDataType4TextBox.Text, true);
@@ -802,8 +799,6 @@ namespace RUINORERP.UI.MRP.BOM
             //如果属性变化 则状态为修改
             EditEntity.PropertyChanged += async (sender, s2) =>
             {
-
-
                 //权限允许,草稿新建或修改状态时，才允许修改（修改要未审核或审核未通过）
                 if (((true && EditEntity.DataStatus == (int)DataStatus.草稿) || (true && EditEntity.DataStatus == (int)DataStatus.新建)))
                 {
@@ -868,6 +863,9 @@ namespace RUINORERP.UI.MRP.BOM
                         // }
                     }
                 }
+
+                EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
+                EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
 
             };
             if (EditEntity.tb_BOM_SDetails == null)
@@ -956,7 +954,7 @@ namespace RUINORERP.UI.MRP.BOM
 
         private void AddItems(tb_BOM_S bom)
         {
-            if (bom==null)
+            if (bom == null)
             {
                 return;
             }
@@ -1085,7 +1083,8 @@ namespace RUINORERP.UI.MRP.BOM
 
             // listCols.SetCol_ReadOnly<tb_BOM_SDetail>(c => c.Substitute);
 
-
+            listCols.SetCol_Format<tb_BOM_SDetail>(c => c.OutputRate, CustomFormatType.PercentFormat);
+            listCols.SetCol_Format<tb_BOM_SDetail>(c => c.LossRate, CustomFormatType.PercentFormat);
             //排除指定列不在相关列内
             //listCols.SetCol_Exclude<ProductSharePart>(c => c.Location_ID);
 
@@ -1100,22 +1099,9 @@ namespace RUINORERP.UI.MRP.BOM
             sgd.GridData = EditEntity;
             //要放到初始化sgd后面
             listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.UsedQty);
-            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalMaterialCost);
-            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalManufacturingCost);
-            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalOutManuCost);
-            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.TotalOutsourcingAllCost);
-            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.TotalSelfProductionAllCost);
-
-
-            listCols.SetCol_Formula<tb_BOM_SDetail>((a, b) => a.MaterialCost * b.UsedQty, c => c.SubtotalMaterialCost);
-            listCols.SetCol_Formula<tb_BOM_SDetail>((a, b) => a.ManufacturingCost * b.UsedQty, c => c.SubtotalManufacturingCost);
-            listCols.SetCol_Formula<tb_BOM_SDetail>((a, b) => a.OutManuCost * b.UsedQty, c => c.SubtotalOutManuCost);
-
-            listCols.SetCol_Formula<tb_BOM_SDetail>((a, b, c) => a.UsedQty * b.MaterialCost + c.SubtotalManufacturingCost, d => d.TotalSelfProductionAllCost);
-            listCols.SetCol_Formula<tb_BOM_SDetail>((a, b, c) => a.UsedQty * b.MaterialCost + c.SubtotalOutManuCost, d => d.TotalOutsourcingAllCost);
-
-
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Inv_Cost, t => t.MaterialCost);
+            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalUnitCost);
+            listCols.SetCol_Formula<tb_BOM_SDetail>((a, b) => a.UnitCost * b.UsedQty, c => c.SubtotalUnitCost);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.Inv_Cost, t => t.UnitCost);
 
             //冗余名称和规格
             //  sgh.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd, f => f.CNName, t => t.SubItemName);
@@ -1163,20 +1149,21 @@ namespace RUINORERP.UI.MRP.BOM
                 {
                     vp.tb_bom_s = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>().Where(a => a.BOM_ID == vp.BOM_ID).Single();
                 }
-                _BOM_SDetail.ManufacturingCost = vp.tb_bom_s.ManufacturingCost;
-                int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.ManufacturingCost)).ColIndex;
-                griddefine.grid[Position.Row, ColIndex].Value = _BOM_SDetail.ManufacturingCost;
+                // _BOM_SDetail.SelfManuCost = vp.tb_bom_s.TotalSelfManuCost;
+                // int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.SelfManuCost)).ColIndex;
+                // griddefine.grid[Position.Row, ColIndex].Value = _BOM_SDetail.SelfManuCost;
 
-
-                _BOM_SDetail.MaterialCost = vp.tb_bom_s.TotalMaterialCost;
-                ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.MaterialCost)).ColIndex;
+                MessageBox.Show("这里要调试确认成本来源方式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                /*
+                _BOM_SDetail.UnitCost = vp.tb_bom_s.SelfProductionAllCosts;
+                int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.MaterialCost)).ColIndex;
                 griddefine.grid[Position.Row, ColIndex].Value = _BOM_SDetail.MaterialCost;
 
 
-                _BOM_SDetail.OutManuCost = vp.tb_bom_s.OutManuCost;
+                _BOM_SDetail.OutManuCost = vp.tb_bom_s.TotalSelfManuCost;
                 ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.OutManuCost)).ColIndex;
                 griddefine.grid[Position.Row, ColIndex].Value = _BOM_SDetail.OutManuCost;
-
+                */
 
                 //Child_BOM_Node_ID 这个在明细中显示的是ID，没有使用外键关联显示，因为列名不一致。手动显示为配方名称
                 var cbni = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.Child_BOM_Node_ID));
@@ -1235,7 +1222,6 @@ namespace RUINORERP.UI.MRP.BOM
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
-
             if (EditEntity == null)
             {
                 //都不是正常状态
@@ -1252,9 +1238,13 @@ namespace RUINORERP.UI.MRP.BOM
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
-                EditEntity.TotalMaterialCost = details.Sum(c => c.SubtotalMaterialCost);
-                EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.OutManuCost;
-                EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.ManufacturingCost;
+                EditEntity.TotalMaterialCost = details.Sum(c => c.SubtotalUnitCost);
+                EditEntity.TotalMaterialQty = details.Sum(c => c.UsedQty);
+                //主表中的这两个字段保存了两种方式下的直接费用。再加上子表中的直接费用
+                // EditEntity.OutManuCost= details.Sum(c => c.SubtotalOutManuCost);
+                // EditEntity.ManufacturingCost = details.Sum(c => c.SubtotalSelfManuCost);
+                EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
+                EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
             }
             catch (Exception ex)
             {
@@ -1473,3 +1463,4 @@ namespace RUINORERP.UI.MRP.BOM
         }
     }
 }
+

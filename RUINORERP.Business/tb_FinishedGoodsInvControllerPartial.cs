@@ -111,7 +111,7 @@ namespace RUINORERP.Business
                         {
                             if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                             {
-                                _logger.Info(productionDemand.PPNo + $"对应的计划明细中完成数量更新成功===重点代码 看已交数量是否正确");
+                                _logger.Debug(productionDemand.PPNo + $"对应的计划明细中完成数量更新成功===重点代码 看已交数量是否正确");
                             }
                         }
                     }
@@ -263,7 +263,7 @@ namespace RUINORERP.Business
                         {
                             if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                             {
-                                _logger.Info(entity.DeliveryBillNo + "==>" + entity.MONo + $"对应 的所有领料单设置为结案。将不能再发料 更新成功===重点代码 看已交数量是否正确");
+                                _logger.Debug(entity.DeliveryBillNo + "==>" + entity.MONo + $"对应 的所有领料单设置为结案。将不能再发料 更新成功===重点代码 看已交数量是否正确");
                             }
                         }
                     }
@@ -276,7 +276,7 @@ namespace RUINORERP.Business
                 {
                     if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                     {
-                        _logger.Info(entity.DeliveryBillNo + "==>" + entity.MONo + $"对应 的制令单已交数量 更新成功===重点代码 看已交数量是否正确");
+                        _logger.Debug(entity.DeliveryBillNo + "==>" + entity.MONo + $"对应 的制令单已交数量 更新成功===重点代码 看已交数量是否正确");
                     }
                 }
 
@@ -450,7 +450,7 @@ namespace RUINORERP.Business
                     {
                         if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                         {
-                            _logger.Info(productionDemand.PPNo + $"对应的计划明细中完成数量反审核 更新成功===重点代码 看已交数量是否正确");
+                            _logger.Debug(productionDemand.PPNo + $"对应的计划明细中完成数量反审核 更新成功===重点代码 看已交数量是否正确");
                         }
                     }
 

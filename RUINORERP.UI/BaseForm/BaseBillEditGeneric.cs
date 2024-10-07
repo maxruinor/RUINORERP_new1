@@ -1697,6 +1697,7 @@ namespace RUINORERP.UI.BaseForm
                     ae.ApprovalResults = false;
                     ToolBarEnabledControl(EditEntity);
                     AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults},{rmr.ErrorMsg}");
+                    MainForm.Instance.logger.LogError($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
 
                 }
@@ -1785,6 +1786,7 @@ namespace RUINORERP.UI.BaseForm
                     command.Undo();
                     ToolBarEnabledControl(EditEntity);
                     AuditLogHelper.Instance.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");
+                    MainForm.Instance.logger.LogError($"{cbd.BillNo}反审失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{cbd.BillNo}反审失败{rmr.ErrorMsg},请联系管理员！", Color.Red);
                 }
             }
@@ -2227,7 +2229,7 @@ namespace RUINORERP.UI.BaseForm
                         AuditLogHelper.Instance.CreateAuditLog<T>("删除", editEntity);
                         if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         {
-                            MainForm.Instance.logger.LogInformation($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
+                            //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
                         }
                         bindingSourceSub.Clear();
 

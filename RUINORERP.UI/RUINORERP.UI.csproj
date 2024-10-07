@@ -2888,6 +2888,7 @@
     <None Include="ReportTemplate\tb_StockIn.frx" />
     <None Include="ReportTemplate\test.frx" />
     <None Include="ReportTemplate\TEST1.frx" />
+    <None Include="ReportTemplate\可以用的模板新销售订单.frx" />
     <None Include="ResourceFile\Help.png" />
     <None Include="ResourceFile\Help0.png" />
     <None Include="ResourceFile\US_Dollar.png" />

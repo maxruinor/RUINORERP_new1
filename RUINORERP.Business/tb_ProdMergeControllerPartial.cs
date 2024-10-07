@@ -68,7 +68,7 @@ namespace RUINORERP.Business
                     invMother.LatestStorageTime = DateTime.Now;
                     invMother.ProdDetailID = entity.ProdDetailID;
                     invMother.Location_ID = entity.Location_ID;
-        
+
                     BusinessHelper.Instance.InitEntity(invMother);
                 }
                 else
@@ -190,15 +190,19 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-
                 _unitOfWorkManage.RollbackTran();
-
+                if (!string.IsNullOrEmpty(rs.ErrorMsg))
+                {
+                    _logger.Error(ex, "事务回滚" + rs.ErrorMsg);
+                }
+                else
+                {
+                    _logger.Error(ex, "事务回滚");
+                }
                 rs.Succeeded = false;
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
-                _logger.Error(ex, "事务回滚");
                 return rs;
             }
-
         }
 
 

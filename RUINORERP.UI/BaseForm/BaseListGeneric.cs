@@ -42,6 +42,7 @@ using RUINORERP.UI.CommonUI;
 using RUINORERP.UI.FormProperty;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
+using SqlSugar;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -585,6 +586,39 @@ namespace RUINORERP.UI.BaseForm
             set { _ListDataSoure = value; }
         }
 
+
+        /// <summary>
+        /// 在已经查询出来的数据中，排除主键，获取其它列重复的记录
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        protected BindingSortCollection<T> GetDuplicatesList()
+        {
+            BindingSortCollection<T> DuplicatesList = new BindingSortCollection<T>();
+            List<T> list = new List<T>();
+            list = ListDataSoure.Cast<T>().ToList();
+            string pkName = UIHelper.GetPrimaryKeyColName(typeof(T));
+
+            Func<T, Tuple<object[]>> keySelector2 = p =>
+            {
+                PropertyInfo[] properties = typeof(T).GetProperties()
+                    .Where(prop => prop.GetCustomAttribute<SugarColumn>()?.IsIgnore == false && prop.Name != pkName)
+                    .ToArray();
+                var values = properties.Select(prop => prop.GetValue(p)).ToArray();
+                return Tuple.Create(values);
+            };
+
+            // 使用自定义比较器进行分组
+            var duplicatesList = list.GroupBy(
+                keySelector2,
+                new CustomTupleEqualityComparer<Tuple<object[]>>(new string[] { pkName }) // 使用适当的比较器
+            ).Where(g => g.Count() > 1)
+             .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
+            .SelectMany(g => g)
+            .ToList();
+            DuplicatesList = duplicatesList.ToBindingSortCollection<T>();
+            return DuplicatesList;
+        }
 
         /// <summary>
         /// 初始化列表数据

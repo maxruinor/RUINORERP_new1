@@ -221,7 +221,7 @@ namespace RUINORERP.Business
                     {
                         if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                         {
-                            _logger.Info(entity.MaterialRequisitionNO + "==>" + entity.tb_manufacturingorder.MONO + $"对应的制令更新成功===重点代码 看已交数量是否正确");
+                            _logger.Debug(entity.MaterialRequisitionNO + "==>" + entity.tb_manufacturingorder.MONO + $"对应的制令更新成功===重点代码 看已交数量是否正确");
                         }
                     }
 

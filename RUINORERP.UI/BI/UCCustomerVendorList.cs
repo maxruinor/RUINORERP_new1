@@ -38,6 +38,20 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
             base.EditForm = typeof(UCCustomerVendorEdit);
             this.Load += UCCustomerVendorList_Load;
+
+            Krypton.Toolkit.KryptonButton button检查数据 = new Krypton.Toolkit.KryptonButton();
+            button检查数据.Text = "提取重复数据";
+            button检查数据.ToolTipValues.Description = "提取重复数据，有一行会保留，没有显示出来。";
+            button检查数据.ToolTipValues.EnableToolTips = true;
+            button检查数据.ToolTipValues.Heading = "提示";
+            button检查数据.Click += button检查数据_Click;
+            base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
+        }
+
+        private void button检查数据_Click(object sender, EventArgs e)
+        {
+            ListDataSoure.DataSource = GetDuplicatesList();
+            dataGridView1.DataSource = ListDataSoure;
         }
 
         private void UCCustomerVendorList_Load(object sender, EventArgs e)

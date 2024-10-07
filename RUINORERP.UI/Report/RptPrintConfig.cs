@@ -48,13 +48,14 @@ namespace RUINORERP.UI.Report
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                MessageBox.Show("您没有删除打印配置的权限，请联系管理员。");
+                return;
+            }
+
             if (MessageBox.Show("打印模板删除后无法恢复\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
-                //if (newSumDataGridView1.CurrentRow != null)
-                //{
-                //    var rowdata = newSumDataGridView1.CurrentRow.DataBoundItem;
-                //    int d = MainForm.Instance.AppContext.Db.Deleteable<tb_PrintTemplate>(rowdata).ExecuteCommand();
-                //}
                 if (bindingSourcePrintTemplate.Current != null)
                 {
                     int d = MainForm.Instance.AppContext.Db.Deleteable<tb_PrintTemplate>(bindingSourcePrintTemplate.Current).ExecuteCommand();

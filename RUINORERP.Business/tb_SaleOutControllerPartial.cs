@@ -312,7 +312,7 @@ namespace RUINORERP.Business
                     {
                         if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                         {
-                            _logger.Info(entity.SaleOutNo + "==>" + entity.tb_saleorder.SOrderNo + $"对应的订单更新成功===重点代码 看已交数量是否正确");
+                           // _logger.Debug(entity.SaleOutNo + "==>" + entity.tb_saleorder.SOrderNo + $"对应的订单更新成功===重点代码 看已交数量是否正确");
                         }
                     }
 

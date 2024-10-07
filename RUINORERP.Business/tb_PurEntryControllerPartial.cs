@@ -266,7 +266,7 @@ namespace RUINORERP.Business
                 {
                     if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                     {
-                        _logger.Info(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
+                        _logger.Debug(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
                     }
                 }
 

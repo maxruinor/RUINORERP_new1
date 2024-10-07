@@ -150,6 +150,7 @@
             this.newSumDataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridView1.ContextMenuStrip = this.contextMenuStrip1;
+            this.newSumDataGridView1.CustomRowNo = false;
             this.newSumDataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.newSumDataGridView1.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridView1.FieldNameList")));
             this.newSumDataGridView1.IsShowSumRow = false;

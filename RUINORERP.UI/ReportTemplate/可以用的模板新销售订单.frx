@@ -1,0 +1,756 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="01/04/2024 00:22:48" ReportInfo.Modified="10/07/2024 10:57:28" ReportInfo.CreatorVersion="2019.1.5.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+    public string ShowPrintStatus(int PrintStatus)
+    {
+      string rs = string.Empty;
+        PrintStatus++;
+        if (PrintStatus == 0)
+        {
+         // rs = &quot;###未付款###!!!&quot;;
+        }
+        if (PrintStatus&gt; 1)
+        {
+          rs = &quot;打印次数:&quot;+PrintStatus;
+        }
+        return rs;
+    }
+    
+    public string ShowApprovalStatus(int? ApprovalStatus)
+    {
+      string rs = string.Empty;
+      if (ApprovalStatus.HasValue)
+      {
+        if (ApprovalStatus.Value == 0)
+        {
+          rs = &quot;未审核&quot;;
+        }
+        if (ApprovalStatus.Value == 1)
+        {
+          rs = &quot;已审核&quot;;
+        }
+      }
+      return rs;
+    }
+    
+    public string ShowPayStatus(int PayStatus)
+    {
+      string rs = string.Empty;
+
+      /*
+              未付款 = 1,
+        全部付款 = 2,
+        部分付款 = 3,
+      */
+        if (PayStatus == 1)
+        {
+         rs = &quot;###未付款###!!!&quot;;
+        }
+        if (PayStatus == 2)
+        {
+          rs = &quot;全部付款&quot;;
+        }
+      if (PayStatus == 3)
+      {
+        rs = &quot;部分付款&quot;;
+      }
+
+      return rs;
+    }
+    
+  }
+}
+</ScriptText>
+  <Styles>
+    <Style Name="采购订单" Border.Lines="All"/>
+  </Styles>
+  <Dictionary>
+    <BusinessObjectDataSource Name="rd" ReferenceName="rd" DataType="System.Collections.Generic.List`1[[System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" Enabled="true">
+      <Column Name="SOrder_ID" DataType="System.Int64"/>
+      <Column Name="SOrderNo" DataType="System.String"/>
+      <Column Name="PayStatus" DataType="System.Int32"/>
+      <Column Name="Paytype_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="CustomerVendor_ID" DataType="System.Int64"/>
+      <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ProjectGroup_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ShipCost" DataType="System.Decimal"/>
+      <Column Name="TotalQty" DataType="System.Int32"/>
+      <Column Name="TotalCost" DataType="System.Decimal"/>
+      <Column Name="TotalAmount" DataType="System.Decimal"/>
+      <Column Name="TotalTaxAmount" DataType="System.Decimal"/>
+      <Column Name="PreDeliveryDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="SaleDate" DataType="System.DateTime"/>
+      <Column Name="DeliveryDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ShippingAddress" DataType="System.String"/>
+      <Column Name="ShippingWay" DataType="System.String"/>
+      <Column Name="TrackNo" DataType="System.String"/>
+      <Column Name="CollectedMoney" DataType="System.Decimal"/>
+      <Column Name="PrePayMoney" DataType="System.Decimal"/>
+      <Column Name="Deposit" DataType="System.Decimal"/>
+      <Column Name="TaxRate" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="DeliveryDateConfirm" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Notes" DataType="System.String"/>
+      <Column Name="ApprovalOpinions" DataType="System.String"/>
+      <Column Name="Approver_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="Approver_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ApprovalStatus" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="ApprovalResults" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="KeepAccountsType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="TaxDeductionType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="OrderPriority" DataType="System.Int32"/>
+      <Column Name="PlatformOrderNo" DataType="System.String"/>
+      <Column Name="PrintStatus" DataType="System.Int32"/>
+      <Column Name="tb_projectgroup" DataType="RUINORERP.Model.tb_ProjectGroup, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="ProjectGroup_ID" DataType="System.Int64"/>
+        <Column Name="ProjectGroupCode" DataType="System.String"/>
+        <Column Name="ProjectGroupName" DataType="System.String"/>
+        <Column Name="ResponsiblePerson" DataType="System.String"/>
+        <Column Name="Phone" DataType="System.String"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="StartDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="EndDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource5" Alias="tb_SaleOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOrders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource6" Alias="tb_FM_OtherExpenseDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_OtherExpenseDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_OtherExpenseDetails"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource7" Alias="tb_FM_ExpenseClaimDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_ExpenseClaimDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_ExpenseClaimDetails"/>
+        <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="tb_department" Enabled="false" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource188" Alias="tb_ProductionPlans" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionPlan, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionPlans"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource189" Alias="tb_MaterialRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialRequisitions"/>
+      </Column>
+      <Column Name="tb_customervendor" DataType="RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="CustomerVendor_ID" DataType="System.Int64"/>
+        <Column Name="CVCode" DataType="System.String"/>
+        <Column Name="CVName" DataType="System.String"/>
+        <Column Name="ShortName" DataType="System.String"/>
+        <Column Name="Type_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Paytype_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Customer_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Area" DataType="System.String"/>
+        <Column Name="Contact" DataType="System.String"/>
+        <Column Name="Phone" DataType="System.String"/>
+        <Column Name="Address" DataType="System.String"/>
+        <Column Name="Website" DataType="System.String"/>
+        <Column Name="IsCustomer" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="IsVendor" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="BankAccount_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="tb_bankaccount" Enabled="false" DataType="RUINORERP.Model.tb_BankAccount, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="tb_customer" Enabled="false" DataType="RUINORERP.Model.tb_Customer, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="tb_employee" Enabled="false" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="tb_customervendortype" Enabled="false" DataType="RUINORERP.Model.tb_CustomerVendorType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="tb_paymentmethod" Enabled="false" DataType="RUINORERP.Model.tb_PaymentMethod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource9" Alias="tb_PurOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource10" Alias="tb_StockOuts" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_StockOut, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_StockOuts"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource11" Alias="tb_PurOrderRes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrderRe, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrderRes"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource12" Alias="tb_Prods" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Prod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Prods"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource13" Alias="tb_Returns" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Return, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Returns"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource14" Alias="tb_InvoiceInfos" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_InvoiceInfo, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_InvoiceInfos"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource15" Alias="tb_CustomerVendorFileses" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendorFiles, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendorFileses"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource17" Alias="tb_PurGoodsRecommendDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurGoodsRecommendDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurGoodsRecommendDetails"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource18" Alias="tb_FM_Initial_PayAndReceivables" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_Initial_PayAndReceivable, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_Initial_PayAndReceivables"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource19" Alias="tb_SaleOuts" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOut, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOuts"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource20" Alias="tb_PurEntries" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntry, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntries"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource21" Alias="tb_SaleOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOrders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource22" Alias="tb_FM_PaymentBills" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_PaymentBill, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_PaymentBills"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource23" Alias="tb_FM_OtherExpenseDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_OtherExpenseDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_OtherExpenseDetails"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource24" Alias="tb_SaleOutRes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOutRe, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOutRes"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource25" Alias="tb_PurEntryRes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntryRe, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntryRes"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource26" Alias="tb_FM_PrePaymentBillDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_PrePaymentBillDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_PrePaymentBillDetails"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource27" Alias="tb_FinishedGoodsInvs" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FinishedGoodsInv, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FinishedGoodsInvs"/>
+        <Column Name="IsExclusive" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource190" Alias="tb_ManufacturingOrdersOut" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrdersOut"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource191" Alias="tb_ManufacturingOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource192" Alias="tb_MaterialReturns" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialReturn, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialReturns"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource193" Alias="tb_ProdReturnings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdReturning, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdReturnings"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource194" Alias="tb_ProdBorrowings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdBorrowing, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdBorrowings"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource195" Alias="tb_MaterialRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialRequisitions"/>
+      </Column>
+      <Column Name="tb_employee" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="Employee_ID" DataType="System.Int64"/>
+        <Column Name="DepartmentID" DataType="System.Int64"/>
+        <Column Name="Employee_NO" DataType="System.String"/>
+        <Column Name="Employee_Name" DataType="System.String"/>
+        <Column Name="Gender" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Position" DataType="System.String"/>
+        <Column Name="Marriage" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Birthday" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="StartDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="JobTitle" DataType="System.String"/>
+        <Column Name="Address" DataType="System.String"/>
+        <Column Name="Email" DataType="System.String"/>
+        <Column Name="Education" DataType="System.String"/>
+        <Column Name="LanguageSkills" DataType="System.String"/>
+        <Column Name="University" DataType="System.String"/>
+        <Column Name="IDNumber" DataType="System.String"/>
+        <Column Name="EndDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="salary" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="PhoneNumber" DataType="System.String"/>
+        <Column Name="BankAccount_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="tb_bankaccount" Enabled="false" DataType="RUINORERP.Model.tb_BankAccount, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="tb_department" Enabled="false" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource29" Alias="tb_PurOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource30" Alias="tb_StockOuts" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_StockOut, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_StockOuts"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource31" Alias="tb_Prods" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Prod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Prods"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource32" Alias="tb_Stocktakes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Stocktake, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Stocktakes"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource33" Alias="tb_Locations" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Location, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Locations"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource34" Alias="tb_Customers" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Customer, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Customers"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource35" Alias="tb_CustomerVendors" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendors"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource37" Alias="tb_Customer_interactions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Customer_interaction, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Customer_interactions"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource38" Alias="tb_UserInfos" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_UserInfo, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_UserInfos"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource39" Alias="tb_ProductionPlans" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionPlan, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionPlans"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource40" Alias="tb_FM_Initial_PayAndReceivables" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_Initial_PayAndReceivable, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_Initial_PayAndReceivables"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource41" Alias="tb_MaterialReturns" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialReturn, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialReturns"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource42" Alias="tb_SaleOuts" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOut, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOuts"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource43" Alias="tb_PurEntries" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntry, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntries"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource44" Alias="tb_SaleOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOrders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource45" Alias="tb_FM_PaymentBills" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_PaymentBill, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_PaymentBills"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource46" Alias="tb_FM_PrePaymentBills" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_PrePaymentBill, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_PrePaymentBills"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource47" Alias="tb_SaleOutRes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOutRe, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOutRes"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource48" Alias="tb_PurEntryRes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntryRe, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntryRes"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource49" Alias="tb_FM_OtherExpenses" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_OtherExpense, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_OtherExpenses"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource50" Alias="tb_FinishedGoodsInvs" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FinishedGoodsInv, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FinishedGoodsInvs"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource51" Alias="tb_FM_ExpenseClaims" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_ExpenseClaim, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_ExpenseClaims"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource52" Alias="tb_FM_ExpenseClaimDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_ExpenseClaimDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_ExpenseClaimDetails"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource166" Alias="tb_FM_OtherExpenseDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_OtherExpenseDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_OtherExpenseDetails"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource196" Alias="tb_AuditLogses" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_AuditLogs, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_AuditLogses"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource197" Alias="tb_ManufacturingOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource198" Alias="tb_PriceRecords" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PriceRecord, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PriceRecords"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource199" Alias="tb_ProdReturnings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdReturning, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdReturnings"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource200" Alias="tb_ProdSplits" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdSplit, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdSplits"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource201" Alias="tb_BuyingRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BuyingRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BuyingRequisitions"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource202" Alias="tb_ProdBorrowings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdBorrowing, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdBorrowings"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource203" Alias="tb_ProdMerges" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdMerge, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdMerges"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource204" Alias="tb_ProductionDemands" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionDemand, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionDemands"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource205" Alias="tb_MaterialRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialRequisitions"/>
+      </Column>
+      <Column Name="tb_paymentmethod" DataType="RUINORERP.Model.tb_PaymentMethod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="Paytype_ID" DataType="System.Int64"/>
+        <Column Name="Paytype_Name" DataType="System.String"/>
+        <Column Name="Desc" DataType="System.String"/>
+        <Column Name="Cash" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource53" Alias="tb_PurOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource54" Alias="tb_CustomerVendors" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendors"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource55" Alias="tb_PurEntries" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntry, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntries"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource56" Alias="tb_SaleOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOrders"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource57" Alias="tb_PurEntryRes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntryRe, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntryRes"/>
+        <BusinessObjectDataSource Name="BusinessObjectDataSource167" Alias="tb_SaleOuts" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOut, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOuts"/>
+      </Column>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource4" Alias="tb_SaleOrderDetails" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrderDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOrderDetails" Enabled="true">
+        <Column Name="SaleOrderDetail_ID" DataType="System.Int64"/>
+        <Column Name="SOrder_ID" DataType="System.Int64"/>
+        <Column Name="ProdDetailID" DataType="System.Int64"/>
+        <Column Name="Location_ID" DataType="System.Int64"/>
+        <Column Name="UnitPrice" DataType="System.Decimal"/>
+        <Column Name="Quantity" DataType="System.Int32"/>
+        <Column Name="Discount" DataType="System.Decimal"/>
+        <Column Name="TransactionPrice" DataType="System.Decimal"/>
+        <Column Name="Cost" DataType="System.Decimal"/>
+        <Column Name="SubtotalCostAmount" DataType="System.Decimal"/>
+        <Column Name="TaxRate" DataType="System.Decimal"/>
+        <Column Name="Summary" DataType="System.String"/>
+        <Column Name="CustomerPartNo" DataType="System.String"/>
+        <Column Name="Gift" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="property" DataType="System.String"/>
+        <Column Name="tb_location" DataType="RUINORERP.Model.tb_Location, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="Location_ID" DataType="System.Int64"/>
+          <Column Name="LocationType_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="LocationCode" DataType="System.String"/>
+          <Column Name="Tel" DataType="System.String"/>
+          <Column Name="Name" DataType="System.String"/>
+          <Column Name="Desc" DataType="System.String"/>
+          <Column Name="tb_employee" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="Employee_ID" DataType="System.Int64"/>
+            <Column Name="DepartmentID" DataType="System.Int64"/>
+            <Column Name="Employee_NO" DataType="System.String"/>
+            <Column Name="Employee_Name" DataType="System.String"/>
+            <Column Name="Gender" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Position" DataType="System.String"/>
+            <Column Name="Marriage" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Birthday" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="StartDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="JobTitle" DataType="System.String"/>
+            <Column Name="Address" DataType="System.String"/>
+            <Column Name="Email" DataType="System.String"/>
+            <Column Name="Education" DataType="System.String"/>
+            <Column Name="LanguageSkills" DataType="System.String"/>
+            <Column Name="University" DataType="System.String"/>
+            <Column Name="IDNumber" DataType="System.String"/>
+            <Column Name="EndDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="salary" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="PhoneNumber" DataType="System.String"/>
+            <Column Name="BankAccount_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="tb_bankaccount" DataType="RUINORERP.Model.tb_BankAccount, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+              <Column Name="BankAccount_id" DataType="System.Int64"/>
+              <Column Name="Account_Name" DataType="System.String"/>
+              <Column Name="Account_No" DataType="System.String"/>
+              <Column Name="OpeningBank" DataType="System.String"/>
+              <Column Name="Is_enabled" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="Notes" DataType="System.String"/>
+              <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource59" Alias="tb_CustomerVendors" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendors"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource60" Alias="tb_Employees" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Employees"/>
+            </Column>
+            <Column Name="tb_department" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+              <Column Name="DepartmentID" DataType="System.Int64"/>
+              <Column Name="DepartmentCode" DataType="System.String"/>
+              <Column Name="DepartmentName" DataType="System.String"/>
+              <Column Name="TEL" DataType="System.String"/>
+              <Column Name="Notes" DataType="System.String"/>
+              <Column Name="Director" DataType="System.String"/>
+              <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource61" Alias="tb_PurOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrders"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource62" Alias="tb_BOM_Ss" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BOM_S, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BOM_Ss"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource63" Alias="tb_Prods" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Prod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Prods"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource65" Alias="tb_Employees" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Employees"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource66" Alias="tb_FM_Accounts" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_Account, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_Accounts"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource67" Alias="tb_ProductionPlans" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionPlan, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionPlans"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource68" Alias="tb_FM_Initial_PayAndReceivables" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_Initial_PayAndReceivable, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_Initial_PayAndReceivables"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource69" Alias="tb_MaterialReturns" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialReturn, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialReturns"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource70" Alias="tb_PurEntries" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntry, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntries"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource71" Alias="tb_FM_PaymentBills" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_PaymentBill, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_PaymentBills"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource72" Alias="tb_FM_OtherExpenseDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_OtherExpenseDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_OtherExpenseDetails"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource73" Alias="tb_FM_PrePaymentBills" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_PrePaymentBill, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_PrePaymentBills"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource74" Alias="tb_PurEntryRes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntryRe, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntryRes"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource75" Alias="tb_FinishedGoodsInvs" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FinishedGoodsInv, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FinishedGoodsInvs"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource76" Alias="tb_FM_ExpenseClaimDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_ExpenseClaimDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_ExpenseClaimDetails"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource206" Alias="tb_ManufacturingOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrders"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource207" Alias="tb_ProjectGroups" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProjectGroup, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProjectGroups"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource208" Alias="tb_BuyingRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BuyingRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BuyingRequisitions"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource209" Alias="tb_MaterialRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialRequisitions"/>
+            </Column>
+            <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource78" Alias="tb_PurOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrders"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource79" Alias="tb_StockOuts" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_StockOut, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_StockOuts"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource80" Alias="tb_Prods" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Prod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Prods"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource81" Alias="tb_Stocktakes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Stocktake, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Stocktakes"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource82" Alias="tb_Locations" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Location, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Locations"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource83" Alias="tb_Customers" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Customer, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Customers"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource84" Alias="tb_CustomerVendors" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_CustomerVendors"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource86" Alias="tb_Customer_interactions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Customer_interaction, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Customer_interactions"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource87" Alias="tb_UserInfos" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_UserInfo, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_UserInfos"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource88" Alias="tb_ProductionPlans" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionPlan, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionPlans"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource89" Alias="tb_FM_Initial_PayAndReceivables" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_Initial_PayAndReceivable, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_Initial_PayAndReceivables"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource90" Alias="tb_MaterialReturns" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialReturn, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialReturns"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource91" Alias="tb_SaleOuts" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOut, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOuts"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource92" Alias="tb_PurEntries" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntry, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntries"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource93" Alias="tb_SaleOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOrders"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource94" Alias="tb_FM_PaymentBills" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_PaymentBill, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_PaymentBills"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource95" Alias="tb_FM_PrePaymentBills" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_PrePaymentBill, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_PrePaymentBills"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource96" Alias="tb_SaleOutRes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOutRe, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOutRes"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource97" Alias="tb_PurEntryRes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntryRe, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntryRes"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource98" Alias="tb_FM_OtherExpenses" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_OtherExpense, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_OtherExpenses"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource99" Alias="tb_FinishedGoodsInvs" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FinishedGoodsInv, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FinishedGoodsInvs"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource100" Alias="tb_FM_ExpenseClaims" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_ExpenseClaim, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_ExpenseClaims"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource101" Alias="tb_FM_ExpenseClaimDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_ExpenseClaimDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_ExpenseClaimDetails"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource168" Alias="tb_FM_OtherExpenseDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FM_OtherExpenseDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FM_OtherExpenseDetails"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource210" Alias="tb_AuditLogses" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_AuditLogs, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_AuditLogses"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource211" Alias="tb_ManufacturingOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrders"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource212" Alias="tb_PriceRecords" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PriceRecord, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PriceRecords"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource213" Alias="tb_ProdReturnings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdReturning, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdReturnings"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource214" Alias="tb_ProdSplits" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdSplit, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdSplits"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource215" Alias="tb_BuyingRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BuyingRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BuyingRequisitions"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource216" Alias="tb_ProdBorrowings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdBorrowing, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdBorrowings"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource217" Alias="tb_ProdMerges" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdMerge, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdMerges"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource218" Alias="tb_ProductionDemands" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionDemand, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionDemands"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource219" Alias="tb_MaterialRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialRequisitions"/>
+          </Column>
+          <Column Name="tb_locationtype" DataType="RUINORERP.Model.tb_LocationType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="LocationType_ID" DataType="System.Int64"/>
+            <Column Name="TypeName" DataType="System.String"/>
+            <Column Name="Desc" DataType="System.String"/>
+            <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource102" Alias="tb_Locations" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Location, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Locations"/>
+          </Column>
+          <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource103" Alias="tb_FinishedGoodsInvDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FinishedGoodsInvDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FinishedGoodsInvDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource104" Alias="tb_PurOrderDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrderDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrderDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource105" Alias="tb_StockInDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_StockInDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_StockInDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource106" Alias="tb_Prods" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Prod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Prods"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource107" Alias="tb_Inventories" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Inventory, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Inventories"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource108" Alias="tb_PurOrderReDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrderReDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrderReDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource109" Alias="tb_StockOutDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_StockOutDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_StockOutDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource110" Alias="tb_Stocktakes" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Stocktake, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Stocktakes"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource113" Alias="tb_BOM_SDetailSecondaries" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BOM_SDetailSecondary, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BOM_SDetailSecondaries"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource114" Alias="tb_StorageRacks" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_StorageRack, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_StorageRacks"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource115" Alias="tb_SaleOrderDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrderDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOrderDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource116" Alias="tb_ManufacturingOrderDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrderDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrderDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource117" Alias="tb_ProduceGoodsRecommendDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProduceGoodsRecommendDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProduceGoodsRecommendDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource120" Alias="tb_PurGoodsRecommendDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurGoodsRecommendDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurGoodsRecommendDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource121" Alias="tb_ProductionDemandDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionDemandDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionDemandDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource123" Alias="tb_MaterialReturns" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialReturn, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialReturns"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource124" Alias="tb_ProductionPlanDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionPlanDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionPlanDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource125" Alias="tb_MaterialReturnDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialReturnDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialReturnDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource126" Alias="tb_SaleOutDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOutDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOutDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource127" Alias="tb_PurEntryDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntryDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntryDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource128" Alias="tb_SaleOutReDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOutReDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOutReDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource129" Alias="tb_PurEntryReDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntryReDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntryReDetails"/>
+          <Column Name="Is_enabled" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource220" Alias="tb_ProdSplitDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdSplitDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdSplitDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource221" Alias="tb_ManufacturingOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrders"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource222" Alias="tb_ProdMergeDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdMergeDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdMergeDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource223" Alias="tb_ProdReturningDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdReturningDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdReturningDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource224" Alias="tb_SaleOutReRefurbishedMaterialsDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOutReRefurbishedMaterialsDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOutReRefurbishedMaterialsDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource225" Alias="tb_ProdBorrowingDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdBorrowingDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdBorrowingDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource226" Alias="tb_ProdSplits" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdSplit, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdSplits"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource227" Alias="tb_BuyingRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BuyingRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BuyingRequisitions"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource228" Alias="tb_ProductionDemandTargetDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionDemandTargetDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionDemandTargetDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource229" Alias="tb_ProdMerges" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdMerge, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdMerges"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource230" Alias="tb_MaterialRequisitions" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialRequisition, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialRequisitions"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource231" Alias="tb_MaterialRequisitionDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialRequisitionDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialRequisitionDetails"/>
+        </Column>
+        <Column Name="tb_proddetail" DataType="RUINORERP.Model.tb_ProdDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="ProdDetailID" DataType="System.Int64"/>
+          <Column Name="ProdBaseID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="SKU" DataType="System.String"/>
+          <Column Name="BarCode" DataType="System.String"/>
+          <Column Name="ImagesPath" DataType="System.String"/>
+          <Column Name="Images" DataType="System.Byte[]" BindableControl="Picture"/>
+          <Column Name="Weight" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Standard_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Transfer_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Wholesale_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Market_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Discount_Price" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Image" DataType="System.Byte[]" BindableControl="Picture"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="SalePublish" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Is_enabled" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Is_available" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="tb_bom_s" Enabled="false" DataType="RUINORERP.Model.tb_BOM_S, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+          <Column Name="tb_prod" DataType="RUINORERP.Model.tb_Prod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="ProdBaseID" DataType="System.Int64"/>
+            <Column Name="ProductNo" DataType="System.String"/>
+            <Column Name="CNName" DataType="System.String"/>
+            <Column Name="ImagesPath" DataType="System.String"/>
+            <Column Name="Images" DataType="System.Byte[]" BindableControl="Picture"/>
+            <Column Name="ENName" DataType="System.String"/>
+            <Column Name="Model" DataType="System.String"/>
+            <Column Name="ShortCode" DataType="System.String"/>
+            <Column Name="Specifications" DataType="System.String"/>
+            <Column Name="SourceType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="DepartmentID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="PropertyType" DataType="System.Int32"/>
+            <Column Name="Unit_ID" DataType="System.Int64"/>
+            <Column Name="Category_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Type_ID" DataType="System.Int64"/>
+            <Column Name="CustomerVendor_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Location_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Rack_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Brand" DataType="System.String"/>
+            <Column Name="ProductENDesc" DataType="System.String"/>
+            <Column Name="ProductCNDesc" DataType="System.String"/>
+            <Column Name="TaxRate" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="CustomsCode" DataType="System.String"/>
+            <Column Name="Tag" DataType="System.String"/>
+            <Column Name="SalePublish" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <Column Name="tb_employee" Enabled="false" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="tb_customervendor" Enabled="false" DataType="RUINORERP.Model.tb_CustomerVendor, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="tb_department" Enabled="false" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="tb_location" Enabled="false" DataType="RUINORERP.Model.tb_Location, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="tb_prodcategories" Enabled="false" DataType="RUINORERP.Model.tb_ProdCategories, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="tb_producttype" Enabled="false" DataType="RUINORERP.Model.tb_ProductType, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="tb_unit" DataType="RUINORERP.Model.tb_Unit, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+              <Column Name="Unit_ID" DataType="System.Int64"/>
+              <Column Name="UnitName" DataType="System.String"/>
+              <Column Name="Notes" DataType="System.String"/>
+              <Column Name="is_measurement_unit" DataType="System.Boolean" BindableControl="CheckBox"/>
+              <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource131" Alias="tb_FinishedGoodsInvDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FinishedGoodsInvDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FinishedGoodsInvDetails"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource133" Alias="tb_Prods" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Prod, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Prods"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource169" Alias="tb_BOM_SDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BOM_SDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BOM_SDetails"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource232" Alias="tb_ManufacturingOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrders"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource233" Alias="tb_Packings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Packing, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Packings"/>
+              <BusinessObjectDataSource Name="BusinessObjectDataSource234" Alias="tb_ProdBundles" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdBundle, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdBundles"/>
+            </Column>
+            <Column Name="tb_storagerack" Enabled="false" DataType="RUINORERP.Model.tb_StorageRack, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+            <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource136" Alias="tb_ProdDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdDetails"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource137" Alias="tb_Prod_Attr_Relations" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Prod_Attr_Relation, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Prod_Attr_Relations"/>
+            <Column Name="DataStatus" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+            <BusinessObjectDataSource Name="BusinessObjectDataSource235" Alias="tb_Packings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Packing, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Packings"/>
+          </Column>
+          <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource138" Alias="tb_FinishedGoodsInvDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_FinishedGoodsInvDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_FinishedGoodsInvDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource140" Alias="tb_BOM_Ss" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BOM_S, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BOM_Ss"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource142" Alias="tb_PurOrderDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrderDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrderDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource143" Alias="tb_StockInDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_StockInDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_StockInDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource144" Alias="tb_Inventories" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Inventory, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Inventories"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource145" Alias="tb_PurOrderReDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrderReDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrderReDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource146" Alias="tb_StockOutDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_StockOutDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_StockOutDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource147" Alias="tb_BOM_SDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BOM_SDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BOM_SDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource149" Alias="tb_ReturnDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ReturnDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ReturnDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource150" Alias="tb_StocktakeDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_StocktakeDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_StocktakeDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource151" Alias="tb_BOM_SDetailSecondaries" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BOM_SDetailSecondary, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BOM_SDetailSecondaries"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource152" Alias="tb_Prod_Attr_Relations" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Prod_Attr_Relation, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Prod_Attr_Relations"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource153" Alias="tb_SaleOrderDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOrderDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOrderDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource154" Alias="tb_ManufacturingOrderDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrderDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrderDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource155" Alias="tb_ProduceGoodsRecommendDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProduceGoodsRecommendDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProduceGoodsRecommendDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource156" Alias="tb_PurGoodsRecommendDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurGoodsRecommendDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurGoodsRecommendDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource157" Alias="tb_ProductionDemandDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionDemandDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionDemandDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource158" Alias="tb_ProductionPlanDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionPlanDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionPlanDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource159" Alias="tb_MaterialReturnDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialReturnDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialReturnDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource160" Alias="tb_SaleOutDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOutDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOutDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource161" Alias="tb_PurEntryDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntryDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntryDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource162" Alias="tb_SaleOutReDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOutReDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOutReDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource163" Alias="tb_PurEntryReDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurEntryReDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurEntryReDetails"/>
+          <Column Name="BOM_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="DataStatus" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource174" Alias="tb_ProdSplitDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdSplitDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdSplitDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource175" Alias="tb_ProdMergeDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdMergeDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdMergeDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource176" Alias="tb_ProdReturningDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdReturningDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdReturningDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource177" Alias="tb_PriceRecords" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PriceRecord, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PriceRecords"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource178" Alias="tb_ProdBorrowingDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdBorrowingDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdBorrowingDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource179" Alias="tb_ProdSplits" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdSplit, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdSplits"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource180" Alias="tb_ProductionDemandTargetDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionDemandTargetDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionDemandTargetDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource181" Alias="tb_ProdMerges" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdMerge, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdMerges"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource183" Alias="tb_BuyingRequisitionDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_BuyingRequisitionDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_BuyingRequisitionDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource184" Alias="tb_MaterialRequisitionDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_MaterialRequisitionDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_MaterialRequisitionDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource185" Alias="tb_ProdBundleDetails" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProdBundleDetail, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProdBundleDetails"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource186" Alias="tb_ManufacturingOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ManufacturingOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ManufacturingOrders"/>
+          <BusinessObjectDataSource Name="BusinessObjectDataSource236" Alias="tb_Packings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_Packing, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_Packings"/>
+        </Column>
+        <Column Name="tb_saleorder" Enabled="false" DataType="RUINORERP.Model.tb_SaleOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"/>
+        <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+        <Column Name="TotalDeliveredQty" DataType="System.Int32"/>
+        <Column Name="TotalReturnedQty" DataType="System.Int32"/>
+        <Column Name="SubtotalTransAmount" DataType="System.Decimal"/>
+        <Column Name="CommissionAmount" DataType="System.Decimal"/>
+        <Column Name="SubtotalTaxAmount" DataType="System.Decimal"/>
+        <Column Name="SubtotalUntaxedAmount" DataType="System.Decimal"/>
+      </BusinessObjectDataSource>
+      <Column Name="Selected" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]" BindableControl="CheckBox"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource58" Alias="tb_PurOrders" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_PurOrder, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_PurOrders"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource164" Alias="tb_SaleOuts" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_SaleOut, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_SaleOuts"/>
+      <Column Name="DataStatus" DataType="System.Int32"/>
+      <Column Name="TotalUntaxedAmount" DataType="System.Decimal"/>
+      <Column Name="CloseCaseOpinions" DataType="System.String"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource172" Alias="tb_ProductionPlans" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_ProductionPlan, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_ProductionPlans"/>
+      <Column Name="IsFromPlatform" DataType="System.Boolean" BindableControl="CheckBox"/>
+      <Column Name="RefBillID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <Column Name="RefNO" DataType="System.String"/>
+      <Column Name="RefBizType" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+      <BusinessObjectDataSource Name="BusinessObjectDataSource187" Alias="tb_OrderPackings" Enabled="false" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.tb_OrderPacking, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" PropName="tb_OrderPackings"/>
+    </BusinessObjectDataSource>
+    <BusinessObjectDataSource Name="currUserInfo" ReferenceName="currUserInfo" DataType="System.Collections.Generic.List`1[[RUINORERP.Model.ICurrentUserInfo, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]" Enabled="true">
+      <Column Name="Name" DataType="System.String"/>
+      <Column Name="Id" DataType="System.Int64"/>
+      <Column Name="loginTime" DataType="System.DateTime"/>
+      <Column Name="HeartbeatUpdateTime" DataType="System.DateTime"/>
+      <Column Name="UserInfo" DataType="RUINORERP.Model.tb_UserInfo, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+        <Column Name="User_ID" DataType="System.Int64"/>
+        <Column Name="Employee_ID" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="UserName" DataType="System.String"/>
+        <Column Name="Password" DataType="System.String"/>
+        <Column Name="is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Notes" DataType="System.String"/>
+        <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+        <Column Name="tb_employee" DataType="RUINORERP.Model.tb_Employee, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+          <Column Name="Employee_ID" DataType="System.Int64"/>
+          <Column Name="DepartmentID" DataType="System.Int64"/>
+          <Column Name="Employee_NO" DataType="System.String"/>
+          <Column Name="Employee_Name" DataType="System.String"/>
+          <Column Name="Gender" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Position" DataType="System.String"/>
+          <Column Name="Marriage" DataType="System.Nullable`1[[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Birthday" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="StartDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="JobTitle" DataType="System.String"/>
+          <Column Name="Address" DataType="System.String"/>
+          <Column Name="Email" DataType="System.String"/>
+          <Column Name="Education" DataType="System.String"/>
+          <Column Name="LanguageSkills" DataType="System.String"/>
+          <Column Name="University" DataType="System.String"/>
+          <Column Name="IDNumber" DataType="System.String"/>
+          <Column Name="EndDate" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="salary" DataType="System.Nullable`1[[System.Decimal, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Notes" DataType="System.String"/>
+          <Column Name="Is_enabled" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Is_available" DataType="System.Nullable`1[[System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Created_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_at" DataType="System.Nullable`1[[System.DateTime, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="Modified_by" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="PhoneNumber" DataType="System.String"/>
+          <Column Name="BankAccount_id" DataType="System.Nullable`1[[System.Int64, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]"/>
+          <Column Name="tb_bankaccount" DataType="RUINORERP.Model.tb_BankAccount, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="BankAccount_id" DataType="System.Int64"/>
+            <Column Name="Account_Name" DataType="System.String"/>
+            <Column Name="Account_No" DataType="System.String"/>
+            <Column Name="OpeningBank" DataType="System.String"/>
+            <Column Name="Is_enabled" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+          </Column>
+          <Column Name="tb_department" DataType="RUINORERP.Model.tb_Department, RUINORERP.Model, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+            <Column Name="DepartmentID" DataType="System.Int64"/>
+            <Column Name="DepartmentCode" DataType="System.String"/>
+            <Column Name="DepartmentName" DataType="System.String"/>
+            <Column Name="TEL" DataType="System.String"/>
+            <Column Name="Notes" DataType="System.String"/>
+            <Column Name="Director" DataType="System.String"/>
+            <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+            <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+          </Column>
+          <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+          <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+        </Column>
+        <Column Name="Selected" DataType="System.Boolean" BindableControl="CheckBox"/>
+        <Column Name="PrimaryKeyID" DataType="System.Int64"/>
+      </Column>
+    </BusinessObjectDataSource>
+  </Dictionary>
+  <ReportPage Name="Page1" PaperWidth="241" PaperHeight="139.7" LeftMargin="6" TopMargin="6" RightMargin="6" BottomMargin="6" FirstPageSource="4" OtherPagesSource="4" Guides="311.85,472.5,519.75,680.4,94.5,765.45,9.45,292.95,699.3,850.5,727.65,869.4,841.01,33.07,198.44,420.51,472.48,543.35,623.67,722.89,850.43,196.07,412.23,458.29,523.25,597.66,690.97,56.7,264.6,784.35,330.75,425.25,642.6,737.1,18.9,18.9,18.9">
+    <ReportTitleBand Name="ReportTitle1" Width="865.62" Height="113.4" Guides="56.7,75.6,56.7,9.45,56.7">
+      <TextObject Name="Text1" Left="321.3" Top="56.7" Width="127.54" Height="28.35" Text="销售订单" Font="宋体, 18pt, style=Bold"/>
+      <TextObject Name="Text2" Left="472.5" Top="56.7" Width="160.65" Height="18.9" Text="单号:[rd.SOrderNo]" Font="宋体, 10pt, style=Bold"/>
+      <TextObject Name="Text3" Left="132.3" Top="9.45" Width="585.9" Height="47.25" Text="深圳市贝思特高新技术有限公司" Font="宋体, 28pt, style=Bold"/>
+      <TextObject Name="Text7" Left="28.35" Top="56.7" Width="283.5" Height="18.9" Text="From:[rd.tb_customervendor.CVName]" VertAlign="Center" Font="宋体, 9pt, style=Bold"/>
+      <TextObject Name="Text10" Left="633.15" Top="56.7" Width="160.65" Height="18.9" Text="订购日期:[FormatDateTime([rd.SaleDate],&quot;yyyy-MM-dd&quot;)]" Font="宋体, 9pt, style=Bold"/>
+      <TextObject Name="Text11" Left="-9450" Top="-9450" Width="94.5" Height="18.9" Border.Lines="All" HorzAlign="Center"/>
+      <TextObject Name="Text36" Left="28.35" Top="94.5" Width="283.5" Height="18.9" Text="联系人:[rd.tb_customervendor.Contact]" VertAlign="Center" Font="宋体, 9pt, style=Bold"/>
+      <TextObject Name="Text4" Left="323.61" Top="94.5" Width="274.05" Height="18.9" Text="业务员: [rd.tb_employee.Employee_Name]  [rd.tb_employee.PhoneNumber]" Font="宋体, 9pt, style=Bold"/>
+      <TextObject Name="Text38" Left="633.15" Top="94.5" Width="274.05" Height="18.9" Text="平台单号:[rd.PlatformOrderNo]" Font="宋体, 9pt, style=Bold"/>
+      <TextObject Name="Text39" Left="633.15" Top="75.6" Width="160.65" Height="18.9" Text="[ShowApprovalStatus([rd.ApprovalStatus])]" Font="宋体, 10pt, style=Bold"/>
+      <TextObject Name="Text6" Left="737.1" Top="18.9" Width="94.5" Height="18.9" Text="[ShowPrintStatus([rd.PrintStatus])]" Font="宋体, 10pt, style=Bold"/>
+      <TextObject Name="Text42" Left="481.95" Top="94.5" Width="160.65" Height="18.9" Text="项目小组:[rd.tb_projectgroup.ProjectGroupName]" Font="宋体, 10pt, style=Bold"/>
+    </ReportTitleBand>
+    <PageHeaderBand Name="PageHeader1" Top="117.4" Width="865.62" Height="11.34" Guides="0,18.9">
+      <TextObject Name="Text5" Left="708.75" Width="160.65" Height="11.34" Text="当前页[Page#]/总页数[TotalPages#]" Font="宋体, 8pt"/>
+    </PageHeaderBand>
+    <ColumnHeaderBand Name="ColumnHeader1" Top="132.74" Width="865.62" Height="18.9">
+      <TableObject Name="Table2" Left="33.07" Width="797.14" Height="18.9" Border.Lines="All">
+        <TableColumn Name="Column10" Width="33.55"/>
+        <TableColumn Name="Column11" Width="121.58"/>
+        <TableColumn Name="Column12" Width="175.62"/>
+        <TableColumn Name="Column13" Width="81.48"/>
+        <TableColumn Name="Column14" Width="60.25"/>
+        <TableColumn Name="Column15" Width="63.83"/>
+        <TableColumn Name="Column16" Width="55.47"/>
+        <TableColumn Name="Column17" Width="102.68"/>
+        <TableColumn Name="Column18" Width="102.68"/>
+        <TableRow Name="Row2">
+          <TableCell Name="Cell10" Border.Lines="Right" Text="序号" HorzAlign="Center" VertAlign="Center"/>
+          <TableCell Name="Cell11" Border.Lines="Right" Text="名称&#13;&#10;" HorzAlign="Center" VertAlign="Center"/>
+          <TableCell Name="Cell12" Border.Lines="Right" Text="规格" HorzAlign="Center" VertAlign="Center"/>
+          <TableCell Name="Cell13" Border.Lines="Right" Text="属性" HorzAlign="Center" VertAlign="Center"/>
+          <TableCell Name="Cell14" Border.Lines="Right" Text="单位" HorzAlign="Center" VertAlign="Center"/>
+          <TableCell Name="Cell15" Border.Lines="Right" Text="数量" HorzAlign="Center" VertAlign="Center"/>
+          <TableCell Name="Cell16" Border.Lines="Right" Text="成交价" HorzAlign="Center" VertAlign="Center"/>
+          <TableCell Name="Cell17" Border.Lines="Right" Text="金额" HorzAlign="Center" VertAlign="Center"/>
+          <TableCell Name="Cell18" Text="摘要" HorzAlign="Center" VertAlign="Center"/>
+        </TableRow>
+      </TableObject>
+    </ColumnHeaderBand>
+    <DataBand Name="Data1" Top="155.64" Width="865.62" Guides="9.45,28.35,0,18.9">
+      <DataBand Name="Data2" Top="159.64" Width="865.62" Height="18.9" CanGrow="true" Guides="0,28.35" DataSource="BusinessObjectDataSource4">
+        <TableObject Name="Table1" Left="33.07" Width="797.14" Height="18.9" Border.Lines="All" RepeatHeaders="false">
+          <TableColumn Name="Column1" Width="33.55"/>
+          <TableColumn Name="Column2" Width="121.58"/>
+          <TableColumn Name="Column3" Width="175.62"/>
+          <TableColumn Name="Column4" Width="81.48"/>
+          <TableColumn Name="Column5" Width="60.25"/>
+          <TableColumn Name="Column6" Width="63.83"/>
+          <TableColumn Name="Column7" Width="55.47"/>
+          <TableColumn Name="Column8" Width="102.68"/>
+          <TableColumn Name="Column9" Width="102.68"/>
+          <TableRow Name="Row1" AutoSize="true">
+            <TableCell Name="Cell1" Border.Lines="Right" Text="[Row#]"/>
+            <TableCell Name="Cell2" Border.Lines="Right" Text="[rd.tb_SaleOrderDetails.tb_proddetail.tb_prod.CNName]"/>
+            <TableCell Name="Cell3" Border.Lines="Right" Text="[rd.tb_SaleOrderDetails.tb_proddetail.tb_prod.Specifications]"/>
+            <TableCell Name="Cell4" Border.Lines="Right" Text="[rd.tb_SaleOrderDetails.property]"/>
+            <TableCell Name="Cell5" Border.Lines="Right" Text="[rd.tb_SaleOrderDetails.tb_proddetail.tb_prod.tb_unit.UnitName]"/>
+            <TableCell Name="Cell6" Border.Lines="Right" Text="[rd.tb_SaleOrderDetails.Quantity]"/>
+            <TableCell Name="Cell7" Border.Lines="Right" Text="[FormatNumber([rd.tb_SaleOrderDetails.TransactionPrice])]"/>
+            <TableCell Name="Cell8" Border.Lines="Right" Text="[FormatNumber([rd.tb_SaleOrderDetails.SubtotalTransAmount])]"/>
+            <TableCell Name="Cell9" Text="[rd.tb_SaleOrderDetails.Summary]"/>
+          </TableRow>
+        </TableObject>
+      </DataBand>
+    </DataBand>
+    <ReportSummaryBand Name="ReportSummary1" Top="182.54" Width="865.62" Height="28.35">
+      <TextObject Name="Text30" Left="411.06" Width="151.18" Height="28.35" Text="[rd.TotalQty]" VertAlign="Center"/>
+      <TextObject Name="Text31" Left="654.36" Width="167.79" Height="28.35" Text="￥[FormatNumber([rd.TotalAmount])]" VertAlign="Center"/>
+      <TextObject Name="Text32" Left="349.65" Width="66.15" Height="28.35" Text="总数量" HorzAlign="Right" VertAlign="Center"/>
+      <TextObject Name="Text33" Left="604.8" Width="47.25" Height="28.35" Text="总金额" HorzAlign="Right" VertAlign="Center"/>
+      <LineObject Name="Line1" Left="330.75" Top="28.35" Width="463.05"/>
+      <TextObject Name="Text40" Left="37.8" Top="9.45" Width="160.64" Height="18.9" Text="[ShowPayStatus([rd.PayStatus])]" VertAlign="Center" Font="宋体, 12pt, style=Bold"/>
+      <TextObject Name="Text41" Left="217.35" Top="9.45" Width="94.5" Height="18.9" Text="[rd.Deposit]" Font="宋体, 10pt, style=Bold"/>
+    </ReportSummaryBand>
+    <PageFooterBand Name="PageFooter1" Top="214.89" Width="865.62" Height="160.65" Guides="75.6,94.5,0,66.15">
+      <TextObject Name="Text8" Left="340.2" Top="103.95" Width="94.5" Height="18.9" Text="审核: "/>
+      <TextObject Name="Text9" Left="604.8" Top="103.95" Width="94.5" Height="18.9" Text="仓库: "/>
+      <TextObject Name="Text35" Left="28.35" Top="132.3" Width="245.7" Height="18.9" Text="打印时间:[Date]"/>
+      <TextObject Name="Text37" Left="333.06" Top="132.3" Width="226.8" Height="18.9" Text="打印人:[currUserInfo.Name]"/>
+      <TextObject Name="Text34" Left="31.98" Width="786.5" Height="94.5" Text="[rd.Notes]" VertAlign="Bottom" Font="宋体, 10pt, style=Bold"/>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

@@ -18,6 +18,8 @@ using RUINORERP.Business;
 using RUINORERP.Global;
 
 using RUINORERP.Business.Processor;
+using SqlSugar;
+using System.Reflection;
 
 namespace RUINORERP.UI.BI
 {
@@ -29,6 +31,52 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             base.EditForm = typeof(UCButtonInfoEdit);
+
+            Krypton.Toolkit.KryptonButton button检查数据 = new Krypton.Toolkit.KryptonButton();
+            button检查数据.Text = "提取重复数据";
+            button检查数据.ToolTipValues.Description = "提取重复数据，有一行会保留，没有显示出来。";
+            button检查数据.ToolTipValues.EnableToolTips = true;
+            button检查数据.ToolTipValues.Heading = "提示";
+            button检查数据.Click += button检查数据_Click;
+            base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
+        }
+        private void button检查数据_Click(object sender, EventArgs e)
+        {
+            List<tb_ButtonInfo> list = new List<tb_ButtonInfo>();
+            list = ListDataSoure.Cast<tb_ButtonInfo>().ToList();
+            string pkName = UIHelper.GetPrimaryKeyColName(typeof(tb_ButtonInfo));
+            //var keySelector1 = list.Select(p =>
+            //{
+            //    PropertyInfo[] properties = typeof(tb_FieldInfo).GetProperties()
+            //        .Where(prop => prop.GetCustomAttribute<SugarColumn>()?.IsIgnore == false && prop.Name != pkName)
+            //        .ToArray();
+            //    var values = properties.Select(prop => prop.GetValue(p)).ToArray();
+            //    return Tuple.Create(values);
+            //});
+
+            // 使用 GroupBy 筛选出重复数据,排除掉主键，将其它所有列【SugarColumn】有效的，都参与比较
+            // 创建一个用于获取所有键属性值的匿名函数
+            // 创建分组键选择器(Tuple) 一个对象中，哪些字段属性参与比较
+            Func<tb_ButtonInfo, Tuple<object[]>> keySelector2 = p =>
+            {
+                PropertyInfo[] properties = typeof(tb_ButtonInfo).GetProperties()
+                    .Where(prop => prop.GetCustomAttribute<SugarColumn>()?.IsIgnore == false && prop.Name != pkName)
+                    .ToArray();
+                var values = properties.Select(prop => prop.GetValue(p)).ToArray();
+                return Tuple.Create(values);
+            };
+
+            // 使用自定义比较器进行分组
+            var duplicatesList = list.GroupBy(
+                keySelector2,
+                new CustomTupleEqualityComparer<Tuple<object[]>>(new string[] { pkName }) // 使用适当的比较器
+            ).Where(g => g.Count() > 1)
+             .Select(g => g.Skip(1))//排除掉第一个元素，这个是第一个重复的元素，要保留
+            .SelectMany(g => g)
+            .ToList();
+
+            ListDataSoure.DataSource = duplicatesList.ToBindingSortCollection<tb_ButtonInfo>();
+            dataGridView1.DataSource = ListDataSoure;
         }
 
         public override void QueryConditionBuilder()

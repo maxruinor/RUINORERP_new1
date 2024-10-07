@@ -66,6 +66,9 @@ namespace RUINORERP.Business
                     invMother.InitInventory = (int)entity.MergeTargetQty;
                     invMother.Notes = "";//后面修改数据库是不需要？
                     invMother.LatestStorageTime = DateTime.Now;
+                    invMother.ProdDetailID = entity.ProdDetailID;
+                    invMother.Location_ID = entity.Location_ID;
+        
                     BusinessHelper.Instance.InitEntity(invMother);
                 }
                 else
@@ -282,8 +285,6 @@ namespace RUINORERP.Business
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_ProdMerge>(entity).ExecuteCommandAsync();
                 //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
 
-
-
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rs.ReturnObject = entity as T;
@@ -299,10 +300,7 @@ namespace RUINORERP.Business
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rs;
             }
-
         }
-
-
 
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {

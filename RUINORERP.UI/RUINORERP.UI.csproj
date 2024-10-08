@@ -174,7 +174,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Ribbon.dll</HintPath>
     </Reference>
-    <Reference Include="Krypton.Toolkit, Version=80.24.7.194, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
+    <Reference Include="Krypton.Toolkit, Version=80.24.7.190, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Toolkit.dll</HintPath>
     </Reference>

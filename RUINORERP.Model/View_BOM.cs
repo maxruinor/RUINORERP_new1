@@ -86,8 +86,8 @@ namespace RUINORERP.Model
         /// SKU
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "SKU",ColDesc = "母件SKU")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU" ,Length=80,IsNullable = true,ColumnDescription = "母件SKU")]
+        [AdvQueryAttribute(ColName = "SKU",ColDesc = "SKU")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU" ,Length=80,IsNullable = true,ColumnDescription = "SKU")]
         [Display(Name = "SKU")]
         public string SKU 
         { 
@@ -131,9 +131,9 @@ namespace RUINORERP.Model
         /// 母件
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "母件")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" ,IsNullable = true,ColumnDescription = "母件" )]
-        [Display(Name = "母件")]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "母件SKU")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" ,IsNullable = true,ColumnDescription = "母件SKU")]
+        [Display(Name = "母件SKU")]
         [FKRelationAttribute("tb_ProdDetail", "ProdDetailID")]
         public long? ProdDetailID 
         { 

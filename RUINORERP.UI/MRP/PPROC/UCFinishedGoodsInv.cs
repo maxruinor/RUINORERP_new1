@@ -75,7 +75,6 @@ namespace RUINORERP.UI.PSI.PUR
         {
             if (entity == null)
             {
-
                 return;
             }
             EditEntity = entity;
@@ -229,18 +228,21 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
-            listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Inv_Cost);
+           // listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.PayableQty);
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnpaidQty);
 
-            listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnitCost);
-            listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost);
-            listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.MaterialCost);
+            //listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnitCost);
+            //listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost);
+           // listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.MaterialCost);
  
-            listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost);
+           // listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost);
             //listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.r, CustomFormatType.PercentFormat);
             
+            listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.UnitCost, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.MaterialCost, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost, CustomFormatType.CurrencyFormat);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridData = EditEntity;
@@ -257,10 +259,16 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.UnpaidQty);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.PayableQty);
 
+            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.PayableQty- b.Qty, c => c.UnpaidQty);
+            decimal wh = EditEntity.tb_manufacturingorder.WorkingHour / EditEntity.tb_manufacturingorder.ManufacturingQty;
+            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a) => wh * a.Qty, c => c.NetWorkingHours);
+           // NewDetail.NetWorkingHours = (SourceBill.WorkingHour / SourceBill.ManufacturingQty) * NewDetail.Qty;
+
             listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.Qty * b.MaterialCost, c => c.SubtotalMaterialCost);
             listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a) =>a.SubtotalMaterialCost + a.ApportionedCost + a.ManuFee, c => c.ProductionAllCost);
             //listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b, c) =>a.LaborCost+ a.SubtotalMaterialCost * b.ApportionedCost * c.ManuFee, c => c.ProductionAllCost);
-           // listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.PayableQty - b.Qty, c => c.UnpaidQty);
+          
+            // listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.PayableQty - b.Qty, c => c.UnpaidQty);
            // listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
 
 
@@ -599,7 +607,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 entity.MONo = SourceBill.MONO;
                 entity.MOID = SourceBill.MOID;
                 entity.DeliveryDate = System.DateTime.Now;
-
+                entity.tb_manufacturingorder = SourceBill;
                 List<tb_FinishedGoodsInvDetail> NewDetails = new List<tb_FinishedGoodsInvDetail>(); //这里是多行>
                 List<string> tipsMsg = new List<string>();
                 //一个制令就一个成品，就一行数据。将来优化同时 多个制令的批量转单
@@ -607,10 +615,14 @@ protected async override Task<ApprovalEntity> ReReview()
                 #region 每行产品ID唯一
 
                 tb_FinishedGoodsInvDetail NewDetail = mapper.Map<tb_FinishedGoodsInvDetail>(SourceBill);
+               
                 NewDetail.PayableQty = SourceBill.ManufacturingQty - SourceBill.QuantityDelivered;
                 NewDetail.Qty = 0;
                 NewDetail.UnpaidQty = NewDetail.PayableQty - NewDetail.Qty;// 已经交数量去掉
                 NewDetail.Location_ID = SourceBill.Location_ID;
+                NewDetail.NetWorkingHours = (SourceBill.WorkingHour / SourceBill.ManufacturingQty) * NewDetail.Qty;
+                NewDetail.NetMachineHours = (SourceBill.MachineHour / SourceBill.ManufacturingQty) * NewDetail.Qty;
+
                 #endregion
 
                 //if (NewDetails.Count == 0)

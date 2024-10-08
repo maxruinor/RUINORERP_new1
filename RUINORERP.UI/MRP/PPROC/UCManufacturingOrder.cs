@@ -110,7 +110,7 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_ManufacturingOrder>(entity, k => k.Priority, typeof(Priority), cmbPriority, true);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ManufacturingQty, txtManufacturingQty, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PeopleQty, txtQuantityDelivered, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PeopleQty, txtPeopleQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.MONO, txtMONO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ManufacturingQty, txtManufacturingQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.PreStartDate, dtpPreStartDate, false);
@@ -120,9 +120,9 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PDNO, txtRefBillNO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ManufacturingOrder>(entity, v => v.PDID, txtRefBillNO, true);
-            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PeopleQty.ToString(), txtQuantityDelivered, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.WorkingHour.ToString(), txtWorkingHour, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.MachineHour.ToString(), txtMachineHour, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ApportionedCost.ToString(), txtApportionedCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.TotalMaterialCost.ToString(), txtTotalMaterialCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.TotalManuFee.ToString(), txtTotalManuFee, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.TotalProductionCost.ToString(), txtTotalProductionCost, BindDataType4TextBox.Money, false);

@@ -131,7 +131,7 @@ namespace RUINORERP.Business
 
                     tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
                     List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                    .Includes(b => b.tb_bom_s)
+                    .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
                     .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
                     foreach (tb_BOM_SDetail bomDetail in bomDetails)
                     {

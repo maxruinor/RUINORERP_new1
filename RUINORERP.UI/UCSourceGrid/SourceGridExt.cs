@@ -517,7 +517,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         //https://www.cnblogs.com/feichexia/archive/2013/05/28/3104832.html
         /// <summary>
-        /// 计算表达式设置
+        /// 计算表达式正向设置
         /// </summary>
         /// <typeparam name="T">操作的所属实体</typeparam>
         /// <param name="cols">作用的列集合</param>

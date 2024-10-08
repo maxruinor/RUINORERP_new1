@@ -788,7 +788,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                ecs.LoginSuccessed = false;
+               
                 this.SystemOperatorState.Text = "登出";
                 AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
@@ -796,6 +796,7 @@ namespace RUINORERP.UI
                 ClearData();
                 ClearUI();
                 Program.AppContextData.IsOnline = false;
+                ecs.LoginSuccessed = false;
                 Application.DoEvents();
 
             }

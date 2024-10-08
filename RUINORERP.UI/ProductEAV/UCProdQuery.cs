@@ -486,7 +486,11 @@ namespace RUINORERP.UI.ProductEAV
             newSumDataGridView产品.FieldNameList = FieldNameList1;
 
             List<Expression<Func<View_ProdDetail, object>>> ProdInvisibleCols = new List<Expression<Func<View_ProdDetail, object>>>();
-            ProdInvisibleCols.Add(c => c.Inv_Cost);
+            //超级用户可以查看成本
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                ProdInvisibleCols.Add(c => c.Inv_Cost);
+            }
             var InvisibleCols = ExpressionHelper.ExpressionListToStringList(ProdInvisibleCols);
             //这里设置了指定列不可见
             foreach (var item in InvisibleCols)

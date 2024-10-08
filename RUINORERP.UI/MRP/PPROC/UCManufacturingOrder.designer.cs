@@ -64,7 +64,7 @@
             this.lblApportionedCost = new Krypton.Toolkit.KryptonLabel();
             this.txtApportionedCost = new Krypton.Toolkit.KryptonTextBox();
             this.lblPeopleQty = new Krypton.Toolkit.KryptonLabel();
-            this.kryptonTextBox1 = new Krypton.Toolkit.KryptonTextBox();
+            this.txtPeopleQty = new Krypton.Toolkit.KryptonTextBox();
             this.lblRefBillNO = new Krypton.Toolkit.KryptonLabel();
             this.txtRefBillNO = new Krypton.Toolkit.KryptonTextBox();
             this.lblPreStartDate = new Krypton.Toolkit.KryptonLabel();
@@ -183,7 +183,7 @@
             this.kryptonPanelMainInfo.Controls.Add(this.lblApportionedCost);
             this.kryptonPanelMainInfo.Controls.Add(this.txtApportionedCost);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPeopleQty);
-            this.kryptonPanelMainInfo.Controls.Add(this.kryptonTextBox1);
+            this.kryptonPanelMainInfo.Controls.Add(this.txtPeopleQty);
             this.kryptonPanelMainInfo.Controls.Add(this.lblRefBillNO);
             this.kryptonPanelMainInfo.Controls.Add(this.txtRefBillNO);
             this.kryptonPanelMainInfo.Controls.Add(this.lblPreStartDate);
@@ -489,10 +489,10 @@
             // 
             // kryptonTextBox1
             // 
-            this.kryptonTextBox1.Location = new System.Drawing.Point(394, 43);
-            this.kryptonTextBox1.Name = "kryptonTextBox1";
-            this.kryptonTextBox1.Size = new System.Drawing.Size(100, 23);
-            this.kryptonTextBox1.TabIndex = 178;
+            this.txtPeopleQty.Location = new System.Drawing.Point(394, 43);
+            this.txtPeopleQty.Name = "txtPeopleQty";
+            this.txtPeopleQty.Size = new System.Drawing.Size(100, 23);
+            this.txtPeopleQty.TabIndex = 178;
             // 
             // lblRefBillNO
             // 
@@ -860,7 +860,7 @@
         private Krypton.Toolkit.KryptonLabel lblApportionedCost;
         private Krypton.Toolkit.KryptonTextBox txtApportionedCost;
         private Krypton.Toolkit.KryptonLabel lblPeopleQty;
-        private Krypton.Toolkit.KryptonTextBox kryptonTextBox1;
+        private Krypton.Toolkit.KryptonTextBox txtPeopleQty;
         private Krypton.Toolkit.KryptonLabel lblWorkingHour;
         private Krypton.Toolkit.KryptonTextBox txtWorkingHour;
         private Krypton.Toolkit.KryptonLabel lblMachineHour;

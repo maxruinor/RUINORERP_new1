@@ -1430,7 +1430,12 @@ namespace RUINORERP.UI.UControls
             {
                 try
                 {
-                    Clipboard.SetDataObject(dgv.GetClipboardContent());
+                    var dataobj = dgv.GetClipboardContent();
+                    if (dataobj != null)
+                    {
+                        Clipboard.SetDataObject(dataobj);
+                    }
+                    
                 }
                 catch (Exception MyEx)
                 {

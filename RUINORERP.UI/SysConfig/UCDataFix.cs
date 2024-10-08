@@ -34,6 +34,7 @@ using RUINORERP.Business;
 using System.Collections.Concurrent;
 using Org.BouncyCastle.Math.Field;
 using RUINORERP.UI.PSI.PUR;
+using Netron.GraphLib;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -43,6 +44,7 @@ namespace RUINORERP.UI.SysConfig
         public UCDataFix()
         {
             InitializeComponent();
+
         }
 
         private void btnSave_Click(object sender, EventArgs e)
@@ -118,6 +120,7 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
             kryptonDataGridView1.DataSource = stlist;
+            kryptonDataGridView1.ContextMenuStrip = contextMenuStripFix;
         }
 
         private async void kryptonDataGridView1_DoubleClick(object sender, EventArgs e)
@@ -470,5 +473,61 @@ namespace RUINORERP.UI.SysConfig
             }
 
         }
+
+        private void 成本价格修复ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CostFix();
+        }
+
+        private void kryptonCommand数据修复指令集合_Execute(object sender, EventArgs e)
+        {
+             
+            CostFix();
+        }
+
+
+
+
+
+
+
+
+
+        #region 数据修复
+
+        private async void CostFix()
+        {
+            /*有库存数据。包含0的情况下。如果价格为空。为0.使用最后的采购入库价格修复。*/
+            //查看出库明细和总数量是否一样。
+            List<tb_Inventory> tb_Inventorys = new List<tb_Inventory>();
+            tb_Inventorys = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                .Where(c => c.Inv_Cost == 0)
+                .ToListAsync();
+
+            for (int i = 0; i < tb_Inventorys.Count; i++)
+            {
+                List<View_PurEntryItems> purEntryItems = await MainForm.Instance.AppContext.Db.Queryable<View_PurEntryItems>()
+                .Where(c => c.ProdDetailID == tb_Inventorys[i].ProdDetailID && c.TransactionPrice != 0)
+                .OrderByDescending(c => c.EntryDate)
+                .ToListAsync();
+                if (purEntryItems.Count > 0)
+                {
+                    tb_Inventorys[i].CostFIFO = purEntryItems[0].TransactionPrice.Value;
+                    tb_Inventorys[i].CostMonthlyWA = purEntryItems[0].TransactionPrice.Value;
+                    tb_Inventorys[i].CostMovingWA = purEntryItems[0].TransactionPrice.Value;
+                    tb_Inventorys[i].Inv_AdvCost = purEntryItems[0].TransactionPrice.Value;
+                    tb_Inventorys[i].Inv_Cost = purEntryItems[0].TransactionPrice.Value;
+                }
+            }
+
+            int counter = await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(tb_Inventorys)
+                        .UpdateColumns(t => new { t.Inv_Cost, t.Inv_AdvCost, t.CostMonthlyWA, t.CostMovingWA, t.CostFIFO }).ExecuteCommandAsync();
+            if (counter > 0)
+            {
+                MainForm.Instance.PrintInfoLog("成本价格修改，更新成功" + counter);
+            }
+        }
+
+        #endregion
     }
 }

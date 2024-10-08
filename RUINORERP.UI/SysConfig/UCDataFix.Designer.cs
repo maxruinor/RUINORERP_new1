@@ -32,10 +32,16 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCDataFix));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonDataGridView1 = new Krypton.Toolkit.KryptonDataGridView();
+            this.kryptonContextMenu1 = new Krypton.Toolkit.KryptonContextMenu();
+            this.kryptonContextMenuItems1 = new Krypton.Toolkit.KryptonContextMenuItems();
+            this.kryptonContextMenuHeading1 = new Krypton.Toolkit.KryptonContextMenuHeading();
+            this.kryptonContextMenuItem1 = new Krypton.Toolkit.KryptonContextMenuItem();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
             this.kryptonGroup1 = new Krypton.Toolkit.KryptonGroup();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.contextMenuStripFix = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.成本价格修复ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.kryptonHeaderGrouptop = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonTextBox1 = new Krypton.Toolkit.KryptonTextBox();
@@ -44,6 +50,15 @@
             this.chkALL = new Krypton.Toolkit.KryptonCheckBox();
             this.btnSave = new Krypton.Toolkit.KryptonButton();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
+            this.kryptonCommand数据修复指令集合 = new Krypton.Toolkit.KryptonCommand();
+            this.kryptonContextMenuItems2 = new Krypton.Toolkit.KryptonContextMenuItems();
+            this.kryptonContextMenuItem2 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonContextMenuItem3 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonContextMenuItem4 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonContextMenuItem5 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonContextMenuItem6 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonContextMenuItem7 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonContextMenuItem8 = new Krypton.Toolkit.KryptonContextMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -64,6 +79,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup1.Panel)).BeginInit();
             this.kryptonGroup1.Panel.SuspendLayout();
             this.kryptonGroup1.SuspendLayout();
+            this.contextMenuStripFix.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGrouptop)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGrouptop.Panel)).BeginInit();
             this.kryptonHeaderGrouptop.Panel.SuspendLayout();
@@ -95,12 +111,37 @@
             this.kryptonDataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.kryptonDataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.kryptonDataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonDataGridView1.KryptonContextMenu = this.kryptonContextMenu1;
             this.kryptonDataGridView1.Location = new System.Drawing.Point(0, 0);
             this.kryptonDataGridView1.Name = "kryptonDataGridView1";
             this.kryptonDataGridView1.RowTemplate.Height = 23;
             this.kryptonDataGridView1.Size = new System.Drawing.Size(260, 606);
             this.kryptonDataGridView1.TabIndex = 0;
             this.kryptonDataGridView1.DoubleClick += new System.EventHandler(this.kryptonDataGridView1_DoubleClick);
+            // 
+            // kryptonContextMenu1
+            // 
+            this.kryptonContextMenu1.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
+            this.kryptonContextMenuItems1});
+            // 
+            // kryptonContextMenuItems1
+            // 
+            this.kryptonContextMenuItems1.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
+            this.kryptonContextMenuHeading1,
+            this.kryptonContextMenuItem1,
+            this.kryptonContextMenuItem6,
+            this.kryptonContextMenuItem7,
+            this.kryptonContextMenuItem8});
+            // 
+            // kryptonContextMenuHeading1
+            // 
+            this.kryptonContextMenuHeading1.ExtraText = "";
+            this.kryptonContextMenuHeading1.Text = "数据修复";
+            // 
+            // kryptonContextMenuItem1
+            // 
+            this.kryptonContextMenuItem1.KryptonCommand = this.kryptonCommand数据修复指令集合;
+            this.kryptonContextMenuItem1.Text = "成本价格修复";
             // 
             // kryptonSplitContainer2
             // 
@@ -156,12 +197,28 @@
             // 
             // richTextBox1
             // 
+            this.richTextBox1.ContextMenuStrip = this.contextMenuStripFix;
             this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.richTextBox1.Location = new System.Drawing.Point(0, 0);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.Size = new System.Drawing.Size(532, 299);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
+            // 
+            // contextMenuStripFix
+            // 
+            this.contextMenuStripFix.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.contextMenuStripFix.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.成本价格修复ToolStripMenuItem});
+            this.contextMenuStripFix.Name = "contextMenuStripFix";
+            this.contextMenuStripFix.Size = new System.Drawing.Size(153, 26);
+            // 
+            // 成本价格修复ToolStripMenuItem
+            // 
+            this.成本价格修复ToolStripMenuItem.Name = "成本价格修复ToolStripMenuItem";
+            this.成本价格修复ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.成本价格修复ToolStripMenuItem.Text = "成本价格修复";
+            this.成本价格修复ToolStripMenuItem.Click += new System.EventHandler(this.成本价格修复ToolStripMenuItem_Click);
             // 
             // kryptonHeaderGrouptop
             // 
@@ -230,6 +287,39 @@
             this.btnSave.Values.Text = "保存";
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
+            // kryptonCommand数据修复指令集合
+            // 
+            this.kryptonCommand数据修复指令集合.Text = "数据修复指令集合";
+            this.kryptonCommand数据修复指令集合.Execute += new System.EventHandler(this.kryptonCommand数据修复指令集合_Execute);
+            // 
+            // kryptonContextMenuItem2
+            // 
+            this.kryptonContextMenuItem2.Text = "Menu Item";
+            // 
+            // kryptonContextMenuItem3
+            // 
+            this.kryptonContextMenuItem3.Text = "Menu Item";
+            // 
+            // kryptonContextMenuItem4
+            // 
+            this.kryptonContextMenuItem4.Text = "Menu Item";
+            // 
+            // kryptonContextMenuItem5
+            // 
+            this.kryptonContextMenuItem5.Text = "Menu Item";
+            // 
+            // kryptonContextMenuItem6
+            // 
+            this.kryptonContextMenuItem6.Text = "Menu Item";
+            // 
+            // kryptonContextMenuItem7
+            // 
+            this.kryptonContextMenuItem7.Text = "Menu Item";
+            // 
+            // kryptonContextMenuItem8
+            // 
+            this.kryptonContextMenuItem8.Text = "Menu Item";
+            // 
             // UCDataFix
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -262,6 +352,7 @@
             this.kryptonGroup1.Panel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroup1)).EndInit();
             this.kryptonGroup1.ResumeLayout(false);
+            this.contextMenuStripFix.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGrouptop.Panel)).EndInit();
             this.kryptonHeaderGrouptop.Panel.ResumeLayout(false);
             this.kryptonHeaderGrouptop.Panel.PerformLayout();
@@ -290,5 +381,20 @@
         private Krypton.Toolkit.KryptonTextBox kryptonTextBox1;
         private Krypton.Toolkit.KryptonGroup kryptonGroup1;
         private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.ContextMenuStrip  contextMenuStripFix;
+        private System.Windows.Forms.ToolStripMenuItem 成本价格修复ToolStripMenuItem;
+        private Krypton.Toolkit.KryptonContextMenu kryptonContextMenu1;
+        private Krypton.Toolkit.KryptonContextMenuItems kryptonContextMenuItems1;
+        private Krypton.Toolkit.KryptonContextMenuHeading kryptonContextMenuHeading1;
+        private Krypton.Toolkit.KryptonContextMenuItem kryptonContextMenuItem1;
+        private Krypton.Toolkit.KryptonCommand kryptonCommand数据修复指令集合;
+        private Krypton.Toolkit.KryptonContextMenuItem kryptonContextMenuItem6;
+        private Krypton.Toolkit.KryptonContextMenuItem kryptonContextMenuItem7;
+        private Krypton.Toolkit.KryptonContextMenuItem kryptonContextMenuItem8;
+        private Krypton.Toolkit.KryptonContextMenuItems kryptonContextMenuItems2;
+        private Krypton.Toolkit.KryptonContextMenuItem kryptonContextMenuItem2;
+        private Krypton.Toolkit.KryptonContextMenuItem kryptonContextMenuItem3;
+        private Krypton.Toolkit.KryptonContextMenuItem kryptonContextMenuItem4;
+        private Krypton.Toolkit.KryptonContextMenuItem kryptonContextMenuItem5;
     }
 }

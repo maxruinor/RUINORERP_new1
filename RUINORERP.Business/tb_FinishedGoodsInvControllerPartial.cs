@@ -176,10 +176,10 @@ namespace RUINORERP.Business
                     //市场价格：参考市场上类似产品或物品的价格。
 
                     //TODO:这里需要根据系统设置中的算法计算。
-                   // child.UnitCost = child.MaterialCost+child.LaborCost+child.
+                    // child.UnitCost = child.MaterialCost+child.LaborCost+child.
 
                     CommService.CostCalculations.CostCalculation(_appContext, inv, child.Qty, child.UnitCost);
-                                               
+
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
 
@@ -350,18 +350,10 @@ namespace RUINORERP.Business
                     inv.Location_ID = child.Location_ID;
                     inv.Notes = "";//后面修改数据库是不需要？
                     inv.LatestOutboundTime = System.DateTime.Now;
-
                     inv.MakingQty = inv.MakingQty + child.Qty;
-
-                    // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
-
-                    // inv.Inv_Cost = child.TransactionPrice;//这里需要计算，根据系统设置中的算法计算。
-                    // inv.CostFIFO = child.TransactionPrice;
-                    // inv.CostMonthlyWA = child.TransactionPrice;
-                    // inv.CostMovingWA = child.TransactionPrice;
-                    // inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
+                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Qty, child.UnitCost);
+                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
-
                     #endregion
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
                     if (rr.Succeeded)

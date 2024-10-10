@@ -51,6 +51,12 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_ManufacturingOrder, tb_ProductionDemand>(c => c.PDID, c => c.PDNO, t => t.PDNo);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.CustomerPartNo);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.BOM_No);
+            queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.SKU);
+            //queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.ProdDetailID);
+            queryFilter.SetQueryField<tb_ManufacturingOrder, View_ProdDetail>(c => c.ProdDetailID, c => c.SKU, r => r.SKU);
+            queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.Type_ID);
+            queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.Specifications);
+            queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.CustomerVendor_ID);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));

@@ -84,6 +84,17 @@ namespace RUINORERP.UI.MRP.MP
                     entity.ActionStatus = ActionStatus.加载;
                     // entity.DataStatus = (int)DataStatus.确认;
                     //如果审核了，审核要灰色
+
+                    if (entity.tb_bom_s == null && entity.BOM_ID > 0)
+                    {
+                        //    entity.tb_bom_s = await _appContext.Db.CopyNew().Queryable<tb_BOM_S>()
+                        //.Includes(a => a.tb_proddetail, b => b.tb_Inventories)
+                        // .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
+                        //    .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
+                        //    .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail)
+                        //    .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_Inventories)
+                        //.Where(c => _bomIDs.Contains(c.BOM_ID)).ToListAsync();
+                    }
                 }
                 else
                 {
@@ -193,6 +204,28 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
                 //如果是销售订单引入变化则加载明细及相关数据
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PDID.HasValue && entity.PDID > 0)
+                {
+                    //修改是否外发时，加工费可能不一样。
+                    if (s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.IsOutSourced))
+                    {
+                        if (entity.IsOutSourced)
+                        {
+                            entity.ApportionedCost = entity.tb_bom_s.OutApportionedCost * entity.ManufacturingQty;
+                            entity.TotalManuFee = entity.tb_bom_s.TotalOutManuCost * entity.ManufacturingQty;
+                            entity.TotalProductionCost = entity.tb_bom_s.OutProductionAllCosts * entity.ManufacturingQty;
+                        }
+                        else
+                        {
+                            entity.ApportionedCost = entity.tb_bom_s.SelfApportionedCost * entity.ManufacturingQty;
+                            entity.TotalManuFee = entity.tb_bom_s.TotalSelfManuCost * entity.ManufacturingQty;
+                            entity.TotalProductionCost = entity.tb_bom_s.SelfProductionAllCosts * entity.ManufacturingQty;
+                            entity.CustomerVendor_ID_Out = null;
+                        }
+                    }
+
+                }
+                //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PDID.HasValue && entity.PDID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.PDID))
                 {
                     //因为太复杂。目前暂时只能由需求分析那边生成
@@ -271,8 +304,7 @@ namespace RUINORERP.UI.MRP.MP
 
             //创建表达式 外发工厂
             var lambdaOut = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == false)
-                            .And(t => t.IsCustomer == false)
+                            .And(t => t.IsOther == true)
                             .ToExpression();
 
             BaseProcessor baseProcessorOut = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
@@ -350,7 +382,8 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.CurrentIinventory);
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.SubtotalUnitCost);
 
-            listCols.SetCol_Formula<tb_ManufacturingOrderDetail>((a, b) => a.ActualSentQty * b.UnitCost, c => c.SubtotalUnitCost);
+            //制令单前期是计划性的。以计划的生产数量为标准去算成本这些
+            listCols.SetCol_Formula<tb_ManufacturingOrderDetail>((a, b) => a.ShouldSendQty * b.UnitCost, c => c.SubtotalUnitCost);
             //bomid的下拉值。受当前行选择时会改变下拉范围,由产品ID决定BOM显示
             sgh.SetCol_LimitedConditionsForSelectionRange<tb_ManufacturingOrderDetail>(sgd, t => t.ProdDetailID, f => f.BOM_ID);
 

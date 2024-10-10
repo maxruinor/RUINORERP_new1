@@ -23,6 +23,7 @@ using NPOI.SS.UserModel;
 using System.Reflection;
 using SourceGrid.Cells.Views;
 using SourceGrid.Cells.Models;
+using System.Text.RegularExpressions;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -462,12 +463,15 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 #endregion
 
-                string newstr = sf.StringFormula;
-                for (int i = 0; i < sf.Parameter.Count; i++)
-                {
-                    newstr = newstr.Replace(sf.Parameter[i], "{" + i + "}");
-                }
-                string lastStr = string.Empty;
+                string resultFormula = sf.StringFormula;
+                //for (int i = 0; i < sf.Parameter.Count; i++)
+                //{
+                //    newstr = newstr.Replace(sf.Parameter[i], "{" + i + "}");
+                //}
+                // 调用方法进行替换
+                resultFormula = ReplaceParameters(sf.StringFormula, sf.Parameter);
+
+                string lastStr = resultFormula;
                 for (int i = 0; i < sf.Parameter.Count; i++)
                 {
                     string subItem = ReflectionHelper.GetPropertyValue(currentObj, sf.Parameter[i]).ToString();
@@ -487,10 +491,10 @@ namespace RUINORERP.UI.UCSourceGrid
                         }
                     }
                     string p = "{" + i + "}";
-                    newstr = newstr.Replace(p, subItem);
+                    resultFormula = resultFormula.Replace(p, subItem);
                 }
                 DataTable dt = new DataTable();
-                object obj = dt.Compute(newstr, "");
+                object obj = dt.Compute(resultFormula, "");
                 //C# 判断数据是否为NaN的方法
                 if (obj.ToString() == "NaN")
                 {
@@ -571,7 +575,16 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
             }
         }
-
+        public static string ReplaceParameters(string formula, List<string> parameters)
+        {
+            for (int i = 0; i < parameters.Count; i++)
+            {
+                // 构建正则表达式，确保匹配整个单词
+                string pattern = @"\b" + Regex.Escape(parameters[i]) + @"\b";
+                formula = Regex.Replace(formula, pattern, "{" + i + "}");
+            }
+            return formula;
+        }
 
         #region 将小数保留到指定位数
         public static decimal RoundToNDecimalPlaces(object value, int numberOfDecimalPlaces)
@@ -818,6 +831,13 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             var setcurrentObj = CurrGridDefine.grid.Rows[sender.Position.Row].RowData;
             if (setcurrentObj == null)
+            {
+                return;
+            }
+            //如果编辑后的值等于原来的值。则不进行后面的操作。特别是反向计算。不然会一直循环重复计算。导致数据错误
+            var oldValue = setcurrentObj.GetPropertyValue(CurrGridDefine[sender.Position.Column].ColName);
+
+            if (oldValue != null && (oldValue.ToString().Equals(sender.Value.ToString())))
             {
                 return;
             }

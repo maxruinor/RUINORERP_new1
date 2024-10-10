@@ -306,6 +306,7 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
+        /// 感叹号的快速查询功能
         /// 关联查询时带出的快速查询的功能
         /// 注意【引用与被引用的 编号和ID字段在两个表中要一致】
         /// </summary>

@@ -1,4 +1,5 @@
-﻿using RUINORERP.UI.UCSourceGrid;
+﻿using NPOI.SS.Formula.Functions;
+using RUINORERP.UI.UCSourceGrid;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static RUINOR.Runtime.InteropServices.APIs.APIsStructs;
 
 namespace RUINORERP.UI.Common
 {
@@ -92,66 +94,62 @@ namespace RUINORERP.UI.Common
         }
         public static CalculateFormula ParserString(Expression<Func<T, T, T, object>> RsColNameExp)
         {
+            return ProcessExpression(RsColNameExp.Body as UnaryExpression);
+
             CalculateFormula sf = new CalculateFormula();
             sf.OperandQty = 3;
             var unary = RsColNameExp.Body as UnaryExpression;
             string str = unary.Operand.ToString();
-
             foreach (var item in RsColNameExp.Parameters)
             {
                 str = str.Replace(item.Name + ".", "");
-                // sf.Parameters.Add(item.Name)
-                //sf.ParameterExpression.Add(item);
             }
             Expression exp = unary.Operand;
-            //Expression left = (unary.Operand as BinaryExpression).Left;
-            // Expression right = (unary.Operand as BinaryExpression).Right;
-            // string parastr1 = GetOperatorData(left, str);
-            // string parastr2 = GetOperatorData(right, str);
-            // sf.Parameter.Add(parastr1);
-            // sf.Parameter.Add(parastr2);
             sf.StringFormula = str;
             LoopAnalysis(exp, sf);
-
             return sf;
         }
 
 
         public static CalculateFormula ParserString(Expression<Func<T, T, object>> RsColNameExp)
         {
-            CalculateFormula sf = new CalculateFormula();
-            sf.OperandQty = 2;
-            var unary = RsColNameExp.Body as UnaryExpression;
-            string str = unary.Operand.ToString();
-
-            foreach (var item in RsColNameExp.Parameters)
-            {
-                str = str.Replace(item.Name + ".", "");
-            }
-            sf.StringFormula = str;
-            Expression exp = unary.Operand;
-            LoopAnalysis(exp, sf);
-
-            return sf;
+            return ProcessExpression(RsColNameExp.Body as UnaryExpression);
         }
 
         public static CalculateFormula ParserString(Expression<Func<T, object>> RsColNameExp)
         {
+            return ProcessExpression(RsColNameExp.Body as UnaryExpression);
             CalculateFormula sf = new CalculateFormula();
             sf.OperandQty = 2;
             var unary = RsColNameExp.Body as UnaryExpression;
+            Expression exp = unary.Operand;
             string str = unary.Operand.ToString();
-
             foreach (var item in RsColNameExp.Parameters)
             {
                 str = str.Replace(item.Name + ".", "");
             }
-            sf.StringFormula = str;
-            Expression exp = unary.Operand;
+            string pattern = @"\b[a-zA-Z]+\.";
+            string simplified = Regex.Replace(unary.Operand.ToString(), pattern, "");
+            //sf.StringFormula = sf.StringFormula.Replace("Convert(" + simplified + ")", simplified);
+            sf.StringFormula = simplified;
             LoopAnalysis(exp, sf);
-
             return sf;
         }
+
+
+        private static CalculateFormula ProcessExpression(UnaryExpression unary)
+        {
+            CalculateFormula sf = new CalculateFormula();
+            //sf.OperandQty = 2;
+            Expression exp = unary.Operand;
+            sf.StringFormula = unary.Operand.ToString();
+            LoopAnalysis(exp, sf);
+            //去掉.
+            string pattern = @"\b[a-zA-Z]+\.";
+            sf.StringFormula = Regex.Replace(sf.StringFormula.ToString(), pattern, "");
+            return sf;
+        }
+
 
 
         private static string GetOperatorData(Expression exp, string StrFormula)
@@ -338,12 +336,16 @@ namespace RUINORERP.UI.Common
             return operatordata;
         }
 
-
+        /// <summary>
+        /// 递归分析表达式
+        /// </summary>
+        /// <param name="exp"></param>
+        /// <param name="sf"></param>
         private static void LoopAnalysis(Expression exp, CalculateFormula sf)
         {
             switch (exp.NodeType)
             {
-               
+
                 case ExpressionType.AndAlso:
                     break;
                 case ExpressionType.ArrayLength:
@@ -363,21 +365,50 @@ namespace RUINORERP.UI.Common
                     }
                     break;
                 case ExpressionType.Convert:
+                    if (exp is UnaryExpression uexp)
+                    {
+                        //string pattern = @"\b[a-zA-Z]+\.";
+                        //string simplified = Regex.Replace(uexp.ToString(), pattern, "");
+                        sf.StringFormula = sf.StringFormula.Replace("Convert(" + uexp.Operand.ToString() + ")", uexp.Operand.ToString());
+                        sf.StringFormula = sf.StringFormula.Replace("Convert(" + exp.ToString() + ")", exp.ToString());
+                    }
                     exp = (exp as UnaryExpression).Operand;
                     if (exp is MemberExpression memberc)
                     {
+                        //string pattern = @"\b[a-zA-Z]+\.";
+                        //string simplified = Regex.Replace(memberc.ToString(), pattern, "");
                         sf.StringFormula = sf.StringFormula.Replace("Convert(" + memberc.Member.Name + ")", memberc.Member.Name);
                     }
                     if (exp is UnaryExpression memberu)
                     {
-                        sf.StringFormula = sf.StringFormula.Replace("Convert(" + exp.ToString() + ")", exp.ToString());
+                        //string pattern = @"\b[a-zA-Z]+\.";
+                        //string simplified = Regex.Replace(memberu.ToString(), pattern, "");
+                        // sf.StringFormula = sf.StringFormula.Replace("Convert(" + simplified + ")", simplified);
+                        sf.StringFormula = sf.StringFormula.Replace("Convert(" + memberu.Operand.ToString() + ")", memberu.Operand.ToString());
                     }
+                    //if (exp is SimpleBinaryExpression sbexp)
+                    //{
+                    //    sf.StringFormula = sf.StringFormula.Replace("Convert(" + exp.ToString() + ")", exp.ToString());
+                    //}
                     LoopAnalysis(exp, sf);
                     break;
                 case ExpressionType.ConvertChecked:
                     break;
+                //除法
                 case ExpressionType.Divide:
+                    Expression leftDivide = (exp as BinaryExpression).Left;
+                    LoopAnalysis(leftDivide, sf);
+                    Expression rightDivide = (exp as BinaryExpression).Right;
+                    LoopAnalysis(rightDivide, sf);
+                    break;
+                //乘法
                 case ExpressionType.Multiply:
+                    Expression leftMultiply = (exp as BinaryExpression).Left;
+                    LoopAnalysis(leftMultiply, sf);
+                    Expression rightMultiply = (exp as BinaryExpression).Right;
+                    LoopAnalysis(rightMultiply, sf);
+                    break;
+
                 case ExpressionType.MultiplyChecked:
                 case ExpressionType.Add:
                 case ExpressionType.AddChecked:
@@ -414,7 +445,7 @@ namespace RUINORERP.UI.Common
                     {
                         sf.Parameter.Add(operatordata);
                     }
-          
+
                     break;
                 case ExpressionType.MemberInit:
                     break;

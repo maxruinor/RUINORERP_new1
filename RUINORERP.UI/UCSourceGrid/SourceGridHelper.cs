@@ -521,12 +521,12 @@ namespace RUINORERP.UI.UCSourceGrid
                                         currContext.DisplayText = "";
                                         if (cellvalue != null)
                                         {
-                                           // currContext.Cell.View = new SourceGrid.Cells.Views.SingleImage();
+                                            // currContext.Cell.View = new SourceGrid.Cells.Views.SingleImage();
                                             currContext.Value = cellvalue;
                                         }
                                         else
                                         {
-                                           // currContext.Cell.View = sgdefine.ViewNormal;
+                                            // currContext.Cell.View = sgdefine.ViewNormal;
                                         }
                                         currContext.Tag = v_prod;
                                     }
@@ -1047,6 +1047,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
             #endregion
+
             SetColumnsWidth(grid, griddefine);
 
             SourceGridDefineColumnItem selected = griddefine.DefineColumns.Find(c => c.ColName == "Selected");
@@ -1286,7 +1287,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         c.View = new SourceGrid.Cells.Views.SingleImage();
                         //PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
                         //c.AddController(popupMenu);
-                       // c.AddController(pictureViewer);
+                        // c.AddController(pictureViewer);
                     }
                     #endregion
 
@@ -3223,6 +3224,19 @@ namespace RUINORERP.UI.UCSourceGrid
                 else
                 {
                     grid.Columns[i].Width = 90;
+                }
+                SourceGridDefineColumnItem sgdc = griddefine[i];
+                //应该更宽的才要设置
+                if (sgdc.width > 90)
+                {
+                    grid.Columns[i].Width = sgdc.width;
+                }
+                else
+                {
+                    if (true)
+                    {
+
+                    }
                 }
                 grid.Columns[i].AutoSizeMode = SourceGrid.AutoSizeMode.None; //禁止调整宽
                 grid.Columns[i].AutoSizeMode = griddefine[i].ColAutoSizeMode;

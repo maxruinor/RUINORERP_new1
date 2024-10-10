@@ -254,8 +254,7 @@ namespace RUINORERP.UI.MRP.MP
 
             //创建表达式 外发工厂
             var lambdaOut = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == false)
-                            .And(t => t.IsCustomer == false)
+                            .And(t => t.IsOther== true)
                             .ToExpression();
 
             BaseProcessor baseProcessorOut = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");

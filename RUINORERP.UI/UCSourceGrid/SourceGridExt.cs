@@ -314,6 +314,35 @@ namespace RUINORERP.UI.UCSourceGrid
             cols.RemoveWhere(c => c.ColName == minfo.Name);
         }
 
+
+        /*
+        public static void SetCol_Width<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, int width)
+        {
+            MemberInfo minfo = colNameExp.GetMemberInfo();
+            foreach (var item in cols)
+            {
+                if (item.BelongingObjectType.Name == typeof(T).Name)
+                {
+                    item.SetCol_Width(minfo.Name, width);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 设置列的宽度
+        /// </summary>
+        /// <param name="col"></param>
+        /// <param name="colName"></param>
+        /// <param name="width"></param>
+        public static void SetCol_Width(this SourceGridDefineColumnItem col, string colName, int width)
+        {
+            if (col.ColName == colName)
+            {
+                col.width = width;
+            }
+        }
+        */
+
         public static void SetCol_ReadOnly(this SourceGridDefineColumnItem col, string colName)
         {
             if (col.ColName == colName)
@@ -470,6 +499,8 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
 
+        #region 正向算
+
         //https://www.cnblogs.com/feichexia/archive/2013/05/28/3104832.html
         /// <summary>
         /// 小计表达式设置，目标列自动标识为要统计列
@@ -482,7 +513,7 @@ namespace RUINORERP.UI.UCSourceGrid
         public static void SetCol_Formula<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> FormulaExp, Expression<Func<T, object>> ResultColName, Expression<Func<T, object>> ConditionExpression = null)
         {
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
-            SetCalculateFormula(cols, ResultColName, expStr, FormulaExp.Body.ToString());
+            SetCalculateFormula(cols, ConditionExpression, ResultColName, expStr, FormulaExp.Body.ToString());
             /*
             MemberInfo minfo = ResultColName.GetMemberInfo();
             foreach (SourceGridDefineColumnItem item in cols)
@@ -511,7 +542,6 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             */
         }
-
 
 
 
@@ -552,7 +582,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
             */
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
-            SetCalculateFormula(cols, ResultColName, expStr, FormulaExp.Body.ToString());
+            SetCalculateFormula(cols, ConditionExpression, ResultColName, expStr, FormulaExp.Body.ToString());
         }
 
         /// <summary>
@@ -563,8 +593,9 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="FormulaExp">公式表达式</param>
         /// <param name="ResultColName">目标结果列</param>
         /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
-        private static void SetCalculateFormula<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ResultColName, CalculateFormula calculateFormula, string OriginalExpressionStr, Expression<Func<T, object>> ConditionExpression = null)
+        private static void SetCalculateFormula<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, object>> ResultColName, CalculateFormula calculateFormula, string OriginalExpressionStr)
         {
+
             MemberInfo minfo = ResultColName.GetMemberInfo();
             foreach (SourceGridDefineColumnItem item in cols)
             {
@@ -616,62 +647,6 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-        //https://www.cnblogs.com/feichexia/archive/2013/05/28/3104832.html
-        /// <summary>
-        /// 反向计算 有除法的。要注意判断除数是否为0，和被除数是否为0
-        /// </summary>
-        /// <typeparam name="T">操作的所属实体</typeparam>
-        /// <param name="cols">作用的列集合</param>
-        /// <param name="FormulaExp">公式表达式</param>
-        /// <param name="ResultColName">目标结果列</param>
-        /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
-        public static void SetCol_FormulaReverse<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
-        {
-            MemberInfo minfo = ResultColName.GetMemberInfo();
-            foreach (SourceGridDefineColumnItem item in cols)
-            {
-                if (item.BelongingObjectType.Name != typeof(T).Name)
-                {
-                    continue;
-                }
-                //如果目标列和参数列一致，则不计算
-                if (item.ColName == minfo.Name)
-                {
-
-                    bool isSame = item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol.ColName == minfo.Name
-                    && s.OriginalExpression.ToString() == FormulaExp.Body.ToString()
-                    && s.CalcCondition.expCondition.ToString() == ConditionExpression.Body.ToString() //反算时一定有条件
-                   ).Any();
-                    if (isSame)
-                    {
-                        continue;
-                    }
-
-                    CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
-                    expStr.TagetCol = item;
-                    expStr.OriginalExpression = FormulaExp.Body.ToString();
-                    expStr.TagetColName = item.ColName;//以这个结果列，或叫目标列为标准，但是可能多种方法组合得到这个结果。所以可以重复
-                    #region 计算条件
-                    CalculationCondition condition = new CalculationCondition();
-                    condition.CalculationTargetType = typeof(T);
-                    //var RExpression = ConditionExpression.ReduceExtensions();
-                    var unary = ConditionExpression.Body as UnaryExpression;
-                    string str = unary.Operand.ToString();
-                    foreach (var para in ConditionExpression.Parameters)
-                    {
-                        str = str.Replace(para.Name + ".", "");
-                    }
-                    Expression exp = unary.Operand;
-                    condition.expCondition = exp;
-                    expStr.CalcCondition = condition;
-                    #endregion
-                    item.ParentGridDefine.SubtotalCalculateReverse.Add(expStr);
-
-                }
-
-            }
-        }
-
         /// <summary>
         /// 指定计算公式的列,要在dg定义后使用
         /// </summary>
@@ -684,7 +659,7 @@ namespace RUINORERP.UI.UCSourceGrid
             Expression<Func<T, object>> ResultColName, Expression<Func<T, object>> ConditionExpression = null)
         {
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
-            SetCalculateFormula(cols, ResultColName, expStr, FormulaExp.Body.ToString());
+            SetCalculateFormula(cols, ConditionExpression, ResultColName, expStr, FormulaExp.Body.ToString());
             /*
             MemberInfo minfo = ResultColName.GetMemberInfo();
             foreach (SourceGridDefineColumnItem item in cols)
@@ -713,24 +688,140 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
+        #endregion
+
+
+
+
+
+        #region 反算
+
         /// <summary>
-        /// 指定计算公式的列,要在dg定义后使用
+        /// 计算表达式设置
         /// </summary>
         /// <typeparam name="T">操作的所属实体</typeparam>
         /// <param name="cols">作用的列集合</param>
         /// <param name="FormulaExp">公式表达式</param>
         /// <param name="ResultColName">目标结果列</param>
         /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
-        public static void SetCol_Formula<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, T, T, object>> RsColNameExp, params Expression<Func<T, object>>[] subtotalColsExps)
+        private static void SetCalculateFormulaReverse<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ResultColName, CalculateFormula calculateFormula, string OriginalExpressionStr, Expression<Func<T, object>> ConditionExpression = null)
         {
-            //MemberInfo minfo = colNameExp.GetMemberInfo();
-            //foreach (var item in cols)
-            //{
-            //    item.SetCol_Summary<T>(minfo.Name, isTotal, subtotalColsExps.Length > 0, subtotalColsExps);
-            //}
+
+            MemberInfo minfo = ResultColName.GetMemberInfo();
+            foreach (SourceGridDefineColumnItem item in cols)
+            {
+                if (item.BelongingObjectType.Name != typeof(T).Name)
+                {
+                    continue;
+                }
+                //如果目标列和参数列一致，则不计算
+                if (item.ColName == minfo.Name)
+                {
+                    bool isSame = item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol.ColName == minfo.Name
+                    && s.OriginalExpression.ToString() == OriginalExpressionStr// FormulaExp.Body.ToString()
+                    && s.CalcCondition.expCondition.ToString() == ConditionExpression.Body.ToString() //反算时一定有条件
+                   ).Any();
+                    if (isSame)
+                    {
+                        continue;
+                    }
+
+                    CalculateFormula expStr = calculateFormula;// CalculateParser<T>.ParserString(FormulaExp);
+                    expStr.TagetCol = item;
+                    expStr.OriginalExpression = OriginalExpressionStr;// FormulaExp.Body.ToString();
+                    expStr.TagetColName = item.ColName;//以这个结果列，或叫目标列为标准，但是可能多种方法组合得到这个结果。所以可以重复
+                    #region 计算条件
+                    CalculationCondition condition = new CalculationCondition();
+                    condition.CalculationTargetType = typeof(T);
+                    //var RExpression = ConditionExpression.ReduceExtensions();
+                    var unary = ConditionExpression.Body as UnaryExpression;
+                    string str = unary.Operand.ToString();
+                    foreach (var para in ConditionExpression.Parameters)
+                    {
+                        str = str.Replace(para.Name + ".", "");
+                    }
+                    Expression exp = unary.Operand;
+                    condition.expCondition = exp;
+                    expStr.CalcCondition = condition;
+                    #endregion
+                    item.ParentGridDefine.SubtotalCalculateReverse.Add(expStr);
+
+                }
+
+            }
         }
 
 
+        public static void SetCol_FormulaReverse<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
+        {
+            CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
+            SetCalculateFormulaReverse(cols, ResultColName, expStr, FormulaExp.Body.ToString(), ConditionExpression);
+        }
+
+        //https://www.cnblogs.com/feichexia/archive/2013/05/28/3104832.html
+        /// <summary>
+        /// 反向计算 有除法的。要注意判断除数是否为0，和被除数是否为0
+        /// </summary>
+        /// <typeparam name="T">操作的所属实体</typeparam>
+        /// <param name="cols">作用的列集合</param>
+        /// <param name="FormulaExp">公式表达式</param>
+        /// <param name="ResultColName">目标结果列</param>
+        /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
+        public static void SetCol_FormulaReverse<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
+        {
+            CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
+            SetCalculateFormulaReverse(cols, ResultColName, expStr, FormulaExp.Body.ToString(), ConditionExpression);
+            /*
+             MemberInfo minfo = ResultColName.GetMemberInfo();
+             foreach (SourceGridDefineColumnItem item in cols)
+             {
+                 if (item.BelongingObjectType.Name != typeof(T).Name)
+                 {
+                     continue;
+                 }
+                 //如果目标列和参数列一致，则不计算
+                 if (item.ColName == minfo.Name)
+                 {
+                     bool isSame = item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol.ColName == minfo.Name
+                     && s.OriginalExpression.ToString() == FormulaExp.Body.ToString()
+                     && s.CalcCondition.expCondition.ToString() == ConditionExpression.Body.ToString() //反算时一定有条件
+                    ).Any();
+                     if (isSame)
+                     {
+                         continue;
+                     }
+
+
+                     expStr.TagetCol = item;
+                     expStr.OriginalExpression = FormulaExp.Body.ToString();
+                     expStr.TagetColName = item.ColName;//以这个结果列，或叫目标列为标准，但是可能多种方法组合得到这个结果。所以可以重复
+                     #region 计算条件
+                     CalculationCondition condition = new CalculationCondition();
+                     condition.CalculationTargetType = typeof(T);
+                     //var RExpression = ConditionExpression.ReduceExtensions();
+                     var unary = ConditionExpression.Body as UnaryExpression;
+                     string str = unary.Operand.ToString();
+                     foreach (var para in ConditionExpression.Parameters)
+                     {
+                         str = str.Replace(para.Name + ".", "");
+                     }
+                     Expression exp = unary.Operand;
+                     condition.expCondition = exp;
+                     expStr.CalcCondition = condition;
+                     #endregion
+                     item.ParentGridDefine.SubtotalCalculateReverse.Add(expStr);
+
+                 }
+
+             }*/
+        }
+        public static void SetCol_FormulaReverse<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
+        {
+            CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
+            SetCalculateFormulaReverse(cols, ResultColName, expStr, FormulaExp.Body.ToString(), ConditionExpression);
+        }
+
+        #endregion
 
 
 

@@ -265,6 +265,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private bool _IsOther = false;
+        /// <summary>
+        /// 是其他
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsOther", ColDesc = "是其他")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsOther", IsNullable = false, ColumnDescription = "是其他")]
+        public bool IsOther
+        {
+            get { return _IsOther; }
+            set
+            {
+                SetProperty(ref _IsOther, value);
+            }
+        }
+
         private string _Notes;
         /// <summary>
         /// 备注

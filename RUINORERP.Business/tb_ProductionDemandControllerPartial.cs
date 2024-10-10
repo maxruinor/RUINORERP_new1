@@ -1204,8 +1204,8 @@ namespace RUINORERP.Business
         /// <param name="MakingItem">要制作的目标，如果中间件，就会是指定一个，如果是上层模式，则是一组中最顶层那个行数据</param>
         /// <param name="needLoop">如果是循环，则是上层械，如果是否则是中间件式</param>
         /// <returns></returns>
-        public async Task<tb_ManufacturingOrder> InitManufacturingOrder(tb_ProductionDemand demand, tb_ProduceGoodsRecommendDetail MakingItem
-            ,
+        public async Task<tb_ManufacturingOrder> InitManufacturingOrder(tb_ProductionDemand demand,
+            tb_ProduceGoodsRecommendDetail MakingItem,
              bool needLoop = false)
         {
 
@@ -1240,6 +1240,10 @@ namespace RUINORERP.Business
             }
             //上面全查出后。找到中间件时，只会有一行数据。如果是上层式，则多行找到的是最上层。
             tb_BOM_S MakingItemBom = MediumBomInfoList.FirstOrDefault(c => c.BOM_ID == MakingItem.BOM_ID);
+
+            //制令单的BOM依据也传过去
+            ManufacturingOrder.tb_bom_s = MakingItemBom;
+
 
             BaseController<tb_ManufacturingOrder> ctrMaking = _appContext.GetRequiredServiceByName<BaseController<tb_ManufacturingOrder>>(typeof(tb_ManufacturingOrder).Name + "Controller");
             ManufacturingOrder.BOM_ID = MakingItemBom.BOM_ID;
@@ -1336,7 +1340,7 @@ namespace RUINORERP.Business
             //}
 
             AllMakingGoods.AddRange(MakingGoods);
-         
+
 
             AllMakingGoods.Sort((p1, p2) =>
             {

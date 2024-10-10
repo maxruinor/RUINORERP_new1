@@ -119,7 +119,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         //默认值
-        public int width = 90;
+        public int width = 0;
 
         /// <summary>
         /// 保存了匹配列的索引

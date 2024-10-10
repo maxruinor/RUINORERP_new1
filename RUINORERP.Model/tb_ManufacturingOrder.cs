@@ -181,10 +181,10 @@ namespace RUINORERP.Model
 
         private string _SKU;
         /// <summary>
-        /// SKU码
+        /// 母件SKU码
         /// </summary>
-        [AdvQueryAttribute(ColName = "SKU",ColDesc = "SKU码")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU" ,Length=80,IsNullable = true,ColumnDescription = "SKU码" )]
+        [AdvQueryAttribute(ColName = "SKU",ColDesc = "母件SKU码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU" ,Length=80,IsNullable = true,ColumnDescription = "母件SKU码")]
         public string SKU
         { 
             get{return _SKU;}

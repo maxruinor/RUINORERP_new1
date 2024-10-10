@@ -37,7 +37,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             InitializeComponent();
         }
- 
+
 
         /// <summary>
         /// 用于其它UI传入的数据载入。并不是刷新数据
@@ -104,7 +104,21 @@ namespace RUINORERP.UI.PSI.PUR
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
+
+            //创建表达式 外发工厂
+            var lambdaOut = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsOther == true)
+                            .ToExpression();
+
+            BaseProcessor baseProcessorOut = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            QueryFilter queryFilterCOut = baseProcessorOut.GetQueryFilter();
+            queryFilterCOut.FilterLimitExpressions.Add(lambdaOut);
+            //第三个参数 k => k.CustomerVendor_ID.Value  不是out这个。只是为了取参数名。用于绑定控件
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor, tb_ManufacturingOrder>(entity, k => k.CustomerVendor_ID, v => v.CVName, k => k.CustomerVendor_ID.Value, cmbCustomerVendor_ID, true, queryFilterCOut.GetFilterExpression<tb_CustomerVendor>());
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterCOut);
+
+            //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
+
             DataBindingHelper.BindData4DataTime<tb_FinishedGoodsInv>(entity, t => t.DeliveryDate, dtpDeliveryDate, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
@@ -138,7 +152,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.MOID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FinishedGoodsInv>(c => c.MOID))
@@ -157,15 +171,15 @@ namespace RUINORERP.UI.PSI.PUR
             }
             ShowPrintStatus(lblPrintStatus, EditEntity);
 
-            //创建表达式
-            var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == true)
-                            .ToExpression();//注意 这一句 不能少
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-            queryFilterC.FilterLimitExpressions.Add(lambda);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+            ////创建表达式
+            //var lambda = Expressionable.Create<tb_CustomerVendor>()
+            //                .And(t => t.IsVendor == true)
+            //                .ToExpression();//注意 这一句 不能少
+            //BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            //QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            //queryFilterC.FilterLimitExpressions.Add(lambda);
+            //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+            //DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
 
 
             tb_PurOrderController<tb_PurOrder> ctrPurorder = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
@@ -218,6 +232,11 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_NeverVisible<tb_FinishedGoodsInvDetail>(c => c.Sub_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
+            //这个小计可以删除。全是单个的。不用小计了。
+            listCols.SetCol_NeverVisible<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);
+
+           // listCols.SetCol_Width<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost, 200);
+
             if (!AppContext.SysConfig.UseBarCode)
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
@@ -228,17 +247,17 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
-           // listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Inv_Cost);
+            // listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.PayableQty);
             listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnpaidQty);
 
             //listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.UnitCost);
             //listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost);
-           // listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.MaterialCost);
- 
-           // listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost);
+            // listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.MaterialCost);
+
+            // listCols.SetCol_ReadOnly<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost);
             //listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.r, CustomFormatType.PercentFormat);
-            
+
             listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.UnitCost, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FinishedGoodsInvDetail>(c => c.MaterialCost, CustomFormatType.CurrencyFormat);
@@ -258,25 +277,27 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.Qty);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.UnpaidQty);
             listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.PayableQty);
+            listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.NetWorkingHours);
+            listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.NetMachineHours);
+            listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.ApportionedCost);
+            listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);
+            listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.ManuFee);
+            listCols.SetCol_Summary<tb_FinishedGoodsInvDetail>(c => c.ProductionAllCost);
 
-            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.PayableQty- b.Qty, c => c.UnpaidQty);
-            decimal wh = EditEntity.tb_manufacturingorder.WorkingHour / EditEntity.tb_manufacturingorder.ManufacturingQty;
-            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a) => wh * a.Qty, c => c.NetWorkingHours);
-           // NewDetail.NetWorkingHours = (SourceBill.WorkingHour / SourceBill.ManufacturingQty) * NewDetail.Qty;
-
-            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.Qty * b.MaterialCost, c => c.SubtotalMaterialCost);
-            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a) =>a.SubtotalMaterialCost + a.ApportionedCost + a.ManuFee, c => c.ProductionAllCost);
-            //listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b, c) =>a.LaborCost+ a.SubtotalMaterialCost * b.ApportionedCost * c.ManuFee, c => c.ProductionAllCost);
-          
-            // listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.PayableQty - b.Qty, c => c.UnpaidQty);
-           // listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b, c) => a.SubtotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
-
+            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.PayableQty - b.Qty, c => c.UnpaidQty);
+            //除数不能为0
+            //测试条件行不行。测试abc 只用a。多个参数行不行。
+            // listCols.SetCol_FormulaReverse<tb_FinishedGoodsInvDetail>((a) => a.Qty != 0,(a, b, c) => a.NetWorkingHours * (b.Qty / c.PayableQty), c => c.NetWorkingHours);
+            // listCols.SetCol_FormulaReverse<tb_FinishedGoodsInvDetail>((a) => a.Qty != 0, (a) => a.NetMachineHours * (a.Qty / a.PayableQty), c => c.NetMachineHours);
+            // listCols.SetCol_FormulaReverse<tb_FinishedGoodsInvDetail>((a) => a.Qty != 0, (a) => a.ApportionedCost * (a.Qty / a.PayableQty), c => c.ApportionedCost);
+            // listCols.SetCol_FormulaReverse<tb_FinishedGoodsInvDetail>((a) => a.Qty != 0, (a) => a.ManuFee * (a.Qty / a.PayableQty), c => c.ManuFee);
+            // listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a, b) => a.Qty * b.MaterialCost, c => c.SubtotalMaterialCost);
+            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a) => a.Qty * a.MaterialCost + a.Qty * a.ApportionedCost + a.Qty * a.ManuFee, c => c.ProductionAllCost);
+            listCols.SetCol_Formula<tb_FinishedGoodsInvDetail>((a) => a.MaterialCost + a.ApportionedCost + a.ManuFee, c => c.UnitCost);
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_FinishedGoodsInvDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_FinishedGoodsInvDetail>(sgd, f => f.prop, t => t.property);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_FinishedGoodsInvDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
-
-
 
             //应该只提供一个结构
             List<tb_FinishedGoodsInvDetail> lines = new List<tb_FinishedGoodsInvDetail>();
@@ -338,9 +359,12 @@ namespace RUINORERP.UI.PSI.PUR
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
-                EditEntity.TotalMaterialCost = details.Sum(c => c.MaterialCost * c.Qty);
-
-
+                EditEntity.TotalNetWorkingHours = details.Sum(c => c.Qty * c.NetMachineHours);
+                EditEntity.TotalNetMachineHours = details.Sum(c => c.Qty * c.NetWorkingHours);
+                EditEntity.TotalMaterialCost = details.Sum(c => c.Qty * c.MaterialCost);
+                EditEntity.TotalApportionedCost = details.Sum(c => c.Qty * c.ApportionedCost);
+                EditEntity.TotalManuFee = details.Sum(c => c.Qty * c.ManuFee);
+                EditEntity.TotalProductionCost = details.Sum(c => c.ProductionAllCost);
             }
             catch (Exception ex)
             {
@@ -412,7 +436,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //   表格中的验证提示
                 //   其他输入条码验证
 
-                
+
                 ReturnMainSubResults<tb_FinishedGoodsInv> SaveResult = new ReturnMainSubResults<tb_FinishedGoodsInv>();
                 if (NeedValidated)
                 {
@@ -427,7 +451,7 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
                 return SaveResult.Succeeded;
-           
+
             }
             return false;
 
@@ -608,6 +632,16 @@ protected async override Task<ApprovalEntity> ReReview()
                 entity.MOID = SourceBill.MOID;
                 entity.DeliveryDate = System.DateTime.Now;
                 entity.tb_manufacturingorder = SourceBill;
+                entity.IsOutSourced = SourceBill.IsOutSourced;
+                if (entity.IsOutSourced)
+                {
+                    entity.CustomerVendor_ID = SourceBill.CustomerVendor_ID_Out;
+                }
+                else
+                {
+                    entity.CustomerVendor_ID = null;
+                }
+                entity.DepartmentID = SourceBill.DepartmentID;
                 List<tb_FinishedGoodsInvDetail> NewDetails = new List<tb_FinishedGoodsInvDetail>(); //这里是多行>
                 List<string> tipsMsg = new List<string>();
                 //一个制令就一个成品，就一行数据。将来优化同时 多个制令的批量转单
@@ -615,33 +649,35 @@ protected async override Task<ApprovalEntity> ReReview()
                 #region 每行产品ID唯一
 
                 tb_FinishedGoodsInvDetail NewDetail = mapper.Map<tb_FinishedGoodsInvDetail>(SourceBill);
-               
+
                 NewDetail.PayableQty = SourceBill.ManufacturingQty - SourceBill.QuantityDelivered;
                 NewDetail.Qty = 0;
                 NewDetail.UnpaidQty = NewDetail.PayableQty - NewDetail.Qty;// 已经交数量去掉
                 NewDetail.Location_ID = SourceBill.Location_ID;
-                NewDetail.NetWorkingHours = (SourceBill.WorkingHour / SourceBill.ManufacturingQty) * NewDetail.Qty;
-                NewDetail.NetMachineHours = (SourceBill.MachineHour / SourceBill.ManufacturingQty) * NewDetail.Qty;
 
+                NewDetail.NetWorkingHours = SourceBill.WorkingHour / SourceBill.ManufacturingQty;
+                NewDetail.NetMachineHours = SourceBill.MachineHour / SourceBill.ManufacturingQty;
+                NewDetail.MaterialCost = SourceBill.TotalMaterialCost / SourceBill.ManufacturingQty;
+                NewDetail.SubtotalMaterialCost = SourceBill.TotalMaterialCost;
+                NewDetail.ManuFee = SourceBill.TotalManuFee / SourceBill.ManufacturingQty;
+                NewDetail.ApportionedCost = SourceBill.ApportionedCost / SourceBill.ManufacturingQty;
+                NewDetail.ProductionAllCost = SourceBill.TotalProductionCost / SourceBill.ManufacturingQty;
                 #endregion
-
-                //if (NewDetails.Count == 0)
-                //{
-                //    tipsMsg.Add($"制令单:{entity.Ref_BillNo}已全部缴库，请检查！");
-                //}
+                NewDetails.Add(NewDetail);
+                if (NewDetails.Count == 0)
+                {
+                    tipsMsg.Add($"制令单:{entity.MONo}已全部缴库，请检查数据！");
+                }
                 StringBuilder msg = new StringBuilder();
                 foreach (var item in tipsMsg)
                 {
                     msg.Append(item).Append("\r\n");
-
                 }
                 if (tipsMsg.Count > 0)
                 {
                     MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-                NewDetails.Add(NewDetail);
                 entity.tb_FinishedGoodsInvDetails = NewDetails;
-
                 //entity.PurOrder_ID = purorder.PurOrder_ID;
                 //entity.PurOrder_NO = purorder.PurOrderNo;
                 //entity.TotalAmount = NewDetails.Sum(c => c.SubtotalAmount);
@@ -656,11 +692,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 entity.Approver_by = null;
                 entity.PrintStatus = 0;
                 entity.ActionStatus = ActionStatus.新增;
-                if (entity.MOID > 0)
-                {
-                    entity.CustomerVendor_ID = entity.CustomerVendor_ID;
-                    entity.DepartmentID = entity.DepartmentID;
-                }
+
                 BusinessHelper.Instance.InitEntity(entity);
 
                 ActionStatus actionStatus = ActionStatus.无操作;
@@ -673,6 +705,6 @@ protected async override Task<ApprovalEntity> ReReview()
 
         }
 
-    
+
     }
 }

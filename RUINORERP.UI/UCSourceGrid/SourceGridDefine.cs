@@ -409,7 +409,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 //按标题数字计算列宽
                 if (cols[i].ColCaption.Length > 0)
                 {
-                    cols[i].width = cols[i].ColCaption.Length * 40;
+                    cols[i].width = cols[i].ColCaption.Length * 20;
                     cols[i].ParentGridDefine = this;
                 }
                 //只有一列需要统计。则整个表格都有总计行。

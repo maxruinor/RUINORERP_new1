@@ -122,7 +122,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-        public bool GetBasicCalculationResult(object obj, Expression exp)
+        public bool GetBasicCalculationResult_old(object obj, Expression exp)
         {
             bool result = false;
             BinaryExpression binaryExpression = (BinaryExpression)exp;
@@ -192,7 +192,84 @@ namespace RUINORERP.UI.UCSourceGrid
 
         }
 
+        public bool GetBasicCalculationResult(object obj, Expression exp)
+        {
+            bool result = false;
+            BinaryExpression binaryExpression = (BinaryExpression)exp;
+            string conditionLeftColName = binaryExpression.Left.ToString().Split('.')[1];
+            PropertyInfo propertyInfoLeft = CalculationTargetType.GetProperty(conditionLeftColName);
+            if (propertyInfoLeft == null)
+            {
+                return false;
+            }
+            object conditionLeftValue = propertyInfoLeft.GetValue(obj);
 
+            // 获取左侧属性的值类型
+            Type valueType = conditionLeftValue.GetType();
+
+            object compareValue = null;
+            string conditionRightColName = null;
+
+            // 处理右侧表达式
+            if (binaryExpression.Right is ConstantExpression constant)
+            {
+                compareValue = Convert.ChangeType(constant.Value, valueType);
+            }
+            else if (binaryExpression.Right is MemberExpression member)
+            {
+                conditionRightColName = member.ToString().Split('.')[1];
+                PropertyInfo propertyInfoRight = CalculationTargetType.GetProperty(conditionRightColName);
+                compareValue = propertyInfoRight.GetValue(obj);
+            }
+
+            // 处理枚举类型
+            if (valueType.IsEnum)
+            {
+                conditionLeftValue = Enum.Parse(valueType, conditionLeftValue.ToString());
+                compareValue = Enum.Parse(valueType, compareValue.ToString());
+            }
+            else
+            {
+                // 确保比较值和左侧值类型一致
+                compareValue = Convert.ChangeType(compareValue, valueType);
+            }
+
+            // 处理可能的null值
+            if (conditionLeftValue == null || compareValue == null)
+            {
+                // 根据业务逻辑处理null值的情况
+                result = conditionLeftValue == compareValue;
+            }
+            else
+            {
+                // 比较值
+                switch (binaryExpression.NodeType)
+                {
+                    case ExpressionType.Equal:
+                        result = conditionLeftValue.Equals(compareValue);
+                        break;
+                    case ExpressionType.NotEqual:
+                        result = !conditionLeftValue.Equals(compareValue);
+                        break;
+                    case ExpressionType.GreaterThan:
+                        result = (decimal)conditionLeftValue > (decimal)compareValue;
+                        break;
+                    case ExpressionType.LessThan:
+                        result = (decimal)conditionLeftValue < (decimal)compareValue;
+                        break;
+                    case ExpressionType.GreaterThanOrEqual:
+                        result = (decimal)conditionLeftValue >= (decimal)compareValue;
+                        break;
+                    case ExpressionType.LessThanOrEqual:
+                        result = (decimal)conditionLeftValue <= (decimal)compareValue;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return result;
+        }
         public static bool CheckCondition(object obj, Type objType, string propertyName, Func<object, bool> condition)
         {
 

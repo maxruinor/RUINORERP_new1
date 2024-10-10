@@ -411,16 +411,16 @@ namespace RUINORERP.Common.Extensions
 
             return type.GetProperty(propertyName);
         }
-    
 
 
-    /// <summary>
-    /// 获取某属性值
-    /// </summary>
-    /// <param name="obj">对象</param>
-    /// <param name="propertyName">属性名</param>
-    /// <returns></returns>
-    public static object GetPropertyValue(this object obj, string propertyName)
+
+        /// <summary>
+        /// 获取某属性值
+        /// </summary>
+        /// <param name="obj">对象</param>
+        /// <param name="propertyName">属性名</param>
+        /// <returns></returns>
+        public static object GetPropertyValue(this object obj, string propertyName)
         {
             return obj.GetType().GetProperty(propertyName, BindingFlags)?.GetValue(obj);
         }
@@ -605,7 +605,7 @@ namespace RUINORERP.Common.Extensions
             catch (Exception ex)
             {
                 // 抛出异常，让调用者处理
-                throw new InvalidOperationException("转换错误:"+$"无法将对象转换为类型 {targetType.FullName}", ex);
+                throw new InvalidOperationException("转换错误:" + $"无法将对象转换为类型 {targetType.FullName}\r\n对象值：{obj.ToString()}", ex);
             }
         }
 
@@ -680,7 +680,7 @@ namespace RUINORERP.Common.Extensions
                 }
             }
         }
-  
+
 
         /// <summary>
         /// GenericTypeExtensions这个类中已经使用

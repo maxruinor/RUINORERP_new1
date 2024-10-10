@@ -25,6 +25,7 @@ namespace RUINORERP.UI.BI
         public UCCustomerVendorEdit()
         {
             InitializeComponent();
+            chkOther.ToolTipValues.Description = "其他类型，如物流公司，第三方仓库，加工厂等合作伙伴等。";
         }
 
         private tb_CustomerVendor _EditEntity;
@@ -38,8 +39,9 @@ namespace RUINORERP.UI.BI
                 if (Text.Contains("其他"))
                 {
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.CVOther);
-                    txtIsCustomer.Enabled = false;
-                    txtIsVendor.Enabled = false;
+                    //txtIsCustomer.Enabled = false;
+                    //txtIsVendor.Enabled = false;
+                    chkOther.Enabled = true;
                 }
                 if (Text.Contains("客户"))
                 {
@@ -64,6 +66,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsCustomer, txtIsCustomer, false);
             DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsExclusive, chk责任人专属, false);
             DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsVendor, txtIsVendor, false);
+            DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsOther, chkOther, false);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_CustomerVendor>(entity, t => t.Is_enabled, rdbis_enabledYes, rdbis_enabledNo);

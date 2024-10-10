@@ -31,6 +31,8 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkOther = new Krypton.Toolkit.KryptonCheckBox();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
             this.rdbis_availableNo = new Krypton.Toolkit.KryptonRadioButton();
             this.rdbis_availableYes = new Krypton.Toolkit.KryptonRadioButton();
@@ -100,6 +102,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkOther);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel3);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox2);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox1);
             this.kryptonPanel1.Controls.Add(this.lblIs_enabled);
@@ -138,6 +142,22 @@
             this.kryptonPanel1.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.kryptonPanel1.Size = new System.Drawing.Size(644, 543);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // chkOther
+            // 
+            this.chkOther.Location = new System.Drawing.Point(453, 175);
+            this.chkOther.Name = "chkOther";
+            this.chkOther.Size = new System.Drawing.Size(19, 13);
+            this.chkOther.TabIndex = 70;
+            this.chkOther.Values.Text = "";
+            // 
+            // kryptonLabel3
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(375, 171);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(75, 20);
+            this.kryptonLabel3.TabIndex = 69;
+            this.kryptonLabel3.Values.Text = "是否为其他";
             // 
             // kryptonGroupBox2
             // 
@@ -224,7 +244,7 @@
             // 
             // lbl责任人专属
             // 
-            this.lbl责任人专属.Location = new System.Drawing.Point(373, 134);
+            this.lbl责任人专属.Location = new System.Drawing.Point(377, 135);
             this.lbl责任人专属.Name = "lbl责任人专属";
             this.lbl责任人专属.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lbl责任人专属.Size = new System.Drawing.Size(75, 20);
@@ -233,7 +253,7 @@
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(129, 105);
+            this.kryptonLabel2.Location = new System.Drawing.Point(135, 105);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.kryptonLabel2.Size = new System.Drawing.Size(36, 20);
@@ -249,7 +269,7 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(129, 12);
+            this.kryptonLabel1.Location = new System.Drawing.Point(135, 12);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.kryptonLabel1.Size = new System.Drawing.Size(36, 20);
@@ -265,7 +285,7 @@
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(116, 132);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(122, 135);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
@@ -276,14 +296,14 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(177, 131);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(177, 135);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
-            this.cmbEmployee_ID.Size = new System.Drawing.Size(140, 21);
+            this.cmbEmployee_ID.Size = new System.Drawing.Size(158, 21);
             this.cmbEmployee_ID.TabIndex = 37;
             // 
             // txtIsVendor
             // 
-            this.txtIsVendor.Location = new System.Drawing.Point(454, 171);
+            this.txtIsVendor.Location = new System.Drawing.Point(316, 175);
             this.txtIsVendor.Name = "txtIsVendor";
             this.txtIsVendor.Size = new System.Drawing.Size(19, 13);
             this.txtIsVendor.TabIndex = 35;
@@ -291,7 +311,7 @@
             // 
             // txtIsCustomer
             // 
-            this.txtIsCustomer.Location = new System.Drawing.Point(193, 171);
+            this.txtIsCustomer.Location = new System.Drawing.Point(184, 175);
             this.txtIsCustomer.Name = "txtIsCustomer";
             this.txtIsCustomer.Size = new System.Drawing.Size(19, 13);
             this.txtIsCustomer.TabIndex = 34;
@@ -308,7 +328,7 @@
             // 
             // lblType_ID
             // 
-            this.lblType_ID.Location = new System.Drawing.Point(104, 43);
+            this.lblType_ID.Location = new System.Drawing.Point(109, 43);
             this.lblType_ID.Name = "lblType_ID";
             this.lblType_ID.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblType_ID.Size = new System.Drawing.Size(62, 20);
@@ -317,7 +337,7 @@
             // 
             // lblCVName
             // 
-            this.lblCVName.Location = new System.Drawing.Point(129, 74);
+            this.lblCVName.Location = new System.Drawing.Point(135, 74);
             this.lblCVName.Name = "lblCVName";
             this.lblCVName.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblCVName.Size = new System.Drawing.Size(36, 20);
@@ -333,7 +353,7 @@
             // 
             // lblContact
             // 
-            this.lblContact.Location = new System.Drawing.Point(116, 203);
+            this.lblContact.Location = new System.Drawing.Point(122, 203);
             this.lblContact.Name = "lblContact";
             this.lblContact.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblContact.Size = new System.Drawing.Size(49, 20);
@@ -349,7 +369,7 @@
             // 
             // lblPhone
             // 
-            this.lblPhone.Location = new System.Drawing.Point(129, 228);
+            this.lblPhone.Location = new System.Drawing.Point(135, 228);
             this.lblPhone.Name = "lblPhone";
             this.lblPhone.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblPhone.Size = new System.Drawing.Size(36, 20);
@@ -365,7 +385,7 @@
             // 
             // lblAddress
             // 
-            this.lblAddress.Location = new System.Drawing.Point(129, 253);
+            this.lblAddress.Location = new System.Drawing.Point(135, 253);
             this.lblAddress.Name = "lblAddress";
             this.lblAddress.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblAddress.Size = new System.Drawing.Size(36, 20);
@@ -381,7 +401,7 @@
             // 
             // lblWebsite
             // 
-            this.lblWebsite.Location = new System.Drawing.Point(129, 278);
+            this.lblWebsite.Location = new System.Drawing.Point(135, 278);
             this.lblWebsite.Name = "lblWebsite";
             this.lblWebsite.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblWebsite.Size = new System.Drawing.Size(36, 20);
@@ -397,7 +417,7 @@
             // 
             // lblIsCustomer
             // 
-            this.lblIsCustomer.Location = new System.Drawing.Point(107, 169);
+            this.lblIsCustomer.Location = new System.Drawing.Point(96, 171);
             this.lblIsCustomer.Name = "lblIsCustomer";
             this.lblIsCustomer.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblIsCustomer.Size = new System.Drawing.Size(75, 20);
@@ -406,7 +426,7 @@
             // 
             // lblIsVendor
             // 
-            this.lblIsVendor.Location = new System.Drawing.Point(360, 169);
+            this.lblIsVendor.Location = new System.Drawing.Point(227, 171);
             this.lblIsVendor.Name = "lblIsVendor";
             this.lblIsVendor.Size = new System.Drawing.Size(88, 20);
             this.lblIsVendor.TabIndex = 29;
@@ -414,7 +434,7 @@
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(116, 303);
+            this.lblNotes.Location = new System.Drawing.Point(135, 303);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
@@ -495,5 +515,7 @@
         private Krypton.Toolkit.KryptonRadioButton rdbis_enabledYes;
         private Krypton.Toolkit.KryptonLabel lblIs_enabled;
         private Krypton.Toolkit.KryptonLabel lblIs_available;
+        private Krypton.Toolkit.KryptonCheckBox chkOther;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel3;
     }
 }

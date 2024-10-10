@@ -2343,6 +2343,7 @@ protected async override Task<ApprovalEntity> ReReview()
             List<tb_ProduceGoodsRecommendDetail> MakingProditems = EditEntity.tb_ProduceGoodsRecommendDetails;
             var MakingItem = MakingProditems.FirstOrDefault(c => c.ID == minKeyValue);
             tb_ManufacturingOrder ManufacturingOrder = await ctrPD.InitManufacturingOrder(EditEntity, MakingItem, !MiddlewareType);
+           
             tb_MenuInfo RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_ManufacturingOrder).Name && m.ClassPath.Contains("RUINORERP.UI.MRP.MP." + typeof(UCManufacturingOrder).Name)).FirstOrDefault();
             if (RelatedBillMenuInfo != null && ManufacturingOrder != null)
             {

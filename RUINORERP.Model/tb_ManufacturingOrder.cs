@@ -195,10 +195,10 @@ namespace RUINORERP.Model
 
         private string _CNName;
         /// <summary>
-        /// 品名
+        /// 母件品名
         /// </summary>
-        [AdvQueryAttribute(ColName = "CNName",ColDesc = "品名")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CNName" ,Length=255,IsNullable = false,ColumnDescription = "品名" )]
+        [AdvQueryAttribute(ColName = "CNName",ColDesc = "母件品名")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CNName" ,Length=255,IsNullable = false,ColumnDescription = "母件品名")]
         public string CNName
         { 
             get{return _CNName;}
@@ -253,10 +253,10 @@ namespace RUINORERP.Model
 
         private long? _Type_ID;
         /// <summary>
-        /// 产品类型
+        /// 母件类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "产品类型")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "产品类型" )]
+        [AdvQueryAttribute(ColName = "Type_ID",ColDesc = "母件类型")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Type_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "母件类型")]
         [FKRelationAttribute("tb_ProductType","Type_ID")]
         public long? Type_ID
         { 
@@ -297,10 +297,10 @@ namespace RUINORERP.Model
 
         private string _Specifications;
         /// <summary>
-        /// 规格
+        /// 母件规格
         /// </summary>
-        [AdvQueryAttribute(ColName = "Specifications",ColDesc = "规格")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Specifications" ,Length=1000,IsNullable = true,ColumnDescription = "规格" )]
+        [AdvQueryAttribute(ColName = "Specifications",ColDesc = "母件规格")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Specifications" ,Length=1000,IsNullable = true,ColumnDescription = "母件规格")]
         public string Specifications
         { 
             get{return _Specifications;}
@@ -311,10 +311,10 @@ namespace RUINORERP.Model
 
         private string _property;
         /// <summary>
-        /// 属性
+        /// 母件属性
         /// </summary>
-        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "property" ,Length=255,IsNullable = true,ColumnDescription = "属性" )]
+        [AdvQueryAttribute(ColName = "property",ColDesc = "母件属性")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "property" ,Length=255,IsNullable = true,ColumnDescription = "母件属性")]
         public string property
         { 
             get{return _property;}

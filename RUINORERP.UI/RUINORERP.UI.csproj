@@ -1452,11 +1452,23 @@
     <Compile Include="PSI\INV\UCInventoryTracking.Designer.cs">
       <DependentUpon>UCInventoryTracking.cs</DependentUpon>
     </Compile>
+    <Compile Include="PSI\INV\UCProdConversion.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdConversion.Designer.cs">
+      <DependentUpon>UCProdConversion.cs</DependentUpon>
+    </Compile>
     <Compile Include="PSI\INV\UCProdMerge.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="PSI\INV\UCProdMerge.Designer.cs">
       <DependentUpon>UCProdMerge.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdConversionQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdConversionQuery.Designer.cs">
+      <DependentUpon>UCProdConversionQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="PSI\INV\UCProdSplit.cs">
       <SubType>UserControl</SubType>
@@ -1910,6 +1922,7 @@
     <Compile Include="UCSourceGrid\SourceGridDefineColumnItem.cs" />
     <Compile Include="UCSourceGrid\SourceGridExt.cs" />
     <Compile Include="UCSourceGrid\SourceGridHelper.cs" />
+    <Compile Include="UCSourceGrid\SourceGridProcess.cs" />
     <Compile Include="UCSourceGrid\SubtotalController.cs" />
     <Compile Include="UCSourceGrid\SubtotalFormula.cs" />
     <Compile Include="UCToolBar\BaseBar.cs">
@@ -2554,8 +2567,14 @@
     <EmbeddedResource Include="PSI\INV\UCInventoryTracking.resx">
       <DependentUpon>UCInventoryTracking.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCProdConversion.resx">
+      <DependentUpon>UCProdConversion.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCProdMerge.resx">
       <DependentUpon>UCProdMerge.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCProdConversionQuery.resx">
+      <DependentUpon>UCProdConversionQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCProdSplit.resx">
       <DependentUpon>UCProdSplit.cs</DependentUpon>

@@ -626,6 +626,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
 
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 EditEntity.TotalCost = details.Sum(c => c.Cost * c.Quantity);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
@@ -634,7 +635,12 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
                 EditEntity.CollectedMoney = EditEntity.TotalUntaxedAmount;
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
-
+                //如果没有有效的明细。直接提示
+                if (NeedValidated && details.Count == 0)
+                {
+                    MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
                 if (NeedValidated && (EditEntity.TotalQty == 0 || detailentity.Sum(c => c.Quantity) == 0))
                 {
                     MessageBox.Show("单据及明细总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -645,12 +651,21 @@ namespace RUINORERP.UI.PSI.SAL
                     MessageBox.Show($"单据总数量{EditEntity.TotalQty}和明细总数量{detailentity.Sum(c => c.Quantity)}不相同，请检查后再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
-                //如果没有有效的明细。直接提示
-                if (NeedValidated && details.Count == 0)
+
+                if (NeedValidated && (EditEntity.TotalAmount == 0 || detailentity.Sum(c => c.TransactionPrice * c.Quantity) == 0))
                 {
-                    MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                   if(MessageBox.Show("单据总金额或明细总金额为零，你确定吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)==DialogResult.No)
+                    {
+                        return false;
+                    }
+                }
+                if (NeedValidated && (EditEntity.TotalAmount != detailentity.Sum(c => c.TransactionPrice * c.Quantity)))
+                {
+                    MessageBox.Show("单据总金额与明细总金额不相等！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
+
+
 
                 //订单只是警告。可以继续
 

@@ -73,8 +73,12 @@ namespace RUINORERP.UI.UCSourceGrid
         public View_ProdDetail QueryObject { get => _queryObject; set => _queryObject = value; }
         */
         public UCProdQuery prodQuery = null;
+
+        public bool CanMultiSelect { get; set; } = true;
+
         private void QueryFormGeneric_Load(object sender, EventArgs e)
         {
+            prodQuery.CanMultiSelect= CanMultiSelect;
             this.kryptonPanelQuery.Controls.Add(prodQuery);
 
             ////由查询这边传递查询的字段名

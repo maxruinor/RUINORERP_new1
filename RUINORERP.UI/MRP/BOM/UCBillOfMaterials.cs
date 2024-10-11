@@ -739,8 +739,8 @@ namespace RUINORERP.UI.MRP.BOM
                 EditEntity.ApprovalResults = false;
                 EditEntity.is_enabled = true;
                 EditEntity.is_available = true;
-                EditEntity.SKU = string.Empty;
                 EditEntity.ProdDetailID = 0;
+                EditEntity.SKU = string.Empty;
                 EditEntity.BOM_ID = 0;
                 //EditEntity.BOM_S_VERID = 0;
                 //EditEntity.Doc_ID = 0;
@@ -910,10 +910,10 @@ namespace RUINORERP.UI.MRP.BOM
             EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
             EditEntity.DataStatus = (int)DataStatus.草稿;
             EditEntity.Approver_at = null;
+            EditEntity.ProdDetailID = 0;
             EditEntity.SKU = null;
             EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
             BusinessHelper.Instance.InitEntity(EditEntity);
-
             foreach (var item in EditEntity.tb_BOM_SDetails)
             {
                 item.BOM_ID = 0;

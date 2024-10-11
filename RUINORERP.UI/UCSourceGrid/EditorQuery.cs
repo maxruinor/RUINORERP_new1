@@ -11,7 +11,10 @@ using ZXing.Common;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
-
+    /// <summary>
+    /// 复杂数据类型编辑器
+    /// 目前应用于产品选择
+    /// </summary>
     public class EditorQuery : SourceGrid.Cells.Editors.TextBoxButton
     {
         #region by watson 
@@ -46,7 +49,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-
+        public bool CanMultiSelect { get; set; } = true;
 
 
 
@@ -56,8 +59,9 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         /// <param name="queryField">对象属性列名</param>
         /// <param name="p_Type">对象类型</param>
-        public EditorQuery(string queryField, Type p_Type) : base(p_Type)
+        public EditorQuery(string queryField, Type p_Type, bool canMultiSelect = true) : base(p_Type)
         {
+            CanMultiSelect = canMultiSelect;
             queryobjType = p_Type;
             _queryField = queryField;
             Control.DialogOpen += new EventHandler(Control_DialogOpen);
@@ -90,14 +94,15 @@ namespace RUINORERP.UI.UCSourceGrid
                 //{
                 //    dg.LocationID = dci.ParentGridDefine.GridData.GetPropertyValue(warehouse.GetMemberInfo().Name).ToLong();
                 //}
-                dg.Text="产品选择";
+                dg.CanMultiSelect = CanMultiSelect;
+                dg.Text = "产品选择";
                 dg.StartPosition = FormStartPosition.CenterScreen;
                 dg.prodQuery.QueryField = this.QueryField;
                 if (this.EditCellContext.Value != null)
                 {
                     dg.prodQuery.QueryValue = this.EditCellContext.Value.ToString();
                 }
-                
+
                 if (dg.ShowDialog() == DialogResult.OK)
                 {
 

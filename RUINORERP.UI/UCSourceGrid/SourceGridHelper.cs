@@ -1938,10 +1938,14 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
             //相关联的列才会验证
+            #region 默认的情况
             foreach (SourceGridDefineColumnItem item in dci.ParentGridDefine)
             {
                 if (pi != null)
                 {
+
+                    //这里设置了查询产品的编辑器。目前条件是目标列，非只读。
+                    //再加一个指定的列名以及指定了查询来源的类型集合？
                     if (pi.Name == item.ColName && !item.ReadOnly && !item.GuideToTargetColumn)
                     {
                         #region 设置下拉类型的值
@@ -2340,9 +2344,385 @@ namespace RUINORERP.UI.UCSourceGrid
                         #endregion
                         break;
                     }
-
                 }
             }
+            #endregion
+
+
+            #region 特殊指定的列以及数据源
+            foreach (SourceGridDefineColumnItem item in dci.ParentGridDefine)
+            {
+                if (pi != null)
+                {
+
+                    //这里设置了查询产品的编辑器。目前条件是目标列，非只读。
+                    //再加一个指定的列名以及指定了查询来源的类型集合？
+                    if (pi.Name == item.ColName && !item.ReadOnly && item.EditorDataSourceCols.ContainsKey(dci.ColName))
+                    {
+                        #region 设置下拉类型的值
+
+                        //如果是主键值类型，有外键关系
+                        if (newcolType.FullName == "System.Int64" && dci.FKRelationCol != null)
+                        {
+                            //用上面通用设置方法 SetComboxEditor ，不需要单独设置
+                            //这里跳过
+                            continue;
+                        }
+
+                        #endregion
+
+
+                        //传入的P是View_prodetail 查询的来源
+                        if (dci.EditorDataSourceCols.ContainsKey(item.ColName))
+                        {
+                            var sttcol = dci.EditorDataSourceCols[item.ColName];
+                            if (sttcol != null)
+                            {
+                                var sourceColName = sttcol.FirstOrDefault(c => c.TargetToColName == item.ColName);
+                                if (sourceColName != null)
+                                {
+                                    _editor = new UI.UCSourceGrid.EditorQuery(sourceColName.SourceColName, pi.PropertyType, dci.CanMuliSelect);
+                                    _editor.AllowNull = true;
+                                    //多选时的处理逻辑
+                                    ((UI.UCSourceGrid.EditorQuery)_editor).OnSelectMultiRowData += delegate (object rows)
+                                    {
+                                        if (rows != null)
+                                        {
+                                            var lastlist = ((IEnumerable<dynamic>)rows).ToList();
+                                            if (lastlist != null && lastlist.Count > 1)
+                                            {
+                                                //多选
+                                                if (OnLoadMultiRowData != null)
+                                                {
+                                                    OnLoadMultiRowData(lastlist, _editor.EditPosition);
+                                                }
+                                            }
+                                        }
+                                    };
+                                    #region 验证值
+                                    _editor.Control.Validating += delegate (object sender, CancelEventArgs cancelEvent)
+                                    {
+                                        if (_editor.EditPosition.Column == -1 && _editor.EditPosition.Row == -1)
+                                        {
+                                            return;
+                                        }
+
+                                        #region 验证值 不成功就弹出 或清空 
+                                        SourceGrid.CellContext currContext = new SourceGrid.CellContext(dci.ParentGridDefine.grid, _editor.EditPosition);
+                                        //注意，这里分两种情况，一种是自动手输的。一种是查询出来的正确值
+                                        DevAgeTextBoxButton sendControl = sender as DevAge.Windows.Forms.DevAgeTextBoxButton;
+                                        //返回的值是 两个，一个是具体的值，另一个是选中的对象集合
+
+
+                                        object val = sendControl.Value;
+                                        if (val == null && _editor.AllowNull)
+                                        {
+                                            cancelEvent.Cancel = false;
+                                            return;
+                                        }
+                                        else
+                                        {
+                                            //没有修改过，有保存焦点进入时的值并且不是选择过来的
+                                            if (currContext.CellRange.Start != new Position(-1, -1) && currContext.Tag != null && sendControl.Tag == null)
+                                            {
+                                                if (currContext.Tag.ToString() == val.ToString())
+                                                {
+                                                    cancelEvent.Cancel = false;
+                                                    return;
+                                                }
+                                            }
+
+                                            //先找到主键，通过主键去找
+                                            SourceGridDefineColumnItem BizKeyCol = dci.ParentGridDefine.CastToList<SourceGridDefineColumnItem>().Where(c => c.IsPrimaryBizKeyColumn).FirstOrDefault();
+                                            //object dcKeyValue = string.Empty;
+                                            //if (BizKeyCol == null)
+                                            //{
+                                            //    throw new Exception("请设置明细表格中的查询对象业务主键列");
+                                            //}
+
+                                            string valValue = val.ToString();
+                                            #region 如果只是点来点去，值没有变化。暂时没有办法得到变化了没有。思路变为：如果当前行数据的产品id存在并且 tag为空时，就不需要重复验证
+                                            if (string.IsNullOrEmpty(valValue))
+                                            {
+                                                return;
+                                            }
+
+                                            #endregion
+
+                                            //TODO这里是否应用缓存？
+                                            object proObj = null;
+                                            #region 选择出来的明细
+                                            if (sendControl.Tag != null)
+                                            {
+                                                var rowlist = ((IEnumerable<dynamic>)sendControl.Tag).ToList();
+                                                if (rowlist.Count == 0)
+                                                {
+                                                    return;
+                                                }
+
+                                                object PObj = rowlist[0];
+                                                var Pvalue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(PObj, sourceColName.SourceColName);
+                                                if (Pvalue.ToString() == valValue)//暂时以字符串来比较
+                                                {
+                                                    proObj = PObj;
+                                                    //TODO
+                                                    //实时改变当前行指定列的下拉值的范围？
+                                                    //找到 KEY VALUE  KEY:是条件，value是目标。比方验证时由产品ID决定BOM显示下拉情况
+                                                    foreach (var col in dci.ParentGridDefine.LimitedConditionsForSelectionRange)
+                                                    {
+                                                        if (col.Value.SugarCol == null)
+                                                        {
+                                                            continue;
+                                                        }
+                                                        if (col.Value.SugarCol.ColumnDataType == null)
+                                                        {
+                                                            continue;
+                                                        }
+
+                                                        if (col.Value.SugarCol.ColumnDataType == "bigint"
+                                                        && col.Value.EditorForColumn is SourceGrid.Cells.Editors.ComboBox)
+                                                        {
+                                                            SourceGrid.Cells.Editors.ComboBox cmbList = col.Value.EditorForColumn as SourceGrid.Cells.Editors.ComboBox;
+                                                            //如果有列的特殊设置。则将数据源重新设置
+                                                            //手动构造
+                                                            var limitedValue = ReflectionHelper.GetPropertyValue(PObj, col.Key.ColName);
+
+                                                            #region  实时修改下拉列表的值
+
+                                                            string tableName = col.Value.FKRelationCol.FKTableName;
+                                                            string typeName = "RUINORERP.Model." + tableName;
+
+                                                            if (CacheHelper.Manager.NewTableList.ContainsKey(tableName))
+                                                            {
+                                                                string ColID = CacheHelper.Manager.NewTableList[tableName].Key;
+                                                                string ColName = CacheHelper.Manager.NewTableList[tableName].Value;
+                                                                BindingSource bs = new BindingSource();
+                                                                var objlist = CacheHelper.Manager.CacheEntityList.Get(tableName);
+                                                                if (objlist != null)
+                                                                {
+                                                                    var Oldlist = ((IEnumerable<dynamic>)objlist).ToList();
+                                                                    //限制范围 https://www.cnblogs.com/zhanglb163/p/12839040.html
+
+                                                                    //性能最好
+                                                                    // var tlist = Oldlist.Where(m => m.ProdDetailID == limitedValue.ToLong()).ToList();
+
+                                                                    //性能其次 但是Model是明细类是动态的。
+                                                                    //var lambda = DynamicExpression.ParseLambda<Model, bool>("name.StartsWith(@0)", "1");
+                                                                    //var fun = expfun.Compile();
+                                                                    //list.Where(s => fun(s)).ToList();
+
+                                                                    //性能最差
+                                                                    //var tlist = Oldlist.AsQueryable().Where(col.Value.ColName + "==@0", 1742079575489384449).ToList();
+
+
+                                                                    var tlist = Oldlist;
+
+                                                                    //下面是动态查询,但是硬编码才性能最好。并且代码可行。所以这种由
+                                                                    //一个列的内容决定另一个列的内容。但是条件中，注意对应字段是否存在另一个集合中，
+                                                                    //有时，外键字段可能不存在另一个集合中。因为名称改了。如 单位，与单位换算中的单位ID就不一样。
+                                                                    //条件是业务主键时
+                                                                    //动态决定下拉值。有两种情况。一种是验证时。这时通过产品明细ID来限制。或其它字段。
+                                                                    //另一种是实时修改时,用selectIndex?
+                                                                    switch (col.Key.ColName)
+                                                                    {
+                                                                        case "ProdDetailID":
+                                                                            tlist = Oldlist.Where(m => m.ProdDetailID == limitedValue.ToLong()).ToList();
+                                                                            break;
+                                                                            //case "Unit_ID"://特别写列。反正这里是硬编码 Unit_ID 在换算表中是指向 Source_unit_id
+                                                                            //    tlist = Oldlist.Where(m => m.Source_unit_id == limitedValue.ToLong()).ToList();
+                                                                            break;
+                                                                        default:
+                                                                            //throw new Exception("请实现限制时：" + col.Key.ColName + "的动态查询");
+                                                                            break;
+                                                                    }
+
+
+                                                                    List<string> ids = new List<string>();
+                                                                    ConcurrentDictionary<string, string> names = new ConcurrentDictionary<string, string>();
+                                                                    foreach (var titem in tlist)
+                                                                    {
+                                                                        string id = ReflectionHelper.GetPropertyValue(titem, ColID).ToString();
+                                                                        ids.Add(id.ToString());
+                                                                        names.TryAdd(id, ReflectionHelper.GetPropertyValue(titem, ColName).ToString());
+                                                                    }
+
+
+                                                                    //这个要写在绑定验证的前面。这样会指定下拉列表的值
+                                                                    cmbList.StandardValues = ids.ToArray();
+
+                                                                    DevAge.ComponentModel.Validator.ComboxValueMapping comboMapping = new DevAge.ComponentModel.Validator.ComboxValueMapping(true);
+                                                                    comboMapping.ValueList = names;
+                                                                    comboMapping.DisplayStringList = ids;
+
+                                                                    //先解绑验证。不然会多次执行。因为开始就有绑定
+                                                                    comboMapping.UnBindValidator(cmbList);
+                                                                    comboMapping.BindValidator(cmbList);
+
+
+                                                                    #region  添加自动完成功能 智能提示功能
+
+                                                                    AutoCompleteStringCollection autoscList = new AutoCompleteStringCollection();
+                                                                    foreach (var nameitem in names)
+                                                                    {
+                                                                        autoscList.Add(nameitem.Value);
+                                                                    }
+                                                                    DevAge.Windows.Forms.DevAgeComboBox cmb = (DevAge.Windows.Forms.DevAgeComboBox)cmbList.Control;
+                                                                    //cmb.BeginUpdate();
+                                                                    //cmb.DisplayMember = DisplayMember;
+                                                                    //cmb.ValueMember = ValueMember;
+                                                                    //cmb.DataSource = names;
+                                                                    cmb.DropDownStyle = ComboBoxStyle.DropDown;
+                                                                    cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+                                                                    cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
+                                                                    cmb.AutoCompleteCustomSource = autoscList;
+                                                                    //cmb.EndUpdate();
+                                                                    #endregion
+
+
+
+                                                                }
+                                                            }
+
+                                                            #endregion
+                                                        }
+                                                    }
+
+
+
+                                                }
+                                            }
+                                            #endregion
+
+                                            #region 手动输入的
+                                            if (sendControl.Tag == null)
+                                            {
+                                                foreach (var Source in dci.ParentGridDefine.SourceList)
+                                                {
+                                                    var Pvalue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(Source, sourceColName.SourceColName);
+                                                    if (Pvalue.ToString() == valValue)//暂时以字符串来比较
+                                                    {
+                                                        proObj = Source;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            #endregion
+
+
+                                            if (proObj != null)
+                                            {
+                                                sendControl.Tag = null;
+                                                foreach (var col in sttcol)
+                                                {
+                                                    var coltarget = dci.ParentGridDefine[col.TargetToColName];
+                                                    int colIndex = coltarget.ColIndex;
+                                                    Position position = new Position(_editor.EditPosition.Row, colIndex);
+                                                    SetCellValueOnlySelf(coltarget, col.SourceColName, col.TargetToColName, position, proObj);
+                                                }
+
+                                                #region 关联列的赋值处理 ,特殊情况具体调用时实现 
+
+                                                //多选
+                                                //if (OnLoadRelevantFields != null && _editor.EditPosition.Column != -1 && _editor.EditPosition.Row != -1)
+                                                //{
+                                                //    OnLoadRelevantFields(proObj, dci.ParentGridDefine.grid[_editor.EditPosition].Row.RowData, dci.ParentGridDefine, _editor.EditPosition);
+                                                //}
+
+                                                #endregion
+
+                                                currContext.EndEdit(false);
+                                                //清空
+                                                proObj = null;
+                                            }
+                                            else
+                                            {
+                                                MainForm.Instance.uclog.AddLog("提示", "产品信息不存在。请重新打开程序重试。");
+                                                sendControl.TextBox.SelectAll();
+                                                using (QueryFormGeneric dg = new QueryFormGeneric())
+                                                {
+                                                    dg.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+                                                    dg.prodQuery.QueryField = sourceColName.SourceColName;
+                                                    //设置一下默认仓库，思路是，首先保存了主表的数据对象，然后拿到主表的仓库字段
+                                                    //这里是不是可以设置为事件来驱动,的并且可以指定字段
+                                                    Expression<Func<View_ProdDetail, object>> warehouse = x => x.Location_ID;
+                                                    if (dci.ParentGridDefine.DefineColumns.FirstOrDefault(c => c.ColName == warehouse.GetMemberInfo().Name) != null)
+                                                    {
+                                                        if (dci.ParentGridDefine.GridData != null)
+                                                        {
+                                                            dg.prodQuery.LocationID = dci.ParentGridDefine.GridData.GetPropertyValue(warehouse.GetMemberInfo().Name).ToLong();
+                                                        }
+
+                                                    }
+
+                                                    if (dg.ShowDialog() == DialogResult.OK)
+                                                    {
+                                                        sendControl.Tag = dg.prodQuery.QueryObjects;
+                                                        sendControl.Value = dg.prodQuery.QueryValue;
+                                                    }
+                                                    else
+                                                    {
+                                                        cancelEvent.Cancel = false;
+                                                        sendControl.TextBox.Text = string.Empty;
+                                                        //清空关联的UI上的值，即就是用产品详情带出来的值
+                                                        dci.ParentGridDefine.SetDependTargetValue(null, _editor.EditPosition, null, dci.ColName);
+                                                        return;
+                                                    }
+                                                }
+                                                cancelEvent.Cancel = true;
+                                            }
+                                        }
+                                        #endregion
+                                    };
+
+                                    _editor.Control.KeyDown += delegate (object sender, KeyEventArgs e)
+                                    {
+                                        #region 编辑时的键盘事件
+                                        SourceGrid.CellContext currContext = new SourceGrid.CellContext(dci.ParentGridDefine.grid, _editor.EditPosition);
+                                        currContext.EndEdit(false);
+                                        //sendControl.Button.Visible = false;
+                                        /*
+                                          Position pt = new Position(sender.Position.Row, sender.Position.Column);
+                                          if (e.KeyCode == Keys.Up)
+                                          {
+                                              pt = new Position(sender.Position.Row - 1, sender.Position.Column);
+                                              sender.Grid.Selection.Focus(pt, false);
+                                              e.Handled = true;
+                                          }
+                                          if (e.KeyCode == Keys.Down)
+                                          {
+                                              pt = new Position(sender.Position.Row + 1, sender.Position.Column);
+                                              sender.Grid.Selection.Focus(pt, false);
+                                              e.Handled = true;
+                                          }
+                                          if (e.KeyCode == Keys.Left)
+                                          {
+                                              pt = new Position(sender.Position.Row, sender.Position.Column - 1);
+                                              sender.Grid.Selection.Focus(pt, false);
+                                              e.Handled = true;
+                                          }
+                                          if (e.KeyCode == Keys.Right)
+                                          {
+                                              pt = new Position(sender.Position.Row, sender.Position.Column + 1);
+                                              sender.Grid.Selection.Focus(pt, false);
+                                              e.Handled = true;
+                                          }*/
+                                        #endregion
+                                    };
+
+                                    #endregion
+                                }
+
+                            }
+                        }
+
+
+
+                        break;
+                    }
+                }
+            }
+
+            #endregion
 
             //==
             _editor.EditableMode = dci.EditableMode;
@@ -2353,6 +2733,8 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             dci.ParentGridDefine.ColEditors.Add(new KeyValuePair<string, EditorBase>(dci.ColName, _editor));
             dci.EditorForColumn = _editor;
+
+
 
             return _editor;
         }
@@ -3071,6 +3453,111 @@ namespace RUINORERP.UI.UCSourceGrid
 
             }
         }
+
+        /// <summary>
+        /// 设置单元格的值,不包含关联的值
+        /// </summary>
+        /// <param name="dc">指定列</param>
+        /// <param name="p"></param>
+        /// <param name="rowObj"></param>
+        /// <param name="isbatch"></param>
+        /// <param name="isOnlyPointColumn">是否只设置指定列的值</param>
+        public void SetCellValueOnlySelf(SourceGridDefineColumnItem dc, string formColName, string toColName, SourceGrid.Position p, object rowObj)
+        {
+            if (p.Column == -1 || p.Row == -1)
+            {
+                return;
+            }
+            SourceGridDefine sgdefine = dc.ParentGridDefine;
+            #region 目标列要修改对应的绑定数据对象
+
+            if (sgdefine.grid.Rows[p.Row].RowData != null)
+            {
+                //设置目标的绑定数据值，就是产品ID
+                SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, dc.ColIndex));
+
+                var currentObj = sgdefine.grid.Rows[p.Row].RowData;
+                var cellOldValue = ReflectionHelper.GetPropertyValue(currentObj, toColName);
+                var cellNewValue = ReflectionHelper.GetPropertyValue(rowObj, formColName);
+
+                if (cellNewValue != null && cellNewValue.IsNotEmptyOrNull() && !cellOldValue.Equals(cellNewValue))
+                {
+                    sgdefine.grid[p.Row, dc.ColIndex].Value = cellNewValue;
+                    sgdefine.grid.Rows[p.Row].RowData.SetPropertyValue(toColName, cellNewValue);
+                    switch (dc.CustomFormat)
+                    {
+                        case CustomFormatType.DefaultFormat:
+                            break;
+                        case CustomFormatType.PercentFormat:
+                            decimal pf = decimal.Parse(cellNewValue.ToString());
+                            sgdefine.grid[p.Row, dc.ColIndex].Value = pf;
+                            break;
+                        case CustomFormatType.CurrencyFormat:
+                            decimal cf = decimal.Parse(cellNewValue.ToString());
+                            sgdefine.grid[p.Row, dc.ColIndex].Value = cf;
+                            break;
+                        case CustomFormatType.DecimalPrecision:
+                            break;
+                        case CustomFormatType.Bool:
+                            bool bl = cellNewValue.ToBool();
+                            if (bl == true)
+                            {
+                                sgdefine.grid[p.Row, dc.ColIndex].DisplayText = "是";
+                            }
+                            else
+                            {
+                                sgdefine.grid[p.Row, dc.ColIndex].DisplayText = "否";
+                            }
+                            break;
+                        case CustomFormatType.Image:
+
+                            break;
+                        case CustomFormatType.WebPathImage:
+
+                            break;
+                        default:
+                            break;
+                    }
+
+                }
+
+                ///默认值处理
+                if (dc.DefaultValue != null && dc.GuideToTargetColumn)
+                {
+                    var setcurrentObj = sgdefine.grid.Rows[p.Row].RowData;
+                    //如果值是空的，就给默认值，时间要特殊处理
+                    if (setcurrentObj != null && setcurrentObj.GetType().GetProperty(dc.ColName) == null)
+                    {
+                        ReflectionHelper.SetPropertyValue(setcurrentObj, dc.ColName, dc.DefaultValue);
+                    }
+                    if (setcurrentObj != null && setcurrentObj.GetType().GetProperty(dc.ColName) != null)
+                    {
+                        //时间为默认值的情况，格式不带时间
+                        if (dc.ColPropertyInfo.PropertyType == typeof(DateTime))
+                        {
+                            if (setcurrentObj.GetPropertyValue(dc.ColName).ToDateTime().Year == 1)
+                            {
+                                ReflectionHelper.SetPropertyValue(setcurrentObj, dc.ColName, dc.DefaultValue);
+                            }
+                            sgdefine.grid[p.Row, dc.ColIndex].DisplayText = string.Format("{0:yyyy-MM-dd}", dc.DefaultValue);
+                        }
+
+                    }
+
+                    if (dc.CustomFormat == CustomFormatType.CurrencyFormat)
+                    {
+                        sgdefine.grid[p.Row, dc.ColIndex].DisplayText = string.Format("{0:C}", dc.DefaultValue);
+                    }
+                    sgdefine.grid[p.Row, dc.ColIndex].Value = dc.DefaultValue;
+                }
+
+            }
+
+            #endregion
+
+
+        }
+
 
 
         /// <summary>

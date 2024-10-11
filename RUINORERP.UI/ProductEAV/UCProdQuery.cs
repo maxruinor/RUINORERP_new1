@@ -76,7 +76,7 @@ namespace RUINORERP.UI.ProductEAV
         /// 每个列表对应的值 ，单独设置
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ColNameDataDictionary { get => _DataDictionary; set => _DataDictionary = value; }
-
+        public bool CanMultiSelect { get; set; } = true;
         public UCProdQuery()
         {
             InitializeComponent();
@@ -735,7 +735,7 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         public bool MultipleChoices { get; set; } = false;
 
-
+       
         //改版
         //返回值将单个值对象等，改为数组
         public object QueryValue { get => _queryValue; set => _queryValue = value; }
@@ -783,6 +783,14 @@ namespace RUINORERP.UI.ProductEAV
 
             kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.Hide;
             chkMultiSelect.Checked = MultipleChoices;
+            if (!CanMultiSelect)
+            {
+                chkMultiSelect.Visible = false;
+            }
+            else
+            {
+                chkMultiSelect.Visible = true;
+            }
             newSumDataGridView产品.MultiSelect = MultipleChoices;
             newSumDataGridView产品.UseSelectedColumn = MultipleChoices;
 

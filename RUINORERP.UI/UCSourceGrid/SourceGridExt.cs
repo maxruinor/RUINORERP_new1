@@ -1,4 +1,5 @@
-﻿using RUINORERP.Common.Extensions;
+﻿using NPOI.SS.Formula.Functions;
+using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global.Model;
 using RUINORERP.UI.Common;
@@ -19,7 +20,6 @@ namespace RUINORERP.UI.UCSourceGrid
     /// </summary>
     public static partial class SourceGridExt
     {
-
         /// <summary>
         /// 指定永远不可见的列 但是这个列不能少，是产品明细主键。决定业务数据用的
         /// </summary>
@@ -58,7 +58,25 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
+        public static void SetCol_CanMuliSelect<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, bool CanMuliSelect)
+        {
+            MemberInfo minfo = colNameExp.GetMemberInfo();
+            foreach (var item in cols)
+            {
+                if (item.BelongingObjectType.Name == typeof(T).Name)
+                {
+                    item.SetCol_CanMuliSelect(minfo.Name, typeof(T), CanMuliSelect);
+                }
+            }
+        }
 
+        public static void SetCol_CanMuliSelect(this SourceGridDefineColumnItem col, string colName, Type BelongingObjectType, bool CanMuliSelect)
+        {
+            if (col.ColName == colName && col.BelongingObjectType == BelongingObjectType)
+            {
+                col.CanMuliSelect = CanMuliSelect;
+            }
+        }
 
         public static void SetCol_NeverVisible(this SourceGridDefineColumnItem col, string colName, Type BelongingObjectType)
         {
@@ -834,8 +852,65 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
+        /// <summary>
+        /// 设置列的编辑器数据源 ,目前框架支持的是默认的产品主要部分，并且是目标列存在于公共产品部分的就会显示查询。这里手动可以指定
+        /// </summary>
+        public static void SetCol_EditorDataSource<Source, Target>(this List<SourceGridDefineColumnItem> cols,
+            Expression<Func<Target, object>> colNameTargetExp, List<SourceToTargetMatchCol> sourceToTargetMatches)
+        {
+            MemberInfo minfoTarget = colNameTargetExp.GetMemberInfo();
+            foreach (var item in cols)
+            {
+                if (item.BelongingObjectType.Name != typeof(Target).Name)
+                {
+                    continue;
+                }
+                else
+                {
+                    item.SetCol_EditorDataSource(minfoTarget.Name, sourceToTargetMatches);
+                }
+            }
+        }
 
 
+        public static void SetCol_EditorDataSource(this SourceGridDefineColumnItem col, string colTargetName, List<SourceToTargetMatchCol> sourceToTargetMatches)
+        {
+            if (col.ColName == colTargetName)
+            {
+                if (col.EditorDataSourceCols == null)
+                {
+                    col.EditorDataSourceCols = new ConcurrentDictionary<string, List<SourceToTargetMatchCol>>();
+                }
+
+                List<SourceToTargetMatchCol> existingTypeList = sourceToTargetMatches;
+                // 检查字典中是否已经包含这个键
+                if (!col.EditorDataSourceCols.TryGetValue(colTargetName, out existingTypeList))
+                {
+                    // 键不存在，添加新键值对
+                    bool added = col.EditorDataSourceCols.TryAdd(colTargetName, sourceToTargetMatches);
+                    if (added)
+                    {
+                        //  Console.WriteLine("新数据添加成功。");
+                    }
+                }
+                else
+                {
+                    col.EditorDataSourceCols.TryUpdate(colTargetName, existingTypeList, sourceToTargetMatches);
+                }
+            }
+        }
+
+
+        public static void SetSourceToTargetMatchCol<Source, Target>(this List<SourceToTargetMatchCol> cols,
+        Expression<Func<Source, object>> colNameSourceExp, Expression<Func<Target, object>> colNameTargetExp)
+        {
+            SourceToTargetMatchCol col = new SourceToTargetMatchCol();
+            col = col.GetSourceToTargetMatchCol<Source, Target>(colNameSourceExp, colNameTargetExp);
+            if (!cols.Contains(col))
+            {
+                cols.Add(col);
+            }
+        }
 
     }
 }

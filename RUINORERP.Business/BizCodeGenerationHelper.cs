@@ -280,6 +280,9 @@ namespace RUINORERP.Business
                 case BizType.归还单://Production Requisition Document
                     rule = "{S:GH}{D:yyMMdd}{redis:{S:GH}{D:yyMM}/000}";
                     break;
+                case BizType.产品转换单://Production Requisition Document
+                    rule = "{S:ZH}{D:yyMMdd}{redis:{S:ZH}{D:yyMM}/000}";
+                    break;
                 default:
 
                     break;

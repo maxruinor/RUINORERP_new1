@@ -46,11 +46,11 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOut>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
-            
+
             base.toolStripButton结案.Visible = true;
         }
 
-     
+
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -168,7 +168,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                 
+
                 }
 
 
@@ -339,7 +339,7 @@ namespace RUINORERP.UI.PSI.SAL
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
-           
+
         }
 
         private void Sgh_OnCalculateColumnValue(object rowObj, SourceGridDefine griddefine, SourceGrid.Position Position)
@@ -424,12 +424,51 @@ namespace RUINORERP.UI.PSI.SAL
                 //}
 
                 EditEntity.tb_SaleOutDetails = details;
-                if (EditEntity.tb_SaleOutDetails == null || EditEntity.tb_SaleOutDetails.Count == 0)
+                if (NeedValidated && (EditEntity.tb_SaleOutDetails == null || EditEntity.tb_SaleOutDetails.Count == 0))
                 {
                     MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
                     return false;
                 }
 
+                //如果所有数据都出库。金额也要一致。否则提醒
+                if (NeedValidated && EditEntity.tb_saleorder != null)
+                {
+                    if (EditEntity.TotalQty == EditEntity.tb_saleorder.TotalQty && EditEntity.TotalAmount != EditEntity.tb_saleorder.TotalAmount)
+                    {
+                        MessageBox.Show("出库总金额与订单总金额据不一致，请检查数据后再试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
+
+                //如果没有有效的明细。直接提示
+                if (NeedValidated && details.Count == 0)
+                {
+                    MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+                if (NeedValidated && (EditEntity.TotalQty == 0 || detailentity.Sum(c => c.Quantity) == 0))
+                {
+                    MessageBox.Show("单据及明细总数量不为能0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+                if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))
+                {
+                    MessageBox.Show($"单据总数量{EditEntity.TotalQty}和明细总数量{detailentity.Sum(c => c.Quantity)}不相同，请检查后再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
+                if (NeedValidated && (EditEntity.TotalAmount == 0 || detailentity.Sum(c => c.TransactionPrice * c.Quantity) == 0))
+                {
+                    if (MessageBox.Show("单据总金额或明细总金额为零，你确定吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                    {
+                        return false;
+                    }
+                }
+                if (NeedValidated && (EditEntity.TotalAmount != detailentity.Sum(c => c.TransactionPrice * c.Quantity)))
+                {
+                    MessageBox.Show("单据总金额与明细总金额不相等！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -451,11 +490,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     EditEntity.Employee_ID = null;
                 }
-                ////计算总金额
-                //decimal? totalMoney = details.Sum(r => r.Quantity * r.TransactionPrice);
-                //EditEntity.TotalAmount = totalMoney.Value;
-                //EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
-
+                
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))
@@ -796,6 +831,8 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+
+            entity.tb_saleorder = saleorder;
             BusinessHelper.Instance.InitEntity(entity);
             ActionStatus actionStatus = ActionStatus.无操作;
             BindData(entity, actionStatus);

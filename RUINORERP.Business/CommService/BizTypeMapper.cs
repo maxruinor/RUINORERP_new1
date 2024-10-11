@@ -56,7 +56,7 @@ namespace RUINORERP.Business.CommService
             Mapping.Add(BizType.产品分割单, typeof(tb_ProdSplit));
             Mapping.Add(BizType.套装组合, typeof(tb_ProdBundle));
             Mapping.Add(BizType.包装信息, typeof(tb_Packing));
-
+            Mapping.Add(BizType.产品转换单, typeof(tb_ProdConversion));
             //mapping.Add(BizType.退料单, typeof(tb_Return));
 
             // 省略其他枚举值与表名的对应关系

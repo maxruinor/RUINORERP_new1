@@ -38,6 +38,11 @@ namespace RUINORERP.UI.UCSourceGrid
         public ConcurrentDictionary<string, List<RelatedColumnParameter>> RelatedCols = new ConcurrentDictionary<string, List<RelatedColumnParameter>>();
 
         /// <summary>
+        /// 保存要手动设置编辑器查询的数据源的列
+        /// </summary>
+        public ConcurrentDictionary<string, List<SourceToTargetMatchCol>> EditorDataSourceCols = new ConcurrentDictionary<string, List<SourceToTargetMatchCol>>();
+
+        /// <summary>
         /// 识别是否为主要的目标列  标识列,只有一个列是主键
         /// </summary>
         public bool IsPrimaryBizKeyColumn { get; set; }
@@ -158,6 +163,9 @@ namespace RUINORERP.UI.UCSourceGrid
         public bool multi;
         private bool summary = false;
         public bool upper = false;
+
+
+        public bool CanMuliSelect { get; set; } = true;
 
         private bool neverVisible = false;
 

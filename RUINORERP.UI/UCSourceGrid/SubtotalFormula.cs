@@ -1,4 +1,5 @@
-﻿using SourceGrid.Conditions;
+﻿using AutoMapper.Internal;
+using SourceGrid.Conditions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -356,5 +357,6 @@ namespace RUINORERP.UI.UCSourceGrid
         Type _fkTableType;
         public Type FkTableType { get => _fkTableType; set => _fkTableType = value; }
     }
+
 
 }

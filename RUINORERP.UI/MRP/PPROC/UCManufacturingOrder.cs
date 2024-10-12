@@ -373,7 +373,7 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_ReadOnly<tb_ManufacturingOrderDetail>(c => c.CurrentIinventory);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.ActualSentQty);
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.ShouldSendQty);
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.ActualSentQty);

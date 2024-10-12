@@ -264,7 +264,7 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_ReadOnly<tb_MaterialReturnDetail>(c => c.Cost);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
 
 
             listCols.SetCol_Summary<tb_MaterialReturnDetail>(c => c.Quantity);

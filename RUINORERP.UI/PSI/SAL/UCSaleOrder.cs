@@ -377,7 +377,7 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_SaleOrderDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
 
 
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);//-->成交价是结果列

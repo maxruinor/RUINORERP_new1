@@ -362,7 +362,7 @@ namespace RUINORERP.UI.PSI.INV
             }
             */
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
             //要放到初始化sgd后面
             listCols.SetCol_Summary<tb_ProdMergeDetail>(c => c.Qty);
 

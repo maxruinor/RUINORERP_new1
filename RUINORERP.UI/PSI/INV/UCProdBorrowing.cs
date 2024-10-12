@@ -251,7 +251,7 @@ namespace RUINORERP.UI.PSI.INV
 
 
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
             listCols.SetCol_Summary<tb_ProdBorrowingDetail>(c => c.Qty);
             listCols.SetCol_Formula<tb_ProdBorrowingDetail>((a, b) => a.Cost * b.Qty, c => c.SubtotalCostAmount);
             listCols.SetCol_Formula<tb_ProdBorrowingDetail>((a, b) => a.Price * b.Qty, c => c.SubtotalPirceAmount);

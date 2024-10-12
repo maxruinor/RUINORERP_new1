@@ -33,8 +33,8 @@
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.kryptonPanelbtusArea = new Krypton.Toolkit.KryptonPanel();
             this.flowLayoutPanelButtonsArea = new System.Windows.Forms.FlowLayoutPanel();
+            this.kryptonPanelbtusArea = new Krypton.Toolkit.KryptonPanel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelbtusArea)).BeginInit();
@@ -47,7 +47,7 @@
             0,
             0,
             0});
-            this.QueryShowColQty.Location = new System.Drawing.Point(161, 118);
+            this.QueryShowColQty.Location = new System.Drawing.Point(161, 12);
             this.QueryShowColQty.Maximum = new decimal(new int[] {
             10,
             0,
@@ -71,7 +71,7 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(25, 119);
+            this.kryptonLabel1.Location = new System.Drawing.Point(25, 13);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(130, 20);
             this.kryptonLabel1.TabIndex = 1;
@@ -110,19 +110,19 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(632, 635);
             this.kryptonPanel1.TabIndex = 14;
             // 
+            // flowLayoutPanelButtonsArea
+            // 
+            this.flowLayoutPanelButtonsArea.Location = new System.Drawing.Point(29, 70);
+            this.flowLayoutPanelButtonsArea.Name = "flowLayoutPanelButtonsArea";
+            this.flowLayoutPanelButtonsArea.Size = new System.Drawing.Size(200, 325);
+            this.flowLayoutPanelButtonsArea.TabIndex = 15;
+            // 
             // kryptonPanelbtusArea
             // 
             this.kryptonPanelbtusArea.Location = new System.Drawing.Point(349, 21);
             this.kryptonPanelbtusArea.Name = "kryptonPanelbtusArea";
             this.kryptonPanelbtusArea.Size = new System.Drawing.Size(247, 191);
             this.kryptonPanelbtusArea.TabIndex = 14;
-            // 
-            // flowLayoutPanelButtonsArea
-            // 
-            this.flowLayoutPanelButtonsArea.Location = new System.Drawing.Point(29, 178);
-            this.flowLayoutPanelButtonsArea.Name = "flowLayoutPanelButtonsArea";
-            this.flowLayoutPanelButtonsArea.Size = new System.Drawing.Size(200, 168);
-            this.flowLayoutPanelButtonsArea.TabIndex = 15;
             // 
             // frmMenuPersonalization
             // 
@@ -133,7 +133,7 @@
             this.ClientSize = new System.Drawing.Size(632, 635);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "frmMenuPersonalization";
-            this.Text = "菜单个性化设置";
+            this.Text = "查询条件设置";
             this.Load += new System.EventHandler(this.frmMenuPersonalization_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);

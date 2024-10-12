@@ -372,7 +372,7 @@ namespace RUINORERP.UI.ProductEAV
             listCols1.SetCol_ReadOnly<tb_PackingDetail>(c => c.PackDetail_ID);
             listCols1.SetCol_ReadOnly<tb_PackingDetail>(c => c.property);
             sgd1 = new SourceGridDefine(grid1, listCols1, true);
-            sgd1.GridData = EditEntity;
+            sgd1.GridMasterData = EditEntity;
 
 
             listCols1.SetCol_Summary<tb_PackingDetail>(c => c.Quantity);

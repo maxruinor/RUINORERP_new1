@@ -1,4 +1,7 @@
-﻿using RUINORERP.Common.Extensions;
+﻿using Netron.GraphLib;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Model;
+using RUINORERP.UI.Common;
 using RUINORERP.UI.ToolForm;
 using RUINORERP.UI.UControls;
 using SourceGrid;
@@ -14,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Winista.Text.HtmlParser.Data;
+using static RUINORERP.UI.Log.UClog;
 using Color = System.Drawing.Color;
 
 namespace RUINORERP.UI.UCSourceGrid
@@ -276,6 +280,30 @@ namespace RUINORERP.UI.UCSourceGrid
     public class PopupMenuForRowHeader : SourceGrid.Cells.Controllers.ControllerBase
     {
         private Grid grid;
+
+        #region 应用于转换单
+
+        public delegate tb_ProdConversion GetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine);
+
+        /// <summary>
+        /// 针对特殊情况下的右键菜单，如替换出库。转换出库等
+        /// 
+        /// </summary>
+        public event GetTransferDataHandler OnGetTransferDataHandler;
+
+        public delegate void TransferMenuHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine);
+
+        /// <summary>
+        /// 针对特殊情况下的右键菜单，如替换出库。转换出库等
+        /// 
+        /// </summary>
+        public event TransferMenuHandler OnTransferMenuHandler;
+
+        #endregion
+
+
+        MenuPowerHelper menuPowerHelper;
+
         public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SourceGridDefineColumnItem> kv);
         /// <summary>
         /// 验证行数据
@@ -290,15 +318,52 @@ namespace RUINORERP.UI.UCSourceGrid
         SourceGridDefine sgdefine;
         public PopupMenuForRowHeader(int addRowIndex, Grid _grid, SourceGridDefine _sgdefine)
         {
-            MyMenu.ShowCheckMargin = true;
+            MyMenu.ShowCheckMargin = false;
+            MyMenu.ShowImageMargin = false;
+            MyMenu.MinimumSize = new Size(100, 0); // 设置最小宽度为 120，高度不限
             //ToolStripSeparator ss = new ToolStripSeparator();
             //MyMenu.Items.Add(ss);
             ToolStripMenuItem siCustom = new ToolStripMenuItem("删除行【" + addRowIndex + "】");
             siCustom.Tag = addRowIndex;
             siCustom.Click += SiCustom_Click;
             MyMenu.Items.Add(siCustom);
+
+
+            ToolStripMenuItem tsMiTransfer = new ToolStripMenuItem("转换出库【" + addRowIndex + "】");
+            tsMiTransfer.Tag = addRowIndex;
+            tsMiTransfer.Size = new System.Drawing.Size(153, 26);
+            tsMiTransfer.Click += tsMiTransfer_Click;
+            MyMenu.Items.Add(tsMiTransfer);
+
             grid = _grid;
             sgdefine = _sgdefine;
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+        }
+        private void tsMiTransfer_Click(object sender, EventArgs e)
+        {
+            //先得选择的行。再取当前选中的行数据，再传入到转换单UI
+            System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
+            int RowIndex = int.Parse(item.Tag.ToString());
+            var rowObj = grid.Rows[RowIndex].RowData;
+            tb_MenuInfo RelatedMenuInfo = null;
+            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_ProdConversion)
+            && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+            tb_ProdConversion prodConversion = new tb_ProdConversion();
+            prodConversion.tb_ProdConversionDetails = new List<tb_ProdConversionDetail>();
+            if (OnGetTransferDataHandler != null)
+            {
+                var result = OnGetTransferDataHandler(item, rowObj, sgdefine);
+                if (result != null)
+                {
+                    prodConversion = result;
+                }
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog("没有找到具体的转换单数据，只提供默认数据。");
+            }
+
+            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, prodConversion);
         }
 
         private void SiCustom_Click(object sender, EventArgs e)
@@ -458,9 +523,18 @@ namespace RUINORERP.UI.UCSourceGrid
         public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
         {
             base.OnMouseUp(sender, e);
-
+            //这里判断右键显示的情况
             if (e.Button == MouseButtons.Right)
+            {
+                //默认不显示。只是要的时候业务UI处理显示
+                MyMenu.Items[1].Visible = false;
+                if (OnTransferMenuHandler != null)
+                {
+                    OnTransferMenuHandler(MyMenu.Items[1], sender.Tag, sgdefine);
+                }
                 MyMenu.Show(sender.Grid, new Point(e.X, e.Y));
+            }
+
         }
 
     }
@@ -613,7 +687,9 @@ namespace RUINORERP.UI.UCSourceGrid
         SourceGridDefine sgdefine;
         public PopupMenuForDeleteSelect(Grid _grid, SourceGridDefine _sgdefine)
         {
-            MyMenu.ShowCheckMargin = true;
+            MyMenu.ShowCheckMargin = false;
+            MyMenu.ShowImageMargin = false;
+            MyMenu.MinimumSize = new Size(100, 0); // 设置最小宽度为 120，高度不限
 
             ToolStripMenuItem tsDeleteSelect = new ToolStripMenuItem("删除选中行");
             tsDeleteSelect.Name = "删除选中行";
@@ -812,7 +888,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-      
+
 
         private void MyMenu_Opening(object sender, CancelEventArgs e)
         {
@@ -842,17 +918,17 @@ namespace RUINORERP.UI.UCSourceGrid
                         SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                         if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
                         {
-                            rs= true;
+                            rs = true;
                         }
                         else
                         {
-                            rs= false;
+                            rs = false;
                         }
                     }
                 }
 
             }
-            return rs;  
+            return rs;
         }
 
     }

@@ -13,6 +13,9 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.UserCenter
 {
+    /// <summary>
+    /// QueryConditionSettings  查询条件设置，可以设置显示行数。条件排序，条件的默认值。条件显示情况
+    /// </summary>
     public partial class frmMenuPersonalization : KryptonForm
     {
         public frmMenuPersonalization()

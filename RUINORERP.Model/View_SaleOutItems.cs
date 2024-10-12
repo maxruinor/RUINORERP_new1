@@ -142,6 +142,26 @@ namespace RUINORERP.Model
                 }
         }
 
+
+        private long? _ProjectGroup_ID;
+
+        /// <summary>
+        /// 项目组
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID", ColDesc = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProjectGroup_ID", IsNullable = true, ColumnDescription = "项目组")]
+        [Display(Name = "项目组")]
+        public long? ProjectGroup_ID
+        {
+            get { return _ProjectGroup_ID; }
+            set
+            {
+                SetProperty(ref _ProjectGroup_ID, value);
+            }
+        }
+
+
         private DateTime? _OutDate;
         
         
@@ -667,13 +687,29 @@ namespace RUINORERP.Model
         }
 
 
+        private long? _DepartmentID;
+
+        /// <summary>
+        /// 部门
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "DepartmentID", ColDesc = "部门")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "DepartmentID", IsNullable = true, ColumnDescription = "部门")]
+        [Display(Name = "部门")]
+        public long? DepartmentID
+        {
+            get { return _DepartmentID; }
+            set
+            {
+                SetProperty(ref _DepartmentID, value);
+            }
+        }
 
 
 
 
-
-//如果为false,则不可以。
-private bool PK_FK_ID_Check()
+        //如果为false,则不可以。
+        private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;

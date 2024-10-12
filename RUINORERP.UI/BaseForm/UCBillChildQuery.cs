@@ -23,7 +23,6 @@ namespace RUINORERP.UI.BaseForm
             newSumDataGridViewChild.CellFormatting += DataGridView1_CellFormatting;
         }
 
-
         private void UCBillChildQuery_Load(object sender, EventArgs e)
         {
             newSumDataGridViewChild.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;

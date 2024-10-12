@@ -1123,8 +1123,8 @@ namespace RUINORERP.UI.ProductEAV
             fs.Read(buffByte, 0, (int)fs.Length);
             fs.Close();
             fs = null;
-            // 判断图片大小是否超过 500KB
-            if (buffByte.Length > 500 * 1024)
+            // 判断图片大小是否超过 200KB
+            if (buffByte.Length > 200 * 1024)
             {
                 // 压缩图片
                 ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
@@ -1137,7 +1137,7 @@ namespace RUINORERP.UI.ProductEAV
                 img = System.Drawing.Image.FromFile("compressed.jpg");
                 this.pictureBox1.Image = img;
 
-                MessageBox.Show("图片大小超过 500KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("图片大小超过 200KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 // 将压缩后的图片转换为 byte[] 数组
                 byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
 

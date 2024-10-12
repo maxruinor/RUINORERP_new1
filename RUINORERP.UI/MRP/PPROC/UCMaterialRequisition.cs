@@ -319,7 +319,7 @@ namespace RUINORERP.UI.MRP.MP
 
 
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
             listCols.SetCol_Summary<tb_MaterialRequisitionDetail>(c => c.SubtotalCost);
             listCols.SetCol_Summary<tb_MaterialRequisitionDetail>(c => c.SubtotalPrice);
             listCols.SetCol_Summary<tb_MaterialRequisitionDetail>(c => c.ActualSentQty);

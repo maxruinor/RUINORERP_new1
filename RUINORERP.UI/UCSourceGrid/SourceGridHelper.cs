@@ -3,15 +3,12 @@ using DevAge.Drawing;
 using DevAge.Windows.Forms;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Utils;
-using NPOI.SS.Formula.Functions;
-using NPOI.SS.UserModel;
-
-
 //using Google.Protobuf.Reflection;
 //using NetTaste;
 using RUINORERP.Business;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
@@ -92,6 +89,16 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         public event LoadMultiRowData OnLoadMultiRowData;
 
+
+        #region 应用于转换单时的数据提供
+
+        public delegate tb_ProdConversion GetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine);
+        /// <summary>
+        /// 针对特殊情况下的右键菜单，如替换出库。转换出库等
+        /// 
+        /// </summary>
+        public event GetTransferDataHandler OnGetTransferDataHandler;
+        #endregion
 
         //处理一个特殊情况：如BOM明细时，如果明细中的产品有配方，即他是由其它产品组成的,他的成本和制造费用自于配方表中的数据。要把这些数据带到BOM明细行中。如果没有配方则是来自于产品详情的成本，这里用一个事件处理
 
@@ -447,6 +454,8 @@ namespace RUINORERP.UI.UCSourceGrid
                         if (pop == null)
                         {
                             PopupMenuForRowHeader menuController = new PopupMenuForRowHeader(i, dc.ParentGridDefine.grid, sgdefine);
+                            menuController.OnTransferMenuHandler += new PopupMenuForRowHeader.TransferMenuHandler(menuController_OnPopupMenuEventHandler);
+                            menuController.OnGetTransferDataHandler += MenuController_OnGetTransferDataHandler;
                             if (currContext.Cell.Controller != null)
                             {
                                 currContext.Cell.Controller.AddController(menuController);
@@ -579,6 +588,41 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
 
+        }
+
+        private tb_ProdConversion MenuController_OnGetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine)
+        {
+            if (this.OnGetTransferDataHandler != null)
+            {
+                return this.OnGetTransferDataHandler(sender, rowObj, CurrGridDefine);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private void menuController_OnPopupMenuEventHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine)
+        {
+
+            if (CurrGridDefine.GridMasterData is BaseEntity EditEntity && CurrGridDefine.GridMasterDataType != null)
+            {
+
+                //如果单据状态是已提交，未审核。则可以弹出菜单转换出库
+                if (ReflectionHelper.ExistPropertyName(CurrGridDefine.GridMasterDataType, "ApprovalStatus")
+                    && ReflectionHelper.ExistPropertyName(CurrGridDefine.GridMasterDataType, "ApprovalResults"))
+                {
+                    //反审，要审核过，并且通过了，才能反审。
+                    if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.未审核
+                        && (EditEntity.GetPropertyValue("ApprovalResults") == null
+                        || EditEntity.GetPropertyValue("ApprovalResults").ToBool() == false)
+                        )
+                    {
+                        sender.Visible = true;
+                    }
+
+                }
+            }
         }
 
 
@@ -1317,33 +1361,6 @@ namespace RUINORERP.UI.UCSourceGrid
                         c.AddController(tabkeyController);
                     }
 
-
-
-                    /*
-                    #region 设置指定列为可编辑列
-                    DependColumn dc = define.DependQuery.RelatedCols.Find(delegate (DependColumn dc)
-                    { return dc.ColCaption == define[i].ColCaption; });
-                    if (dc != null && dc.IsQueryCol)
-                    {
-                        //这里要重构
-                        DependColumnController 更新关联列控制器 = new DependColumnController(define, define.DependQuery.RelatedCols);
-
-                        更新关联列控制器.ConvertFunction = delegate (object valValue)
-                        {
-                            if (valValue.GetType() == define.DependencyType)
-                            {
-                                return valValue;
-                                //return RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(valValue, dc.ColName);
-                            }
-                            else
-                            {
-                                return valValue;
-                            }
-                        };
-                        c.AddController(更新关联列控制器);
-                    }
-                    #endregion
-                    */
                     if (newcolType.FullName == "System.Byte[]")
                     {
                         //  c.View = define.ImagesViewModel;
@@ -1513,9 +1530,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
             grid.AutoSizeCells();
         }
-
-
-
 
         public static void SetRowReadOnly(SourceGrid.Grid grid, int[] rowIndexs, SourceGridDefine define)
         {
@@ -2279,9 +2293,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                         Expression<Func<View_ProdDetail, object>> warehouse = x => x.Location_ID;
                                         if (dci.ParentGridDefine.DefineColumns.FirstOrDefault(c => c.ColName == warehouse.GetMemberInfo().Name) != null)
                                         {
-                                            if (dci.ParentGridDefine.GridData != null)
+                                            if (dci.ParentGridDefine.GridMasterData != null)
                                             {
-                                                dg.prodQuery.LocationID = dci.ParentGridDefine.GridData.GetPropertyValue(warehouse.GetMemberInfo().Name).ToLong();
+                                                dg.prodQuery.LocationID = dci.ParentGridDefine.GridMasterData.GetPropertyValue(warehouse.GetMemberInfo().Name).ToLong();
                                             }
 
                                         }
@@ -2647,9 +2661,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                                     Expression<Func<View_ProdDetail, object>> warehouse = x => x.Location_ID;
                                                     if (dci.ParentGridDefine.DefineColumns.FirstOrDefault(c => c.ColName == warehouse.GetMemberInfo().Name) != null)
                                                     {
-                                                        if (dci.ParentGridDefine.GridData != null)
+                                                        if (dci.ParentGridDefine.GridMasterData != null)
                                                         {
-                                                            dg.prodQuery.LocationID = dci.ParentGridDefine.GridData.GetPropertyValue(warehouse.GetMemberInfo().Name).ToLong();
+                                                            dg.prodQuery.LocationID = dci.ParentGridDefine.GridMasterData.GetPropertyValue(warehouse.GetMemberInfo().Name).ToLong();
                                                         }
 
                                                     }

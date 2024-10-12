@@ -252,7 +252,7 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_ReadOnly<tb_ProductionPlanDetail>(c => c.IsAnalyzed);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
 
 
             listCols.SetCol_Summary<tb_ProductionPlanDetail>(c => c.Quantity);

@@ -62,30 +62,14 @@ namespace RUINORERP.Business
                         inv = new tb_Inventory();
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Location_ID = child.Location_ID;
-                        //if (_appContext.SysConfig.CheckNegativeInventory)
-                        //{
-                        //    inv.Quantity = -child.Quantity;
-                        //}
-                        //else
-                        //{
+                        
                         inv.Quantity = 0;
-                        //}
-
+                        
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
                                        //inv.LatestStorageTime = System.DateTime.Now;
                         BusinessHelper.Instance.InitEntity(inv);
                     }
-                    //订单只是警告。可以继续
-                    /*
-                    if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Quantity) < 0)
-                    {
-                        rmrs.ErrorMsg = $"库存为：{inv.Quantity}，拟销售量为：{child.Quantity}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
-                        rmrs.Succeeded = false;
-                        return rmrs;
-                    }
-                    */
-
                     //更新在途库存
                     inv.Sale_Qty = inv.Sale_Qty + child.Quantity;
                     BusinessHelper.Instance.EditEntity(inv);
@@ -474,7 +458,6 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 BizTypeMapper mapper = new BizTypeMapper();

@@ -342,7 +342,7 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.CarryingSubtotalAmount);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
 
             //  listCols.SetCol_Formula<tb_StocktakeDetail>((a, b, c) => (a.CarryinglQty * b.CarryinglQty * c.CarryinglQty), F => F.CarryinglQty);
             listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CheckQty);

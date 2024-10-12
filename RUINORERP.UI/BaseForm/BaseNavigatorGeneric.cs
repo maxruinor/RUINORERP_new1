@@ -16,6 +16,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Common;
+using RUINORERP.UI.FormProperty;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
 using StackExchange.Redis;
@@ -270,13 +271,25 @@ namespace RUINORERP.UI.BaseForm
                         }
 
                     }
+
+                    Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
+                    button设置查询条件.Text = "设置查询条件";
+                    button设置查询条件.ToolTipValues.Description = "对查询条件进行个性化设置。";
+                    button设置查询条件.ToolTipValues.EnableToolTips = true;
+                    button设置查询条件.ToolTipValues.Heading = "提示";
+                    button设置查询条件.Click += button设置查询条件_Click;
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button设置查询条件);
                 }
             }
 
             
         }
 
-
+        private void button设置查询条件_Click(object sender, EventArgs e)
+        {
+            MenuPersonalizedSettings();
+        }
+       
 
         /// <summary>
         /// 固定的值显示，入库ture 出库false
@@ -495,9 +508,16 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
+
+        protected frmFormProperty frm = new frmFormProperty();
         protected virtual void Property()
         {
-            MenuPersonalizedSettings();
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                //保存属性
+                // ToolBarEnabledControl(MenuItemEnums.属性);
+                //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
+            }
         }
         protected virtual void MenuPersonalizedSettings()
         {

@@ -208,7 +208,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_OtherExpenseDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_OtherExpenseDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
             /*
             //具体审核权限的人才显示
             if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())

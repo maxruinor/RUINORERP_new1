@@ -39,7 +39,12 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <summary>
         /// 保存主子表中的主表数据
         /// </summary>
-        public object GridData { get; set; }
+        public object GridMasterData { get; set; }
+
+        /// <summary>
+        /// 主表的实体类型
+        /// </summary>
+        public Type GridMasterDataType { get; set; }
 
 
         public delegate void CalculateTotalValue(SourceGridDefine griddefine);
@@ -228,7 +233,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         #region 全局背景色设置
 
-     
+
 
         #region 全局性的单元格样式可以在这统一设置。像图片这个就不可以。得一个cell一个new
 
@@ -275,7 +280,7 @@ namespace RUINORERP.UI.UCSourceGrid
             DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
             DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
 
-          
+
             //正常时的背景色等样式 //这间隔颜色在三个地方设置了。不要轻易动
             CellBackColorAlternate viewNormal = new CellBackColorAlternate(Color.White, Color.LightCyan);
             viewNormal.Border = cellBorder;

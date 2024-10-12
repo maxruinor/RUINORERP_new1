@@ -271,14 +271,6 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        // public delegate void QueryHandler<T>(T entity);
-
-        // [Browsable(true), Description("双击将数据载入到明细外部事件")]
-        // public event QueryHandler<T> OnQuery;
-
-        //protected virtual void Query()
-        //{
-
-        //}
+       
     }
 }

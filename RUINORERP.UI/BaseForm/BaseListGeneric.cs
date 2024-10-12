@@ -314,11 +314,23 @@ namespace RUINORERP.UI.BaseForm
                     ClassGenericType = typeof(T);
                     Builder();
 
+                    Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
+                    button设置查询条件.Text = "设置查询条件";
+                    button设置查询条件.ToolTipValues.Description = "对查询条件进行个性化设置。";
+                    button设置查询条件.ToolTipValues.EnableToolTips = true;
+                    button设置查询条件.ToolTipValues.Heading = "提示";
+                    button设置查询条件.Click += button设置查询条件_Click;
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button设置查询条件);
                 }
             }
 
 
 
+        }
+
+        private void button设置查询条件_Click(object sender, EventArgs e)
+        {
+            MenuPersonalizedSettings();
         }
 
         public virtual void Builder()

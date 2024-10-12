@@ -57,6 +57,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "经办人" )]
+        [FKRelationAttribute("tb_Employee", "Employee_ID")]
         public long? Employee_ID
         { 
             get{return _Employee_ID;}
@@ -71,6 +72,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "库位")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "库位" )]
+        [FKRelationAttribute("tb_Location", "Location_ID")]
         public long Location_ID
         { 
             get{return _Location_ID;}
@@ -95,10 +97,10 @@ namespace RUINORERP.Model
 
         private DateTime? _ConversionDate;
         /// <summary>
-        /// 转换日期
+        /// 单据日期
         /// </summary>
-        [AdvQueryAttribute(ColName = "ConversionDate",ColDesc = "转换日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "ConversionDate" ,IsNullable = true,ColumnDescription = "转换日期" )]
+        [AdvQueryAttribute(ColName = "ConversionDate",ColDesc = "单据日期")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "ConversionDate" ,IsNullable = true,ColumnDescription = "单据日期")]
         public DateTime? ConversionDate
         { 
             get{return _ConversionDate;}

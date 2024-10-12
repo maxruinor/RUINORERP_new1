@@ -250,6 +250,10 @@ namespace RUINORERP.UI.PSI.SAL
 
             DataBindingHelper.InitFilterForControlByExp<tb_SaleOrder>(entity, txtSaleOrder, c => c.SOrderNo, queryFilter);
             ToolBarEnabledControl(entity);
+
+            sgd.GridMasterData = entity;
+            sgd.GridMasterDataType = entity.GetType();
+
         }
 
         public void InitDataTocmbbox()
@@ -293,7 +297,7 @@ namespace RUINORERP.UI.PSI.SAL
             ControlChildColumnsInvisible(listCols);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+
             /*
             //具体审核权限的人才显示
             if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
@@ -339,7 +343,40 @@ namespace RUINORERP.UI.PSI.SAL
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
+            sgh.OnGetTransferDataHandler += Sgh_OnGetTransferDataHandler;
+        }
 
+        private tb_ProdConversion Sgh_OnGetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine)
+        {
+            if (rowObj == null || !(rowObj is tb_SaleOutDetail))
+            {
+                return null;
+            }
+            tb_ProdConversion prodConversion = new tb_ProdConversion();
+            
+            prodConversion.tb_ProdConversionDetails = new List<tb_ProdConversionDetail>();
+            //销售的明细作为转换的明细中的来源
+            tb_SaleOutDetail outDetail = rowObj as tb_SaleOutDetail;
+            tb_ProdConversionDetail conversionDetail = new tb_ProdConversionDetail();
+            prodConversion.Location_ID = outDetail.Location_ID;
+            View_ProdDetail ViewDetail = list.FirstOrDefault(c => c.ProdDetailID == outDetail.ProdDetailID && c.Location_ID == outDetail.Location_ID);
+
+            conversionDetail.property_from = outDetail.property;
+            conversionDetail.ConversionQty = outDetail.Quantity;
+            conversionDetail.CNName_from = ViewDetail.CNName;
+            conversionDetail.Specifications_from = ViewDetail.Specifications;
+            conversionDetail.ProdDetailID_from = outDetail.ProdDetailID;
+            conversionDetail.Model_from = ViewDetail.Model;
+            if (ViewDetail.Type_ID.HasValue)
+            {
+                conversionDetail.Type_ID_from = ViewDetail.Type_ID.Value;
+                conversionDetail.Type_ID_to = ViewDetail.Type_ID.Value;//因为不好处理为null。就认为和来源一样
+            }
+            conversionDetail.BarCode_from = ViewDetail.BarCode;
+            conversionDetail.SKU_from = ViewDetail.SKU;
+            
+            prodConversion.tb_ProdConversionDetails.Add(conversionDetail);
+            return prodConversion;
         }
 
         private void Sgh_OnCalculateColumnValue(object rowObj, SourceGridDefine griddefine, SourceGrid.Position Position)
@@ -490,7 +527,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     EditEntity.Employee_ID = null;
                 }
-                
+
 
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
                 if (NeedValidated && EditEntity.TotalQty != details.Sum(c => c.Quantity))

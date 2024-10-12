@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FastReport.Barcode;
+using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using FastReport.Utils;
 using Krypton.Docking;
@@ -28,6 +29,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Common;
+using RUINORERP.UI.FormProperty;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
 using RUINORERP.UI.UCSourceGrid;
@@ -163,15 +165,44 @@ namespace RUINORERP.UI.BaseForm
                             }
                         }
                     }
+
+                    Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
+                    button设置查询条件.Text = "设置查询条件";
+                    button设置查询条件.ToolTipValues.Description = "对查询条件进行个性化设置。";
+                    button设置查询条件.ToolTipValues.EnableToolTips = true;
+                    button设置查询条件.ToolTipValues.Heading = "提示";
+                    button设置查询条件.Click += button设置查询条件_Click;
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button设置查询条件);
                 }
             }
 
-
-
-
         }
-
-
+        private void button设置查询条件_Click(object sender, EventArgs e)
+        {
+            MenuPersonalizedSettings();
+        }
+        protected virtual void MenuPersonalizedSettings()
+        {
+            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
+            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
+            if (frmMenu.ShowDialog() == DialogResult.OK)
+            {
+                if (!this.DesignMode)
+                {
+                    MenuPersonalization personalization = new MenuPersonalization();
+                    UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
+                    if (personalization != null)
+                    {
+                        decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
+                        QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
+                    }
+                    else
+                    {
+                        QueryDtoProxy = LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
+                    }
+                }
+            }
+        }
 
 
         /// <summary>
@@ -851,33 +882,18 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        public virtual void Property()
-        {
-            MenuPersonalizedSettings();
-        }
 
-        protected virtual void MenuPersonalizedSettings()
+        protected frmFormProperty frm = new frmFormProperty();
+        protected virtual void Property()
         {
-            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
-            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
-            if (frmMenu.ShowDialog() == DialogResult.OK)
+            if (frm.ShowDialog() == DialogResult.OK)
             {
-                if (!this.DesignMode)
-                {
-                    MenuPersonalization personalization = new MenuPersonalization();
-                    UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-                    if (personalization != null)
-                    {
-                        decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                        QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
-                    }
-                    else
-                    {
-                        QueryDtoProxy = LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
-                    }
-                }
+                //保存属性
+                // ToolBarEnabledControl(MenuItemEnums.属性);
+                //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
             }
         }
+
         /// <summary>
         /// 针对查询结果的限制
         /// </summary>

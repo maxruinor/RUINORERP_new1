@@ -1096,7 +1096,7 @@ namespace RUINORERP.UI.MRP.BOM
             }
             */
             sgd = new SourceGridDefine(grid1, listCols, true);
-            sgd.GridData = EditEntity;
+            sgd.GridMasterData = EditEntity;
             //要放到初始化sgd后面
             listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.UsedQty);
             listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalUnitCost);

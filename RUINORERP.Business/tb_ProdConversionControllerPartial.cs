@@ -60,7 +60,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invForm);
                     }
-                    invForm.Quantity = -TransferQty;
+                    invForm.Quantity = invForm.Quantity - TransferQty;
                     if (TransferQty > 0)
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invForm.Quantity - TransferQty) < 0)
@@ -93,7 +93,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invTo);
                     }
-                    invTo.Quantity = +TransferQty;
+                    invTo.Quantity = invTo.Quantity + TransferQty;
                     if (TransferQty > 0)
                     {
                         invTo.LatestStorageTime = System.DateTime.Now;
@@ -232,7 +232,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invForm);
                     }
-                    invForm.Quantity = +TransferQty;
+                    invForm.Quantity = invForm.Quantity + TransferQty;
                     if (TransferQty > 0)
                     {
                         invForm.LatestStorageTime = System.DateTime.Now;
@@ -266,7 +266,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invTo);
                     }
-                    invTo.Quantity = -TransferQty;
+                    invTo.Quantity = invTo.Quantity - TransferQty;
                     if (TransferQty > 0)
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invTo.Quantity - TransferQty) < 0)

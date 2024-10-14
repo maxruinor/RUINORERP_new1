@@ -905,6 +905,11 @@ namespace RUINORERP.UI.MRP.BOM
 
         protected override void AddByCopy()
         {
+            if (EditEntity == null)
+            {
+                MessageBox.Show("请先选择一个BOM清单作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             EditEntity.ActionStatus = ActionStatus.新增;
             EditEntity.BOM_ID = 0;
             EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;

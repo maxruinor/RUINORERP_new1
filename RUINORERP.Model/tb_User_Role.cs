@@ -83,10 +83,10 @@ namespace RUINORERP.Model
 
         private bool _Authorized= false;
         /// <summary>
-        /// 默认角色
+        /// 已授权
         /// </summary>
-        [AdvQueryAttribute(ColName = "Authorized",ColDesc = "默认角色")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Authorized" ,IsNullable = false,ColumnDescription = "默认角色" )]
+        [AdvQueryAttribute(ColName = "Authorized",ColDesc = "已授权")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Authorized" ,IsNullable = false,ColumnDescription = "已授权")]
         public bool Authorized
         { 
             get{return _Authorized;}
@@ -97,10 +97,10 @@ namespace RUINORERP.Model
 
         private bool _DefaultRole= false;
         /// <summary>
-        /// 已授权
+        /// 默认角色
         /// </summary>
-        [AdvQueryAttribute(ColName = "DefaultRole",ColDesc = "已授权")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "DefaultRole" ,IsNullable = false,ColumnDescription = "已授权" )]
+        [AdvQueryAttribute(ColName = "DefaultRole",ColDesc = "默认角色")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "DefaultRole" ,IsNullable = false,ColumnDescription = "默认角色")]
         public bool DefaultRole
         { 
             get{return _DefaultRole;}

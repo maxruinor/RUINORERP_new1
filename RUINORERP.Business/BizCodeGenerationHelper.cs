@@ -217,7 +217,7 @@ namespace RUINORERP.Business
                 case BizType.采购入库单:
                     rule = "{S:PIR}{D:yyMMdd}{redis:{S:PIR}{D:yyMM}/000}";
                     break;
-                case BizType.采购入库退回单:
+                case BizType.采购退回单:
                     rule = "{S:PIRR}{D:yyMMdd}{redis:{S:PIRR}{D:yyMM}/000}";
                     break;
                 case BizType.其他入库单:

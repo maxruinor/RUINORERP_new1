@@ -193,7 +193,7 @@ namespace RUINORERP.UI.UserCenter
                             bizTypes.Add(BizType.采购订单);
                             break;
                         case 待办事项.采购_退款退货处理:
-                            bizTypes.Add(BizType.采购入库退回单);
+                            bizTypes.Add(BizType.采购退回单);
                             break;
                         case 待办事项.销售_销售订单:
                             bizTypes.Add(BizType.销售订单);

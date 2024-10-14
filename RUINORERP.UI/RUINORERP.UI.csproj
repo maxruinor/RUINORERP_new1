@@ -1578,11 +1578,23 @@
     <Compile Include="PSI\PUR\UCPurEntryQuery.Designer.cs">
       <DependentUpon>UCPurEntryQuery.cs</DependentUpon>
     </Compile>
+    <Compile Include="PSI\PUR\UCPurReturnEntry.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\PUR\UCPurReturnEntry.designer.cs">
+      <DependentUpon>UCPurReturnEntry.cs</DependentUpon>
+    </Compile>
     <Compile Include="PSI\PUR\UCPurEntryRe.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="PSI\PUR\UCPurEntryRe.designer.cs">
       <DependentUpon>UCPurEntryRe.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\PUR\UCPurReturnEntryQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\PUR\UCPurReturnEntryQuery.Designer.cs">
+      <DependentUpon>UCPurReturnEntryQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="PSI\PUR\UCPurEntryReQuery.cs">
       <SubType>UserControl</SubType>
@@ -2630,8 +2642,14 @@
     <EmbeddedResource Include="PSI\PUR\UCPurEntryQuery.resx">
       <DependentUpon>UCPurEntryQuery.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PSI\PUR\UCPurReturnEntry.resx">
+      <DependentUpon>UCPurReturnEntry.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PSI\PUR\UCPurEntryRe.resx">
       <DependentUpon>UCPurEntryRe.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\PUR\UCPurReturnEntryQuery.resx">
+      <DependentUpon>UCPurReturnEntryQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\PUR\UCPurEntryReQuery.resx">
       <DependentUpon>UCPurEntryReQuery.cs</DependentUpon>

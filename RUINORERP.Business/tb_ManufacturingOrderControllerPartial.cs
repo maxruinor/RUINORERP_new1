@@ -81,14 +81,11 @@ namespace RUINORERP.Business
                         && i.Location_ID == entitys[m].tb_ManufacturingOrderDetails[c].Location_ID);
                         if (inv == null)
                         {
-                            inv = new tb_Inventory();
-                            inv.ProdDetailID = entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID;
-                            inv.Location_ID = entitys[m].tb_ManufacturingOrderDetails[c].Location_ID;
-                            inv.Quantity = 0;
-                            inv.InitInventory = (int)inv.Quantity;
-                            inv.Notes = "";//后面修改数据库是不需要？
-                                           //inv.LatestStorageTime = System.DateTime.Now;
-                            BusinessHelper.Instance.InitEntity(inv);
+                            //应该不会到这里面来了。
+                            //View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == entitys[m].ProdDetailID).FirstAsync();
+                            _unitOfWorkManage.RollbackTran();
+                            rs.ErrorMsg = $"{entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID}库存中没有当前的产品。请使用【期初盘点】的方式进行盘点后，再操作。";
+                            return rs;
                         }
                         //更新未发数,这种情况是少发领料，强制结案时。
                         if (已发数 < 应发数)

@@ -44,7 +44,6 @@ namespace RUINORERP.Business
             ReturnResults<T> rmsr = new ReturnResults<T>();
             tb_Stocktake entity = ObjectEntity as tb_Stocktake;
 
-
             try
             {
                 // 开启事务，保证数据一致性
@@ -52,125 +51,134 @@ namespace RUINORERP.Business
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
-              
-                    if (entity == null)
+
+                if (entity == null)
+                {
+                    return rmsr;
+                }
+                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+                //!!!child.DiffQty 是否有正负数？如果有正数
+                CheckMode cm = (CheckMode)entity.CheckMode;
+                //将盘点到的数据，根据处理调整类型去修改库存表，期初还需要保存到期初表中
+                //最后要用事务操作
+                //保存库存，增加 通过产品明细ID去找
+                foreach (var child in entity.tb_StocktakeDetails)
+                {
+                    //先看库存表中是否存在记录。
+                    #region 库存表的更新
+                    //标记是否有期初
+                    bool Opening = false;
+                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID);
+                    if (inv != null)
                     {
-                        return rmsr;
-                    }
-                    BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
-                    //!!!child.DiffQty 是否有正负数？如果有正数
+                        Opening = false;
+                        //更新库存
 
-                    //将盘点到的数据，根据处理调整类型去修改库存表，期初还需要保存到期初表中
-                    //最后要用事务操作
-                    //保存库存，增加 通过产品明细ID去找
-                    foreach (var child in entity.tb_StocktakeDetails)
-                    {
-                        //先看库存表中是否存在记录。
-                        #region 库存表的更新
-                        //标记是否有期初
-                        bool Opening = false;
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID);
-                        if (inv != null)
+                        if (entity.Adjust_Type == (int)Adjust_Type.全部)
                         {
-                            Opening = false;
-                            //更新库存
-
-                            if (entity.Adjust_Type == (int)Adjust_Type.全部)
-                            {
-                                inv.Quantity = inv.Quantity + child.DiffQty;
-                            }
-                            if (entity.Adjust_Type == (int)Adjust_Type.减少 && child.DiffQty < 0)
-                            {
-                                inv.Quantity = inv.Quantity + child.DiffQty;
-                            }
-                            if (entity.Adjust_Type == (int)Adjust_Type.增加 && child.DiffQty > 0)
-                            {
-                                inv.Quantity = inv.Quantity + child.DiffQty;
-                            }
-                            inv.LastInventoryDate = System.DateTime.Now;
-                            //ctrinv.EditEntity(inv);
-                            BusinessHelper.Instance.EditEntity(inv);
-
-                        }
-                        else
-                        {
-                            Opening = true;
-                            inv = new tb_Inventory();
-                            inv.Location_ID = entity.Location_ID;
-                            inv.ProdDetailID = child.ProdDetailID;
                             inv.Quantity = inv.Quantity + child.DiffQty;
-                            inv.InitInventory = (int)inv.Quantity;
-                            inv.Notes = "";//后面修改数据库是不需要？
-                            BusinessHelper.Instance.InitEntity(inv);
                         }
-
-                        /*
-                      直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                     平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                     先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                     后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                     数据来源可以是多种多样的，例如：
-                     采购价格：从供应商处购买产品或物品时的价格。
-                     生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                     市场价格：参考市场上类似产品或物品的价格。
-                      */
-                        inv.CostFIFO = child.Cost;
-                        inv.CostMonthlyWA = child.Cost;
-                        inv.CostMovingWA = child.Cost;
-                        inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
-                        inv.ProdDetailID = child.ProdDetailID;
-                        inv.Rack_ID = child.Rack_ID;
-                        inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
-                        //!!!child.DiffQty 是否有正负数？如果有正数
-                        if (child.DiffQty > 0)
+                        if (entity.Adjust_Type == (int)Adjust_Type.减少 && child.DiffQty < 0)
                         {
-                            inv.LatestStorageTime = System.DateTime.Now;
+                            inv.Quantity = inv.Quantity + child.DiffQty;
                         }
-                        if (child.DiffQty < 0)
+                        if (entity.Adjust_Type == (int)Adjust_Type.增加 && child.DiffQty > 0)
                         {
-                            inv.LatestOutboundTime = System.DateTime.Now;
+                            inv.Quantity = inv.Quantity + child.DiffQty;
                         }
-
-                        #endregion
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-                            if (Opening)
-                            {
-                                #region 处理期初
-                                //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
-                                tb_OpeningInventory oinv = new tb_OpeningInventory();
-                                oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
-                                oinv.Cost_price = rr.ReturnObject.Inv_Cost;
-                                oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
-                                oinv.InitInvDate = entity.Check_date;
-                                oinv.RefBillID = entity.MainID;
-                                oinv.RefNO = entity.CheckNo;
-                                oinv.InitQty = 0;
-                                //oinv.InitInvDate = System.DateTime.Now;
-                                CommBillData cbd = bcf.GetBillData<tb_Stocktake>(entity);
-                                //oinv.RefBizType = cbd.BizType;
-                                //TODO 还要完善引用数据
-                                await ctrOPinv.AddReEntityAsync(oinv);
-                                #endregion
-                            }
-                        }
+                        inv.LastInventoryDate = System.DateTime.Now;
+                        //ctrinv.EditEntity(inv);
+                        BusinessHelper.Instance.EditEntity(inv);
 
                     }
+                    else
+                    {
+                        if (CheckMode.期初盘点 != cm)
+                        {
+                            View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID).FirstAsync();
+                            _unitOfWorkManage.RollbackTran();
+                            rmsr.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}库存中没有当前盘点的产品。请使用期初盘点的方式进行盘点。";
+                            return rmsr;
+                        }
+                        Opening = true;
+                        inv = new tb_Inventory();
+                        inv.Location_ID = entity.Location_ID;
+                        inv.ProdDetailID = child.ProdDetailID;
+                        inv.Quantity = inv.Quantity + child.DiffQty;
+                        inv.InitInventory = (int)inv.Quantity;
+                        inv.Notes = "";//后面修改数据库是不需要？
+                        BusinessHelper.Instance.InitEntity(inv);
+                    }
 
-                    CheckMode cm = (CheckMode)entity.CheckMode;
+                    /*
+                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
+                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
+                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
+                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
+                 数据来源可以是多种多样的，例如：
+                 采购价格：从供应商处购买产品或物品时的价格。
+                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
+                 市场价格：参考市场上类似产品或物品的价格。
+                  */
+
+
                     //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.
                     if (CheckMode.期初盘点 == cm)
                     {
-                        //意思是只是体现了成本？ 还是说 期初时可以录入成本，其它盘点不可以？应该是的。
+                        CommService.CostCalculations.CostCalculation(_appContext, inv, inv.Quantity, child.Cost);
+                    }
+                    //inv.CostFIFO = child.Cost;
+                    //inv.CostMonthlyWA = child.Cost;
+                    //inv.CostMovingWA = child.Cost;
+                    //inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
+                    inv.ProdDetailID = child.ProdDetailID;
+                    inv.Rack_ID = child.Rack_ID;
+                    inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
+                    //!!!child.DiffQty 是否有正负数？如果有正数
+                    if (child.DiffQty > 0)
+                    {
+                        inv.LatestStorageTime = System.DateTime.Now;
+                    }
+                    if (child.DiffQty < 0)
+                    {
+                        inv.LatestOutboundTime = System.DateTime.Now;
                     }
 
-          
+                    #endregion
+                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    if (rr.Succeeded)
+                    {
+                        if (Opening)
+                        {
+                            #region 处理期初
+                            //库存都没有。期初也会没有 ,并且期初只会新增，不会修改。
+                            tb_OpeningInventory oinv = new tb_OpeningInventory();
+                            oinv.Inventory_ID = rr.ReturnObject.Inventory_ID;
+                            oinv.Cost_price = rr.ReturnObject.Inv_Cost;
+                            oinv.Subtotal_Cost_Price = oinv.Cost_price * oinv.InitQty;
+                            oinv.InitInvDate = entity.Check_date;
+                            oinv.RefBillID = entity.MainID;
+                            oinv.RefNO = entity.CheckNo;
+                            oinv.InitQty = 0;
+                            //oinv.InitInvDate = System.DateTime.Now;
+                            CommBillData cbd = bcf.GetBillData<tb_Stocktake>(entity);
+                            //oinv.RefBizType = cbd.BizType;
+                            //TODO 还要完善引用数据
+                            await ctrOPinv.AddReEntityAsync(oinv);
+                            #endregion
+                        }
+                    }
+
+                }
+
+
+
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
                 //后面已经修改为
-               // entity.ApprovalResults = approvalEntity.ApprovalResults;
+                // entity.ApprovalResults = approvalEntity.ApprovalResults;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -188,10 +196,10 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-             
-                    _logger.Error(ex,  "事务回滚");
-             
-                rmsr.ErrorMsg = "事务回滚=>"  + ex.Message;
+
+                _logger.Error(ex, "事务回滚");
+
+                rmsr.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rmsr;
             }
 
@@ -330,17 +338,17 @@ namespace RUINORERP.Business
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-               
+
                 rmsr.Succeeded = true;
                 rmsr.ReturnObject = entity as T;
                 return rmsr;
             }
             catch (Exception ex)
             {
-         
+
                 _unitOfWorkManage.RollbackTran();
                 rmsr.ErrorMsg = ex.Message;
-                _logger.Error(ex ,"事务回滚");
+                _logger.Error(ex, "事务回滚");
                 //  _logger.Error(approvalEntity.bizName +);
                 return rmsr;
             }

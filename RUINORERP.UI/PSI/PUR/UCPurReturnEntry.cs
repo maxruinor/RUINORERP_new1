@@ -44,10 +44,10 @@ using RUINORERP.UI.ToolForm;
 
 namespace RUINORERP.UI.PSI.PUR
 {
-    [MenuAttrAssemblyInfo("采购退回单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购退回单)]
-    public partial class UCPurEntryRe : BaseBillEditGeneric<tb_PurEntryRe, tb_PurEntryReDetail>
+    [MenuAttrAssemblyInfo("采购退货入库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购退货入库单)]
+    public partial class UCPurReturnEntry : BaseBillEditGeneric<tb_PurEntryRe, tb_PurEntryReDetail>
     {
-        public UCPurEntryRe()
+        public UCPurReturnEntry()
         {
             InitializeComponent();
             

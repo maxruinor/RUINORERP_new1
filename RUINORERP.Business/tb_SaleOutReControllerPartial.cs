@@ -261,10 +261,10 @@ namespace RUINORERP.Business
 
                            // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
 
-                            inv.Inv_Cost = child.TransactionPrice;//这里需要计算，根据系统设置中的算法计算。
-                            inv.CostFIFO = child.TransactionPrice;
-                            inv.CostMonthlyWA = child.TransactionPrice;
-                            inv.CostMovingWA = child.TransactionPrice;
+                            //inv.Inv_Cost = child.TransactionPrice;//这里需要计算，根据系统设置中的算法计算。
+                            //inv.CostFIFO = child.TransactionPrice;
+                            //inv.CostMonthlyWA = child.TransactionPrice;
+                            //inv.CostMovingWA = child.TransactionPrice;
                             inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                             inv.LatestStorageTime = System.DateTime.Now;
 

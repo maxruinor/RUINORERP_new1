@@ -257,9 +257,7 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdReturningDetail.Location_ID))]
         public virtual List<tb_ProdReturningDetail> tb_ProdReturningDetails { get; set; }
-        //tb_ProdReturningDetail.Location_ID)
-        //Location_ID.FK_PRODRetruningdetail_REF_LOCAT)
-        //tb_Location.Location_ID)
+
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]

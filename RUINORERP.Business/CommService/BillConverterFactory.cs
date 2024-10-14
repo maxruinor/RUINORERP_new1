@@ -157,9 +157,9 @@ namespace RUINORERP.Business.CommService
                 case BizType.返厂出库:
                     var Return = Entity as tb_Return;
                     cbd.BillID = Return.MainID;
-                    cbd.BillNo = Return.RetrunNo;
+                    cbd.BillNo = Return.ReturnNo;
                     break;
-                case BizType.采购入库退回单:
+                case BizType.采购退回单:
                     var purEntryRe = Entity as tb_PurEntryRe;
                     cbd.BillID = purEntryRe.PurEntryRe_ID;
                     cbd.BillNo = purEntryRe.PurEntryRENo;

@@ -118,6 +118,12 @@ namespace RUINORERP.UI.PSI.INV
             //};
         }
 
+        protected override void Cancel()
+        {
+            cmbCheckMode.Enabled = true;
+            base.Cancel();
+            lblPrintStatus.Text = "";
+        }
         public override void BindData(tb_Stocktake _BaseEntity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             tb_Stocktake entity = _BaseEntity as tb_Stocktake;
@@ -231,24 +237,17 @@ namespace RUINORERP.UI.PSI.INV
             {
 
                 //权限允许
-                if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
+                if ((true && entity.DataStatus == (int)DataStatus.草稿)
+                || (true && entity.DataStatus == (int)DataStatus.新建)
+                )
                 {
-
-
-                    //if (s2.PropertyName == entity.GetPropertyName<tb_Stocktake>(c => c.Location_ID))
-                    //{
-                    //    if (EditEntity.Location_ID > 0)
-                    //    {
-
-                    //        //明细仓库优先来自于主表，可以手动修改。
-                    //        listCols.SetCol_DefaultValue<tb_Stocktake>(c => c.Location_ID, EditEntity.Location_ID);
-                    //        if (entity.tb_StocktakeDetails != null)
-                    //        {
-                    //            entity.tb_StocktakeDetails.ForEach(c => c.lo = EditEntity.Location_ID);
-                    //            sgh.SetCellValue<tb_ProdMergeDetail>(sgd, colNameExp => colNameExp.Location_ID, EditEntity.Location_ID);
-                    //        }
-                    //    }
-                    //}
+                    if (s2.PropertyName == entity.GetPropertyName<tb_Stocktake>(c => c.CheckMode))
+                    {
+                        if (EditEntity.CheckMode >= 0)
+                        {
+                            ControlCostByCheckModel((CheckMode)EditEntity.CheckMode);
+                        }
+                    }
                 }
 
                 //显示 打印状态 如果是草稿状态 不显示打印
@@ -285,17 +284,10 @@ namespace RUINORERP.UI.PSI.INV
             InitDataTocmbbox();
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
-            /////显示列表对应的中文
-            //base.FieldNameList = UIHelper.GetFieldNameList<tb_StocktakeDetail>();
 
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
 
-            //Type combinedType = Common.EmitHelper.MergeTypes(true, typeof(ProductSharePart), typeof(tb_StocktakeDetail));
-            //object ReturnSumInst = Activator.CreateInstance(combinedType);
-
-            ///显示列表对应的中文
-            // ConcurrentQueue<KeyValuePair<string, PropertyInfo>> Ddc = EmitHelper.GetfieldNameList(combinedType);
 
 
 
@@ -340,7 +332,18 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.DiffSubtotalAmount);
             listCols.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.CheckSubtotalAmount);
             listCols.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.CarryingSubtotalAmount);
+            InitLoadGrid();
 
+            sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
+            sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
+            //sgd.BindingSourceLines.ListChanged += BindingSourceLines_ListChanged;
+            // bindingSourceSub.AddingNew += BindingSourceSub_AddingNew;
+            //控件主表的字段显示权限
+            base.ControlMasterColumnsInvisible();
+        }
+
+        private void InitLoadGrid()
+        {
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
 
@@ -360,15 +363,12 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CarryinglQty * b.Cost), r => r.CarryingSubtotalAmount);
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CheckQty * b.Cost), r => r.CheckSubtotalAmount);
 
-
-
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.prop, t => t.property);
             //由查询的结果中含有的字段，指向到明细中的字段中,这里是将查询到的库存放到载账数量
 
             sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Quantity, t => t.CarryinglQty);
-            // sgh.SetPointToColumnPairs<ProductSharePart, tb_StocktakeDetail>(sgd, f => f.STOCK, t => t.CarryinglQty);
 
             //应该只提供一个结构
             List<tb_StocktakeDetail> lines = new List<tb_StocktakeDetail>();
@@ -384,12 +384,6 @@ namespace RUINORERP.UI.PSI.INV
             sgd.SetDependencyObject<ProductSharePart, tb_StocktakeDetail>(list);
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_StocktakeDetail));
-            sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
-            sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
-            //sgd.BindingSourceLines.ListChanged += BindingSourceLines_ListChanged;
-            // bindingSourceSub.AddingNew += BindingSourceSub_AddingNew;
-            //控件主表的字段显示权限
-            base.ControlMasterColumnsInvisible();
         }
 
         private void Grid1_Enter(object sender, EventArgs e)
@@ -510,7 +504,12 @@ namespace RUINORERP.UI.PSI.INV
             {
                 return false;
             }
-
+            CheckMode initMode = (CheckMode)EditEntity.CheckMode;
+            if (initMode == CheckMode.期初盘点 && details.Any(c => c.Cost == 0))
+            {
+                MessageBox.Show("【期初盘点】模式下，盘点产品的成本不能为0！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
             switch (EditEntity.Adjust_Type)
             {
                 case (int)Adjust_Type.全部:
@@ -541,39 +540,11 @@ namespace RUINORERP.UI.PSI.INV
         }
 
 
-        //protected async override void Delete()
-        //{
-        //    if (MessageBox.Show("系统不建议删除基本资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-        //    {
-        //        tb_Stocktake main = (tb_Stocktake)bindingSourceMain.Current;
-        //        tb_StocktakeDetail sub = (tb_StocktakeDetail)bindingSourceSub.Current;
-        //        bindingSourceMain.Remove(main);
-        //        bindingSourceSub.Remove(sub);
-        //        //      db.DeleteNav(list)
-        //        //.IncludesAllFirstLayer()//自动2级
-        //        //.IncludeByNameString(nameof(类.导航)).ThenIncludeByNameString(nameof(类.导航2))//3级
-        //        //.ExecuteCommand();
-        //        base.Delete();
-        //    }
-
-        //}
 
 
-
-
-
-
-
-
-
-
-        //private void UcAdv_AdvQueryEvent(bool useLike, Model.Base.BaseEntityDto dto)
-        //{
-        //    //AdvQueryShowResult(useLike, dto);
-
-        //}
 
         List<tb_StocktakeDetail> details = new List<tb_StocktakeDetail>();
+
 
 
         protected async override Task<bool> Save(bool NeedValidated)
@@ -613,6 +584,10 @@ namespace RUINORERP.UI.PSI.INV
                     return false;
                 }
 
+
+
+
+
                 EditEntity.tb_StocktakeDetails = details;
 
                 //没有经验通过下面先不计算
@@ -621,10 +596,14 @@ namespace RUINORERP.UI.PSI.INV
                     return false;
                 }
 
+
                 if (NeedValidated && !base.Validator<tb_StocktakeDetail>(details))
                 {
                     return false;
                 }
+
+
+
 
                 //设置目标ID成功后就行头写上编号？
                 //   表格中的验证提示
@@ -653,224 +632,8 @@ namespace RUINORERP.UI.PSI.INV
         }
 
 
-        /*
-        if (_EditEntity.actionStatus == ActionStatus.修改)
-        {
-            //产品ID有值才算有效值
-            details = detailentity.Where(t => t.ProdDetailID.HasValue).ToList();
-            details = details.Where(t => t.ProdDetailID.Value > 0).ToList();
-            //如果没有有效的明细。直接提示
-            if (details.Count == 0)
-            {
-                MessageBox.Show("请录入有效明细记录！");
-                return;
-            }
+     
 
-            //前后比较是否变化
-            ComPareResult result = UITools.ComPare(oldOjb, details);
-            if (!result.IsEqual)
-            {
-                //把差集删除
-                //https://www.cnblogs.com/nuomibaibai/p/17043541.html
-                //string [] dogs = animals.Select(x=>x.dog).ToArray();
-                //差集 简化为明细ID的差，得到被删除的IDS
-                List<long> oldids = oldOjb.Select(id => id.SubID).ToList();
-                List<long> newids = details.Select(id => id.SubID).ToList();
-                List<long> chaji = oldids.Except<long>(newids).ToList();
-                List<object> olist = new List<object>();
-                chaji.ForEach(i => olist.Add(i));
-                //await soc.DeleteAsyncForDetail(olist.ToArray());
-            }
-            else
-            {
-                if (EditEntity.actionStatus == ActionStatus.无操作)
-                {
-                    EditEntity.actionStatus = ActionStatus.修改;
-                }
-            }
-            //然后再写保存逻辑
-
-
-
-            //计算总金额
-            //decimal? totalMoney = details.Sum(r => r.quantity * r.price);
-            //_EditEntity.TotalAmount = totalMoney.Value;
-            //_EditEntity.tb_sales_order_details = details;
-            //设置目标ID成功后就行头写上编号？
-            //   表格中的验证提示
-            //   其他输入条码验证
-            bool vd = base.ShowInvalidMessage(ctrMain.Validator(_EditEntity));
-            if (!vd)
-            {
-                return;
-            }
-            ReturnMainSubResults<tb_Stocktake> rmr = new ReturnMainSubResults<tb_Stocktake>();
-            rmr = await soc.BaseSaveOrUpdateWithChild<tb_Stocktake>(_EditEntity);
-
-            //_EditEntity = await soc.AddAsync(_EditEntity, details);
-            //_EditEntity = await soc.AddAsync(_EditEntity);
-            lblReview.Text = _EditEntity.status;
-        }
-        */
-
-        //  base.Save();
-
-
-
-        /*
-    protected async override Task<ApprovalEntity> Review()
-    {
-    if (EditEntity == null)
-    {
-        return null;
-    }
-    //如果已经审核通过，则不能重复审核
-    if (EditEntity.ApprovalStatus.HasValue)
-    {
-        if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-        {
-            if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                return null;
-            }
-        }
-    }
-
-    if (EditEntity.CarryingTotalQty != details.Sum(c => c.CarryinglQty))
-    {
-        System.Windows.Forms.MessageBox.Show($"单据载账总数量{EditEntity.CarryingTotalQty}和明细载账数量的和{details.Sum(c => c.CarryinglQty)}不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        return null;
-    }
-    if (EditEntity.CheckTotalQty != details.Sum(c => c.CheckQty))
-    {
-        System.Windows.Forms.MessageBox.Show($"单据盘点总数量{EditEntity.CheckTotalQty}和明细盘点数量的和{details.Sum(c => c.CheckQty)}不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        return null;
-    }
-
-    if (EditEntity.DiffTotalQty != details.Sum(c => c.DiffQty))
-    {
-        System.Windows.Forms.MessageBox.Show($"单据差异总数量{EditEntity.DiffTotalQty}和明细差异数量的和{details.Sum(c => c.DiffQty)}不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        return null;
-    }
-
-
-    Command command = new Command();
-    //缓存当前编辑的对象。如果撤销就回原来的值
-    tb_Stocktake oldobj = CloneHelper.DeepCloneObject<tb_Stocktake>(EditEntity);
-    command.UndoOperation = delegate ()
-    {
-        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-        CloneHelper.SetValues<tb_Stocktake>(EditEntity, oldobj);
-    };
-    ApprovalEntity ae = await base.Review();
-    if (EditEntity == null)
-    {
-        return null;
-    }
-    if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-    {
-        return null;
-    }
-    //ReturnResults<tb_Stocktake> rmr = new ReturnResults<tb_Stocktake>();
-    // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-    //因为只需要更新主表
-    //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-    // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-    tb_StocktakeController<tb_Stocktake> ctr = Startup.GetFromFac<tb_StocktakeController<tb_Stocktake>>();
-    ReturnResults<tb_Stocktake> rrs = await ctr.ApprovalAsync(EditEntity);
-    if (rrs.Succeeded)
-    {
-
-        //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-        //{
-
-        //}
-        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-        //MainForm.Instance.ecs.AddSendData(od);
-        EditEntity.DataStatus = (int)DataStatus.确认;
-        //审核成功
-        base.ToolBarEnabledControl(MenuItemEnums.审核);
-        //如果审核结果为不通过时，审核不是灰色。
-        if (!ae.ApprovalResults)
-        {
-            toolStripbtnReview.Enabled = true;
-        }
-    }
-    else
-    {
-        //审核失败 要恢复之前的值
-        command.Undo();
-        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rrs.ErrorMsg},如果无法解决，请联系管理员！");
-    }
-
-    return ae;
-    }
-
-
-    /// <summary>
-    /// 列表中不再实现反审，批量，出库反审情况极少。并且是仔细处理
-    /// </summary>
-    protected async override Task<ApprovalEntity> ReReview()
-    {
-    ApprovalEntity ae = new ApprovalEntity();
-    if (EditEntity == null)
-    {
-        return ae;
-    }
-
-    //反审，要审核过，并且通过了，才能反审。
-    if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-    {
-        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-        return ae;
-    }
-
-
-    if (EditEntity.tb_StocktakeDetails == null || EditEntity.tb_StocktakeDetails.Count == 0)
-    {
-        MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量。", UILogType.警告);
-        return ae;
-    }
-
-    Command command = new Command();
-    //缓存当前编辑的对象。如果撤销就回原来的值
-    tb_Stocktake oldobj = CloneHelper.DeepCloneObject<tb_Stocktake>(EditEntity);
-    command.UndoOperation = delegate ()
-    {
-        //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-        CloneHelper.SetValues<tb_Stocktake>(EditEntity, oldobj);
-    };
-
-    tb_StocktakeController<tb_Stocktake> ctr = Startup.GetFromFac<tb_StocktakeController<tb_Stocktake>>();
-    ReturnResults<bool> rrs = await ctr.AntiApprovalAsync(EditEntity);
-    if (rrs.Succeeded)
-    {
-        //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-        //{
-
-        //}
-        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-        //MainForm.Instance.ecs.AddSendData(od);
-
-        //审核成功
-        base.ToolBarEnabledControl(MenuItemEnums.反审);
-        toolStripbtnReview.Enabled = true;
-
-    }
-    else
-    {
-        //审核失败 要恢复之前的值
-        command.Undo();
-        MainForm.Instance.PrintInfoLog($"盘点单{EditEntity.CheckNo}反审失败,{rrs.ErrorMsg},请联系管理员！", Color.Red);
-    }
-    return ae;
-    }
-    */
         private void btnImportCheckProd_Click(object sender, EventArgs e)
         {
             if (EditEntity == null)
@@ -929,6 +692,7 @@ namespace RUINORERP.UI.PSI.INV
 
         private void cmbCheckMode_SelectedIndexChanged(object sender, EventArgs e)
         {
+            return;
             if (sgd == null || cmbCheckMode.SelectedItem == null || cmbCheckMode.SelectedValue.ToString() == "-1")
             {
                 return;
@@ -938,13 +702,70 @@ namespace RUINORERP.UI.PSI.INV
             {
                 //成本字段可以修改
                 sgd.DefineColumns.SetCol_ReadWrite<tb_StocktakeDetail>(c => c.Cost);
+                //添加
+                listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.Cost)).Visible = true;
+                InitLoadGrid();
             }
             else
             {
+                ControlChildColumnsInvisible(listCols);
+
                 //成本字段不可以修改
                 sgd.DefineColumns.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.Cost);
+                //如果权限配方不能看成本时。录入明细后不能切换成期初盘点。因为期初是可以看成本的。大于权限配置。
+                if (listCols != null)
+                {
+                    var detail = new tb_StocktakeDetail();
+                    if (listCols.Where(c => c.ColName == nameof(detail.Cost)).FirstOrDefault().Visible == false)
+                    {
+                        // cmbCheckMode.Enabled = false;
+                    }
+                    else
+                    {
+                        // cmbCheckMode.Enabled = true;
+                    }
+                }
+
             }
         }
+
+
+        private void ControlCostByCheckModel(CheckMode checkMode)
+        {
+
+            //如果选期初 ，则载帐日期需要是当前时间，调整方式 则不可能是减少，是增加。
+            if (checkMode == CheckMode.期初盘点)
+            {
+                //成本字段可以修改
+                sgd.DefineColumns.SetCol_ReadWrite<tb_StocktakeDetail>(c => c.Cost);
+                //添加
+                listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.Cost)).NeverVisible = false;
+                listCols.FirstOrDefault(c => c.ColName == nameof(tb_StocktakeDetail.Cost)).Visible = true;
+                InitLoadGrid();
+            }
+            else
+            {
+                ControlChildColumnsInvisible(listCols);
+                InitLoadGrid();
+                //成本字段不可以修改
+                sgd.DefineColumns.SetCol_ReadOnly<tb_StocktakeDetail>(c => c.Cost);
+                //如果权限配方不能看成本时。录入明细后不能切换成期初盘点。因为期初是可以看成本的。大于权限配置。
+                if (listCols != null)
+                {
+                    var detail = new tb_StocktakeDetail();
+                    if (listCols.Where(c => c.ColName == nameof(detail.Cost)).FirstOrDefault().Visible == false)
+                    {
+                        cmbCheckMode.Enabled = false;
+                    }
+                    else
+                    {
+                        cmbCheckMode.Enabled = true;
+                    }
+                }
+
+            }
+        }
+
     }
 
 

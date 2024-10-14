@@ -190,10 +190,10 @@ namespace RUINORERP.Business
                  生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                  市场价格：参考市场上类似产品或物品的价格。
                   */
-                    inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
-                    inv.CostFIFO = child.Cost;
-                    inv.CostMonthlyWA = child.Cost;
-                    inv.CostMovingWA = child.Cost;
+                    //inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
+                    //inv.CostFIFO = child.Cost;
+                    //inv.CostMonthlyWA = child.Cost;
+                    //inv.CostMovingWA = child.Cost;
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
@@ -362,10 +362,10 @@ namespace RUINORERP.Business
                  生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                  市场价格：参考市场上类似产品或物品的价格。
                   */
-                    inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
-                    inv.CostFIFO = child.Cost;
-                    inv.CostMonthlyWA = child.Cost;
-                    inv.CostMovingWA = child.Cost;
+                    //inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
+                    //inv.CostFIFO = child.Cost;
+                    //inv.CostMonthlyWA = child.Cost;
+                    //inv.CostMovingWA = child.Cost;
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;

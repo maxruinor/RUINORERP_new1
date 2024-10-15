@@ -145,6 +145,13 @@ namespace RUINORERP.Model.Dto
         [ReadOnly(true)]
         public decimal? Standard_Price { get; set; }
 
+        /// <summary>
+        /// 调拨价
+        /// </summary>
+        [SugarColumn(ColumnDataType = "money", ColumnName = "TransPrice", IsNullable = true, ColumnDescription = "调拨价")]
+        [ReadOnly(true)]
+        public decimal? TransPrice { get; set; }
+
 
         #region 字段描述对应列表
         private ConcurrentDictionary<string, string> fieldNameList;

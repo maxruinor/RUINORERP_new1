@@ -226,25 +226,43 @@ namespace RUINORERP.UI.AdvancedUIModule
                         KryptonTextBox tb_box_cmb = new KryptonTextBox();
                         tb_box_cmb.Name = queryField.FieldName;
                         tb_box_cmb.Width = 150;
+                        if (string.IsNullOrEmpty(queryField.FriendlyFieldNameFormBiz))
+                        {
+                            DataBindingHelper.BindData4TextBox(newDto, queryField.FieldName, tb_box_cmb, BindDataType4TextBox.Text, false);
+                        }
+                        else
+                        {
+                            DataBindingHelper.BindData4TextBox(newDto, queryField.FriendlyFieldNameFormBiz, tb_box_cmb, BindDataType4TextBox.Text, false);
+                        }
 
-                        DataBindingHelper.BindData4TextBox(newDto, queryField.FriendlyFieldName, tb_box_cmb, BindDataType4TextBox.Text, false);
-                        //DataBindingHelper.BindData4TextBoxWithTagQuery(newDto, newFieldlist[c].ColName, tb_box_cmb, false);
 
                         #region 生成快捷查询
 
-                        string IDColName = queryField.fKRelationAttribute.FK_IDColName;
-                        string ColName = queryField.FriendlyFieldName;
-                        //DataBindingHelper.BindData4Cmb<T>(QueryDto, key, value, coldata.FKTableName, cmb);
-                        //这里加载时 是指定了相关的外键表的对应实体的类型
-                        //if (ReladtedEntityType == null)
-                        //{
-                        //    ReladtedEntityType = typeof(T);
-                        //}
+                        string IDColName = string.Empty;
+                        if (!string.IsNullOrEmpty(queryField.fKRelationAttribute.FK_IDColName))
+                        {
+                            IDColName = queryField.fKRelationAttribute.FK_IDColName;
+                        }
+
+                        if (!string.IsNullOrEmpty(queryField.FriendlyFieldValueFromSource))
+                        {
+                            IDColName = queryField.FriendlyFieldValueFromSource;
+                        }
+
+                        string DisplayColName = queryField.FriendlyFieldNameFormBiz;
+                        if (queryField.FriendlyFieldNameFromSource.IsNotEmptyOrNull())
+                        {
+                            DisplayColName = queryField.FriendlyFieldNameFromSource;
+                        }
 
                         //如果有最终指定原始的字段就用原始的来绑定
-                        if (queryField.FriendlyFieldNameFromRelated.IsNotEmptyOrNull())
+                        if (queryField.FriendlyFieldNameFromSource.IsNotEmptyOrNull())
                         {
-                            ColName = queryField.FriendlyFieldNameFromRelated;
+                            DisplayColName = queryField.FriendlyFieldNameFromSource;
+                        }
+                        if (string.IsNullOrEmpty(IDColName))
+                        {
+                            IDColName = DisplayColName;
                         }
                         if (queryField.SubFilter.QueryTargetType == null)
                         {
@@ -252,14 +270,10 @@ namespace RUINORERP.UI.AdvancedUIModule
                         }
                         //注意这样调用不能用同名重载的方法名
                         MethodInfo mf2 = dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { queryField.SubFilter.QueryTargetType });
-                        object[] args2 = new object[6] { newDto, tb_box_cmb, ColName, queryField.SubFilter, queryField.SubFilter.QueryTargetType, ColName };
+                        object[] args2 = new object[6] { newDto, tb_box_cmb, DisplayColName, queryField.SubFilter, queryField.SubFilter.QueryTargetType, IDColName };
                         mf2.Invoke(dbh, args2);
 
-                        // DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(entity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
                         #endregion
-
-
-                        //lbl.Text = "";
 
                         tb_box_cmb.Location = new System.Drawing.Point(_x, _y);
                         UcPanel.Controls.Add(tb_box_cmb);
@@ -373,7 +387,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                     case AdvQueryProcessType.defaultSelect:
                         #region     单选下拉
 
-
                         KryptonComboBox DefaultCmb = new KryptonComboBox();
                         DefaultCmb.Name = queryField.FieldName;
                         DefaultCmb.Text = "";
@@ -383,7 +396,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
                             if (CacheHelper.Manager.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
-
                             {
 
                                 //关联要绑定的类型
@@ -411,15 +423,24 @@ namespace RUINORERP.UI.AdvancedUIModule
                                     //非常值和学习借鉴有代码 TODO 重点学习代码
                                     //UI传入过滤条件 下拉可以显示不同的数据
                                     ExpConverter expConverter = new ExpConverter();
-
-                                    //var whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryEntityType, queryField.SubFilter.FilterLimitExpressions[0]);
-                                    //var whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryEntityType, queryField.SubFilter.GetFilterLimitExpression());
                                     var whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryTargetType, queryField.SubFilter.GetFilterLimitExpression(mytype));
                                     #region 
                                     //绑定下拉
-                                    MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimited").MakeGenericMethod(new Type[] { mytype });
-                                    object[] args1 = new object[6] { newDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
-                                    mf1.Invoke(dbh, args1);
+                                   
+                                    if (pair.Key == queryField.FieldName)
+                                    {
+                                        MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimited").MakeGenericMethod(new Type[] { mytype });
+                                        object[] args1 = new object[6] { newDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
+                                        mf1.Invoke(dbh, args1);
+                                    }
+                                    else
+                                    {
+                                        MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimitedByAlias").MakeGenericMethod(new Type[] { mytype });
+                                        //注意这样
+                                        object[] args1 = new object[7] { newDto, pair.Key, queryField.FieldName, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
+                                        mf1.Invoke(dbh, args1);
+                                    }
+                                    
                                     #endregion
                                 }
 

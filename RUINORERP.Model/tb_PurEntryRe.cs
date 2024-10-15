@@ -51,6 +51,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _PurEntryReNo;
+        /// <summary>
+        /// 退回单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PurEntryReNo", ColDesc = "退回单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PurEntryReNo", Length = 50, IsNullable = false, ColumnDescription = "退回单号")]
+        public string PurEntryReNo
+        {
+            get { return _PurEntryReNo; }
+            set
+            {
+                SetProperty(ref _PurEntryReNo, value);
+            }
+        }
+
         private long _CustomerVendor_ID;
         /// <summary>
         /// 供应商
@@ -140,19 +155,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _PurEntryRENo;
-        /// <summary>
-        /// 退回单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PurEntryRENo",ColDesc = "退回单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PurEntryRENo" ,Length=50,IsNullable = false,ColumnDescription = "退回单号" )]
-        public string PurEntryRENo
-        { 
-            get{return _PurEntryRENo;}
-            set{
-            SetProperty(ref _PurEntryRENo, value);
-            }
-        }
+        
 
         private int _TotalQty= ((0));
         /// <summary>

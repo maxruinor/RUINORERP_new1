@@ -36,8 +36,8 @@ namespace RUINORERP.Business
  RuleFor(tb_PurEntryRe =>tb_PurEntryRe.PurEntryID).NotNull().WithMessage("采购入库单:不能为空。");
  RuleFor(tb_PurEntryRe =>tb_PurEntryRe.PurEntryNo).MaximumLength(25).WithMessage("入库单号:不能超过最大长度,25.");
  RuleFor(tb_PurEntryRe =>tb_PurEntryRe.PurEntryNo).NotEmpty().WithMessage("入库单号:不能为空。");
- RuleFor(tb_PurEntryRe =>tb_PurEntryRe.PurEntryRENo).MaximumLength(25).WithMessage("退回单号:不能超过最大长度,25.");
- RuleFor(tb_PurEntryRe =>tb_PurEntryRe.PurEntryRENo).NotEmpty().WithMessage("退回单号:不能为空。");
+ RuleFor(tb_PurEntryRe =>tb_PurEntryRe.PurEntryReNo).MaximumLength(25).WithMessage("退回单号:不能超过最大长度,25.");
+ RuleFor(tb_PurEntryRe =>tb_PurEntryRe.PurEntryReNo).NotEmpty().WithMessage("退回单号:不能为空。");
 //***** 
  RuleFor(tb_PurEntryRe =>tb_PurEntryRe.TotalQty).NotNull().WithMessage("合计数量:不能为空。");
  RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,4,true).WithMessage("合计税额:小数位不能超过4。");

@@ -96,7 +96,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.PurEntryRENo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退回单);
+                entity.PurEntryReNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退回单);
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_PurEntryReDetails != null && entity.tb_PurEntryReDetails.Count > 0)
                 {
@@ -110,7 +110,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
-            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.PurEntryRENo, txtPurEntryRENo, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.PurEntryReNo, txtPurEntryRENo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ActualAmount.ToString(), txtActualAmount, BindDataType4TextBox.Money, false);
@@ -403,7 +403,7 @@ namespace RUINORERP.UI.PSI.PUR
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PurEntryRENo}。");
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.PurEntryReNo}。");
                     }
                     else
                     {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/14/2024 18:29:34
+// 时间：10/15/2024 18:45:35
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -456,8 +456,9 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_StockTransfer>> QueryByNavAsync()
         {
             List<tb_StockTransfer> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>()
-                               .Includes(t => t.tb_location )
-                               .Includes(t => t.tb_location )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_location_from )
+                               .Includes(t => t.tb_location_to )
                                             .Includes(t => t.tb_StockTransferDetails )
                         .ToListAsync();
             
@@ -478,8 +479,9 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_StockTransfer>> QueryByNavAsync(Expression<Func<tb_StockTransfer, bool>> exp)
         {
             List<tb_StockTransfer> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(exp)
-                               .Includes(t => t.tb_location )
-                               .Includes(t => t.tb_location )
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_location_from)
+                               .Includes(t => t.tb_location_to)
                                             .Includes(t => t.tb_StockTransferDetails )
                         .ToListAsync();
             
@@ -500,8 +502,9 @@ namespace RUINORERP.Business
          public virtual List<tb_StockTransfer> QueryByNav(Expression<Func<tb_StockTransfer, bool>> exp)
         {
             List<tb_StockTransfer> list = _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(exp)
-                            .Includes(t => t.tb_location )
-                            .Includes(t => t.tb_location )
+                            .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_location_from)
+                               .Includes(t => t.tb_location_to)
                                         .Includes(t => t.tb_StockTransferDetails )
                         .ToList();
             
@@ -539,8 +542,9 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_StockTransfer entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(w => w.StockTransferID == (long)id)
-                             .Includes(t => t.tb_location )
-                            .Includes(t => t.tb_location )
+                             .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_location_from)
+                               .Includes(t => t.tb_location_to)
                                         .Includes(t => t.tb_StockTransferDetails )
                         .FirstAsync();
             if(entity!=null)

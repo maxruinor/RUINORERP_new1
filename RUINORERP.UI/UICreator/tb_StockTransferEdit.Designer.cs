@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/14/2024 18:29:33
+// 时间：10/15/2024 18:45:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,18 +52,18 @@ namespace RUINORERP.UI
      // this.btnCancel = new ComponentFactory.Krypton.Toolkit.KryptonButton();
       //this.kryptonPanel1 = new ComponentFactory.Krypton.Toolkit.KryptonPanel();
       //for definition
-     Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。this.lblLocation_ID_from = new Krypton.Toolkit.KryptonLabel();
+     this.lblStockTransferNo = new Krypton.Toolkit.KryptonLabel();
+this.txtStockTransferNo = new Krypton.Toolkit.KryptonTextBox();
+
+Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。this.lblLocation_ID_from = new Krypton.Toolkit.KryptonLabel();
 this.txtLocation_ID_from = new Krypton.Toolkit.KryptonTextBox();
 
 Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。this.lblLocation_ID_to = new Krypton.Toolkit.KryptonLabel();
 this.txtLocation_ID_to = new Krypton.Toolkit.KryptonTextBox();
 
-Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
-this.txtEmployee_ID = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblStockTransferNo = new Krypton.Toolkit.KryptonLabel();
-this.txtStockTransferNo = new Krypton.Toolkit.KryptonTextBox();
-
+this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
+this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
+Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。
 Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。this.lblTotalQty = new Krypton.Toolkit.KryptonLabel();
 this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
 
@@ -73,11 +73,8 @@ this.txtTotalCost = new Krypton.Toolkit.KryptonTextBox();
 this.lblTotalTransferAmount = new Krypton.Toolkit.KryptonLabel();
 this.txtTotalTransferAmount = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblBill_Date = new Krypton.Toolkit.KryptonLabel();
-this.dtpBill_Date = new Krypton.Toolkit.KryptonDateTimePicker();
-
-this.lblOut_date = new Krypton.Toolkit.KryptonLabel();
-this.dtpOut_date = new Krypton.Toolkit.KryptonDateTimePicker();
+this.lblTransfer_date = new Krypton.Toolkit.KryptonLabel();
+this.dtpTransfer_date = new Krypton.Toolkit.KryptonDateTimePicker();
 
 this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
 this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -147,69 +144,72 @@ this.txtPrintStatus = new Krypton.Toolkit.KryptonTextBox();
             
          //for size
      
-            //#####Location_ID_from###Int64
-//属性测试25Location_ID_from
-Location_ID_from主外字段不一致。//属性测试25Location_ID_from
+            //#####50StockTransferNo###String
+this.lblStockTransferNo.AutoSize = true;
+this.lblStockTransferNo.Location = new System.Drawing.Point(100,25);
+this.lblStockTransferNo.Name = "lblStockTransferNo";
+this.lblStockTransferNo.Size = new System.Drawing.Size(41, 12);
+this.lblStockTransferNo.TabIndex = 1;
+this.lblStockTransferNo.Text = "调拨单号";
+this.txtStockTransferNo.Location = new System.Drawing.Point(173,21);
+this.txtStockTransferNo.Name = "txtStockTransferNo";
+this.txtStockTransferNo.Size = new System.Drawing.Size(100, 21);
+this.txtStockTransferNo.TabIndex = 1;
+this.Controls.Add(this.lblStockTransferNo);
+this.Controls.Add(this.txtStockTransferNo);
+
+           //#####Location_ID_from###Int64
+//属性测试50Location_ID_from
+//属性测试50Location_ID_from
+Location_ID_from主外字段不一致。//属性测试50Location_ID_from
 Location_ID_to主外字段不一致。this.lblLocation_ID_from.AutoSize = true;
-this.lblLocation_ID_from.Location = new System.Drawing.Point(100,25);
+this.lblLocation_ID_from.Location = new System.Drawing.Point(100,50);
 this.lblLocation_ID_from.Name = "lblLocation_ID_from";
 this.lblLocation_ID_from.Size = new System.Drawing.Size(41, 12);
-this.lblLocation_ID_from.TabIndex = 1;
-this.lblLocation_ID_from.Text = "";
-this.txtLocation_ID_from.Location = new System.Drawing.Point(173,21);
+this.lblLocation_ID_from.TabIndex = 2;
+this.lblLocation_ID_from.Text = "调出仓库";
+this.txtLocation_ID_from.Location = new System.Drawing.Point(173,46);
 this.txtLocation_ID_from.Name = "txtLocation_ID_from";
 this.txtLocation_ID_from.Size = new System.Drawing.Size(100, 21);
-this.txtLocation_ID_from.TabIndex = 1;
+this.txtLocation_ID_from.TabIndex = 2;
 this.Controls.Add(this.lblLocation_ID_from);
 this.Controls.Add(this.txtLocation_ID_from);
 
            //#####Location_ID_to###Int64
-//属性测试50Location_ID_to
-Location_ID_from主外字段不一致。//属性测试50Location_ID_to
+//属性测试75Location_ID_to
+//属性测试75Location_ID_to
+Location_ID_from主外字段不一致。//属性测试75Location_ID_to
 Location_ID_to主外字段不一致。this.lblLocation_ID_to.AutoSize = true;
-this.lblLocation_ID_to.Location = new System.Drawing.Point(100,50);
+this.lblLocation_ID_to.Location = new System.Drawing.Point(100,75);
 this.lblLocation_ID_to.Name = "lblLocation_ID_to";
 this.lblLocation_ID_to.Size = new System.Drawing.Size(41, 12);
-this.lblLocation_ID_to.TabIndex = 2;
-this.lblLocation_ID_to.Text = "";
-this.txtLocation_ID_to.Location = new System.Drawing.Point(173,46);
+this.lblLocation_ID_to.TabIndex = 3;
+this.lblLocation_ID_to.Text = "调入仓库";
+this.txtLocation_ID_to.Location = new System.Drawing.Point(173,71);
 this.txtLocation_ID_to.Name = "txtLocation_ID_to";
 this.txtLocation_ID_to.Size = new System.Drawing.Size(100, 21);
-this.txtLocation_ID_to.TabIndex = 2;
+this.txtLocation_ID_to.TabIndex = 3;
 this.Controls.Add(this.lblLocation_ID_to);
 this.Controls.Add(this.txtLocation_ID_to);
 
            //#####Employee_ID###Int64
-//属性测试75Employee_ID
-Location_ID_from主外字段不一致。//属性测试75Employee_ID
-Location_ID_to主外字段不一致。this.lblEmployee_ID.AutoSize = true;
-this.lblEmployee_ID.Location = new System.Drawing.Point(100,75);
+//属性测试100Employee_ID
+this.lblEmployee_ID.AutoSize = true;
+this.lblEmployee_ID.Location = new System.Drawing.Point(100,100);
 this.lblEmployee_ID.Name = "lblEmployee_ID";
 this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
-this.lblEmployee_ID.TabIndex = 3;
+this.lblEmployee_ID.TabIndex = 4;
 this.lblEmployee_ID.Text = "经办人";
-this.txtEmployee_ID.Location = new System.Drawing.Point(173,71);
-this.txtEmployee_ID.Name = "txtEmployee_ID";
-this.txtEmployee_ID.Size = new System.Drawing.Size(100, 21);
-this.txtEmployee_ID.TabIndex = 3;
+//111======100
+this.cmbEmployee_ID.Location = new System.Drawing.Point(173,96);
+this.cmbEmployee_ID.Name ="cmbEmployee_ID";
+this.cmbEmployee_ID.Size = new System.Drawing.Size(100, 21);
+this.cmbEmployee_ID.TabIndex = 4;
 this.Controls.Add(this.lblEmployee_ID);
-this.Controls.Add(this.txtEmployee_ID);
-
-           //#####50StockTransferNo###String
-this.lblStockTransferNo.AutoSize = true;
-this.lblStockTransferNo.Location = new System.Drawing.Point(100,100);
-this.lblStockTransferNo.Name = "lblStockTransferNo";
-this.lblStockTransferNo.Size = new System.Drawing.Size(41, 12);
-this.lblStockTransferNo.TabIndex = 4;
-this.lblStockTransferNo.Text = "调拨单号";
-this.txtStockTransferNo.Location = new System.Drawing.Point(173,96);
-this.txtStockTransferNo.Name = "txtStockTransferNo";
-this.txtStockTransferNo.Size = new System.Drawing.Size(100, 21);
-this.txtStockTransferNo.TabIndex = 4;
-this.Controls.Add(this.lblStockTransferNo);
-this.Controls.Add(this.txtStockTransferNo);
+this.Controls.Add(this.cmbEmployee_ID);
 
            //#####TotalQty###Int32
+//属性测试125TotalQty
 //属性测试125TotalQty
 Location_ID_from主外字段不一致。//属性测试125TotalQty
 Location_ID_to主外字段不一致。this.lblTotalQty.AutoSize = true;
@@ -255,188 +255,176 @@ this.txtTotalTransferAmount.TabIndex = 7;
 this.Controls.Add(this.lblTotalTransferAmount);
 this.Controls.Add(this.txtTotalTransferAmount);
 
-           //#####Bill_Date###DateTime
-this.lblBill_Date.AutoSize = true;
-this.lblBill_Date.Location = new System.Drawing.Point(100,200);
-this.lblBill_Date.Name = "lblBill_Date";
-this.lblBill_Date.Size = new System.Drawing.Size(41, 12);
-this.lblBill_Date.TabIndex = 8;
-this.lblBill_Date.Text = "单据日期";
+           //#####Transfer_date###DateTime
+this.lblTransfer_date.AutoSize = true;
+this.lblTransfer_date.Location = new System.Drawing.Point(100,200);
+this.lblTransfer_date.Name = "lblTransfer_date";
+this.lblTransfer_date.Size = new System.Drawing.Size(41, 12);
+this.lblTransfer_date.TabIndex = 8;
+this.lblTransfer_date.Text = "调拨日期";
 //111======200
-this.dtpBill_Date.Location = new System.Drawing.Point(173,196);
-this.dtpBill_Date.Name ="dtpBill_Date";
-this.dtpBill_Date.ShowCheckBox =true;
-this.dtpBill_Date.Size = new System.Drawing.Size(100, 21);
-this.dtpBill_Date.TabIndex = 8;
-this.Controls.Add(this.lblBill_Date);
-this.Controls.Add(this.dtpBill_Date);
-
-           //#####Out_date###DateTime
-this.lblOut_date.AutoSize = true;
-this.lblOut_date.Location = new System.Drawing.Point(100,225);
-this.lblOut_date.Name = "lblOut_date";
-this.lblOut_date.Size = new System.Drawing.Size(41, 12);
-this.lblOut_date.TabIndex = 9;
-this.lblOut_date.Text = "出库日期";
-//111======225
-this.dtpOut_date.Location = new System.Drawing.Point(173,221);
-this.dtpOut_date.Name ="dtpOut_date";
-this.dtpOut_date.ShowCheckBox =true;
-this.dtpOut_date.Size = new System.Drawing.Size(100, 21);
-this.dtpOut_date.TabIndex = 9;
-this.Controls.Add(this.lblOut_date);
-this.Controls.Add(this.dtpOut_date);
+this.dtpTransfer_date.Location = new System.Drawing.Point(173,196);
+this.dtpTransfer_date.Name ="dtpTransfer_date";
+this.dtpTransfer_date.ShowCheckBox =true;
+this.dtpTransfer_date.Size = new System.Drawing.Size(100, 21);
+this.dtpTransfer_date.TabIndex = 8;
+this.Controls.Add(this.lblTransfer_date);
+this.Controls.Add(this.dtpTransfer_date);
 
            //#####Created_at###DateTime
 this.lblCreated_at.AutoSize = true;
-this.lblCreated_at.Location = new System.Drawing.Point(100,250);
+this.lblCreated_at.Location = new System.Drawing.Point(100,225);
 this.lblCreated_at.Name = "lblCreated_at";
 this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_at.TabIndex = 10;
+this.lblCreated_at.TabIndex = 9;
 this.lblCreated_at.Text = "创建时间";
-//111======250
-this.dtpCreated_at.Location = new System.Drawing.Point(173,246);
+//111======225
+this.dtpCreated_at.Location = new System.Drawing.Point(173,221);
 this.dtpCreated_at.Name ="dtpCreated_at";
 this.dtpCreated_at.ShowCheckBox =true;
 this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-this.dtpCreated_at.TabIndex = 10;
+this.dtpCreated_at.TabIndex = 9;
 this.Controls.Add(this.lblCreated_at);
 this.Controls.Add(this.dtpCreated_at);
 
            //#####Created_by###Int64
-//属性测试275Created_by
-Location_ID_from主外字段不一致。//属性测试275Created_by
+//属性测试250Created_by
+//属性测试250Created_by
+Location_ID_from主外字段不一致。//属性测试250Created_by
 Location_ID_to主外字段不一致。this.lblCreated_by.AutoSize = true;
-this.lblCreated_by.Location = new System.Drawing.Point(100,275);
+this.lblCreated_by.Location = new System.Drawing.Point(100,250);
 this.lblCreated_by.Name = "lblCreated_by";
 this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_by.TabIndex = 11;
+this.lblCreated_by.TabIndex = 10;
 this.lblCreated_by.Text = "创建人";
-this.txtCreated_by.Location = new System.Drawing.Point(173,271);
+this.txtCreated_by.Location = new System.Drawing.Point(173,246);
 this.txtCreated_by.Name = "txtCreated_by";
 this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
-this.txtCreated_by.TabIndex = 11;
+this.txtCreated_by.TabIndex = 10;
 this.Controls.Add(this.lblCreated_by);
 this.Controls.Add(this.txtCreated_by);
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
-this.lblModified_at.Location = new System.Drawing.Point(100,300);
+this.lblModified_at.Location = new System.Drawing.Point(100,275);
 this.lblModified_at.Name = "lblModified_at";
 this.lblModified_at.Size = new System.Drawing.Size(41, 12);
-this.lblModified_at.TabIndex = 12;
+this.lblModified_at.TabIndex = 11;
 this.lblModified_at.Text = "修改时间";
-//111======300
-this.dtpModified_at.Location = new System.Drawing.Point(173,296);
+//111======275
+this.dtpModified_at.Location = new System.Drawing.Point(173,271);
 this.dtpModified_at.Name ="dtpModified_at";
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-this.dtpModified_at.TabIndex = 12;
+this.dtpModified_at.TabIndex = 11;
 this.Controls.Add(this.lblModified_at);
 this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
-//属性测试325Modified_by
-Location_ID_from主外字段不一致。//属性测试325Modified_by
+//属性测试300Modified_by
+//属性测试300Modified_by
+Location_ID_from主外字段不一致。//属性测试300Modified_by
 Location_ID_to主外字段不一致。this.lblModified_by.AutoSize = true;
-this.lblModified_by.Location = new System.Drawing.Point(100,325);
+this.lblModified_by.Location = new System.Drawing.Point(100,300);
 this.lblModified_by.Name = "lblModified_by";
 this.lblModified_by.Size = new System.Drawing.Size(41, 12);
-this.lblModified_by.TabIndex = 13;
+this.lblModified_by.TabIndex = 12;
 this.lblModified_by.Text = "修改人";
-this.txtModified_by.Location = new System.Drawing.Point(173,321);
+this.txtModified_by.Location = new System.Drawing.Point(173,296);
 this.txtModified_by.Name = "txtModified_by";
 this.txtModified_by.Size = new System.Drawing.Size(100, 21);
-this.txtModified_by.TabIndex = 13;
+this.txtModified_by.TabIndex = 12;
 this.Controls.Add(this.lblModified_by);
 this.Controls.Add(this.txtModified_by);
 
            //#####1500Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,350);
+this.lblNotes.Location = new System.Drawing.Point(100,325);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 14;
+this.lblNotes.TabIndex = 13;
 this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,346);
+this.txtNotes.Location = new System.Drawing.Point(173,321);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 14;
+this.txtNotes.TabIndex = 13;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
 
            //#####isdeleted###Boolean
 this.lblisdeleted.AutoSize = true;
-this.lblisdeleted.Location = new System.Drawing.Point(100,375);
+this.lblisdeleted.Location = new System.Drawing.Point(100,350);
 this.lblisdeleted.Name = "lblisdeleted";
 this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
-this.lblisdeleted.TabIndex = 15;
+this.lblisdeleted.TabIndex = 14;
 this.lblisdeleted.Text = "逻辑删除";
-this.chkisdeleted.Location = new System.Drawing.Point(173,371);
+this.chkisdeleted.Location = new System.Drawing.Point(173,346);
 this.chkisdeleted.Name = "chkisdeleted";
 this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
-this.chkisdeleted.TabIndex = 15;
+this.chkisdeleted.TabIndex = 14;
 this.Controls.Add(this.lblisdeleted);
 this.Controls.Add(this.chkisdeleted);
 
            //#####DataStatus###Int32
-//属性测试400DataStatus
-Location_ID_from主外字段不一致。//属性测试400DataStatus
+//属性测试375DataStatus
+//属性测试375DataStatus
+Location_ID_from主外字段不一致。//属性测试375DataStatus
 Location_ID_to主外字段不一致。this.lblDataStatus.AutoSize = true;
-this.lblDataStatus.Location = new System.Drawing.Point(100,400);
+this.lblDataStatus.Location = new System.Drawing.Point(100,375);
 this.lblDataStatus.Name = "lblDataStatus";
 this.lblDataStatus.Size = new System.Drawing.Size(41, 12);
-this.lblDataStatus.TabIndex = 16;
+this.lblDataStatus.TabIndex = 15;
 this.lblDataStatus.Text = "数据状态";
-this.txtDataStatus.Location = new System.Drawing.Point(173,396);
+this.txtDataStatus.Location = new System.Drawing.Point(173,371);
 this.txtDataStatus.Name = "txtDataStatus";
 this.txtDataStatus.Size = new System.Drawing.Size(100, 21);
-this.txtDataStatus.TabIndex = 16;
+this.txtDataStatus.TabIndex = 15;
 this.Controls.Add(this.lblDataStatus);
 this.Controls.Add(this.txtDataStatus);
 
            //#####500ApprovalOpinions###String
 this.lblApprovalOpinions.AutoSize = true;
-this.lblApprovalOpinions.Location = new System.Drawing.Point(100,425);
+this.lblApprovalOpinions.Location = new System.Drawing.Point(100,400);
 this.lblApprovalOpinions.Name = "lblApprovalOpinions";
 this.lblApprovalOpinions.Size = new System.Drawing.Size(41, 12);
-this.lblApprovalOpinions.TabIndex = 17;
+this.lblApprovalOpinions.TabIndex = 16;
 this.lblApprovalOpinions.Text = "审批意见";
-this.txtApprovalOpinions.Location = new System.Drawing.Point(173,421);
+this.txtApprovalOpinions.Location = new System.Drawing.Point(173,396);
 this.txtApprovalOpinions.Name = "txtApprovalOpinions";
 this.txtApprovalOpinions.Size = new System.Drawing.Size(100, 21);
-this.txtApprovalOpinions.TabIndex = 17;
+this.txtApprovalOpinions.TabIndex = 16;
 this.Controls.Add(this.lblApprovalOpinions);
 this.Controls.Add(this.txtApprovalOpinions);
 
            //#####Approver_by###Int64
-//属性测试450Approver_by
-Location_ID_from主外字段不一致。//属性测试450Approver_by
+//属性测试425Approver_by
+//属性测试425Approver_by
+Location_ID_from主外字段不一致。//属性测试425Approver_by
 Location_ID_to主外字段不一致。this.lblApprover_by.AutoSize = true;
-this.lblApprover_by.Location = new System.Drawing.Point(100,450);
+this.lblApprover_by.Location = new System.Drawing.Point(100,425);
 this.lblApprover_by.Name = "lblApprover_by";
 this.lblApprover_by.Size = new System.Drawing.Size(41, 12);
-this.lblApprover_by.TabIndex = 18;
+this.lblApprover_by.TabIndex = 17;
 this.lblApprover_by.Text = "审批人";
-this.txtApprover_by.Location = new System.Drawing.Point(173,446);
+this.txtApprover_by.Location = new System.Drawing.Point(173,421);
 this.txtApprover_by.Name = "txtApprover_by";
 this.txtApprover_by.Size = new System.Drawing.Size(100, 21);
-this.txtApprover_by.TabIndex = 18;
+this.txtApprover_by.TabIndex = 17;
 this.Controls.Add(this.lblApprover_by);
 this.Controls.Add(this.txtApprover_by);
 
            //#####Approver_at###DateTime
 this.lblApprover_at.AutoSize = true;
-this.lblApprover_at.Location = new System.Drawing.Point(100,475);
+this.lblApprover_at.Location = new System.Drawing.Point(100,450);
 this.lblApprover_at.Name = "lblApprover_at";
 this.lblApprover_at.Size = new System.Drawing.Size(41, 12);
-this.lblApprover_at.TabIndex = 19;
+this.lblApprover_at.TabIndex = 18;
 this.lblApprover_at.Text = "审批时间";
-//111======475
-this.dtpApprover_at.Location = new System.Drawing.Point(173,471);
+//111======450
+this.dtpApprover_at.Location = new System.Drawing.Point(173,446);
 this.dtpApprover_at.Name ="dtpApprover_at";
 this.dtpApprover_at.ShowCheckBox =true;
 this.dtpApprover_at.Size = new System.Drawing.Size(100, 21);
-this.dtpApprover_at.TabIndex = 19;
+this.dtpApprover_at.TabIndex = 18;
 this.Controls.Add(this.lblApprover_at);
 this.Controls.Add(this.dtpApprover_at);
 
@@ -444,31 +432,32 @@ this.Controls.Add(this.dtpApprover_at);
 
            //#####ApprovalResults###Boolean
 this.lblApprovalResults.AutoSize = true;
-this.lblApprovalResults.Location = new System.Drawing.Point(100,525);
+this.lblApprovalResults.Location = new System.Drawing.Point(100,500);
 this.lblApprovalResults.Name = "lblApprovalResults";
 this.lblApprovalResults.Size = new System.Drawing.Size(41, 12);
-this.lblApprovalResults.TabIndex = 21;
+this.lblApprovalResults.TabIndex = 20;
 this.lblApprovalResults.Text = "审批结果";
-this.chkApprovalResults.Location = new System.Drawing.Point(173,521);
+this.chkApprovalResults.Location = new System.Drawing.Point(173,496);
 this.chkApprovalResults.Name = "chkApprovalResults";
 this.chkApprovalResults.Size = new System.Drawing.Size(100, 21);
-this.chkApprovalResults.TabIndex = 21;
+this.chkApprovalResults.TabIndex = 20;
 this.Controls.Add(this.lblApprovalResults);
 this.Controls.Add(this.chkApprovalResults);
 
            //#####PrintStatus###Int32
-//属性测试550PrintStatus
-Location_ID_from主外字段不一致。//属性测试550PrintStatus
+//属性测试525PrintStatus
+//属性测试525PrintStatus
+Location_ID_from主外字段不一致。//属性测试525PrintStatus
 Location_ID_to主外字段不一致。this.lblPrintStatus.AutoSize = true;
-this.lblPrintStatus.Location = new System.Drawing.Point(100,550);
+this.lblPrintStatus.Location = new System.Drawing.Point(100,525);
 this.lblPrintStatus.Name = "lblPrintStatus";
 this.lblPrintStatus.Size = new System.Drawing.Size(41, 12);
-this.lblPrintStatus.TabIndex = 22;
+this.lblPrintStatus.TabIndex = 21;
 this.lblPrintStatus.Text = "打印状态";
-this.txtPrintStatus.Location = new System.Drawing.Point(173,546);
+this.txtPrintStatus.Location = new System.Drawing.Point(173,521);
 this.txtPrintStatus.Name = "txtPrintStatus";
 this.txtPrintStatus.Size = new System.Drawing.Size(100, 21);
-this.txtPrintStatus.TabIndex = 22;
+this.txtPrintStatus.TabIndex = 21;
 this.Controls.Add(this.lblPrintStatus);
 this.Controls.Add(this.txtPrintStatus);
 
@@ -486,21 +475,21 @@ this.Controls.Add(this.txtPrintStatus);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 22;
+           // this.kryptonPanel1.TabIndex = 21;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+                this.Controls.Add(this.lblStockTransferNo );
+this.Controls.Add(this.txtStockTransferNo );
+
                 Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。this.Controls.Add(this.lblLocation_ID_from );
 this.Controls.Add(this.txtLocation_ID_from );
 
                 Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。this.Controls.Add(this.lblLocation_ID_to );
 this.Controls.Add(this.txtLocation_ID_to );
 
-                Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。this.Controls.Add(this.lblEmployee_ID );
-this.Controls.Add(this.txtEmployee_ID );
-
-                this.Controls.Add(this.lblStockTransferNo );
-this.Controls.Add(this.txtStockTransferNo );
+                this.Controls.Add(this.lblEmployee_ID );
+this.Controls.Add(this.cmbEmployee_ID );
 
                 Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。this.Controls.Add(this.lblTotalQty );
 this.Controls.Add(this.txtTotalQty );
@@ -511,11 +500,8 @@ this.Controls.Add(this.txtTotalCost );
                 this.Controls.Add(this.lblTotalTransferAmount );
 this.Controls.Add(this.txtTotalTransferAmount );
 
-                this.Controls.Add(this.lblBill_Date );
-this.Controls.Add(this.dtpBill_Date );
-
-                this.Controls.Add(this.lblOut_date );
-this.Controls.Add(this.dtpOut_date );
+                this.Controls.Add(this.lblTransfer_date );
+this.Controls.Add(this.dtpTransfer_date );
 
                 this.Controls.Add(this.lblCreated_at );
 this.Controls.Add(this.dtpCreated_at );
@@ -578,6 +564,11 @@ this.Controls.Add(this.txtPrintStatus );
      //for start
      
          
+              private Krypton.Toolkit.KryptonLabel lblStockTransferNo;
+private Krypton.Toolkit.KryptonTextBox txtStockTransferNo;
+
+    
+        
               Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。private Krypton.Toolkit.KryptonLabel lblLocation_ID_from;
 private Krypton.Toolkit.KryptonTextBox txtLocation_ID_from;
 
@@ -588,14 +579,9 @@ private Krypton.Toolkit.KryptonTextBox txtLocation_ID_to;
 
     
         
-              Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
-private Krypton.Toolkit.KryptonTextBox txtEmployee_ID;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblStockTransferNo;
-private Krypton.Toolkit.KryptonTextBox txtStockTransferNo;
-
+              private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
+private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
+Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。
     
         
               Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。private Krypton.Toolkit.KryptonLabel lblTotalQty;
@@ -613,13 +599,8 @@ private Krypton.Toolkit.KryptonTextBox txtTotalTransferAmount;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblBill_Date;
-private Krypton.Toolkit.KryptonDateTimePicker dtpBill_Date;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblOut_date;
-private Krypton.Toolkit.KryptonDateTimePicker dtpOut_date;
+              private Krypton.Toolkit.KryptonLabel lblTransfer_date;
+private Krypton.Toolkit.KryptonDateTimePicker dtpTransfer_date;
 
     
         

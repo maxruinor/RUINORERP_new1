@@ -434,7 +434,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         }
 
 
-                        if ((coldata.IsFKRelationAttribute && queryField.FriendlyFieldName.IsNullOrEmpty()))
+                        if ((coldata.IsFKRelationAttribute && queryField.FriendlyFieldNameFormBiz.IsNullOrEmpty()))
                         {
                             #region     单选
 
@@ -530,21 +530,21 @@ namespace RUINORERP.UI.AdvancedUIModule
                             break;
                         }
                         //|| (queryField.SubFilter != null && queryField.SubFilter.QueryFields.Count > 0)
-                        if (coldata.IsFKRelationAttribute && queryField.FriendlyFieldName.IsNotEmptyOrNull())
+                        if (coldata.IsFKRelationAttribute && queryField.FriendlyFieldNameFormBiz.IsNotEmptyOrNull())
                         {
                             #region 绑定文本框
                             KryptonTextBox tb_box_cmb = new KryptonTextBox();
                             tb_box_cmb.Name = newFieldlist[c].FieldName;
                             tb_box_cmb.Width = 150;
 
-                            DataBindingHelper.BindData4TextBox(newDto, queryField.FriendlyFieldName, tb_box_cmb, BindDataType4TextBox.Text, false);
+                            DataBindingHelper.BindData4TextBox(newDto, queryField.FriendlyFieldNameFormBiz, tb_box_cmb, BindDataType4TextBox.Text, false);
                             //DataBindingHelper.BindData4TextBoxWithTagQuery(newDto, newFieldlist[c].ColName, tb_box_cmb, false);
 
 
                             #region 生成快捷查询
 
                             string IDColName = coldata.fKRelationAttribute.FK_IDColName;
-                            string ColName = queryField.FriendlyFieldName;
+                            string ColName = queryField.FriendlyFieldNameFormBiz;
                             //DataBindingHelper.BindData4Cmb<T>(QueryDto, key, value, coldata.FKTableName, cmb);
                             //这里加载时 是指定了相关的外键表的对应实体的类型
                             if (ReladtedEntityType == null)
@@ -553,9 +553,9 @@ namespace RUINORERP.UI.AdvancedUIModule
                             }
 
                             //如果有最终指定原始的字段就用原始的来绑定
-                            if (queryField.FriendlyFieldNameFromRelated.IsNotEmptyOrNull())
+                            if (queryField.FriendlyFieldNameFromSource.IsNotEmptyOrNull())
                             {
-                                ColName = queryField.FriendlyFieldNameFromRelated;
+                                ColName = queryField.FriendlyFieldNameFromSource;
                             }
                             if (queryField.SubFilter.QueryTargetType == null)
                             {

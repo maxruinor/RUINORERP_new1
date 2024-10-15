@@ -1518,6 +1518,12 @@
     <Compile Include="PSI\INV\UCProdBorrowing.Designer.cs">
       <DependentUpon>UCProdBorrowing.cs</DependentUpon>
     </Compile>
+    <Compile Include="PSI\INV\UCStockTransfer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCStockTransfer.Designer.cs">
+      <DependentUpon>UCStockTransfer.cs</DependentUpon>
+    </Compile>
     <Compile Include="PSI\INV\UCStockOut.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1535,6 +1541,12 @@
     </Compile>
     <Compile Include="PSI\INV\UCProdSplitQuery.Designer.cs">
       <DependentUpon>UCProdSplitQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\INV\UCStockTransferQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCStockTransferQuery.Designer.cs">
+      <DependentUpon>UCStockTransferQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="PSI\INV\UCStockOutQuery.cs">
       <SubType>UserControl</SubType>
@@ -2612,6 +2624,9 @@
     <EmbeddedResource Include="PSI\INV\UCProdBorrowing.resx">
       <DependentUpon>UCProdBorrowing.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCStockTransfer.resx">
+      <DependentUpon>UCStockTransfer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCStockOut.resx">
       <DependentUpon>UCStockOut.cs</DependentUpon>
     </EmbeddedResource>
@@ -2620,6 +2635,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCProdSplitQuery.resx">
       <DependentUpon>UCProdSplitQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCStockTransferQuery.resx">
+      <DependentUpon>UCStockTransferQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCStockOutQuery.resx">
       <DependentUpon>UCStockOutQuery.cs</DependentUpon>

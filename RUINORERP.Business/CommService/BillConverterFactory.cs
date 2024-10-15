@@ -162,7 +162,7 @@ namespace RUINORERP.Business.CommService
                 case BizType.采购退回单:
                     var purEntryRe = Entity as tb_PurEntryRe;
                     cbd.BillID = purEntryRe.PurEntryRe_ID;
-                    cbd.BillNo = purEntryRe.PurEntryRENo;
+                    cbd.BillNo = purEntryRe.PurEntryReNo;
                     break;
                 /*
             case BizType.返厂出库:
@@ -172,22 +172,22 @@ namespace RUINORERP.Business.CommService
             case BizType.售后入库:
                 var Return = Entity as tb_Return;
                 cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.RetrunNo;
+                cbd.BillNo = Return.ReturnNo;
                 break;
             case BizType.售后出库:
                 var Return = Entity as tb_Return;
                 cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.RetrunNo;
+                cbd.BillNo = Return.ReturnNo;
                 break;
             case BizType.报损单:
                 var Return = Entity as tb_Return;
                 cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.RetrunNo;
+                cbd.BillNo = Return.ReturnNo;
                 break;
             case BizType.报溢单:
                 var Return = Entity as tb_Return;
                 cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.RetrunNo;
+                cbd.BillNo = Return.ReturnNo;
                 break;
                 */
 
@@ -256,7 +256,7 @@ namespace RUINORERP.Business.CommService
                 //case BizType.发料计划单:
                 //    var Return = Entity as tb_Return;
                 //    cbd.BillID = Return.MainID;
-                //    cbd.BillNo = Return.RetrunNo;
+                //    cbd.BillNo = Return.ReturnNo;
                 //    break;
                 case BizType.请购单:
                     var BuyingRequisition = Entity as tb_BuyingRequisition;
@@ -287,27 +287,27 @@ namespace RUINORERP.Business.CommService
             case BizType.托外加工单:
                 var Return = Entity as tb_Return;
                 cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.RetrunNo;
+                cbd.BillNo = Return.ReturnNo;
                 break;
             case BizType.托外领料单:
                 var Return = Entity as tb_Return;
                 cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.RetrunNo;
+                cbd.BillNo = Return.ReturnNo;
                 break;
             case BizType.托外退料单:
                 var Return = Entity as tb_Return;
                 cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.RetrunNo;
+                cbd.BillNo = Return.ReturnNo;
                 break;
             case BizType.托外补料单:
                 var Return = Entity as tb_Return;
                 cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.RetrunNo;
+                cbd.BillNo = Return.ReturnNo;
                 break;
             case BizType.托外加工缴回单:
                 var Return = Entity as tb_Return;
                 cbd.BillID = Return.MainID;
-                cbd.BillNo = Return.RetrunNo;
+                cbd.BillNo = Return.ReturnNo;
                 break;*/
                 case BizType.采购入库统计:
                     var PurEntryStatistics = Entity as View_PurEntryItems;

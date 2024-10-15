@@ -49,9 +49,7 @@ namespace RUINORERP.Business
             _appContext = appContext;
         }
       
-        
-        
-        
+
          public ValidationResult Validator(tb_Location info)
         {
             tb_LocationValidator validator = new tb_LocationValidator();

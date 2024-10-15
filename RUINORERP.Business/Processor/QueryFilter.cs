@@ -40,7 +40,7 @@ namespace RUINORERP.Business.Processor
             foreach (var item in QueryFields)
             {
                 //如果有代替项就用代替项
-                string conditionField = string.IsNullOrEmpty(item.FriendlyFieldName) ? item.FieldName : item.FriendlyFieldName;
+                string conditionField = string.IsNullOrEmpty(item.FriendlyFieldNameFormBiz) ? item.FieldName : item.FriendlyFieldNameFormBiz;
                 AppendIfNotContains(queryConditions, conditionField);
             }
 
@@ -423,206 +423,6 @@ namespace RUINORERP.Business.Processor
 
 
 
-
-        /*
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="queryFieldIDExp">查询条件为这个字段时</param>
-        /// <param name="queryFieldNameExp">查询出来的显示为这个字段，ID-》name</param>
-        /// <param name="AddSubFilter">如果是关联字段时，是否添加子过滤条件</param>
-        /// <param name="SubFieldLimitExpression">子条件限制器</param>
-        /// <returns></returns>
-        public QueryField SetQueryField<T>(Expression<Func<T, object>> queryFieldIDExp, Expression<Func<T, object>> queryFieldNameExp, bool AddSubFilter, LambdaExpression SubFieldLimitExpression = null)
-        {
-            if (QueryEntityType != null)
-            {
-                QueryEntityType = typeof(T);
-            }
-            QueryField queryField = new QueryField();
-
-            //这里有两种情况，一种是只传一个字段。另一种是两个字段
-
-            //以后面这个为准，编号
-            if (queryFieldIDExp!=null && queryFieldNameExp != null)
-            {
-                
-                #region
-                //指定到字符类型，方便使用
-                string fieldID = ExpressionHelper.ExpressionToString<T>(queryFieldIDExp);
-                string fieldName = ExpressionHelper.ExpressionToString<T>(queryFieldNameExp);
-                queryField = new QueryField(fieldID);
-                PropertyInfo IDPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == fieldID);
-                queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == fieldName);
-                if (AddSubFilter)
-                {
-                    //处理是不是有下级，相关连的
-                    //次級的,如果是表，查可以查出这个字段是否为外键关联的，如果是则可以在这里统计处理关联表的查询条件，即子查询条件集合
-                    //if (typeof(T).Name.Contains("tb_") && queryField.FieldPropertyInfo != null)
-                    if (IDPropertyInfo != null)
-                    {
-                        //主键是long  64位
-                        if (IDPropertyInfo.ToString().Contains("Int64"))
-                        {
-                            //获取指定类型的自定义特性
-                            object[] attrs = IDPropertyInfo.GetCustomAttributes(false);
-                            foreach (var attr in attrs)
-                            {
-                                if (attr is FKRelationAttribute)
-                                {
-                                    FKRelationAttribute fkrattr = attr as FKRelationAttribute;
-                                    fkrattr.FK_IDColName = IDPropertyInfo.Name;
-                                    if (queryFieldNameExp != null)
-                                    {
-                                        fkrattr.FK_NameColName = queryFieldNameExp.GetMemberInfo().Name;
-                                    }
-                                    BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(fkrattr.FKTableName + "Processor");
-
-                                    queryField.SubFilter = baseProcessor.GetQueryFilter(SubFieldLimitExpression);
-                                    //queryField.SubFilter.QueryEntityType = Activator.CreateInstance("RUINORERP.Model", fkrattr.FKTableName).GetType();
-                                    queryField.SubFilter.QueryEntityType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + fkrattr.FKTableName);
-
-                                    break;
-
-                                }
-                            }
-                        }
-                    }
-                }
-                QueryFields.Add(queryField);
-                #endregion
-             
-            }
-            else
-            {
-                #region
-                //指定到字符类型，方便使用
-                string fieldID = ExpressionHelper.ExpressionToString<T>(queryFieldIDExp);
-                queryField = new QueryField(fieldID);
-                queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == fieldID);
-                if (AddSubFilter)
-                {
-                    //处理是不是有下级，相关连的
-                    //次級的,如果是表，查可以查出这个字段是否为外键关联的，如果是则可以在这里统计处理关联表的查询条件，即子查询条件集合
-                    //if (typeof(T).Name.Contains("tb_") && queryField.FieldPropertyInfo != null)
-                    if (queryField.FieldPropertyInfo != null)
-                    {
-                        //主键是long  64位
-                        if (queryField.FieldPropertyInfo.ToString().Contains("Int64"))
-                        {
-                            //获取指定类型的自定义特性
-                            object[] attrs = queryField.FieldPropertyInfo.GetCustomAttributes(false);
-                            foreach (var attr in attrs)
-                            {
-                                if (attr is FKRelationAttribute)
-                                {
-                                    FKRelationAttribute fkrattr = attr as FKRelationAttribute;
-                                    fkrattr.FK_IDColName = queryField.FieldPropertyInfo.Name;
-                                    if (queryFieldNameExp != null)
-                                    {
-                                        fkrattr.FK_NameColName = queryFieldNameExp.GetMemberInfo().Name;
-                                    }
-                                    BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(fkrattr.FKTableName + "Processor");
-
-                                    queryField.SubFilter = baseProcessor.GetQueryFilter(SubFieldLimitExpression);
-                                    //queryField.SubFilter.QueryEntityType = Activator.CreateInstance("RUINORERP.Model", fkrattr.FKTableName).GetType();
-                                    queryField.SubFilter.QueryEntityType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + fkrattr.FKTableName);
-
-                                    break;
-
-                                }
-                            }
-                        }
-                    }
-                }
-                QueryFields.Add(queryField);
-                 
-                #endregion
-            }
-
-
-            return queryField;
-        }
-
-     */
-
-
-        /*****
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="queryFieldIDExp">查询条件为这个字段时</param>
-        /// <param name="queryFieldNameExp">查询出来的显示为这个字段，ID-》name</param>
-        /// <param name="AddSubFilter">如果是关联字段时，是否添加子过滤条件</param>
-        /// <param name="SubFieldLimitExpression">子条件限制器</param>
-        /// <returns></returns>
-        public QueryField SetQueryField<T>(Expression<Func<T, object>> queryFieldIDExp, Expression<Func<T, object>> queryFieldNameExp, bool AddSubFilter, LambdaExpression SubFieldLimitExpression = null)
-        {
-            if (QueryEntityType != null)
-            {
-                QueryEntityType = typeof(T);
-            }
-            QueryField queryField = new QueryField();
-
-            //这里有两种情况，一种是只传一个字段。另一种是两个字段
-
-            //以后面这个为准，编号
-            if (queryFieldIDExp != null && queryFieldNameExp != null)
-            {
-
-                #region
-                //指定到字符类型，方便使用
-                string fieldID = ExpressionHelper.ExpressionToString<T>(queryFieldIDExp);
-                string fieldName = ExpressionHelper.ExpressionToString<T>(queryFieldNameExp);
-                queryField = new QueryField(fieldName);
-                PropertyInfo IDPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == fieldID);
-                queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == fieldName);
-                if (AddSubFilter)
-                {
-                    //处理是不是有下级，相关连的
-                    //次級的,如果是表，查可以查出这个字段是否为外键关联的，如果是则可以在这里统计处理关联表的查询条件，即子查询条件集合
-                    //if (typeof(T).Name.Contains("tb_") && queryField.FieldPropertyInfo != null)
-                    if (IDPropertyInfo != null)
-                    {
-                        AddSubFilterToQueryField(queryField, SubFieldLimitExpression, IDPropertyInfo, ExpressionHelper.ExpressionToString<T>(queryFieldNameExp));
-                    }
-                }
-                QueryFields.Add(queryField);
-                #endregion
-
-            }
-            else
-            {
-                #region
-                //指定到字符类型，方便使用
-                string fieldID = ExpressionHelper.ExpressionToString<T>(queryFieldIDExp);
-                queryField = new QueryField(fieldID);
-                queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == fieldID);
-                if (AddSubFilter)
-                {
-                    //处理是不是有下级，相关连的
-                    //次級的,如果是表，查可以查出这个字段是否为外键关联的，如果是则可以在这里统计处理关联表的查询条件，即子查询条件集合
-                    //if (typeof(T).Name.Contains("tb_") && queryField.FieldPropertyInfo != null)
-                    if (queryField.FieldPropertyInfo != null)
-                    {
-                        //主键是long  64位
-                        AddSubFilterToQueryField(queryField, SubFieldLimitExpression, queryField.FieldPropertyInfo, ExpressionHelper.ExpressionToString<T>(queryFieldNameExp));
-                    }
-                }
-                QueryFields.Add(queryField);
-
-                #endregion
-            }
-
-
-            return queryField;
-        }
-
-        */
-
-
         /// <summary>
         /// 设置查询字段，并且指定了引用的外键表类型，并且指向了最原始的显示字段
         /// 如：销售出库单22222222222222222
@@ -648,14 +448,14 @@ namespace RUINORERP.Business.Processor
                 //指定到字符类型，方便显示给用户时就可以用文本框了
                 queryField.AdvQueryFieldType = AdvQueryProcessType.TextSelect;
                 string fieldName = ExpressionHelper.ExpressionToString(queryFieldNameExp);
-                queryField.FriendlyFieldName = fieldName;
-                queryField.FriendlyFieldNameFromRelated = fieldName;
+                queryField.FriendlyFieldNameFormBiz = fieldName;
+                queryField.FriendlyFieldNameFromSource = fieldName;
             }
             //指定了就覆盖，不然认为是一样的
             if (queryOriginalFieldNameExp != null)
             {
                 string OriginalFieldName = ExpressionHelper.ExpressionToString(queryOriginalFieldNameExp);
-                queryField.FriendlyFieldNameFromRelated = OriginalFieldName;
+                queryField.FriendlyFieldNameFromSource = OriginalFieldName;
             }
 
             if (AddSubFilter)
@@ -670,6 +470,69 @@ namespace RUINORERP.Business.Processor
             return queryField;
         }
 
+
+
+        /// <summary>
+        /// 通过别名来设置查询字段,比方调拨单中 ，调出仓库和调入仓库是同一个字段，但是显示的时候要区分，所以用别名来区分
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="R"></typeparam>
+        /// <param name="ReferenceFieldExp"></param>
+        /// <param name="SourceIDExp"></param>
+        /// <param name="SourceNameExp"></param>
+        /// <param name="AddSubFilter"></param>
+        /// <param name="expSubFieldLimitCondition"></param>
+        /// <returns></returns>
+        public QueryField SetQueryFieldByAlias<T, R>(
+            Expression<Func<T, object>> ReferenceFieldExp,
+            Expression<Func<T, object>> ReferenceReplaceFieldExp = null,
+            Expression<Func<R, object>> SourceIDExp = null, Expression<Func<R, object>>
+            SourceNameExp = null,
+            bool AddSubFilter = true,
+            Expression<Func<R, bool>> expSubFieldLimitCondition = null)
+        {
+            QueryField queryField = new QueryField();
+            QueryTargetType = typeof(T);
+            queryField.QueryTargetType = QueryTargetType;
+
+            //原始的字段。但是和外键表主键不一样。无法加载下拉
+            queryField.FieldName = ExpressionHelper.ExpressionToString(ReferenceFieldExp);
+            queryField.FieldPropertyInfo = typeof(T).GetProperties().FirstOrDefault(c => c.Name == queryField.FieldName);
+
+            //目前这个情况更适合下拉？
+            queryField.AdvQueryFieldType = AdvQueryProcessType.defaultSelect;
+
+            //这里重新覆盖上面的字段。用代替字段
+            if (ReferenceReplaceFieldExp != null)
+            {
+                string fieldName = ExpressionHelper.ExpressionToString(ReferenceReplaceFieldExp);
+                queryField.FriendlyFieldNameFormBiz = fieldName;
+            }
+            // 覆盖显示的。用名称字段
+            if (SourceIDExp != null)
+            {
+                string strSourceIDExp = ExpressionHelper.ExpressionToString(SourceIDExp);
+                queryField.FriendlyFieldValueFromSource = strSourceIDExp;
+            }
+
+            // 覆盖显示的。用名称字段
+            if (SourceNameExp != null)
+            {
+                string OriginalFieldName = ExpressionHelper.ExpressionToString(SourceNameExp);
+                queryField.FriendlyFieldNameFromSource = OriginalFieldName;
+            }
+
+            if (AddSubFilter)
+            {
+                AddSubFilterToQueryField(queryField, expSubFieldLimitCondition, typeof(R));
+            }
+            //上面没有调用其它方法来SET这里要添加
+            if (!QueryFields.Contains(queryField))
+            {
+                QueryFields.Add(queryField);
+            }
+            return queryField;
+        }
 
 
         /// <summary>
@@ -698,7 +561,7 @@ namespace RUINORERP.Business.Processor
             if (queryFieldNameExp != null)
             {
                 string fieldName = ExpressionHelper.ExpressionToString(queryFieldNameExp);
-                queryField.FriendlyFieldName = fieldName;
+                queryField.FriendlyFieldNameFormBiz = fieldName;
             }
 
             if (AddSubFilter)

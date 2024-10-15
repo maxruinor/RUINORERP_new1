@@ -53,7 +53,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_PurEntryRe, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
 
             //可以根据关联外键自动加载条件，条件用公共虚方法
-            queryFilter.SetQueryField<tb_PurEntryRe>(c => c.PurEntryRENo);
+            queryFilter.SetQueryField<tb_PurEntryRe>(c => c.PurEntryReNo);
             queryFilter.SetQueryField<tb_PurEntryRe, tb_PurEntry>(c => c.PurEntryID, c => c.PurEntryNo);
             queryFilter.SetQueryField<tb_PurEntryRe>(c => c.ReturnDate);
             queryFilter.SetQueryField<tb_PurEntryRe>(c => c.DepartmentID);

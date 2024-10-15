@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/14/2024 18:29:35
+// 时间：10/15/2024 18:45:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,12 +51,26 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _StockTransferNo;
+        /// <summary>
+        /// 调拨单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "StockTransferNo",ColDesc = "调拨单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "StockTransferNo" ,Length=50,IsNullable = true,ColumnDescription = "调拨单号" )]
+        public string StockTransferNo
+        { 
+            get{return _StockTransferNo;}
+            set{
+            SetProperty(ref _StockTransferNo, value);
+            }
+        }
+
         private long _Location_ID_from;
         /// <summary>
-        /// 
+        /// 调出仓库
         /// </summary>
-        [AdvQueryAttribute(ColName = "Location_ID_from",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID_from" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "Location_ID_from",ColDesc = "调出仓库")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID_from" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "调出仓库" )]
         [FKRelationAttribute("tb_Location","Location_ID_from")]
         public long Location_ID_from
         { 
@@ -68,10 +82,10 @@ namespace RUINORERP.Model
 
         private long _Location_ID_to;
         /// <summary>
-        /// 
+        /// 调入仓库
         /// </summary>
-        [AdvQueryAttribute(ColName = "Location_ID_to",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID_to" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "Location_ID_to",ColDesc = "调入仓库")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID_to" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "调入仓库" )]
         [FKRelationAttribute("tb_Location","Location_ID_to")]
         public long Location_ID_to
         { 
@@ -87,25 +101,12 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "经办人" )]
+        [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long Employee_ID
         { 
             get{return _Employee_ID;}
             set{
             SetProperty(ref _Employee_ID, value);
-            }
-        }
-
-        private string _StockTransferNo;
-        /// <summary>
-        /// 调拨单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "StockTransferNo",ColDesc = "调拨单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "StockTransferNo" ,Length=50,IsNullable = true,ColumnDescription = "调拨单号" )]
-        public string StockTransferNo
-        { 
-            get{return _StockTransferNo;}
-            set{
-            SetProperty(ref _StockTransferNo, value);
             }
         }
 
@@ -151,31 +152,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime? _Bill_Date;
+        private DateTime? _Transfer_date;
         /// <summary>
-        /// 单据日期
+        /// 调拨日期
         /// </summary>
-        [AdvQueryAttribute(ColName = "Bill_Date",ColDesc = "单据日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Bill_Date" ,IsNullable = true,ColumnDescription = "单据日期" )]
-        public DateTime? Bill_Date
+        [AdvQueryAttribute(ColName = "Transfer_date",ColDesc = "调拨日期")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Transfer_date" ,IsNullable = true,ColumnDescription = "调拨日期" )]
+        public DateTime? Transfer_date
         { 
-            get{return _Bill_Date;}
+            get{return _Transfer_date;}
             set{
-            SetProperty(ref _Bill_Date, value);
-            }
-        }
-
-        private DateTime? _Out_date;
-        /// <summary>
-        /// 出库日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Out_date",ColDesc = "出库日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Out_date" ,IsNullable = true,ColumnDescription = "出库日期" )]
-        public DateTime? Out_date
-        { 
-            get{return _Out_date;}
-            set{
-            SetProperty(ref _Out_date, value);
+            SetProperty(ref _Transfer_date, value);
             }
         }
 
@@ -367,13 +354,18 @@ namespace RUINORERP.Model
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
+        public virtual tb_Employee tb_employee { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID_from))]
-        public virtual tb_Location tb_location { get; set; }
+        public virtual tb_Location tb_location_from { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID_to))]
-        public virtual tb_Location tb_location { get; set; }
+        public virtual tb_Location tb_location_to { get; set; }
 
 
         //[Browsable(false)]

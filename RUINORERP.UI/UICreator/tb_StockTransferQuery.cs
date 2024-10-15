@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/14/2024 18:29:33
+// 时间：10/15/2024 18:45:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -85,8 +85,6 @@ namespace RUINORERP.UI
         
     
         
-    
-        
 
   
    
@@ -98,7 +96,8 @@ namespace RUINORERP.UI
 
         public void LoadDroplistData()
         {
-          Location_ID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
+          // DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+Location_ID_from主外字段不一致。Location_ID_to主外字段不一致。          Location_ID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
 Location_ID_to主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
           Location_ID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
 Location_ID_to主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);

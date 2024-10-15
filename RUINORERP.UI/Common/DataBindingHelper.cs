@@ -1609,6 +1609,74 @@ namespace RUINORERP.UI.Common
 
 
 
+        /// <summary>
+        /// 引用字段时。通常要与被引用的表中的主键名称一样。但是如果一个表中同时引用 比方调拨单 引用了两个仓库一进一出时。
+        /// 字段名不一样，则可以指定字段名
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity">{tb_StockTransferProxy}</param>
+        /// <param name="expkey">Location_ID_from</param>
+        /// <param name="pointkey">Location_ID</param>
+        /// <param name="expValue">Name</param>
+        /// <param name="tableName">"tb_Location"</param>
+        /// <param name="cmbBox"></param>
+        /// <param name="expCondition">tb_Location中的过滤条件：Param_0.Is_enabled == True</param>
+        public static void BindData4CmbRefWithLimitedByAlias<T>(object entity, string expkey, string pointkey, string expValue, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
+        {
+            cmbBox.DataBindings.Clear();
+            InitDataToCmbWithCondition<T>(expkey, expValue, tableName, cmbBox, expCondition);
+            var depa = new Binding("SelectedValue", entity, pointkey, true, DataSourceUpdateMode.OnValidation);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+
+            #region 添加清除功能
+            //不重复添加
+            if (cmbBox.ButtonSpecs.Where(b => b.UniqueName == "btnclear").Any())
+            {
+                return;
+            }
+            if ((cmbBox as Control).DataBindings.Count > 0)
+            {
+                if (cmbBox.DataBindings.Count > 0 && cmbBox.DataSource is BindingSource)
+                {
+                    ButtonSpecAny bsa = new ButtonSpecAny();
+                    // bsa.Image = Image.FromStream(GetResource("RUINORERP.UI.ResourceFile.search.ico"));
+                    // bsa.Tag = ktb;
+                    // cmbBox.Tag = targetEntity;
+                    bsa.UniqueName = "btnclear";
+                    bsa.Type = PaletteButtonSpecStyle.Close;
+                    bsa.Edge = PaletteRelativeEdgeAlign.Near;
+                    //bsa.Click += BsaEdit_Click;
+                    bsa.Click += (sender, e) =>
+                    {
+                        #region
+                        cmbBox.DataSource = cmbBox.DataSource;
+                        cmbBox.Text = "";
+                        InitDataToCmbWithCondition<T>(expkey, expValue, tableName, cmbBox, expCondition);
+                        cmbBox.SelectedItem = null;
+                        cmbBox.SelectedIndex = -1;
+                        cmbBox.SelectedValue = -1L;//为了验证通过设置为long型
+
+                        // 手动设置验证通过
+                        // ((INotifyPropertyChanged)cmbBox).PropertyChanged -= MyComboBox_PropertyChanged;
+                        // cmbBox.SelectedIndex = -1;
+                        //  ((INotifyPropertyChanged)myComboBox).PropertyChanged += MyComboBox_PropertyChanged;
+
+
+
+                        //cmbBox.SelectedItem
+                        #endregion
+
+                    };
+                    cmbBox.ButtonSpecs.Add(bsa);
+                }
+            }
+            #endregion
+        }
+
 
         /// <summary>
         /// 绑定特殊多选，

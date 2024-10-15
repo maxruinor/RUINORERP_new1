@@ -29,7 +29,7 @@ namespace RUINORERP.UI.PSI.PUR
         public UCPurReturnEntryQuery()
         {
             InitializeComponent();
-            base.RelatedBillEditCol = (c => c.PurEntryRENo);
+            base.RelatedBillEditCol = (c => c.PurEntryReNo);
         }
         public override void SetGridViewDisplayConfig()
         {

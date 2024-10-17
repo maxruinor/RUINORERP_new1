@@ -23,28 +23,28 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.PSI.PUR
 {
 
-    [MenuAttrAssemblyInfo("采购退货入库查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购退货入库单)]
-    public partial class UCPurReturnEntryQuery : BaseBillQueryMC<tb_PurEntryRe, tb_PurEntryReDetail>
+    [MenuAttrAssemblyInfo("采购退货入库查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购退货入库)]
+    public partial class UCPurReturnEntryQuery : BaseBillQueryMC<tb_PurReturnEntry, tb_PurReturnEntryDetail>
     {
         public UCPurReturnEntryQuery()
         {
             InitializeComponent();
-            base.RelatedBillEditCol = (c => c.PurEntryReNo);
+            base.RelatedBillEditCol = (c => c.PurReEntryNo);
         }
         public override void SetGridViewDisplayConfig()
         {
-            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_PurEntryRe, tb_PurEntry>(c => c.PurEntryNo, r => r.PurEntryNo);
+            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_PurReturnEntry, tb_PurEntryRe>(c => c.PurReEntryNo, r => r.PurEntryNo);
             base.SetGridViewDisplayConfig();
         }
         public override void BuildColNameDataDictionary()
         {
             //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
-            System.Linq.Expressions.Expression<Func<tb_PurEntryRe, int?>> exprApprovalStatus;
+            System.Linq.Expressions.Expression<Func<tb_PurReturnEntry, int?>> exprApprovalStatus;
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
 
-            //System.Linq.Expressions.Expression<Func<tb_PurEntryRe, int?>> exprPayStatus;
+            //System.Linq.Expressions.Expression<Func<tb_PurReturnEntry, int?>> exprPayStatus;
             //exprPayStatus = (p) => p.PayStatus;
             //base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, GetKeyValuePairs(typeof(PayStatus)));
 
@@ -63,20 +63,19 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
             }
-            System.Linq.Expressions.Expression<Func<tb_PurEntryReDetail, long>> expProdDetailID;
+            System.Linq.Expressions.Expression<Func<tb_PurReturnEntryDetail, long>> expProdDetailID;
             expProdDetailID = (p) => p.ProdDetailID;// == name;
             base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
         }
 
         public override void BuildInvisibleCols()
         {
-            //引用的订单号ID不需要显示。因为有一个单号冗余显示了。
-            base.MasterInvisibleCols.Add(c => c.PurEntryID);
+        
         }
         public override void BuildLimitQueryConditions()
         {
             //创建表达式
-            var lambda = Expressionable.Create<tb_PurEntryRe>()
+            var lambda = Expressionable.Create<tb_PurReturnEntry>()
                              //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                              // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                              .And(t => t.isdeleted == false)
@@ -93,7 +92,7 @@ namespace RUINORERP.UI.PSI.PUR
         /// </summary>
         public override void BuildQueryCondition()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurEntryRe).Name + "Processor");
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurReturnEntry).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
 

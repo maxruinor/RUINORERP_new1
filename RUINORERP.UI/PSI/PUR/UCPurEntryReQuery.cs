@@ -23,7 +23,7 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.PSI.PUR
 {
 
-    [MenuAttrAssemblyInfo("采购退回单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购退回单)]
+    [MenuAttrAssemblyInfo("采购退货单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购退货单)]
     public partial class UCPurEntryReQuery : BaseBillQueryMC<tb_PurEntryRe, tb_PurEntryReDetail>
     {
         public UCPurEntryReQuery()

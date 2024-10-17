@@ -337,7 +337,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+          
 
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
                 {

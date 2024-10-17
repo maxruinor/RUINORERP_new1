@@ -217,8 +217,11 @@ namespace RUINORERP.Business
                 case BizType.采购入库单:
                     rule = "{S:PIR}{D:yyMMdd}{redis:{S:PIR}{D:yyMM}/000}";
                     break;
-                case BizType.采购退回单:
+                case BizType.采购退货单:
                     rule = "{S:PIRR}{D:yyMMdd}{redis:{S:PIRR}{D:yyMM}/000}";
+                    break;
+                case BizType.采购退货入库:
+                    rule = "{S:PIRRE}{D:yyMMdd}{redis:{S:PIRRE}{D:yyMM}/000}";
                     break;
                 case BizType.其他入库单:
                     rule = "{S:OIR}{D:yyMMdd}{redis:{S:OIR}{D:yyMM}/000}";
@@ -282,6 +285,9 @@ namespace RUINORERP.Business
                     break;
                 case BizType.产品转换单://Production Requisition Document
                     rule = "{S:ZH}{D:yyMMdd}{redis:{S:ZH}{D:yyMM}/000}";
+                    break;
+                case BizType.调拨单://Production Requisition Document
+                    rule = "{S:DB}{D:yyMMdd}{redis:{S:DB}{D:yyMM}/000}";
                     break;
                 default:
 

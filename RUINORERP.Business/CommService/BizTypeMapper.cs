@@ -34,7 +34,7 @@ namespace RUINORERP.Business.CommService
             Mapping.Add(BizType.销售退回单, typeof(tb_SaleOutRe));
             Mapping.Add(BizType.采购订单, typeof(tb_PurOrder));
             Mapping.Add(BizType.采购入库单, typeof(tb_PurEntry));
-            Mapping.Add(BizType.采购退回单, typeof(tb_PurEntryRe));
+            Mapping.Add(BizType.采购退货单, typeof(tb_PurEntryRe));
             //mapping.Add(BizType.返厂入库, typeof(tb_Return));
             //mapping.Add(BizType.返厂出库, typeof(tb_StockCheck));
             Mapping.Add(BizType.盘点单, typeof(tb_Stocktake));
@@ -57,6 +57,10 @@ namespace RUINORERP.Business.CommService
             Mapping.Add(BizType.套装组合, typeof(tb_ProdBundle));
             Mapping.Add(BizType.包装信息, typeof(tb_Packing));
             Mapping.Add(BizType.产品转换单, typeof(tb_ProdConversion));
+            Mapping.Add(BizType.调拨单, typeof(tb_StockTransfer));
+            Mapping.Add(BizType.返厂出库, typeof(tb_Return));
+            
+
             //mapping.Add(BizType.退料单, typeof(tb_Return));
 
             // 省略其他枚举值与表名的对应关系

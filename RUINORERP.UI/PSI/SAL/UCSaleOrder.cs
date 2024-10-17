@@ -40,6 +40,7 @@ using RUINORERP.Business.CommService;
 using NPOI.POIFS.Properties;
 using System.Diagnostics;
 using RUINORERP.Common.Extensions;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -668,25 +669,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 //订单只是警告。可以继续
-
-                if (!MainForm.Instance.AppContext.SysConfig.CheckNegativeInventory)
-                {
-                    foreach (var item in details)
-                    {
-                        var detail = list.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
-                        if (detail != null)
-                        {
-                            if (NeedValidated && (detail.Quantity - item.Quantity) < 0)
-                            {
-                                if (MessageBox.Show($"产品{detail.SKU},{detail.CNName},{detail.prop}的库存不足\r\n实际数量为：{detail.Quantity} ，拟销数量为： {item.Quantity}，是否继续保存？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
-                                {
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-                }
-
+    
                 EditEntity.tb_SaleOrderDetails = details;
                 //var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 //if (aa.Count > 1)
@@ -710,8 +693,23 @@ namespace RUINORERP.UI.PSI.SAL
                     return false;
                 }
 
-
-
+                if (!MainForm.Instance.AppContext.SysConfig.CheckNegativeInventory)
+                {
+                    foreach (var item in details)
+                    {
+                        var detail = list.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
+                        if (detail != null)
+                        {
+                            if (NeedValidated && (detail.Quantity - item.Quantity) < 0)
+                            {
+                                if (MessageBox.Show($"产品{detail.SKU},{detail.CNName},{detail.prop}的库存不足\r\n实际数量为：{detail.Quantity} ，拟销数量为： {item.Quantity}，是否继续保存？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 if (EditEntity.ApprovalStatus == null)
                 {

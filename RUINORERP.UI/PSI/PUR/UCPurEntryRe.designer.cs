@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.cmbProcessWay = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.dtpBillDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
@@ -76,7 +77,6 @@
             this.lblDiscountAmount = new Krypton.Toolkit.KryptonLabel();
             this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
-            this.cmbProcessWay = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -85,6 +85,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbProcessWay)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
@@ -95,7 +96,6 @@
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbProcessWay)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -151,6 +151,15 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
             this.kryptonSplitContainer1.SplitterDistance = 255;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // cmbProcessWay
+            // 
+            this.cmbProcessWay.DropDownWidth = 100;
+            this.cmbProcessWay.IntegralHeight = false;
+            this.cmbProcessWay.Location = new System.Drawing.Point(362, 125);
+            this.cmbProcessWay.Name = "cmbProcessWay";
+            this.cmbProcessWay.Size = new System.Drawing.Size(167, 21);
+            this.cmbProcessWay.TabIndex = 150;
             // 
             // kryptonLabel2
             // 
@@ -433,11 +442,11 @@
             this.lbl盘点单.LabelStyle = Krypton.Toolkit.LabelStyle.TitlePanel;
             this.lbl盘点单.Location = new System.Drawing.Point(362, 19);
             this.lbl盘点单.Name = "lbl盘点单";
-            this.lbl盘点单.Size = new System.Drawing.Size(148, 29);
+            this.lbl盘点单.Size = new System.Drawing.Size(110, 29);
             this.lbl盘点单.StateCommon.LongText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
             this.lbl盘点单.StateCommon.LongText.Color2 = System.Drawing.Color.Lime;
             this.lbl盘点单.TabIndex = 45;
-            this.lbl盘点单.Values.Text = "采购入库退回单";
+            this.lbl盘点单.Values.Text = "采购退货单";
             // 
             // kryptonSplitContainer2
             // 
@@ -558,15 +567,6 @@
             this.lblPaytype_ID.TabIndex = 95;
             this.lblPaytype_ID.Values.Text = "付款方式";
             // 
-            // cmbProcessWay
-            // 
-            this.cmbProcessWay.DropDownWidth = 100;
-            this.cmbProcessWay.IntegralHeight = false;
-            this.cmbProcessWay.Location = new System.Drawing.Point(362, 125);
-            this.cmbProcessWay.Name = "cmbProcessWay";
-            this.cmbProcessWay.Size = new System.Drawing.Size(167, 21);
-            this.cmbProcessWay.TabIndex = 150;
-            // 
             // UCPurEntryRe
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -585,6 +585,7 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbProcessWay)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
@@ -596,7 +597,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbProcessWay)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

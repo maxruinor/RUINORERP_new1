@@ -159,7 +159,7 @@ namespace RUINORERP.Business.CommService
                     cbd.BillID = Return.MainID;
                     cbd.BillNo = Return.ReturnNo;
                     break;
-                case BizType.采购退回单:
+                case BizType.采购退货单:
                     var purEntryRe = Entity as tb_PurEntryRe;
                     cbd.BillID = purEntryRe.PurEntryRe_ID;
                     cbd.BillNo = purEntryRe.PurEntryReNo;
@@ -282,6 +282,11 @@ namespace RUINORERP.Business.CommService
                     var ProdConversion = Entity as tb_ProdConversion;
                     cbd.BillID = ProdConversion.ConversionID;
                     cbd.BillNo = ProdConversion.ConversionNo;
+                    break;
+                case BizType.调拨单:
+                    var StockTransfer = Entity as tb_StockTransfer;
+                    cbd.BillID = StockTransfer.StockTransferID;
+                    cbd.BillNo = StockTransfer.StockTransferNo;
                     break;
                 /*
             case BizType.托外加工单:

@@ -32,6 +32,7 @@ using RUINORERP.Common;
 using RUINORERP.Global.CustomAttribute;
 using System.Linq.Dynamic.Core;
 using SharpYaml.Tokens;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Business
 {
@@ -48,11 +49,17 @@ namespace RUINORERP.Business
         public IUnitOfWorkManage _unitOfWorkManage;
         public ILogger<BaseController<T>> _logger;
 
+        public string BizTypeText { get; set; }
+        public int BizTypeInt { get; set; }
         public BaseController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null)
         {
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
+            BizTypeMapper mapper = new BizTypeMapper();
+            BizType bizType = mapper.GetBizType(typeof(T).Name);
+            BizTypeText = bizType.ToString();
+            BizTypeInt = (int)bizType;
         }
 
 

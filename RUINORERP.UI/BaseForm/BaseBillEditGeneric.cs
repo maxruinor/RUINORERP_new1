@@ -2249,6 +2249,18 @@ namespace RUINORERP.UI.BaseForm
                 var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
                 if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
                 {
+                    //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
+                    if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
+                    {
+                        if (ReflectionHelper.ExistPropertyName<T>("Created_by") && ReflectionHelper.GetPropertyValue(editEntity, "Created_by").ToString() != AppContext.CurUserInfo.Id.ToString())
+                        {
+                            MessageBox.Show("只有创建人才能删除提交过的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            rss.ErrorMsg = "只有创建人才能删除提交过的单据。";
+                            rss.Succeeded = false;
+                            return rss;
+                        }
+                    }
+
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     bool rs = await ctr.BaseDeleteByNavAsync(editEntity as T);
                     object PKValue = editEntity.GetPropertyValue(UIHelper.GetPrimaryKeyColName(typeof(T)));
@@ -2283,7 +2295,7 @@ namespace RUINORERP.UI.BaseForm
             return rss;
         }
 
-        
+
         /// <summary>
         /// 提交
         /// </summary>

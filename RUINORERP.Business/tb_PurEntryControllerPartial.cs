@@ -85,8 +85,6 @@ namespace RUINORERP.Business
                     }
                 }
 
-
-
                 foreach (tb_PurEntryDetail child in entity.tb_PurEntryDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
@@ -122,34 +120,34 @@ namespace RUINORERP.Business
                     //采购价格：从供应商处购买产品或物品时的价格。
                     //生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                     //市场价格：参考市场上类似产品或物品的价格。
+                    if (child.IsGift.HasValue && child.IsGift == false && child.TransactionPrice > 0)
+                    {
+                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
+                        #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
-                    CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
+                        tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
+                        List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                        .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
+                        .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
+                        foreach (tb_BOM_SDetail bomDetail in bomDetails)
+                        {
+                            //如果存在则更新 
+                            bomDetail.UnitCost = inv.Inv_Cost;
+                            bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                            if (bomDetail.tb_bom_s != null)
+                            {
+                                bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                                bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
+                                bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
+                                await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
+                            }
+                        }
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+
+                        #endregion
+                    }
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
-
-                    #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
-
-                    tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
-                    List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                    .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
-                    .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
-                    foreach (tb_BOM_SDetail bomDetail in bomDetails)
-                    {
-                        //如果存在则更新 
-                        bomDetail.UnitCost = inv.Inv_Cost;
-                        bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
-                        if (bomDetail.tb_bom_s != null)
-                        {
-                            bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
-                            bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
-                            bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
-                        }
-                    }
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
-
-                    #endregion
-
                     #endregion
 
                     #region 更新采购价格
@@ -162,10 +160,14 @@ namespace RUINORERP.Business
                         priceRecord = new tb_PriceRecord();
                     }
                     priceRecord.Employee_ID = entity.Employee_ID.Value;
-                    priceRecord.PurPrice = child.TransactionPrice;
-                    priceRecord.PurDate = System.DateTime.Now;
-                    priceRecord.ProdDetailID = child.ProdDetailID;
-                    ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
+                    if (child.TransactionPrice != priceRecord.PurPrice)
+                    {
+                        priceRecord.PurPrice = child.TransactionPrice;
+                        priceRecord.PurDate = System.DateTime.Now;
+                        priceRecord.ProdDetailID = child.ProdDetailID;
+                        ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
+                    }
+
 
                     #endregion
 
@@ -409,31 +411,36 @@ namespace RUINORERP.Business
                  生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                  市场价格：参考市场上类似产品或物品的价格。
                   */
-                    CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
+                    if (child.IsGift.HasValue && child.IsGift == false && child.TransactionPrice > 0)
+                    {
+                        CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
+                        //赠品不更新。价格为0的不更新。
+                        #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
+
+                        tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
+                        List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                        .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
+                        .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
+                        foreach (tb_BOM_SDetail bomDetail in bomDetails)
+                        {
+                            //如果存在则更新 
+                            bomDetail.UnitCost = inv.Inv_Cost;
+                            bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                            if (bomDetail.tb_bom_s != null)
+                            {
+                                bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                                bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
+                                bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
+                                await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
+                            }
+                        }
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+
+
+                        #endregion
+                    }
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
-                    #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
-
-                    tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
-                    List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                    .Includes(b => b.tb_bom_s)
-                    .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
-                    foreach (tb_BOM_SDetail bomDetail in bomDetails)
-                    {
-                        //如果存在则更新 
-                        bomDetail.UnitCost = inv.Inv_Cost;
-                        bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
-                        if (bomDetail.tb_bom_s != null)
-                        {
-                            bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
-                            bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
-                            bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
-                        }
-                    }
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
-
-                    #endregion
 
                     #endregion
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);

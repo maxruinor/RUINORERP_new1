@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:20
+// 时间：10/16/2024 20:05:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,66 +18,80 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 采购入库退回单
+    /// 采购退货入库单明细
     /// </summary>
     [Serializable()]
-    [Description("tb_PurEntryReDetail")]
-    [SugarTable("tb_PurEntryReDetail")]
-    public partial class tb_PurEntryReDetail: BaseEntity, ICloneable
+    [Description("tb_PurReturnEntryDetail")]
+    [SugarTable("tb_PurReturnEntryDetail")]
+    public partial class tb_PurReturnEntryDetail: BaseEntity, ICloneable
     {
-        public tb_PurEntryReDetail()
+        public tb_PurReturnEntryDetail()
         {
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_PurEntryReDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("tb_PurReturnEntryDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
 
         #region 属性
-        private long _PurEntryRe_CID;
+        private long _PurReEntry_CID;
         /// <summary>
         /// 
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurEntryRe_CID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
-        public long PurEntryRe_CID
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurReEntry_CID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
+        public long PurReEntry_CID
         { 
-            get{return _PurEntryRe_CID;}
+            get{return _PurReEntry_CID;}
             set{
-            base.PrimaryKeyID = _PurEntryRe_CID;
-            SetProperty(ref _PurEntryRe_CID, value);
+            base.PrimaryKeyID = _PurReEntry_CID;
+            SetProperty(ref _PurReEntry_CID, value);
             }
         }
 
-        private long _PurEntryRe_ID;
+        private long _PurReEntry_ID;
         /// <summary>
         /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "PurEntryRe_ID",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurEntryRe_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
-        [FKRelationAttribute("tb_PurEntryRe","PurEntryRe_ID")]
-        public long PurEntryRe_ID
+        [AdvQueryAttribute(ColName = "PurReEntry_ID",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurReEntry_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
+        [FKRelationAttribute("tb_PurReturnEntry","PurReEntry_ID")]
+        public long PurReEntry_ID
         { 
-            get{return _PurEntryRe_ID;}
+            get{return _PurReEntry_ID;}
             set{
-            SetProperty(ref _PurEntryRe_ID, value);
+            SetProperty(ref _PurReEntry_ID, value);
             }
         }
 
         private long _ProdDetailID;
         /// <summary>
-        /// 货品
+        /// 产品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
+            }
+        }
+
+        private string _CustomertModel;
+        /// <summary>
+        /// 客户型号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CustomertModel",ColDesc = "客户型号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomertModel" ,Length=50,IsNullable = true,ColumnDescription = "客户型号" )]
+        public string CustomertModel
+        { 
+            get{return _CustomertModel;}
+            set{
+            SetProperty(ref _CustomertModel, value);
             }
         }
 
@@ -93,6 +107,21 @@ namespace RUINORERP.Model
             get{return _Location_ID;}
             set{
             SetProperty(ref _Location_ID, value);
+            }
+        }
+
+        private long? _Rack_ID;
+        /// <summary>
+        /// 货架
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Rack_ID",ColDesc = "货架")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Rack_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "货架" )]
+        [FKRelationAttribute("tb_StorageRack","Rack_ID")]
+        public long? Rack_ID
+        { 
+            get{return _Rack_ID;}
+            set{
+            SetProperty(ref _Rack_ID, value);
             }
         }
 
@@ -123,20 +152,7 @@ namespace RUINORERP.Model
             SetProperty(ref _Quantity, value);
             }
         }
-        private int _DeliveredQuantity = ((0));
-        /// <summary>
-        /// 已交数
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DeliveredQuantity", ColDesc = "已交数")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "DeliveredQuantity", DecimalDigits = 0, IsNullable = false, ColumnDescription = "已交数")]
-        public int DeliveredQuantity
-        {
-            get { return _DeliveredQuantity; }
-            set
-            {
-                SetProperty(ref _DeliveredQuantity, value);
-            }
-        }
+
         private decimal _UnitPrice= ((0));
         /// <summary>
         /// 单价
@@ -162,6 +178,20 @@ namespace RUINORERP.Model
             get{return _Discount;}
             set{
             SetProperty(ref _Discount, value);
+            }
+        }
+
+        private decimal _TransactionPrice= ((0));
+        /// <summary>
+        /// 成交单价
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成交单价" )]
+        public decimal TransactionPrice
+        { 
+            get{return _TransactionPrice;}
+            set{
+            SetProperty(ref _TransactionPrice, value);
             }
         }
 
@@ -207,20 +237,6 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _TransactionPrice= ((0));
-        /// <summary>
-        /// 成交单价
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成交单价" )]
-        public decimal TransactionPrice
-        { 
-            get{return _TransactionPrice;}
-            set{
-            SetProperty(ref _TransactionPrice, value);
-            }
-        }
-
         private decimal _SubtotalTrPriceAmount= ((0));
         /// <summary>
         /// 小计
@@ -235,26 +251,12 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _CustomertModel;
-        /// <summary>
-        /// 客户型号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "CustomertModel",ColDesc = "客户型号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomertModel" ,Length=50,IsNullable = true,ColumnDescription = "客户型号" )]
-        public string CustomertModel
-        { 
-            get{return _CustomertModel;}
-            set{
-            SetProperty(ref _CustomertModel, value);
-            }
-        }
-
         private string _Summary;
         /// <summary>
         /// 摘要
         /// </summary>
         [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=255,IsNullable = true,ColumnDescription = "摘要" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=1000,IsNullable = true,ColumnDescription = "摘要" )]
         public string Summary
         { 
             get{return _Summary;}
@@ -291,29 +293,9 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Rack_ID;
-        /// <summary>
-        /// 货架
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Rack_ID",ColDesc = "货架")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Rack_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "货架" )]
-        [FKRelationAttribute("tb_StorageRack","Rack_ID")]
-        public long? Rack_ID
-        { 
-            get{return _Rack_ID;}
-            set{
-            SetProperty(ref _Rack_ID, value);
-            }
-        }
-
         #endregion
 
         #region 扩展属性
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
-        public virtual tb_Location tb_location { get; set; }
-
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
@@ -321,13 +303,18 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(PurEntryRe_ID))]
-        public virtual tb_PurEntryRe tb_purentryre { get; set; }
+        [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
+        public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(PurReEntry_ID))]
+        public virtual tb_PurReturnEntry tb_purreturnentry { get; set; }
 
 
 
@@ -366,7 +353,7 @@ return rs;
                 {
                     fieldNameList = new ConcurrentDictionary<string, string>();
                     SugarColumn entityAttr;
-                    Type type = typeof(tb_PurEntryReDetail);
+                    Type type = typeof(tb_PurReturnEntryDetail);
                     
                        foreach (PropertyInfo field in type.GetProperties())
                             {
@@ -409,7 +396,7 @@ return rs;
 
         public override object Clone()
         {
-            tb_PurEntryReDetail loctype = (tb_PurEntryReDetail)this.MemberwiseClone(); //创建当前对象的浅拷贝。
+            tb_PurReturnEntryDetail loctype = (tb_PurReturnEntryDetail)this.MemberwiseClone(); //创建当前对象的浅拷贝。
             return loctype;
         }
     }

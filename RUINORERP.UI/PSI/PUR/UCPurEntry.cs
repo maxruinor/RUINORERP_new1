@@ -181,10 +181,7 @@ namespace RUINORERP.UI.PSI.PUR
             queryFilterC.FilterLimitExpressions.Add(lambda);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-
-
-            tb_PurOrderController<tb_PurOrder> ctrPurorder = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-
+  
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_PurEntry>(entity, v => v.PurOrder_NO, txtPurOrderNO, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_PurEntry>(entity, v => v.PurOrder_ID, txtPurOrderNO, true);

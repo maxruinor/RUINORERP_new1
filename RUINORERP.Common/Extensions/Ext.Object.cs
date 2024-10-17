@@ -571,27 +571,27 @@ namespace RUINORERP.Common.Extensions
         /// <exception cref="InvalidOperationException"></exception>
         public static object ChangeTypeSafely(this object obj, Type targetType)
         {
-            if (obj == null || obj == DBNull.Value)
-            {
-                // 如果obj是null或DBNull.Value，尝试创建targetType的默认值
-                if (Nullable.GetUnderlyingType(targetType) != null || targetType.IsValueType)
-                {
-                    return Activator.CreateInstance(targetType);
-                }
-                return null;
-            }
-
-            if (obj is string strObj && string.IsNullOrEmpty(strObj))
-            {
-                // 如果obj是空字符串，特殊处理
-                if (targetType == typeof(decimal) || targetType == typeof(decimal?))
-                {
-                    return decimal.Zero;
-                }
-            }
-
             try
             {
+                if (obj == null || obj == DBNull.Value)
+                {
+                    // 如果obj是null或DBNull.Value，尝试创建targetType的默认值
+                    if (Nullable.GetUnderlyingType(targetType) != null || targetType.IsValueType)
+                    {
+                        return Activator.CreateInstance(targetType);
+                    }
+                    return null;
+                }
+
+                if (obj is string strObj && string.IsNullOrEmpty(strObj))
+                {
+                    // 如果obj是空字符串，特殊处理
+                    if (targetType == typeof(decimal) || targetType == typeof(decimal?))
+                    {
+                        return decimal.Zero;
+                    }
+                }
+
                 if (targetType.IsGenericType && targetType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
                 {
                     NullableConverter nullableConverter = new NullableConverter(targetType);

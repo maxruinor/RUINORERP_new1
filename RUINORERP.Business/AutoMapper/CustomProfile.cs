@@ -49,6 +49,8 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_PurEntryDetail, tb_PurOrderDetail>();
 
 
+ 
+
 
             //从前到后，由前到后,将借出转为要归还的数据
             CreateMap<tb_ProdBorrowing, tb_ProdReturning>();
@@ -108,6 +110,10 @@ namespace RUINORERP.Business.AutoMapper
 
             CreateMap<tb_PurEntryRe, tb_PurEntry>();
             CreateMap<tb_PurEntryReDetail, tb_PurEntryDetail>();
+
+
+            CreateMap<tb_PurEntryRe, tb_PurReturnEntry>();
+            CreateMap<tb_PurEntryReDetail, tb_PurReturnEntryDetail>();
 
 
             CreateMap<tb_StockInDetail, View_ProdDetail>();

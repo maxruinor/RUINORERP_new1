@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCMultiPropertyEditor));
             this.kryptonSplitContainer生成组合 = new Krypton.Toolkit.KryptonSplitContainer();
             this.cmbPropertyType = new Krypton.Toolkit.KryptonComboBox();
@@ -148,6 +148,7 @@
             // 
             // kryptonSplitContainer生成组合.Panel1
             // 
+            this.kryptonSplitContainer生成组合.Panel1.Controls.Add(this.btnOk);
             this.kryptonSplitContainer生成组合.Panel1.Controls.Add(this.cmbPropertyType);
             this.kryptonSplitContainer生成组合.Panel1.Controls.Add(this.kryptonLabel2);
             this.kryptonSplitContainer生成组合.Panel1.Controls.Add(this.btnClear);
@@ -182,7 +183,7 @@
             // 
             // btnClear
             // 
-            this.btnClear.Location = new System.Drawing.Point(762, 10);
+            this.btnClear.Location = new System.Drawing.Point(601, 10);
             this.btnClear.Name = "btnClear";
             this.btnClear.Size = new System.Drawing.Size(40, 25);
             this.btnClear.TabIndex = 171;
@@ -191,7 +192,7 @@
             // 
             // btnAddProperty
             // 
-            this.btnAddProperty.Location = new System.Drawing.Point(688, 10);
+            this.btnAddProperty.Location = new System.Drawing.Point(543, 10);
             this.btnAddProperty.Name = "btnAddProperty";
             this.btnAddProperty.Size = new System.Drawing.Size(40, 25);
             this.btnAddProperty.TabIndex = 170;
@@ -202,7 +203,7 @@
             // 
             this.cmb属性.DropDownWidth = 205;
             this.cmb属性.IntegralHeight = false;
-            this.cmb属性.Location = new System.Drawing.Point(421, 12);
+            this.cmb属性.Location = new System.Drawing.Point(347, 12);
             this.cmb属性.Name = "cmb属性";
             this.cmb属性.Size = new System.Drawing.Size(180, 21);
             this.cmb属性.TabIndex = 141;
@@ -210,7 +211,7 @@
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(379, 12);
+            this.kryptonLabel3.Location = new System.Drawing.Point(305, 12);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(36, 20);
             this.kryptonLabel3.TabIndex = 140;
@@ -229,8 +230,8 @@
             this.dataGridViewProd.AllowUserToAddRows = false;
             this.dataGridViewProd.AllowUserToDeleteRows = false;
             this.dataGridViewProd.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dataGridViewProd.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.dataGridViewProd.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridViewProd.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -257,7 +258,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(391, 8);
+            this.btnOk.Location = new System.Drawing.Point(796, 11);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(80, 24);
             this.btnOk.TabIndex = 14;
@@ -584,7 +585,6 @@
             // 
             // kryptonPanel2
             // 
-            this.kryptonPanel2.Controls.Add(this.btnOk);
             this.kryptonPanel2.Controls.Add(this.groupLine1);
             this.kryptonPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel2.Location = new System.Drawing.Point(0, 0);
@@ -643,38 +643,38 @@
             this.toolStripMI全部展开,
             this.toolStripMI全部折叠});
             this.contextMenuStripTreeGrid.Name = "contextMenuStrip1";
-            this.contextMenuStripTreeGrid.Size = new System.Drawing.Size(181, 120);
+            this.contextMenuStripTreeGrid.Size = new System.Drawing.Size(148, 98);
             // 
             // 删除SKU明细toolStripMenuItem
             // 
             this.删除SKU明细toolStripMenuItem.Name = "删除SKU明细toolStripMenuItem";
-            this.删除SKU明细toolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.删除SKU明细toolStripMenuItem.Size = new System.Drawing.Size(147, 22);
             this.删除SKU明细toolStripMenuItem.Text = "删除SKU明细";
             this.删除SKU明细toolStripMenuItem.Click += new System.EventHandler(this.删除SKU明细toolStripMenuItem_Click);
             // 
             // 删除属性值ToolStripMenuItem
             // 
             this.删除属性值ToolStripMenuItem.Name = "删除属性值ToolStripMenuItem";
-            this.删除属性值ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.删除属性值ToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
             this.删除属性值ToolStripMenuItem.Text = "删除属性值";
             this.删除属性值ToolStripMenuItem.Click += new System.EventHandler(this.删除属性值ToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(144, 6);
             // 
             // toolStripMI全部展开
             // 
             this.toolStripMI全部展开.Name = "toolStripMI全部展开";
-            this.toolStripMI全部展开.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMI全部展开.Size = new System.Drawing.Size(147, 22);
             this.toolStripMI全部展开.Text = "全部展开";
             this.toolStripMI全部展开.Click += new System.EventHandler(this.toolStripMI全部展开_Click);
             // 
             // toolStripMI全部折叠
             // 
             this.toolStripMI全部折叠.Name = "toolStripMI全部折叠";
-            this.toolStripMI全部折叠.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMI全部折叠.Size = new System.Drawing.Size(147, 22);
             this.toolStripMI全部折叠.Text = "全部折叠";
             this.toolStripMI全部折叠.Click += new System.EventHandler(this.toolStripMI全部折叠_Click);
             // 

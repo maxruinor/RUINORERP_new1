@@ -119,7 +119,7 @@ namespace RUINORERP.UI.PSI.INV
 
             DataBindingHelper.BindData4ControlByEnum<tb_StockTransfer>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_StockTransfer>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-            
+
             if (entity.tb_StockTransferDetails != null && entity.tb_StockTransferDetails.Count > 0)
             {
                 // details = entity.tb_StockTransferDetails;
@@ -163,7 +163,7 @@ namespace RUINORERP.UI.PSI.INV
                 }
             };
 
-     
+
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
                 base.InitRequiredToControl(new tb_StockTransferValidator(), kryptonPanelMainInfo.Controls);
@@ -196,6 +196,8 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_NeverVisible<tb_StockTransferDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_StockTransferDetail>(c => c.StockTransferDetaill_ID);
             listCols.SetCol_NeverVisible<tb_StockTransferDetail>(c => c.StockTransferID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             ControlChildColumnsInvisible(listCols);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
@@ -329,6 +331,7 @@ namespace RUINORERP.UI.PSI.INV
                 }
                 EditEntity.TotalQty = details.Sum(c => c.Qty);
                 EditEntity.tb_StockTransferDetails = details;
+                
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {

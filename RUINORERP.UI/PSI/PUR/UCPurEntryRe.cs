@@ -44,7 +44,7 @@ using RUINORERP.UI.ToolForm;
 
 namespace RUINORERP.UI.PSI.PUR
 {
-    [MenuAttrAssemblyInfo("采购退回单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购退回单)]
+    [MenuAttrAssemblyInfo("采购退货单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理, BizType.采购退货单)]
     public partial class UCPurEntryRe : BaseBillEditGeneric<tb_PurEntryRe, tb_PurEntryReDetail>
     {
         public UCPurEntryRe()
@@ -96,7 +96,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.PurEntryReNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退回单);
+                entity.PurEntryReNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退货单);
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_PurEntryReDetails != null && entity.tb_PurEntryReDetails.Count > 0)
                 {
@@ -266,32 +266,19 @@ namespace RUINORERP.UI.PSI.PUR
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
 
-            /*
-            //具体审核权限的人才显示
-            if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
-            {
-                //listCols.SetCol_NeverVisible<tb_PurEntryReDetail>(c => c.UnitPrice);
-                //listCols.SetCol_NeverVisible<tb_PurEntryReDetail>(c => c.TransactionPrice);
-                //listCols.SetCol_NeverVisible<tb_PurEntryReDetail>(c => c.SubtotalPirceAmount);
-            }*/
-
             listCols.SetCol_Summary<tb_PurEntryReDetail>(c => c.Quantity);
             listCols.SetCol_Summary<tb_PurEntryReDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_PurEntryReDetail>(c => c.SubtotalTrPriceAmount);
             listCols.SetCol_Summary<tb_PurEntryReDetail>(c => c.DiscountAmount);
 
-            listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.UnitPrice * b.Discount - c.SubtotalTrPriceAmount, d => d.DiscountAmount);
             listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
             listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.UnitPrice * b.Discount * c.Quantity, c => c.SubtotalTrPriceAmount);
             listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.SubtotalTrPriceAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
-
+            listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.UnitPrice * b.Discount - c.SubtotalTrPriceAmount, d => d.DiscountAmount);
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
-            //sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.prop, t => t.property);
-
-
-
 
 
             //应该只提供一个结构
@@ -302,8 +289,7 @@ namespace RUINORERP.UI.PSI.PUR
                    .AndIF(true, w => w.CNName.Length > 0)
                   // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
                   .ToExpression();//注意 这一句 不能少
-                                  // StringBuilder sb = new StringBuilder();
-            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
+
             list = dc.BaseQueryByWhere(exp);
             sgd.SetDependencyObject<ProductSharePart, tb_PurEntryReDetail>(list);
 

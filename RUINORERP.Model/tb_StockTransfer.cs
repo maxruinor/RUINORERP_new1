@@ -194,17 +194,18 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime _Modified_at;
+        private DateTime? _Modified_at;
         /// <summary>
         /// 修改时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = false,ColumnDescription = "修改时间" )]
-        public DateTime Modified_at
-        { 
-            get{return _Modified_at;}
-            set{
-            SetProperty(ref _Modified_at, value);
+        [AdvQueryAttribute(ColName = "Modified_at", ColDesc = "修改时间")]
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "Modified_at", IsNullable = true, ColumnDescription = "修改时间")]
+        public DateTime? Modified_at
+        {
+            get { return _Modified_at; }
+            set
+            {
+                SetProperty(ref _Modified_at, value);
             }
         }
 

@@ -60,7 +60,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invForm);
                     }
-                    invForm.Quantity = invForm.Quantity - TransferQty;
+                 
                     if (TransferQty > 0)
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invForm.Quantity - TransferQty) < 0)
@@ -72,6 +72,7 @@ namespace RUINORERP.Business
                         }
                         invForm.LatestOutboundTime = System.DateTime.Now;
                     }
+                    invForm.Quantity = invForm.Quantity - TransferQty;
                     if (TransferQty < 0)
                     {
                         invForm.LatestStorageTime = System.DateTime.Now;
@@ -93,7 +94,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invTo);
                     }
-                    invTo.Quantity = invTo.Quantity + TransferQty;
+                    
                     if (TransferQty > 0)
                     {
                         invTo.LatestStorageTime = System.DateTime.Now;
@@ -108,8 +109,8 @@ namespace RUINORERP.Business
                             return rmrs;
                         }
                         invForm.LatestOutboundTime = System.DateTime.Now;
-
                     }
+                    invTo.Quantity = invTo.Quantity + TransferQty;
                     #endregion
                     ReturnResults<tb_Inventory> rrFrom = await ctrinv.SaveOrUpdate(invForm);
                     ReturnResults<tb_Inventory> rrTo = await ctrinv.SaveOrUpdate(invTo);
@@ -232,7 +233,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invForm);
                     }
-                    invForm.Quantity = invForm.Quantity + TransferQty;
+               
                     if (TransferQty > 0)
                     {
                         invForm.LatestStorageTime = System.DateTime.Now;
@@ -249,6 +250,7 @@ namespace RUINORERP.Business
                         }
                         invForm.LatestOutboundTime = System.DateTime.Now;
                     }
+                    invForm.Quantity = invForm.Quantity + TransferQty;
                     #endregion
 
                     #region  目标库存更新 ，
@@ -266,7 +268,7 @@ namespace RUINORERP.Business
                     {
                         BusinessHelper.Instance.EditEntity(invTo);
                     }
-                    invTo.Quantity = invTo.Quantity - TransferQty;
+                  
                     if (TransferQty > 0)
                     {
                         if (!_appContext.SysConfig.CheckNegativeInventory && (invTo.Quantity - TransferQty) < 0)
@@ -279,6 +281,7 @@ namespace RUINORERP.Business
                         invForm.LatestOutboundTime = System.DateTime.Now;
 
                     }
+                    invTo.Quantity = invTo.Quantity - TransferQty;
                     if (TransferQty < 0)
                     {
                         invTo.LatestStorageTime = System.DateTime.Now;

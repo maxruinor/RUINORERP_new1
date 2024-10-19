@@ -43,12 +43,13 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCMasterQuery.GridRelated.SetRelatedInfo<View_FM_ExpenseClaimItems, tb_FM_ExpenseClaim>(c => c.ClaimNo, r => r.ClaimNo);
 
             //是否能通过一两个主表，通过 外键去找多级关联的表？
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail));
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOrder));
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOrderDetail));
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProdCategories));
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Unit));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProjectGroup));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_FM_Subject));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Department));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_FM_Account));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Employee));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Currency));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_FM_ExpenseType));
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_FM_ExpenseClaimItems, tb_FM_ExpenseClaim>(c => c.ClaimNo, r => r.ClaimNo);
         }
@@ -82,8 +83,7 @@ namespace RUINORERP.UI.PSI.SAL
 
         public override void BuildSummaryCols()
         {
-            base.MasterSummaryCols.Add(c => c.ClaimAmount);
-            base.MasterSummaryCols.Add(c => c.ApprovedAmount);
+            base.MasterSummaryCols.Add(c => c.TotalAmount);
         }
 
         public override void BuildInvisibleCols()

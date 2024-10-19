@@ -357,7 +357,8 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CarryingSubtotalAmount);
 
 
-            listCols.SetCol_FormulaReverse<tb_StocktakeDetail>(d => d.CheckQty != d.CarryinglQty, (a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);//-->成交价是结果列
+            //listCols.SetCol_FormulaReverse<tb_StocktakeDetail>(d => d.CheckQty != d.CarryinglQty, (a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);//-->成交价是结果列
+            listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);//-->成交价是结果列
 
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.DiffQty * b.Cost), r => r.DiffSubtotalAmount);
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CarryinglQty * b.Cost), r => r.CarryingSubtotalAmount);
@@ -632,7 +633,7 @@ namespace RUINORERP.UI.PSI.INV
         }
 
 
-     
+
 
         private void btnImportCheckProd_Click(object sender, EventArgs e)
         {

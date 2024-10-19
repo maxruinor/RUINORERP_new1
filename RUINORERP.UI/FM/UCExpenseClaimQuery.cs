@@ -74,7 +74,6 @@ namespace RUINORERP.UI.FM
             base.MasterSummaryCols.Add(c => c.TaxAmount);
             base.MasterSummaryCols.Add(c => c.ApprovedAmount);
             base.MasterSummaryCols.Add(c => c.UntaxedAmount);
-
             base.ChildSummaryCols.Add(c => c.TaxAmount);
             base.ChildSummaryCols.Add(c => c.TotalAmount);
             base.ChildSummaryCols.Add(c => c.UntaxedAmount);

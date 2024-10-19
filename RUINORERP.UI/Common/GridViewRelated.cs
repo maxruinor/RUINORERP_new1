@@ -265,7 +265,7 @@ namespace RUINORERP.UI.Common
         /// <param name="IsFromGridValue">是否从Grid中取值,只是用这个参数来区别一下没有实际作用,后面优化吧</param
         public object GuideToForm(string GridViewColumnFieldName, object CurrentRowEntity)
         {
-            object bizKey=null;
+            object bizKey = null;
             tb_MenuInfo RelatedMenuInfo = null;
 
             if (ComplexType)
@@ -394,15 +394,35 @@ namespace RUINORERP.UI.Common
                 else
                 {
                     //要查询取值,视图也适用于这里
-                    bizKey= GuideToForm(GridViewColumnFieldName, CurrentRow.DataBoundItem);
+                    bizKey = GuideToForm(GridViewColumnFieldName, CurrentRow.DataBoundItem);
                 }
             }
             return bizKey;
         }
 
-
         public void OpenTargetEntity(tb_MenuInfo RelatedMenuInfo, string tableName, object billno)
         {
+
+
+            if (tableName == typeof(tb_SaleOutRe).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutRe>()
+                    .Includes(c => c.tb_SaleOutReDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.SaleOutRe_ID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.ReturnNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
+            if (tableName == typeof(tb_FM_ExpenseClaim).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ExpenseClaim>()
+                    .Includes(c => c.tb_FM_ExpenseClaimDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.ClaimMainID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.ClaimNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
 
             if (tableName == typeof(tb_ProductionPlan).Name)
             {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:41
+// 时间：10/19/2024 00:34:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -34,18 +34,16 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
  RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.ExpenseType_id).Must(CheckForeignKeyValueCanNull).WithMessage("费用类型:下拉选择值不正确。");
  RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.ExpenseType_id).NotEmpty().When(x => x.ExpenseType_id.HasValue);
- RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.account_id).Must(CheckForeignKeyValueCanNull).WithMessage("支付账号:下拉选择值不正确。");
- RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.account_id).NotEmpty().When(x => x.account_id.HasValue);
- RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.subject_id).Must(CheckForeignKeyValueCanNull).WithMessage("会计科目:下拉选择值不正确。");
- RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.subject_id).NotEmpty().When(x => x.subject_id.HasValue);
+ RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
+ RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.Subject_id).NotEmpty().When(x => x.Subject_id.HasValue);
  RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("所属项目:下拉选择值不正确。");
  RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
- RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.Notes).MaximumLength(50).WithMessage("备注:不能超过最大长度,50.");
+ RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.Summary).MaximumLength(50).WithMessage("摘要:不能超过最大长度,50.");
  RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
  RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
  RuleFor(x => x.UntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
- RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.EvidenceImagePath).MaximumLength(200).WithMessage("凭证图:不能超过最大长度,200.");
+ RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.EvidenceImagePath).MaximumLength(300).WithMessage("凭证图:不能超过最大长度,300.");
        	
            	        Initialize();
      }

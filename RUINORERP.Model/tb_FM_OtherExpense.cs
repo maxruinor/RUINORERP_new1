@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:42
+// 时间：10/19/2024 00:34:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -387,6 +387,20 @@ namespace RUINORERP.Model
             get{return _Currency_ID;}
             set{
             SetProperty(ref _Currency_ID, value);
+            }
+        }
+
+        private string _CloseCaseImagePath;
+        /// <summary>
+        /// 结案凭证
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseImagePath",ColDesc = "结案凭证")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseImagePath" ,Length=300,IsNullable = true,ColumnDescription = "结案凭证" )]
+        public string CloseCaseImagePath
+        { 
+            get{return _CloseCaseImagePath;}
+            set{
+            SetProperty(ref _CloseCaseImagePath, value);
             }
         }
 

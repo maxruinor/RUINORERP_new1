@@ -33,7 +33,6 @@ namespace RUINORERP.Model
             }
         }
 
-
         private string _PurOrder_NO;
 
 

@@ -36,11 +36,11 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyCode
             , cmbCurrency_ID);
 
-            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.account_name, txtaccount_name, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_name, txtaccount_name, BindDataType4TextBox.Text, false);
 
-            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.account_No, txtaccount_No, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_No, txtaccount_No, BindDataType4TextBox.Text, false);
 
-            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.account_type, txtaccount_type, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_type, txtaccount_type, BindDataType4TextBox.Qty, false);
 
             DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Bank, txtBank, BindDataType4TextBox.Text, false);
 

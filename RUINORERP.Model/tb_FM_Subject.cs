@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:46
+// 时间：10/19/2024 00:39:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -211,19 +211,19 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.subject_id))]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.Subject_id))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
         //tb_FM_OtherExpenseDetail.subject_id)
         //subject_id.FK_TB_FM_OT_REFERENCE_TB_FM_SU)
-        //tb_FM_Subject.subject_id)
+        //tb_FM_Subject.Subject_id)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.subject_id))]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Subject_id))]
         public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
         //tb_FM_Account.subject_id)
         //subject_id.FK_TB_FM_AC_REFERENCE_TB_FM_SU)
-        //tb_FM_Subject.subject_id)
+        //tb_FM_Subject.Subject_id)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -243,11 +243,11 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.subject_id))]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.Subject_id))]
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
         //tb_FM_ExpenseClaimDetail.subject_id)
         //subject_id.FK_EXPENSECLAIMDETAIL_REF_SUBJECT)
-        //tb_FM_Subject.subject_id)
+        //tb_FM_Subject.Subject_id)
 
 
         #endregion

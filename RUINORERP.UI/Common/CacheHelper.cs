@@ -548,7 +548,7 @@ namespace RUINORERP.UI.Common
                         SetDictDataSource<tb_ProjectGroup>(k => k.ProjectGroup_ID, v => v.ProjectGroupName);
                         break;
                     case "tb_FM_Account":
-                        SetDictDataSource<tb_FM_Account>(k => k.account_id, v => v.account_name);
+                        SetDictDataSource<tb_FM_Account>(k => k.Account_id, v => v.Account_name);
                         break;
                     case "tb_FM_ExpenseType":
                         SetDictDataSource<tb_FM_ExpenseType>(k => k.ExpenseType_id, v => v.Expense_name);

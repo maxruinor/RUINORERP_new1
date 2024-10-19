@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:43
+// 时间：10/19/2024 00:34:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -125,18 +125,18 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _account_id;
+        private long? _Account_id;
         /// <summary>
         /// 交易账号
         /// </summary>
-        [AdvQueryAttribute(ColName = "account_id",ColDesc = "交易账号")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "交易账号" )]
-        [FKRelationAttribute("tb_FM_Account","account_id")]
-        public long? account_id
+        [AdvQueryAttribute(ColName = "Account_id",ColDesc = "交易账号")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "交易账号" )]
+        [FKRelationAttribute("tb_FM_Account","Account_id")]
+        public long? Account_id
         { 
-            get{return _account_id;}
+            get{return _Account_id;}
             set{
-            SetProperty(ref _account_id, value);
+            SetProperty(ref _Account_id, value);
             }
         }
 
@@ -155,18 +155,18 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _subject_id;
+        private long? _Subject_id;
         /// <summary>
         /// 会计科目
         /// </summary>
-        [AdvQueryAttribute(ColName = "subject_id",ColDesc = "会计科目")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "subject_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "会计科目" )]
-        [FKRelationAttribute("tb_FM_Subject","subject_id")]
-        public long? subject_id
+        [AdvQueryAttribute(ColName = "Subject_id",ColDesc = "会计科目")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Subject_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "会计科目" )]
+        [FKRelationAttribute("tb_FM_Subject","Subject_id")]
+        public long? Subject_id
         { 
-            get{return _subject_id;}
+            get{return _Subject_id;}
             set{
-            SetProperty(ref _subject_id, value);
+            SetProperty(ref _Subject_id, value);
             }
         }
 
@@ -212,17 +212,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _Notes;
+        private string _Summary;
         /// <summary>
-        /// 备注
+        /// 摘要
         /// </summary>
-        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=100,IsNullable = true,ColumnDescription = "备注" )]
-        public string Notes
+        [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=100,IsNullable = true,ColumnDescription = "摘要" )]
+        public string Summary
         { 
-            get{return _Notes;}
+            get{return _Summary;}
             set{
-            SetProperty(ref _Notes, value);
+            SetProperty(ref _Summary, value);
             }
         }
 
@@ -283,6 +283,20 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _EvidenceImagePath;
+        /// <summary>
+        /// 凭证图
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EvidenceImagePath",ColDesc = "凭证图")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "EvidenceImagePath" ,Length=300,IsNullable = true,ColumnDescription = "凭证图" )]
+        public string EvidenceImagePath
+        { 
+            get{return _EvidenceImagePath;}
+            set{
+            SetProperty(ref _EvidenceImagePath, value);
+            }
+        }
+
         #endregion
 
         #region 扩展属性
@@ -313,7 +327,7 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(account_id))]
+        [Navigate(NavigateType.OneToOne, nameof(Account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
         [SugarColumn(IsIgnore = true)]
@@ -323,7 +337,7 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(subject_id))]
+        [Navigate(NavigateType.OneToOne, nameof(Subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
 
 
@@ -337,6 +351,14 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
+         if("account_id"!="Account_id")
+        {
+        // rs=false;
+        }
+         if("subject_id"!="Subject_id")
+        {
+        // rs=false;
+        }
 return rs;
 }
 

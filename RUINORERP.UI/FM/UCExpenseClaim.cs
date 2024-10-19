@@ -106,7 +106,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             cmbCurrency_ID.SelectedIndex = 1;//默认第一个人民币
             DataBindingHelper.BindData4DataTime<tb_FM_ExpenseClaim>(entity, t => t.DocumentDate, dtpDocumentDate, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ClaimlAmount.ToString(), txtClaimlAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ClaimAmount.ToString(), txtClaimlAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovedAmount.ToString(), txtApprovedAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ExpenseClaim>(entity, t => t.IncludeTax, chkIncludeTax, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
@@ -293,8 +293,8 @@ namespace RUINORERP.UI.FM
                     return;
                 }
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
-                EditEntity.ClaimlAmount = details.Sum(c => c.TotalAmount);
-                EditEntity.ApprovedAmount = EditEntity.ClaimlAmount;
+                EditEntity.ClaimAmount = details.Sum(c => c.TotalAmount);
+                EditEntity.ApprovedAmount = EditEntity.ClaimAmount;
                 EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
             }
             catch (Exception ex)
@@ -331,7 +331,7 @@ namespace RUINORERP.UI.FM
                 EditEntity.tb_FM_ExpenseClaimDetails = details;
 
                 //如果主表的总金额和明细金额加总后不相等，则提示
-                if (NeedValidated && EditEntity.ClaimlAmount != details.Sum(c => c.TotalAmount))
+                if (NeedValidated && EditEntity.ClaimAmount != details.Sum(c => c.TotalAmount))
                 {
                     if (MessageBox.Show("总金额和明细金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:40
+// 时间：10/19/2024 00:34:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -109,17 +109,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _ClaimlAmount= ((0));
+        private decimal _ClaimAmount= ((0));
         /// <summary>
         /// 报销金额
         /// </summary>
-        [AdvQueryAttribute(ColName = "ClaimlAmount",ColDesc = "报销金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ClaimlAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "报销金额" )]
-        public decimal ClaimlAmount
+        [AdvQueryAttribute(ColName = "ClaimAmount",ColDesc = "报销金额")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ClaimAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "报销金额" )]
+        public decimal ClaimAmount
         { 
-            get{return _ClaimlAmount;}
+            get{return _ClaimAmount;}
             set{
-            SetProperty(ref _ClaimlAmount, value);
+            SetProperty(ref _ClaimAmount, value);
             }
         }
 
@@ -373,6 +373,20 @@ namespace RUINORERP.Model
             get{return _PrintStatus;}
             set{
             SetProperty(ref _PrintStatus, value);
+            }
+        }
+
+        private string _CloseCaseImagePath;
+        /// <summary>
+        /// 结案凭证
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseImagePath",ColDesc = "结案凭证")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseImagePath" ,Length=300,IsNullable = true,ColumnDescription = "结案凭证" )]
+        public string CloseCaseImagePath
+        { 
+            get{return _CloseCaseImagePath;}
+            set{
+            SetProperty(ref _CloseCaseImagePath, value);
             }
         }
 

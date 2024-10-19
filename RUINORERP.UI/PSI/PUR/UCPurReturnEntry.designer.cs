@@ -177,7 +177,6 @@
             // 
             // dtpBillDate
             // 
-            this.dtpBillDate.Format = System.Windows.Forms.DateTimePickerFormat.Short;
             this.dtpBillDate.Location = new System.Drawing.Point(847, 51);
             this.dtpBillDate.Name = "dtpBillDate";
             this.dtpBillDate.Size = new System.Drawing.Size(153, 21);

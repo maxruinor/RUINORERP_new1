@@ -56,8 +56,6 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_PurEntry>(c => c.PurEntryNo);
             queryFilter.SetQueryField<tb_PurEntry, tb_PurOrder>(c => c.PurOrder_ID, c => c.PurOrder_NO, t => t.PurOrderNo);
             queryFilter.SetQueryField<tb_PurEntry>(c => c.DepartmentID);
-            queryFilter.SetQueryField<tb_PurEntry>(c => c.Notes);
-            
             queryFilter.SetQueryField<tb_PurEntry>(c => c.EntryDate);
             queryFilter.SetQueryField<tb_PurEntry>(c => c.Paytype_ID, false);
             queryFilter.SetQueryField<tb_PurEntry>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));

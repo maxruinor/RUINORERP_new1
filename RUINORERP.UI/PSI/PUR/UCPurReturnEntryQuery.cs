@@ -33,7 +33,7 @@ namespace RUINORERP.UI.PSI.PUR
         }
         public override void SetGridViewDisplayConfig()
         {
-            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_PurReturnEntry, tb_PurEntryRe>(c => c.PurReEntryNo, r => r.PurEntryNo);
+            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_PurReturnEntry, tb_PurEntryRe>(c => c.PurEntryReNo, r => r.PurEntryReNo);
             base.SetGridViewDisplayConfig();
         }
         public override void BuildColNameDataDictionary()
@@ -42,7 +42,6 @@ namespace RUINORERP.UI.PSI.PUR
             System.Linq.Expressions.Expression<Func<tb_PurReturnEntry, int?>> exprApprovalStatus;
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
-
 
             //System.Linq.Expressions.Expression<Func<tb_PurReturnEntry, int?>> exprPayStatus;
             //exprPayStatus = (p) => p.PayStatus;
@@ -70,7 +69,7 @@ namespace RUINORERP.UI.PSI.PUR
 
         public override void BuildInvisibleCols()
         {
-        
+            base.MasterInvisibleCols.Add(c => c.PurEntryRe_ID);
         }
         public override void BuildLimitQueryConditions()
         {

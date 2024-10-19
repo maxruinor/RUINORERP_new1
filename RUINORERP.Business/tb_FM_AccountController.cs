@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:39
+// 时间：10/19/2024 00:39:07
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -84,7 +84,7 @@ namespace RUINORERP.Business
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.account_id > 0)
+                if (entity.Account_id > 0)
                 {
                     bool rs = await _tb_FM_AccountServices.Update(entity);
                     if (rs)
@@ -125,7 +125,7 @@ namespace RUINORERP.Business
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.account_id > 0)
+                if (entity.Account_id > 0)
                 {
                     bool rs = await _tb_FM_AccountServices.Update(entity);
                     if (rs)
@@ -204,7 +204,7 @@ namespace RUINORERP.Business
             {
                 rs=true;
                 ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.account_id).ToArray();
+                 long[] result = entitys.Select(e => e.Account_id).ToArray();
                 MyCacheManager.Instance.DeleteEntityList<tb_FM_Account>(result);
             }
             return rs;
@@ -242,7 +242,7 @@ namespace RUINORERP.Business
                        // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 
-            if (entity.account_id > 0)
+            if (entity.Account_id > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_Account>(entity as tb_FM_Account)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
@@ -267,7 +267,7 @@ namespace RUINORERP.Business
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rsms.ReturnObject = entity as T ;
-                entity.PrimaryKeyID = entity.account_id;
+                entity.PrimaryKeyID = entity.Account_id;
                 rsms.Succeeded = rs;
             }
             catch (Exception ex)
@@ -304,7 +304,7 @@ namespace RUINORERP.Business
         public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
             tb_FM_Account entity = model as tb_FM_Account;
-             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_Account>(m => m.account_id== entity.account_id)
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_Account>(m => m.Account_id== entity.Account_id)
                                 .Include(m => m.tb_FM_OtherExpenseDetails)
                         .Include(m => m.tb_FM_Initial_PayAndReceivables)
                         .Include(m => m.tb_FM_PaymentBills)
@@ -569,7 +569,7 @@ namespace RUINORERP.Business
         
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
-            tb_FM_Account entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>().Where(w => w.account_id == (long)id)
+            tb_FM_Account entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Account>().Where(w => w.Account_id == (long)id)
                              .Includes(t => t.tb_department )
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_fm_subject )

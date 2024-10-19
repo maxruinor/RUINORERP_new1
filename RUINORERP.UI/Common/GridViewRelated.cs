@@ -547,6 +547,45 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+            if (tableName == typeof(tb_StockTransfer).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_StockTransfer>()
+                    .Includes(c => c.tb_StockTransferDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.StockTransferID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.StockTransferNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
+            if (tableName == typeof(tb_ProdConversion).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdConversion>()
+                    .Includes(c => c.tb_ProdConversionDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.ConversionID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.ConversionNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
+            if (tableName == typeof(tb_PurReturnEntry).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_PurReturnEntry>()
+                    .Includes(c => c.tb_PurReturnEntryDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.PurReEntry_ID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.PurReEntryNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
+            if (tableName == typeof(tb_PurEntryRe).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryRe>()
+                    .Includes(c => c.tb_PurEntryReDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.PurEntryRe_ID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.PurEntryReNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
 
         }
 

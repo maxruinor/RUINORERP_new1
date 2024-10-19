@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).BeginInit();
             this.SuspendLayout();
             // 
             // UCSaleOutStatistics
@@ -36,6 +37,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "UCSaleOutStatistics";
             this.Load += new System.EventHandler(this.UCSaleOutStatistics_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMain)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

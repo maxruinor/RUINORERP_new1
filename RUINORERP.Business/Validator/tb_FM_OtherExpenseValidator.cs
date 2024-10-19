@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:42
+// 时间：10/19/2024 00:34:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,6 +45,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.ApprovedAmount).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
+ RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.CloseCaseImagePath).MaximumLength(300).WithMessage("结案凭证:不能超过最大长度,300.");
        	
            	                //long
                 //ExpenseMainID

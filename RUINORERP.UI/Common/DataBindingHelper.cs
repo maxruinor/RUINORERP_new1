@@ -317,7 +317,6 @@ namespace RUINORERP.UI.Common
                                                 MainForm.Instance.logger.LogInformation($"没有获取到显示字段值{display}，请联系管理员。  ");
                                                 return;
                                             }
-                                      
 
                                             RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, display, ktbTxt.Text);
                                             RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);

@@ -198,7 +198,20 @@ namespace HLH.Lib.Draw
         {
             MemoryStream ms = new MemoryStream(data);
             Image image = System.Drawing.Image.FromStream(ms);
+            return MakeThumbnailfromImage(image, width, height);
+        }
 
+        /// <summary>
+        /// 创建缩略图
+        /// </summary>
+        /// <param name="src">来源页面
+        /// 可以是相对地址或者绝对地址
+        /// </param>
+        /// <param name="width">缩略图宽度</param>
+        /// <param name="height">缩略图高度</param>
+        /// <returns>字节数组</returns>
+        public static Image MakeThumbnailfromImage(Image image, double width, double height)
+        {
             double newWidth, newHeight;
             if (image.Width > image.Height)
             {
@@ -245,7 +258,6 @@ namespace HLH.Lib.Draw
             //bitmap.Dispose();
             return bitmap;
         }
-
 
         /// <summary>
         /// 创建缩略图

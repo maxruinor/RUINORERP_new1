@@ -33,6 +33,20 @@ namespace RUINORERP.UI.PSI.SAL
             base.WithOutlook = true;
 
         }
+
+        public override void BuildColNameDataDictionary()
+        {
+            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
+            System.Linq.Expressions.Expression<Func<tb_FM_ExpenseClaim, int?>> exprApprovalStatus;
+            exprApprovalStatus = (p) => p.ApprovalStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
+            
+            System.Linq.Expressions.Expression<Func<tb_FM_ExpenseClaim, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+
+        }
+
         private void UCSaleOrderStatistics_Load(object sender, EventArgs e)
         {
             //这个应该是一个组 多个表
@@ -53,10 +67,7 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_FM_ExpenseClaimItems, tb_FM_ExpenseClaim>(c => c.ClaimNo, r => r.ClaimNo);
         }
-        public override void BuildColNameDataDictionary()
-        {
-
-        }
+  
 
         public override void BuildLimitQueryConditions()
         {

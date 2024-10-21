@@ -36,7 +36,7 @@ using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
 using Image = System.Drawing.Image;
-
+using RUINOR.WinFormsUI.CustomPictureBox;
 namespace RUINORERP.UI.MRP.BOM
 {
 

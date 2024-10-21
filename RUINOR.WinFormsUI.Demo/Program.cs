@@ -1,4 +1,5 @@
-﻿using RUINOR.WinFormsUI.Demo.TreeGridView;
+﻿using RUINOR.WinFormsUI.Demo.CustomPictureBoxDemo;
+using RUINOR.WinFormsUI.Demo.TreeGridView;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace RUINOR.WinFormsUI.Demo
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new frmPicDemo());
+            return;
             Application.Run(new frmMain());
             Application.Run(new RUINOR.WinFormsUI.TreeViewColumns.TreeViewColumnsDemo.Form1());
             Application.Run(new RUINOR.WinFormsUI.Demo.TreeGridView.Form1());

@@ -1050,152 +1050,7 @@ namespace RUINORERP.Business
 
         IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
 
-        /*
-         /// <summary>
-         /// 生成制令单草稿
-         /// </summary>
-         public async Task<List<tb_ManufacturingOrder>> GenerateManufacturingOrder(tb_ProductionDemand demand)
-         {
-             List<tb_ManufacturingOrder> ManufacturingOrders = new List<tb_ManufacturingOrder>();
-             ReturnMainSubResults<tb_BuyingRequisition> rmr = new ReturnMainSubResults<tb_BuyingRequisition>();
-
-
-             //一个制令单。只会生成一个顶级的目标产品
-             List<tb_ProduceGoodsRecommendDetail> ProduceDetails = demand.tb_ProduceGoodsRecommendDetails;
-             foreach (var item in ProduceDetails.Where(c => c.ParentId == 0).ToList())
-             {
-                 tb_BOM_SController<tb_BOM_S> ctrBOM = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                 tb_BOM_S bom = await ctrBOM.BaseQueryByIdNavAsync(item.BOM_ID);
-                 //一个成品一个制作令单？
-                 tb_ManufacturingOrder ManufacturingOrder = mapper.Map<tb_ManufacturingOrder>(item);
-                 #region 
-                 BaseController<tb_ManufacturingOrder> ctrMaking = _appContext.GetRequiredServiceByName<BaseController<tb_ManufacturingOrder>>(typeof(tb_ManufacturingOrder).Name + "Controller");
-                 ManufacturingOrder.BOM_No = bom.BOM_No;
-                 ManufacturingOrder.ProdDetailID = item.ProdDetailID;
-                 ManufacturingOrder.property = item.property;
-                 ManufacturingOrder.Specifications = item.Specifications;
-                 ManufacturingOrder.MONO = BizCodeGenerator.Instance.GetBizBillNo(BizType.制令单);
-                 ManufacturingOrder.PDID = demand.PDID;
-                 ManufacturingOrder.PDCID = item.PDCID;
-                 ManufacturingOrder.PDNO = demand.PDNo;
-                 ManufacturingOrder.Location_ID = item.Location_ID;
-                 ManufacturingOrder.QuantityDelivered = 0;
-                 // ManufacturingOrder.RefBillType = (int)BizType.生产需求分析;
-
-                 //暂时认为一定有计划
-                 if (demand.tb_productionplan != null)
-                 {
-                     ManufacturingOrder.DepartmentID = demand.tb_productionplan.DepartmentID;
-                 }
-
-                 if (demand.tb_productionplan.tb_saleorder != null)
-                 {
-                     ManufacturingOrder.CustomerVendor_ID = demand.tb_productionplan.tb_saleorder.CustomerVendor_ID;
-                     ManufacturingOrder.Priority = demand.tb_productionplan.tb_saleorder.OrderPriority;
-                 }
-
-                 ManufacturingOrder.PeopleQty = bom.PeopleQty * item.RequirementQty;
-                 ManufacturingOrder.Employee_ID = _appContext.CurUserInfo.Id;
-                 MessageBox.Show("要确认成本的方式TODO");
-                 if (bom.WorkingHour.HasValue)
-                 {
-                     ManufacturingOrder.WorkingHour = bom.WorkingHour.Value * item.RequirementQty;
-                 }
-                 if (bom.MachineHour.HasValue)
-                 {
-                     ManufacturingOrder.MachineHour = bom.MachineHour.Value * item.RequirementQty;
-                 }
-                 if (ManufacturingOrder.IsOutSourced)
-                 {
-                     ManufacturingOrder.ApportionedCost = bom.OutApportionedCost * item.RequirementQty;
-                    // ManufacturingOrder.TotalManuFee = bom.TotalManuFee * item.RequirementQty;
-                     //ManufacturingOrder.ApportionedCost = bom.OutApportionedCost * item.RequirementQty;
-                 }
-                 else
-                 {
-                    ManufacturingOrder.ApportionedCost = bom.SelfApportionedCost * item.RequirementQty;
-                    // ManufacturingOrder.ApportionedCost = bom.OutApportionedCost * item.RequirementQty;
-
-                    // ManufacturingOrder.ApportionedCost = bom.OutApportionedCost * item.RequirementQty;
-                 }
-
-
-                 ManufacturingOrder.ApprovalOpinions = string.Empty;
-                 ManufacturingOrder.ApprovalResults = null;
-                 ManufacturingOrder.ApprovalStatus = null;
-                 ManufacturingOrder.Approver_at = null;
-                 ManufacturingOrder.Approver_by = null;
-                 if (ManufacturingOrder.MOID == 0)
-                 {
-                     BusinessHelper.Instance.InitEntity(ManufacturingOrder);
-                     BusinessHelper.Instance.InitStatusEntity(ManufacturingOrder);
-                 }
-                 else
-                 {
-                     BusinessHelper.Instance.EditEntity(ManufacturingOrder);
-                 }
-
-                 ManufacturingOrder.ManufacturingQty = item.RequirementQty;
-                 //ManufacturingOrder.PeopleQty = item.p;
-                 //===============================================================================
-                 //加载他下面的所有物料，是所有。
-                 //这里算出来的物料是库存不足的数据。再加上有BOM的除去顶层。看中单屋是否数量全是自制。否则仓库也要发对应的半制程品
-                 List<tb_ManufacturingOrderDetail> AllMakingGoods = new List<tb_ManufacturingOrderDetail>();
-                 //这里只得到了除顶层的的有BOM的数据
-                 List<tb_ManufacturingOrderDetail> MakingGoods = await GetSubItemsForManufacturingOrderDetail(ProduceDetails, 0, bom);
-
-                 //这里是中间件ID
-                 HashSet<long> excludedIds = new HashSet<long>(MakingGoods.Select(p => p.ProdDetailID));
-
-                 //这里要以库存不足（包括了足的）为基准去生成发料明细
-                 var SubItems = demand.tb_ProductionDemandDetails.Where(s => !excludedIds.Contains(s.ProdDetailID)).ToList();
-
-                 //这里再取库存不足的，再加上有BOM的除去顶层。
-                 List<tb_ManufacturingOrderDetail> MakingGoodsOther = mapper.Map<List<tb_ManufacturingOrderDetail>>(SubItems);
-
-                 //要计算的情况
-                 foreach (tb_ManufacturingOrderDetail MODetail in MakingGoodsOther)
-                 {
-                     tb_BOM_SDetail child_bomDetail = bom.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == MODetail.ProdDetailID);
-                     //损耗量，影响领料数量？
-
-                     MODetail.WastageQty = MODetail.ShouldSendQty * child_bomDetail.LossRate;
-
-                 }
-
-                 //两统计在一起发料
-
-                 //两部分
-                 AllMakingGoods.AddRange(MakingGoods);
-                 AllMakingGoods.AddRange(MakingGoodsOther);
-
-                 AllMakingGoods.Sort((p1, p2) =>
-                 {
-                     if (p1.ParentId != p2.ParentId)
-                     {
-                         return p2.ParentId.CompareTo(p1.ParentId);
-                     }
-                     else if (p1.BOM_ID.HasValue && p1.BOM_ID != p2.BOM_ID)
-                     {
-                         return p2.BOM_ID.Value.CompareTo(p1.BOM_ID);
-                     }
-                     else if (p1.ShouldSendQty != p2.ShouldSendQty)
-                     {
-                         return p2.ShouldSendQty.CompareTo(p1.ShouldSendQty);
-                     }
-                     else return 0;
-                 });
-
-                 ManufacturingOrder.tb_ManufacturingOrderDetails = AllMakingGoods;
-                 #endregion
-                 ManufacturingOrders.Add(ManufacturingOrder);
-             }
-
-
-             return ManufacturingOrders;
-
-         }
-     */
+   
 
         /// <summary>
         /// 初始化制令单的数据，由制令单这边生成时候调用
@@ -1409,7 +1264,7 @@ namespace RUINORERP.Business
             return ManufacturingOrder;
         }
 
-
+        /*
         /// <summary>
         /// 生成制令单明细
         /// </summary>
@@ -1477,7 +1332,7 @@ namespace RUINORERP.Business
 
             return AllMakingGoods;
         }
-
+        */
 
 
 
@@ -1502,6 +1357,12 @@ namespace RUINORERP.Business
                 //==通过库存不足那边的转换一下，再修正重要的值
                 var mpdItem = demand.tb_ProductionDemandDetails.FirstOrDefault(c => c.ProdDetailID == mItem.ProdDetailID);
                 tb_ManufacturingOrderDetail mItemGoods = mapper.Map<tb_ManufacturingOrderDetail>(mpdItem);
+                if (mItemGoods == null)
+                {
+                    //如果需求分析单已经建好保存后，再修改BOM添加了材料后。按BOM明细到分析单明细中找不到时。则直接由BOM明细生成制令单明细行
+                    mItemGoods = mapper.Map<tb_ManufacturingOrderDetail>(mItem);
+                    mItemGoods.Location_ID = MakingItem.Location_ID;
+                }
                 //===
                 mItemGoods.ActualSentQty = 0;
                 //不管是中间件还是原料都有上级BOM

@@ -36,7 +36,7 @@ using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
 using Image = System.Drawing.Image;
-
+using RUINOR.WinFormsUI.CustomPictureBox;
 namespace RUINORERP.UI.ProductEAV
 {
     [MenuAttrAssemblyInfo("产品查询", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]

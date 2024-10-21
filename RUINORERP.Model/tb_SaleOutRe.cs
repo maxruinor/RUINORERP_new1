@@ -71,6 +71,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProjectGroup_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "项目组" )]
+        [FKRelationAttribute("tb_ProjectGroup", "ProjectGroup_ID")]
         public long? ProjectGroup_ID
         { 
             get{return _ProjectGroup_ID;}
@@ -99,6 +100,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Paytype_ID",ColDesc = "退款类型")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Paytype_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "退款类型" )]
+        [FKRelationAttribute("tb_PaymentMethod", "Paytype_ID")]
         public long? Paytype_ID
         { 
             get{return _Paytype_ID;}

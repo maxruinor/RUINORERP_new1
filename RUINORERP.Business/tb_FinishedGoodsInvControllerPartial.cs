@@ -179,7 +179,28 @@ namespace RUINORERP.Business
                     // child.UnitCost = child.MaterialCost+child.LaborCost+child.
 
                     CommService.CostCalculations.CostCalculation(_appContext, inv, child.Qty, child.UnitCost);
+                    #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
+                    tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
+                    List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                    .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
+                    .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
+                    foreach (tb_BOM_SDetail bomDetail in bomDetails)
+                    {
+                        //如果存在则更新 
+                        bomDetail.UnitCost = inv.Inv_Cost;
+                        bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                        if (bomDetail.tb_bom_s != null)
+                        {
+                            bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                            bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
+                            bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
+                        }
+                    }
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+
+                    #endregion
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
 

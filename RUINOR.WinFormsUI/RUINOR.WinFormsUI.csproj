@@ -77,6 +77,18 @@
     <Compile Include="ComboBoxTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="CustomPictureBox\frmPictureViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CustomPictureBox\frmPictureViewer.Designer.cs">
+      <DependentUpon>frmPictureViewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CustomPictureBox\ImageCroppingBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CustomPictureBox\MagicPictureBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DockingToolbar\AllowedBorders.cs" />
     <Compile Include="DockingToolbar\DockLocation.cs" />
     <Compile Include="DockingToolbar\ToolBarDockArea.cs">
@@ -365,6 +377,9 @@
     <Content Include="SourceGrid2\Grid.bmp" />
     <Content Include="SourceGrid2\GridVirtual.bmp" />
     <Content Include="TreeViewThreeState\TreeViewThreeStateTest.png" />
+    <EmbeddedResource Include="CustomPictureBox\frmPictureViewer.resx">
+      <DependentUpon>frmPictureViewer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -514,5 +529,6 @@
       <Name>RUINOR.Runtime.InteropServices.APIs</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

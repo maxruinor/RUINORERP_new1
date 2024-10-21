@@ -64,66 +64,7 @@ namespace RUINORERP.Model
             get{return _DocumentDate;}            set{                SetProperty(ref _DocumentDate, value);                }
         }
 
-        private decimal? _ClaimAmount;
-        
-        
-        /// <summary>
-        /// 报销金额
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "ClaimAmount",ColDesc = "报销金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ClaimAmount" ,IsNullable = true,ColumnDescription = "报销金额" )]
-        [Display(Name = "报销金额")]
-        public decimal? ClaimAmount 
-        { 
-            get{return _ClaimAmount;}            set{                SetProperty(ref _ClaimAmount, value);                }
-        }
-
-        private decimal? _ApprovedAmount;
-        
-        
-        /// <summary>
-        /// 核准金额
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "ApprovedAmount",ColDesc = "核准金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ApprovedAmount" ,IsNullable = true,ColumnDescription = "核准金额" )]
-        [Display(Name = "核准金额")]
-        public decimal? ApprovedAmount 
-        { 
-            get{return _ApprovedAmount;}            set{                SetProperty(ref _ApprovedAmount, value);                }
-        }
-
-        private decimal? _UntaxedAmount;
-        
-        
-        /// <summary>
-        /// 未税本位币
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "UntaxedAmount",ColDesc = "未税本位币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UntaxedAmount" ,IsNullable = true,ColumnDescription = "未税本位币" )]
-        [Display(Name = "未税本位币")]
-        public decimal? UntaxedAmount 
-        { 
-            get{return _UntaxedAmount;}            set{                SetProperty(ref _UntaxedAmount, value);                }
-        }
-
-        private DateTime? _Created_at;
-        
-        
-        /// <summary>
-        /// 创建时间
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = true,ColumnDescription = "创建时间" )]
-        [Display(Name = "创建时间")]
-        public DateTime? Created_at 
-        { 
-            get{return _Created_at;}            set{                SetProperty(ref _Created_at, value);                }
-        }
-
+         
         private long? _Created_by;
         
         
@@ -139,35 +80,7 @@ namespace RUINORERP.Model
             get{return _Created_by;}            set{                SetProperty(ref _Created_by, value);                }
         }
 
-        private DateTime? _Modified_at;
         
-        
-        /// <summary>
-        /// 修改时间
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = true,ColumnDescription = "修改时间" )]
-        [Display(Name = "修改时间")]
-        public DateTime? Modified_at 
-        { 
-            get{return _Modified_at;}            set{                SetProperty(ref _Modified_at, value);                }
-        }
-
-        private long? _Modified_by;
-        
-        
-        /// <summary>
-        /// 修改人
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Modified_by",ColDesc = "修改人")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Modified_by" ,IsNullable = true,ColumnDescription = "修改人" )]
-        [Display(Name = "修改人")]
-        public long? Modified_by 
-        { 
-            get{return _Modified_by;}            set{                SetProperty(ref _Modified_by, value);                }
-        }
 
         private int? _DataStatus;
         

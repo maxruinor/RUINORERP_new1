@@ -126,6 +126,12 @@
       <DependentUpon>frmChkComboBoxDemo.cs</DependentUpon>
     </Compile>
     <Compile Include="ChkComboBoxDemo\Statusses.cs" />
+    <Compile Include="CustomPictureBoxDemo\frmPicDemo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CustomPictureBoxDemo\frmPicDemo.Designer.cs">
+      <DependentUpon>frmPicDemo.cs</DependentUpon>
+    </Compile>
     <Compile Include="frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -160,6 +166,9 @@
     </Compile>
     <EmbeddedResource Include="ChkComboBoxDemo\frmChkComboBoxDemo.resx">
       <DependentUpon>frmChkComboBoxDemo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CustomPictureBoxDemo\frmPicDemo.resx">
+      <DependentUpon>frmPicDemo.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
@@ -283,6 +292,7 @@
     <Content Include="Resources\OPENFOLD.ICO" />
     <Content Include="Resources\Up.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets" Condition="Exists('..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

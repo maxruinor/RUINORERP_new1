@@ -27,7 +27,7 @@ using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
 using Image = System.Drawing.Image;
-
+using RUINOR.WinFormsUI.CustomPictureBox;
 namespace RUINORERP.UI.UCSourceGrid
 {
     [MenuAttrAssemblyInfo("依BOM查询库存", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.库存查询)]

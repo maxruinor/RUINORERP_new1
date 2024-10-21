@@ -1841,12 +1841,6 @@
     <Compile Include="SysConfig\UCWorkCenterConfig.Designer.cs">
       <DependentUpon>UCWorkCenterConfig.cs</DependentUpon>
     </Compile>
-    <Compile Include="ToolForm\frmPictureViewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ToolForm\frmPictureViewer.Designer.cs">
-      <DependentUpon>frmPictureViewer.cs</DependentUpon>
-    </Compile>
     <Compile Include="ToolForm\frmSelectItemFromGrid.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2779,9 +2773,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCWorkCenterConfig.resx">
       <DependentUpon>UCWorkCenterConfig.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ToolForm\frmPictureViewer.resx">
-      <DependentUpon>frmPictureViewer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolForm\frmSelectItemFromGrid.resx">
       <DependentUpon>frmSelectItemFromGrid.cs</DependentUpon>

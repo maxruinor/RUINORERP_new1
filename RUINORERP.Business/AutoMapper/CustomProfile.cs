@@ -49,7 +49,7 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_PurEntryDetail, tb_PurOrderDetail>();
 
 
- 
+
 
 
             //从前到后，由前到后,将借出转为要归还的数据
@@ -122,7 +122,7 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_StockOutDetail, View_ProdDetail>();
             CreateMap<View_ProdDetail, tb_StockOutDetail>();
             CreateMap<View_ProdDetail, tb_PackingDetail>();
-            
+
 
             CreateMap<tb_SaleOrder, tb_ProductionPlan>();
             CreateMap<tb_SaleOrderDetail, tb_ProductionPlanDetail>();
@@ -201,8 +201,12 @@ namespace RUINORERP.Business.AutoMapper
 
             CreateMap<tb_ProduceGoodsRecommendDetail, tb_ManufacturingOrderDetail>();
 
+
             CreateMap<tb_ProductionDemandDetail, tb_ManufacturingOrderDetail>()
              .ForMember(a => a.ShouldSendQty, o => o.MapFrom(d => d.NeedQuantity));
+
+            //如果需求分析单已经建好保存后，再修改BOM添加了材料后。按BOM明细到分析单明细中找不到时。则直接由BOM明细生成制令单明细行
+            CreateMap<tb_BOM_SDetail, tb_ManufacturingOrderDetail>();
 
             //库存不足的 生成
             CreateMap<tb_ManufacturingOrderDetail, tb_MaterialRequisitionDetail>();

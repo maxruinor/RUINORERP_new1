@@ -31,7 +31,8 @@
             this.components = new System.ComponentModel.Container();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonGroupBoxCurrentNode = new Krypton.Toolkit.KryptonGroupBox();
-            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
+            this.picBoxCloseImage = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
+            this.lblCloseImage = new Krypton.Toolkit.KryptonLabel();
             this.txtBillNO = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.txtBillType = new Krypton.Toolkit.KryptonTextBox();
@@ -45,16 +46,15 @@
             this.toolTipBase = new System.Windows.Forms.ToolTip(this.components);
             this.bindingSourceEdit = new System.Windows.Forms.BindingSource(this.components);
             this.openFileDialog4Img = new System.Windows.Forms.OpenFileDialog();
-            this.pictureBox1 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxCurrentNode)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxCurrentNode.Panel)).BeginInit();
             this.kryptonGroupBoxCurrentNode.Panel.SuspendLayout();
             this.kryptonGroupBoxCurrentNode.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picBoxCloseImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
@@ -65,35 +65,45 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(932, 523);
+            this.kryptonPanel1.Size = new System.Drawing.Size(553, 523);
             this.kryptonPanel1.TabIndex = 4;
             // 
             // kryptonGroupBoxCurrentNode
             // 
-            this.kryptonGroupBoxCurrentNode.Location = new System.Drawing.Point(36, 21);
+            this.kryptonGroupBoxCurrentNode.Location = new System.Drawing.Point(12, 12);
             this.kryptonGroupBoxCurrentNode.Name = "kryptonGroupBoxCurrentNode";
             // 
             // kryptonGroupBoxCurrentNode.Panel
             // 
-            this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.pictureBox1);
-            this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.kryptonLabel2);
+            this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.picBoxCloseImage);
+            this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblCloseImage);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtBillNO);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.kryptonLabel1);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtBillType);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblUnitName);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblDesc);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtOpinion);
-            this.kryptonGroupBoxCurrentNode.Size = new System.Drawing.Size(501, 377);
+            this.kryptonGroupBoxCurrentNode.Size = new System.Drawing.Size(541, 459);
             this.kryptonGroupBoxCurrentNode.TabIndex = 14;
             this.kryptonGroupBoxCurrentNode.Values.Heading = "请输入结案的情况";
             // 
-            // kryptonLabel2
+            // picBoxCloseImage
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(7, 125);
-            this.kryptonLabel2.Name = "kryptonLabel2";
-            this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel2.TabIndex = 70;
-            this.kryptonLabel2.Values.Text = "结案凭证";
+            this.picBoxCloseImage.AllowDrop = true;
+            this.picBoxCloseImage.Image = global::RUINORERP.UI.Properties.Resources.nopic;
+            this.picBoxCloseImage.Location = new System.Drawing.Point(74, 221);
+            this.picBoxCloseImage.Name = "picBoxCloseImage";
+            this.picBoxCloseImage.Size = new System.Drawing.Size(252, 199);
+            this.picBoxCloseImage.TabIndex = 15;
+            this.picBoxCloseImage.TabStop = false;
+            // 
+            // lblCloseImage
+            // 
+            this.lblCloseImage.Location = new System.Drawing.Point(7, 219);
+            this.lblCloseImage.Name = "lblCloseImage";
+            this.lblCloseImage.Size = new System.Drawing.Size(62, 20);
+            this.lblCloseImage.TabIndex = 70;
+            this.lblCloseImage.Values.Text = "结案凭证";
             // 
             // txtBillNO
             // 
@@ -138,13 +148,13 @@
             this.txtOpinion.Location = new System.Drawing.Point(74, 63);
             this.txtOpinion.Multiline = true;
             this.txtOpinion.Name = "txtOpinion";
-            this.txtOpinion.Size = new System.Drawing.Size(420, 58);
+            this.txtOpinion.Size = new System.Drawing.Size(432, 152);
             this.txtOpinion.TabIndex = 11;
             // 
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(292, 408);
+            this.btnCancel.Location = new System.Drawing.Point(291, 477);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 13;
@@ -153,7 +163,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(180, 408);
+            this.btnOk.Location = new System.Drawing.Point(179, 477);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 12;
@@ -172,23 +182,13 @@
             // 
             this.openFileDialog4Img.FileName = "*.jpg";
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.AllowDrop = true;
-            this.pictureBox1.Image = global::RUINORERP.UI.Properties.Resources.nopic;
-            this.pictureBox1.Location = new System.Drawing.Point(74, 127);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(252, 199);
-            this.pictureBox1.TabIndex = 15;
-            this.pictureBox1.TabStop = false;
-            // 
             // frmOpinion
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(932, 523);
+            this.ClientSize = new System.Drawing.Size(553, 523);
             this.Controls.Add(this.kryptonPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "frmOpinion";
@@ -203,9 +203,9 @@
             this.kryptonGroupBoxCurrentNode.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxCurrentNode)).EndInit();
             this.kryptonGroupBoxCurrentNode.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.picBoxCloseImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -225,8 +225,8 @@
         internal System.Windows.Forms.ToolTip toolTipBase;
         internal System.Windows.Forms.BindingSource bindingSourceEdit;
         public Krypton.Toolkit.KryptonTextBox txtOpinion;
-        private Krypton.Toolkit.KryptonLabel kryptonLabel2;
+        private Krypton.Toolkit.KryptonLabel lblCloseImage;
         private System.Windows.Forms.OpenFileDialog openFileDialog4Img;
-        private RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox pictureBox1;
+        private RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox picBoxCloseImage;
     }
 }

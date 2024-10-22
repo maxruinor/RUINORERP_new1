@@ -402,6 +402,7 @@ namespace RUINORERP.Model
             }
         }
 
+
         private long? _BankAccount_id;
         /// <summary>
         /// 

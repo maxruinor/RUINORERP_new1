@@ -28,6 +28,23 @@ namespace RUINORERP.Common.Helper
             }
         }
 
+        public static string GetImageHash(Image image)
+        {
+            if (image == null)
+            {
+                return string.Empty;
+            }
+            using (var md5 = MD5.Create())
+            {
+                byte[] imageBytes = ConvertImageToByteEx(image);
+                // 计算 hash
+                var hashBytes = md5.ComputeHash(imageBytes);
+                // 将 byte 数组转换为字符串
+                return BitConverter.ToString(hashBytes).Replace("-", String.Empty).ToLowerInvariant();
+
+            }
+        }
+
         public static bool AreImagesEqual(string filePath1, string filePath2)
         {
             var hash1 = GetImageHash(filePath1);

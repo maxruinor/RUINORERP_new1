@@ -52,7 +52,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.TotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
- RuleFor(tb_SaleOrder =>tb_SaleOrder.CloseCaseOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_SaleOrder =>tb_SaleOrder.CloseCaseOpinions).MaximumLength(100).WithMessage("结案意见:不能超过最大长度,100.");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);

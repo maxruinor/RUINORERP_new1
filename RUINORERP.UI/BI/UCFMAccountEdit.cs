@@ -15,6 +15,7 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.Business.LogicaService;
 using RUINORERP.UI.Common;
 using RUINORERP.Business;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.BI
 {
@@ -33,14 +34,13 @@ namespace RUINORERP.UI.BI
 
             DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.subject_id, v => v.subject_name, cmbsubject_id);
 
-            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyCode
-            , cmbCurrency_ID);
+            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyCode, cmbCurrency_ID);
 
             DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_name, txtaccount_name, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_No, txtaccount_No, BindDataType4TextBox.Text, false);
 
-            DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Account_type, txtaccount_type, BindDataType4TextBox.Qty, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_FM_Account>(entity, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
 
             DataBindingHelper.BindData4TextBox<tb_FM_Account>(entity, t => t.Bank, txtBank, BindDataType4TextBox.Text, false);
 

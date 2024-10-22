@@ -389,7 +389,20 @@ namespace RUINORERP.Model
             SetProperty(ref _CloseCaseImagePath, value);
             }
         }
-
+        private string _CloseCaseOpinions;
+        /// <summary>
+        /// 结案意见
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions", ColDesc = "结案意见")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "CloseCaseOpinions", Length = 200, IsNullable = true, ColumnDescription = "结案意见")]
+        public string CloseCaseOpinions
+        {
+            get { return _CloseCaseOpinions; }
+            set
+            {
+                SetProperty(ref _CloseCaseOpinions, value);
+            }
+        }
         #endregion
 
         #region 扩展属性

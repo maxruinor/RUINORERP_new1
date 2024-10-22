@@ -7,11 +7,16 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.EnumExt
 {
 
+    /// <summary>
+    /// 账户类型
+    /// </summary>
     public enum AccountType
     {
         银行账户,
         现金账户,
-        网络账户
+        微信账户,
+        支付宝账户,
+        收款码,
     }
 
 

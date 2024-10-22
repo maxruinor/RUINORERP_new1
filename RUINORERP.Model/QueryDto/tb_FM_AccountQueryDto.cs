@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:39
+// 时间：10/22/2024 16:24:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,17 +47,17 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _subject_id;
+        private long? _Subject_id;
         /// <summary>
         /// 会计科目
         /// </summary>
-        [AdvQueryAttribute(ColName = "subject_id",ColDesc = "会计科目")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "subject_id",IsNullable = true,ColumnDescription = "会计科目" )]
-        [FKRelationAttribute("tb_FM_Subject","subject_id")]
-        public long? subject_id 
+        [AdvQueryAttribute(ColName = "Subject_id",ColDesc = "会计科目")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Subject_id",IsNullable = true,ColumnDescription = "会计科目" )]
+        [FKRelationAttribute("tb_FM_Subject","Subject_id")]
+        public long? Subject_id 
         { 
-            get{return _subject_id;}
-            set{SetProperty(ref _subject_id, value);}
+            get{return _Subject_id;}
+            set{SetProperty(ref _Subject_id, value);}
         }
      
 
@@ -75,42 +75,42 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _account_name;
+        private string _Account_name;
         /// <summary>
         /// 账户名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "account_name",ColDesc = "账户名称")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "account_name",Length=50,IsNullable = true,ColumnDescription = "账户名称" )]
-        public string account_name 
+        [AdvQueryAttribute(ColName = "Account_name",ColDesc = "账户名称")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Account_name",Length=50,IsNullable = true,ColumnDescription = "账户名称" )]
+        public string Account_name 
         { 
-            get{return _account_name;}
-            set{SetProperty(ref _account_name, value);}
+            get{return _Account_name;}
+            set{SetProperty(ref _Account_name, value);}
         }
      
 
-        private string _account_No;
+        private string _Account_No;
         /// <summary>
         /// 账号
         /// </summary>
-        [AdvQueryAttribute(ColName = "account_No",ColDesc = "账号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "account_No",Length=100,IsNullable = true,ColumnDescription = "账号" )]
-        public string account_No 
+        [AdvQueryAttribute(ColName = "Account_No",ColDesc = "账号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Account_No",Length=100,IsNullable = true,ColumnDescription = "账号" )]
+        public string Account_No 
         { 
-            get{return _account_No;}
-            set{SetProperty(ref _account_No, value);}
+            get{return _Account_No;}
+            set{SetProperty(ref _Account_No, value);}
         }
      
 
-        private int? _account_type;
+        private int? _Account_type;
         /// <summary>
         /// 账户类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "account_type",ColDesc = "账户类型")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "account_type",IsNullable = true,ColumnDescription = "账户类型" )]
-        public int? account_type 
+        [AdvQueryAttribute(ColName = "Account_type",ColDesc = "账户类型")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Account_type",IsNullable = true,ColumnDescription = "账户类型" )]
+        public int? Account_type 
         { 
-            get{return _account_type;}
-            set{SetProperty(ref _account_type, value);}
+            get{return _Account_type;}
+            set{SetProperty(ref _Account_type, value);}
         }
      
 

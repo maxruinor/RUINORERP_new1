@@ -1,4 +1,5 @@
-﻿using RUINORERP.Global;
+﻿using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
@@ -21,8 +22,11 @@ namespace RUINORERP.UI.CommonUI
             InitializeComponent();
         }
 
-        private string _CloseCaseImagePath = string.Empty;
-        private Image _CloseCaseImageData;
+
+        private Image _CloseCaseImage;
+        private string DefaultImageHash = string.Empty;
+
+        private bool _ShowCloseCaseImage = false;
         private void btnOk_Click(object sender, EventArgs e)
         {
             if (_entity.CloseCaseOpinions.IsNullOrEmpty())
@@ -30,13 +34,12 @@ namespace RUINORERP.UI.CommonUI
                 MessageBox.Show("请填写结案意见！");
                 return;
             }
-            _CloseCaseImageData= pictureBox1.Image;
-            if (_CloseCaseImageData == null)
+            string newImageHash = RUINORERP.Common.Helper.ImageHelper.GetImageHash(picBoxCloseImage.Image);
+            if (!newImageHash.Equals(DefaultImageHash))
             {
-                MessageBox.Show("请上传结案图片！");
-                return;
+                _CloseCaseImage = picBoxCloseImage.Image;
             }
-          
+
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
@@ -49,9 +52,9 @@ namespace RUINORERP.UI.CommonUI
 
         private void frmApproval_Load(object sender, EventArgs e)
         {
-            //pictureBox1.AllowDrop = true;
-            //pictureBox1.DragEnter += new DragEventHandler(pictureBox1_DragEnter);
-            //pictureBox1.DragDrop += new DragEventHandler(pictureBox1_DragDrop);
+            DefaultImageHash = RUINORERP.Common.Helper.ImageHelper.GetImageHash(picBoxCloseImage.Image);
+            picBoxCloseImage.Visible = ShowCloseCaseImage;
+            lblCloseImage.Visible = ShowCloseCaseImage;
         }
         private void pictureBox1_DragEnter(object sender, DragEventArgs e)
         {
@@ -75,7 +78,7 @@ namespace RUINORERP.UI.CommonUI
                     string filePath = files[0];
                     if (filePath.ToLower().EndsWith(".png") || filePath.ToLower().EndsWith(".jpg") || filePath.ToLower().EndsWith(".jpeg") || filePath.ToLower().EndsWith(".bmp"))
                     {
-                        pictureBox1.Image = RUINORERP.UI.Common.ImageHelper.GetImage(filePath, 800, 600);
+                        picBoxCloseImage.Image = RUINORERP.UI.Common.ImageHelper.GetImage(filePath, 800, 600);
                     }
                     else
                     {
@@ -87,8 +90,9 @@ namespace RUINORERP.UI.CommonUI
 
         private ApprovalEntity _entity;
 
-        public string CloseCaseImagePath { get => _CloseCaseImagePath; set => _CloseCaseImagePath = value; }
-        public Image CloseCaseImageData { get => _CloseCaseImageData; set => _CloseCaseImageData = value; }
+        //public string CloseCaseImagePath { get => _CloseCaseImagePath; set => _CloseCaseImagePath = value; }
+        public Image CloseCaseImage { get => _CloseCaseImage; set => _CloseCaseImage = value; }
+        public bool ShowCloseCaseImage { get => _ShowCloseCaseImage; set => _ShowCloseCaseImage = value; }
 
         public void BindData(ApprovalEntity entity)
         {
@@ -102,6 +106,6 @@ namespace RUINORERP.UI.CommonUI
             errorProviderForAllInput.DataSource = entity;
         }
 
-        
+
     }
 }

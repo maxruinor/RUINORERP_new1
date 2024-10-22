@@ -15,7 +15,9 @@ using RUINORERP.Common.CollectionExtension;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business;
-
+using RUINORERP.Global;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.BI
 {
@@ -28,9 +30,18 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
             base.EditForm = typeof(UCFMAccountEdit);
 
+            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
+           
+            System.Linq.Expressions.Expression<Func<tb_FM_Account, int?>> exprCheckMode;
+            exprCheckMode = (p) => p.Account_type;
+            base.ColNameDataDictionary.TryAdd(exprCheckMode.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(AccountType)));
+
+ 
+
         }
 
-        
+     
+
 
 
     }

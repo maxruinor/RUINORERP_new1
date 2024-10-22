@@ -27,7 +27,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         private bool isDragging = false; // 是否正在拖动
         private Point dragOffset; // 拖动偏移量
         private Point lastMousePosition; // 上一次鼠标位置
- 
+
         // 设置右键菜单
         ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
         ImageCroppingBox imageCroppingBox1 = new ImageCroppingBox();
@@ -37,18 +37,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             // 设置允许拖拽
             this.AllowDrop = true;
-     
-            //// 设置 PictureBox 可以接收焦点
-            //typeof(Control)
-            //    .GetProperty("TabStop", BindingFlags.Instance | BindingFlags.NonPublic)
-            //    .SetValue(this, true);
-
-            //typeof(Control)
-            //    .GetProperty("Focusable", BindingFlags.Instance | BindingFlags.NonPublic)
-            //    .SetValue(this, true);
-
-        
-
+            this.BorderStyle = BorderStyle.FixedSingle;
             this.SizeMode = PictureBoxSizeMode.Normal; // 确保图片可以移动
 
             // 设置双击事件
@@ -57,7 +46,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             contextMenuStrip.Items.Add("粘贴图片", null, PasteImage);
 
             this.ContextMenuStrip = contextMenuStrip;
-         
+
 
             this.Paint += new PaintEventHandler(PictureBoxViewer_Paint);
 
@@ -77,14 +66,14 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 contextMenuStrip.Items.Add(new ToolStripMenuItem("查看大图", null, new EventHandler(ViewLargeImage), "查看大图"));
             }
-            //if (!contextMenuStrip.Items.ContainsKey("旋转图片"))
-            //{
-            //    contextMenuStrip.Items.Add(new ToolStripMenuItem("旋转图片", null, new EventHandler(RotateImage), "旋转图片"));
-            //}
+            if (!contextMenuStrip.Items.ContainsKey("清除图片"))
+            {
+                contextMenuStrip.Items.Add(new ToolStripMenuItem("清除图片", null, new EventHandler(ClearImage), "清除图片"));
+            }
             if (!contextMenuStrip.Items.ContainsKey("裁剪图片"))
             {
-                imageCroppingBox1.Location = this.Location;
                 imageCroppingBox1.Size = this.Size;
+                //imageCroppingBox1.Location = this.Location;
                 imageCroppingBox1.Visible = false;
                 imageCroppingBox1.ContextMenuStrip = contextMenuStripForCrop;
                 imageCroppingBox1.DoubleClick += new EventHandler(SaveCrop);
@@ -96,6 +85,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 contextMenuStripForCrop.Items.Add(new ToolStripMenuItem("取消裁剪", null, new EventHandler(StopCrop), "取消裁剪"));
             }
+        }
+
+        private void ClearImage(object sender, EventArgs e)
+        {
+            this.Image = null;
+            // 重绘 PictureBox
+            this.Invalidate();
         }
 
         private void PictureBoxViewer_Paint(object sender, PaintEventArgs e)
@@ -121,7 +117,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
         }
 
-    
+
         /// <summary>
         /// 裁剪
         /// </summary>
@@ -194,11 +190,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             base.OnDragDrop(e);
         }
 
-     
+
         // 粘贴图片事件
         private void PasteImage(object sender, EventArgs e)
         {
-           // this.CanFocus
+            // this.CanFocus
             if (Clipboard.ContainsImage())
             {
                 Image image = Clipboard.GetImage();
@@ -246,7 +242,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     ViewLargeImage(sender, e);
                 }
-                
+
             }
         }
 

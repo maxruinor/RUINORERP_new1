@@ -151,6 +151,56 @@ namespace RUINORERP.Business
             }
 
         }
+        /// <summary>
+        /// 批量结案  销售订单标记结案，数据状态为8, 
+        /// 如果还没有出库。但是结案的订单时。修正拟出库数量。
+        /// 目前暂时是这个逻辑。后面再处理凭证财务相关的
+        /// 目前认为结案 是仓库和业务确定这个订单不再执行的一个确认过程。
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
+        {
+            List<tb_FM_ExpenseClaim> entitys = new List<tb_FM_ExpenseClaim>();
+            entitys = NeedCloseCaseList as List<tb_FM_ExpenseClaim>;
+
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                #region 结案
+                //更新拟销售量  减少
+                for (int m = 0; m < entitys.Count; m++)
+                {
+                    //判断 能结案的 是确认审核过的。
+                    if (entitys[m].DataStatus != (int)DataStatus.确认 || !entitys[m].ApprovalResults.HasValue)
+                    {
+                        //return false;
+                        continue;
+                    }
+                    //这部分是否能提出到上一级公共部分？
+                    entitys[m].DataStatus = (int)DataStatus.完结;
+                    BusinessHelper.Instance.EditEntity(entitys[m]);
+                    //只更新指定列
+                    var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ExpenseClaim>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.CloseCaseImagePath, it.Modified_by, it.Modified_at, it.Notes }).ExecuteCommandAsync();
+                }
+                #endregion
+                // 注意信息的完整性
+                _unitOfWorkManage.CommitTran();
+                rs.Succeeded = true;
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
+                rs.ErrorMsg = ex.Message;
+                rs.Succeeded = false;
+                return rs;
+            }
+
+        }
 
 
 

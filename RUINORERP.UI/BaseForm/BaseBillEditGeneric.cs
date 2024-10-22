@@ -55,6 +55,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using NPOI.SS.Formula.Functions;
 using SourceGrid;
 using RUINORERP.UI.FormProperty;
+using SourceGrid.Cells.Models;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -162,6 +163,7 @@ namespace RUINORERP.UI.BaseForm
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as T);
+            ToolBarEnabledControl(Entity);
         }
 
         /// <summary>
@@ -461,7 +463,7 @@ namespace RUINORERP.UI.BaseForm
                             if (GetHelpInfoByBinding(ktb.DataBindings).Length > 0)
                             {
                                 ButtonSpecAny bsa = new ButtonSpecAny();
-                                bsa.Image = Image.FromStream(Common.DataBindingHelper.GetResource("help4"));
+                                bsa.Image = System.Drawing.Image.FromStream(Common.DataBindingHelper.GetResource("help4"));
                                 bsa.Tag = ktb;
                                 bsa.Click += Bsa_Click;
                                 ktb.ButtonSpecs.Add(bsa);
@@ -831,7 +833,7 @@ namespace RUINORERP.UI.BaseForm
                             if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
                             {
                                 ButtonSpecAny bsa = new ButtonSpecAny();
-                                bsa.Image = Image.FromStream(Common.DataBindingHelper.GetResource("help4"));
+                                bsa.Image = System.Drawing.Image.FromStream(Common.DataBindingHelper.GetResource("help4"));
                                 bsa.Tag = ktb;
                                 bsa.Click += BsaEdit_Click;
                                 ktb.ButtonSpecs.Add(bsa);
@@ -1535,7 +1537,7 @@ namespace RUINORERP.UI.BaseForm
         //否则就是调用解析时用加小尾巴
         //注册时处理了所以用上面不加小尾巴
         //BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller`1");
-
+        
         /// <summary>
         /// 结案处理
         /// 一般会自动结案，但是有些需要人工结案
@@ -1549,6 +1551,7 @@ namespace RUINORERP.UI.BaseForm
             }
             BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
+            frm.ShowCloseCaseImage = ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath");
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
@@ -1586,11 +1589,25 @@ namespace RUINORERP.UI.BaseForm
                     return false;
                 }
 
-                ReturnResults<bool> rs = new ReturnResults<bool>();
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                rs = await ctr.BatchCloseCaseAsync(needCloseCases);
+                ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
-                {
+                    {
+                    if (ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
+                    {
+                        string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
+                        byte[] bytes = UI.Common.ImageHelper.imageToByteArray(frm.CloseCaseImage);
+                          HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                    ////上传新文件时要加后缀名
+                    string uploadRsult = await httpWebService.UploadImageAsync(strCloseCaseImagePath + ".jpg", bytes, "upload");
+                        if (uploadRsult.Contains("UploadSuccessful"))
+                        {
+                            EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
+                            //这里更新数据库
+                            await ctr.BaseSaveOrUpdate(EditEntity); 
+                        }
+                    }
+
                     //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
                     //{
 

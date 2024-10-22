@@ -28,11 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
+            this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
+            this.lblReview = new Krypton.Toolkit.KryptonLabel();
+            this.magicPictureBox1 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
+            this.chkClaimEmployee = new Krypton.Toolkit.KryptonCheckBox();
             this.lblApprovalResults = new Krypton.Toolkit.KryptonLabel();
             this.chkApprovalResults = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
-            this.txtDataStatus = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
             this.lblClaimlAmount = new Krypton.Toolkit.KryptonLabel();
@@ -57,14 +61,11 @@
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblDocumentDate = new Krypton.Toolkit.KryptonLabel();
             this.dtpDocumentDate = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.lblstatus = new Krypton.Toolkit.KryptonLabel();
-            this.txtstatus = new Krypton.Toolkit.KryptonTextBox();
-            this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
-            this.lblReview = new Krypton.Toolkit.KryptonLabel();
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
-            this.chkClaimEmployee = new Krypton.Toolkit.KryptonCheckBox();
+            this.txtCloseCaseOpinions = new Krypton.Toolkit.KryptonTextBox();
+            this.lblstatus = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -73,6 +74,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).BeginInit();
@@ -92,11 +94,13 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDataStatus);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPrintStatus);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblReview);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.magicPictureBox1);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkClaimEmployee);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblApprovalResults);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkApprovalResults);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDataStatus);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtDataStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblApprovalOpinions);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtApprovalOpinions);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblClaimlAmount);
@@ -122,9 +126,7 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDocumentDate);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.dtpDocumentDate);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblstatus);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtstatus);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPrintStatus);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblReview);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtCloseCaseOpinions);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lbl盘点单);
             // 
             // kryptonSplitContainer1.Panel2
@@ -134,9 +136,56 @@
             this.kryptonSplitContainer1.SplitterDistance = 243;
             this.kryptonSplitContainer1.TabIndex = 4;
             // 
+            // lblDataStatus
+            // 
+            this.lblDataStatus.Location = new System.Drawing.Point(962, 18);
+            this.lblDataStatus.Name = "lblDataStatus";
+            this.lblDataStatus.Size = new System.Drawing.Size(125, 38);
+            this.lblDataStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblDataStatus.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblDataStatus.TabIndex = 165;
+            this.lblDataStatus.Values.Text = "数据状态";
+            // 
+            // lblPrintStatus
+            // 
+            this.lblPrintStatus.Location = new System.Drawing.Point(618, 18);
+            this.lblPrintStatus.Name = "lblPrintStatus";
+            this.lblPrintStatus.Size = new System.Drawing.Size(125, 38);
+            this.lblPrintStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblPrintStatus.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblPrintStatus.TabIndex = 164;
+            this.lblPrintStatus.Values.Text = "打印状态";
+            // 
+            // lblReview
+            // 
+            this.lblReview.Location = new System.Drawing.Point(791, 18);
+            this.lblReview.Name = "lblReview";
+            this.lblReview.Size = new System.Drawing.Size(125, 38);
+            this.lblReview.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblReview.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblReview.TabIndex = 163;
+            this.lblReview.Values.Text = "审核状态";
+            // 
+            // magicPictureBox1
+            // 
+            this.magicPictureBox1.AllowDrop = true;
+            this.magicPictureBox1.Location = new System.Drawing.Point(956, 168);
+            this.magicPictureBox1.Name = "magicPictureBox1";
+            this.magicPictureBox1.Size = new System.Drawing.Size(131, 68);
+            this.magicPictureBox1.TabIndex = 162;
+            this.magicPictureBox1.TabStop = false;
+            // 
+            // chkClaimEmployee
+            // 
+            this.chkClaimEmployee.Location = new System.Drawing.Point(99, 115);
+            this.chkClaimEmployee.Name = "chkClaimEmployee";
+            this.chkClaimEmployee.Size = new System.Drawing.Size(88, 20);
+            this.chkClaimEmployee.TabIndex = 161;
+            this.chkClaimEmployee.Values.Text = "制单人报销";
+            // 
             // lblApprovalResults
             // 
-            this.lblApprovalResults.Location = new System.Drawing.Point(853, 154);
+            this.lblApprovalResults.Location = new System.Drawing.Point(883, 89);
             this.lblApprovalResults.Name = "lblApprovalResults";
             this.lblApprovalResults.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalResults.TabIndex = 159;
@@ -144,30 +193,15 @@
             // 
             // chkApprovalResults
             // 
-            this.chkApprovalResults.Location = new System.Drawing.Point(926, 154);
+            this.chkApprovalResults.Location = new System.Drawing.Point(956, 95);
             this.chkApprovalResults.Name = "chkApprovalResults";
             this.chkApprovalResults.Size = new System.Drawing.Size(19, 13);
             this.chkApprovalResults.TabIndex = 160;
             this.chkApprovalResults.Values.Text = "";
             // 
-            // lblDataStatus
-            // 
-            this.lblDataStatus.Location = new System.Drawing.Point(853, 98);
-            this.lblDataStatus.Name = "lblDataStatus";
-            this.lblDataStatus.Size = new System.Drawing.Size(62, 20);
-            this.lblDataStatus.TabIndex = 155;
-            this.lblDataStatus.Values.Text = "数据状态";
-            // 
-            // txtDataStatus
-            // 
-            this.txtDataStatus.Location = new System.Drawing.Point(926, 95);
-            this.txtDataStatus.Name = "txtDataStatus";
-            this.txtDataStatus.Size = new System.Drawing.Size(131, 23);
-            this.txtDataStatus.TabIndex = 156;
-            // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(853, 123);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(883, 64);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 157;
@@ -175,7 +209,7 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(926, 120);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(956, 61);
             this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
             this.txtApprovalOpinions.Size = new System.Drawing.Size(131, 21);
@@ -229,7 +263,7 @@
             // 
             // lblTaxAmount
             // 
-            this.lblTaxAmount.Location = new System.Drawing.Point(604, 71);
+            this.lblTaxAmount.Location = new System.Drawing.Point(603, 66);
             this.lblTaxAmount.Name = "lblTaxAmount";
             this.lblTaxAmount.Size = new System.Drawing.Size(36, 20);
             this.lblTaxAmount.TabIndex = 149;
@@ -237,14 +271,14 @@
             // 
             // txtTaxAmount
             // 
-            this.txtTaxAmount.Location = new System.Drawing.Point(645, 67);
+            this.txtTaxAmount.Location = new System.Drawing.Point(644, 62);
             this.txtTaxAmount.Name = "txtTaxAmount";
             this.txtTaxAmount.Size = new System.Drawing.Size(167, 23);
             this.txtTaxAmount.TabIndex = 150;
             // 
             // lblTaxRate
             // 
-            this.lblTaxRate.Location = new System.Drawing.Point(604, 96);
+            this.lblTaxRate.Location = new System.Drawing.Point(603, 91);
             this.lblTaxRate.Name = "lblTaxRate";
             this.lblTaxRate.Size = new System.Drawing.Size(36, 20);
             this.lblTaxRate.TabIndex = 151;
@@ -252,14 +286,14 @@
             // 
             // txtTaxRate
             // 
-            this.txtTaxRate.Location = new System.Drawing.Point(645, 92);
+            this.txtTaxRate.Location = new System.Drawing.Point(644, 87);
             this.txtTaxRate.Name = "txtTaxRate";
             this.txtTaxRate.Size = new System.Drawing.Size(167, 23);
             this.txtTaxRate.TabIndex = 152;
             // 
             // lblUntaxedAmount
             // 
-            this.lblUntaxedAmount.Location = new System.Drawing.Point(566, 121);
+            this.lblUntaxedAmount.Location = new System.Drawing.Point(565, 116);
             this.lblUntaxedAmount.Name = "lblUntaxedAmount";
             this.lblUntaxedAmount.Size = new System.Drawing.Size(75, 20);
             this.lblUntaxedAmount.TabIndex = 153;
@@ -267,7 +301,7 @@
             // 
             // txtUntaxedAmount
             // 
-            this.txtUntaxedAmount.Location = new System.Drawing.Point(645, 117);
+            this.txtUntaxedAmount.Location = new System.Drawing.Point(644, 112);
             this.txtUntaxedAmount.Name = "txtUntaxedAmount";
             this.txtUntaxedAmount.Size = new System.Drawing.Size(167, 23);
             this.txtUntaxedAmount.TabIndex = 154;
@@ -353,41 +387,6 @@
             this.dtpDocumentDate.Size = new System.Drawing.Size(154, 21);
             this.dtpDocumentDate.TabIndex = 140;
             // 
-            // lblstatus
-            // 
-            this.lblstatus.Location = new System.Drawing.Point(853, 184);
-            this.lblstatus.Name = "lblstatus";
-            this.lblstatus.Size = new System.Drawing.Size(62, 20);
-            this.lblstatus.TabIndex = 131;
-            this.lblstatus.Values.Text = "单据状态";
-            // 
-            // txtstatus
-            // 
-            this.txtstatus.Location = new System.Drawing.Point(926, 180);
-            this.txtstatus.Name = "txtstatus";
-            this.txtstatus.Size = new System.Drawing.Size(131, 23);
-            this.txtstatus.TabIndex = 132;
-            // 
-            // lblPrintStatus
-            // 
-            this.lblPrintStatus.Location = new System.Drawing.Point(795, 18);
-            this.lblPrintStatus.Name = "lblPrintStatus";
-            this.lblPrintStatus.Size = new System.Drawing.Size(155, 47);
-            this.lblPrintStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
-            this.lblPrintStatus.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblPrintStatus.TabIndex = 88;
-            this.lblPrintStatus.Values.Text = "打印状态";
-            // 
-            // lblReview
-            // 
-            this.lblReview.Location = new System.Drawing.Point(956, 18);
-            this.lblReview.Name = "lblReview";
-            this.lblReview.Size = new System.Drawing.Size(155, 47);
-            this.lblReview.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
-            this.lblReview.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblReview.TabIndex = 87;
-            this.lblReview.Values.Text = "审核状态";
-            // 
             // lbl盘点单
             // 
             this.lbl盘点单.LabelStyle = Krypton.Toolkit.LabelStyle.TitlePanel;
@@ -428,14 +427,21 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
-            // chkClaimEmployee
+            // txtCloseCaseOpinions
             // 
-            this.chkClaimEmployee.Location = new System.Drawing.Point(99, 115);
-            this.chkClaimEmployee.Name = "chkClaimEmployee";
-            this.chkClaimEmployee.Size = new System.Drawing.Size(101, 20);
-            this.chkClaimEmployee.TabIndex = 161;
-            this.chkClaimEmployee.Values.Text = "制单人报销";
-            
+            this.txtCloseCaseOpinions.Location = new System.Drawing.Point(956, 112);
+            this.txtCloseCaseOpinions.Multiline = true;
+            this.txtCloseCaseOpinions.Name = "txtCloseCaseOpinions";
+            this.txtCloseCaseOpinions.Size = new System.Drawing.Size(131, 50);
+            this.txtCloseCaseOpinions.TabIndex = 132;
+            // 
+            // lblstatus
+            // 
+            this.lblstatus.Location = new System.Drawing.Point(883, 112);
+            this.lblstatus.Name = "lblstatus";
+            this.lblstatus.Size = new System.Drawing.Size(62, 20);
+            this.lblstatus.TabIndex = 131;
+            this.lblstatus.Values.Text = "结案意见";
             // 
             // UCExpenseClaim
             // 
@@ -455,6 +461,7 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).EndInit();
@@ -471,12 +478,8 @@
 
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
         private Krypton.Toolkit.KryptonLabel lbl盘点单;
-        private Krypton.Toolkit.KryptonLabel lblPrintStatus;
-        private Krypton.Toolkit.KryptonLabel lblReview;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer2;
         private SourceGrid.Grid grid1;
-        private Krypton.Toolkit.KryptonLabel lblstatus;
-        private Krypton.Toolkit.KryptonTextBox txtstatus;
         private Krypton.Toolkit.KryptonLabel lblClaimNo;
         private Krypton.Toolkit.KryptonTextBox txtClaimNo;
         private Krypton.Toolkit.KryptonLabel lblCurrency_ID;
@@ -499,12 +502,16 @@
         private Krypton.Toolkit.KryptonTextBox txtTaxRate;
         private Krypton.Toolkit.KryptonLabel lblUntaxedAmount;
         private Krypton.Toolkit.KryptonTextBox txtUntaxedAmount;
-        private Krypton.Toolkit.KryptonLabel lblDataStatus;
-        private Krypton.Toolkit.KryptonTextBox txtDataStatus;
         private Krypton.Toolkit.KryptonLabel lblApprovalOpinions;
         private Krypton.Toolkit.KryptonTextBox txtApprovalOpinions;
         private Krypton.Toolkit.KryptonLabel lblApprovalResults;
         private Krypton.Toolkit.KryptonCheckBox chkApprovalResults;
         private Krypton.Toolkit.KryptonCheckBox chkClaimEmployee;
+        private RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox magicPictureBox1;
+        private Krypton.Toolkit.KryptonLabel lblDataStatus;
+        private Krypton.Toolkit.KryptonLabel lblPrintStatus;
+        private Krypton.Toolkit.KryptonLabel lblReview;
+        private Krypton.Toolkit.KryptonLabel lblstatus;
+        private Krypton.Toolkit.KryptonTextBox txtCloseCaseOpinions;
     }
 }

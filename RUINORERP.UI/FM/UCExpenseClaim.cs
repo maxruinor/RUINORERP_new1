@@ -40,6 +40,7 @@ using Netron.GraphLib;
 using RUINORERP.UI.SysConfig;
 using SourceGrid.Cells.Editors;
 using RUINORERP.UI.MRP.MP;
+using SourceGrid.Cells.Models;
 
 namespace RUINORERP.UI.FM
 {
@@ -66,7 +67,7 @@ namespace RUINORERP.UI.FM
         //{
         //    BindData(Entity as tb_FM_ExpenseClaim);
         //}
-        public override void BindData(tb_FM_ExpenseClaim entity,ActionStatus actionStatus)
+        public override void BindData(tb_FM_ExpenseClaim entity, ActionStatus actionStatus)
         {
             if (entity == null)
             {
@@ -115,10 +116,11 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.UntaxedAmount.ToString(), txtUntaxedAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-            DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.DataStatus, txtstatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
+            DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
-            txtstatus.ReadOnly = true;
+
             if (entity.tb_FM_ExpenseClaimDetails != null && entity.tb_FM_ExpenseClaimDetails.Count > 0)
             {
                 //新建和草稿时子表编辑也可以保存。
@@ -173,7 +175,33 @@ namespace RUINORERP.UI.FM
                 }
             };
 
+            //显示结案凭证图片
+            LoadImageData(entity.CloseCaseImagePath);
+
         }
+
+        private async void LoadImageData(string CloseCaseImagePath)
+        {
+            if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))
+            {
+                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                try
+                {
+                    byte[] img = await httpWebService.DownloadImgFileAsync(CloseCaseImagePath);
+                    magicPictureBox1.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                    magicPictureBox1.Visible = true;
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                }
+            }
+            else
+            {
+                magicPictureBox1.Visible = false;
+            }
+        }
+
 
         private void Grid1_BindingContextChanged(object sender, EventArgs e)
         {
@@ -214,7 +242,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TotalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
-//            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage, CustomFormatType.Image);
+            //            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage, CustomFormatType.Image);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImagePath, CustomFormatType.WebPathImage);
             sgd = new SourceGridDefine(grid1, listCols, true);
 
@@ -505,10 +533,22 @@ namespace RUINORERP.UI.FM
 
         public override async Task<bool> DeleteRemoteImages()
         {
+
             if (EditEntity == null || EditEntity.tb_FM_ExpenseClaimDetails == null)
             {
                 return false;
             }
+
+            #region 删除主图的结案图。一般没有结案是没有的。结案就不会有结案图了。也有特殊情况。
+
+            if (!string.IsNullOrEmpty(EditEntity.CloseCaseImagePath))
+            {
+                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                string deleteRsult = await httpWebService.DeleteImageAsync(EditEntity.CloseCaseImagePath, "delete123");
+                MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
+            }
+            #endregion
+
             bool result = true;
             foreach (tb_FM_ExpenseClaimDetail detail in EditEntity.tb_FM_ExpenseClaimDetails)
             {

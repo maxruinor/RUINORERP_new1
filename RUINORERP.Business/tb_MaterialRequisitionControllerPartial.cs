@@ -169,6 +169,7 @@ namespace RUINORERP.Business
                                 string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
                                 MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 _unitOfWorkManage.RollbackTran();
+                                rrs.ErrorMsg = msg;
                                 _logger.LogInformation(msg);
                                 return rrs;
                             }
@@ -198,6 +199,7 @@ namespace RUINORERP.Business
                                 string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量不能大于制令单对应行的应发数量，审核失败！";
                                 MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                 _unitOfWorkManage.RollbackTran();
+                                rrs.ErrorMsg = msg;
                                 _logger.LogInformation(msg);
                                 return rrs;
                             }
@@ -263,6 +265,7 @@ namespace RUINORERP.Business
                                     string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量不能大于制令单对应行的应发数量，审核失败！";
                                     MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                     _unitOfWorkManage.RollbackTran();
+                                    rrs.ErrorMsg = msg;
                                     _logger.LogInformation(msg);
                                     return rrs;
 

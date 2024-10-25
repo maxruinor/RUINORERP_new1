@@ -973,9 +973,6 @@ namespace RUINORERP.UI
             await Task.Delay(10);
         }
 
-
-
-
         /// <summary>
         /// 只执行一次,初始化菜单
         /// </summary>

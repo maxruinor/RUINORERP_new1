@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:20
+// 时间：10/25/2024 15:56:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -123,20 +123,21 @@ namespace RUINORERP.Model
             SetProperty(ref _Quantity, value);
             }
         }
-        private int _DeliveredQuantity = ((0));
+
+        private int _DeliveredQuantity= ((0));
         /// <summary>
-        /// 已交数
+        /// 已交数量
         /// </summary>
-        [AdvQueryAttribute(ColName = "DeliveredQuantity", ColDesc = "已交数")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "DeliveredQuantity", DecimalDigits = 0, IsNullable = false, ColumnDescription = "已交数")]
+        [AdvQueryAttribute(ColName = "DeliveredQuantity",ColDesc = "已交数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DeliveredQuantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "已交数量" )]
         public int DeliveredQuantity
-        {
-            get { return _DeliveredQuantity; }
-            set
-            {
-                SetProperty(ref _DeliveredQuantity, value);
+        { 
+            get{return _DeliveredQuantity;}
+            set{
+            SetProperty(ref _DeliveredQuantity, value);
             }
         }
+
         private decimal _UnitPrice= ((0));
         /// <summary>
         /// 单价

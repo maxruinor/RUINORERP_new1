@@ -41,6 +41,8 @@ using RUINORERP.UI.SysConfig;
 using SourceGrid.Cells.Editors;
 using RUINORERP.UI.MRP.MP;
 using SourceGrid.Cells.Models;
+using RUINORERP.UI.BI;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.FM
 {
@@ -160,12 +162,13 @@ namespace RUINORERP.UI.FM
                     {
                         if (obj is tb_FM_PayeeInfo cv)
                         {
+                            DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                             //添加收款信息。展示给财务看
-                            txtAccount_name.Text = cv.Account_name;
+                           
                             txtAccount_No.Text = cv.Account_No;
                             if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
                             {
-                                btnInfo.Tag = cv.PaymentCodeImagePath;
+                                btnInfo.Tag = cv;
                                 btnInfo.Visible = true;
                             }
                             else
@@ -176,7 +179,7 @@ namespace RUINORERP.UI.FM
                         }
                         else
                         {
-                            txtAccount_name.Text = "";
+                             //cmbAccount_type
                             txtAccount_No.Text = "";
                         }
                     }
@@ -413,24 +416,27 @@ namespace RUINORERP.UI.FM
                 {
                     return false;
                 }
-                //处理图片
-                bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
-                if (uploadImg)
-                {
-                    ////更新图片名后保存到数据库
-                    //int ImgCounter = await MainForm.Instance.AppContext.Db.Updateable<tb_FM_ExpenseClaimDetail>(EditEntity.tb_FM_ExpenseClaimDetails)
-                    //    .UpdateColumns(t => new { t.EvidenceImagePath })
-                    //    .ExecuteCommandAsync();
-                    //if (ImgCounter > 0)
-                    //{
-                    MainForm.Instance.PrintInfoLog($"图片保存成功,。");
-                    //}
+                if (NeedValidated)
+                {//处理图片
+                    bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
+                    if (uploadImg)
+                    {
+                        ////更新图片名后保存到数据库
+                        //int ImgCounter = await MainForm.Instance.AppContext.Db.Updateable<tb_FM_ExpenseClaimDetail>(EditEntity.tb_FM_ExpenseClaimDetails)
+                        //    .UpdateColumns(t => new { t.EvidenceImagePath })
+                        //    .ExecuteCommandAsync();
+                        //if (ImgCounter > 0)
+                        //{
+                        MainForm.Instance.PrintInfoLog($"图片保存成功,。");
+                        //}
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog("图片上传出错。");
+                        return false;
+                    }
                 }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("图片上传出错。");
-                    return false;
-                }
+                
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
                 if (NeedValidated)
                 {
@@ -620,20 +626,42 @@ namespace RUINORERP.UI.FM
                 {
                     if (!string.IsNullOrWhiteSpace(btninfo.Tag.ToString()))
                     {
-                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                        try
+                        //tb_FM_PayeeInfo payeeInfo = btninfo.Tag as tb_FM_PayeeInfo;
+
+                        #region 显示收款详情信息
+
+                        object frm = Activator.CreateInstance(typeof(UCFMPayeeInfoEdit));
+                        if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                         {
-                            byte[] img = await httpWebService.DownloadImgFileAsync(btninfo.Tag.ToString());
-                            frmPictureViewer pictureViewer = new frmPictureViewer();
-                            pictureViewer.PictureBoxViewer.Image = UI.Common.ImageHelper.byteArrayToImage(img);
-                            pictureViewer.ShowDialog();
+                            BaseEditGeneric<tb_FM_PayeeInfo> frmaddg = frm as BaseEditGeneric<tb_FM_PayeeInfo>;
+                            frmaddg.Text = "收款账号详情";
+                            frmaddg.bindingSourceEdit.DataSource = new List<tb_FM_PayeeInfo>();
+                            object obj = frmaddg.bindingSourceEdit.AddNew();
+                            obj = btninfo.Tag;
+                            tb_FM_PayeeInfo payeeInfo = obj as tb_FM_PayeeInfo;
+                            BaseEntity bty = payeeInfo as BaseEntity;
+                            bty.ActionStatus = ActionStatus.加载;
+                            frmaddg.BindData(bty);
+                            if (frmaddg.ShowDialog() == DialogResult.OK)
+                            {
+
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
-                        }
+                        #endregion
+                        //HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                        //try
+                        //{
+                        //    byte[] img = await httpWebService.DownloadImgFileAsync(btninfo.Tag.ToString());
+                        //    frmPictureViewer pictureViewer = new frmPictureViewer();
+                        //    pictureViewer.PictureBoxViewer.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                        //    pictureViewer.ShowDialog();
+                        //}
+                        //catch (Exception ex)
+                        //{
+                        //    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                        //}
                     }
-                     
+
                 }
             }
 

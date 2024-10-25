@@ -46,9 +46,9 @@ namespace RUINORERP.Business.Processor
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.ClaimName);
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.DocumentDate);
-            queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.TranDate);
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.ClaimNo);
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.Employee_ID, typeof(tb_Employee));
+            queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.PayeeInfoID, typeof(tb_FM_PayeeInfo));
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.DepartmentID, typeof(tb_Department));
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.Subject_id, typeof(tb_FM_Subject));
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.ExpenseType_id, typeof(tb_FM_ExpenseType));
@@ -56,7 +56,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.Account_id, typeof(tb_FM_Account));
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<View_FM_ExpenseClaimItems>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
-            
+
             return queryFilter;
         }
 

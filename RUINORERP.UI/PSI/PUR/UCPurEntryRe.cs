@@ -96,6 +96,7 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
+                entity.ReturnDate = System.DateTime.Now;
                 entity.PurEntryReNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退货单);
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_PurEntryReDetails != null && entity.tb_PurEntryReDetails.Count > 0)
@@ -114,8 +115,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ActualAmount.ToString(), txtActualAmount, BindDataType4TextBox.Money, false);
-
-            DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.BillDate, dtpBillDate, false);
+ 
 
             DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.ReturnDate, dtpReturnDate, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text, false);

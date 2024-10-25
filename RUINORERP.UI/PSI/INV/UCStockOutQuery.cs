@@ -39,6 +39,10 @@ namespace RUINORERP.UI.PSI.INV
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
+            System.Linq.Expressions.Expression<Func<tb_StockOut, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+
 
             //System.Linq.Expressions.Expression<Func<tb_StockIn, int?>> exprPayStatus;
             //exprPayStatus = (p) => p.;

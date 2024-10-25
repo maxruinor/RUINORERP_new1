@@ -91,10 +91,17 @@ namespace RUINORERP.Global.Model
                     }
                     if (string.IsNullOrEmpty(realName))
                     {
-                        realName = string.Join("-", _ImageFullName.Split('-').Take(1));
+                        int lastSlashIndex = _ImageFullName.LastIndexOf('/'); // 找到最后一个'/'的位置
+                        int firstDashIndex = _ImageFullName.IndexOf('-'); // 找到第一个'-'的位置
+
+                        if (lastSlashIndex != -1 && firstDashIndex != -1 && lastSlashIndex < firstDashIndex)
+                        {
+                             realName = _ImageFullName.Substring(lastSlashIndex + 1, firstDashIndex - lastSlashIndex - 1);
+                        }
+                        //realName = string.Join("-", _ImageFullName.Split('-').Take(1));
                         if (string.IsNullOrEmpty(realName))
                         {
-                            realName = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
+                            realName =  Ulid.NewUlid().ToString();
                         }
                     }
                 }

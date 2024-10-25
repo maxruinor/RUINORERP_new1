@@ -35,78 +35,7 @@ namespace RUINORERP.UI.PSI.INV
             base.tsbtnBatchConversion.Visible = false;
 
         }
-        /*
-
-        public override Task<bool> ReReview(List<tb_StockIn> EditEntitys)
-        {
-            MessageBox.Show("请在单据明细中使用反审功能。");
-            return null;
-        }
-
-        public async override Task<ApprovalEntity> Review(tb_StockIn EditEntity)
-        {
-            if (EditEntitys == null)
-            {
-                return null;
-            }
-            //如果已经审核并且通过，则不能重复审核
-            List<tb_StockIn> needApprovals = EditEntitys.Where(
-                c => ((c.ApprovalStatus.HasValue
-                && c.ApprovalStatus.Value == (int)ApprovalStatus.已审核
-                && c.ApprovalResults.HasValue && !c.ApprovalResults.Value))
-                || (c.ApprovalStatus.HasValue && c.ApprovalStatus == (int)ApprovalStatus.未审核)
-                ).ToList();
-
-            if (needApprovals.Count == 0)
-            {
-                MainForm.Instance.PrintInfoLog($"要审核的数据为：{needApprovals.Count}:请检查数据！");
-                return null;
-            }
-
-            //同时检查数量和金额，总数量和总金额不能小于明细小计的和
-            foreach (tb_StockIn item in needApprovals)
-            {
-                if (item.TotalQty < item.tb_StockInDetails.Sum(c => c.Qty))
-                {
-                    MainForm.Instance.PrintInfoLog($"订单：{item.BillNo}:总数量不能小于明细小计之和！");
-                    return null;
-                }
-
-                if (item.TotalAmount < item.tb_StockInDetails.Sum(c => c.Price * c.Qty))
-                {
-                    MainForm.Instance.PrintInfoLog($"订单：{item.BillNo}:总金额不能小于明细小计之和！");
-                    return null;
-                }
-            }
-
-            ApprovalEntity ae = base.BatchApproval(needApprovals);
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-
-            tb_StockInController<tb_StockIn> ctr = Startup.GetFromFac<tb_StockInController<tb_StockIn>>();
-            ReturnResults<bool> rs = await ctr.AdjustingAsync(needApprovals, ae);
-            if (rs.Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-                base.Query(QueryDto);
-            }
-            else
-            {
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
-            }
-
-            return ae;
-        }
-        */
+         
 
         public override void BuildColNameDataDictionary()
         {
@@ -115,6 +44,9 @@ namespace RUINORERP.UI.PSI.INV
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
+            System.Linq.Expressions.Expression<Func<tb_StockIn, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
 
             //System.Linq.Expressions.Expression<Func<tb_StockIn, int?>> exprPayStatus;
             //exprPayStatus = (p) => p.;

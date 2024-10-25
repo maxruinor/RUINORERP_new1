@@ -46,6 +46,10 @@ namespace RUINORERP.UI.PSI.INV
             exprCheckMode = (p) => p.CheckMode;
             base.MasterColNameDataDictionary.TryAdd(exprCheckMode.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CheckMode)));
 
+            System.Linq.Expressions.Expression<Func<tb_Stocktake, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+
 
             //System.Linq.Expressions.Expression<Func<tb_StockIn, int?>> exprPayStatus;
             //exprPayStatus = (p) => p.;

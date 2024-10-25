@@ -45,6 +45,10 @@ namespace RUINORERP.UI.PSI.SAL
             System.Linq.Expressions.Expression<Func<tb_SaleOutRe, int?>> exprApprovalStatus;
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
+           
+            System.Linq.Expressions.Expression<Func<tb_SaleOutRe, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
 
 
             System.Linq.Expressions.Expression<Func<tb_SaleOutRe, int?>> exprPayStatus;

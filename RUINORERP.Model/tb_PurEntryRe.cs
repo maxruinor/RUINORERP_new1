@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:19
+// 时间：10/25/2024 15:56:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 采购退回单 供应商接到采购订单后，向企业发货，用户在收到货物时，可以先检验，对合格品进行入库，也可以直接入库，形成采购入库单。为了保证清楚地记录进货情况，对进货的管理就很重要，而在我们的系统中，凭证、收付款是根据进货单自动一环扣一环地切制，故详细输入进货单资料后，存货的数量、成本会随着改变，收付帐款也会跟着你的立帐方式变化；凭证亦会随着“您是否立即产生凭证”变化。采购入库单可以由采购订单、借入单、在途物资单转入，也可以手动录入新增单据。
+    /// 采购入库单 供应商接到采购订单后，向企业发货，用户在收到货物时，可以先检验，对合格品进行入库，也可以直接入库，形成采购入库单。为了保证清楚地记录进货情况，对进货的管理就很重要，而在我们的系统中，凭证、收付款是根据进货单自动一环扣一环地切制，故详细输入进货单资料后，存货的数量、成本会随着改变，收付帐款也会跟着你的立帐方式变化；凭证亦会随着“您是否立即产生凭证”变化。采购入库单可以由采购订单、借入单、在途物资单转入，也可以手动录入新增单据。
     /// </summary>
     [Serializable()]
     [Description("tb_PurEntryRe")]
@@ -55,14 +55,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 退回单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "PurEntryReNo", ColDesc = "退回单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PurEntryReNo", Length = 50, IsNullable = false, ColumnDescription = "退回单号")]
+        [AdvQueryAttribute(ColName = "PurEntryReNo",ColDesc = "退回单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PurEntryReNo" ,Length=50,IsNullable = false,ColumnDescription = "退回单号" )]
         public string PurEntryReNo
-        {
-            get { return _PurEntryReNo; }
-            set
-            {
-                SetProperty(ref _PurEntryReNo, value);
+        { 
+            get{return _PurEntryReNo;}
+            set{
+            SetProperty(ref _PurEntryReNo, value);
             }
         }
 
@@ -155,8 +154,6 @@ namespace RUINORERP.Model
             }
         }
 
-        
-
         private int _TotalQty= ((0));
         /// <summary>
         /// 合计数量
@@ -213,19 +210,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime? _BillDate;
-        /// <summary>
-        /// 单据日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "BillDate",ColDesc = "单据日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BillDate" ,IsNullable = true,ColumnDescription = "单据日期" )]
-        public DateTime? BillDate
-        { 
-            get{return _BillDate;}
-            set{
-            SetProperty(ref _BillDate, value);
-            }
-        }
+
 
         private int _ProcessWay= ((0));
         /// <summary>
@@ -241,13 +226,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime? _ReturnDate;
+        private DateTime _ReturnDate;
         /// <summary>
         /// 退回日期
         /// </summary>
         [AdvQueryAttribute(ColName = "ReturnDate",ColDesc = "退回日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "ReturnDate" ,IsNullable = true,ColumnDescription = "退回日期" )]
-        public DateTime? ReturnDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "ReturnDate" ,IsNullable = false,ColumnDescription = "退回日期" )]
+        public DateTime ReturnDate
         { 
             get{return _ReturnDate;}
             set{
@@ -606,6 +591,14 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntry.PurEntryRe_ID))]
+        public virtual List<tb_PurReturnEntry> tb_PurReturnEntries { get; set; }
+        //tb_PurReturnEntry.PurEntryRe_ID)
+        //PurEntryRe_ID.FK_PURREENtry_REF_PURENtryRe)
+        //tb_PurEntryRe.PurEntryRe_ID)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]

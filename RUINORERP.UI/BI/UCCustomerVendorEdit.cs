@@ -16,6 +16,9 @@ using RUINORERP.Business.LogicaService;
 using RUINORERP.Business;
 using RUINORERP.UI.Common;
 using RUINORERP.Global;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.UI.BI
 {
@@ -113,7 +116,7 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private void btnAddPayeeInfo_Click(object sender, EventArgs e)
+        private  void btnAddPayeeInfo_Click(object sender, EventArgs e)
         {
             object frm = Activator.CreateInstance(typeof(UCFMPayeeInfoEdit));
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
@@ -130,13 +133,7 @@ namespace RUINORERP.UI.BI
                 frmaddg.BindData(bty);
                 if (frmaddg.ShowDialog() == DialogResult.OK)
                 {
-                    BaseController<tb_FM_PayeeInfo> ctrPayeeInfo = Startup.GetFromFacByName<BaseController<tb_FM_PayeeInfo>>(typeof(tb_FM_PayeeInfo).Name + "Controller");
-                    ctrPayeeInfo.BaseSaveOrUpdate(payeeInfo);
-                    //如果有默认值，则更新其它的为否
-                    if (true == payeeInfo.IsDefault)
-                    {
-
-                    }
+                    UIBizSrvice.SavePayeeInfo(payeeInfo);
                 }
             }
         }

@@ -115,9 +115,7 @@ namespace RUINORERP.Business
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
-                // entity.ApprovalOpinions = approvalEntity.ApprovalOpinions;
-                //后面已经修改为
-                // entity.ApprovalResults = approvalEntity.ApprovalResults;
+
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
@@ -230,6 +228,7 @@ namespace RUINORERP.Business
                 }
                 //===============
                 //也写回采购订单明细
+                //退回流程不算入采购订单的已交数量
 
                 /*
                 if (entity.tb_purentry.tb_purorder == null)
@@ -268,12 +267,111 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).ExecuteCommandAsync();
-
+                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).UpdateColumns(it => new
+                {
+                    it.DataStatus,
+                    it.ApprovalOpinions,
+                    it.Modified_at,
+                    it.Modified_by,
+                    it.ApprovalResults,
+                    it.ApprovalStatus
+                }).ExecuteCommandAsync();
+               // await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).ExecuteCommandAsync();
 
                 _unitOfWorkManage.CommitTran();
                 rs.ReturnObject = entity as T;
+                rs.Succeeded = true;
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
+                rs.ErrorMsg = ex.Message;
+                return rs;
+            }
+
+        }
+
+
+        /// <summary>
+        /// 批量结案  销售出库标记结案，数据状态为8,可以修改付款状态，同时检测销售订单的付款状态，也可以更新销售订单付款状态
+        /// 目前暂时是这个逻辑。后面再处理凭证财务相关的
+        /// 目前认为结案就是一个财务确认过程。 如：返厂后不用退回的。扣货款的。则可以直接结案。
+        /// 结案时，如果引用了入库单，则要更新入库和他对应的采购单为结案状态。
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
+        {
+            List<tb_PurEntryRe> entitys = new List<tb_PurEntryRe>();
+            entitys = NeedCloseCaseList as List<tb_PurEntryRe>;
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            try
+            {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+                #region 结案
+                foreach (var entity in entitys)
+                {
+                    //结案的出库单。先要是审核成功通过的
+                    if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && entity.ApprovalResults.Value))
+                    {
+                        if (entity.PurEntryID.HasValue)
+                        {
+                            if (entity.tb_purentry == null)
+                            {
+                                entity.tb_purentry = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntry>()
+                                    .Includes(a => a.tb_purorder)
+                                    .Where(c => c.PurEntryID == entity.PurEntryID.Value)
+                                    .SingleAsync();
+                            }
+
+                            entity.tb_purentry.DataStatus = (int)DataStatus.完结;
+                            BusinessHelper.Instance.EditEntity(entity);
+                            if (entity.tb_purentry.tb_purorder == null && entity.tb_purentry.PurOrder_ID.HasValue)
+                            {
+                                entity.tb_purentry.tb_purorder = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurOrder>()
+                                   .Where(c => c.PurOrder_ID == entity.tb_purentry.PurOrder_ID.Value)
+                                   .SingleAsync();
+                            }
+                            entity.tb_purentry.tb_purorder.DataStatus = (int)DataStatus.完结;
+                            entity.tb_purentry.tb_purorder.CloseCaseOpinions = "由采购退货单关联式结案";
+                            BusinessHelper.Instance.EditEntity(entity);
+                            var affectedPORows = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrder>(entity).UpdateColumns(it => new
+                            {
+                                it.DataStatus,
+                                it.CloseCaseOpinions,
+                                it.Modified_by,
+                                it.Modified_at
+                            }).ExecuteCommandAsync();
+
+                            var affectedPERows = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntry>(entity).UpdateColumns(it => new
+                            {
+                                it.DataStatus,
+                                it.Modified_by,
+                                it.Modified_at
+                            }).ExecuteCommandAsync();
+
+                        }
+
+                        entity.DataStatus = (int)DataStatus.完结;
+                        BusinessHelper.Instance.EditEntity(entity);
+                        //只更新指定列
+                        var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).UpdateColumns(it => new
+                        {
+                            it.DataStatus,
+                            it.Paytype_ID,
+                            it.Modified_by,
+                            it.Modified_at
+                        }).ExecuteCommandAsync();
+
+                    }
+                }
+
+                #endregion
+                // 注意信息的完整性
+                _unitOfWorkManage.CommitTran();
                 rs.Succeeded = true;
                 return rs;
             }
@@ -283,10 +381,12 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
+                rs.Succeeded = false;
                 return rs;
             }
 
         }
+
 
 
 

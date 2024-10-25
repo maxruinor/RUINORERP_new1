@@ -44,6 +44,14 @@ namespace RUINORERP.UI.PSI.PUR
         public override void BuildColNameDataDictionary()
         {
             //固定值也包括枚举值
+            System.Linq.Expressions.Expression<Func<tb_BuyingRequisition, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+
+            System.Linq.Expressions.Expression<Func<tb_BuyingRequisition, int?>> exprApprovalStatus;
+            exprApprovalStatus = (p) => p.ApprovalStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
+
 
             List<View_ProdDetail> list = new List<View_ProdDetail>();
             list = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().ToList();

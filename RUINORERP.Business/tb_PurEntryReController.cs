@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:19
+// 时间：10/25/2024 15:56:38
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -245,13 +245,15 @@ namespace RUINORERP.Business
             if (entity.PurEntryRe_ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_PurEntryRe>(entity as tb_PurEntryRe)
-                        .Include(m => m.tb_PurEntryReDetails)
+                        .Include(m => m.tb_PurReturnEntries)
+                    .Include(m => m.tb_PurEntryReDetails)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_PurEntryRe>(entity as tb_PurEntryRe)
+                .Include(m => m.tb_PurReturnEntries)
                 .Include(m => m.tb_PurEntryReDetails)
                                 .ExecuteCommandAsync();
         }
@@ -283,7 +285,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntryRe>()
-                                .Includes(m => m.tb_PurEntryReDetails)
+                                .Includes(m => m.tb_PurReturnEntries)
+                        .Includes(m => m.tb_PurEntryReDetails)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -293,7 +296,8 @@ namespace RUINORERP.Business
         {
             tb_PurEntryRe entity = model as tb_PurEntryRe;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_PurEntryRe>(m => m.PurEntryRe_ID== entity.PurEntryRe_ID)
-                                .Include(m => m.tb_PurEntryReDetails)
+                                .Include(m => m.tb_PurReturnEntries)
+                        .Include(m => m.tb_PurEntryReDetails)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -461,7 +465,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_department )
                                .Includes(t => t.tb_employee )
-                                            .Includes(t => t.tb_PurEntryReDetails )
+                                            .Includes(t => t.tb_PurReturnEntries )
+                                .Includes(t => t.tb_PurEntryReDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -486,7 +491,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_department )
                                .Includes(t => t.tb_employee )
-                                            .Includes(t => t.tb_PurEntryReDetails )
+                                            .Includes(t => t.tb_PurReturnEntries )
+                                .Includes(t => t.tb_PurEntryReDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -511,7 +517,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_PurEntryReDetails )
+                                        .Includes(t => t.tb_PurReturnEntries )
+                            .Includes(t => t.tb_PurEntryReDetails )
                         .ToList();
             
             foreach (var item in list)
@@ -553,7 +560,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_PurEntryReDetails )
+                                        .Includes(t => t.tb_PurReturnEntries )
+                            .Includes(t => t.tb_PurEntryReDetails )
                         .FirstAsync();
             if(entity!=null)
             {

@@ -1080,6 +1080,7 @@
     <Compile Include="BusinessFlow\FlowDesign.Designer.cs">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\UIBizSrvice.cs" />
     <Compile Include="FM\UCExpenseClaimStatistics.cs">
       <SubType>UserControl</SubType>
     </Compile>

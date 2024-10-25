@@ -43,9 +43,12 @@ namespace RUINORERP.UI.PSI.PUR
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
-            //System.Linq.Expressions.Expression<Func<tb_PurReturnEntry, int?>> exprPayStatus;
-            //exprPayStatus = (p) => p.PayStatus;
-            //base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, GetKeyValuePairs(typeof(PayStatus)));
+            System.Linq.Expressions.Expression<Func<tb_PurReturnEntry, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+
+
+ 
 
             List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
             kvlist1.Add(new KeyValuePair<object, string>(true, "是"));

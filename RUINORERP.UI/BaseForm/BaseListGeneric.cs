@@ -1590,7 +1590,6 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 if (entity.RowImage.image != null)
                                 {
-
                                     if (!entity.RowImage.oldhash.Equals(entity.RowImage.newhash, StringComparison.OrdinalIgnoreCase)
                                      && entity.GetPropertyValue("PaymentCodeImagePath").ToString() == entity.RowImage.ImageFullName)
                                     {
@@ -1598,7 +1597,7 @@ namespace RUINORERP.UI.BaseForm
                                         //如果服务器有旧文件 。可以先删除
                                         if (!string.IsNullOrEmpty(entity.RowImage.oldhash))
                                         {
-                                            string oldfileName = entity.RowImage.Dir + entity.RowImage.oldhash;
+                                            string oldfileName = entity.RowImage.Dir + entity.RowImage.realName + "-" + entity.RowImage.oldhash;
                                             string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
                                             MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
                                         }

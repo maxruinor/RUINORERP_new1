@@ -203,18 +203,35 @@ namespace RUINORERP.Model
         }
 
         private long? _Employee_ID;
-        
-        
+
+
         /// <summary>
         /// 报销人
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "报销人")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" ,IsNullable = true,ColumnDescription = "报销人" )]
+        [AdvQueryAttribute(ColName = "Employee_ID", ColDesc = "报销人")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Employee_ID", IsNullable = true, ColumnDescription = "报销人")]
         [Display(Name = "报销人")]
-        public long? Employee_ID 
+        public long? Employee_ID
+        {
+            get { return _Employee_ID; }            set
+            {                SetProperty(ref _Employee_ID, value);
+            }
+        }
+
+        private long? _PayeeInfoID;
+        
+        
+        /// <summary>
+        /// 收款信息
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "PayeeInfoID",ColDesc = "收款信息")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PayeeInfoID" ,IsNullable = true,ColumnDescription = "收款信息" )]
+        [Display(Name = "收款信息")]
+        public long? PayeeInfoID 
         { 
-            get{return _Employee_ID;}            set{                SetProperty(ref _Employee_ID, value);                }
+            get{return _PayeeInfoID;}            set{                SetProperty(ref _PayeeInfoID, value);                }
         }
 
         private long? _DepartmentID;

@@ -71,7 +71,6 @@ namespace RUINORERP.UI.FM
         {
             if (entity == null)
             {
-                chkClaimEmployee.Enabled = false;
                 return;
             }
 
@@ -86,7 +85,7 @@ namespace RUINORERP.UI.FM
             else
             {
                 entity.ActionStatus = ActionStatus.新增;
-                chkClaimEmployee.Enabled = true;
+
                 entity.DataStatus = (int)DataStatus.草稿;
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                 {
@@ -105,6 +104,7 @@ namespace RUINORERP.UI.FM
 
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ClaimNo, txtClaimNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
+            DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, c => c.Employee_ID.HasValue && c.Employee_ID.Value == entity.Employee_ID);
             cmbCurrency_ID.SelectedIndex = 1;//默认第一个人民币
             DataBindingHelper.BindData4DataTime<tb_FM_ExpenseClaim>(entity, t => t.DocumentDate, dtpDocumentDate, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ClaimAmount.ToString(), txtClaimlAmount, BindDataType4TextBox.Money, false);
@@ -132,7 +132,6 @@ namespace RUINORERP.UI.FM
                         if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                         {
                             EditEntity.ActionStatus = ActionStatus.修改;
-                            chkClaimEmployee.Enabled = true;
                         }
                     };
                 }
@@ -152,34 +151,63 @@ namespace RUINORERP.UI.FM
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
                     EditEntity.ActionStatus = ActionStatus.修改;
-                    chkClaimEmployee.Enabled = true;
+                }
+                //如果报销人有变化，带出对应的收款方式
+                if (entity.PayeeInfoID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ExpenseClaim>(c => c.PayeeInfoID))
+                {
+                    var obj = CacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                    if (obj != null && obj.ToString() != "System.Object")
+                    {
+                        if (obj is tb_FM_PayeeInfo cv)
+                        {
+                            //添加收款信息。展示给财务看
+                            txtAccount_name.Text = cv.Account_name;
+                            txtAccount_No.Text = cv.Account_No;
+                            if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
+                            {
+                                btnInfo.Tag = cv.PaymentCodeImagePath;
+                                btnInfo.Visible = true;
+                            }
+                            else
+                            {
+                                btnInfo.Tag = string.Empty;
+                                btnInfo.Visible = false;
+                            }
+                        }
+                        else
+                        {
+                            txtAccount_name.Text = "";
+                            txtAccount_No.Text = "";
+                        }
+                    }
                 }
 
+
                 base.ToolBarEnabledControl(entity);
-                //显示 打印状态 如果是草稿状态 不显示打印
-                if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
+
+            };
+
+            //显示 打印状态 如果是草稿状态 不显示打印
+            if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
+            {
+                toolStripbtnPrint.Enabled = true;
+                if (EditEntity.PrintStatus == 0)
                 {
-                    toolStripbtnPrint.Enabled = true;
-                    if (EditEntity.PrintStatus == 0)
-                    {
-                        lblPrintStatus.Text = "未打印";
-                    }
-                    else
-                    {
-                        lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
-                    }
+                    lblPrintStatus.Text = "未打印";
                 }
                 else
                 {
-                    toolStripbtnPrint.Enabled = false;
+                    lblPrintStatus.Text = $"打印{EditEntity.PrintStatus}次";
                 }
-            };
-
+            }
+            else
+            {
+                toolStripbtnPrint.Enabled = false;
+            }
             //显示结案凭证图片
             LoadImageData(entity.CloseCaseImagePath);
 
         }
-
         private async void LoadImageData(string CloseCaseImagePath)
         {
             if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))
@@ -201,6 +229,7 @@ namespace RUINORERP.UI.FM
                 magicPictureBox1.Visible = false;
             }
         }
+
 
 
         private void Grid1_BindingContextChanged(object sender, EventArgs e)
@@ -288,16 +317,9 @@ namespace RUINORERP.UI.FM
 
         private void Sgh_OnAddDataRow(object rowObj)
         {
-            if (chkClaimEmployee.Checked)
-            {
-                sgh.SetCellValue<tb_FM_ExpenseClaimDetail>(sgd, c => c.Employee_ID, EditEntity.Employee_ID);
-            }
 
-            // 获取应用程序的执行目录下的 temp 文件夹路径
-            // string tempPath = DirectoryHelper.GetTempPath();
-            // 生成唯一的文件名
-            // string newFileName = Guid.NewGuid().ToString() + ".jpg"; // 假设保存为 JPG 格式
-            //sgh.SetCellValue<tb_FM_ExpenseClaimDetail>(sgd, c => c.EvidenceImagePath, newFileName);
+
+
         }
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
@@ -588,6 +610,33 @@ namespace RUINORERP.UI.FM
                 }
             }
             return result;
+        }
+
+        private async void btnInfo_Click(object sender, EventArgs e)
+        {
+            if (sender is KryptonButton btninfo)
+            {
+                if (btninfo.Tag != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(btninfo.Tag.ToString()))
+                    {
+                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                        try
+                        {
+                            byte[] img = await httpWebService.DownloadImgFileAsync(btninfo.Tag.ToString());
+                            frmPictureViewer pictureViewer = new frmPictureViewer();
+                            pictureViewer.PictureBoxViewer.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                            pictureViewer.ShowDialog();
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                        }
+                    }
+                     
+                }
+            }
+
         }
     }
 }

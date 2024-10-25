@@ -28,8 +28,8 @@ namespace RUINORERP.Business
      {
       RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.ClaimMainID).NotEmpty().When(x => x.ClaimMainID.HasValue);
  RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.ClaimName).MaximumLength(150).WithMessage("事由:不能超过最大长度,150.");
- RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("报销人:下拉选择值不正确。");
- RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
+ 
+ 
  RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("报销部门:下拉选择值不正确。");
  RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
  RuleFor(tb_FM_ExpenseClaimDetail =>tb_FM_ExpenseClaimDetail.ExpenseType_id).Must(CheckForeignKeyValueCanNull).WithMessage("费用类型:下拉选择值不正确。");

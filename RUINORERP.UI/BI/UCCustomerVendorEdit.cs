@@ -80,6 +80,15 @@ namespace RUINORERP.UI.BI
                 base.InitRequiredToControl(new tb_CustomerVendorValidator(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
+
+            if (_EditEntity.CustomerVendor_ID > 0)
+            {
+                btnAddPayeeInfo.Visible = true;
+            }
+            else
+            {
+                btnAddPayeeInfo.Visible = false;
+            }
         }
 
 
@@ -101,6 +110,34 @@ namespace RUINORERP.UI.BI
                 bindingSourceEdit.EndEdit();
                 this.DialogResult = DialogResult.OK;
                 this.Close();
+            }
+        }
+
+        private void btnAddPayeeInfo_Click(object sender, EventArgs e)
+        {
+            object frm = Activator.CreateInstance(typeof(UCFMPayeeInfoEdit));
+            if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+            {
+                BaseEditGeneric<tb_FM_PayeeInfo> frmaddg = frm as BaseEditGeneric<tb_FM_PayeeInfo>;
+                frmaddg.Text = "收款账号编辑";
+                frmaddg.bindingSourceEdit.DataSource = new List<tb_FM_PayeeInfo>();
+                object obj = frmaddg.bindingSourceEdit.AddNew();
+                tb_FM_PayeeInfo payeeInfo = obj as tb_FM_PayeeInfo;
+                payeeInfo.CustomerVendor_ID = _EditEntity.CustomerVendor_ID;
+                BaseEntity bty = payeeInfo as BaseEntity;
+                bty.ActionStatus = ActionStatus.加载;
+                BusinessHelper.Instance.EditEntity(bty);
+                frmaddg.BindData(bty);
+                if (frmaddg.ShowDialog() == DialogResult.OK)
+                {
+                    BaseController<tb_FM_PayeeInfo> ctrPayeeInfo = Startup.GetFromFacByName<BaseController<tb_FM_PayeeInfo>>(typeof(tb_FM_PayeeInfo).Name + "Controller");
+                    ctrPayeeInfo.BaseSaveOrUpdate(payeeInfo);
+                    //如果有默认值，则更新其它的为否
+                    if (true == payeeInfo.IsDefault)
+                    {
+
+                    }
+                }
             }
         }
     }

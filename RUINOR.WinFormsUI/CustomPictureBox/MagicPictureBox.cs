@@ -7,11 +7,20 @@ using System.Windows.Forms;
 using System.Drawing;
 using HLH.Lib.Draw;
 using System.Reflection;
+using RUINORERP.Global.Model;
 
 namespace RUINOR.WinFormsUI.CustomPictureBox
 {
     /// <summary>
     /// 自定义PictureBox控件
+    /// 是不是考虑多个图片的情况？比方凭证多张。路径用;隔开
+    /// 名称路径思路：
+    /// 创建第一次Image有值时就给一个默认的名称，唯一的
+    /// 保存图片的hash值，用于判断图片是否已经存在并且没有改变
+    /// 为了方便比较是否修改过。直接用hash值作为名称。并不长。
+    /// TODO:重点: 因为修改后。要删除旧文件。所以文件名保存了新旧新的hash值。如果hash值相同，则不删除。不同则上传新的删除旧的。
+    /// 格式为: oldhash_newhash 无后缀 默认.jpg
+    /// 
     /// </summary>
     public class MagicPictureBox : PictureBox
     {
@@ -33,6 +42,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         ImageCroppingBox imageCroppingBox1 = new ImageCroppingBox();
 
         ContextMenuStrip contextMenuStripForCrop = new ContextMenuStrip();
+
+        private DataRowImage _RowImage = new DataRowImage();
+        public DataRowImage RowImage { get => _RowImage; set => _RowImage = value; }
+ 
         public MagicPictureBox() : base()
         {
             // 设置允许拖拽
@@ -185,6 +198,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             if (files != null && files.Length > 0)
             {
                 Image image = Image.FromFile(files[0]);
+                string newhash = ImageHelper.GetImageHash(this.Image);
+                RowImage.SetImageNewHash(newhash);
                 this.Image = image;
             }
             base.OnDragDrop(e);
@@ -198,7 +213,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             if (Clipboard.ContainsImage())
             {
                 Image image = Clipboard.GetImage();
+                string newhash = ImageHelper.GetImageHash(image);
+                RowImage.SetImageNewHash(newhash);
                 this.Image = image;
+
                 AddContextMenuItems();
             }
         }
@@ -225,6 +243,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     if (openFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         this.Image = Image.FromFile(openFileDialog.FileName);
+                        string newhash = ImageHelper.GetImageHash(this.Image);
+                        RowImage.SetImageNewHash(newhash);
                     }
                 }
             }
@@ -236,6 +256,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 if (isCropping)
                 {
                     this.Image = CropImage(this.Image, cropRectangle);
+                    string newhash = ImageHelper.GetImageHash(this.Image);
+                    RowImage.SetImageNewHash(newhash);
                     isCropping = false;
                 }
                 else
@@ -327,6 +349,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 if (cropRectangle.Width > 0 && cropRectangle.Height > 0)
                 {
                     this.Image = CropImage(this.Image, cropRectangle);
+                    string newhash = ImageHelper.GetImageHash(this.Image);
+                    RowImage.SetImageNewHash(newhash);
                     cropRectangle = Rectangle.Empty;
                 }
             }

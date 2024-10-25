@@ -810,11 +810,23 @@
     <Compile Include="BI\UCFMSubjectList.designer.cs">
       <DependentUpon>UCFMSubjectList.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\UCFMPayeeInfoEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCFMPayeeInfoEdit.Designer.cs">
+      <DependentUpon>UCFMPayeeInfoEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCLocationEdit.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="BI\UCLocationEdit.Designer.cs">
       <DependentUpon>UCLocationEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCFMPayeeInfoList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCFMPayeeInfoList.Designer.cs">
+      <DependentUpon>UCFMPayeeInfoList.cs</DependentUpon>
     </Compile>
     <Compile Include="BI\UCLocationList.cs">
       <SubType>UserControl</SubType>
@@ -2301,8 +2313,14 @@
     <EmbeddedResource Include="BI\UCFMSubjectList.resx">
       <DependentUpon>UCFMSubjectList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCFMPayeeInfoEdit.resx">
+      <DependentUpon>UCFMPayeeInfoEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCLocationEdit.resx">
       <DependentUpon>UCLocationEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCFMPayeeInfoList.resx">
+      <DependentUpon>UCFMPayeeInfoList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCLocationList.resx">
       <DependentUpon>UCLocationList.cs</DependentUpon>
@@ -2955,6 +2973,7 @@
     <None Include="Resources\1616_favorites_.png" />
     <None Include="Resources\1616_large icons_.png" />
     <None Include="Resources\1616_selected_ok_.png" />
+    <None Include="ResourceFile\info.ico" />
     <Content Include="ruinor.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3182,6 +3201,7 @@
     <Content Include="SqlScript\工作台.sql" />
     <Content Include="SqlScript\库存跟综纵向.sql" />
     <Content Include="SqlScript\库存跟踪横向.sql" />
+    <Content Include="SqlScript\死锁维护.sql" />
     <Content Include="SqlScript\维护.sql" />
     <Content Include="SqlScript\销售报表.sql" />
     <Content Include="SuperSocketClient\通讯中心.txt" />

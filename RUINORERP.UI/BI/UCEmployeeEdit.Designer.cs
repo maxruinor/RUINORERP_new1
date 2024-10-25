@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.txtPhoneNumber = new Krypton.Toolkit.KryptonTextBox();
             this.dtpEndDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.dtpBirthday = new Krypton.Toolkit.KryptonDateTimePicker();
             this.txtStartDate = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -75,8 +77,7 @@
             this.lblIs_available = new Krypton.Toolkit.KryptonLabel();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.txtPhoneNumber = new Krypton.Toolkit.KryptonTextBox();
+            this.btnAddPayeeInfo = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -97,6 +98,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.btnAddPayeeInfo);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Controls.Add(this.txtPhoneNumber);
             this.kryptonPanel1.Controls.Add(this.dtpEndDate);
@@ -145,6 +147,21 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(612, 513);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(79, 122);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(49, 20);
+            this.kryptonLabel1.TabIndex = 77;
+            this.kryptonLabel1.Values.Text = "手机号";
+            // 
+            // txtPhoneNumber
+            // 
+            this.txtPhoneNumber.Location = new System.Drawing.Point(133, 119);
+            this.txtPhoneNumber.Name = "txtPhoneNumber";
+            this.txtPhoneNumber.Size = new System.Drawing.Size(141, 23);
+            this.txtPhoneNumber.TabIndex = 76;
+            // 
             // dtpEndDate
             // 
             this.dtpEndDate.Checked = false;
@@ -184,6 +201,7 @@
             // cmbDepartment
             // 
             this.cmbDepartment.DropDownWidth = 100;
+            this.cmbDepartment.IntegralHeight = false;
             this.cmbDepartment.Location = new System.Drawing.Point(133, 92);
             this.cmbDepartment.Name = "cmbDepartment";
             this.cmbDepartment.Size = new System.Drawing.Size(141, 21);
@@ -283,7 +301,7 @@
             // 
             this.lblNotes.Location = new System.Drawing.Point(67, 403);
             this.lblNotes.Name = "lblNotes";
-            this.lblNotes.Size = new System.Drawing.Size(60, 20);
+            this.lblNotes.Size = new System.Drawing.Size(62, 20);
             this.lblNotes.TabIndex = 61;
             this.lblNotes.Values.Text = "备注说明";
             // 
@@ -299,7 +317,7 @@
             // 
             this.lblEmployee_NO.Location = new System.Drawing.Point(67, 11);
             this.lblEmployee_NO.Name = "lblEmployee_NO";
-            this.lblEmployee_NO.Size = new System.Drawing.Size(60, 20);
+            this.lblEmployee_NO.Size = new System.Drawing.Size(62, 20);
             this.lblEmployee_NO.TabIndex = 25;
             this.lblEmployee_NO.Values.Text = "员工编号";
             // 
@@ -307,14 +325,14 @@
             // 
             this.txtEmployee_NO.Location = new System.Drawing.Point(133, 13);
             this.txtEmployee_NO.Name = "txtEmployee_NO";
-            this.txtEmployee_NO.Size = new System.Drawing.Size(141, 20);
+            this.txtEmployee_NO.Size = new System.Drawing.Size(141, 23);
             this.txtEmployee_NO.TabIndex = 26;
             // 
             // lblEmployee_Name
             // 
             this.lblEmployee_Name.Location = new System.Drawing.Point(92, 56);
             this.lblEmployee_Name.Name = "lblEmployee_Name";
-            this.lblEmployee_Name.Size = new System.Drawing.Size(35, 20);
+            this.lblEmployee_Name.Size = new System.Drawing.Size(36, 20);
             this.lblEmployee_Name.TabIndex = 27;
             this.lblEmployee_Name.Values.Text = "姓名";
             // 
@@ -322,14 +340,14 @@
             // 
             this.txtEmployee_Name.Location = new System.Drawing.Point(133, 57);
             this.txtEmployee_Name.Name = "txtEmployee_Name";
-            this.txtEmployee_Name.Size = new System.Drawing.Size(141, 20);
+            this.txtEmployee_Name.Size = new System.Drawing.Size(141, 23);
             this.txtEmployee_Name.TabIndex = 28;
             // 
             // lblGender
             // 
             this.lblGender.Location = new System.Drawing.Point(326, 22);
             this.lblGender.Name = "lblGender";
-            this.lblGender.Size = new System.Drawing.Size(35, 20);
+            this.lblGender.Size = new System.Drawing.Size(36, 20);
             this.lblGender.TabIndex = 29;
             this.lblGender.Values.Text = "性别";
             // 
@@ -337,7 +355,7 @@
             // 
             this.lblPosition.Location = new System.Drawing.Point(326, 56);
             this.lblPosition.Name = "lblPosition";
-            this.lblPosition.Size = new System.Drawing.Size(35, 20);
+            this.lblPosition.Size = new System.Drawing.Size(36, 20);
             this.lblPosition.TabIndex = 31;
             this.lblPosition.Values.Text = "职位";
             // 
@@ -345,14 +363,14 @@
             // 
             this.txtPosition.Location = new System.Drawing.Point(377, 56);
             this.txtPosition.Name = "txtPosition";
-            this.txtPosition.Size = new System.Drawing.Size(130, 20);
+            this.txtPosition.Size = new System.Drawing.Size(130, 23);
             this.txtPosition.TabIndex = 32;
             // 
             // lblDepartmentID
             // 
             this.lblDepartmentID.Location = new System.Drawing.Point(92, 91);
             this.lblDepartmentID.Name = "lblDepartmentID";
-            this.lblDepartmentID.Size = new System.Drawing.Size(35, 20);
+            this.lblDepartmentID.Size = new System.Drawing.Size(36, 20);
             this.lblDepartmentID.TabIndex = 34;
             this.lblDepartmentID.Values.Text = "部门";
             // 
@@ -360,7 +378,7 @@
             // 
             this.lblMarriage.Location = new System.Drawing.Point(301, 93);
             this.lblMarriage.Name = "lblMarriage";
-            this.lblMarriage.Size = new System.Drawing.Size(60, 20);
+            this.lblMarriage.Size = new System.Drawing.Size(62, 20);
             this.lblMarriage.TabIndex = 35;
             this.lblMarriage.Values.Text = "婚姻状况";
             // 
@@ -368,14 +386,14 @@
             // 
             this.txtMarriage.Location = new System.Drawing.Point(377, 89);
             this.txtMarriage.Name = "txtMarriage";
-            this.txtMarriage.Size = new System.Drawing.Size(130, 20);
+            this.txtMarriage.Size = new System.Drawing.Size(130, 23);
             this.txtMarriage.TabIndex = 36;
             // 
             // lblBirthday
             // 
             this.lblBirthday.Location = new System.Drawing.Point(326, 243);
             this.lblBirthday.Name = "lblBirthday";
-            this.lblBirthday.Size = new System.Drawing.Size(35, 20);
+            this.lblBirthday.Size = new System.Drawing.Size(36, 20);
             this.lblBirthday.TabIndex = 37;
             this.lblBirthday.Values.Text = "生日";
             // 
@@ -383,7 +401,7 @@
             // 
             this.lblStartDate.Location = new System.Drawing.Point(67, 213);
             this.lblStartDate.Name = "lblStartDate";
-            this.lblStartDate.Size = new System.Drawing.Size(60, 20);
+            this.lblStartDate.Size = new System.Drawing.Size(62, 20);
             this.lblStartDate.TabIndex = 39;
             this.lblStartDate.Values.Text = "入职时间";
             // 
@@ -391,7 +409,7 @@
             // 
             this.lblJobTitle.Location = new System.Drawing.Point(92, 248);
             this.lblJobTitle.Name = "lblJobTitle";
-            this.lblJobTitle.Size = new System.Drawing.Size(35, 20);
+            this.lblJobTitle.Size = new System.Drawing.Size(36, 20);
             this.lblJobTitle.TabIndex = 42;
             this.lblJobTitle.Values.Text = "职称";
             // 
@@ -399,14 +417,14 @@
             // 
             this.txtJobTitle.Location = new System.Drawing.Point(131, 245);
             this.txtJobTitle.Name = "txtJobTitle";
-            this.txtJobTitle.Size = new System.Drawing.Size(141, 20);
+            this.txtJobTitle.Size = new System.Drawing.Size(141, 23);
             this.txtJobTitle.TabIndex = 41;
             // 
             // lblAddress
             // 
             this.lblAddress.Location = new System.Drawing.Point(67, 274);
             this.lblAddress.Name = "lblAddress";
-            this.lblAddress.Size = new System.Drawing.Size(60, 20);
+            this.lblAddress.Size = new System.Drawing.Size(62, 20);
             this.lblAddress.TabIndex = 44;
             this.lblAddress.Values.Text = "联络地址";
             // 
@@ -414,14 +432,14 @@
             // 
             this.txtAddress.Location = new System.Drawing.Point(131, 271);
             this.txtAddress.Name = "txtAddress";
-            this.txtAddress.Size = new System.Drawing.Size(379, 20);
+            this.txtAddress.Size = new System.Drawing.Size(379, 23);
             this.txtAddress.TabIndex = 43;
             // 
             // lblEmail
             // 
             this.lblEmail.Location = new System.Drawing.Point(92, 300);
             this.lblEmail.Name = "lblEmail";
-            this.lblEmail.Size = new System.Drawing.Size(35, 20);
+            this.lblEmail.Size = new System.Drawing.Size(36, 20);
             this.lblEmail.TabIndex = 45;
             this.lblEmail.Values.Text = "邮件";
             // 
@@ -429,14 +447,14 @@
             // 
             this.txtEmail.Location = new System.Drawing.Point(131, 297);
             this.txtEmail.Name = "txtEmail";
-            this.txtEmail.Size = new System.Drawing.Size(141, 20);
+            this.txtEmail.Size = new System.Drawing.Size(141, 23);
             this.txtEmail.TabIndex = 46;
             // 
             // lblEducation
             // 
             this.lblEducation.Location = new System.Drawing.Point(67, 328);
             this.lblEducation.Name = "lblEducation";
-            this.lblEducation.Size = new System.Drawing.Size(60, 20);
+            this.lblEducation.Size = new System.Drawing.Size(62, 20);
             this.lblEducation.TabIndex = 47;
             this.lblEducation.Values.Text = "教育程度";
             // 
@@ -444,14 +462,14 @@
             // 
             this.txtEducation.Location = new System.Drawing.Point(131, 325);
             this.txtEducation.Name = "txtEducation";
-            this.txtEducation.Size = new System.Drawing.Size(143, 20);
+            this.txtEducation.Size = new System.Drawing.Size(143, 23);
             this.txtEducation.TabIndex = 48;
             // 
             // lblLanguageSkills
             // 
             this.lblLanguageSkills.Location = new System.Drawing.Point(299, 326);
             this.lblLanguageSkills.Name = "lblLanguageSkills";
-            this.lblLanguageSkills.Size = new System.Drawing.Size(60, 20);
+            this.lblLanguageSkills.Size = new System.Drawing.Size(62, 20);
             this.lblLanguageSkills.TabIndex = 49;
             this.lblLanguageSkills.Values.Text = "外语能力";
             // 
@@ -459,14 +477,14 @@
             // 
             this.txtLanguageSkills.Location = new System.Drawing.Point(363, 323);
             this.txtLanguageSkills.Name = "txtLanguageSkills";
-            this.txtLanguageSkills.Size = new System.Drawing.Size(149, 20);
+            this.txtLanguageSkills.Size = new System.Drawing.Size(149, 23);
             this.txtLanguageSkills.TabIndex = 50;
             // 
             // lblUniversity
             // 
             this.lblUniversity.Location = new System.Drawing.Point(67, 352);
             this.lblUniversity.Name = "lblUniversity";
-            this.lblUniversity.Size = new System.Drawing.Size(60, 20);
+            this.lblUniversity.Size = new System.Drawing.Size(62, 20);
             this.lblUniversity.TabIndex = 51;
             this.lblUniversity.Values.Text = "毕业院校";
             // 
@@ -474,14 +492,14 @@
             // 
             this.txtUniversity.Location = new System.Drawing.Point(131, 349);
             this.txtUniversity.Name = "txtUniversity";
-            this.txtUniversity.Size = new System.Drawing.Size(381, 20);
+            this.txtUniversity.Size = new System.Drawing.Size(381, 23);
             this.txtUniversity.TabIndex = 52;
             // 
             // lblIDNumber
             // 
             this.lblIDNumber.Location = new System.Drawing.Point(67, 377);
             this.lblIDNumber.Name = "lblIDNumber";
-            this.lblIDNumber.Size = new System.Drawing.Size(60, 20);
+            this.lblIDNumber.Size = new System.Drawing.Size(62, 20);
             this.lblIDNumber.TabIndex = 54;
             this.lblIDNumber.Values.Text = "身份证号";
             // 
@@ -489,14 +507,14 @@
             // 
             this.txtIDNumber.Location = new System.Drawing.Point(131, 374);
             this.txtIDNumber.Name = "txtIDNumber";
-            this.txtIDNumber.Size = new System.Drawing.Size(381, 20);
+            this.txtIDNumber.Size = new System.Drawing.Size(381, 23);
             this.txtIDNumber.TabIndex = 53;
             // 
             // lblEndDate
             // 
             this.lblEndDate.Location = new System.Drawing.Point(301, 213);
             this.lblEndDate.Name = "lblEndDate";
-            this.lblEndDate.Size = new System.Drawing.Size(60, 20);
+            this.lblEndDate.Size = new System.Drawing.Size(62, 20);
             this.lblEndDate.TabIndex = 55;
             this.lblEndDate.Values.Text = "离职日期";
             // 
@@ -504,7 +522,7 @@
             // 
             this.lblIs_enabled.Location = new System.Drawing.Point(67, 161);
             this.lblIs_enabled.Name = "lblIs_enabled";
-            this.lblIs_enabled.Size = new System.Drawing.Size(60, 20);
+            this.lblIs_enabled.Size = new System.Drawing.Size(62, 20);
             this.lblIs_enabled.TabIndex = 57;
             this.lblIs_enabled.Values.Text = "是否启用";
             // 
@@ -512,7 +530,7 @@
             // 
             this.lblIs_available.Location = new System.Drawing.Point(301, 161);
             this.lblIs_available.Name = "lblIs_available";
-            this.lblIs_available.Size = new System.Drawing.Size(60, 20);
+            this.lblIs_available.Size = new System.Drawing.Size(62, 20);
             this.lblIs_available.TabIndex = 59;
             this.lblIs_available.Values.Text = "是否可用";
             // 
@@ -534,20 +552,14 @@
             this.btnOk.Values.Text = "确定";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // kryptonLabel1
+            // btnAddPayeeInfo
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(79, 122);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(48, 20);
-            this.kryptonLabel1.TabIndex = 77;
-            this.kryptonLabel1.Values.Text = "手机号";
-            // 
-            // txtPhoneNumber
-            // 
-            this.txtPhoneNumber.Location = new System.Drawing.Point(133, 119);
-            this.txtPhoneNumber.Name = "txtPhoneNumber";
-            this.txtPhoneNumber.Size = new System.Drawing.Size(141, 20);
-            this.txtPhoneNumber.TabIndex = 76;
+            this.btnAddPayeeInfo.Location = new System.Drawing.Point(510, 479);
+            this.btnAddPayeeInfo.Name = "btnAddPayeeInfo";
+            this.btnAddPayeeInfo.Size = new System.Drawing.Size(90, 25);
+            this.btnAddPayeeInfo.TabIndex = 78;
+            this.btnAddPayeeInfo.Values.Text = "添加收款信息";
+            this.btnAddPayeeInfo.Click += new System.EventHandler(this.btnAddPayeeInfo_Click);
             // 
             // UCEmployeeEdit
             // 
@@ -632,5 +644,6 @@
         private Krypton.Toolkit.KryptonDateTimePicker dtpEndDate;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonTextBox txtPhoneNumber;
+        private Krypton.Toolkit.KryptonButton btnAddPayeeInfo;
     }
 }

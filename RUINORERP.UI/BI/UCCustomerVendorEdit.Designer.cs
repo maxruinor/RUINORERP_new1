@@ -67,6 +67,7 @@
             this.lblIsVendor = new Krypton.Toolkit.KryptonLabel();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+            this.btnAddPayeeInfo = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -102,6 +103,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.btnAddPayeeInfo);
             this.kryptonPanel1.Controls.Add(this.chkOther);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel3);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox2);
@@ -449,6 +451,15 @@
             this.txtNotes.Size = new System.Drawing.Size(296, 72);
             this.txtNotes.TabIndex = 32;
             // 
+            // btnAddPayeeInfo
+            // 
+            this.btnAddPayeeInfo.Location = new System.Drawing.Point(524, 492);
+            this.btnAddPayeeInfo.Name = "btnAddPayeeInfo";
+            this.btnAddPayeeInfo.Size = new System.Drawing.Size(90, 25);
+            this.btnAddPayeeInfo.TabIndex = 79;
+            this.btnAddPayeeInfo.Values.Text = "添加收款信息";
+            this.btnAddPayeeInfo.Click += new System.EventHandler(this.btnAddPayeeInfo_Click);
+            // 
             // UCCustomerVendorEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -517,5 +528,6 @@
         private Krypton.Toolkit.KryptonLabel lblIs_available;
         private Krypton.Toolkit.KryptonCheckBox chkOther;
         private Krypton.Toolkit.KryptonLabel kryptonLabel3;
+        private Krypton.Toolkit.KryptonButton btnAddPayeeInfo;
     }
 }

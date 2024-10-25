@@ -35,10 +35,23 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.Memory, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.2\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.4.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
@@ -47,6 +60,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="Ulid, Version=1.3.4.0, Culture=neutral, PublicKeyToken=5635ede1d450abf5, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ulid.1.3.4\lib\netstandard2.0\Ulid.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChkComboBox\CheckBoxComboBox.cs">
@@ -88,6 +104,12 @@
     </Compile>
     <Compile Include="CustomPictureBox\MagicPictureBox.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CustomPictureBox\UCMagicPictrueBoxes.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CustomPictureBox\UCMagicPictrueBoxes.Designer.cs">
+      <DependentUpon>UCMagicPictrueBoxes.cs</DependentUpon>
     </Compile>
     <Compile Include="DockingToolbar\AllowedBorders.cs" />
     <Compile Include="DockingToolbar\DockLocation.cs" />
@@ -380,6 +402,9 @@
     <EmbeddedResource Include="CustomPictureBox\frmPictureViewer.resx">
       <DependentUpon>frmPictureViewer.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CustomPictureBox\UCMagicPictrueBoxes.resx">
+      <DependentUpon>UCMagicPictrueBoxes.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -513,6 +538,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="GlacialList\GlacialList.csproj" />
+    <None Include="packages.config" />
     <None Include="SourceGrid2\General\vssver.scc" />
   </ItemGroup>
   <ItemGroup>
@@ -527,6 +553,10 @@
     <ProjectReference Include="..\RUINOR.Runtime.InteropServices.APIs\RUINOR.Runtime.InteropServices.APIs.csproj">
       <Project>{3ae43324-7d66-42ec-8fdf-13ba0faf1dbc}</Project>
       <Name>RUINOR.Runtime.InteropServices.APIs</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj">
+      <Project>{4838ca4a-b538-4bfd-a366-ce7b25620558}</Project>
+      <Name>RUINORERP.Global</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

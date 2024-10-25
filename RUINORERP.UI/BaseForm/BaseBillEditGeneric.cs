@@ -1599,7 +1599,7 @@ namespace RUINORERP.UI.BaseForm
                         byte[] bytes = UI.Common.ImageHelper.imageToByteArray(frm.CloseCaseImage);
                           HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
                     ////上传新文件时要加后缀名
-                    string uploadRsult = await httpWebService.UploadImageAsync(strCloseCaseImagePath + ".jpg", bytes, "upload");
+                        string uploadRsult = await httpWebService.UploadImageAsync(strCloseCaseImagePath + ".jpg", bytes, "upload");
                         if (uploadRsult.Contains("UploadSuccessful"))
                         {
                             EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);

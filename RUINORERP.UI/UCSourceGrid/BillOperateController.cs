@@ -206,7 +206,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             valueImageWeb.CellImageHashName = sender.Value.ToString();
                             HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
                             try
-                            {
+                            {   
                                 valueImageWeb.CellImageBytes = await httpWebService.DownloadImgFileAsync(valueImageWeb.GetNewRealfileName());
                             }
                             catch (Exception ex)

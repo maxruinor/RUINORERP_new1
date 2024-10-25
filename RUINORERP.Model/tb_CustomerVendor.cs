@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:33
+// 时间：10/22/2024 18:12:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -127,8 +127,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 是否可用
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsExclusive",ColDesc = "责任人专属")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExclusive" ,IsNullable = false,ColumnDescription = "责任人专属")]
+        [AdvQueryAttribute(ColName = "IsExclusive",ColDesc = "是否可用")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExclusive" ,IsNullable = false,ColumnDescription = "是否可用" )]
         public bool IsExclusive
         { 
             get{return _IsExclusive;}
@@ -154,7 +154,7 @@ namespace RUINORERP.Model
 
         private long? _Customer_id;
         /// <summary>
-        /// CRM中用到的
+        /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
@@ -265,18 +265,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _IsOther = false;
+        private bool _IsOther= false;
         /// <summary>
         /// 是其他
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsOther", ColDesc = "是其他")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsOther", IsNullable = false, ColumnDescription = "是其他")]
+        [AdvQueryAttribute(ColName = "IsOther",ColDesc = "是其他")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsOther" ,IsNullable = false,ColumnDescription = "是其他" )]
         public bool IsOther
-        {
-            get { return _IsOther; }
-            set
-            {
-                SetProperty(ref _IsOther, value);
+        { 
+            get{return _IsOther;}
+            set{
+            SetProperty(ref _IsOther, value);
             }
         }
 
@@ -397,8 +396,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "BankAccount_id",ColDesc = "银行账号")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BankAccount_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "银行账号")]
+        [AdvQueryAttribute(ColName = "BankAccount_id",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BankAccount_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
         [FKRelationAttribute("tb_BankAccount","BankAccount_id")]
         public long? BankAccount_id
         { 
@@ -455,18 +454,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.CustomerVendor_ID_Out))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrdersOut { get; set; }
-        //tb_ManufacturingOrder.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_MANUF_REF_CUSTOVENDOR_OUT)
-        //tb_CustomerVendor.CustomerVendor_ID_Out)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.CustomerVendor_ID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_MANUFCTRUINGORDER_REF_CUSTOMERVENDOR)
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.CustomerVendor_ID))]
+        public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
+        //tb_PurEntryRe.CustomerVendor_ID)
+        //CustomerVendor_ID.FK_PURENRE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
         //[Browsable(false)]
@@ -479,18 +470,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Return.CustomerVendor_ID))]
-        public virtual List<tb_Return> tb_Returns { get; set; }
-        //tb_Return.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_RETURN_RE_CUSTOVENDOR)
+        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.CustomerVendor_ID))]
+        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
+        //tb_MaterialRequisition.CustomerVendor_ID)
+        //CustomerVendor_ID.FK_MATEREQUISTIONS_RE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.CustomerVendor_ID))]
-        public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
-        //tb_PurEntryRe.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_PURENRE_CUSTOVENDOR)
+        [Navigate(NavigateType.OneToMany, nameof(tb_Return.CustomerVendor_ID))]
+        public virtual List<tb_Return> tb_Returns { get; set; }
+        //tb_Return.CustomerVendor_ID)
+        //CustomerVendor_ID.FK_RETURN_RE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
         //[Browsable(false)]
@@ -551,6 +542,22 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntry.CustomerVendor_ID))]
+        public virtual List<tb_PurReturnEntry> tb_PurReturnEntries { get; set; }
+        //tb_PurReturnEntry.CustomerVendor_ID)
+        //CustomerVendor_ID.FK_PURReturn_REF_CUSTOMERVENDOR)
+        //tb_CustomerVendor.CustomerVendor_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_StockOut.CustomerVendor_ID))]
+        public virtual List<tb_StockOut> tb_StockOuts { get; set; }
+        //tb_StockOut.CustomerVendor_ID)
+        //CustomerVendor_ID.FK_TB_STOCKOUT_REF_CUSTOVendor)
+        //tb_CustomerVendor.CustomerVendor_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrder.CustomerVendor_ID))]
         public virtual List<tb_SaleOrder> tb_SaleOrders { get; set; }
         //tb_SaleOrder.CustomerVendor_ID)
@@ -583,10 +590,34 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.CustomerVendor_ID_Out))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders_Out { get; set; }
+        //tb_ManufacturingOrder.CustomerVendor_ID)
+        //CustomerVendor_ID.FK_MANUF_REF_CUSTOVENDOR_OUT)
+        //tb_CustomerVendor.CustomerVendor_ID_Out)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.CustomerVendor_ID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.CustomerVendor_ID)
+        //CustomerVendor_ID.FK_MANUFCTRUINGORDER_REF_CUSTOMERVENDOR)
+        //tb_CustomerVendor.CustomerVendor_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.CustomerVendor_ID))]
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
         //tb_FM_PaymentBill.CustomerVendor_ID)
         //CustomerVendor_ID.FK_FM_PAYMENTBILL_REF_CUSTOMERVENDOR)
+        //tb_CustomerVendor.CustomerVendor_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_StockIn.CustomerVendor_ID))]
+        public virtual List<tb_StockIn> tb_StockIns { get; set; }
+        //tb_StockIn.CustomerVendor_ID)
+        //CustomerVendor_ID.FK_TB_STOCKIN_RE_CUSTOMERVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
         //[Browsable(false)]
@@ -599,14 +630,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.CustomerVendor_ID))]
-        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
-        //tb_MaterialRequisition.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_MATEREQUISTIONS_RE_CUSTOVENDOR)
-        //tb_CustomerVendor.CustomerVendor_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderRe.CustomerVendor_ID))]
         public virtual List<tb_PurOrderRe> tb_PurOrderRes { get; set; }
         //tb_PurOrderRe.CustomerVendor_ID)
@@ -615,18 +638,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_StockOut.CustomerVendor_ID))]
-        public virtual List<tb_StockOut> tb_StockOuts { get; set; }
-        //tb_StockOut.CustomerVendor_ID)
-        //CustomerVendor_ID.FK_TB_STOCKOUT_REF_CUSTOVendor)
-        //tb_CustomerVendor.CustomerVendor_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurGoodsRecommendDetail.CustomerVendor_ID))]
         public virtual List<tb_PurGoodsRecommendDetail> tb_PurGoodsRecommendDetails { get; set; }
         //tb_PurGoodsRecommendDetail.CustomerVendor_ID)
         //CustomerVendor_ID.FK_PURGOODSEWCOMMENDDETAIL_REF_CUSTOMERVENDOR)
+        //tb_CustomerVendor.CustomerVendor_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PayeeInfo.CustomerVendor_ID))]
+        public virtual List<tb_FM_PayeeInfo> tb_FM_PayeeInfos { get; set; }
+        //tb_FM_PayeeInfo.CustomerVendor_ID)
+        //CustomerVendor_ID.FK_TB_FM_PA_REFERENCE_TB_CUSTO)
         //tb_CustomerVendor.CustomerVendor_ID)
 
 

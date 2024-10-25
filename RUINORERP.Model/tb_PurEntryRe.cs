@@ -126,14 +126,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long _PurEntryID;
+        private long? _PurEntryID;
         /// <summary>
         /// 采购入库单
         /// </summary>
         [AdvQueryAttribute(ColName = "PurEntryID",ColDesc = "采购入库单")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurEntryID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "采购入库单" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurEntryID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "采购入库单" )]
         [FKRelationAttribute("tb_PurEntry","PurEntryID")]
-        public long PurEntryID
+        public long? PurEntryID
         { 
             get{return _PurEntryID;}
             set{
@@ -146,7 +146,7 @@ namespace RUINORERP.Model
         /// 入库单号
         /// </summary>
         [AdvQueryAttribute(ColName = "PurEntryNo",ColDesc = "入库单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PurEntryNo" ,Length=50,IsNullable = false,ColumnDescription = "入库单号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PurEntryNo" ,Length=50,IsNullable = true,ColumnDescription = "入库单号" )]
         public string PurEntryNo
         { 
             get{return _PurEntryNo;}

@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.Model;
 using RUINORERP.Model.Base;
 using SqlSugar;
 using System;
@@ -29,6 +30,14 @@ namespace RUINORERP.Model
     [Serializable()]
     public class BaseEntity : INotifyPropertyChanged, IDataErrorInfo
     {
+
+        private DataRowImage _RowImage = new DataRowImage();
+
+        /// <summary>
+        /// 表中行数据可能存在的图片列。将来可能会扩展到多张图片
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        public DataRowImage RowImage { get => _RowImage; set => _RowImage = value; }
 
 
 

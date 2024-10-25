@@ -43,6 +43,8 @@ using RUINORERP.UI.FormProperty;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
 using SqlSugar;
+using NPOI.SS.Formula.Functions;
+using SourceGrid.Cells.Models;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -231,16 +233,13 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-
-
-
             //图片特殊处理
             if (dataGridView1.Columns[e.ColumnIndex].Name == "Image")
             {
                 if (e.Value != null)
                 {
                     System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
+                    System.Drawing.Image image = System.Drawing.Image.FromStream(buf, true);
                     e.Value = image;
                     //这里用缓存
                 }
@@ -1123,7 +1122,7 @@ namespace RUINORERP.UI.BaseForm
                 BaseEntity bty = CurrencyObj as BaseEntity;
                 frmadd.BindData(bty);
                 //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)bindingSourceList.Current);
+                T oldobj = CloneHelper.DeepCloneObjectAdv<T>((T)bindingSourceList.Current);
                 int UpdateIndex = bindingSourceList.Position;
                 command.UndoOperation = delegate ()
                 {
@@ -1584,6 +1583,43 @@ namespace RUINORERP.UI.BaseForm
                         rr = await ctr.BaseSaveOrUpdate(entity as T);
                         if (rr.Succeeded)
                         {
+                            //保存图片
+                            #region 
+
+                            if (ReflectionHelper.ExistPropertyName<T>(nameof(entity.RowImage)) && entity.RowImage != null)
+                            {
+                                if (entity.RowImage.image != null)
+                                {
+
+                                    if (!entity.RowImage.oldhash.Equals(entity.RowImage.newhash, StringComparison.OrdinalIgnoreCase)
+                                     && entity.GetPropertyValue("PaymentCodeImagePath").ToString() == entity.RowImage.ImageFullName)
+                                    {
+                                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                        //如果服务器有旧文件 。可以先删除
+                                        if (!string.IsNullOrEmpty(entity.RowImage.oldhash))
+                                        {
+                                            string oldfileName = entity.RowImage.Dir + entity.RowImage.oldhash;
+                                            string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
+                                            MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
+                                        }
+                                        string newfileName = entity.RowImage.GetUploadfileName();
+                                        ////上传新文件时要加后缀名
+                                        string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", entity.RowImage.ImageBytes, "upload");
+                                        if (uploadRsult.Contains("UploadSuccessful"))
+                                        {
+                                            //重要
+                                            entity.RowImage.ImageFullName = entity.RowImage.UpdateImageName(entity.RowImage.newhash);
+                                            entity.SetPropertyValue("PaymentCodeImagePath", entity.RowImage.ImageFullName);
+                                            await ctr.BaseSaveOrUpdate(entity as T);
+                                            //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
+                                            MainForm.Instance.PrintInfoLog("UploadSuccessful for base List:" + newfileName);
+                                        }
+                                    }
+                                }
+                            }
+                            #endregion
+                            //保存路径
+
                             ToolBarEnabledControl(MenuItemEnums.保存);
                             //提示服务器开启推送工作流
                             OriginalData beatData = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);

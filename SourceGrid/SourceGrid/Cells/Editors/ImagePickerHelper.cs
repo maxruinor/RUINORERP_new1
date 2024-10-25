@@ -18,14 +18,13 @@ namespace SourceGrid.Cells.Editors
     public class ImageHashHelper
     {
 
-
         public static bool AreHashesEqual(string hash1, string hash2)
         {
             return hash1.Equals(hash2, StringComparison.OrdinalIgnoreCase);
         }
+ 
 
-
-        public static string GenerateHash(byte[] data)
+            public static string GenerateHash(byte[] data)
         {
             using (MD5 md5 = MD5.Create())
             {

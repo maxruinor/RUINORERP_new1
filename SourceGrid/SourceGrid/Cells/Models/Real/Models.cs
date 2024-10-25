@@ -310,6 +310,8 @@ namespace SourceGrid.Cells.Models
         /// 为了方便比较是否修改过。直接用hash值作为名称。并不长。
         /// TODO:重点: 因为修改后。要删除旧文件。所以文件名保存了新旧新的hash值。如果hash值相同，则不删除。不同则上传新的删除旧的。
         /// 格式为: oldhash_newhash 无后缀 默认.jpg
+//        24/09/01J91AT48VF0PV0D08YEE3BMYK-595b739fa14a661a47afb827184eb0a9_595b739fa14a661a47afb827184eb0a9
+//        24/09/01J91AT48VF0PV0D08YEE3BMYK-595b739fa14a661a47afb827184eb0a9_f7705f09bb2ca50b31660fa3221d9dd6 --更新后 中间是旧，最后是新
         /// </summary>
         /// 
         ///旧的hash值，除了第一次和数据库取出。其它都是修改newhash.实际作用是文件名。用于判断是否修改过
@@ -334,23 +336,27 @@ namespace SourceGrid.Cells.Models
             set
             {
                 this._CellImageHashName = value;
-                int realnameIndex = _CellImageHashName.IndexOf("-");
-                if (string.IsNullOrEmpty(oldhash))
+                if (_CellImageHashName != null)
                 {
-                    oldhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(realnameIndex + 1, CellImageHashName.IndexOf("_") - realnameIndex - 1) : "";
-                }
-                if (string.IsNullOrEmpty(newhash))
-                {
-                    newhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : "";
-                }
-                if (string.IsNullOrEmpty(realName))
-                {
-                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : System.DateTime.Now.ToString("yy")+"/"+System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
+                    int realnameIndex = _CellImageHashName.IndexOf("-");
+                    if (string.IsNullOrEmpty(oldhash))
+                    {
+                        oldhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(realnameIndex + 1, CellImageHashName.IndexOf("_") - realnameIndex - 1) : "";
+                    }
+                    if (string.IsNullOrEmpty(newhash))
+                    {
+                        newhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : "";
+                    }
                     if (string.IsNullOrEmpty(realName))
                     {
-                        realName =System.DateTime.Now.ToString("yy")+ "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
+                        realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
+                        if (string.IsNullOrEmpty(realName))
+                        {
+                            realName = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
+                        }
                     }
                 }
+
             }
         }
 
@@ -390,10 +396,11 @@ namespace SourceGrid.Cells.Models
         /// 当newhash改变时，更新hash值，这时应该是图片上传成功。要覆盖旧名，新旧一样。方便后面更新
         /// </summary>
         /// <param name="_newhash"></param>
-        public void UpdateImageName(string _newhash)
+        public string UpdateImageName(string _newhash)
         {
             oldhash = _newhash;
             CellImageHashName = realName + "-" + oldhash + "_" + newhash;
+            return CellImageHashName;
         }
 
         public void SetImageNewHash(string ParaNewHash)
@@ -413,13 +420,13 @@ namespace SourceGrid.Cells.Models
                 }
                 if (string.IsNullOrEmpty(realName))
                 {
-                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : System.DateTime.Now.ToString("yy")+ "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
+                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
                 }
             }
-   
+
             if (string.IsNullOrEmpty(realName))
             {
-                realName = System.DateTime.Now.ToString("yy")+"/"+System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
+                realName = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
             }
 
             CellImageHashName = realName + "-" + oldhash + "_" + newhash;
@@ -435,7 +442,7 @@ namespace SourceGrid.Cells.Models
         public static readonly ValueImageWeb Default = new ValueImageWeb();
         public ValueImageWeb()
         {
-             
+
         }
         //这一行确定了这个值的类型，所以这里不用再写一个转换器了
         private DevAge.ComponentModel.Validator.ValidatorTypeConverter imageConverter =

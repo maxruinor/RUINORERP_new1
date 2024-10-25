@@ -18,6 +18,8 @@ using RUINORERP.Business;
 using RUINORERP.Common.Helper;
 using RUINORERP.UI.Common;
 using RUINORERP.Global;
+using FastReport.Utils;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.BI
 {
@@ -35,7 +37,7 @@ namespace RUINORERP.UI.BI
         Binding startDate;
         Binding birthBinding;
         Binding endDate;
-        public  void BindData11111(tb_Employee entity)
+        public void BindData11111(tb_Employee entity)
         {
             _EditEntity = entity;
 
@@ -196,7 +198,7 @@ namespace RUINORERP.UI.BI
                 _EditEntity.Employee_NO = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Employee);
                 _EditEntity.Is_available = true;
                 _EditEntity.Is_enabled = true;
-          
+
             }
             DataBindingHelper.BindData4TextBox<tb_Employee>(entity, t => t.Employee_NO, txtEmployee_NO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Employee>(entity, t => t.Employee_Name, txtEmployee_Name, BindDataType4TextBox.Text, false);
@@ -226,6 +228,15 @@ namespace RUINORERP.UI.BI
                 base.InitRequiredToControl(new tb_EmployeeValidator(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
+            if (_EditEntity.Employee_ID > 0)
+            {
+                btnAddPayeeInfo.Visible = true;
+            }
+            else
+            {
+                btnAddPayeeInfo.Visible = false;
+            }
+
         }
 
 
@@ -351,6 +362,36 @@ namespace RUINORERP.UI.BI
                     dtpEndDate.DataBindings.Add(endDate);
                 }
             }
+        }
+
+        private void btnAddPayeeInfo_Click(object sender, EventArgs e)
+        {
+            object frm = Activator.CreateInstance(typeof(UCFMPayeeInfoEdit));
+            if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+            {
+                BaseEditGeneric<tb_FM_PayeeInfo> frmaddg = frm as BaseEditGeneric<tb_FM_PayeeInfo>;
+                frmaddg.Text = "收款账号编辑";
+                frmaddg.bindingSourceEdit.DataSource = new List<tb_FM_PayeeInfo>();
+                object obj = frmaddg.bindingSourceEdit.AddNew();
+                tb_FM_PayeeInfo payeeInfo = obj as tb_FM_PayeeInfo;
+                payeeInfo.Employee_ID = _EditEntity.Employee_ID;
+                BaseEntity bty = payeeInfo as BaseEntity;
+                bty.ActionStatus = ActionStatus.加载;
+                BusinessHelper.Instance.EditEntity(bty);
+                frmaddg.BindData(bty);
+                if (frmaddg.ShowDialog() == DialogResult.OK)
+                {
+                    BaseController<tb_FM_PayeeInfo> ctrPayeeInfo = Startup.GetFromFacByName<BaseController<tb_FM_PayeeInfo>>(typeof(tb_FM_PayeeInfo).Name + "Controller");
+                    ctrPayeeInfo.BaseSaveOrUpdate(payeeInfo);
+
+                    //如果有默认值，则更新其它的为否
+                    if (true == payeeInfo.IsDefault)
+                    {
+
+                    }
+                }
+            }
+
         }
     }
 }

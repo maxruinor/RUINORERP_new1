@@ -465,7 +465,6 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_fm_subject )
                                .Includes(t => t.tb_department )
-                               .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_fm_expenseclaim )
                                     .ToListAsync();
             
@@ -491,7 +490,6 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_fm_subject )
                                .Includes(t => t.tb_department )
-                               .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_fm_expenseclaim )
                                     .ToListAsync();
             
@@ -517,7 +515,6 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_fm_subject )
                             .Includes(t => t.tb_department )
-                            .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_fm_expenseclaim )
                                     .ToList();
             
@@ -560,7 +557,6 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_fm_subject )
                             .Includes(t => t.tb_department )
-                            .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_fm_expenseclaim )
                                     .FirstAsync();
             if(entity!=null)

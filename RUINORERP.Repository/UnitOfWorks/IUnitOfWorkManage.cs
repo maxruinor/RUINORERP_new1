@@ -7,7 +7,6 @@ namespace RUINORERP.Repository.UnitOfWorks
     {
         SqlSugarScope GetDbClient();
         int TranCount { get; }
-
         UnitOfWork CreateUnitOfWork();
 
         void BeginTran();

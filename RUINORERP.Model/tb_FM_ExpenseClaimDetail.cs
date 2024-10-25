@@ -80,20 +80,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Employee_ID;
-        /// <summary>
-        /// 报销人
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "报销人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "报销人" )]
-        [FKRelationAttribute("tb_Employee","Employee_ID")]
-        public long? Employee_ID
-        { 
-            get{return _Employee_ID;}
-            set{
-            SetProperty(ref _Employee_ID, value);
-            }
-        }
+
 
         private long? _DepartmentID;
         /// <summary>
@@ -310,10 +297,7 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
-        public virtual tb_Employee tb_employee { get; set; }
+         
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]

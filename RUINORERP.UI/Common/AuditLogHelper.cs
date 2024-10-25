@@ -120,7 +120,7 @@ namespace RUINORERP.UI.Common
             auditLog.ActionTime = DateTime.Now;
             try
             {
-                MainForm.Instance.AppContext.Db.Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
+                MainForm.Instance.AppContext.Db.CopyNew().Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
             }
             catch (Exception ex)
             {

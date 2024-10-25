@@ -3,7 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace RUINORERP.Common.Helper
 {
@@ -224,13 +227,102 @@ namespace RUINORERP.Common.Helper
         }
 
 
+
+        /// <summary>
+        /// 在 .NET 中，有几个现成的库可以帮助简化深度复制对象的实现：
+
+//        AutoMapper：这是一个流行的对象到对象映射器，它不仅可以用于映射，还可以用于深度复制对象。使用 AutoMapper，你可以配置映射关系，然后使用它来复制对象。它的性能也相当不错，对于大多数应用场景来说是一个不错的选择。
+
+//DeepCloner：这是一个专门用于深度复制的库，它提供了一个简单的 API 来克隆对象。DeepCloner 可以处理复杂的对象图，包括集合和循环引用。
+
+//FastDeepCloner：这是一个高性能的深度克隆库，它提供了比传统二进制序列化更快的克隆方法。FastDeepCloner 支持多种.NET 框架，并且可以通过添加[FastDeepClonerIgnore] 属性来忽略特定属性的克隆。
+
+//System.Text.Json：如果你不需要安装额外的库，可以考虑使用.NET 自带的 System.Text.Json 库来进行深度复制。这种方法不需要序列化和反序列化整个对象图，但是它可能不适用于所有类型的复杂对象。
+
+//XmlSerializer 或 DataContractSerializer：这些是.NET 框架提供的序列化器，它们可以用来深度复制对象。这些方法需要你的类和成员标记为[Serializable] 或 [DataContract]，并且可能需要一些额外的配置。
+
+//BinaryFormatter：这是一个旧的.NET 序列化器，它可以用于深度复制对象。但是，从.NET Core 3.0 开始，BinaryFormatter 已被弃用，因为它存在安全问题。
+
+//选择哪个库取决于你的具体需求，包括性能要求、是否需要处理特殊类型（如 byte[] 或 Image）、以及是否愿意引入外部依赖。在处理 byte[] 数组时，通常需要手动复制数组；而对于 Image 类型的对象，你可能需要调用特定的复制方法或重新从源创建实例。如果需要忽略某个属性，可以在克隆过程中检查属性名并跳过它，或者使用库提供的忽略属性的功能（如果支持）。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="t"></param>
+        /// <param name="ignoreProperties"></param>
+        /// <returns></returns>
+        public static T DeepCloneObjectAdv<T>(this T t, List<string> ignoreProperties = null) where T : class
+        {
+            var instance = Activator.CreateInstance<T>();
+            var propertyInfos = instance.GetType().GetProperties();
+
+            // 可以在这里定义一个忽略属性的列表
+            // var ignoreProperties = new List<string> { "PropertyNameToIgnore" }; // 替换为实际要忽略的属性名
+
+            foreach (var propertyInfo in propertyInfos)
+            {
+                if (ignoreProperties != null)
+                {
+                    if (ignoreProperties.Contains(propertyInfo.Name)) // 检查是否需要忽略该属性
+                    {
+                        continue;
+                    }
+                }
+
+                if (!propertyInfo.CanWrite)
+                {
+                    continue;
+                }
+
+                var propertyValue = propertyInfo.GetValue(t);
+
+                if (propertyValue == null)
+                {
+                    continue;
+                }
+
+                if (propertyInfo.PropertyType == typeof(byte[]))
+                {
+                    // 处理 byte[] 数组
+                    byte[] byteArray = (byte[])propertyValue;
+                    byte[] clonedByteArray = new byte[byteArray.Length];
+                    Array.Copy(byteArray, clonedByteArray, byteArray.Length);
+                    propertyInfo.SetValue(instance, clonedByteArray);
+                }
+                else if (propertyInfo.PropertyType == typeof(System.Drawing.Image))
+                {
+                    // 处理 Image 类型
+                    System.Drawing.Image image = (System.Drawing.Image)propertyValue;
+                    System.Drawing.Image clonedImage = (System.Drawing.Image)image.Clone();
+                    propertyInfo.SetValue(instance, clonedImage);
+                }
+                else if (propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.GetGenericTypeDefinition().Equals(typeof(Nullable<>)))
+                {
+                    var nullableConverter = new NullableConverter(propertyInfo.PropertyType);
+                    try
+                    {
+                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyValue, nullableConverter.UnderlyingType), null);
+                    }
+                    catch (Exception ex)
+                    {
+                        var typeArray = propertyInfo.PropertyType.GetGenericArguments();
+                        propertyInfo.SetValue(instance, Convert.ChangeType(propertyValue, typeArray[0]), null);
+                    }
+                }
+                else
+                {
+                    propertyInfo.SetValue(instance, Convert.ChangeType(propertyValue, propertyInfo.PropertyType), null);
+                }
+            }
+
+            return instance;
+        }
+
         /// <summary>
         /// 对象Clone
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="t"></param>
         /// <returns></returns>
-        public static T DeepCloneObject<T>(object t) 
+        public static T DeepCloneObject<T>(object t)
         {
             var instance = Activator.CreateInstance<T>();
             var propertyInfos = t.GetType().GetProperties();

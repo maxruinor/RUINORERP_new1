@@ -4,6 +4,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 using System.Web;
 
 namespace HLH.Lib.Draw
@@ -14,6 +15,58 @@ namespace HLH.Lib.Draw
     /// </summary>
     public class ImageHelper
     {
+        public static bool AreHashesEqual(string hash1, string hash2)
+        {
+            return hash1.Equals(hash2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static byte[] imageToByteArray(Image imageIn)
+        {
+
+            MemoryStream ms = new MemoryStream();
+            imageIn.Save(ms, ImageFormat.Gif);
+            return ms.ToArray();
+
+        }
+
+        public static Image byteArrayToImage(byte[] byteArrayIn)
+        {
+
+            MemoryStream ms = new MemoryStream(byteArrayIn);
+            Image returnImage = Image.FromStream(ms);
+            return returnImage;
+
+        }
+        public static string GetImageHash(Image img)
+        {
+            byte[] bytes = imageToByteArray(img);
+            return GenerateHash(bytes);
+        }
+        public static string GenerateHash(byte[] data)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                return BitConverter.ToString(md5.ComputeHash(data)).Replace("-", "").ToLowerInvariant();
+            }
+        }
+        public static string GetImageHash(string filePath)
+        {
+            using (var md5 = MD5.Create())
+            {
+                using (var stream = File.OpenRead(filePath))
+                {
+                    var hashBytes = md5.ComputeHash(stream);
+                    return BitConverter.ToString(hashBytes).Replace("-", String.Empty).ToLowerInvariant();
+                }
+            }
+        }
+        public static string GenerateHash(Stream stream)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+            }
+        }
         /// <summary>
         /// œ‘ æÕº∆¨
         /// </summary>

@@ -57,69 +57,6 @@ namespace RUINORERP.UI
             }
         }
 
-
-        /// <summary>
-        ///  服务容器
-        /// </summary>
-        //static IServiceCollection Services { get; set; }
-        /// <summary>
-        /// 服务管理者
-        /// </summary>
-        //public static IServiceProvider ServiceProvider { get; set; }
-        /*
-        static void Build()
-        {
-            // 创建服务容器
-            Services = new ServiceCollection();
-            #region 日志
-
-            Services.AddLogging(logBuilder =>
-            {
-                logBuilder.ClearProviders();
-                logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
-            });
-
-            //注入Log4Net
-            //Services.AddLogging(cfg =>
-            //{
-            //    //cfg.AddLog4Net();
-            //    //默认的配置文件路径是在根目录，且文件名为log4net.config
-            //    //如果文件路径或名称有变化，需要重新设置其路径或名称
-            //    //比如在项目根目录下创建一个名为cfg的文件夹，将log4net.config文件移入其中，并改名为log.config
-            //    //则需要使用下面的代码来进行配置
-            //    //cfg.AddLog4Net(new Log4NetProviderOptions()
-            //    //{
-            //    //    Log4NetConfigFileName = "cfg/log.config",
-            //    //    Watch = true
-            //    //});
-            //});
-            #endregion
-
-            //builder.RegisterType<BlogLogAOP>();//可以直接替换其他拦截器！一定要把拦截器进行注册
-
-
-
-            ConfigureServices(Services);
-
-
-            //Services.AddSingleton<IApiUserSession, ApiUserPrincipal>(); //CurrentPrincipal实现方式
-            //Services.AddTransient<test>();
-            // 添加服务注册
-            //ConfigureServices(Services);
-
-            //添加IApiUserSession实现类
-            //Services.AddSingleton<IApiUserSession, ApiUserPrincipal>();
-
-            //调用自定义的服务注册
-            ConfigureRepository(Services);
-
-
-            // 创建服务管理者
-            ServiceProvider = Services.BuildServiceProvider();
-
-            Services.AddSingleton(ServiceProvider);//注册到服务集合中,需要可以在Service中构造函数中注入使用
-        }
-        */
         /// <summary>
         /// 配置依赖注入对象
         /// </summary>
@@ -226,52 +163,7 @@ namespace RUINORERP.UI
             //}
             #endregion
         }
-
-        /// 
-        /// 配置依赖注入对象
-        /// 
-        /// 
-        //       public static void ConfigureRepository1(IServiceCollection services)
-        //       {
-        //           #region 自动注入对应的服务接口
-        //           //services.AddSingleton();//services.AddScoped();
-
-        //           var baseType = typeof(**IDependency * *);
-        //           var path = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-        //           var getFiles = Directory.GetFiles(path, "*.dll").Where(Match);  //.Where(o=>o.Match())
-        //           var referencedAssemblies = getFiles.Select(Assembly.LoadFrom).ToList();  //.Select(o=> Assembly.LoadFrom(o)) 
-
-        //           var ss = referencedAssemblies.SelectMany(o => o.GetTypes());
-
-        //           var types = referencedAssemblies
-        //           .SelectMany(a => a.DefinedTypes)
-        //           .Select(type => type.AsType())
-        //           .Where(x => x != baseType && baseType.IsAssignableFrom(x)).ToList();
-        //           var implementTypes = types.Where(x => x.IsClass).ToList();
-        //           var interfaceTypes = types.Where(x => x.IsInterface).ToList();
-        //           foreach (var implementType in implementTypes)
-        //           {
-        //               if (typeof(**IScopedDependency * *).IsAssignableFrom(implementType))
-        //{
-        //                   var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-        //                   if (interfaceType != null)
-        //                       services.AddScoped(interfaceType, implementType);
-        //               }
-        //else if (typeof(**ISingletonDependency * *).IsAssignableFrom(implementType))
-        //{
-        //                   var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-        //                   if (interfaceType != null)
-        //                       services.AddSingleton(interfaceType, implementType);
-        //               }
-        //else
-        //               {
-        //                   var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-        //                   if (interfaceType != null)
-        //                       services.AddTransient(interfaceType, implementType);
-        //               }
-        //           }
-        //           #endregion
-        //       }
+ 
 
         /// <summary>
         /// 注入服务
@@ -393,7 +285,7 @@ namespace RUINORERP.UI
                     Console.WriteLine("接收到的命令行参数如下：");
                     foreach (var arg in args)
                     {
-                        AppContextData.ClientInfo.Version = arg;
+                        AppContextData.OnlineUser.客户端版本 = arg;
                         // Console.WriteLine(arg);
                         //MessageBox.Show(arg);
                     }

@@ -96,11 +96,6 @@ namespace RUINORERP.Server.Workflow
             host.RegisterWorkflow<WFPush.PushBaseInfoWorkflow, PushData>();
 
 
-            // host.RegisterWorkflow<ActivityWorkflow, MyData>();
-            // host.RegisterWorkflow<ApprovalWorkflowTest, WFApproval.ApprovalWFData>();
-            // host.RegisterWorkflow<ApprovalWorkflow, tb_Stocktake>();
-            // host.RegisterWorkflow<WorkWorkflow2, MyNameClass>();
-            // host.RegisterWorkflow
         }
     }
 }

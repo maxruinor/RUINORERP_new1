@@ -33,6 +33,7 @@ using SqlSugar;
 using RUINORERP.Business.Processor;
 using Netron.GraphLib;
 using RUINOR.WinFormsUI.TileListView;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -938,7 +939,7 @@ namespace RUINORERP.UI.ProductEAV
             {
                 if (EditEntity.Category_ID.HasValue && EditEntity.Category_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Category_ID))
                 {
-                    var obj = CacheHelper.Instance.GetEntity<tb_ProdCategories>(EditEntity.Category_ID.Value);
+                    var obj = BizCacheHelper.Instance.GetEntity<tb_ProdCategories>(EditEntity.Category_ID.Value);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_ProdCategories Cate)
@@ -1012,8 +1013,8 @@ namespace RUINORERP.UI.ProductEAV
             }
             else
             {
-                cevent.Value = CacheHelper.Instance.GetEntity<tb_ProdCategories>(cevent.Value.ToString()).Category_name;
-                //cevent.Value = CacheHelper.Instance.GetValue<tb_ProductCategories>(cevent.Value);
+                cevent.Value = BizCacheHelper.Instance.GetEntity<tb_ProdCategories>(cevent.Value.ToString()).Category_name;
+                //cevent.Value = BizCacheHelper.Instance.GetValue<tb_ProductCategories>(cevent.Value);
 
                 //显示名称
                 //tb_ProductCategories entity = list.Find(t => t.category_ID.ToString() == cevent.Value.ToString());
@@ -2269,7 +2270,7 @@ namespace RUINORERP.UI.ProductEAV
         //    if (FKValueColNameTableNameList.TryGetValue(dataGridView1.Columns[columnIndex].Name, out tableName))
         //    {
         //        string ValueDisplayColName = string.Empty;
-        //        var obj = CacheHelper.Instance.GetValue(tableName, value);
+        //        var obj = BizCacheHelper.Instance.GetValue(tableName, value);
         //        NameValue = obj.ToString();
 
         //    }

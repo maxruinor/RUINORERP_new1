@@ -29,6 +29,8 @@ using SuperSocket.Command;
 using RUINORERP.Business;
 using RUINORERP.Model;
 using WorkflowCore.Services.DefinitionStorage;
+using RUINORERP.Business.AutoMapper;
+using AutoMapper;
 
 namespace RUINORERP.Server
 {
@@ -108,6 +110,12 @@ namespace RUINORERP.Server
                 #region 用了csla  
                 try
                 {
+
+                    //IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                    //tb_PurOrder purOrder= new tb_PurOrder();
+                    //purOrder.PurOrderNo = "12312";
+                    //var employeeDto = mapper.Map<tb_PurEntry>(purOrder);
+
                     Startup starter = new Startup();
                     IHost myhost = starter.CslaDIPort();
                     // IHostBuilder  myhost = starter.CslaDIPort();
@@ -134,10 +142,7 @@ namespace RUINORERP.Server
                     //var json = System.IO.File.ReadAllText("myflow.json");
                     //var loader = ServiceProvider.GetService<IDefinitionLoader>();
                     //loader.LoadDefinition(json, Deserializers.Json);
-
                     host.AddRegisterWorkflow();
-
-
 
                     //加载工作流配置
                     var loader = Startup.ServiceProvider.GetService<IDefinitionLoader>();
@@ -148,13 +153,10 @@ namespace RUINORERP.Server
                     // 如果host启动了，不能再次启动，但没有判断方法
                     if (!serviceStarted)
                     {
-                        host.Start();
+                        // host.Start();
                         serviceStarted = true;
                     }
                     WorkflowHost = host;
-
-
-
 
                     // 启动workflow工作流
                     // host.StartWorkflow("HelloWorkflow", 1, data: null); //
@@ -162,13 +164,17 @@ namespace RUINORERP.Server
 
                     #endregion
 
-
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
+
+                    //ILogger<frmMain> logger = services.GetService<ILogger<frmMain>>();
+                    //frmMain frmMain1 = new frmMain(logger);
+                    //Application.Run(frmMain1);
+                   
                     var form1 = Startup.GetFromFac<frmMain>();
+                    form1._ServiceProvider = services;
                     //starter.GetMultipleServerHost(Startup.Services).StartAsync();
                     Application.Run(form1);
                     //myhost.StartAsync();
-               
 
                 }
                 catch (Exception ex)

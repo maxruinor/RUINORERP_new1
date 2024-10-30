@@ -100,6 +100,7 @@ namespace RUINORERP.UI
                 this.txtUserName.Text = UserGlobalConfig.Instance.UseName;
                 this.txtPassWord.Text = UserGlobalConfig.Instance.PassWord;
                 txtServerIP.Text = UserGlobalConfig.Instance.ServerIP;
+                txtPort.Text = UserGlobalConfig.Instance.ServerPort;
                 chksaveIDpwd.Checked = true;
                 if (UserGlobalConfig.Instance.IsSupperUser)
                 {
@@ -151,11 +152,12 @@ namespace RUINORERP.UI
                     }
                     else
                     {
-
                         //base.Cursor = Cursors.WaitCursor;
                         UserGlobalConfig.Instance.UseName = this.txtUserName.Text;
                         UserGlobalConfig.Instance.PassWord = this.txtPassWord.Text;
                         UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
+                        UserGlobalConfig.Instance.ServerPort = txtPort.Text;
+                        
                         //传入帐号密码返回结果
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData);
                         if (ok)
@@ -165,7 +167,7 @@ namespace RUINORERP.UI
                                 ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
                                 await serverAuthorizer.LongRunningOperationAsync(ecs, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
                                 // LoginServerByEasyClient(userName, password);
-                                UITools.SuperSleep(800);
+                                UITools.SuperSleep(1000);
                                 if (ecs.LoginStatus)
                                 {
 
@@ -187,9 +189,9 @@ namespace RUINORERP.UI
                             }
 
                             //只保存一次，注销不算 1990-1-1 不算
-                            if (Program.AppContextData.ClientInfo.loginTime < System.DateTime.Now.AddYears(-30))
+                            if (Program.AppContextData.OnlineUser.登陆时间 < System.DateTime.Now.AddYears(-30))
                             {
-                                Program.AppContextData.ClientInfo.loginTime = System.DateTime.Now;
+                                Program.AppContextData.OnlineUser.登陆时间 = System.DateTime.Now;
                             }
 
                             UserGlobalConfig.Instance.AutoSavePwd = chksaveIDpwd.Checked;
@@ -331,7 +333,13 @@ namespace RUINORERP.UI
 
         private void chkSelectServer_CheckedChanged(object sender, EventArgs e)
         {
-            txtServerIP.Visible = chkSelectServer.Checked;
+            ///txtServerIP.Visible = chkSelectServer.Checked;
+            gbIPPort.Visible = chkSelectServer.Checked;
+        }
+
+        private void txtServerIP_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

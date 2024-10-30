@@ -38,6 +38,7 @@ using RUINORERP.Business.Security;
 using SourceGrid;
 using EnumsNET;
 using RUINORERP.UI.PSI.PUR;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -198,7 +199,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
                 {
-                    var obj = CacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)

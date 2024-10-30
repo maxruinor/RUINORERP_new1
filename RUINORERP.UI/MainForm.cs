@@ -66,6 +66,9 @@ using RUINORERP.Model.Models;
 using RUINORERP.Business.CommService;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Common.Helper;
+using System.Windows.Input;
+using SourceLibrary.Security;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 
 
@@ -117,6 +120,7 @@ namespace RUINORERP.UI
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;
             ecs.OnConnectClosed += Ecs_OnConnectClosed;
+            
             AppContext = Program.AppContextData;
 
         }
@@ -298,7 +302,7 @@ namespace RUINORERP.UI
             List<tb_Company> company = await companyController.QueryAsync();
             if (company != null)
             {
-                this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + "_" + AppContext.ClientInfo.Version;
+                this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + "_" + AppContext.OnlineUser.客户端版本;
             }
 
             // logger.LogInformation("打开主窗体准备进入系统");
@@ -368,11 +372,15 @@ namespace RUINORERP.UI
                     }
 
                 }
-
             }
 
             Stopwatch stopwatchInitConfig = Stopwatch.StartNew();
-            await InitConfig();
+
+            //手动初始化 
+            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
+            BizCacheHelper.InitManager();
+
+            await InitConfig(false);
             stopwatchInitConfig.Stop();
             MainForm.Instance.uclog.AddLog($"InitConfig  执行时间：{stopwatchInitConfig.ElapsedMilliseconds} 毫秒");
             Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
@@ -383,12 +391,34 @@ namespace RUINORERP.UI
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
 
-            var rslist = CacheHelper.Manager.CacheEntityList.Get(nameof(tb_MenuInfo));
-            if (rslist != null)
-            {
-                MainForm.Instance.AppContext.UserMenuList = rslist as List<tb_MenuInfo>;
-            }
+            tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
+            List<tb_MenuInfo> menuList = menuInfoController.Query();
+            //var rslist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(tb_MenuInfo));
+            //if (rslist != null)
+            //{
+            MainForm.Instance.AppContext.UserMenuList = menuList;// rslist as List<tb_MenuInfo>;
+            //}
             LoginWebServer();
+
+            System.Windows.Forms.Timer timerStatus = new System.Windows.Forms.Timer();
+            timerStatus.Interval = 1000; // 设置定时器间隔为1000毫秒（1秒）
+            timerStatus.Tick += (sender, e) => RefreshData();
+            timerStatus.Start();
+        }
+
+        private void RefreshData()
+        {
+            // 更新状态栏信息
+            if (ecs.client.Socket == null)
+            {
+                lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}";
+            }
+            else
+            {
+                lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}，sessionID:{ecs.client.Socket.LocalEndPoint}";
+            }
+
+
         }
 
         private void kryptonDockableWorkspace1_ActivePageChanged(object sender, ActivePageChangedEventArgs e)
@@ -508,7 +538,7 @@ namespace RUINORERP.UI
 
                     KryptonTreeView TreeView1 = new KryptonTreeView();
                     TreeView1.MouseDoubleClick += TreeView1_DoubleClick;
-                    TreeView1.MouseDoubleClick += TreeView1_MouseDoubleClick;
+
                     TreeView1.NodeMouseDoubleClick += TreeView1_NodeMouseDoubleClick;
 
                     if (item.tb_P4Menus != null)
@@ -569,7 +599,7 @@ namespace RUINORERP.UI
                     {
                         KryptonTreeView TreeView1 = new KryptonTreeView();
                         TreeView1.MouseDoubleClick += TreeView1_DoubleClick;
-                        TreeView1.MouseDoubleClick += TreeView1_MouseDoubleClick;
+
                         TreeView1.NodeMouseDoubleClick += TreeView1_NodeMouseDoubleClick;
                         //如果是顶级菜单是和模块名相同，跳过
 
@@ -617,11 +647,6 @@ namespace RUINORERP.UI
                     menuPowerHelper.ExecuteEvents(menuInfo, null);
                 }
             }
-        }
-
-        private void TreeView1_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-
         }
 
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -768,6 +793,11 @@ namespace RUINORERP.UI
                     MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
 
                     // LoginWebServer();
+
+                    OriginalData odforCache = ActionForClient.请求发送缓存(string.Empty);
+                    TransPackProcess tpp = new TransPackProcess();
+                    byte[] buffer1 = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(odforCache));
+                    ecs.client.Send(buffer1);
                 }
 
             }
@@ -788,7 +818,7 @@ namespace RUINORERP.UI
         {
             try
             {
-               
+
                 this.SystemOperatorState.Text = "登出";
                 AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
@@ -824,7 +854,7 @@ namespace RUINORERP.UI
                 return;
             }
             MainForm.Instance.AppContext.IsOnline = true;
-            await InitConfig();
+            // await InitConfig();
             LoadUIMenus();
             LoadUIForIM_LogPages();
         }
@@ -967,9 +997,9 @@ namespace RUINORERP.UI
         }
 
 
-        private async Task InitConfig()
+        private async Task InitConfig(bool LoadData)
         {
-            CacheHelper.Instance.InitDict();
+            BizCacheHelper.Instance.InitDict(LoadData);
             await Task.Delay(10);
         }
 
@@ -990,7 +1020,6 @@ namespace RUINORERP.UI
             {
                 throw ex;
             }
-
             stopwatch.Stop();
             MainForm.Instance.logger.LogInformation($"初始化菜单InitMenu 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
             MainForm.Instance.uclog.AddLog($"初始化菜单InitMenu 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
@@ -1836,17 +1865,44 @@ namespace RUINORERP.UI
 
         [DllImport("user32.dll")]
         static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+
         /// <summary>
-        /// 取得最后一次输入时间 ms(毫秒)
+        /// 取得最后一次输入时间（秒）
         /// </summary>
         /// <returns></returns>
         public static long GetLastInputTime()
         {
             LASTINPUTINFO vLastInputInfo = new LASTINPUTINFO();
-            vLastInputInfo.cbSize = Marshal.SizeOf(vLastInputInfo);
+            vLastInputInfo.cbSize = (int)Marshal.SizeOf(vLastInputInfo);
+
             if (!GetLastInputInfo(ref vLastInputInfo)) return 0;
-            return Environment.TickCount - (long)vLastInputInfo.dwTime;
+
+            long timeInMilliseconds = Environment.TickCount - (long)vLastInputInfo.dwTime;
+            long timeInSeconds = timeInMilliseconds / 1000;
+
+            // 处理可能的负数
+            if (timeInSeconds < 0)
+            {
+                timeInSeconds = 0;
+            }
+
+            return timeInSeconds;
         }
+
+        //[DllImport("user32.dll")]
+        //static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+        ///// <summary>
+        ///// 取得最后一次输入时间 ms(毫秒)
+        ///// 要修改为秒 by watson 2024-10-29
+        ///// </summary>
+        ///// <returns></returns>
+        //public static long GetLastInputTime()
+        //{
+        //    LASTINPUTINFO vLastInputInfo = new LASTINPUTINFO();
+        //    vLastInputInfo.cbSize = Marshal.SizeOf(vLastInputInfo);
+        //    if (!GetLastInputInfo(ref vLastInputInfo)) return 0;
+        //    return Environment.TickCount - (long)vLastInputInfo.dwTime;
+        //}
 
         #endregion
 
@@ -2004,7 +2060,7 @@ namespace RUINORERP.UI
                     ClearUI();
                     AppContext.CurUserInfo.UserModList.Clear();
                     PTPrincipal.GetAllAuthorizationInfo(AppContext, AppContext.CurUserInfo.UserInfo, roleInfo);
-                    await InitConfig();
+                    //await InitConfig();
                     LoadUIMenus();
                     LoadUIForIM_LogPages();
                     this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";
@@ -2014,7 +2070,7 @@ namespace RUINORERP.UI
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            if (MainForm.GetLastInputTime() > 15000 && !MainForm.Instance.AppContext.IsOnline)
+            if (MainForm.GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
             {
                 //刷新工作台数据？
                 //指向工作台
@@ -2049,6 +2105,11 @@ namespace RUINORERP.UI
         private void btntsbRefresh_Click(object sender, EventArgs e)
         {
             LoginWebServer();
+
+            OriginalData odforCache = ActionForClient.请求发送缓存(string.Empty);
+            TransPackProcess tpp = new TransPackProcess();
+            byte[] buffer1 = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(odforCache));
+            ecs.client.Send(buffer1);
         }
 
         private async void LoginWebServer()
@@ -2065,7 +2126,6 @@ namespace RUINORERP.UI
                     //var ulid = Ulid.NewUlid();
                     //var ulidString = ulid.ToString();
                     //Console.WriteLine($"Generated ULID: {ulidString}");
-                    
                 }
             }
             catch (Exception ex)

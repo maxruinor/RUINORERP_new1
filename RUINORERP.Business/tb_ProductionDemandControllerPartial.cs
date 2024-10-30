@@ -461,6 +461,7 @@ namespace RUINORERP.Business
 
 
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+
             //找到了库存情况
             List<tb_ProductionDemandDetail> FromInvdetails = mapper.Map<List<tb_ProductionDemandDetail>>(list);
             List<tb_ProductionDemandDetail> LastDetails = new List<tb_ProductionDemandDetail>();

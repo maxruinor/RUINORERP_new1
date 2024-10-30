@@ -6,6 +6,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Extensions;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Common.Log4Net;
+using RUINORERP.Business.AutoMapper;
 using Microsoft.Extensions.Configuration;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Repository.Base;
@@ -48,6 +49,10 @@ using RUINORERP.Business.Processor;
 using WorkflowCore.Interface;
 using WorkflowCore.Services.DefinitionStorage;
 using RUINORERP.WF.WorkFlow;
+using FluentValidation;
+using RUINORERP.Server.BizService;
+using Microsoft.Extensions.Caching.Memory;
+using Autofac.Core;
 
 namespace RUINORERP.Server
 {
@@ -82,15 +87,19 @@ namespace RUINORERP.Server
             Services = new ServiceCollection();
 
             ConfigureServices(Services);
-            //注册当前程序集的所有类成员
-            builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-                .AsImplementedInterfaces().AsSelf();
 
+            //注册当前程序集的所有类成员
+            //builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
+            //    .AsImplementedInterfaces().AsSelf();
+            builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
+            .AsImplementedInterfaces()
+            .AsSelf()
+            .SingleInstance();
             //覆盖上面自动注册的？说是最后的才是
             //builder.RegisterType<UserControl>().Named<UserControl>("MENU").InstancePerDependency();
-
-            ConfigureContainerByDll(builder);
+            ConfigureContainerForDll(builder);
             RegisterForm(builder);
+
 
             //将配置添加到ConfigurationBuilder
             //var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory());
@@ -161,6 +170,13 @@ namespace RUINORERP.Server
                  .PropertiesAutowired()//指定属性注入
                  .SingleInstance();
 
+            ////覆盖上面自动dll批量注入的方法，因为要用单例模式
+            builder.RegisterType(typeof(RUINORERP.Business.CommService.BillConverterFactory))
+                 .AsImplementedInterfaces() //加上这一行，会出错
+                 .EnableInterfaceInterceptors()
+                 .EnableClassInterceptors()//打开AOP类的虚方法注入
+                 .PropertiesAutowired()//指定属性注入
+                 .SingleInstance();
             //_containerBuilder = builder;
             //AutoFacContainer = builder.Build();
             #endregion
@@ -266,8 +282,6 @@ namespace RUINORERP.Server
                 }).BuildAsServer();
             return server;
         }
-
-
 
         /// <summary>
         /// 使用csla有值
@@ -422,7 +436,12 @@ namespace RUINORERP.Server
 
             // services.Configure<KestrelServerOptions>(options => { options.AllowSynchronousIO = true; });
             // services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = true; });
+            //Add Memory Cache
+            services.AddOptions();
+            services.AddMemoryCache();
             services.AddMemoryCacheSetup();
+            services.AddDistributedMemoryCache();
+
             //services.AddRedisCacheSetup();
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
@@ -440,15 +459,18 @@ namespace RUINORERP.Server
             services.AddSingleton<IMapper>(mapper);
             services.AddAutoMapperInstall();
             */
-
+            services.AddSingleton<UserService>();
             //映射暂时注释掉
 
-            // services.AddSingleton(typeof(RUINORERP.Business.AutoMapper.AutoMapperConfig));
-            //IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
-            //services.AddScoped<IMapper, Mapper>();
-            //services.AddSingleton<IMapper>(mapper);
-            // services.AddAutoMapperSetup();
 
+            //services.AddSingleton(typeof(RUINORERP.Business.AutoMapper.AutoMapperConfig));
+            //IMapper mapper = RUINORERP.Business.AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+
+            services.AddSingleton(typeof(Comm.AutoMapperConfig));
+            IMapper mapper = Comm.AutoMapperConfig.RegisterMappings().CreateMapper();
+            services.AddScoped<IMapper, Mapper>();
+            services.AddSingleton<IMapper>(mapper);
+            //services.AddAutoMapperSetup();
 
             //services.AddCorsSetup();
             //services.AddMiniProfilerSetup();
@@ -484,8 +506,17 @@ namespace RUINORERP.Server
             //Services.AddSingleton(ServiceProvider);//注册到服务集合中,需要可以在Service中构造函数中注入使用
         }
 
-        public static void ConfigureContainerByDll(ContainerBuilder builder)
+        public static void ConfigureContainerForDll(ContainerBuilder builder)
         {
+
+            // builder.RegisterType(typeof(OptionsManager<>)).As(typeof(IOptions<>)).SingleInstance();
+            //// builder.RegisterType(typeof(OptionsManager<>)).As(typeof(IOptionsSnapshot<>));
+            // builder.RegisterType(typeof(OptionsMonitor<>)).As(typeof(IOptionsMonitor<>)).SingleInstance();
+            // builder.RegisterType(typeof(OptionsMonitor<>)).As(typeof(IOptionsFactory<>)).SingleInstance();
+            // builder.RegisterType(typeof(OptionsFactory<>)).As(typeof(IOptionsMonitorCache<>)).SingleInstance();
+            //builder.RegisterType<MemoryCache>().As<IMemoryCache>().SingleInstance();
+
+
             //var dalAssemble_common = System.Reflection.Assembly.LoadFrom("RUINORERP.Common.dll");
             //builder.RegisterAssemblyTypes(dalAssemble_common)
             //      .AsImplementedInterfaces().AsSelf()
@@ -598,6 +629,10 @@ namespace RUINORERP.Server
             //2023-12-22用名称注册验证器
             List<KeyValuePair<string, Type>> ValidatorGenericlist = new List<KeyValuePair<string, Type>>();
 
+            //2024-9-04用名称注册验证器  新加了一个基类
+            List<KeyValuePair<string, Type>> NewBaseValidatorGenericlist = new List<KeyValuePair<string, Type>>();
+
+
             List<Type> IOCTypes = new List<Type>();
 
 
@@ -643,15 +678,31 @@ namespace RUINORERP.Server
                     //泛型名称有一个尾巴，这里处理掉，但是总体要保持不能同时拥有同名的 泛型 和非泛型控制类
                     //否则就是调用解析时用加小尾巴
                     BaseControllerGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
-                    //BaseControllerGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name, tempTypes[i]));
+
                 }
 
-                if (tempTypes[i].BaseType.Name.Contains("Validator") && tempTypes[i].BaseType.IsGenericType)
+                if (tempTypes[i].BaseType.Name.Contains("AbstractValidator")
+                 && !tempTypes[i].Name.Contains("BaseValidatorGeneric")
+                 && !tempTypes[i].BaseType.Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
                 {
+
                     //泛型名称有一个尾巴，这里处理掉，但是总体要保持不能同时拥有同名的 泛型 和非泛型控制类
                     //否则就是调用解析时用加小尾巴
                     ValidatorGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
-                    //BaseControllerGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name, tempTypes[i]));
+
+                }
+
+                //基类本身
+                if (tempTypes[i].Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
+                {
+                    builder.RegisterGeneric(typeof(BaseValidatorGeneric<>));
+                    builder.RegisterGeneric(typeof(AbstractValidator<>));
+                }
+
+                //子类
+                if (tempTypes[i].BaseType.Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
+                {
+                    NewBaseValidatorGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
                 }
 
                 /*
@@ -731,6 +782,15 @@ namespace RUINORERP.Server
             foreach (var item in ValidatorGenericlist)
             {
                 //builder.RegisterGeneric(typeof(BaseController<>));
+                builder.RegisterType(item.Value)
+               .AsImplementedInterfaces().AsSelf()
+                  .SingleInstance()
+                  .PropertiesAutowired()
+                 .InstancePerDependency();
+            }
+            //用名称注册泛型
+            foreach (var item in NewBaseValidatorGenericlist)
+            {
                 builder.RegisterType(item.Value)
                .AsImplementedInterfaces().AsSelf()
                   .SingleInstance()
@@ -864,6 +924,10 @@ namespace RUINORERP.Server
 
         public static T GetFromFacByName<T>(string className)
         {
+            if (string.IsNullOrEmpty(className))
+            {
+                return default(T);
+            }
 
             return AutofacContainerScope.ResolveNamed<T>(className);
         }

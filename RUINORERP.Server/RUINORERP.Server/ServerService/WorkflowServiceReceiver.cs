@@ -24,9 +24,9 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 登陆时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                var UserName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                var pwd = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 登陆时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                var UserName = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                var pwd = ByteDataAnalysis.GetShortString(gd.Two, ref index);
 
 
                 string msg = string.Empty;
@@ -39,11 +39,11 @@ namespace RUINORERP.Server.ServerService
                 if (user != null)
                 {
                     //登陆成功
-                    UserSession.User.UserName = user.UserName;
+                    UserSession.User.用户名 = user.UserName;
                     UserSession.User.SessionId = UserSession.SessionID;
                     if (user.tb_employee != null)
                     {
-                        UserSession.User.EmpName = user.tb_employee.Employee_Name;
+                        UserSession.User.姓名 = user.tb_employee.Employee_Name;
                     }
 
                     //通知客户端
@@ -52,7 +52,7 @@ namespace RUINORERP.Server.ServerService
                     exMsg.One = null;
                     //这种可以写一个扩展方法
                     ByteBuff tx = new ByteBuff(100);
-                    tx.PushString(UserSession.User.EmpName + "用户登陆成功");
+                    tx.PushString(UserSession.User.姓名 + "用户登陆成功");
                     exMsg.Two = tx.toByte();
                     UserSession.AddSendData(exMsg);
                 }
@@ -82,11 +82,11 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                 long billID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
-                string opinion = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string opinion = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                 //ApprovalWFData data = new ApprovalWFData();
                 //data.Status = "你";
                 //data.BillId = billID;
@@ -109,11 +109,11 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                 long billID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
-                string opinion = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string opinion = ByteDataAnalysis.GetShortString(gd.Two, ref index);
 
                 //这里工作流ID要传送的，这里暂时用了单号去找
                 ApprovalWFData data = new ApprovalWFData();
@@ -142,11 +142,11 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                 long billID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
-                string opinion = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string opinion = ByteDataAnalysis.GetShortString(gd.Two, ref index);
 
                 ApprovalWFData approvalWFData = new ApprovalWFData();
 
@@ -184,14 +184,14 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                 int workflowBizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
 
                 WorkflowBizType workflowBiz = (WorkflowBizType)workflowBizType;
                 switch (workflowBiz)
                 {
                     case WorkflowBizType.基础数据信息推送:
-                        string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        string tableName = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                         PushData data = new PushData();
                         data.InputData = tableName;
                         var workflowId = Program.WorkflowHost.StartWorkflow<PushData>("PushBaseInfoWorkflow", data);

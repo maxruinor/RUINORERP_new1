@@ -28,196 +28,207 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.button1 = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.button2 = new System.Windows.Forms.Button();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.button3 = new System.Windows.Forms.Button();
-            this.btn外部事件 = new System.Windows.Forms.Button();
-            this.btnStart = new System.Windows.Forms.Button();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.txtworkflowid = new System.Windows.Forms.TextBox();
-            this.txteventName = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.txteventPara = new System.Windows.Forms.TextBox();
-            this.txtworkflowParam = new System.Windows.Forms.TextBox();
-            this.btnPushTest = new System.Windows.Forms.Button();
-            this.SuspendLayout();
+            button1 = new System.Windows.Forms.Button();
+            textBox1 = new System.Windows.Forms.TextBox();
+            button2 = new System.Windows.Forms.Button();
+            textBox2 = new System.Windows.Forms.TextBox();
+            button3 = new System.Windows.Forms.Button();
+            btn外部事件 = new System.Windows.Forms.Button();
+            btnStart = new System.Windows.Forms.Button();
+            textBox3 = new System.Windows.Forms.TextBox();
+            label1 = new System.Windows.Forms.Label();
+            txtworkflowid = new System.Windows.Forms.TextBox();
+            txteventName = new System.Windows.Forms.TextBox();
+            label2 = new System.Windows.Forms.Label();
+            label3 = new System.Windows.Forms.Label();
+            label4 = new System.Windows.Forms.Label();
+            txteventPara = new System.Windows.Forms.TextBox();
+            txtworkflowParam = new System.Windows.Forms.TextBox();
+            btnPushTest = new System.Windows.Forms.Button();
+            btn缓存测试 = new System.Windows.Forms.Button();
+            SuspendLayout();
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(676, 24);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            button1.Location = new System.Drawing.Point(676, 24);
+            button1.Name = "button1";
+            button1.Size = new System.Drawing.Size(75, 23);
+            button1.TabIndex = 0;
+            button1.Text = "button1";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(474, 69);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(100, 23);
-            this.textBox1.TabIndex = 1;
+            textBox1.Location = new System.Drawing.Point(474, 69);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new System.Drawing.Size(100, 23);
+            textBox1.TabIndex = 1;
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(676, 99);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 0;
-            this.button2.Text = "事件";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            button2.Location = new System.Drawing.Point(676, 99);
+            button2.Name = "button2";
+            button2.Size = new System.Drawing.Size(75, 23);
+            button2.TabIndex = 0;
+            button2.Text = "事件";
+            button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(474, 141);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(100, 23);
-            this.textBox2.TabIndex = 1;
+            textBox2.Location = new System.Drawing.Point(474, 141);
+            textBox2.Name = "textBox2";
+            textBox2.Size = new System.Drawing.Size(100, 23);
+            textBox2.TabIndex = 1;
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(657, 378);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(121, 59);
-            this.button3.TabIndex = 8;
-            this.button3.Text = "外部UserTAsk";
-            this.button3.UseVisualStyleBackColor = true;
+            button3.Location = new System.Drawing.Point(657, 378);
+            button3.Name = "button3";
+            button3.Size = new System.Drawing.Size(121, 59);
+            button3.TabIndex = 8;
+            button3.Text = "外部UserTAsk";
+            button3.UseVisualStyleBackColor = true;
             // 
             // btn外部事件
             // 
-            this.btn外部事件.Location = new System.Drawing.Point(657, 303);
-            this.btn外部事件.Name = "btn外部事件";
-            this.btn外部事件.Size = new System.Drawing.Size(121, 50);
-            this.btn外部事件.TabIndex = 2;
-            this.btn外部事件.Text = "外部事件";
-            this.btn外部事件.UseVisualStyleBackColor = true;
-            this.btn外部事件.Click += new System.EventHandler(this.btn外部事件_Click);
+            btn外部事件.Location = new System.Drawing.Point(657, 303);
+            btn外部事件.Name = "btn外部事件";
+            btn外部事件.Size = new System.Drawing.Size(121, 50);
+            btn外部事件.TabIndex = 2;
+            btn外部事件.Text = "外部事件";
+            btn外部事件.UseVisualStyleBackColor = true;
+            btn外部事件.Click += btn外部事件_Click;
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(657, 240);
-            this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(121, 43);
-            this.btnStart.TabIndex = 0;
-            this.btnStart.Text = "启动工作流";
-            this.btnStart.UseVisualStyleBackColor = true;
-            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
+            btnStart.Location = new System.Drawing.Point(657, 240);
+            btnStart.Name = "btnStart";
+            btnStart.Size = new System.Drawing.Size(121, 43);
+            btnStart.TabIndex = 0;
+            btnStart.Text = "启动工作流";
+            btnStart.UseVisualStyleBackColor = true;
+            btnStart.Click += btnStart_Click;
             // 
             // textBox3
             // 
-            this.textBox3.Location = new System.Drawing.Point(434, 396);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(154, 23);
-            this.textBox3.TabIndex = 3;
+            textBox3.Location = new System.Drawing.Point(434, 396);
+            textBox3.Name = "textBox3";
+            textBox3.Size = new System.Drawing.Size(154, 23);
+            textBox3.TabIndex = 3;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(320, 396);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(98, 17);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "UserTask参数值";
+            label1.AutoSize = true;
+            label1.Location = new System.Drawing.Point(320, 396);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(98, 17);
+            label1.TabIndex = 5;
+            label1.Text = "UserTask参数值";
             // 
             // txtworkflowid
             // 
-            this.txtworkflowid.Location = new System.Drawing.Point(133, 250);
-            this.txtworkflowid.Name = "txtworkflowid";
-            this.txtworkflowid.Size = new System.Drawing.Size(246, 23);
-            this.txtworkflowid.TabIndex = 7;
+            txtworkflowid.Location = new System.Drawing.Point(133, 250);
+            txtworkflowid.Name = "txtworkflowid";
+            txtworkflowid.Size = new System.Drawing.Size(246, 23);
+            txtworkflowid.TabIndex = 7;
             // 
             // txteventName
             // 
-            this.txteventName.Location = new System.Drawing.Point(121, 317);
-            this.txteventName.Name = "txteventName";
-            this.txteventName.Size = new System.Drawing.Size(100, 23);
-            this.txteventName.TabIndex = 6;
+            txteventName.Location = new System.Drawing.Point(121, 317);
+            txteventName.Name = "txteventName";
+            txteventName.Size = new System.Drawing.Size(100, 23);
+            txteventName.TabIndex = 6;
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(360, 310);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(68, 17);
-            this.label2.TabIndex = 5;
-            this.label2.Text = "事件参数值";
+            label2.AutoSize = true;
+            label2.Location = new System.Drawing.Point(360, 310);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(68, 17);
+            label2.TabIndex = 5;
+            label2.Text = "事件参数值";
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(44, 253);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(72, 17);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "workflowid";
+            label3.AutoSize = true;
+            label3.Location = new System.Drawing.Point(44, 253);
+            label3.Name = "label3";
+            label3.Size = new System.Drawing.Size(72, 17);
+            label3.TabIndex = 5;
+            label3.Text = "workflowid";
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(55, 317);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(44, 17);
-            this.label4.TabIndex = 5;
-            this.label4.Text = "事件名";
+            label4.AutoSize = true;
+            label4.Location = new System.Drawing.Point(55, 317);
+            label4.Name = "label4";
+            label4.Size = new System.Drawing.Size(44, 17);
+            label4.TabIndex = 5;
+            label4.Text = "事件名";
             // 
             // txteventPara
             // 
-            this.txteventPara.Location = new System.Drawing.Point(434, 311);
-            this.txteventPara.Name = "txteventPara";
-            this.txteventPara.Size = new System.Drawing.Size(154, 23);
-            this.txteventPara.TabIndex = 3;
+            txteventPara.Location = new System.Drawing.Point(434, 311);
+            txteventPara.Name = "txteventPara";
+            txteventPara.Size = new System.Drawing.Size(154, 23);
+            txteventPara.TabIndex = 3;
             // 
             // txtworkflowParam
             // 
-            this.txtworkflowParam.Location = new System.Drawing.Point(434, 250);
-            this.txtworkflowParam.Name = "txtworkflowParam";
-            this.txtworkflowParam.Size = new System.Drawing.Size(154, 23);
-            this.txtworkflowParam.TabIndex = 1;
+            txtworkflowParam.Location = new System.Drawing.Point(434, 250);
+            txtworkflowParam.Name = "txtworkflowParam";
+            txtworkflowParam.Size = new System.Drawing.Size(154, 23);
+            txtworkflowParam.TabIndex = 1;
             // 
             // btnPushTest
             // 
-            this.btnPushTest.Location = new System.Drawing.Point(271, 12);
-            this.btnPushTest.Name = "btnPushTest";
-            this.btnPushTest.Size = new System.Drawing.Size(130, 46);
-            this.btnPushTest.TabIndex = 9;
-            this.btnPushTest.Text = "推送工作测试";
-            this.btnPushTest.UseVisualStyleBackColor = true;
-            this.btnPushTest.Click += new System.EventHandler(this.btnPushTest_Click);
+            btnPushTest.Location = new System.Drawing.Point(271, 12);
+            btnPushTest.Name = "btnPushTest";
+            btnPushTest.Size = new System.Drawing.Size(130, 46);
+            btnPushTest.TabIndex = 9;
+            btnPushTest.Text = "推送工作测试";
+            btnPushTest.UseVisualStyleBackColor = true;
+            btnPushTest.Click += btnPushTest_Click;
+            // 
+            // btn缓存测试
+            // 
+            btn缓存测试.Location = new System.Drawing.Point(24, 12);
+            btn缓存测试.Name = "btn缓存测试";
+            btn缓存测试.Size = new System.Drawing.Size(75, 23);
+            btn缓存测试.TabIndex = 10;
+            btn缓存测试.Text = "缓存测试";
+            btn缓存测试.UseVisualStyleBackColor = true;
+            btn缓存测试.Click += btn缓存测试_Click;
             // 
             // frmWorkFlowManage
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(796, 540);
-            this.Controls.Add(this.btnPushTest);
-            this.Controls.Add(this.txtworkflowParam);
-            this.Controls.Add(this.txteventPara);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.txteventName);
-            this.Controls.Add(this.txtworkflowid);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.textBox3);
-            this.Controls.Add(this.btnStart);
-            this.Controls.Add(this.btn外部事件);
-            this.Controls.Add(this.button3);
-            this.Controls.Add(this.textBox2);
-            this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
-            this.Name = "frmWorkFlowManage";
-            this.Text = "frmWorkFlowManage";
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            ClientSize = new System.Drawing.Size(796, 540);
+            Controls.Add(btn缓存测试);
+            Controls.Add(btnPushTest);
+            Controls.Add(txtworkflowParam);
+            Controls.Add(txteventPara);
+            Controls.Add(label4);
+            Controls.Add(label3);
+            Controls.Add(label2);
+            Controls.Add(txteventName);
+            Controls.Add(txtworkflowid);
+            Controls.Add(label1);
+            Controls.Add(textBox3);
+            Controls.Add(btnStart);
+            Controls.Add(btn外部事件);
+            Controls.Add(button3);
+            Controls.Add(textBox2);
+            Controls.Add(textBox1);
+            Controls.Add(button2);
+            Controls.Add(button1);
+            Name = "frmWorkFlowManage";
+            Text = "frmWorkFlowManage";
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -242,5 +253,6 @@
 #pragma warning restore CS0169 // 从不使用字段“frmWorkFlowManage.textBox7”
         private System.Windows.Forms.TextBox txtworkflowParam;
         private System.Windows.Forms.Button btnPushTest;
+        private System.Windows.Forms.Button btn缓存测试;
     }
 }

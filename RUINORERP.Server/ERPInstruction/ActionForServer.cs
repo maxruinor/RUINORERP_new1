@@ -134,22 +134,22 @@ namespace TransInstruction
                 index = 10;
                 byte[] UnparsedData = new byte[gd.Two.Length - index];
                 bool success = false;
-                string 角色名 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string 种族 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 角色名 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string 种族 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                 byte sex = ByteDataAnalysis.Getbyte(gd.Two, ref index);
-                string 职业 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 职业 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                 //5*6 5个1位为1，5个0 25位全为0   00000 10000  100000  100000  100000  100000  
                 index += 30;//by by watson tx.PushString(f获取行会名称());
-                string 发型 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                string 发型 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
                 //1 0000
                 index += 5;
-                string HunterSuit = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                string HunterSuit = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
                 int t1 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 byte b2 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
                 byte b3 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
                 byte b4 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
 
-                string 所属地 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                string 所属地 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
                 //0000
                 int l1 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 int 等级 = ByteDataAnalysis.GetInt(gd.Two, ref index);
@@ -198,19 +198,19 @@ namespace TransInstruction
                     else
                     {
                         //有物品 f详细信息
-                        string 物品外观2D = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                        string 物品外观2D = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
                         int 物品等级 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                         byte 物品颜色 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
-                        string 物品外观3D = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
-                        string v英文名称 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                        string 物品外观3D = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
+                        string v英文名称 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
                         //var 合成名称 = V中文名称.Split('\n')[0]; //为了频道 看方法 f详细信息
-                        string 合成名称 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
-                        string 物品v备注 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                        string 合成名称 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
+                        string 物品v备注 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
 
                         int l10 = ByteDataAnalysis.GetInt(gd.Two, ref index);//0
                         int v宽度 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                         int v高度 = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                        string 物品信息v类型 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                        string 物品信息v类型 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
                         int v持久开关1 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                         int v持久开关2 = ByteDataAnalysis.GetInt(gd.Two, ref index);
 
@@ -244,19 +244,19 @@ namespace TransInstruction
 
 
 
-                string s6 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                string s6 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
                 byte b22 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
                 int st7 = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                string s7 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
-                string s8 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
-                string 武器中文名 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
-                string 技能1 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                string s7 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
+                string s8 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
+                string 武器中文名 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
+                string 技能1 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
                 //
 
                 int st77 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 int st8 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 int st9 = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                string s9 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
+                string s9 = ByteDataAnalysis.GetShortString(gd.Two, out UnparsedData, ref index);
 
                 int st10 = ByteDataAnalysis.GetInt(gd.Two, ref index);
 
@@ -343,7 +343,7 @@ namespace TransInstruction
                                     //sz = buffer.Skip(indexFalg).Take(tempLen).ToArray();
                                     //rs = System.Text.Encoding.GetEncoding("GB2312").GetString(sz);
                                     indexFalg = indexFalg - 4;
-                                    rs = ByteDataAnalysis.GetString(buffer, out UnparsedData, ref indexFalg);
+                                    rs = ByteDataAnalysis.GetShortString(buffer, out UnparsedData, ref indexFalg);
                                     rsList.Add(i + 1, rs);
                                     i = indexFalg - 1;//因为外面循环会自动加1这里用少1的
                                     break;
@@ -452,7 +452,7 @@ namespace TransInstruction
                                     //sz = buffer.Skip(indexFalg).Take(tempLen).ToArray();
                                     //rs = System.Text.Encoding.GetEncoding("GB2312").GetString(sz);
                                     indexFalg = indexFalg - 4;
-                                    rs = ByteDataAnalysis.GetString(buffer, out UnparsedData, ref indexFalg);
+                                    rs = ByteDataAnalysis.GetShortString(buffer, out UnparsedData, ref indexFalg);
                                     rsList.Add(new KeyValuePair<int, int>(i + 1, rs.Length + 1), rs);
                                     i = indexFalg - 1;//因为外面循环会自动加1这里用少1的
                                     break;
@@ -956,10 +956,10 @@ namespace TransInstruction
                 byte counterForRole = ByteDataAnalysis.Getbyte(buffer, ref index);
                 for (int i = 0; i < (int)counterForRole; i++)
                 {
-                    string roleName = ByteDataAnalysis.GetString(buffer, ref index);
-                    string str种族 = ByteDataAnalysis.GetString(buffer, ref index);
+                    string roleName = ByteDataAnalysis.GetShortString(buffer, ref index);
+                    string str种族 = ByteDataAnalysis.GetShortString(buffer, ref index);
                     int sex = ByteDataAnalysis.GetInt(buffer, ref index);
-                    string str职业 = ByteDataAnalysis.GetString(buffer, ref index);
+                    string str职业 = ByteDataAnalysis.GetShortString(buffer, ref index);
                     int xx = ByteDataAnalysis.GetInt(buffer, ref index);
                     int time = ByteDataAnalysis.GetInt(buffer, ref index);
 
@@ -1113,7 +1113,7 @@ namespace TransInstruction
                 //1是说话，2，是呼喊  3是黄色警告，150 是提示右下角灰色文字
                 rs += mt.ToString() + "|";
 
-                string msg = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string msg = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                 rs += msg;
 
             }
@@ -1154,13 +1154,13 @@ namespace TransInstruction
                 case 0xB0:
                     //人物
                     byte r = ByteDataAnalysis.Getbyte(gd.Two, ref index);
-                    string rw = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string rw = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                     rs += rw;
                     break;
                 case 0x00B1:
                     byte g = ByteDataAnalysis.Getbyte(gd.Two, ref index);
-                    string gaiwu = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    string gaiwuz = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string gaiwu = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                    string gaiwuz = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                     rs += gaiwuz + gaiwu;
                     //怪物
                     break;
@@ -1169,12 +1169,12 @@ namespace TransInstruction
                     break;
                 case 0x00B3:
                     byte n = ByteDataAnalysis.Getbyte(gd.Two, ref index);
-                    string npc = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string npc = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                     rs += npc;
                     //npc
                     break;
                 case 0x00B4:
-                    string wp = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string wp = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                     rs += wp;
                     //物品
                     break;

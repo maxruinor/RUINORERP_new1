@@ -57,10 +57,7 @@ namespace RUINORERP.Model.Context
         #endregion
 
 
-        /// <summary>
-        /// 与客户端有关的信息
-        /// </summary>
-        public ClientInformation ClientInfo { get; set; } = new ClientInformation();
+ 
 
 
         /// <summary>
@@ -82,7 +79,7 @@ namespace RUINORERP.Model.Context
         /// sugarClient
         /// </summary>
         public ISqlSugarClient Db { get; set; }
-
+        public UserInfo OnlineUser { get; set; } = new UserInfo();
         public ICurrentUserInfo CurUserInfo { get; set; }
         public string Status { get; set; }
 

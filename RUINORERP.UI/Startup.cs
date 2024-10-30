@@ -88,206 +88,6 @@ namespace RUINORERP.UI
 
 
 
-        /*
-/// <summary>
-/// 用于csla前的方法
-/// </summary>
-public Startup()
-{
-    //Configuration = configuration;
-    //WebHostEnvironment = webHostEnvironment;
-    // 创建服务容器
-    Services = new ServiceCollection();
-    //BatchServiceRegister(Services);
-    ConfigureServices(Services);
-
-    var builder = new ContainerBuilder();
-
-
-    //注册当前程序集的所有类成员
-    builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-        .AsImplementedInterfaces().AsSelf();
-
-    //覆盖上面自动注册的？说是最后的才是
-    //builder.RegisterType<UserControl>().Named<UserControl>("MENU").InstancePerDependency();
-
-
-    builder.RegisterType<RUINORERP.UI.SS.MenuInit>().Named<UserControl>("MENU")
-    .AsImplementedInterfaces().AsSelf();
-
-    ConfigureContainer(builder);
-
-    RegisterForm(builder);
-
-
-    //将配置添加到ConfigurationBuilder
-    //var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory());
-    //config.AddJsonFile("autofac.json");
-    //config.AddJsonFile来自Microsoft.Extensions.Configuration.Json
-    //config.AddXmlFile来自Microsoft.Extensions.Configuration.Xml
-
-    //用Autofac注册ConfigurationModule
-    //var module = new ConfigurationModule(config.Build());
-
-    //builder.RegisterModule(module);
-    //var Configuration = AutofacCore.GetFromFac<IConfiguration>();
-    //AppId = Configuration["AppSettings:AppId"];
-    //AppSecret = Configuration["AppSettings:AppSecret"];
-
-    // builder.Register(c => new BI.UCLocation()).Named<UserControl>("UCLocation");
-    //builder.Register(c => System.Reflection.Assembly.GetExecutingAssembly().CreateInstance("RUINORERP.UI.BI.UCLocation")).Named<UserControl>("UCLocation");
-
-    //builder.RegisterType<ProductEAV.UCProductEdit>();
-
-
-    //builder.RegisterType<Ean13>()
-    //      //选择类型默认最多的，这里用无参的，实际没有的构造函数,如果类型为别的类型，就typeof(别的类型，和构造函数保持一直即可)
-    //      //实际是我在代码中直接实例化的，不需要注入，是不是可以做一个特性，标识不需要参与批量注入
-    //      .UsingConstructor();
-
-    builder.RegisterType<AutoComplete>()
-    .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
-    builder.RegisterType<BizCodeGenerator>(); // 注册拦截器
-    // 注册依赖
-    builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
-    //builder.RegisterType<LogInterceptor>(); // 注册拦截器
-    //builder.RegisterType<Person>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-    builder.RegisterType<Person>().InterceptedBy(typeof(BaseDataCacheAOP)).EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-    //builder.RegisterType<AOPDllTest.PersonDLL>().InterceptedBy(typeof(BaseDataCacheAOP)).EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-    builder.RegisterType<PersonBus>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-    //builder.RegisterType<tb_DepartmentController>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-
-    builder.RegisterType<tb_DepartmentServices>().As<Itb_DepartmentServices>()
-        .AsImplementedInterfaces()
-        .InstancePerLifetimeScope()
-        .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
-    //builder.RegisterType<tb_DepartmentServices>().Named<Itb_DepartmentServices>(typeof(tb_DepartmentServices).Name).InstancePerLifetimeScope().EnableInterfaceInterceptors();
-    //builder.RegisterType<FactoryTwo>().Named<IServiceFactory>(typeof(FactoryTwo).Name).InstancePerLifetimeScope().EnableClassInterceptors();
-
-    //var intermediateFactory = container.Resolve<Func<B, C>>();
-    //Func<A, C> factory =
-    //    a => intermediateFactory(container.Resolve(TypedParameter.From(a)));
-    //var x = factory(new A());
-
-
-    //注册是最后的覆盖前面的 ，AOP测试时，业务控制器中的方法不生效。与 ConfigureContainer(builder); 中注册的方式有关。可能参数不对。
-    //后面需要研究
-    builder.Populate(Services);//将自带的也注入到autofac
-    AutoFacContainer = builder.Build();
-}
-
-
-
-
-
-
-
-/// <summary>
-/// 用于csla更新后的注册
-/// </summary>
-public IHost CslaDIPortBackup()
-{
-    var hostBuilder = new HostBuilder()
-     .ConfigureAppConfiguration((context, config) =>
-     {
-         var env = context.HostingEnvironment;
-         config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
-         config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-     })
-     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-     .ConfigureContainer<ContainerBuilder>(builder =>
-     {
-         #region  注册
-         Services = new ServiceCollection();
-         //BatchServiceRegister(Services);
-         ConfigureServices(Services);
-         //注册当前程序集的所有类成员
-         builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-             .AsImplementedInterfaces().AsSelf();
-
-         //覆盖上面自动注册的？说是最后的才是
-         //builder.RegisterType<UserControl>().Named<UserControl>("MENU").InstancePerDependency();
-
-         builder.RegisterType<RUINORERP.UI.SS.MenuInit>().Named<UserControl>("MENU")
-         .AsImplementedInterfaces().AsSelf();
-
-         ConfigureContainer(builder);
-
-         RegisterForm(builder);
-
-         //将配置添加到ConfigurationBuilder
-         //var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory());
-         //config.AddJsonFile("autofac.json");
-         //config.AddJsonFile来自Microsoft.Extensions.Configuration.Json
-         //config.AddXmlFile来自Microsoft.Extensions.Configuration.Xml
-
-         //用Autofac注册ConfigurationModule
-         //var module = new ConfigurationModule(config.Build());
-
-         //builder.RegisterModule(module);
-         //var Configuration = AutofacCore.GetFromFac<IConfiguration>();
-         //AppId = Configuration["AppSettings:AppId"];
-         //AppSecret = Configuration["AppSettings:AppSecret"];
-
-         // builder.Register(c => new BI.UCLocation()).Named<UserControl>("UCLocation");
-         //builder.Register(c => System.Reflection.Assembly.GetExecutingAssembly().CreateInstance("RUINORERP.UI.BI.UCLocation")).Named<UserControl>("UCLocation");
-
-         //builder.RegisterType<ProductEAV.UCProductEdit>();
-
-
-         //builder.RegisterType<Ean13>()
-         //      //选择类型默认最多的，这里用无参的，实际没有的构造函数,如果类型为别的类型，就typeof(别的类型，和构造函数保持一直即可)
-         //      //实际是我在代码中直接实例化的，不需要注入，是不是可以做一个特性，标识不需要参与批量注入
-         //      .UsingConstructor();
-
-         builder.RegisterType<AutoComplete>()
-         .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
-         builder.RegisterType<BizCodeGenerator>(); // 注册拦截器
-                                                   // 注册依赖
-         builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
-                                                   //builder.RegisterType<LogInterceptor>(); // 注册拦截器
-                                                   //builder.RegisterType<Person>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-         builder.RegisterType<Person>().InterceptedBy(typeof(BaseDataCacheAOP)).EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-                                                                                                            //builder.RegisterType<AOPDllTest.PersonDLL>().InterceptedBy(typeof(BaseDataCacheAOP)).EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-         builder.RegisterType<PersonBus>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-         //builder.RegisterType<tb_DepartmentController>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-
-         builder.RegisterType<tb_DepartmentServices>().As<Itb_DepartmentServices>()
-             .AsImplementedInterfaces()
-             .InstancePerLifetimeScope()
-             .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
-         //builder.RegisterType<tb_DepartmentServices>().Named<Itb_DepartmentServices>(typeof(tb_DepartmentServices).Name).InstancePerLifetimeScope().EnableInterfaceInterceptors();
-         //builder.RegisterType<FactoryTwo>().Named<IServiceFactory>(typeof(FactoryTwo).Name).InstancePerLifetimeScope().EnableClassInterceptors();
-
-         //var intermediateFactory = container.Resolve<Func<B, C>>();
-         //Func<A, C> factory =
-         //    a => intermediateFactory(container.Resolve(TypedParameter.From(a)));
-         //var x = factory(new A());
-
-         //注册是最后的覆盖前面的 ，AOP测试时，业务控制器中的方法不生效。与 ConfigureContainer(builder); 中注册的方式有关。可能参数不对。
-         //后面需要研究
-         builder.Populate(Services);//将自带的也注入到autofac
-
-         //AutoFacContainer = builder.Build();
-         #endregion
-
-     })
-     .ConfigureServices((context, services) =>
-    {
-        services.AddAutofac();
-        //services.AddCsla(options => options.AddWindowsForms());
-        services.AddLogging(configure => configure.AddConsole());
-        //services.AddTransient<Business.Csla.Itb_LocationTypeDal, Business.Csla.tb_LocationTypeDal>();
-        //.AddTransient<tb_UnitEntity>()
-        // register other services here
-
-        //测试服务 
-        //services.AddHostedService<DemoService>();
-    }).Build();
-    return hostBuilder;
-}
-
-*/
 
         /// <summary>
         /// 注册过程 2023-10-08
@@ -298,7 +98,7 @@ public IHost CslaDIPortBackup()
         {
             #region  注册
             Services = new ServiceCollection();
-            //BatchServiceRegister(Services);
+           
             #region 模仿csla 为了上下文
             //为了上下文
             // ApplicationContext defaults
@@ -317,23 +117,10 @@ public IHost CslaDIPortBackup()
             //如果注册为名称的，需要这样操作
             builder.RegisterType<RUINORERP.UI.SS.MenuInit>().Named<UserControl>("MENU")
             .AsImplementedInterfaces().AsSelf();
-            //如果注册为名称的，需要这样操作
-            //builder.RegisterType<tb_UnitController>().Named<BaseController>("tb_UnitController")
-            //.AsImplementedInterfaces().AsSelf();
-            //可能 这样是错的
-            // builder.RegisterGeneric(typeof(tb_UnitController<>)).Named<BaseController<T>>("tb_UnitController1")
-            //           .AsImplementedInterfaces().AsSelf();
+  
 
 
-            //builder.RegisterGeneric(typeof(tb_UnitController<>))
-            //        .Named("named", typeof(BaseController<>))
-            //        .AsImplementedInterfaces()
-            //        .SingleInstance()
-            //        .PropertiesAutowired();
-
-
-
-            ConfigureContainer(builder);
+            ConfigureContainerForDll(builder);
 
             RegisterForm(builder);
 
@@ -922,7 +709,13 @@ public IHost CslaDIPortBackup()
             return false;
         }
 
-        public static void ConfigureContainer(ContainerBuilder builder)
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="builder"></param>
+        public static void ConfigureContainerForDll(ContainerBuilder builder)
         {
             //var dalAssemble_common = System.Reflection.Assembly.LoadFrom("RUINORERP.Common.dll");
             //builder.RegisterAssemblyTypes(dalAssemble_common)

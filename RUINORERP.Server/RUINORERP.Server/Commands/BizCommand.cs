@@ -12,6 +12,12 @@ using TransInstruction.DataPortal;
 using RUINORERP.Server.BizService;
 using RUINORERP.Model;
 using RUINORERP.Server.ServerService;
+using Microsoft.Extensions.Caching.Memory;
+using RUINORERP.Model.Base;
+using RUINORERP.Server.Comm;
+using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Server.Commands
 {
@@ -23,6 +29,11 @@ namespace RUINORERP.Server.Commands
     [Command(Key = "KXGame")]
     public class BizCommand : IAsyncCommand<BizPackageInfo>
     {
+        private IMemoryCache _cache;
+        public BizCommand(IMemoryCache cache)
+        {
+            _cache = cache;
+        }
         public async ValueTask ExecuteAsync(IAppSession session, BizPackageInfo package)
         {
             SessionforBiz Player = session as SessionforBiz;
@@ -80,7 +91,7 @@ namespace RUINORERP.Server.Commands
                             byte[] source = gd.Two;
                             try
                             {
-                                string msg = ByteDataAnalysis.GetString(gd.Two, ref index);
+                                string msg = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                             }
                             catch (Exception ex)
                             {
@@ -90,10 +101,24 @@ namespace RUINORERP.Server.Commands
                             break;
 
                         case ClientCmdEnum.用户登陆:
+                            _cache.Set("用户登陆", "用户登陆");
+
+                            // var obj = CacheHelper.Instance.GetEntity<tb_CustomerVendor>(1740971599693221888);
+
                             tb_UserInfo user = await UserService.接收用户登陆指令(Player, gd);
                             if (UserService.用户登陆回复(Player, user))
                             {
                                 UserService.发送在线列表(Player);
+                            }
+                            break;
+
+                        case ClientCmdEnum.请求缓存:
+                            index = 0;
+                            string datatime = ByteDataAnalysis.GetLongString(gd.Two, ref index);
+                            string tn = ByteDataAnalysis.GetLongString(gd.Two, ref index);
+                            foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+                            {
+                                UserService.发送缓存数据列表(Player, tableName);
                             }
                             break;
 
@@ -188,7 +213,7 @@ namespace RUINORERP.Server.Commands
             }
             else
             {
-                bg.Step(18);//跳过开头
+                bg.Step(18);//跳过开头 
                 bg.Step(296 - 18 - 18);
                 密码串 = bg.GetString();
             }
@@ -219,7 +244,7 @@ namespace RUINORERP.Server.Commands
             PacketProcess ap = new PacketProcess(PlayerSession);
             if (package != null)
             {
-            #pragma warning disable CS0168 // 声明了变量，但从未使用过
+#pragma warning disable CS0168 // 声明了变量，但从未使用过
                 try
                 {
                     #region 收到客户机的心跳数据，作对应回复
@@ -232,17 +257,17 @@ namespace RUINORERP.Server.Commands
                     Int64 userid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                     //人物
                     //byte r = ByteDataAnalysis.Getbyte(gd.Two, ref index);
-                    string empName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    string ver = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string empName = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                    string ver = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                     long ComputerFreeTime = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                    string strCurrentFormUI  = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    string strCurrentModule = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    PlayerSession.User.ClientInfo.BeatData = 累加数;
-                    PlayerSession.User.ClientInfo.LastBeatTime = DateTime.Now;
-                    PlayerSession.User.ClientInfo.Version = ver;
-                    PlayerSession.User.ClientInfo.ComputerFreeTime = ComputerFreeTime;
-                    PlayerSession.User.ClientInfo.CurrentFormUI = strCurrentFormUI;
-                    PlayerSession.User.ClientInfo.CurrentModule = strCurrentModule;
+                    string strCurrentFormUI = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                    string strCurrentModule = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                    PlayerSession.User.心跳数 = 累加数.ObjToInt();
+                    PlayerSession.User.最后心跳时间 = DateTime.Now;
+                    PlayerSession.User.客户端版本 = ver;
+                    PlayerSession.User.静止时间 = ComputerFreeTime;
+                    PlayerSession.User.当前窗体 = strCurrentFormUI;
+                    PlayerSession.User.当前模块 = strCurrentModule;
 
                     //ByteBuff tx = new ByteBuff(100);
                     //tx.PushInt(frmMain.Instance.sessionListBiz.Count);
@@ -250,10 +275,10 @@ namespace RUINORERP.Server.Commands
                     //{
 
                     //    tx.PushString(item.Value.SessionID);
-                    //    tx.PushString(item.Value.User.UserName);
-                    //    tx.PushString(item.Value.User.EmpName);
+                    //    tx.PushString(item.Value.User.用户名);
+                    //    tx.PushString(item.Value.User.姓名);
                     //}
-                    // frmMain.Instance.PrintInfoLog($"收到{PlayerSession.User.EmpName + "|" + empName}心跳包,累加数{累加数}");
+                    // frmMain.Instance.PrintInfoLog($"收到{PlayerSession.User.姓名 + "|" + empName}心跳包,累加数{累加数}");
                     //不用回复，如果规则不对，直接T出？
                     // UserService.回复心跳(PlayerSession, tx);
 
@@ -264,7 +289,7 @@ namespace RUINORERP.Server.Commands
 
 
                 }
-            #pragma warning restore CS0168 // 声明了变量，但从未使用过
+#pragma warning restore CS0168 // 声明了变量，但从未使用过
             }
         }
         private async Task time服务(SessionforBiz Player)

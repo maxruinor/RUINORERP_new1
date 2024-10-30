@@ -45,6 +45,7 @@ using Control = System.Windows.Forms.Control;
 using SqlSugar;
 using NPOI.SS.Formula.Functions;
 using SourceGrid.Cells.Models;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -1630,7 +1631,7 @@ namespace RUINORERP.UI.BaseForm
                             //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                             //只处理需要缓存的表
-                            if (CacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
+                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
                             {
 
                             }

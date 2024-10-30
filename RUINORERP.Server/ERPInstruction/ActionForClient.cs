@@ -10,7 +10,6 @@ namespace TransInstruction
     public class ActionForClient
     {
 
-
         public static OriginalData 工作流提交(long billid, int BizType)
         {
             var tx = new ByteBuff(2 + 4);
@@ -71,6 +70,24 @@ namespace TransInstruction
             return gd;
         }
 
+        /// <summary>
+        /// 表名为空则是所有表
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <returns></returns>
+        public static OriginalData 请求发送缓存(string TableName)
+        {
+            var tx = new ByteBuff(2 + 4);
+            //tx.PushInt16((Int16)ClientCmdEnum.用户登陆);
+            //tx.PushInt((int)6);//加一个其他东西？比方随便时间，或当前时间的到分钟
+            tx.PushString(System.DateTime.Now.ToString());
+            tx.PushString(TableName);
+            OriginalData gd = new OriginalData();
+            gd.cmd = (byte)ClientCmdEnum.请求缓存;
+            gd.One = null;
+            gd.Two = tx.toByte();
+            return gd;
+        }
 
         public static OriginalData SendMessage(string Message, string sessonid, string receiver)
         {

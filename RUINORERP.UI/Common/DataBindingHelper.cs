@@ -195,7 +195,7 @@ namespace RUINORERP.UI.Common
                                             //将List<T>类型的结果是object的转换为指定类型的List
                                             //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
                                             //有缓存的情况
-                                            var rslist = CacheHelper.Manager.CacheEntityList.Get(targetEntity.Name);
+                                            var rslist = BizCacheHelper.Manager.CacheEntityList.Get(targetEntity.Name);
                                             //条件如果有限制了。就不能全部加载
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
@@ -1772,14 +1772,14 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox"></param>
         public static void InitDataToCmb<T>(string key, string value, string tableName, KryptonComboBox cmbBox) where T : class
         {
-            if (CacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
             {
                 if (string.IsNullOrEmpty(value))
                 {
-                    value = CacheHelper.Manager.NewTableList[tableName].Value;
+                    value = BizCacheHelper.Manager.NewTableList[tableName].Value;
                 }
                 BindingSource bs = new BindingSource();
-                List<T> tlist = CacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
+                List<T> tlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
 
 
 
@@ -1914,11 +1914,11 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox"></param>
         public static void InitDataToCmbWithCondition<T>(string key, string value, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
         {
-            //if (CacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            //if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
             //{
             //    if (string.IsNullOrEmpty(value))
             //    {
-            //        value = CacheHelper.Manager.NewTableList[tableName].Value;
+            //        value = BizCacheHelper.Manager.NewTableList[tableName].Value;
             //    }
             BindingSource bs = new BindingSource();
             //    List<T> tlist = CacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
@@ -2032,12 +2032,12 @@ namespace RUINORERP.UI.Common
         public static void InitDataToCmb(string key, string tableName, ComboBox cmbBox)
         {
 
-            if (CacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
             {
-                string ShowName = CacheHelper.Manager.NewTableList[tableName].Value;
+                string ShowName = BizCacheHelper.Manager.NewTableList[tableName].Value;
 
                 BindingSource bs = new BindingSource();
-                var objlist = CacheHelper.Manager.CacheEntityList.Get(tableName);
+                var objlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 var tlist = ((IEnumerable<dynamic>)objlist).ToList();
                 if (tlist == null || tlist.Count == 0)
                 {
@@ -2147,10 +2147,10 @@ namespace RUINORERP.UI.Common
         public static void InitCmb<T>(string key, string value, string tableName, ComboBox cmbBox, bool HasSelectItem) where T : class
         {
 
-            if (CacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
             {
                 BindingSource bs = new BindingSource();
-                List<T> tlist = CacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
+                List<T> tlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
                 if (tlist == null || tlist.Count == 0)
                 {
                     Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();

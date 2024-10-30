@@ -19,7 +19,6 @@ namespace RUINORERP.Model
         /// </summary>
         long Id { get; set; }
 
-
         ///// <summary>
         ///// 请求携带的Token
         ///// </summary>

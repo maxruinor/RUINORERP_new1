@@ -525,7 +525,7 @@ namespace RUINORERP.UI.BaseForm
                         BindingSource NewBsList = new BindingSource();
                         //将List<T>类型的结果是object的转换为指定类型的List
                         //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
-                        var rslist = CacheHelper.Manager.CacheEntityList.Get(fktableName);
+                        var rslist = BizCacheHelper.Manager.CacheEntityList.Get(fktableName);
                         var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
                         if (lastlist != null)
                         {
@@ -2780,7 +2780,7 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode)
                 {
                     //自动保存的时间秒数  30秒
-                    if (MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime > 30000 && MainForm.Instance.AppContext.IsOnline)
+                    if (MainForm.Instance.AppContext.OnlineUser.静止时间 > 30 && MainForm.Instance.AppContext.IsOnline)
                     {
                         bool result = await AutoSaveDataAsync();
                         if (!result)

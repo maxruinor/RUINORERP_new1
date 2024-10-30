@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net8.0-windows7.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <StartupObject>RUINORERP.Server.Program</StartupObject>
     <ApplicationIcon>ResourceFile\server.ico</ApplicationIcon>
@@ -17,6 +17,10 @@
 
   <ItemGroup>
     <Compile Remove="AutoMapperConfig.cs" />
+    <Compile Remove="Comm\AutoMapperProfile.cs" />
+    <Compile Remove="Comm\CacheHelper.cs" />
+    <Compile Remove="frmUserOnline.cs" />
+    <Compile Remove="frmUserOnline.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
     <Compile Remove="Startup - 复制.cs" />
     <Compile Remove="Workflow\BillConverterFactory.cs" />
@@ -24,6 +28,10 @@
     <Compile Remove="Workflow\WFApproval\BillApprovalWorkflow.cs" />
     <Compile Remove="Workflow\WFApproval\WorkflowWithTimedPusher.cs" />
     <Compile Remove="Workflow\WFPush\GetBaseInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="frmUserOnline.resx" />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,16 +83,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="7.1.0" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Autofac" Version="8.1.1" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Autofac.Extras.DynamicProxy" Version="7.0.0" />
-    <PackageReference Include="AutoMapper" Version="12.0.1" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
     <PackageReference Include="Huanent.Logging.File" Version="3.0.2" />
     <PackageReference Include="log4net" Version="2.0.15" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="7.0.0" />
     <PackageReference Include="SqlSugarCore" Version="5.1.4.130" />
     <PackageReference Include="SuperSocket.Command" Version="2.0.0-beta.18" />

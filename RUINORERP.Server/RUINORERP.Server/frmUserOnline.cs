@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using RUINORERP.Business.CommService;
 using RUINORERP.Server.BizService;
+using RUINORERP.Server.Comm;
 using RUINORERP.Server.ServerSession;
 using System;
 using System.Collections.Concurrent;
@@ -8,6 +10,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,38 +27,13 @@ namespace RUINORERP.Server
         {
             InitializeComponent();
             _logger = loggerFactory.CreateLogger<frmUserOnline>();
-            this.Load += frmUserOnline_Load;
-        }
 
+        }
 
         BindingSource bs = new BindingSource(frmMain.Instance.sessionListBiz, null);
         private void frmUserOnline_Load(object sender, EventArgs e)
         {
-
             LoadUserOnline();
-            /*
-            new Task(new Action(() =>
-            {
-
-                this.Invoke(new Action(() =>
-                {
-                    //需要执行的代码
-                    if (this.listBoxForConn.Items.Count != frmMain.Instance.sessionListBiz.Count)
-                    {
-                        listBoxForConn.Items.Clear();
-                        foreach (var item in frmMain.Instance.sessionListBiz)
-                        {
-                            listBoxForConn.Items.Add(item.Value);
-                        }
-                    }
-
-                }));
-
-            })).Start();
-            */
-
-
-
         }
 
         private void LoadUserOnline()
@@ -103,14 +81,21 @@ namespace RUINORERP.Server
                                 //{
                                 await SB.CloseAsync(SuperSocket.Channel.CloseReason.RemoteClosing);
                                 frmMain.Instance.sessionListBiz.TryRemove(item.Key, out SB);
+                                UserInfo user = frmMain.Instance.userInfos.FirstOrDefault(c => c.SessionID == SB.SessionID);
+                                frmMain.Instance.userInfos.Remove(user);
                                 //}
                             }
                             if (timeSpan.TotalSeconds > 60)
                             {
                                 //if (SB.State == SuperSocket.SessionState.Connected)
                                 //{
-                                await SB.CloseAsync(SuperSocket.Channel.CloseReason.RemoteClosing);
-                                frmMain.Instance.sessionListBiz.TryRemove(item.Key, out SB);
+                                if (SB != null)
+                                {
+                                    await SB.CloseAsync(SuperSocket.Channel.CloseReason.RemoteClosing);
+                                    frmMain.Instance.sessionListBiz.TryRemove(item.Key, out SB);
+                                    UserInfo user = frmMain.Instance.userInfos.FirstOrDefault(c => c.SessionID == SB.SessionID);
+                                    frmMain.Instance.userInfos.Remove(user);
+                                }
                                 //}
                             }
 
@@ -137,13 +122,13 @@ namespace RUINORERP.Server
                                         exist = true;
                                         lvitem.SubItems[0].Text = item.Value.User.UserName.ToString();
                                         lvitem.SubItems[1].Text = item.Value.User.EmpName.ToString();
-                                        lvitem.SubItems[2].Text = item.Value.User.ClientInfo.CurrentModule.ToString();
-                                        lvitem.SubItems[3].Text = item.Value.User.ClientInfo.CurrentFormUI.ToString();
-                                        lvitem.SubItems[4].Text = item.Value.User.ClientInfo.LoginTime.ToString();
-                                        lvitem.SubItems[5].Text = item.Value.User.ClientInfo.BeatData.ToString();
-                                        lvitem.SubItems[6].Text = item.Value.User.ClientInfo.LastBeatTime.ToString();
-                                        lvitem.SubItems[7].Text = item.Value.User.ClientInfo.Version.ToString();
-                                        lvitem.SubItems[8].Text = (item.Value.User.ClientInfo.ComputerFreeTime / 1000).ToString();
+                                        lvitem.SubItems[2].Text = item.Value.User.CurrentModule.ToString();
+                                        lvitem.SubItems[3].Text = item.Value.User.CurrentFormUI.ToString();
+                                        lvitem.SubItems[4].Text = item.Value.User.LoginTime.ToString();
+                                        lvitem.SubItems[5].Text = item.Value.User.BeatData.ToString();
+                                        lvitem.SubItems[6].Text = item.Value.User.LastBeatTime.ToString();
+                                        lvitem.SubItems[7].Text = item.Value.User.Version.ToString();
+                                        lvitem.SubItems[8].Text = (item.Value.User.ComputerFreeTime).ToString();
                                     }
                                     else
                                     {
@@ -172,13 +157,13 @@ namespace RUINORERP.Server
                                     itemLv.Name = item.Key.ToString();//sessionid
                                     itemLv.SubItems.Add(item.Value.User.UserName);
                                     itemLv.SubItems.Add(item.Value.User.EmpName);         //这句操作会跟随上句类似添加主键操作后面,作为主键那行的第二个元素
-                                    itemLv.SubItems.Add(item.Value.User.ClientInfo.CurrentModule.ToString());                  //原理同上,后面可以继续添加元素，如果你有需求且在winform中已设计好属性列个数
-                                    itemLv.SubItems.Add(item.Value.User.ClientInfo.CurrentFormUI.ToString());
-                                    itemLv.SubItems.Add(item.Value.User.ClientInfo.LoginTime.ToString());//4
-                                    itemLv.SubItems.Add(item.Value.User.ClientInfo.BeatData.ToString());
-                                    itemLv.SubItems.Add(item.Value.User.ClientInfo.LastBeatTime.ToString());
-                                    itemLv.SubItems.Add(item.Value.User.ClientInfo.Version.ToString());
-                                    itemLv.SubItems.Add((item.Value.User.ClientInfo.ComputerFreeTime / 1000).ToString());
+                                    itemLv.SubItems.Add(item.Value.User.CurrentModule.ToString());                  //原理同上,后面可以继续添加元素，如果你有需求且在winform中已设计好属性列个数
+                                    itemLv.SubItems.Add(item.Value.User.CurrentFormUI.ToString());
+                                    itemLv.SubItems.Add(item.Value.User.LoginTime.ToString());//4
+                                    itemLv.SubItems.Add(item.Value.User.BeatData.ToString());
+                                    itemLv.SubItems.Add(item.Value.User.LastBeatTime.ToString());
+                                    itemLv.SubItems.Add(item.Value.User.Version.ToString());
+                                    itemLv.SubItems.Add((item.Value.User.ComputerFreeTime).ToString());
                                     //item.BackColor = Color.Red;
                                     #endregion
                                 }
@@ -289,6 +274,8 @@ namespace RUINORERP.Server
                                 listViewForUser.Items.Remove(lvi);
                                 SessionforBiz biz = new SessionforBiz();
                                 frmMain.Instance.sessionListBiz.TryRemove(SB.SessionID, out biz);
+                                UserInfo user = frmMain.Instance.userInfos.FirstOrDefault(c => c.SessionID == biz.SessionID);
+                                frmMain.Instance.userInfos.Remove(user);
                             }
                             if (SB.State == SuperSocket.SessionState.Connected)
                             {
@@ -296,6 +283,8 @@ namespace RUINORERP.Server
                                 listViewForUser.Items.Remove(lvi);
                                 SessionforBiz biz = new SessionforBiz();
                                 frmMain.Instance.sessionListBiz.TryRemove(SB.SessionID, out biz);
+                                UserInfo user = frmMain.Instance.userInfos.FirstOrDefault(c => c.SessionID == biz.SessionID);
+                                frmMain.Instance.userInfos.Remove(user);
                             }
 
                         }
@@ -394,6 +383,29 @@ namespace RUINORERP.Server
             }
 
 
+            if (e.ClickedItem.Text == "推送缓存数据")
+            {
+                if (listViewForUser.SelectedItems != null)
+                {
+                    if (listViewForUser.SelectedItems.Count == 1)
+                    {
+                        ListViewItem lvi = listViewForUser.SelectedItems[0];
+
+                        if (lvi.Tag is SessionforBiz)
+                        {
+                            SessionforBiz SB = lvi.Tag as SessionforBiz;
+                            if (SB.State == SuperSocket.SessionState.Connected)
+                            {
+                                foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+                                {
+                                    UserService.发送缓存数据列表(SB, tableName);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if (e.ClickedItem.Text == "关机")
             {
                 if (listViewForUser.SelectedItems != null)
@@ -416,5 +428,7 @@ namespace RUINORERP.Server
                 }
             }
         }
+
+
     }
 }

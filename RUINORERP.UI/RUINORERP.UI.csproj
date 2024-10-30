@@ -73,17 +73,20 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Autofac, Version=8.0.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.8.0.0\lib\netstandard2.0\Autofac.dll</HintPath>
+    <Reference Include="Autofac, Version=8.1.1.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autofac.8.1.1\lib\netstandard2.0\Autofac.dll</HintPath>
     </Reference>
-    <Reference Include="Autofac.Extensions.DependencyInjection, Version=9.0.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.Extensions.DependencyInjection.9.0.0\lib\netstandard2.0\Autofac.Extensions.DependencyInjection.dll</HintPath>
+    <Reference Include="Autofac.Extensions.DependencyInjection, Version=10.0.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autofac.Extensions.DependencyInjection.10.0.0\lib\netstandard2.0\Autofac.Extensions.DependencyInjection.dll</HintPath>
     </Reference>
     <Reference Include="Autofac.Extras.DynamicProxy, Version=7.1.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
       <HintPath>..\packages\Autofac.Extras.DynamicProxy.7.1.0\lib\netstandard2.0\Autofac.Extras.DynamicProxy.dll</HintPath>
     </Reference>
     <Reference Include="AutoMapper, Version=10.0.0.0, Culture=neutral, PublicKeyToken=be96cd2c38ef1005, processorArchitecture=MSIL">
       <HintPath>..\packages\AutoMapper.10.1.1\lib\net461\AutoMapper.dll</HintPath>
+    </Reference>
+    <Reference Include="AutoMapper.Extensions.Microsoft.DependencyInjection, Version=8.0.0.0, Culture=neutral, PublicKeyToken=e767ac9c89543656, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoMapper.Extensions.Microsoft.DependencyInjection.8.1.0\lib\netstandard2.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll</HintPath>
     </Reference>
     <Reference Include="BouncyCastle.Cryptography, Version=2.0.0.0, Culture=neutral, PublicKeyToken=072edcf4a5328938, processorArchitecture=MSIL">
       <HintPath>..\packages\BouncyCastle.Cryptography.2.3.0\lib\net461\BouncyCastle.Cryptography.dll</HintPath>
@@ -232,8 +235,8 @@
     <Reference Include="Microsoft.Extensions.DependencyInjection, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.7.0.0\lib\net462\Microsoft.Extensions.DependencyInjection.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=8.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.8.0.0\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=8.0.0.1, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.8.0.1\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Extensions.FileProviders.Abstractions, Version=9.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.FileProviders.Abstractions.9.0.0-preview.5.24306.7\lib\net462\Microsoft.Extensions.FileProviders.Abstractions.dll</HintPath>
@@ -355,8 +358,8 @@
     </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Design" />
-    <Reference Include="System.Diagnostics.DiagnosticSource, Version=7.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Diagnostics.DiagnosticSource.7.0.2\lib\net462\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=8.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Diagnostics.DiagnosticSource.8.0.1\lib\net462\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\System.IO.Compression.4.3.0\lib\net46\System.IO.Compression.dll</HintPath>
@@ -527,7 +530,6 @@
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
     <Compile Include="ATechnologyStack\ServiceRegister\AutofacServiceRegister.cs" />
     <Compile Include="AutoFacBootStrapper.cs" />
-    <Compile Include="AutoMapper\AutoMapperConfig.cs" />
     <Compile Include="BaseForm\BaseBillEdit.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1119,7 +1121,6 @@
     </Compile>
     <Compile Include="Common\BarCodeCreator.cs" />
     <Compile Include="Common\BarCodeHelper.cs" />
-    <Compile Include="Common\CacheHelper.cs" />
     <Compile Include="Common\AuditLogHelper.cs" />
     <Compile Include="Common\CustomTupleEqualityComparer.cs" />
     <Compile Include="Common\DuplicateFinder.cs" />
@@ -1799,6 +1800,12 @@
     </Compile>
     <Compile Include="SysConfig\UCButtonInfoList.designer.cs">
       <DependentUpon>UCButtonInfoList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SysConfig\UCCacheManage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SysConfig\UCCacheManage.Designer.cs">
+      <DependentUpon>UCCacheManage.cs</DependentUpon>
     </Compile>
     <Compile Include="SysConfig\UCDataCorrectionCenter.cs">
       <SubType>UserControl</SubType>
@@ -2766,6 +2773,9 @@
     <EmbeddedResource Include="SysConfig\UCButtonInfoList.resx">
       <DependentUpon>UCButtonInfoList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SysConfig\UCCacheManage.resx">
+      <DependentUpon>UCCacheManage.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCDataCorrectionCenter.resx">
       <DependentUpon>UCDataCorrectionCenter.cs</DependentUpon>
     </EmbeddedResource>
@@ -3366,6 +3376,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="AM\" />
+    <Folder Include="AutoMapper\" />
     <Folder Include="BaseUControls\" />
     <Folder Include="CRM\" />
     <Folder Include="IMResources\Icons\" />

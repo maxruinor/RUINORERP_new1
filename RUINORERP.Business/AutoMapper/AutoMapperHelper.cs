@@ -21,7 +21,7 @@ namespace RUINORERP.Business.AutoMapper
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
             _serviceProvider = services.BuildServiceProvider();
-            services.AddAutoMapper(typeof(AutoMapperConfig));
+           // services.AddAutoMapper(typeof(AutoMapperConfig));
           //  services.AddAutoMapper(typeof(RUINORERP.AutoMapper.CustomProfile));
           //  services.AddAutoMapper(typeof(RUINORERP.AutoMapper.AutoMapperConfig));
             AutoMapperConfig.RegisterMappings();

@@ -1,13 +1,21 @@
 ﻿using Autofac;
+using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
+using Dm.Config;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using RUINORERP.Business;
+using RUINORERP.Business.CommService;
+using RUINORERP.Extensions;
 using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.Commands;
 using RUINORERP.Server.ServerSession;
@@ -18,8 +26,10 @@ using SuperSocket.Server;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -27,6 +37,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TransInstruction;
 
 namespace RUINORERP.Server
 {
@@ -39,7 +50,8 @@ namespace RUINORERP.Server
         public ConcurrentDictionary<string, string> workflowlist = new ConcurrentDictionary<string, string>();
         public ILogger<frmMain> _logger { get; set; }
 
-
+        public IServiceCollection _services { get; set; }
+        public IServiceProvider _ServiceProvider { get; set; }
 
         private static frmMain _main;
         public static frmMain Instance
@@ -47,11 +59,12 @@ namespace RUINORERP.Server
             get { return _main; }
         }
         public frmMain(ILogger<frmMain> logger)
-
         {
             InitializeComponent();
             _main = this;
             _logger = logger;
+            _services = Startup.Services;
+
             //ILoggerFactory loggerFactory = LoggerFactory.Create(logbuilder => logbuilder
             // .AddFilter("Microsoft", LogLevel.Debug)
             // .AddFilter("System", LogLevel.Debug)
@@ -146,9 +159,58 @@ namespace RUINORERP.Server
         }
 
         bool ServerStart = false;
-        private void frmMain_Load(object sender, EventArgs e)
+        static System.Timers.Timer timer = null;
+
+        frmUserManage frmusermange = Startup.GetFromFac<frmUserManage>();
+
+        private async void frmMain_Load(object sender, EventArgs e)
         {
+            this.IsMdiContainer = true; // 设置父窗体为MDI容器
+            menuStrip1.MdiWindowListItem = 窗口ToolStripMenuItem;
             InitAll();
+
+            //手动初始化
+            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
+            BizCacheHelper.InitManager();
+
+            IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
+            cache.Set("test1", "test123");
+            await InitConfig(false);
+
+            //将会话数据转换为用户数据
+            foreach (var session in frmMain.Instance.sessionListBiz.Values)
+            {
+                session.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
+            }
+
+            //timer = new System.Timers.Timer(500);
+            //timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
+            //{
+            //    try
+            //    {
+            //        bindsourceUserList.DataSource = frmMain.Instance.sessionListBiz.Values;
+            //    }
+            //    catch (Exception)
+            //    {
+
+            //    }
+
+            //});
+            //timer.Enabled = true;
+            //timer.Start();
+        }
+
+ 
+
+
+        public async Task InitConfig(bool LoadData = true)
+        {
+            BizCacheHelper cacheHelper = Startup.GetFromFac<BizCacheHelper>();
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            cacheHelper.InitDict(LoadData);
+            stopwatch.Stop();
+            frmMain.Instance.PrintInfoLog($"InitConfig总执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
+            await Task.Delay(0);
         }
 
         private void InitAll()
@@ -225,10 +287,15 @@ namespace RUINORERP.Server
                          })
                          .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
                          .UseSession<SessionforBiz>()
+                         
+
                      //注册用于处理连接、关闭的Session处理器
                      .UseSessionHandler(async (session) =>
                      {
+                         SessionforBiz sessionforBiz = session as SessionforBiz;
+                         sessionforBiz.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
                          sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
+                         frmusermange.userInfos.Add(sessionforBiz.User);
                          PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session connected: {session.RemoteEndPoint}");
                          await Task.Delay(0);
                      }, async (session, reason) =>
@@ -240,14 +307,22 @@ namespace RUINORERP.Server
                          //}
                          PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session {session.RemoteEndPoint} closed: {reason}");
                          sessionListBiz.Remove(sg.SessionID, out sg);
-                         //SessionListGame.Remove(session as SessionforBiz);
+                       
+                         if (sg != null)
+                         {
+                             frmusermange.userInfos.Remove(sg.User);
+                         }
+
                          await Task.Delay(0);
                      })
-                             //.ConfigureServices((context, services) =>
-                             //{
-                             //    services = _services;
-                             //    //services.AddSingleton<RoomService>();
-                             //})
+                             .ConfigureServices((context, services) =>
+                             {
+                                 IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
+                                 // services = Startup.Services;
+                                 //services.AddMemoryCache();
+                                 services.AddMemoryCacheSetupWithInstance(cache);
+                             })
+
                              .UseCommand(commandOptions =>
                              {
                                  commandOptions.AddCommand<BizCommand>();
@@ -264,7 +339,7 @@ namespace RUINORERP.Server
                      if (isWindows)
                      {
                          // Default the EventLogLoggerProvider to warning or above
-                         logging.AddFilter<EventLogLoggerProvider>(level => level >= LogLevel.Information);
+                         logging.AddFilter<EventLogLoggerProvider>(level => level >= Microsoft.Extensions.Logging.LogLevel.Information);
                      }
                      logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                      logging.AddConsole();
@@ -291,6 +366,7 @@ namespace RUINORERP.Server
             }
 
         }
+
 
 
         public void StartupServer()
@@ -437,12 +513,19 @@ ApplicationInsights
                 try
                 {
                     if (IsDisposed || !frmMain.Instance.IsHandleCreated) return;
+
+                    // 确保最多只有1000行
+                    EnsureMaxLines(frmMain.Instance.richTextBox1, 1000);
+
+                    // 将消息格式化为带时间戳和行号的字符串
+                    string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n";
+
                     frmMain.Instance.Invoke(new EventHandler(delegate
                     {
                         frmMain.Instance.richTextBox1.SelectionColor = Color.Black;
-                        frmMain.Instance.richTextBox1.AppendText(msg);
-                        frmMain.Instance.richTextBox1.AppendText("\r\n");
+                        frmMain.Instance.richTextBox1.AppendText(formattedMsg);
                         frmMain.Instance.richTextBox1.SelectionColor = Color.Black;
+                        frmMain.Instance.richTextBox1.ScrollToCaret(); // 滚动到最新的消息
 
                     }
                     ));
@@ -457,6 +540,27 @@ ApplicationInsights
 
         }
 
+        private void EnsureMaxLines(RichTextBox rtb, int maxLines)
+        {
+            // 计算当前的行数
+            int currentLines = rtb.GetLineFromCharIndex(rtb.Text.Length) + 1;
+
+            // 如果行数超过了最大限制，则删除旧的行
+            if (currentLines > maxLines)
+            {
+                int linesToRemove = currentLines - maxLines;
+                int start = rtb.GetFirstCharIndexFromLine(0);
+                int end = rtb.GetFirstCharIndexFromLine(linesToRemove);
+
+                // 确保richTextBox1控件在主线程中被操作
+                frmMain.Instance.Invoke(new MethodInvoker(() =>
+                {
+                    rtb.Text = rtb.Text.Remove(start, end - start);
+                }));
+            }
+        }
+
+
         private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             if (e.ClickedItem.Text == "工作流管理")
@@ -464,6 +568,7 @@ ApplicationInsights
                 frmWorkFlowManage frm = Startup.GetFromFac<frmWorkFlowManage>();
                 frm.MdiParent = this;
                 frm.Show();
+                frm.Activate();
 
             }
             if (e.ClickedItem.Text == "启动服务")
@@ -473,12 +578,26 @@ ApplicationInsights
 
             if (e.ClickedItem.Text == "在线用户管理")
             {
-                frmUserOnline frmuser = Startup.GetFromFac<frmUserOnline>();
-                frmuser.MdiParent = this;
-                frmuser.Show();
+                //frmUserOnline frmuser = Startup.GetFromFac<frmUserOnline>();
+                //frmuser.MdiParent = this;
+                //frmuser.Show();
+                if (frmusermange == null)
+                {
+                    frmusermange = Startup.GetFromFac<frmUserManage>();
+                }
+                //frmUserManage 
+                frmusermange.MdiParent = this;
+                frmusermange.Show();
+                frmusermange.Activate();
             }
 
-
+            if (e.ClickedItem.Text == "缓存管理")
+            {
+                frmCacheManage frmCahe = Startup.GetFromFac<frmCacheManage>();
+                frmCahe.MdiParent = this;
+                frmCahe.Show();
+                frmCahe.Activate();
+            }
 
         }
 
@@ -490,6 +609,40 @@ ApplicationInsights
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             Shutdown();
+        }
+        private void 层叠排列ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.LayoutMdi(MdiLayout.Cascade);
+        }
+
+        private void 水平平铺ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.LayoutMdi(MdiLayout.TileHorizontal);
+        }
+
+        private void 垂直平铺ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.LayoutMdi(MdiLayout.TileVertical);
+        }
+
+        private void 关闭ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void toolStripButton5_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolStripButton3_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

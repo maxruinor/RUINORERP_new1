@@ -1,9 +1,14 @@
-﻿using RUINORERP.Global;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
+using RUINORERP.Business.CommService;
+using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.Server.Comm;
 using RUINORERP.Server.Workflow;
 using RUINORERP.Server.Workflow.Steps;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.Workflow.WFPush;
+using SharpYaml.Tokens;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,7 +22,7 @@ using WorkflowCore.Interface;
 
 namespace RUINORERP.Server
 {
-    public partial class frmWorkFlowManage : Form
+    public partial class frmWorkFlowManage : frmBase
     {
         IWorkflowHost host;
         private static frmWorkFlowManage _main;
@@ -73,7 +78,7 @@ namespace RUINORERP.Server
                 data.BillID = 888;
                 data.bizType = Global.BizType.制令单;
                 data.ApprovalResults = false;
-              //  data.ApprovalComments = "人不在";
+                //  data.ApprovalComments = "人不在";
                 approvalWFData.approvalEntity = data;
 
                 WFController wc = Startup.GetFromFac<WFController>();
@@ -129,11 +134,31 @@ namespace RUINORERP.Server
         private void btnPushTest_Click(object sender, EventArgs e)
         {
             PushData data = new PushData();
-            data.InputData= "tb_UserInfo";
+            data.InputData = "tb_UserInfo";
             //var workflowId = Program.WorkflowHost.StartWorkflow("PushBaseInfoWorkflow", data);
             //MessageBox.Show("start push：" + workflowId);
 
             host.StartWorkflow("HelloWorld123", 1, null);
         }
+
+        private void btn缓存测试_Click(object sender, EventArgs e)
+        {
+            IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
+
+            object obj = BizCacheHelper.Instance.GetValue("tb_CustomerVendor", 1740971599693221888);
+            if (obj != null)
+            {
+
+            }
+                //CacheHelper cacheHelper = Startup.GetFromFac<CacheHelper>();
+                //var obj = CacheHelper.Instance.GetEntity<tb_CustomerVendor>(1740971599693221888);
+
+                //string json = JsonConvert.SerializeObject(obj,
+                //   new JsonSerializerSettings
+                //   {
+                //       ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                //   });
+
+            }
     }
 }

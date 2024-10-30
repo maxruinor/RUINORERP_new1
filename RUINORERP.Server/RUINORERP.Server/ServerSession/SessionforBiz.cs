@@ -4,21 +4,48 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using ERPBizService;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.Commands;
 using RUINORERP.Server.Lib;
 using SuperSocket;
 using SuperSocket.Channel;
 using SuperSocket.Server;
 using TransInstruction;
-using TransInstruction.DataModel;
+
 
 namespace RUINORERP.Server.ServerSession
 {
     public class SessionforBiz : AppSession
     {
+        private UserInfo _User = new UserInfo();
+        public UserInfo User
+        {
+            get {
 
-        
-        public OnlineUserInfo User = new OnlineUserInfo();
+                if (_User.SessionId == null)
+                {
+                    _User.SessionId = this.SessionID;
+                    _User.客户端IP = this.RemoteEndPoint.ToString();
+                }
+                return _User;
+            }
+            set
+            {
+                if (_User != value)
+                {
+                    _User = value;
+                    if (_User == null)
+                    {
+                        _User = new UserInfo();
+                    }
+                    if (_User.SessionId == null)
+                    {
+                        _User.SessionId = this.SessionID;
+                        _User.客户端IP = this.RemoteEndPoint.ToString();
+                    }
+                }
+            }
+        }
         /// <summary>
         /// 心跳计数器 他并不是一直增加全是会变化
         /// 检测如果一直不变化 则可能掉线
@@ -27,7 +54,6 @@ namespace RUINORERP.Server.ServerSession
         public int HeartbeatCounterCheck;
 
         private ConcurrentDictionary<int, TransDataEntity> _TransDataEntityList = new ConcurrentDictionary<int, TransDataEntity>();
-
         /// <summary>
         /// 保存攻击数据
         /// </summary>
@@ -37,13 +63,12 @@ namespace RUINORERP.Server.ServerSession
         private string SessionName => "[SessionforBiz]";
 
 
-        // public static Dictionary<int, string> m_二次登陆;
+
 
         //暂时用这个方法来判断 这个会话 有没有XT过
         public bool UseXT = false;
         protected override async ValueTask OnSessionConnectedAsync()
         {
-           
             // m_二次登陆 = new Dictionary<int, string>();
             //User = new S游戏玩家();
             string msg;
@@ -112,12 +137,6 @@ namespace RUINORERP.Server.ServerSession
         //在角色上线后执行
         // private Queue<byte[]> DataQueue = new Queue<byte[]>();
         public ConcurrentQueue<byte[]> DataQueue = new ConcurrentQueue<byte[]>();
-
-        /// <summary>
-        /// 要发送的数据  目前在心跳时发送的。是不是 这个实时性可以慢点。 再弄一个快的？如PK数据
-        /// </summary>
-        // public MyQueue<KxData> Send_m_list = new MyQueue<KxData>();
-
 
 
         /// <summary>

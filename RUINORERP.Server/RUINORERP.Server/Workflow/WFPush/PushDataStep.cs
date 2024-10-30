@@ -43,7 +43,7 @@ namespace RUINORERP.Server.Workflow.WFPush
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintInfoLog("服务器收到客户端基础信息变更分布失败:" + item.Value.User.UserName + ex.Message);
+                    frmMain.Instance.PrintInfoLog("服务器收到客户端基础信息变更分布失败:" + item.Value.User.用户名 + ex.Message);
                 }
 
             }

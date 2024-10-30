@@ -43,14 +43,19 @@
             this.txtServerIP = new System.Windows.Forms.TextBox();
             this.chkSelectServer = new System.Windows.Forms.CheckBox();
             this.chkAutoReminderUpdate = new System.Windows.Forms.CheckBox();
+            this.txtPort = new System.Windows.Forms.TextBox();
+            this.lblIP = new System.Windows.Forms.Label();
+            this.lblPort = new System.Windows.Forms.Label();
+            this.gbIPPort = new System.Windows.Forms.GroupBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.gbIPPort.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblpwd
             // 
-            this.lblpwd.Location = new System.Drawing.Point(87, 135);
+            this.lblpwd.Location = new System.Drawing.Point(101, 166);
             this.lblpwd.Name = "lblpwd";
             this.lblpwd.Size = new System.Drawing.Size(43, 14);
             this.lblpwd.TabIndex = 13;
@@ -58,7 +63,7 @@
             // 
             // lblID
             // 
-            this.lblID.Location = new System.Drawing.Point(87, 97);
+            this.lblID.Location = new System.Drawing.Point(101, 114);
             this.lblID.Name = "lblID";
             this.lblID.Size = new System.Drawing.Size(43, 14);
             this.lblID.TabIndex = 12;
@@ -66,7 +71,7 @@
             // 
             // chksaveIDpwd
             // 
-            this.chksaveIDpwd.Location = new System.Drawing.Point(144, 215);
+            this.chksaveIDpwd.Location = new System.Drawing.Point(158, 215);
             this.chksaveIDpwd.Name = "chksaveIDpwd";
             this.chksaveIDpwd.Size = new System.Drawing.Size(144, 24);
             this.chksaveIDpwd.TabIndex = 9;
@@ -76,7 +81,7 @@
             // btncancel
             // 
             this.btncancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btncancel.Location = new System.Drawing.Point(229, 251);
+            this.btncancel.Location = new System.Drawing.Point(263, 251);
             this.btncancel.Name = "btncancel";
             this.btncancel.Size = new System.Drawing.Size(73, 35);
             this.btncancel.TabIndex = 11;
@@ -85,7 +90,7 @@
             // 
             // btnok
             // 
-            this.btnok.Location = new System.Drawing.Point(127, 251);
+            this.btnok.Location = new System.Drawing.Point(158, 251);
             this.btnok.Name = "btnok";
             this.btnok.Size = new System.Drawing.Size(73, 35);
             this.btnok.TabIndex = 10;
@@ -96,7 +101,7 @@
             // 
             this.txtPassWord.AccessibleDescription = "password";
             this.txtPassWord.AccessibleName = "password";
-            this.txtPassWord.Location = new System.Drawing.Point(144, 131);
+            this.txtPassWord.Location = new System.Drawing.Point(158, 162);
             this.txtPassWord.Name = "txtPassWord";
             this.txtPassWord.PasswordChar = '*';
             this.txtPassWord.Size = new System.Drawing.Size(178, 21);
@@ -109,7 +114,7 @@
             this.txtUserName.AccessibleName = "";
             this.txtUserName.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.txtUserName.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-            this.txtUserName.Location = new System.Drawing.Point(144, 93);
+            this.txtUserName.Location = new System.Drawing.Point(158, 110);
             this.txtUserName.Name = "txtUserName";
             this.txtUserName.Size = new System.Drawing.Size(178, 21);
             this.txtUserName.TabIndex = 7;
@@ -124,9 +129,9 @@
             // 
             this.pictureBox1.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.pictureBox1.Image = global::RUINORERP.UI.Properties.Resources.logo11;
-            this.pictureBox1.Location = new System.Drawing.Point(54, 12);
+            this.pictureBox1.Location = new System.Drawing.Point(71, 6);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(296, 45);
+            this.pictureBox1.Size = new System.Drawing.Size(304, 64);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 14;
             this.pictureBox1.TabStop = false;
@@ -153,17 +158,17 @@
             this.txtServerIP.AccessibleName = "";
             this.txtServerIP.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             this.txtServerIP.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-            this.txtServerIP.Location = new System.Drawing.Point(207, 295);
+            this.txtServerIP.Location = new System.Drawing.Point(51, 18);
             this.txtServerIP.Name = "txtServerIP";
-            this.txtServerIP.Size = new System.Drawing.Size(115, 21);
+            this.txtServerIP.Size = new System.Drawing.Size(96, 21);
             this.txtServerIP.TabIndex = 17;
             this.txtServerIP.Text = "192.168.0.254";
-            this.txtServerIP.Visible = false;
+            this.txtServerIP.TextChanged += new System.EventHandler(this.txtServerIP_TextChanged);
             // 
             // chkSelectServer
             // 
             this.chkSelectServer.AutoSize = true;
-            this.chkSelectServer.Location = new System.Drawing.Point(345, 297);
+            this.chkSelectServer.Location = new System.Drawing.Point(347, 324);
             this.chkSelectServer.Name = "chkSelectServer";
             this.chkSelectServer.Size = new System.Drawing.Size(84, 16);
             this.chkSelectServer.TabIndex = 18;
@@ -184,17 +189,61 @@
             this.chkAutoReminderUpdate.UseVisualStyleBackColor = true;
             this.chkAutoReminderUpdate.Visible = false;
             // 
+            // txtPort
+            // 
+            this.txtPort.AccessibleDescription = "";
+            this.txtPort.AccessibleName = "";
+            this.txtPort.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+            this.txtPort.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
+            this.txtPort.Location = new System.Drawing.Point(200, 18);
+            this.txtPort.Name = "txtPort";
+            this.txtPort.Size = new System.Drawing.Size(46, 21);
+            this.txtPort.TabIndex = 20;
+            this.txtPort.Text = "3001";
+            // 
+            // lblIP
+            // 
+            this.lblIP.AutoSize = true;
+            this.lblIP.Location = new System.Drawing.Point(22, 22);
+            this.lblIP.Name = "lblIP";
+            this.lblIP.Size = new System.Drawing.Size(23, 12);
+            this.lblIP.TabIndex = 23;
+            this.lblIP.Text = "IP:";
+            // 
+            // lblPort
+            // 
+            this.lblPort.AutoSize = true;
+            this.lblPort.Location = new System.Drawing.Point(159, 22);
+            this.lblPort.Name = "lblPort";
+            this.lblPort.Size = new System.Drawing.Size(35, 12);
+            this.lblPort.TabIndex = 24;
+            this.lblPort.Text = "Port:";
+            // 
+            // gbIPPort
+            // 
+            this.gbIPPort.Controls.Add(this.txtPort);
+            this.gbIPPort.Controls.Add(this.lblPort);
+            this.gbIPPort.Controls.Add(this.txtServerIP);
+            this.gbIPPort.Controls.Add(this.lblIP);
+            this.gbIPPort.Location = new System.Drawing.Point(71, 301);
+            this.gbIPPort.Name = "gbIPPort";
+            this.gbIPPort.Size = new System.Drawing.Size(262, 49);
+            this.gbIPPort.TabIndex = 25;
+            this.gbIPPort.TabStop = false;
+            this.gbIPPort.Text = "服务器信息";
+            this.gbIPPort.Visible = false;
+            // 
             // FrmLogin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.CancelButton = this.btncancel;
-            this.ClientSize = new System.Drawing.Size(430, 325);
+            this.ClientSize = new System.Drawing.Size(443, 362);
             this.ControlBox = false;
+            this.Controls.Add(this.gbIPPort);
             this.Controls.Add(this.chkAutoReminderUpdate);
             this.Controls.Add(this.chkSelectServer);
-            this.Controls.Add(this.txtServerIP);
             this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.lblpwd);
@@ -213,6 +262,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.gbIPPort.ResumeLayout(false);
+            this.gbIPPort.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -234,5 +285,9 @@
         internal System.Windows.Forms.TextBox txtServerIP;
         private System.Windows.Forms.CheckBox chkSelectServer;
         private System.Windows.Forms.CheckBox chkAutoReminderUpdate;
+        private System.Windows.Forms.Label lblIP;
+        internal System.Windows.Forms.TextBox txtPort;
+        private System.Windows.Forms.Label lblPort;
+        private System.Windows.Forms.GroupBox gbIPPort;
     }
 }

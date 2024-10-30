@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -142,6 +143,10 @@ namespace RUINORERP.UI
         public string UseName { get => useName; set => useName = value; }
 
         /// <summary>
+        /// 服务器Port
+        /// </summary>
+        public string ServerPort { get; set; }
+        /// <summary>
         /// 服务器IP
         /// </summary>
         public string ServerIP { get; set; }
@@ -207,4 +212,11 @@ namespace RUINORERP.UI
         #endregion
     }
 
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct LASTINPUTINFO
+    {
+        public uint cbSize;
+        public uint dwTime;
+    }
 }

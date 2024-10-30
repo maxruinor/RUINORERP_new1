@@ -67,6 +67,7 @@ namespace RUINORERP.UI
             this.toolStripBtnUpdate = new System.Windows.Forms.ToolStripButton();
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
             this.toolBtnExit = new System.Windows.Forms.ToolStripButton();
+            this.btntsbRefresh = new System.Windows.Forms.ToolStripButton();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
             this.窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.关闭所有窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -81,7 +82,7 @@ namespace RUINORERP.UI
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.statusTimer = new System.Windows.Forms.Timer(this.components);
-            this.btntsbRefresh = new System.Windows.Forms.ToolStripButton();
+            this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             this.kryptonPage5.SuspendLayout();
@@ -359,7 +360,8 @@ namespace RUINORERP.UI
             this.SystemOperatorState,
             this.toolStripddbtnSkin,
             this.toolStripDropDownBtnRoles,
-            this.lblStatusGlobal});
+            this.lblStatusGlobal,
+            this.lblServerInfo});
             this.statusStrip1.Location = new System.Drawing.Point(0, 627);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.ManagerRenderMode;
@@ -463,6 +465,16 @@ namespace RUINORERP.UI
             this.toolBtnExit.Size = new System.Drawing.Size(53, 22);
             this.toolBtnExit.Text = "退出";
             this.toolBtnExit.Click += new System.EventHandler(this.toolBtnExit_Click);
+            // 
+            // btntsbRefresh
+            // 
+            this.btntsbRefresh.Image = global::RUINORERP.UI.Properties.Resources.Refresh;
+            this.btntsbRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btntsbRefresh.Name = "btntsbRefresh";
+            this.btntsbRefresh.Padding = new System.Windows.Forms.Padding(50, 0, 0, 0);
+            this.btntsbRefresh.Size = new System.Drawing.Size(103, 22);
+            this.btntsbRefresh.Text = "刷新";
+            this.btntsbRefresh.Click += new System.EventHandler(this.btntsbRefresh_Click);
             // 
             // menuStripMain
             // 
@@ -591,15 +603,13 @@ namespace RUINORERP.UI
             this.statusTimer.Interval = 5000;
             this.statusTimer.Tick += new System.EventHandler(this.statusTimer_Tick);
             // 
-            // btntsbRefresh
+            // lblServerInfo
             // 
-            this.btntsbRefresh.Image = global::RUINORERP.UI.Properties.Resources.Refresh;
-            this.btntsbRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btntsbRefresh.Name = "btntsbRefresh";
-            this.btntsbRefresh.Padding = new System.Windows.Forms.Padding(50, 0, 0, 0);
-            this.btntsbRefresh.Size = new System.Drawing.Size(103, 22);
-            this.btntsbRefresh.Text = "刷新";
-            this.btntsbRefresh.Click += new System.EventHandler(this.btntsbRefresh_Click);
+            this.lblServerInfo.Name = "lblServerInfo";
+            this.lblServerInfo.Padding = new System.Windows.Forms.Padding(200, 0, 0, 0);
+            this.lblServerInfo.Size = new System.Drawing.Size(219, 17);
+            this.lblServerInfo.Text = "....";
+            this.lblServerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // MainForm
             // 
@@ -699,6 +709,7 @@ namespace RUINORERP.UI
         public System.Windows.Forms.ToolStripStatusLabel lblStatusGlobal;
         private System.Windows.Forms.Timer statusTimer;
         private System.Windows.Forms.ToolStripButton btntsbRefresh;
+        public System.Windows.Forms.ToolStripStatusLabel lblServerInfo;
     }
 }
 

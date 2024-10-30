@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINORERP.Model.CommonModel;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using TransInstruction;
-using TransInstruction.DataModel;
+
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -16,11 +17,11 @@ namespace RUINORERP.UI.SuperSocketClient
     public class SocketSession
     {
         #region 当前用户信息
-        private List<OnlineUserInfo> userInfos = new List<OnlineUserInfo>();
-        public List<OnlineUserInfo> UserInfos { get => userInfos; set => userInfos = value; }
+        private List<UserInfo> userInfos = new List<UserInfo>();
+        public List<UserInfo> UserInfos { get => userInfos; set => userInfos = value; }
 
-        private OnlineUserInfo _currentUser = new OnlineUserInfo();
-        public OnlineUserInfo CurrentUser { get => _currentUser; set => _currentUser = value; }
+        private UserInfo _currentUser = new UserInfo();
+        public UserInfo CurrentUser { get => _currentUser; set => _currentUser = value; }
 
         #endregion
 

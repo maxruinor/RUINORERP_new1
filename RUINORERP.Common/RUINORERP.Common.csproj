@@ -72,7 +72,7 @@
   <Compile Remove="MemoryCache\DictServiceHelper.cs" />
 </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="6.5.0" />
+    <PackageReference Include="Autofac" Version="8.1.1" />
     <PackageReference Include="Autofac.Extras.DynamicProxy" Version="6.0.1" />
     <PackageReference Include="EPPlus" Version="7.3.2" />
     <PackageReference Include="log4net" Version="2.0.15" />
@@ -91,7 +91,7 @@
     <PackageReference Include="PinYinConverterCore" Version="1.0.2" />
     <PackageReference Include="SqlSugar" Version="5.1.4.160" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.90" />
-    <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.26.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.2" />
     <PackageReference Include="System.Management" Version="7.0.0" />

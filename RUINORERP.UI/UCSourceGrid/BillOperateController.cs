@@ -24,6 +24,7 @@ using System.Reflection;
 using SourceGrid.Cells.Views;
 using SourceGrid.Cells.Models;
 using System.Text.RegularExpressions;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -282,7 +283,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             {
                                 object id = ReflectionHelper.GetPropertyValue(setcurrentObj, rc.ValueParameters[i].ParameterColName);
                                 //取值时没有使用指向性列名，用的是初始时 默认指向的名称编号等，这里是不是可以优化成可以指定。或不指定。不指定的话，使用默认的时。SetCol_RelatedValue 可以少输入一个参数
-                                var obj = CacheHelper.Instance.GetEntity(rc.ValueParameters[i].FkTableType.Name, id);
+                                var obj = BizCacheHelper.Instance.GetEntity(rc.ValueParameters[i].FkTableType.Name, id);
                                 if (obj != null)
                                 {
                                     object value = ReflectionHelper.GetPropertyValue(obj, rc.ValueParameters[i].PointToColName);

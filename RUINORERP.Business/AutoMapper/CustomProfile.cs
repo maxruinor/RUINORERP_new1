@@ -11,7 +11,7 @@ namespace RUINORERP.Business.AutoMapper
 {
 
     /// <summary>
-    /// 使用中配置构造函数，用来创建关系映射
+    /// 使用中配置构造函数，用来创建关系映射 bestnew
     /// </summary>
     public class CustomProfile : Profile
     {
@@ -20,12 +20,10 @@ namespace RUINORERP.Business.AutoMapper
         /// </summary>
         public CustomProfile()
         {
-            CreateMap<tb_BOM_SDetail, tb_BOM_SDetailTree>()
-                 .ForMember(dest => dest.FieldNameList, opt => opt.Ignore());//排除字段 忽略指定集合字段
-
-
             CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInv>();
             CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInvDetail>();
+            //测试了订单转成入库单列表集合不用单设置也可以成功,List<T>  这种转。反而有问题？
+           CreateMap<tb_PurOrder, tb_PurEntry>();
 
             CreateMap<BlogArticle, BlogViewModels>();
             CreateMap<BlogViewModels, BlogArticle>();
@@ -34,22 +32,11 @@ namespace RUINORERP.Business.AutoMapper
             //产品编辑时用 注意主键被覆盖问题
             CreateMap<tb_ProdDetail, Eav_ProdDetails>();
 
-            //ui TO ENTITY
-            CreateMap<Eav_ProdDetails, tb_ProdDetail>()
-            //如果希望忽略具有空值的所有源属性,则可以使用:
-            .ForAllMembers(opt => opt.Condition(srs => !srs.IsNullOrEmpty()));
-
-
-            //测试了订单转成入库单列表集合不用单设置也可以成功,List<T>  这种转。反而有问题？
-            CreateMap<tb_PurOrder, tb_PurEntry>();
             CreateMap<tb_PurOrderDetail, tb_PurEntryDetail>();
 
 
             CreateMap<tb_PurEntry, tb_PurOrder>();
             CreateMap<tb_PurEntryDetail, tb_PurOrderDetail>();
-
-
-
 
 
             //从前到后，由前到后,将借出转为要归还的数据
@@ -133,6 +120,15 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_ProductionPlan, tb_ProductionDemand>();
             CreateMap<tb_ProductionPlanDetail, tb_ProductionDemandDetail>();
 
+            CreateMap<tb_BOM_SDetail, tb_BOM_SDetailTree>()
+            .ForMember(dest => dest.FieldNameList, opt => opt.Ignore());//排除字段 忽略指定集合字段
+
+
+            //ui TO ENTITY
+            CreateMap<Eav_ProdDetails, tb_ProdDetail>()
+            //如果希望忽略具有空值的所有源属性,则可以使用:
+            .ForAllMembers(opt => opt.Condition(srs => !srs.IsNullOrEmpty()));
+
             CreateMap<tb_ProductionDemandTargetDetail, tb_ProductionDemandDetail>()
             .ForMember(a => a.NeedQuantity, o => o.MapFrom(d => d.NeedQuantity))
             //毛需求是原始的需求数量，而净需求是经过库存调整后的实际需求数量。   净需求 = 毛需求 - 库存 + 已预订量 - 在途量
@@ -144,15 +140,40 @@ namespace RUINORERP.Business.AutoMapper
             ;
 
             CreateMap<tb_ProductionPlanDetail, tb_ProductionDemandTargetDetail>()
-                 .ForMember(a => a.NeedQuantity, o => o.MapFrom(d => d.Quantity));
+            .ForMember(a => a.NeedQuantity, o => o.MapFrom(d => d.Quantity));
 
 
             CreateMap<View_Inventory, tb_ProductionDemandDetail>()
-              .ForMember(a => a.BookInventory, o => o.MapFrom(d => d.Quantity))
-              .ForMember(a => a.AvailableStock, o => o.MapFrom(d => d.Quantity - d.Sale_Qty))
-              .ForMember(a => a.InTransitInventory, o => o.MapFrom(d => d.Quantity - d.On_the_way_Qty))
-              .ForMember(a => a.MakeProcessInventory, o => o.MapFrom(d => d.Quantity - d.MakingQty))
-              ;
+            .ForMember(a => a.BookInventory, o => o.MapFrom(d => d.Quantity))
+            .ForMember(a => a.AvailableStock, o => o.MapFrom(d => d.Quantity - d.Sale_Qty))
+            .ForMember(a => a.InTransitInventory, o => o.MapFrom(d => d.Quantity - d.On_the_way_Qty))
+            .ForMember(a => a.MakeProcessInventory, o => o.MapFrom(d => d.Quantity - d.MakingQty))
+            ;
+
+            CreateMap<tb_ProductionDemandDetail, tb_ManufacturingOrderDetail>()
+            .ForMember(a => a.ShouldSendQty, o => o.MapFrom(d => d.NeedQuantity));
+
+            CreateMap<tb_ProductionDemandDetail, tb_PurGoodsRecommendDetail>()
+            .ForMember(a => a.PDCID_RowID, o => o.MapFrom(d => d.ID))//这个ID不是主键，只是用于库存不足中树的显示，以及用于合并时关联ID,因为生成时主键还没有保存到DB。没值
+            .ForMember(a => a.RecommendQty, o => o.MapFrom(d => d.NeedQuantity))
+            .ForMember(a => a.RequirementQty, o => o.MapFrom(d => d.MissingQuantity));
+
+
+            CreateMap<tb_ProductionDemandDetail, tb_ProduceGoodsRecommendDetail>()
+            .ForMember(a => a.RecommendQty, o => o.MapFrom(d => d.MissingQuantity))
+            .ForMember(a => a.PlanNeedQty, o => o.MapFrom(d => d.NeedQuantity))
+            .ForMember(a => a.RequirementQty, o => o.MapFrom(d => d.MissingQuantity));
+
+
+            CreateMap<tb_ProductionDemand, tb_BuyingRequisition>()
+            .ForMember(a => a.RefBillID, o => o.MapFrom(d => d.PDID))
+            .ForMember(a => a.RefBillNO, o => o.MapFrom(d => d.PDNo));
+
+
+
+            CreateMap<tb_PurGoodsRecommendDetail, tb_BuyingRequisitionDetail>()
+            .ForMember(a => a.RequirementDate, o => o.MapFrom(d => d.RequirementDate))
+            .ForMember(a => a.Quantity, o => o.MapFrom(d => d.RequirementQty));
 
             CreateMap<tb_ProductionPlanDetail, View_ProdDetail>();
             CreateMap<View_ProdDetail, tb_ProductionPlanDetail>();
@@ -163,27 +184,6 @@ namespace RUINORERP.Business.AutoMapper
 
             CreateMap<View_ProdDetail, tb_BuyingRequisitionDetail>();
 
-            CreateMap<tb_ProductionDemandDetail, tb_PurGoodsRecommendDetail>()
-                .ForMember(a => a.PDCID_RowID, o => o.MapFrom(d => d.ID))//这个ID不是主键，只是用于库存不足中树的显示，以及用于合并时关联ID,因为生成时主键还没有保存到DB。没值
-                .ForMember(a => a.RecommendQty, o => o.MapFrom(d => d.NeedQuantity))
-                .ForMember(a => a.RequirementQty, o => o.MapFrom(d => d.MissingQuantity));
-
-
-            CreateMap<tb_ProductionDemandDetail, tb_ProduceGoodsRecommendDetail>()
-             .ForMember(a => a.RecommendQty, o => o.MapFrom(d => d.MissingQuantity))
-             .ForMember(a => a.PlanNeedQty, o => o.MapFrom(d => d.NeedQuantity))
-             .ForMember(a => a.RequirementQty, o => o.MapFrom(d => d.MissingQuantity));
-
-
-            CreateMap<tb_ProductionDemand, tb_BuyingRequisition>()
-            .ForMember(a => a.RefBillID, o => o.MapFrom(d => d.PDID))
-            .ForMember(a => a.RefBillNO, o => o.MapFrom(d => d.PDNo));
-
-
-
-            CreateMap<tb_PurGoodsRecommendDetail, tb_BuyingRequisitionDetail>()
-             .ForMember(a => a.RequirementDate, o => o.MapFrom(d => d.RequirementDate))
-             .ForMember(a => a.Quantity, o => o.MapFrom(d => d.RequirementQty));
 
 
             //由需求分析主表生成制令单主表？
@@ -202,8 +202,8 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_ProduceGoodsRecommendDetail, tb_ManufacturingOrderDetail>();
 
 
-            CreateMap<tb_ProductionDemandDetail, tb_ManufacturingOrderDetail>()
-             .ForMember(a => a.ShouldSendQty, o => o.MapFrom(d => d.NeedQuantity));
+
+
 
             //如果需求分析单已经建好保存后，再修改BOM添加了材料后。按BOM明细到分析单明细中找不到时。则直接由BOM明细生成制令单明细行
             CreateMap<tb_BOM_SDetail, tb_ManufacturingOrderDetail>();
@@ -222,53 +222,9 @@ namespace RUINORERP.Business.AutoMapper
             //领取料单明细转退料明细
             CreateMap<tb_MaterialReturnDetail, tb_MaterialRequisitionDetail>();
 
-
-            // CreateMap<tb_Favorite, UseCsla.tb_FavoriteInfo>();
-            // CreateMap<UseCsla.tb_FavoriteInfo, tb_Favorite>();
-            //CreateMap<tb_Favorite, UseCsla.tb_FavoriteEditInfo>();
-            // CreateMap<UseCsla.tb_FavoriteEditInfo, tb_Favorite>();
-            //CreateMap<tb_Prod_Base, tb_Prod_BaseQueryDto>();
-            //CreateMap<tb_Prod_BaseQueryDto, tb_Prod_Base>();
             //意思是转换时为空则给默认值?
             //CreateMap<tb_Unit, tb_UnitDto>().ForMember(destination => destination.UnitName, opt => opt.NullSubstitute("缺少值名字")); ;
 
-            /*
-            CreateMap<SysUserInfo, SysUserInfoDto>()
-                .ForMember(a => a.uID, o => o.MapFrom(d => d.Id))
-                .ForMember(a => a.RIDs, o => o.MapFrom(d => d.RIDs))
-                .ForMember(a => a.addr, o => o.MapFrom(d => d.Address))
-                .ForMember(a => a.age, o => o.MapFrom(d => d.Age))
-                .ForMember(a => a.birth, o => o.MapFrom(d => d.Birth))
-                .ForMember(a => a.uStatus, o => o.MapFrom(d => d.Status))
-                .ForMember(a => a.uUpdateTime, o => o.MapFrom(d => d.UpdateTime))
-                .ForMember(a => a.uCreateTime, o => o.MapFrom(d => d.CreateTime))
-                .ForMember(a => a.uErrorCount, o => o.MapFrom(d => d.ErrorCount))
-                .ForMember(a => a.uLastErrTime, o => o.MapFrom(d => d.LastErrorTime))
-                .ForMember(a => a.uLoginName, o => o.MapFrom(d => d.LoginName))
-                .ForMember(a => a.uLoginPWD, o => o.MapFrom(d => d.LoginPWD))
-                .ForMember(a => a.uRemark, o => o.MapFrom(d => d.Remark))
-                .ForMember(a => a.uRealName, o => o.MapFrom(d => d.RealName))
-                .ForMember(a => a.name, o => o.MapFrom(d => d.Name))
-                .ForMember(a => a.tdIsDelete, o => o.MapFrom(d => d.IsDeleted))
-                .ForMember(a => a.RoleNames, o => o.MapFrom(d => d.RoleNames));
-            CreateMap<SysUserInfoDto, SysUserInfo>()
-                .ForMember(a => a.Id, o => o.MapFrom(d => d.uID))
-                .ForMember(a => a.Address, o => o.MapFrom(d => d.addr))
-                .ForMember(a => a.RIDs, o => o.MapFrom(d => d.RIDs))
-                .ForMember(a => a.Age, o => o.MapFrom(d => d.age))
-                .ForMember(a => a.Birth, o => o.MapFrom(d => d.birth))
-                .ForMember(a => a.Status, o => o.MapFrom(d => d.uStatus))
-                .ForMember(a => a.UpdateTime, o => o.MapFrom(d => d.uUpdateTime))
-                .ForMember(a => a.CreateTime, o => o.MapFrom(d => d.uCreateTime))
-                .ForMember(a => a.ErrorCount, o => o.MapFrom(d => d.uErrorCount))
-                .ForMember(a => a.LastErrorTime, o => o.MapFrom(d => d.uLastErrTime))
-                .ForMember(a => a.LoginName, o => o.MapFrom(d => d.uLoginName))
-                .ForMember(a => a.LoginPWD, o => o.MapFrom(d => d.uLoginPWD))
-                .ForMember(a => a.Remark, o => o.MapFrom(d => d.uRemark))
-                .ForMember(a => a.RealName, o => o.MapFrom(d => d.uRealName))
-                .ForMember(a => a.Name, o => o.MapFrom(d => d.name))
-                .ForMember(a => a.IsDeleted, o => o.MapFrom(d => d.tdIsDelete))
-                .ForMember(a => a.RoleNames, o => o.MapFrom(d => d.RoleNames));*/
         }
     }
 }

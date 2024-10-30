@@ -36,6 +36,7 @@ using WorkflowCore.Primitives;
 using RUINOR.WinFormsUI.ChkComboBox;
 using Netron.GraphLib;
 using System.Web.UI;
+using RUINORERP.Business.CommService;
 namespace RUINORERP.UI.AdvancedUIModule
 {
     public class UIGenerateHelper
@@ -291,7 +292,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                         //只处理需要缓存的表
                         pair = new KeyValuePair<string, string>();
-                        if (queryField.HasSubFilter && CacheHelper.Manager.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
+                        if (queryField.HasSubFilter && BizCacheHelper.Manager.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
                         {
                             #region 绑定下拉带子查询条件
                             Type mytype = queryField.SubQueryTargetType;
@@ -349,7 +350,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         pair = new KeyValuePair<string, string>();
                         //只处理需要缓存的表
 
-                        if (CacheHelper.Manager.NewTableList.TryGetValue(queryField.FKTableName, out pair))
+                        if (BizCacheHelper.Manager.NewTableList.TryGetValue(queryField.FKTableName, out pair))
                         {
                             string PIDColName = pair.Key;
                             string PColName = pair.Value;
@@ -395,7 +396,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         pair = new KeyValuePair<string, string>();
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
-                            if (CacheHelper.Manager.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
+                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
                             {
 
                                 //关联要绑定的类型

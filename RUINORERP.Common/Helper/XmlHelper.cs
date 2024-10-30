@@ -42,10 +42,30 @@ namespace RUINORERP.Common.Helper
                 //  Entity = SerializationHelper.Deserialize(PathwithFileName, false) as T;
                 string json = File.ReadAllText(PathwithFileName);
                 Entity = JsonConvert.DeserializeObject<T>(json) as T;
+                
             }
             return Entity as T;
         }
 
+        public object Deserialize(string fileName) 
+        {
+            object Entity = null;
+            string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data\\", fileName);
+            System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
+            //判断目录是否存在
+            if (!System.IO.Directory.Exists(fi.Directory.FullName))
+            {
+                System.IO.Directory.CreateDirectory(fi.Directory.FullName);
+            }
+            if (System.IO.File.Exists(PathwithFileName))
+            {
+                //  Entity = SerializationHelper.Deserialize(PathwithFileName, false) as T;
+                string json = File.ReadAllText(PathwithFileName);
+                Entity = JsonConvert.DeserializeObject(json);
+
+            }
+            return Entity  ;
+        }
 
         /// <summary>
         /// 转换对象为JSON格式数据

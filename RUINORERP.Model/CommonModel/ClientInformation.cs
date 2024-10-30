@@ -1,97 +1,231 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Model.CommonModel
 {
-
     /// <summary>
+    /// 用户信息在服务器端显示管理客户端的信息
     /// 与客户端有关的信息
     /// </summary>
-    public class ClientInformation
+    public class UserInfo : INotifyPropertyChanged
     {
-        /// <summary>
-        /// 电脑空闲时间，毫秒（ms)
-        /// </summary>
-        public long ComputerFreeTime { get; set; } = 0;
+        private string _sessionid;
+        private string _用户名;
+        private string _姓名;
+        private string _当前模块;
+        private string _当前窗体;
+        private DateTime _登陆时间;
+        private int _心跳数;
+        private DateTime _最后心跳时间;
+        private string _客户端版本;
+        private string _客户端IP;
+        private long _静止时间;
 
+        #region  属性
 
-        public DateTime loginTime { set; get; } = System.DateTime.Now;
+        public string SessionId
+        {
+            get { return _sessionid; }
+            set
+            {
+                if (_sessionid != value)
+                {
+                    _sessionid = value;
+                    OnPropertyChanged(nameof(SessionId));
+                }
+            }
+        }
 
-        /// <summary>
-        /// 心跳节拍数
-        /// </summary>
-        public int BeatData { get; set; }
+        public string 用户名
+        {
+            get { return _用户名; }
+            set
+            {
+                if (_用户名 != value)
+                {
+                    _用户名 = value;
+                    OnPropertyChanged(nameof(用户名));
+                }
+            }
+        }
 
-        /// <summary>
-        /// 登陆时间
-        /// </summary>
-        public DateTime LoginTime { get; set; }
+        public string 姓名
+        {
+            get { return _姓名; }
+            set
+            {
+                if (_姓名 != value)
+                {
+                    _姓名 = value;
+                    OnPropertyChanged(nameof(姓名));
+                }
+            }
+        }
 
-        /// <summary>
-        /// MIS版本
-        /// </summary>
-        public string Version { get; set; } = string.Empty;
+        public string 当前模块
+        {
+            get { return _当前模块; }
+            set
+            {
+                if (_当前模块 != value)
+                {
+                    _当前模块 = value;
+                    OnPropertyChanged(nameof(当前模块));
+                }
+            }
+        }
 
-        /// <summary>
-        /// 最后心跳时间
-        /// </summary>
-        public DateTime LastBeatTime { get; set; }
+        public string 当前窗体
+        {
+            get { return _当前窗体; }
+            set
+            {
+                if (_当前窗体 != value)
+                {
+                    _当前窗体 = value;
+                    OnPropertyChanged(nameof(当前窗体));
+                }
+            }
+        }
 
+        public DateTime 登陆时间
+        {
+            get { return _登陆时间; }
+            set
+            {
+                if (_登陆时间 != value)
+                {
+                    _登陆时间 = value;
+                    OnPropertyChanged(nameof(登陆时间));
+                }
+            }
+        }
 
-        private string currentModule = string.Empty;
-        private string currentFormUI = string.Empty;
+        public int 心跳数
+        {
+            get { return _心跳数; }
+            set
+            {
+                if (_心跳数 != value)
+                {
+                    _心跳数 = value;
+                    OnPropertyChanged(nameof(心跳数));
+                }
+            }
+        }
 
-        public string CurrentModule { get => currentModule; set => currentModule = value; }
+        public DateTime 最后心跳时间
+        {
+            get { return _最后心跳时间; }
+            set
+            {
+                if (_最后心跳时间 != value)
+                {
+                    _最后心跳时间 = value;
+                    OnPropertyChanged(nameof(最后心跳时间));
+                }
+            }
+        }
 
-        public string CurrentFormUI { get => currentFormUI; set => currentFormUI = value; }
+        public string 客户端版本
+        {
+            get { return _客户端版本; }
+            set
+            {
+                if (_客户端版本 != value)
+                {
+                    _客户端版本 = value;
+                    OnPropertyChanged(nameof(客户端版本));
+                }
+            }
+        }
 
+        public string 客户端IP
+        {
+            get { return _客户端IP; }
+            set
+            {
+                if (_客户端IP != value)
+                {
+                    _客户端IP = value;
+                    OnPropertyChanged(nameof(客户端IP));
+                }
+            }
+        }
 
+        public long 静止时间
+        {
+            get { return _静止时间; }
+            set
+            {
+                if (_静止时间 != value)
+                {
+                    _静止时间 = value;
+                    OnPropertyChanged(nameof(静止时间));
+                }
+            }
+        }
+        #endregion
+
+        private bool _online;
+        private int _userID;
+        private bool _serverAuthentication;
+
+        public int UserID
+        {
+            get => _userID;
+            set
+            {
+                if (_userID != value)
+                {
+                    _userID = value;
+                    OnPropertyChanged(nameof(UserID));
+                }
+            }
+        }
+ 
+ 
+        public bool Online
+        {
+            get => _online;
+            set
+            {
+                if (_online != value)
+                {
+                    _online = value;
+                    OnPropertyChanged(nameof(Online));
+                }
+            }
+        }
+
+        public bool ServerAuthentication
+        {
+            get => _serverAuthentication;
+            set
+            {
+                if (_serverAuthentication != value)
+                {
+                    _serverAuthentication = value;
+                    OnPropertyChanged(nameof(ServerAuthentication));
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
-    /// <summary>
-    /// 与客户端有关的信息
-    /// </summary>
-    public class ServerInformation
-    {
-        /// <summary>
-        /// 电脑空闲时间，毫秒（ms)
-        /// </summary>
-        public long ComputerFreeTime { get; set; } = 0;
+   
 
+ 
 
-        public DateTime loginTime { set; get; } = System.DateTime.Now;
-
-        /// <summary>
-        /// 心跳节拍数
-        /// </summary>
-        public int BeatData { get; set; }
-
-        /// <summary>
-        /// 登陆时间
-        /// </summary>
-        public DateTime LoginTime { get; set; }
-
-        /// <summary>
-        /// MIS版本
-        /// </summary>
-        public string Version { get; set; } = string.Empty;
-
-        /// <summary>
-        /// 最后心跳时间
-        /// </summary>
-        public DateTime LastBeatTime { get; set; }
-
-
-        private string currentModule = string.Empty;
-        private string currentFormUI = string.Empty;
-
-        public string CurrentModule { get => currentModule; set => currentModule = value; }
-
-        public string CurrentFormUI { get => currentFormUI; set => currentFormUI = value; }
-
-
-    }
+ 
 }

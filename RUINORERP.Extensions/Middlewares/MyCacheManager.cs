@@ -142,9 +142,6 @@ namespace RUINORERP.Extensions.Middlewares
                 //更新?
             }
 
-
-
-
         }
 
         /*
@@ -331,6 +328,16 @@ namespace RUINORERP.Extensions.Middlewares
                 return;
             }
             string tableName = type.Name;
+            UpdateEntityList(tableName, newlist);
+        }
+
+        public void UpdateEntityList(string tableName, List<object> newlist)
+        {
+            //newlist是引用类型不可以对他操作，不然会体现到上现操作。例如查询
+            if (newlist == null)
+            {
+                return;
+            }
             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
             if (NewTableList.TryGetValue(tableName, out pair))
             {
@@ -361,34 +368,7 @@ namespace RUINORERP.Extensions.Middlewares
                 #endregion
             }
 
-            /*
-            //只处理需要缓存的表
-            if (TableList.ContainsKey(tableName))
-            {
-                //设置属性的值
-                if (CacheEntityList.Exists(tableName))
-                {
-                    //如果缓存中已经包含的这个表的部分行值呢？以新的为标准，把新的叫包含了旧值的去掉，没有的就添加
-                    List<T> oldlist = CacheEntityList.Get(tableName) as List<T>;
-
-                    foreach (var item in oldlist)
-                    {
-                        if (!newlist.Exists(n => n.GetPropertyValue("ID") == item.GetPropertyValue("")))
-                        {
-
-                        }
-                    }
-                    CacheEntityList.Update(tableName, k => newlist);
-                }
-                else
-                {
-                    CacheEntityList.Add(tableName, newlist);
-                }
-            }
-            */
         }
-
-        /*
 
         public void AddCacheEntityList<T>(T entity)
         {
@@ -416,61 +396,32 @@ namespace RUINORERP.Extensions.Middlewares
             }
 
         }
-        */
 
-        /*
-        public void AddCacheEntityList<T>(object entity)
+        public void AddCacheEntityList(object objList, string tableName)
         {
-            string tableName = typeof(T).Name;
-            //只处理需要缓存的表
-            if (TableList.ContainsKey(tableName))
+            if (objList == null)
             {
-                string key = TableList[tableName].Split(':')[0];
-                string value = TableList[tableName].Split(':')[1];
-
-                //设置属性的值
-                object Newkey = typeof(T).GetProperty(key).GetValue(entity, null);
-                object NewValue = typeof(T).GetProperty(value).GetValue(entity, null);
-
-                if (CacheEntityList.Exists(tableName))
-                {
-                    var oldlist = CacheEntityList.Get(tableName) as List<T>;
-                    if (oldlist == null)
-                    {
-                        return;
-                    }
-                    if (oldlist.Exists(k => k.Equals(entity)))
-                    {
-
-                    }
-                    else
-                    {
-                        oldlist.Add((T)entity);
-                    }
-
-                    CacheEntityList.Update(tableName, v => oldlist);
-                }
+                return;
             }
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+
+            //if (!NewTableList.ContainsKey(tableName))
+            //{
+            //    NewTableList.TryAdd(tableName, new KeyValuePair<string, string>(idColName, nameColName));
+            //}
+
+            //if (NewTableList.TryGetValue(tableName, out pair))
+            //{
+
+            //}
+            //只处理需要缓存的表
+            if (!CacheEntityList.Exists(tableName))
+            {
+                CacheEntityList.Add(tableName, objList);
+            }
+
         }
-        */
-        //public void UpdateEntity<T>(object entity)
-        //{
-        //    string tableName = typeof(T).Name;
-        //    //只处理需要缓存的表
-        //    if (TableList.ContainsKey(tableName))
-        //    {
-        //        string key = TableList[tableName].Split(':')[0];
-        //        string value = TableList[tableName].Split(':')[1];
-        //        //设置属性的值
-        //        object xkey = typeof(T).GetProperty(key).GetValue(entity, null);
-        //        object xValue = typeof(T).GetProperty(value).GetValue(entity, null);
-        //        string dckey = tableName + ":" + key + ":" + xkey;
-        //        if (CacheEntity.Exists(dckey))
-        //        {
-        //            CacheEntity.Update(dckey, v => entity);
-        //        }
-        //    }
-        //}
+
 
         /// <summary>
         /// 更新列表中的一个值
@@ -498,29 +449,6 @@ namespace RUINORERP.Extensions.Middlewares
                     }
                     oldlist.Add(entity);
                     CacheEntityList.Update(tableName, v => oldlist);
-                    /*
-                    bool flag = false;
-                    foreach (var item in oldlist)
-                    {
-                        //设置属性的值
-                        object oldkey = typeof(T).GetProperty(key).GetValue(item, null);
-                        object oldValue = typeof(T).GetProperty(value).GetValue(item, null);
-
-
-                        if (oldkey.ToString() == Newkey.ToString())
-                        {
-                            oldValue = NewValue;
-                            ReflectionHelper.SetPropertyValue(item, value, NewValue);
-                            flag = true;
-                            break;
-                        }
-                    }
-                    if (!flag)
-                    {
-                        oldlist.Add((T)entity);
-                    }
-                    CacheEntityList.Update(tableName, v => oldlist);
-                    */
                 }
                 else
                 {
@@ -535,8 +463,7 @@ namespace RUINORERP.Extensions.Middlewares
 
         }
 
-
-
+      
         /// <summary>
         /// 
         /// </summary>

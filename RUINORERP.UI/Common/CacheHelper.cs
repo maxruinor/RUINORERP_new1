@@ -16,6 +16,7 @@ using RUINORERP.Common.Log4Net;
 using RUINORERP.Common.Extensions;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using System.Diagnostics;
 
 
 namespace RUINORERP.UI.Common
@@ -39,59 +40,62 @@ namespace RUINORERP.UI.Common
                 if (_helper == null)
                 {
                     _helper = new CacheHelper();
-                    if (_manager == null)
-                    {
-                        //因为是静态，系统启动就调用这里。所以这里的才是最会执行的代码
-                        var cache = CacheManager.Core.CacheFactory.Build<object>(p => p.WithMicrosoftLogging(log =>
-                        {
-                            // log.ClearProviders();
-                            //f.AddConsole(LogLevel.Information);
-                            //f.AddDebug(LogLevel.Verbose);
-                            //log4net.config 配置文件中最后面 定的级别
-                            Log4NetProvider log4NetProvider = new Log4NetProvider("Log4net_file.config");
-                            log.AddProvider(log4NetProvider);
-                        })
-                        .WithSystemRuntimeCacheHandle()
-                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120))
-                        );
-
-                        //  var cacheA = CacheFactory.FromConfiguration<object>("myCache");
-                        //因为系统启动就调用这里。所以这里的才是最会执行的代码
-                        var cacheEntity = CacheManager.Core.CacheFactory.Build<object>(p => p.WithMicrosoftLogging(log =>
-                        {
-                            // log.ClearProviders();
-                            //f.AddConsole(LogLevel.Information);
-                            //f.AddDebug(LogLevel.Verbose);
-                            //log4net.config 配置文件中最后面 定的级别
-                            Log4NetProvider log4NetProvider = new Log4NetProvider("Log4net_file.config");
-                            log.AddProvider(log4NetProvider);
-                        })
-                        .WithSystemRuntimeCacheHandle()
-                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120))
-                        );
-
-
-                        //因为系统启动就调用这里。所以这里的才是最会执行的代码
-                        var cacheEntityList = CacheManager.Core.CacheFactory.Build<object>(p => p.WithMicrosoftLogging(log =>
-                        {
-                            // log.ClearProviders();
-                            //f.AddConsole(LogLevel.Information);
-                            //f.AddDebug(LogLevel.Verbose);
-                            //log4net.config 配置文件中最后面 定的级别
-                            Log4NetProvider log4NetProvider = new Log4NetProvider("Log4net_file.config");
-                            log.AddProvider(log4NetProvider);
-                        })
-                        .WithSystemRuntimeCacheHandle()
-                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120))
-                        );
-
-
-                        _manager = new MyCacheManager(cache, cacheEntity, cacheEntityList);
-                    }
+                  
                 }
                 return _helper;
             }
         }
+
+
+        public static void InitManager()
+        {
+            if (_manager == null)
+            {
+                //因为是静态，系统启动就调用这里。所以这里的才是最会执行的代码
+                var cache = CacheManager.Core.CacheFactory.Build<object>(p => p.WithMicrosoftLogging(log =>
+                {
+                    // log.ClearProviders();
+                    //f.AddConsole(LogLevel.Information);
+                    //f.AddDebug(LogLevel.Verbose);
+                    //log4net.config 配置文件中最后面 定的级别
+                    Log4NetProvider log4NetProvider = new Log4NetProvider("Log4net_file.config");
+                    log.AddProvider(log4NetProvider);
+                })
+                .WithSystemRuntimeCacheHandle()
+                .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120))
+                );
+
+                //  var cacheA = CacheFactory.FromConfiguration<object>("myCache");
+                //因为系统启动就调用这里。所以这里的才是最会执行的代码
+                var cacheEntity = CacheManager.Core.CacheFactory.Build<object>(p => p.WithMicrosoftLogging(log =>
+                {
+                    // log.ClearProviders();
+                    //f.AddConsole(LogLevel.Information);
+                    //f.AddDebug(LogLevel.Verbose);
+                    //log4net.config 配置文件中最后面 定的级别
+                    Log4NetProvider log4NetProvider = new Log4NetProvider("Log4net_file.config");
+                    log.AddProvider(log4NetProvider);
+                })
+                .WithSystemRuntimeCacheHandle()
+                .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120))
+                );
+                //因为系统启动就调用这里。所以这里的才是最会执行的代码
+                var cacheEntityList = CacheManager.Core.CacheFactory.Build<object>(p => p.WithMicrosoftLogging(log =>
+                {
+                    // log.ClearProviders();
+                    //f.AddConsole(LogLevel.Information);
+                    //f.AddDebug(LogLevel.Verbose);
+                    //log4net.config 配置文件中最后面 定的级别
+                    Log4NetProvider log4NetProvider = new Log4NetProvider("Log4net_file.config");
+                    log.AddProvider(log4NetProvider);
+                })
+                .WithSystemRuntimeCacheHandle()
+                .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120))
+                );
+                _manager = new MyCacheManager(cache, cacheEntity, cacheEntityList);
+            }
+        }
+
 
         private static MyCacheManager _manager;
 
@@ -99,8 +103,6 @@ namespace RUINORERP.UI.Common
 
         //public ConcurrentDictionary<string, object> Dict { get => _Dict; set => _Dict = value; }
         public static MyCacheManager Manager { get => _manager; set => _manager = value; }
-
-
 
         public T GetEntity<T>(object IdValue)
         {
@@ -370,22 +372,18 @@ namespace RUINORERP.UI.Common
         /// <param name="expvalue">Name</param>
         public void SetDictDataSource<T>(Expression<Func<T, long>> expkey, Expression<Func<T, string>> expvalue) where T : class
         {
+            string tableName = typeof(T).Name;
+            Stopwatch stopwatch = Stopwatch.StartNew();
             var mb = expkey.GetMemberInfo();
             string idColName = mb.Name;
             var mbv = expvalue.GetMemberInfo();
             string nameColName = mbv.Name;
-            string tableName = typeof(T).Name;
             try
             {
-
                 if (!Manager.NewTableList.ContainsKey(tableName))
                 {
                     Manager.NewTableList.TryAdd(tableName, new KeyValuePair<string, string>(idColName, nameColName));
                 }
-                //if (!Manager.TableTypeList.ContainsKey(tableName))
-                //{
-                //    Manager.TableTypeList.TryAdd(tableName, typeof(T));
-                //}
 
                 //第一次先查询一次载入
                 CommonController bdc = Startup.GetFromFac<CommonController>();
@@ -406,61 +404,9 @@ namespace RUINORERP.UI.Common
             {
                 MainForm.Instance.logger.LogError("SetDictDataSource:" + tableName + "===>" + ex.Message);
             }
+            stopwatch.Stop();
+            MainForm.Instance.logger.LogInformation($"初始化SetDictDataSource: {tableName} 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
         }
-
-
-        /*
-        /// <summary>
-        /// 保存，并且初始化值
-        /// </summary>
-        /// <typeparam name="T">键值对的表实体</typeparam>
-        /// <param name="expkey">ID</param>
-        /// <param name="expvalue">Name</param>
-        public void SetDictDataSource(Type type, string keyColName, string nameColName)
-        {
-            string tableName = type.Name;
-            try
-            {
-
-                if (!Manager.NewTableList.ContainsKey(tableName))
-                {
-                    Manager.NewTableList.TryAdd(tableName, new KeyValuePair<string, string>(keyColName, nameColName));
-                }
-
-                //// 要创建的实体类名
-                //string className = "YourEntityClassName";
-
-                //// 使用 Assembly.Load 加载包含实体类的程序集
-                //Assembly assembly = Assembly.Load("YourAssemblyName");
-
-                //// 使用 Type.GetType 获取实体类的类型
-                //Type entityType = assembly.GetType(className);
-
-                //// 使用 Activator.CreateInstance 创建实体的实例
-                //object entityInstance = Activator.CreateInstance(entityType);
-
-
-                //第一次先查询一次载入
-                CommonController bdc = Startup.GetFromFac<CommonController>();
-                var list = bdc.GetBindSource<T>(tableName);
-
-                //设置绑定数据源
-                //只处理需要缓存的表
-                if (Manager.NewTableList.ContainsKey(tableName))
-                {
-                    //设置属性的值
-                    if (!Manager.CacheEntityList.Exists(tableName))
-                    {
-                        Manager.UpdateEntityList(type, list);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError("SetDictDataSource:" + tableName + "===>" + ex.Message);
-            }
-        }
-        */
 
         public void SetDictDataSource(List<string> typeNames)
         {
@@ -586,13 +532,11 @@ namespace RUINORERP.UI.Common
             }
         }
 
-
         /// <summary>
         /// 初始化数据字典,并且提取出结果
         /// </summary>
         public void InitDict()
         {
-
             try
             {
                 Manager.Cache.Clear();
@@ -647,9 +591,6 @@ namespace RUINORERP.UI.Common
         }
 
     }
-
-
-
 
 
     public static class PropertyCopier

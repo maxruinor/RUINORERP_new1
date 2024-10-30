@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using RUINORERP.Common.Extensions;
 using RUINORERP.UI.SuperSocketClient;
 using System;
 using System.Collections.Generic;
@@ -92,8 +93,6 @@ namespace RUINORERP.UI.Common
                     UserGlobalConfig.Instance.ServerIP = "192.168.0.254";
                 }
 
-
-                // ecs.Connect("127.0.0.1", 3001);
                 TransPackProcess tpp = new TransPackProcess();
 
                 if (_ecs == null)
@@ -104,7 +103,7 @@ namespace RUINORERP.UI.Common
                 {
                     //ecs.ServerIp = "127.0.0.1";
                     _ecs.ServerIp = UserGlobalConfig.Instance.ServerIP;
-                    _ecs.Port = 3001;
+                    _ecs.Port = UserGlobalConfig.Instance.ServerPort.ToInt();
                     await _ecs.Connect();
 
                 }

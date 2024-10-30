@@ -8,7 +8,6 @@ using SuperSocket.ProtoBase;
 using System.IO;
 using System.Net;
 using TransInstruction;
-using TransInstruction.DataModel;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.ComponentModel;
@@ -20,18 +19,19 @@ using RUINORERP.UI.IM;
 using System.Diagnostics;
 using SourceLibrary.Security;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
     public class EasyClientService
     {
         #region 当前用户信息
-        private List<OnlineUserInfo> userInfos = new List<OnlineUserInfo>();
-        public List<OnlineUserInfo> UserInfos { get => userInfos; set => userInfos = value; }
+        private List<UserInfo> userInfos = new List<UserInfo>();
+        public List<UserInfo> UserInfos { get => userInfos; set => userInfos = value; }
 
-        private OnlineUserInfo _currentUser = new OnlineUserInfo();
+        private UserInfo _currentUser = new UserInfo();
 
-        public OnlineUserInfo CurrentUser { get => _currentUser; set => _currentUser = value; }
+        public UserInfo CurrentUser { get => _currentUser; set => _currentUser = value; }
 
 
         #endregion
@@ -81,7 +81,6 @@ namespace RUINORERP.UI.SuperSocketClient
             DataQueue.Enqueue(buffer);
         }
 
-
         public EasyClient<BizPackageInfo> client;
         private bool isConnected = false;
 
@@ -113,8 +112,8 @@ namespace RUINORERP.UI.SuperSocketClient
             client.NewPackageReceived += OnPackageReceived;
             client.Error += OnClientError;
             client.Closed += OnClientClosed;
-
-
+            string testMesg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId} 启动线程测试";
+            MessageBox.Show(testMesg);
             //每10s发送一次心跳或尝试一次重连
             timer = new System.Timers.Timer(2000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
@@ -189,9 +188,9 @@ namespace RUINORERP.UI.SuperSocketClient
                 // tx.PushInt((int)SysStatmp);//系统当前时间  这里打开的话就会有这种错误  Too Fast Client Time  OST 1656993523 NST 1656993564 DST 41 OCT 17 NCT 91 DCT 74
                 tx.PushInt64(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
                 tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
-                tx.PushString(System.Environment.MachineName + ":" + MainForm.Instance.AppContext.ClientInfo.Version);
-                MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime = MainForm.GetLastInputTime();
-                tx.PushInt64(MainForm.Instance.AppContext.ClientInfo.ComputerFreeTime);//电脑空闲时间
+                tx.PushString(System.Environment.MachineName + ":" + MainForm.Instance.AppContext.OnlineUser.客户端版本);
+                MainForm.Instance.AppContext.OnlineUser.静止时间 = MainForm.GetLastInputTime();
+                tx.PushInt64(MainForm.Instance.AppContext.OnlineUser.静止时间);//电脑空闲时间
                 tx.PushString(MainForm.Instance.AppContext.log.Path);
                 tx.PushString(MainForm.Instance.AppContext.log.ModName);
 
@@ -210,7 +209,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
         public async Task<bool> Connect()
         {
-            MainForm.Instance.uclog.AddLog("正在连接...");
+            MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}正在连接...");
             var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port));
             if (connected)
             {
@@ -237,24 +236,25 @@ namespace RUINORERP.UI.SuperSocketClient
 
                 //连接成功
                 IsConnected = true;
-                _stopThreadEvent.Reset();
-                _threadWorker = new Thread(DoWork)
+                _stopThreadEvent.Reset(); // 重置停止事件
+
+                // 检查是否需要重新启动发送数据线程
+                _threadSendDataWorker = new Thread(DoWork)
                 {
                     IsBackground = true
                 };
-                _threadWorker.Start();
 
-                //如果曾经正常登陆过，则断开重新连接发送登陆信息
-                //if (LoginSuccessed)
-                //{
-                //    ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
-                //    serverAuthorizer.LoginServerByEasyClient(this, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord);
-                //    UITools.SuperSleep(2000);
-                //    if (LoginStatus)
-                //    {
-                //        MainForm.Instance.logger.LogInformation("重新登陆服务器成功");
-                //    }
-                //}
+                if (_threadSendDataWorker.ThreadState == (System.Threading.ThreadState.Unstarted | System.Threading.ThreadState.Background))
+                {
+                    try
+                    {
+                        _threadSendDataWorker.Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, "线程启动出错:" + ex.Message);
+                    }
+                }
 
             }
             else
@@ -270,35 +270,103 @@ namespace RUINORERP.UI.SuperSocketClient
         {
             await client.Close();
             _stopThreadEvent.Set();
-            if (_threadWorker != null)
+            if (_threadSendDataWorker != null && _threadSendDataWorker.ThreadState == System.Threading.ThreadState.Running)
             {
-                _threadWorker.Join();
-                _threadWorker = null;
+                try
+                {
+                    _threadSendDataWorker.Join();
+                    _threadSendDataWorker.Abort();
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // 处理线程中断异常
+                }
+                catch (ThreadAbortException)
+                {
+                    // 处理线程中止异常
+                }
+                finally
+                {
+                    _threadSendDataWorker = null;
+                }
             }
         }
 
 
         ///连接上之后断开必然会触发OnClosed事件;
+        //private async void OnClientClosed(object sender, EventArgs e)
+        //{
+        //    IsConnected = false;
+        //    if (OnConnectClosed != null)
+        //    {
+        //        OnConnectClosed(IsConnected);
+        //    }
+        //    userInfos = new List<OnlineUserInfo>();
+        //    Thread.Sleep(10);
+        //    _stopThreadEvent.Set();
+        //    if (_threadSendDataWorker != null)
+        //    {
+        //        _threadSendDataWorker.Join();
+        //        _threadSendDataWorker = null;
+        //    }
+        //    //重新连接
+        //    //如果只执行连接，没有注册dowork
+        //    //await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port));
+        //    await Connect();
+        //}
+
+
         private async void OnClientClosed(object sender, EventArgs e)
         {
+            // 设置连接状态为断开
             IsConnected = false;
+
+            // 触发连接关闭事件
             if (OnConnectClosed != null)
             {
                 OnConnectClosed(IsConnected);
             }
-            userInfos = new List<OnlineUserInfo>();
-            Thread.Sleep(10);
-            _stopThreadEvent.Set();
-            if (_threadWorker != null)
+
+            // 清空用户信息列表
+            lock (userInfos)
             {
-                _threadWorker.Join();
-                _threadWorker = null;
+                userInfos.Clear();
             }
-            //重新连接
-            //如果只执行连接，没有注册dowork
-            //await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port));
+
+            // 通知发送数据线程停止
+            _stopThreadEvent.Set();
+
+            // 等待发送数据线程结束
+            if (_threadSendDataWorker != null && _threadSendDataWorker.ThreadState == System.Threading.ThreadState.Running)
+            {
+                try
+                {
+                    await Task.Run(() => _threadSendDataWorker.Join());
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // 处理线程中断异常
+                }
+                catch (ThreadAbortException)
+                {
+                    // 处理线程中止异常
+                }
+                finally
+                {
+                    _threadSendDataWorker = null;
+                }
+            }
+
+            // 记录日志
+            MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接已关闭，准备重新连接...");
+
+            // 引入延迟重连策略
+            await Task.Delay(2000); // 延迟1秒，可以根据实际情况调整
+
+            // 尝试重新连接
             await Connect();
         }
+
 
         private async void OnPackageReceived(object sender, PackageEventArgs<BizPackageInfo> e)
         {
@@ -313,6 +381,9 @@ namespace RUINORERP.UI.SuperSocketClient
                     OriginalData od = e.Package.od;
                     switch (msg)
                     {
+                        case ServerCmdEnum.发送缓存数据列表:
+                            ClientService.接收缓存数据列表(od);
+                            break;
                         case ServerCmdEnum.工作流数据推送:
                             WorkflowService.接收工作流数据(od);
                             break;
@@ -414,14 +485,14 @@ namespace RUINORERP.UI.SuperSocketClient
         private async void OnClientError(object sender, SuperSocket.ClientEngine.ErrorEventArgs e)
         {
             MainForm.Instance.uclog.AddLog("与服务器连接异常:" + e.Exception.Message);
-            MainForm.Instance.uclog.AddLog("准备重新连接...");
+            MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}准备重新连接...");
             IsConnected = false;
-            userInfos = new List<OnlineUserInfo>();
-            Thread.Sleep(1000);
+            userInfos = new List<UserInfo>();
+            Thread.Sleep(2000);
             reConnect++;
             if (reConnect > 30)
             {
-                MainForm.Instance.uclog.AddLog("系统连接超时...一分钟后强制退出，请保存数据。");
+                MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}系统连接超时...一分钟后强制退出，请保存数据。");
                 this.LoginStatus = false;
                 if (reConnect > 90)
                 {
@@ -438,6 +509,11 @@ namespace RUINORERP.UI.SuperSocketClient
         private void OnClientConnected(object sender, EventArgs e)
         {
             IsConnected = true;
+            //如果验证通过才是登陆成功
+            if (true)
+            {
+                this.LoginStatus= false;
+            }
             //连上就需要做一些动作，如果登陆成功过的。
             /*
             if (this.LoginStatus == false)
@@ -464,12 +540,15 @@ namespace RUINORERP.UI.SuperSocketClient
             }
             //获取用户列表
             */
-            MainForm.Instance.uclog.AddLog("连接成功");
+            MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接成功{LoginStatus},{this.client.LocalEndPoint}");
         }
 
         #region 线程
 
-        private Thread _threadWorker;
+        /// <summary>
+        /// 发送数据线程
+        /// </summary>
+        private Thread _threadSendDataWorker;
         private readonly AutoResetEvent _stopThreadEvent;
 
         #endregion

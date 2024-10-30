@@ -23,5 +23,17 @@ namespace RUINORERP.Extensions
                 return cache;
             });
         }
+
+        public static void AddMemoryCacheSetupWithInstance(this IServiceCollection services, IMemoryCache memoryCache)
+        {
+            if (services == null) throw new ArgumentNullException(nameof(services));
+
+            services.AddScoped<ICaching, MemoryCaching>();
+            services.AddSingleton<IMemoryCache>(factory =>
+            {
+                return memoryCache;
+            });
+        }
+
     }
 }

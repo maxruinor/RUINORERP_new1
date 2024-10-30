@@ -1,14 +1,28 @@
 ﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-namespace RUINORERP.UI.AutoMapper
-{
 
-    /*
+namespace RUINORERP.Server.Comm
+{
+    /// <summary>
+    /// 静态全局 AutoMapper 配置文件
+    /// </summary>
+    public class AutoMapperConfig
+    {
+        public static MapperConfiguration RegisterMappings()
+        {
+            return new MapperConfiguration(cfg =>
+            {
+                // 也可以在指定的程序集中扫描从 Profile 继承的类，并将其添加到配置中
+                //cfg.AddMaps(System.AppDomain.CurrentDomain.GetAssemblies());
+                // 也可以传程序集名称（dll 名称）
+                //cfg.AddMaps("LibCoreTest");
+
+                //cfg.AddProfile(new Business.AutoMapper.CslaProfile());
+                 //cfg.AddProfile(new CustomProfile());
+               // cfg.AddProfile(new CustomProfileAll());
+            });
+        }
+
+        /*
 
 
     /// <summary>
@@ -45,26 +59,5 @@ namespace RUINORERP.UI.AutoMapper
 
     }
     */
-
-
-    /// <summary>
-    /// 11
-    /// </summary>
-    public class AutoMapperConfig
-    {
-        public static MapperConfiguration RegisterMappings()
-        {
-            return new MapperConfiguration(cfg =>
-            {
-                // 也可以在指定的程序集中扫描从 Profile 继承的类，并将其添加到配置中
-                //cfg.AddMaps(System.AppDomain.CurrentDomain.GetAssemblies());
-                // 也可以传程序集名称（dll 名称）
-                //cfg.AddMaps("LibCoreTest");
-
-                //cfg.AddProfile(new Business.AutoMapper.CslaProfile());
-                cfg.AddProfile(new Business.AutoMapper.CustomProfile());
-            });
-        }
     }
 }
-

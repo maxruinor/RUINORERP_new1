@@ -91,10 +91,6 @@ namespace RUINORERP.UI.SuperSocketClient
         /// 指示登陆的实际状态，登陆了才有心跳。因为心跳放到了连接成功后。所以在这里添加了一个属性来确认 by watson 2024-3-11
         /// </summary>
         public bool LoginStatus { get; set; } = false;
-        /// <summary>
-        /// 标识是否登陆成功过
-        /// </summary>
-        public bool LoginSuccessed { get; set; } = false;
 
         public string ServerIp { get => _ip; set => _ip = value; }
         public int Port { get => _port; set => _port = value; }
@@ -112,8 +108,7 @@ namespace RUINORERP.UI.SuperSocketClient
             client.NewPackageReceived += OnPackageReceived;
             client.Error += OnClientError;
             client.Closed += OnClientClosed;
-            string testMesg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId} 启动线程测试";
-            MessageBox.Show(testMesg);
+            
             //每10s发送一次心跳或尝试一次重连
             timer = new System.Timers.Timer(2000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
@@ -206,69 +201,162 @@ namespace RUINORERP.UI.SuperSocketClient
             return gd;
         }
 
-
+        private Task _connectTask;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private volatile bool _isConnecting = false;
+        private int _reconnectAttempts = 0;
+        private const int MaxReconnectAttempts = 10;
+        private const int ReconnectInterval = 5000; // 重连间隔时间，单位为毫秒
         public async Task<bool> Connect()
         {
-            MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}正在连接...");
-            var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port));
-            if (connected)
+            if (_isConnecting) // 如果已经在连接中，直接返回
             {
-                //如果重连次数大于，认为是通过重新连接到服务器的。这时将手动登陆信息传入
-                if (reConnect > 1)
-                {
-                    try
-                    {
-                        ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
-                        await serverAuthorizer.LongRunningOperationAsync(this, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
-                        UITools.SuperSleep(800);
-                        if (this.LoginStatus)
-                        {
-                            MainForm.Instance.logger.LogInformation("成功恢复与服务器的连接。");
-                        }
-                    }
-                    catch (Exception)
-                    {
-
-
-                    }
-                    reConnect = 0;
-                }
-
-                //连接成功
-                IsConnected = true;
-                _stopThreadEvent.Reset(); // 重置停止事件
-
-                // 检查是否需要重新启动发送数据线程
-                _threadSendDataWorker = new Thread(DoWork)
-                {
-                    IsBackground = true
-                };
-
-                if (_threadSendDataWorker.ThreadState == (System.Threading.ThreadState.Unstarted | System.Threading.ThreadState.Background))
-                {
-                    try
-                    {
-                        _threadSendDataWorker.Start();
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.logger.LogError(ex, "线程启动出错:" + ex.Message);
-                    }
-                }
-
+                return false;
             }
-            else
+            _cancellationTokenSource.Cancel(); // 取消之前的连接尝试
+            _cancellationTokenSource = new CancellationTokenSource(); // 创建新的CancellationTokenSource
+            _isConnecting = true;
+            try
             {
-                //连接失败
-                IsConnected = false;
+                _cancellationTokenSource.Token.ThrowIfCancellationRequested(); // 如果已经被取消，抛出异常
 
+                MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}正在连接...");
+                //var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port));
+                var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port), _cancellationTokenSource.Token);
+                if (connected)
+                {
+                    await ConnectSuccessed();
+                }
+                else
+                {
+                    //连接失败
+                    IsConnected = false;
+
+                }
+                return IsConnected;
+            }
+            catch (OperationCanceledException)
+            {
+                // 连接被取消
+                MainForm.Instance.uclog.AddLog("连接尝试被取消。");
+            }
+            finally
+            {
+                _isConnecting = false; // 完成连接尝试，无论成功与否
             }
             return IsConnected;
         }
 
+
+        public async Task<bool> ConnectSuccessed()
+        {
+            //连接成功
+            IsConnected = true;
+            _stopThreadEvent.Reset(); // 重置停止事件
+
+            // 检查是否需要重新启动发送数据线程
+            _threadSendDataWorker = new Thread(DoWork)
+            {
+                IsBackground = true
+            };
+
+            if (_threadSendDataWorker.ThreadState == (System.Threading.ThreadState.Unstarted | System.Threading.ThreadState.Background))
+            {
+                try
+                {
+                    _threadSendDataWorker.Start();
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "线程启动出错:" + ex.Message);
+                }
+            }
+
+            //如果重连次数大于1，认为是通过重新连接到服务器的。
+            //这时将手动登陆信息传入 TODO实际要看之前是不是登陆成功的状态。
+            if (_reconnectAttempts > 1)
+            {
+                try
+                {
+                    ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
+                    bool result = await serverAuthorizer.loginRunningOperationAsync(this, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
+                    if (result)
+                    {
+                        MainForm.Instance.logger.LogInformation("成功恢复与服务器的连接。");
+                    }
+                }
+                catch (Exception)
+                {
+
+
+                }
+
+            }
+
+
+            return IsConnected;
+        }
+
+
+        public async Task<bool> Connect(CancellationToken cancellationToken)
+        {
+            string msg = string.Empty;
+            if (_isConnecting)
+            {
+                return false;
+            }
+
+            _isConnecting = true;
+            try
+            {
+                msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}正在连接服务器{ServerIp}:{Port}...";
+                MainForm.Instance.uclog.AddLog(msg);
+                MainForm.Instance.lblServerInfo.Text = msg;
+                var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port), cancellationToken);
+                if (connected)
+                {
+                    // 连接成功
+                    IsConnected = true;
+                    // ... 连接成功后的操作 ...
+                    await ConnectSuccessed();
+                }
+                else
+                {
+                    // 连接失败
+                    IsConnected = false;
+                }
+                return connected;
+            }
+            catch (OperationCanceledException)
+            {
+                // 连接被取消
+                MainForm.Instance.uclog.AddLog("连接尝试被取消。");
+                msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接尝试被取消{ServerIp}:{Port}...";
+                MainForm.Instance.uclog.AddLog(msg);
+                MainForm.Instance.lblServerInfo.Text = msg;
+            }
+            catch (Exception ex)
+            {
+                // 处理其他异常情况
+                MainForm.Instance.uclog.AddLog($"连接异常: {ex.Message}");
+            }
+            finally
+            {
+                _isConnecting = false; // 完成连接尝试，无论成功与否
+            }
+            return IsConnected;
+        }
+
+
         public async void Stop()
         {
-            await client.Close();
+            if (_isConnecting)
+            {
+                _cancellationTokenSource.Cancel(); // 取消正在进行的连接尝试
+                await Task.Run(() => _threadSendDataWorker.Join()); // 等待发送数据线程结束
+                _threadSendDataWorker = null;
+            }
+            await client.Close(); // 关闭客户端连接
             _stopThreadEvent.Set();
             if (_threadSendDataWorker != null && _threadSendDataWorker.ThreadState == System.Threading.ThreadState.Running)
             {
@@ -360,11 +448,21 @@ namespace RUINORERP.UI.SuperSocketClient
             // 记录日志
             MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接已关闭，准备重新连接...");
 
-            // 引入延迟重连策略
-            await Task.Delay(2000); // 延迟1秒，可以根据实际情况调整
-
             // 尝试重新连接
-            await Connect();
+            //await Connect();
+            //如何登陆成功过。则一直重新连接。否则只重新连接一次。需要点击连接按钮才会重新连接
+            if (LoginStatus)
+            {  // 引入延迟重连策略
+                while (_reconnectAttempts < MaxReconnectAttempts)
+                {
+                    await Reconnect();
+                }
+                MainForm.Instance.LogLock();
+            }
+            else
+            {
+                await Reconnect();
+            }
         }
 
 
@@ -405,7 +503,7 @@ namespace RUINORERP.UI.SuperSocketClient
                         case ServerCmdEnum.用户登陆回复:
                             bool Successed = ClientService.用户登陆回复(od);
                             LoginStatus = Successed;
-                            LoginSuccessed = Successed;
+                            Program.AppContextData.IsOnline = Successed;
                             break;
                         case ServerCmdEnum.发送在线列表:
                             //try
@@ -446,8 +544,8 @@ namespace RUINORERP.UI.SuperSocketClient
                             break;
 
                         case ServerCmdEnum.给客户端发提示消息:
-                            //string cmsg = IM.UCMessager.Instance.接收消息(od);
-                            //MainForm.Instance.ShowMsg(cmsg);
+                             ClientService.接收服务器消息(od);
+                            
                             break;
                         case ServerCmdEnum.心跳回复:
                             break;
@@ -485,14 +583,17 @@ namespace RUINORERP.UI.SuperSocketClient
         private async void OnClientError(object sender, SuperSocket.ClientEngine.ErrorEventArgs e)
         {
             MainForm.Instance.uclog.AddLog("与服务器连接异常:" + e.Exception.Message);
-            MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}准备重新连接...");
+            string msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId},准备重新连接...";
+            MainForm.Instance.uclog.AddLog(msg);
+            MainForm.Instance.lblServerInfo.Text = msg;
             IsConnected = false;
             userInfos = new List<UserInfo>();
-            Thread.Sleep(2000);
             reConnect++;
             if (reConnect > 30)
             {
-                MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}系统连接超时...一分钟后强制退出，请保存数据。");
+                msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId},系统连接超时...一分钟后强制退出，请保存数据。";
+                MainForm.Instance.uclog.AddLog(msg);
+                MainForm.Instance.lblServerInfo.Text = msg;
                 this.LoginStatus = false;
                 if (reConnect > 90)
                 {
@@ -503,16 +604,53 @@ namespace RUINORERP.UI.SuperSocketClient
             //重新连接
             //如果只执行连接，没有注册dowork
             //await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port));
-            await Connect();
+            //await Connect();
+            await Reconnect();
         }
+
+        private async Task Reconnect()
+        {
+            if (_isConnecting || _reconnectAttempts >= MaxReconnectAttempts)
+            {
+                return;
+            }
+            _reconnectAttempts++;
+            try
+            {
+                _cancellationTokenSource.Cancel(); // 取消之前的重连尝试
+                _cancellationTokenSource = new CancellationTokenSource(); // 创建新的CancellationTokenSource
+
+                // 等待一段时间再尝试重连
+                await Task.Delay(ReconnectInterval, _cancellationTokenSource.Token);
+                string msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}尝试第{_reconnectAttempts}次连接{ServerIp}:{Port}...";
+                MainForm.Instance.uclog.AddLog(msg);
+                MainForm.Instance.lblServerInfo.Text = msg;
+
+                // 尝试重新连接
+                var connected = await Connect(_cancellationTokenSource.Token);
+                if (connected)
+                {
+                    _reconnectAttempts = 0; // 重置重连尝试次数
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // 重连尝试被取消
+            }
+            finally
+            {
+                _isConnecting = false; // 完成重连尝试，无论成功与否
+            }
+        }
+
 
         private void OnClientConnected(object sender, EventArgs e)
         {
             IsConnected = true;
             //如果验证通过才是登陆成功
-            if (true)
+            if (Program.AppContextData.IsOnline)
             {
-                this.LoginStatus= false;
+                this.LoginStatus = true;
             }
             //连上就需要做一些动作，如果登陆成功过的。
             /*
@@ -540,7 +678,9 @@ namespace RUINORERP.UI.SuperSocketClient
             }
             //获取用户列表
             */
-            MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接成功{LoginStatus},{this.client.LocalEndPoint}");
+            string msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接成功{LoginStatus},{this.client.LocalEndPoint}";
+            MainForm.Instance.uclog.AddLog(msg);
+            MainForm.Instance.lblServerInfo.Text = msg;
         }
 
         #region 线程

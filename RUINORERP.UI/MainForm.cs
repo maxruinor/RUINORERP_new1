@@ -120,7 +120,7 @@ namespace RUINORERP.UI
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;
             ecs.OnConnectClosed += Ecs_OnConnectClosed;
-            
+
             AppContext = Program.AppContextData;
 
         }
@@ -134,7 +134,7 @@ namespace RUINORERP.UI
 
         private void Ecs_OnConnectClosed(bool isconect)
         {
-            ecs.LoginStatus = false;
+            // ecs.LoginStatus = false;
             ecs.IsConnected = isconect;
         }
 
@@ -826,7 +826,7 @@ namespace RUINORERP.UI
                 ClearData();
                 ClearUI();
                 Program.AppContextData.IsOnline = false;
-                ecs.LoginSuccessed = false;
+                ecs.LoginStatus = false;
                 Application.DoEvents();
 
             }
@@ -839,24 +839,25 @@ namespace RUINORERP.UI
         /// <summary>
         /// 注销
         /// </summary>
-        public async void LogLock()
+        public void LogLock()
         {
-            this.SystemOperatorState.Text = "注销";
-            ecs.LoginStatus = false;
-            ecs.LoginSuccessed = false;
-            Program.AppContextData.IsOnline = false;
-            ClearUI();
-            ClearRoles();
-            System.GC.Collect();
-            //标记一下状态为注销，可以保存到上下文传到心跳包中
-            if (!Login())
+            MainForm.Instance.Invoke(new Action(() =>
             {
-                return;
-            }
-            MainForm.Instance.AppContext.IsOnline = true;
-            // await InitConfig();
-            LoadUIMenus();
-            LoadUIForIM_LogPages();
+                this.SystemOperatorState.Text = "注销";
+                ecs.LoginStatus = false;
+                Program.AppContextData.IsOnline = false;
+                ClearUI();
+                ClearRoles();
+                System.GC.Collect();
+                //标记一下状态为注销，可以保存到上下文传到心跳包中
+                if (!Login())
+                {
+                    return;
+                }
+                // await InitConfig();
+                LoadUIMenus();
+                LoadUIForIM_LogPages();
+            }));
         }
 
         #endregion
@@ -1925,7 +1926,6 @@ namespace RUINORERP.UI
 
         public void ShowMsg(string msg)
         {
-            return;
             if (string.IsNullOrEmpty(msg))
             {
                 return;

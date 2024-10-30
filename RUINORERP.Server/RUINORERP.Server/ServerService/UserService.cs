@@ -77,7 +77,7 @@ namespace RUINORERP.Server.BizService
 
                     ByteBuff tx = new ByteBuff(200);
                     tx.PushString(tableName);
-                    tx.PushString(json);
+                    tx.PushLongString(json);
                     PlayerSession.AddSendData((byte)ServerCmdEnum.发送缓存数据列表, null, tx.toByte());
                 }
 
@@ -224,7 +224,35 @@ namespace RUINORERP.Server.BizService
             }
 
         }
+        public static bool 给客户端发消息(SessionforBiz PlayerSession, string Message, bool MustDisplay)
+        {
+            bool rs = false;
+            try
+            {
+                int index = 0;
+                SessionforBiz sb = null;
+                frmMain.Instance.sessionListBiz.TryGetValue(PlayerSession.SessionID, out sb);
+                if (sb != null)
+                {
+                    string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    ByteBuff tx = new ByteBuff(100);
+                    rs = true;
+                    tx.PushString(sendtime);
+                    tx.PushString(sb.SessionID);
+                    tx.PushString(sb.User.姓名);//sender
+                    tx.PushString(Message);
+                    tx.PushBool(MustDisplay);
+                    sb.AddSendData((byte)ServerCmdEnum.给客户端发提示消息, null, tx.toByte());
+                }
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                rs = false;
+            }
 
+            return rs;
+        }
         public static bool 转发消息(SessionforBiz PlayerSession, OriginalData gd)
         {
             bool rs = false;

@@ -97,40 +97,73 @@ namespace SuperSocket.ClientEngine
         }
 #endif
 
-        private TcpClientSession GetUnderlyingSession()
+
+
+        #region  by watson add
+        public async Task<bool> ConnectAsync(EndPoint remoteEndPoint, CancellationToken cancellationToken)
         {
-#if NETFX_CORE && !NETSTANDARD
-            return new AsyncTcpSession();
-#else
-            var security = Security;
+            if (PipeLineProcessor == null)
+                throw new Exception("This client has not been initialized.");
 
-            if (security == null)
+            // 确保在连接过程中能够响应取消请求
+            using (cancellationToken.Register(() => PipeLineProcessor.Reset()))
             {
-                return new AsyncTcpSession();
+                var connectTaskSrc = InitConnect(remoteEndPoint);
+                try
+                {
+                    // 等待连接任务完成或取消
+                    return await connectTaskSrc.Task.ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    // 处理取消情况
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    // 处理其他异常情况
+                    // 可以根据需要记录日志或处理异常
+                    return false;
+                }
             }
-
-#if SILVERLIGHT
-            // no SSL/TLS enabled
-            if (!security.EnabledSslProtocols)
-            {
-                return new AsyncTcpSession();
-            }
-
-            return new SslStreamTcpSession();
-#else
-            // no SSL/TLS enabled
-            if (security.EnabledSslProtocols == System.Security.Authentication.SslProtocols.None)
-            {
-                return new AsyncTcpSession();
-            }
-
-            return new SslStreamTcpSession()
-            {
-                Security = security
-            };
-#endif
-#endif
         }
+
+        // 修改InitConnect方法以接受CancellationToken参数
+        private TaskCompletionSource<bool> InitConnect(EndPoint remoteEndPoint, CancellationToken cancellationToken)
+        {
+            var connectTaskSrc = new TaskCompletionSource<bool>();
+
+            // 模拟异步连接操作，这里应该替换为实际的连接逻辑
+            Task.Run(async () =>
+            {
+                try
+                {
+                    // 在连接过程中检查取消请求
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        // 模拟连接尝试
+                        await Task.Delay(1000); // 假设这里有一个延迟来模拟连接尝试
+
+                        // 假设连接成功
+                        connectTaskSrc.SetResult(true);
+                        break;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    connectTaskSrc.SetCanceled();
+                }
+                catch (Exception ex)
+                {
+                    connectTaskSrc.SetException(ex);
+                }
+            }, cancellationToken); // 将CancellationToken传递给Task.Run
+
+            return connectTaskSrc;
+        }
+
+        #endregion
+
 
         private TaskCompletionSource<bool> InitConnect(EndPoint remoteEndPoint)
         {
@@ -166,6 +199,43 @@ namespace SuperSocket.ClientEngine
 
             return taskSrc;
         }
+
+
+        private TcpClientSession GetUnderlyingSession()
+        {
+#if NETFX_CORE && !NETSTANDARD
+            return new AsyncTcpSession();
+#else
+            var security = Security;
+
+            if (security == null)
+            {
+                return new AsyncTcpSession();
+            }
+
+#if SILVERLIGHT
+            // no SSL/TLS enabled
+            if (!security.EnabledSslProtocols)
+            {
+                return new AsyncTcpSession();
+            }
+
+            return new SslStreamTcpSession();
+#else
+            // no SSL/TLS enabled
+            if (security.EnabledSslProtocols == System.Security.Authentication.SslProtocols.None)
+            {
+                return new AsyncTcpSession();
+            }
+
+            return new SslStreamTcpSession()
+            {
+                Security = security
+            };
+#endif
+#endif
+        }
+
 
         public void Send(byte[] data)
         {
@@ -228,6 +298,7 @@ namespace SuperSocket.ClientEngine
         }
 #endif
 
+        // ClientSession 这个类中设置了缓存大小 public const int DefaultReceiveBufferSize = 4096; 
         void OnSessionDataReceived(object sender, DataEventArgs e)
         {
             ProcessResult result;

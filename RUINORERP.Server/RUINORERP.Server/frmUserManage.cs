@@ -1,7 +1,9 @@
 ﻿using RUINORERP.Business.CommService;
+using RUINORERP.Common.Extensions;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.ServerSession;
+using RUINORERP.Server.ToolsUI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -30,7 +32,7 @@ namespace RUINORERP.Server
             userInfos.CollectionChanged += UserInfos_CollectionChanged;
 
             RefreshData();
-          
+
 
         }
 
@@ -43,7 +45,7 @@ namespace RUINORERP.Server
             //dataGridView1.DataSource = null;
             dataGridView1.DataSource = userInfoBindingSource;
 
-    
+
 
             //BindingSource userInfoBindingSource = new BindingSource();
             //userInfoBindingSource.DataSource = userInfos;
@@ -68,7 +70,6 @@ namespace RUINORERP.Server
             {
                 case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                     SessionforBiz biz = frmMain.Instance.sessionListBiz[((UserInfo)e.NewItems[e.NewStartingIndex]).SessionId];
-              
                     userInfoBindingSource.Add(((UserInfo)e.NewItems[e.NewStartingIndex]));
                     // 处理添加元素的逻辑
                     //userInfoBindingSource.DataSource = frmMain.Instance.userInfos;
@@ -95,12 +96,12 @@ namespace RUINORERP.Server
                 if (((UserInfo)sender).SessionId != null)
                 {
                     SessionforBiz biz = frmMain.Instance.sessionListBiz[((UserInfo)sender).SessionId];
-                    
+
                     for (int i = 0; i < dataGridView1.Rows.Count; i++)
                     {
                         if (dataGridView1.Rows[i].DataBoundItem is UserInfo userInfo)
                         {
-                            if ( userInfo.SessionId == biz.SessionID)
+                            if (userInfo.SessionId == biz.SessionID)
                             {
                                 foreach (DataGridViewColumn dc in dataGridView1.Columns)
                                 {
@@ -201,7 +202,12 @@ namespace RUINORERP.Server
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
                         if (SB.State == SuperSocket.SessionState.Connected)
                         {
-                            UserService.发消息给客户端(SB);
+                            frmMessager frm = new frmMessager();
+                            if (frm.ShowDialog() == DialogResult.OK)
+                            {
+                                UserService.给客户端发消息(SB, frm.Message, frm.MustDisplay);
+                            }
+
                         }
 
                     }
@@ -271,6 +277,11 @@ namespace RUINORERP.Server
         {
             e.Cancel = true;
             this.Hide();
+        }
+
+        private void toolStripMenuItem5_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

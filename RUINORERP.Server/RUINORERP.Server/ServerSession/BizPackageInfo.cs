@@ -8,6 +8,7 @@ namespace RUINORERP.Server.ServerSession
     public class BizPackageInfo : IKeyedPackageInfo<string>
     {
         public string Key { get; set; }
+
         /// <summary>
         /// 包头长度不够18
         /// </summary>

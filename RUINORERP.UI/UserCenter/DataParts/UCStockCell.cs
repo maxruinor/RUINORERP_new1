@@ -149,7 +149,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             long lastInputTime = MainForm.GetLastInputTime();
             if (lastInputTime > 10000 && kryptonTreeGridView1.Rows.Count > 0)
             {
-                MainForm.Instance.ShowMsg($"您有需要处理的盘点单。");
+               // MainForm.Instance.ShowMsg($"您有需要处理的盘点单。");
             }
             //if (MainForm.GetLastInputTime() > 10000 && kryptonTreeGridView1.Rows.Count > 0)
             //{

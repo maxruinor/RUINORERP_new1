@@ -1,4 +1,5 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
+using HLH.Lib.Helper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
@@ -11,6 +12,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.WebSockets;
 using System.Windows.Forms;
 using System.Windows.Media;
 
@@ -39,9 +41,26 @@ namespace RUINORERP.UI.SysConfig
         {
             //加载所有缓存的表
             listBoxTableList.Items.Clear();
+
+
             foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
             {
-                listBoxTableList.Items.Add(tableName);
+                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                if (CacheList == null)
+                {
+                    listBoxTableList.Items.Add(tableName);
+                }
+                else
+                {
+                    var lastlist = ((IEnumerable<dynamic>)CacheList).ToList();
+                    if (lastlist != null)
+                    {
+                        SuperValue kv = new SuperValue(tableName + "[" + lastlist.Count + "]", tableName);
+                        listBoxTableList.Items.Add(kv);
+                    }
+
+                }
+
             }
         }
 
@@ -56,22 +75,31 @@ namespace RUINORERP.UI.SysConfig
         Assembly assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
         private void listBoxTableList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string tableName = listBoxTableList.SelectedItem.ToString();
-            var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-            if (CacheList == null)
+            if (listBoxTableList.SelectedItem is SuperValue kv)
+            {
+                string tableName = kv.superDataTypeName;
+                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                if (CacheList == null)
+                {
+                    dataGridView1.DataSource = null;
+                    return;
+                }
+                // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
+
+                // 使用 GetType 方法获取 PrintHelper<T> 的类型
+                Type type = assembly.GetType("RUINORERP.Model." + tableName);
+                dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(type);
+                dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                dataGridView1.XmlFileName = "UCCacheManage" + tableName;
+                dataGridView1.DataSource = null;
+                dataGridView1.DataSource = CacheList;
+            }
+            else
             {
                 dataGridView1.DataSource = null;
                 return;
             }
-            // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
-
-            // 使用 GetType 方法获取 PrintHelper<T> 的类型
-            Type type = assembly.GetType("RUINORERP.Model." + tableName);
-            dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(type);
-            dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dataGridView1.XmlFileName = "UCCacheManage" + tableName;
-            dataGridView1.DataSource = null;
-            dataGridView1.DataSource = CacheList;
+            
         }
     }
 }

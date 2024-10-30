@@ -265,13 +265,13 @@ namespace TransInstruction
 
             try
             {
-                byte[] lenByte = new byte[4];
-                lenByte = buffer.Skip(Index).Take(4).ToArray();
-                int len = BitConverter.ToInt32(lenByte, 0);
+                //长字符串  是long格式保存的长度占8个字节
+                byte[] lenByte = new byte[8];
+                lenByte = buffer.Skip(Index).Take(8).ToArray();
+                long len = BitConverter.ToInt64(lenByte, 0);
                
-                //消息长度？ 暂时用下面直接减
-                Index = Index + 4;
-
+                //消息长度中，占用了8位，移位
+                Index = Index + 8;
                 byte[] msg = new byte[len];
                 //msg.Length-1减1是去掉结束符
                 msg = buffer.Skip(Index).Take(msg.Length - 1).ToArray();

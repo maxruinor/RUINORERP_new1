@@ -145,6 +145,11 @@ namespace TransInstruction.DataPortal
             val >>= 8;
             PushByte((byte)val);
         }
+
+        /// <summary>
+        /// 长度有限制int的最大值
+        /// </summary>
+        /// <param name="val"></param>
         public void PushString(string val)
         {
             var arr = Tool4DataProcess.StrToBytes(val);
@@ -155,6 +160,24 @@ namespace TransInstruction.DataPortal
             }
             PushByte(0); //最后是结束符
         }
+
+        /// <summary>
+        /// 添加长字符串，以0结尾
+        /// </summary>
+        /// <param name="val"></param>
+        public void PushLongString(string val)
+        {
+            var arr = Tool4DataProcess.StrToBytes(val);
+            PushInt64(arr.Length + 1);
+            foreach (byte by in arr)
+            {
+                PushByte(by);
+            }
+            PushByte(0); //最后是结束符
+        }
+
+
+
         /// <summary>
         /// 将全部数据导出，已经pop的数据也导出
         /// </summary>

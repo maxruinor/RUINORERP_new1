@@ -13,9 +13,15 @@ namespace RUINORERP.UI.SuperSocketClient
     //SuperSocket入门（五）-常用协议实现模版及FixedSizeReceiveFilter示例
     //https://docs.supersocket.net/v2-0/zh-CN/The-Built-in-Command-Line-PipelineFilter
     //https://blog.csdn.net/weixin_38083655/article/details/111467821  这个可以看一下
+
+    /// <summary>
+    /// 过滤器
+    /// </summary>
     public class BizPipelineFilter : FixedHeaderReceiveFilter<BizPackageInfo>
     {
-
+        /// <summary>
+        /// 业务上固定了包头的大小是18个字节
+        /// </summary>
         static int HeaderLen = 18;
         public BizPipelineFilter() : base(HeaderLen) // 包头的大小是3字节，所以将3传如基类的构造方法中去
         {
@@ -123,7 +129,7 @@ namespace RUINORERP.UI.SuperSocketClient
             // return new StringPackageInfo("", body, new string[] { });
 
 
-            //得到的是整个包
+            //得到的是整个包 为什么是固定256？
             byte[] PackageContents = new byte[bufferStream.Length];
             //2023-6-10
             bufferStream.Read(PackageContents, 0, (int)bufferStream.Length);
@@ -156,7 +162,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     gpi.ecode = SpecialOrder.长度小于18;
                     gpi.Flag = "空包";
                     gpi.Body = PackageContents;
-//                    gpi..cmd = 1;//0可以算空包吗？
+                    //                    gpi..cmd = 1;//0可以算空包吗？
                     return gpi;
                 }
                 else

@@ -34,6 +34,10 @@ namespace RUINORERP.UI.Common
                 // 在任务执行期间定期检查 CancellationToken，
                 //發送帳號密碼
                 LoginServerByEasyClient(_ecs, userName, password);
+
+                //等待授权成功后需要1秒钟
+                await Task.Delay(TimeSpan.FromSeconds(1));
+
                 // 如果它已取消，可以安全地退出。
                 while (!_ecs.LoginStatus)
                 {
@@ -50,6 +54,41 @@ namespace RUINORERP.UI.Common
             }
         }
 
+        /// <summary>
+        /// 登录服务器并等待响应，最多等待指定的超时时间。
+        /// </summary>
+        /// <param name="userName">用户名</param>
+        /// <param name="password">密码</param>
+        /// <param name="timeOutSec">超时时间（秒）</param>
+        /// <returns>如果登录成功，返回true；否则返回false。</returns>
+        public async Task<bool> loginRunningOperationAsync(EasyClientService _ecs, string userName, string password, int timeOutSec)
+        {
+            using (var tokenSource = new CancellationTokenSource())
+            {
+                var startTime = DateTime.Now;
+
+                // 发送用户名和密码到服务器
+                LoginServerByEasyClient(_ecs, userName, password);
+
+                // 等待服务器响应，直到超时或收到登录状态
+                while (!_ecs.LoginStatus)
+                {
+                    if ((DateTime.Now - startTime) >= TimeSpan.FromSeconds(timeOutSec))
+                    {
+                        tokenSource.Cancel();
+                    }
+
+                    if (tokenSource.IsCancellationRequested)
+                    {
+                        return false; // 登录超时，返回false
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(2), tokenSource.Token); // 等待2秒再次检查
+                }
+
+                return _ecs.LoginStatus; // 登录状态已更新，返回结果
+            }
+        }
 
         public async void LoginServerByEasyClient(EasyClientService _ecs, string userName, string password)
         {
@@ -105,7 +144,6 @@ namespace RUINORERP.UI.Common
                     _ecs.ServerIp = UserGlobalConfig.Instance.ServerIP;
                     _ecs.Port = UserGlobalConfig.Instance.ServerPort.ToInt();
                     await _ecs.Connect();
-
                 }
 
                 //连接上准备

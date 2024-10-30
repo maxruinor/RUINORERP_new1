@@ -157,7 +157,7 @@ namespace RUINORERP.UI
                         UserGlobalConfig.Instance.PassWord = this.txtPassWord.Text;
                         UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
                         UserGlobalConfig.Instance.ServerPort = txtPort.Text;
-                        
+
                         //传入帐号密码返回结果
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData);
                         if (ok)
@@ -165,10 +165,9 @@ namespace RUINORERP.UI
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
                             {
                                 ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
-                                await serverAuthorizer.LongRunningOperationAsync(ecs, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
-                                // LoginServerByEasyClient(userName, password);
-                                UITools.SuperSleep(1000);
-                                if (ecs.LoginStatus)
+                                bool result = await serverAuthorizer.loginRunningOperationAsync(ecs, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
+                                //UITools.SuperSleep(1000);
+                                if (result)
                                 {
 
                                 }
@@ -198,8 +197,7 @@ namespace RUINORERP.UI
                             UserGlobalConfig.Instance.IsSupperUser = Program.AppContextData.IsSuperUser;
                             UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
                             UserGlobalConfig.Instance.Serialize();
-
-                            Program.AppContextData.IsOnline = true;
+                             
                             //先指定一下服务器IP
                             //BizCodeGenerator.Instance.RedisServerIP = UserGlobalConfig.Instance.ServerIP;
 

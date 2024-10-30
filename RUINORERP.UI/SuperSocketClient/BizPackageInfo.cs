@@ -4,6 +4,10 @@ using TransInstruction.DataPortal;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
+
+    /// <summary>
+    /// 特殊指令
+    /// </summary>
     public enum SpecialOrder
     {
         长度小于18,

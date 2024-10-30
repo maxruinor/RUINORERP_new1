@@ -63,6 +63,7 @@ namespace RUINORERP.UI
             this.toolStripDropDownBtnRoles = new System.Windows.Forms.ToolStripDropDownButton();
             this.cmbRoles = new System.Windows.Forms.ToolStripComboBox();
             this.lblStatusGlobal = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripBtnUpdate = new System.Windows.Forms.ToolStripButton();
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
@@ -82,7 +83,6 @@ namespace RUINORERP.UI
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.statusTimer = new System.Windows.Forms.Timer(this.components);
-            this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             this.kryptonPage5.SuspendLayout();
@@ -423,6 +423,14 @@ namespace RUINORERP.UI
             this.lblStatusGlobal.Size = new System.Drawing.Size(85, 17);
             this.lblStatusGlobal.Text = "全局状态提示";
             // 
+            // lblServerInfo
+            // 
+            this.lblServerInfo.Name = "lblServerInfo";
+            this.lblServerInfo.Padding = new System.Windows.Forms.Padding(380, 0, 0, 0);
+            this.lblServerInfo.Size = new System.Drawing.Size(399, 17);
+            this.lblServerInfo.Text = "....";
+            this.lblServerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // toolStrip1
             // 
             this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -602,14 +610,6 @@ namespace RUINORERP.UI
             // 
             this.statusTimer.Interval = 5000;
             this.statusTimer.Tick += new System.EventHandler(this.statusTimer_Tick);
-            // 
-            // lblServerInfo
-            // 
-            this.lblServerInfo.Name = "lblServerInfo";
-            this.lblServerInfo.Padding = new System.Windows.Forms.Padding(200, 0, 0, 0);
-            this.lblServerInfo.Size = new System.Drawing.Size(219, 17);
-            this.lblServerInfo.Text = "....";
-            this.lblServerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // MainForm
             // 

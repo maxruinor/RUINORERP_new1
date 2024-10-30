@@ -94,10 +94,16 @@ namespace RUINORERP.UI.SuperSocketClient
                 ByteBuff bg = new ByteBuff(gd.Two);
                 string tablename = ByteDataAnalysis.GetShortString(gd.Two, ref index);
                 string json = ByteDataAnalysis.GetLongString(gd.Two, ref index);
-                object objList = JsonConvert.DeserializeObject(json);
-                MyCacheManager.Instance.AddCacheEntityList(objList, tablename);
-
-                MainForm.Instance.PrintInfoLog("接收缓存数据列表成功！");
+                if (!string.IsNullOrEmpty(json))
+                {
+                    if (json != "null")
+                    {
+                        object objList = JsonConvert.DeserializeObject(json);
+                        MyCacheManager.Instance.AddCacheEntityList(objList, tablename);
+                        MainForm.Instance.PrintInfoLog("接收缓存数据列表成功！");
+                    }
+              
+                }
             }
             catch (Exception ex)
             {
@@ -107,5 +113,27 @@ namespace RUINORERP.UI.SuperSocketClient
 
         }
 
+
+        public static string 接收服务器消息(OriginalData gd)
+        {
+            string Message = "";
+            try
+            {
+                int index = 0;
+                ByteBuff bg = new ByteBuff(gd.Two);
+                string sendtime = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string SessionID = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string 姓名 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                Message = ByteDataAnalysis.GetLongString(gd.Two, ref index);
+                bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                MainForm.Instance.ShowMsg(Message);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("用户登陆:" + ex.Message);
+            }
+            return Message;
+
+        }
     }
 }

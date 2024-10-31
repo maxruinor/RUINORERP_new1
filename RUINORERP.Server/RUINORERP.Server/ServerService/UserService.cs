@@ -6,7 +6,6 @@ using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model;
 using RUINORERP.Server.Comm;
-using RUINORERP.Server.Lib;
 using RUINORERP.Server.ServerSession;
 using System;
 using System.Collections.Generic;
@@ -53,7 +52,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("发送缓存数据:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("发送缓存数据:" + ex.Message);
             }
 
         }
@@ -84,7 +83,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("发送缓存数据列表:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("发送缓存数据列表:" + ex.Message);
             }
 
         }
@@ -145,7 +144,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("用户登陆:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
             }
             return user;
         }
@@ -206,7 +205,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("用户登陆:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
             }
 
         }
@@ -220,7 +219,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("用户登陆:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
             }
 
         }

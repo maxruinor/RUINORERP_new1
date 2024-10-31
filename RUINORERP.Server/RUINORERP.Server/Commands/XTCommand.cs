@@ -10,7 +10,7 @@ using System.IO;
 using RUINORERP.Server.Commands;
 using RUINORERP.Server.ServerSession;
 using TransInstruction;
-using RUINORERP.Server.Lib;
+
 
 namespace RUINORERP.Server
 {
@@ -41,7 +41,7 @@ namespace RUINORERP.Server
                     gdd.Two = null;
                     PlayerSession.AddSendData(gdd);
 
-                    byte[] buffer = Tools.HexStrTobyte("CDE704FF85575FDB1BD5FC83EA7CB9F61F6FCFF301FF");
+                    byte[] buffer = TransInstruction.Tool4DataProcess.HexStrTobyte("CDE704FF85575FDB1BD5FC83EA7CB9F61F6FCFF301FF");
                     TransPackProcess gpp = new TransPackProcess();
                     OriginalData gd = gpp.UnServerPack(buffer);
 

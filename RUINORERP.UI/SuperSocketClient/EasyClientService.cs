@@ -60,24 +60,31 @@ namespace RUINORERP.UI.SuperSocketClient
             DataQueue.Enqueue(buffer);
         }
 
-
+        /// <summary>
+        /// 添加加密前的原始数据，经过加密后添加到队列中
+        /// </summary>
+        /// <param name="od"></param>
         public void AddSendData(OriginalData od)
         {
             TransPackProcess tpp = new TransPackProcess();
-            byte[] buffer = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(od));
+
+            byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
             DataQueue.Enqueue(buffer);
         }
 
+        /// <summary>
+        /// 添加加密前的原始数据，经过加密后添加到队列中
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="one"></param>
+        /// <param name="two"></param>
         public void AddSendData(byte cmd, byte[] one, byte[] two)
         {
-            //pp.WriteClientData((byte)SephirothInstruction.ServerCmd.ISMainMsg.主动10, null, tx.toByte());
             OriginalData od = new OriginalData();
             od.cmd = cmd;
             od.One = one;
             od.Two = two;
-
-            TransPackProcess tpp = new TransPackProcess();
-            byte[] buffer = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(od));
+            byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
             DataQueue.Enqueue(buffer);
         }
 
@@ -108,7 +115,7 @@ namespace RUINORERP.UI.SuperSocketClient
             client.NewPackageReceived += OnPackageReceived;
             client.Error += OnClientError;
             client.Closed += OnClientClosed;
-            
+
             //每10s发送一次心跳或尝试一次重连
             timer = new System.Timers.Timer(2000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
@@ -544,8 +551,8 @@ namespace RUINORERP.UI.SuperSocketClient
                             break;
 
                         case ServerCmdEnum.给客户端发提示消息:
-                             ClientService.接收服务器消息(od);
-                            
+                            ClientService.接收服务器消息(od);
+
                             break;
                         case ServerCmdEnum.心跳回复:
                             break;

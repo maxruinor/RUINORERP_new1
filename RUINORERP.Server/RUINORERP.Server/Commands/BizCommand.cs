@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.Server.Commands;
-using RUINORERP.Server.Lib;
 using RUINORERP.Server.ServerSession;
 using SuperSocket;
 using SuperSocket.Command;
@@ -150,19 +149,19 @@ namespace RUINORERP.Server.Commands
                             string ss = "";
                             //角色上线后的操作指令(session, package);
                             ss = ActionForServer.Try解析封包为实际逻辑(gd);
-                            Tools.ShowMsg("========要处理的其它指令=========" + ss);
+                            TransInstruction.Tool4DataProcess .ShowMsg("========要处理的其它指令=========" + ss);
 
                             break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Tools.ShowMsg("指令测试结果异常：" + ex.Message + ex.StackTrace);
+                    TransInstruction.Tool4DataProcess.ShowMsg("指令测试结果异常：" + ex.Message + ex.StackTrace);
                     if (ex.InnerException != null)
                     {
                         if (ex.InnerException != null)
                         {
-                            Tools.ShowMsg("sql：" + ex.InnerException.Message);
+                            TransInstruction.Tool4DataProcess.ShowMsg("sql：" + ex.InnerException.Message);
                         }
 
                     }
@@ -183,7 +182,7 @@ namespace RUINORERP.Server.Commands
         {
             if (!msg.ToString().Contains("心跳"))
             {
-                Tools.ShowMsg("OtherEvent：" + msg.ToString());
+                TransInstruction.Tool4DataProcess.ShowMsg("OtherEvent：" + msg.ToString());
             }
         }
 

@@ -27,7 +27,7 @@ namespace RUINORERP.UI.SuperSocketClient
         {
 
         }
-
+        TransPackProcess tpp = new TransPackProcess();
         /// <summary>
         /// 业务上通过包头18个里面的内容 解释出 还有多少len是一个完整的包。
         /// </summary>
@@ -54,9 +54,23 @@ namespace RUINORERP.UI.SuperSocketClient
             //2023-6-10
             bufferStream.Read(Head, 0, 18);
 
-            // var reader = new SequenceReader<byte>(buffer);
-            //reader.Advance(1); // skip the first byte
-            // reader.TryCopyTo(Head);
+            int len = CryptoProtocol.AnalyzeSeverPackHeader(Head);
+            return len;
+            try
+            {
+               
+                //int intValue = 123456;
+                //byte[] intBytes = BitConverter.GetBytes(intValue);
+
+                //long longValue = 1234567890123456789;
+                //byte[] longBytes = BitConverter.GetBytes(longValue);
+
+                //OriginalData od = tpp.UnServerPack(Head);
+            }
+            catch (Exception)
+            {
+
+            }
 
             //先把头解密了，后面的就好说了
             byte[] KEY = null;
@@ -69,12 +83,12 @@ namespace RUINORERP.UI.SuperSocketClient
                 掩码 = KxSocket.加密(KEY, Head, 0, 0);
 
                 byte hi = 0, low = 0;
-                for (int ii = 0; ii < 9; ii++)
+                for (int ii = 0; ii < 8; ii++)
                 {
                     hi ^= Head[ii * 2];
                     low ^= Head[ii * 2 + 1];
                 }
-                if ((hi == 0) && (low == 0))
+                if (Head[16] == hi && Head[17] == low)
                 {
                     m_日期KEY = i;
                     解码 = true;
@@ -101,6 +115,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
             return lenOne + lenTwo;
         }
+
 
 
         public int m_日期KEY;
@@ -176,12 +191,13 @@ namespace RUINORERP.UI.SuperSocketClient
                     // reader.TryCopyTo(Head);
                     // reader.TryReadBigEndian(out short packageKey);
                     //var outs = Tools.Hex2Str(Head, 0, 18, true);
-                    TransPackProcess pp = new TransPackProcess();
-                    gpi.Body = PackageContents;
-                    //gpi.od = pp.UnClientPack(gpi.Body);
-                    gpi.od = pp.UnServerPack(gpi.Body);
 
-                    //gpi.kd = pp.UnClientPack(Head, HeaderLen, PackageContents);
+
+                  ///  TransPackProcess pp = new TransPackProcess();
+                    gpi.Body = PackageContents;
+                    gpi.od = TransInstruction.CryptoProtocol.DecryptServerPack(gpi.Body);
+                  //  gpi.od = pp.UnServerPack(gpi.Body);
+               
                     gpi.ecode = SpecialOrder.正常;
                     #endregion
 

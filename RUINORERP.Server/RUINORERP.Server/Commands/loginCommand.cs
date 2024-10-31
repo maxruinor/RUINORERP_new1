@@ -7,7 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using SuperSocket;
 using RUINORERP.Server.ServerSession;
-using RUINORERP.Server.Lib;
+using TransInstruction;
+
 
 namespace RUINORERP.Server.Commands
 {
@@ -26,7 +27,7 @@ namespace RUINORERP.Server.Commands
             //发送消息给客户端 处理命令
             if (result.Length <= 3)
             {
-                await session.SendAsync(Tools.StrToBytes("false\n用户名或密码错误，太短了吧。"));
+                await session.SendAsync(TransInstruction.Tool4DataProcess.StrToBytes("false\n用户名或密码错误，太短了吧。"));
             }
 
             string[] ss = result.Split('|',StringSplitOptions.None);

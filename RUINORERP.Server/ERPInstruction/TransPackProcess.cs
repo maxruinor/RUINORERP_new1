@@ -12,6 +12,7 @@ namespace TransInstruction
 
         /// <summary>
         /// 服务器的加密方法，加密后发送到客户端
+        /// 可以使用
         /// </summary>
         /// <param name="cmd"></param>
         /// <param name="one"></param>
@@ -374,7 +375,11 @@ namespace TransInstruction
                 }
                 if (解码 == false)
                 {
-                    throw new Exception($"解码失败，非法字符串:{Tool4DataProcess.Hex2Str(Head, 0, Head.Length, true)}");
+                    //throw new Exception($"解码失败，非法字符串:{Tool4DataProcess.Hex2Str(Head, 0, Head.Length, true)}");
+                }
+                else
+                {
+
                 }
 
                 var outs = Tool4DataProcess.Hex2Str(Head, 0, rxi, true);

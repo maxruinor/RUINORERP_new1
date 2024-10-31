@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using RUINORERP.Server.Commands;
 using TransInstruction.DataPortal;
+using TransInstruction;
 
 namespace RUINORERP.Server.ServerSession
 {
@@ -47,6 +48,9 @@ namespace RUINORERP.Server.ServerSession
             var reader = new SequenceReader<byte>(buffer);
             //reader.Advance(1); // skip the first byte
             reader.TryCopyTo(Head);
+
+            int bodylen = CryptoProtocol.AnalyzeClientPackHeader(Head);
+            return bodylen;
 
             //先把头解密了，后面的就好说了
             byte[] KEY = null;
@@ -99,48 +103,6 @@ namespace RUINORERP.Server.ServerSession
             return base.Filter(ref reader);
         }
 
-        /*
-        public object Context { get; set; }
-        public new IPipelineFilter<GamePackageInfo> NextFilter => this;
-
-        public override GamePackageInfo Filter(ref SequenceReader<byte> reader)
-        {
-            /*
-        //先接收固定的256字节
-        socket.ReadWithLength(256, 60000);
-
-        //服务端发送字符串 22
-        socket.WriteClientData(0x03, new byte[] { 0x01, 0x00, 0x01, 0x00 }, null);
-        */
-
-        //GamePackageInfo txtPackage = new GamePackageInfo();
-        //    GamePackageInfo txtPackage = new GamePackageInfo { Body = reader.Sequence.ToArray() };
-        //    if (txtPackage.Body.Length == 256)
-        //    {
-        //        txtPackage.Key = "XT";
-        //        try
-        //        {
-        //            byte[] buffer = reader.Sequence.ToArray();
-        //            //DataBuilder db = new DataBuilder();
-        //            //KxData kd = db.ReadClientData(buffer);
-        //            txtPackage.Body = buffer;
-        //        }
-        //        catch (Exception ex)
-        //        {
-
-
-        //        }
-
-        //    }
-        //    else
-        //    {
-
-        //    }
-        //    // GamePackageInfo txtPackage = new GamePackageInfo { Body = reader.Sequence.ToString() };
-        //    //while (reader.TryRead(out _)) ;
-        //    return txtPackage;
-        //}
-
 
 
         /// <summary>
@@ -170,7 +132,7 @@ namespace RUINORERP.Server.ServerSession
             }
             if (PackageContents.Length == 18)
             {
-               gpi.Key = "XT";
+                gpi.Key = "XT";
                 //gpi.Key = "KXGame";
                 gpi.ecode = SpecialOrder.长度等于18;
                 return gpi;
@@ -196,9 +158,11 @@ namespace RUINORERP.Server.ServerSession
                 reader.TryCopyTo(Head);
                 // reader.TryReadBigEndian(out short packageKey);
                 //var outs = Tools.Hex2Str(Head, 0, 18, true);
-                PacketProcess pp = new PacketProcess();
+
                 gpi.Body = PackageContents;
-                gpi.kd = pp.UnClientPack(Head, HeaderLen, PackageContents);
+                PacketProcess pp = new PacketProcess();
+                //gpi.kd = pp.UnClientPack(Head, HeaderLen, PackageContents);
+                gpi.kd = CryptoProtocol.DecryptionClientPack(Head, HeaderLen, PackageContents);
                 gpi.ecode = SpecialOrder.正常;
                 #endregion
 

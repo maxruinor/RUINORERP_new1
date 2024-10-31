@@ -46,10 +46,12 @@ namespace SuperSocket.ProtoBase
             var total = data.Total;
 
             //Haven't received a full request package
+            //尚未收到完整的请求包
             if (total < m_Size)
                 return default(TPackageInfo);
 
             //There is more data after parse one request
+            //解析一个请求后有更多数据
             if (total > m_Size)
             {
                 rest = total - m_Size;

@@ -149,12 +149,11 @@ namespace RUINORERP.UI.Common
                 //连接上准备
                 OriginalData od = ActionForClient.UserReayLogin();
 
-                byte[] buffer = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(od));
-                //socketSession.AddSendData(od);
+              
+                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
                 _ecs.client.Send(buffer);
-
                 OriginalData od1 = ActionForClient.UserLogin(userName, password);
-                byte[] buffer1 = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(od1));
+                byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(od1);
                 _ecs.client.Send(buffer1);
             }
             catch (Exception ex)

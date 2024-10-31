@@ -1,5 +1,4 @@
 ﻿using TransInstruction;
-using RUINORERP.Server.Lib;
 using RUINORERP.Server.ServerSession;
 using System;
 using System.Collections.Generic;
@@ -66,10 +65,10 @@ namespace RUINORERP.Server.Commands
             }
             if (解码 == false)
             {
-                throw new Exception($"非法字符串:{Tools.Hex2Str(Head, 0, Head.Length, true)}");
+                throw new Exception($"非法字符串:{TransInstruction.Tool4DataProcess.Hex2Str(Head, 0, Head.Length, true)}");
             }
 
-            var outs = Tools.Hex2Str(Head, 0, rxi, true);
+            var outs = TransInstruction.Tool4DataProcess.Hex2Str(Head, 0, rxi, true);
             ret.cmd = Head[0];
             int len = (int)Head[3];
             len <<= 8;
@@ -83,7 +82,7 @@ namespace RUINORERP.Server.Commands
                 // alldata.TryCopyTo(ret.One);
                 掩码 = 加密(KEY, ret.One, pi, 掩码);
                 pi += len;
-                outs += Tools.Hex2Str(ret.One, 0, len, true);
+                outs += TransInstruction.Tool4DataProcess.Hex2Str(ret.One, 0, len, true);
             }
 
             len = (int)Head[5];
@@ -113,7 +112,7 @@ namespace RUINORERP.Server.Commands
                 {
                     throw new Exception(ex.ToString());
                 }
-                outs += Tools.Hex2Str(ret.Two, 0, len, true);
+                outs += TransInstruction.Tool4DataProcess.Hex2Str(ret.Two, 0, len, true);
             }
             //排除收到的心跳数据
             if (ret.cmd != 12)
@@ -240,21 +239,22 @@ namespace RUINORERP.Server.Commands
             }
             head[16] = hi;
             head[17] = low;
+            //调试输出用.正常是不执行的
             if (Debug == true)
             {
-                outs += Tools.Hex2Str(head, 0, head.Length, true);
+                outs += TransInstruction.Tool4DataProcess.Hex2Str(head, 0, head.Length, true);
                 if (one.Length != 0)
                 {
-                    outs += Tools.Hex2Str(one, 0, one.Length, true);
+                    outs += TransInstruction.Tool4DataProcess.Hex2Str(one, 0, one.Length, true);
                 }
                 if (two.Length != 0)
                 {
-                    outs += Tools.Hex2Str(two, 0, two.Length, true);
+                    outs += TransInstruction.Tool4DataProcess.Hex2Str(two, 0, two.Length, true);
                 }
                 //排除心跳回复
                 if (cmd != 13)
                 {
-                    Tools.ShowMsg($"+++[{outs.Length / 3}]:{outs}\r\n");
+                    TransInstruction.Tool4DataProcess.ShowMsg($"+++[{outs.Length / 3}]:{outs}\r\n");
                 }
 
             }
@@ -378,19 +378,19 @@ namespace RUINORERP.Server.Commands
             head[17] = low;
             if (Debug == true)
             {
-                outs += Tools.Hex2Str(head, 0, head.Length, true);
+                outs += TransInstruction.Tool4DataProcess.Hex2Str(head, 0, head.Length, true);
                 if (one.Length != 0)
                 {
-                    outs += Tools.Hex2Str(one, 0, one.Length, true);
+                    outs += TransInstruction.Tool4DataProcess.Hex2Str(one, 0, one.Length, true);
                 }
                 if (two.Length != 0)
                 {
-                    outs += Tools.Hex2Str(two, 0, two.Length, true);
+                    outs += TransInstruction.Tool4DataProcess.Hex2Str(two, 0, two.Length, true);
                 }
                 //排除心跳回复
                 if (cmd != 13)
                 {
-                    Tools.ShowMsg($"+++[{outs.Length / 3}]:{outs}\r\n");
+                    TransInstruction.Tool4DataProcess.ShowMsg($"+++[{outs.Length / 3}]:{outs}\r\n");
                 }
 
             }
@@ -407,9 +407,9 @@ namespace RUINORERP.Server.Commands
 
 
             //监控输出的数据
-            string str1 = Tools.byteToHexStr(one, true);
-            string str2 = Tools.byteToHexStr(head, true);
-            string str3 = Tools.byteToHexStr(two, true);
+            string str1 = TransInstruction.Tool4DataProcess.byteToHexStr(one, true);
+            string str2 = TransInstruction.Tool4DataProcess.byteToHexStr(head, true);
+            string str3 = TransInstruction.Tool4DataProcess.byteToHexStr(two, true);
             //ServiceforGame<SephirothServer.Server.GamePackageInfo> sg = (this as IAppSession).Server as ServiceforGame<SephirothServer.Server.GamePackageInfo>;
             //if (GlobalSettings._debug == DebugController.Debug)
             //{
@@ -517,7 +517,7 @@ namespace RUINORERP.Server.Commands
         public static byte[] GetPassword(string s)
         {
             var ret = new byte[256];
-            byte[] bys = Tools.StrToBytes(s);
+            byte[] bys = TransInstruction.Tool4DataProcess.StrToBytes(s);
             int tmlen = bys.Length;                                         //获取长度
             byte temp1, temp2, temp3, temp4;
             temp1 = temp2 = temp3 = temp4 = 0;

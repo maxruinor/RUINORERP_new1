@@ -100,7 +100,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     {
                         object objList = JsonConvert.DeserializeObject(json);
                         MyCacheManager.Instance.AddCacheEntityList(objList, tablename);
-                        MainForm.Instance.PrintInfoLog("接收缓存数据列表成功！");
+                        MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
                     }
               
                 }

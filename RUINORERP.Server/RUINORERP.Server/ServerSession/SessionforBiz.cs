@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ERPBizService;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.Commands;
-using RUINORERP.Server.Lib;
 using SuperSocket;
 using SuperSocket.Channel;
 using SuperSocket.Server;
@@ -74,16 +73,8 @@ namespace RUINORERP.Server.ServerSession
             string msg;
             byte[] head;
             // 发送 256个固定值
-            Tools.StrToHex("310631B5316D315B314231D33170319031D43189313931A231AA314A315731A5316031FB31BD31AF3188318A3126313B31253177317C318531DA316031C631AD31D031F531AE31F0310531173120311331B531D731DD3109313331583030316B31BB317F31F331143120314631B4312D31E331D2318831F1315231BE31F131AD315F31D231F7310C3183311931E4314931BC311831EA31053120318B3129311D31663143313B3114312931E8317631F1315231D4315331F431AD31DF318731E0319131F2310431903116318931FF3196312A314931BB319831C731103126319B310731C8310B31A83165314C31D931DD31CC31903185314F31A6313931A1312E", 0, -1, out head, out msg);
-            //(this as IAppSession).Server.DataContext
-            //监控输出的数据
-            // string str = Tools.byteToHexStr(head, true);
-            //ServiceforGame<SephirothServer.Server.GamePackageInfo> sg = (this as IAppSession).Server as ServiceforGame<SephirothServer.Server.GamePackageInfo>;
-            //  if (GlobalSettings._debug == DebugController.Debug)
-            // {
-            //     log4netHelper.debug("一连结就，发送包头固定的：" + head.Length.ToString() + "\r\n" + str);
-            // }
-            //监控输出的数据end
+            TransInstruction.Tool4DataProcess.StrToHex("310631B5316D315B314231D33170319031D43189313931A231AA314A315731A5316031FB31BD31AF3188318A3126313B31253177317C318531DA316031C631AD31D031F531AE31F0310531173120311331B531D731DD3109313331583030316B31BB317F31F331143120314631B4312D31E331D2318831F1315231BE31F131AD315F31D231F7310C3183311931E4314931BC311831EA31053120318B3129311D31663143313B3114312931E8317631F1315231D4315331F431AD31DF318731E0319131F2310431903116318931FF3196312A314931BB319831C731103126319B310731C8310B31A83165314C31D931DD31CC31903185314F31A6313931A1312E", 0, -1, out head, out msg);
+            
 
             await (this as IAppSession).SendAsync(head);
 
@@ -121,17 +112,7 @@ namespace RUINORERP.Server.ServerSession
             (this as IAppSession).SendAsync(data);
         }
 
-        /// <summary>
-        /// 只是会话中处理的一个自定方法。名字改
-        /// </summary>
-        /// <param name="temperature"></param>
-        /// <param name="humidity"></param>
-        public void ReceiveData(float temperature, short humidity)
-        {
-            Console.WriteLine($@"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} Receive data: " +
-                              $@"temperature = {temperature}℃, " +
-                              $@"humidity = {humidity}%.");
-        }
+ 
 
         //思路 每个都有对应的队列来控制所有的数据发出
         //在角色上线后执行
@@ -152,7 +133,7 @@ namespace RUINORERP.Server.ServerSession
             }
             else
             {
-                Tools.ShowMsg("包头长居然为0!");
+                TransInstruction.Tool4DataProcess.ShowMsg("包头长居然为0!");
             }
             if (gde.one.Length > 0)
             {
@@ -168,7 +149,8 @@ namespace RUINORERP.Server.ServerSession
 
         public void AddSendData(OriginalData d)
         {
-            EncryptedData gde = PacketProcess.EncryptedDataPack(d.cmd, d.One, d.Two);
+            //EncryptedData gde = PacketProcess.EncryptedDataPack(d.cmd, d.One, d.Two);
+            EncryptedData gde = CryptoProtocol.EncryptionServerPackToClient(d.cmd, d.One, d.Two);
             AddSendData(gde);
         }
 
@@ -179,7 +161,7 @@ namespace RUINORERP.Server.ServerSession
             gd.cmd = cmd;
             gd.One = one;
             gd.Two = two;
-            EncryptedData gde = PacketProcess.EncryptedDataPack(gd.cmd, gd.One, gd.Two);
+            EncryptedData gde = CryptoProtocol.EncryptionServerPackToClient(gd.cmd, gd.One, gd.Two);
             AddSendData(gde);
 
 

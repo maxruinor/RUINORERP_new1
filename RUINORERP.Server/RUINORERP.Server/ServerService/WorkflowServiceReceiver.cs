@@ -1,6 +1,5 @@
 ﻿using RUINORERP.Business;
 using RUINORERP.Model;
-using RUINORERP.Server.Lib;
 using RUINORERP.Server.ServerSession;
 using RUINORERP.Server.Workflow;
 using RUINORERP.Server.Workflow.WFApproval;
@@ -71,7 +70,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("用户登陆:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
             }
             return user;
         }
@@ -98,7 +97,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("用户登陆:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
             }
             return rs;
         }
@@ -131,7 +130,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("用户登陆:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
             }
             return rs;
         }
@@ -166,7 +165,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("用户登陆:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
             }
             return rs;
         }
@@ -195,7 +194,7 @@ namespace RUINORERP.Server.ServerService
                         PushData data = new PushData();
                         data.InputData = tableName;
                         var workflowId = Program.WorkflowHost.StartWorkflow<PushData>("PushBaseInfoWorkflow", data);
-                        Tools.ShowMsg("启动了工作流:" + workflowId);
+                        TransInstruction.Tool4DataProcess.ShowMsg("启动了工作流:" + workflowId);
 
 
 
@@ -216,7 +215,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                Tools.ShowMsg("用户登陆:" + ex.Message);
+                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
             }
             return rs;
         }

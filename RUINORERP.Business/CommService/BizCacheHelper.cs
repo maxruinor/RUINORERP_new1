@@ -434,7 +434,7 @@ namespace RUINORERP.Business.CommService
                 _logger.LogError("SetDictDataSource:" + tableName + "===>" + ex.Message);
             }
             stopwatch.Stop();
-            _logger.LogInformation($"初始化SetDictDataSource: {tableName} 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
+            //_logger.LogInformation($"初始化SetDictDataSource: {tableName} 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
         }
 
         public void SetDictDataSource(List<string> typeNames, bool LoadData = true)

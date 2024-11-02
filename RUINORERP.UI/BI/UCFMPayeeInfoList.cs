@@ -18,6 +18,8 @@ using RUINORERP.Business;
 using RUINORERP.Business.Processor;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Common.Extensions;
+using SqlSugar;
+using RUINORERP.Business.Security;
 
 namespace RUINORERP.UI.BI
 {
@@ -40,11 +42,20 @@ namespace RUINORERP.UI.BI
 
         public override void QueryConditionBuilder()
         {
+
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
+
+            //创建表达式
+            var lambda = Expressionable.Create<tb_FM_PayeeInfo>()
+                             //.And(t => t.Is_enabled == true)
+                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制只看到自己的
+                            .ToExpression();//注意 这一句 不能少
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+
             //清空过滤条件，因为这个基本数据 需要显示出来 
-            QueryConditionFilter.FilterLimitExpressions.Clear();
-           
+            //QueryConditionFilter.FilterLimitExpressions.Clear();
+
         }
 
     }

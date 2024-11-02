@@ -172,10 +172,14 @@ namespace RUINORERP.Model.CommonModel
         #endregion
 
         private bool _online;
-        private int _userID;
+        private bool _IsSuperUser;
+        private long _userID;
         private bool _serverAuthentication;
 
-        public int UserID
+        /// <summary>
+        /// 用户名表中的主键
+        /// </summary>
+        public long UserID
         {
             get => _userID;
             set
@@ -187,8 +191,19 @@ namespace RUINORERP.Model.CommonModel
                 }
             }
         }
- 
- 
+        public bool IsSuperUser
+        {
+            get => _IsSuperUser;
+            set
+            {
+                if (_IsSuperUser != value)
+                {
+                    _IsSuperUser = value;
+                    OnPropertyChanged(nameof(IsSuperUser));
+                }
+            }
+        }
+
         public bool Online
         {
             get => _online;

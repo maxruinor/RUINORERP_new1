@@ -103,6 +103,7 @@ namespace RUINORERP.Extensions.Middlewares
             SetFkColList(type);
         }
 
+
         public void SetFkColList(Type type)
         {
             string tableName = type.Name;
@@ -141,7 +142,6 @@ namespace RUINORERP.Extensions.Middlewares
             {
                 //更新?
             }
-
         }
 
         /*
@@ -272,6 +272,10 @@ namespace RUINORERP.Extensions.Middlewares
                     //列中的数据，已经ADD delete正常操作了。存的旧值是正常的，新的中列表list如果在旧中没有就添加。其他不管？
                     //
                     List<T> oldlist = CacheEntityList.Get(tableName) as List<T>;
+                    if (oldlist== null)
+                    {
+                        oldlist = new List<T>();
+                    }
                     foreach (var item in newlist)
                     {
                         if (!oldlist.Exists(n => n.GetPropertyValue(pair.Key).ToString() == item.GetPropertyValue(pair.Key).ToString()))
@@ -319,7 +323,47 @@ namespace RUINORERP.Extensions.Middlewares
             */
         }
 
+        /// <summary>
+        /// 更新列表中的一个值
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        public void UpdateEntityList<T>(T entity)
+        {
+            string tableName = typeof(T).Name;
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                if (CacheEntityList.Exists(tableName))
+                {
+                    string key = pair.Key;
+                    object Newkey = typeof(T).GetProperty(key).GetValue(entity, null);
+                    var oldlist = CacheEntityList.Get(tableName) as List<T>;
+                    if (oldlist == null)
+                    {
+                        oldlist = new List<T>();
+                    }
+                    //如果旧列表中有这个值，则直接删除，把新的添加上
+                    var olditem = oldlist.Find(n => n.GetPropertyValue(pair.Key).ToString() == entity.GetPropertyValue(pair.Key).ToString());
+                    if (olditem != null)
+                    {
+                        oldlist.Remove(olditem);
+                    }
+                    oldlist.Add(entity);
+                    CacheEntityList.Update(tableName, v => oldlist);
+                }
+                else
+                {
+                    List<T> clist = new List<T>();
+                    clist.Add((T)entity);
+                    CacheEntityList.Add(tableName, clist);
+                }
 
+            }
+
+
+
+        }
         public void UpdateEntityList(Type type, List<object> newlist)
         {
             //newlist是引用类型不可以对他操作，不然会体现到上现操作。例如查询
@@ -348,7 +392,11 @@ namespace RUINORERP.Extensions.Middlewares
                     //列中的数据，已经ADD delete正常操作了。存的旧值是正常的，新的中列表list如果在旧中没有就添加。其他不管？
                     //
                     List<object> oldlist = CacheEntityList.Get(tableName) as List<object>;
-                    foreach (var item in newlist)
+                    if (oldlist == null)
+                    {
+                        oldlist = new List<object>();
+                    }
+                        foreach (var item in newlist)
                     {
                         if (!oldlist.Exists(n => n.GetPropertyValue(pair.Key).ToString() == item.GetPropertyValue(pair.Key).ToString()))
                         {
@@ -369,6 +417,7 @@ namespace RUINORERP.Extensions.Middlewares
             }
 
         }
+
 
         public void AddCacheEntityList<T>(T entity)
         {
@@ -423,47 +472,8 @@ namespace RUINORERP.Extensions.Middlewares
         }
 
 
-        /// <summary>
-        /// 更新列表中的一个值
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="entity"></param>
-        public void UpdateEntityList<T>(T entity)
-        {
-            string tableName = typeof(T).Name;
-            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (NewTableList.TryGetValue(tableName, out pair))
-            {
-                if (CacheEntityList.Exists(tableName))
-                {
-                    string key = pair.Key;
-                    object Newkey = typeof(T).GetProperty(key).GetValue(entity, null);
-
-                    var oldlist = CacheEntityList.Get(tableName) as List<T>;
-
-                    //如果旧列表中有这个值，则直接删除，把新的添加上
-                    var olditem = oldlist.Find(n => n.GetPropertyValue(pair.Key).ToString() == entity.GetPropertyValue(pair.Key).ToString());
-                    if (olditem != null)
-                    {
-                        oldlist.Remove(olditem);
-                    }
-                    oldlist.Add(entity);
-                    CacheEntityList.Update(tableName, v => oldlist);
-                }
-                else
-                {
-                    List<T> clist = new List<T>();
-                    clist.Add((T)entity);
-                    CacheEntityList.Add(tableName, clist);
-                }
-
-            }
 
 
-
-        }
-
-      
         /// <summary>
         /// 
         /// </summary>

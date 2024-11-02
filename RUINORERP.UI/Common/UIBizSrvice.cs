@@ -1,18 +1,27 @@
 ﻿using Netron.GraphLib;
 using RUINORERP.Business;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using TransInstruction;
 
 namespace RUINORERP.UI.Common
 {
     public static class UIBizSrvice
     {
+        /// <summary>
+        /// 保存收款人信息
+        /// </summary>
+        /// <param name="payeeInfo"></param>
         public static async void SavePayeeInfo(tb_FM_PayeeInfo payeeInfo)
         {
             BaseController<tb_FM_PayeeInfo> ctrPayeeInfo = Startup.GetFromFacByName<BaseController<tb_FM_PayeeInfo>>(typeof(tb_FM_PayeeInfo).Name + "Controller");
@@ -71,8 +80,63 @@ namespace RUINORERP.UI.Common
 
             }
             #endregion
+        }
 
+        public static void RequestCache<T>()
+        {
+            RequestCache(typeof(T).Name, typeof(T));
+        }
+
+        public static void RequestCache(Type type)
+        {
+            RequestCache(type.Name, type);
+        }
+        public static void RequestCache(string tableName, Type type = null)
+        {
+            //优先处理本身，比方 BOM_ID显示BOM_NO，只要传tb_BOM_S
+            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            {
+                //请求本身
+                var rslist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                if (rslist == null)
+                {
+                    OriginalData odforCache = ActionForClient.请求发送缓存(tableName);
+                    byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
+                    MainForm.Instance.ecs.client.Send(buffer);
+                }
+            }
+
+            //请求关联表
+            List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
+            if (!BizCacheHelper.Manager.FkPairTableList.TryGetValue(tableName, out kvlist))
+            {
+                if (kvlist == null)
+                {
+                    if (type == null)
+                    {
+
+                        type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                    }
+
+                    BizCacheHelper.Manager.SetFkColList(type);
+                }
+            }
+
+            //获取相关的表
+            if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(tableName, out kvlist))
+            {
+                foreach (var item in kvlist)
+                {
+                    OriginalData odforCache = ActionForClient.请求发送缓存(item.Value);
+                    byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
+                    MainForm.Instance.ecs.client.Send(buffer);
+                }
+            }
 
         }
+
+
     }
+
 }
+

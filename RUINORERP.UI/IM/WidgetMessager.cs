@@ -18,9 +18,10 @@ namespace RUINORERP.UI.IM
         public Messager()
         {
             InitializeComponent();
-          
+
         }
 
+        public string Content { get; set; } = string.Empty;
 
         #region //私有变量和方法
 

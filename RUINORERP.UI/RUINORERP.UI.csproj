@@ -326,6 +326,7 @@
       <HintPath>..\packages\Pipelines.Sockets.Unofficial.2.2.8\lib\net472\Pipelines.Sockets.Unofficial.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="PY, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\PY.1.0.1\lib\netstandard2.0\PY.dll</HintPath>
     </Reference>
@@ -1082,6 +1083,12 @@
     <Compile Include="BusinessFlow\FlowDesign.Designer.cs">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </Compile>
+    <Compile Include="CommonUI\frmInputContent.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonUI\frmInputContent.Designer.cs">
+      <DependentUpon>frmInputContent.cs</DependentUpon>
+    </Compile>
     <Compile Include="Common\UIBizSrvice.cs" />
     <Compile Include="FM\UCExpenseClaimStatistics.cs">
       <SubType>UserControl</SubType>
@@ -1263,6 +1270,13 @@
       <DependentUpon>frmTest.cs</DependentUpon>
     </Compile>
     <Compile Include="IM\FormMoveState.cs" />
+    <Compile Include="IM\IMessage.cs" />
+    <Compile Include="IM\MessagePrompt.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="IM\MessagePrompt.Designer.cs">
+      <DependentUpon>MessagePrompt.cs</DependentUpon>
+    </Compile>
     <Compile Include="IM\NotificationBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1785,6 +1799,7 @@
     <Compile Include="SuperSocketClient\ReceiveFilter.cs" />
     <Compile Include="SuperSocketClient\SocketClientHelper.cs" />
     <Compile Include="SuperSocketClient\SocketSession.cs" />
+    <Compile Include="SuperSocketClient\SystemOptimizerService.cs" />
     <Compile Include="SuperSocketClient\WorkflowService.cs" />
     <Compile Include="SysConfig\ConfigHelper.cs" />
     <Compile Include="SysConfig\ConfigKeys.cs" />
@@ -2453,6 +2468,9 @@
     <EmbeddedResource Include="BusinessFlow\FlowDesign.resx">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommonUI\frmInputContent.resx">
+      <DependentUpon>frmInputContent.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\UCExpenseClaimStatistics.resx">
       <DependentUpon>UCExpenseClaimStatistics.cs</DependentUpon>
     </EmbeddedResource>
@@ -2515,6 +2533,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmTest.resx">
       <DependentUpon>frmTest.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IM\MessagePrompt.resx">
+      <DependentUpon>MessagePrompt.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="IM\NotificationBox.resx">
       <DependentUpon>NotificationBox.cs</DependentUpon>

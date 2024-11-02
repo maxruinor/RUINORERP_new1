@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.ServerSession;
 using System;
@@ -59,7 +60,6 @@ namespace RUINORERP.Server.BizService
 
         public static void 发送缓存数据列表(SessionforBiz PlayerSession, string tableName)
         {
-
             try
             {
                 if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
@@ -76,7 +76,7 @@ namespace RUINORERP.Server.BizService
 
                     ByteBuff tx = new ByteBuff(200);
                     tx.PushString(tableName);
-                    tx.PushLongString(json);
+                    tx.PushString(json);
                     PlayerSession.AddSendData((byte)ServerCmdEnum.发送缓存数据列表, null, tx.toByte());
                 }
 
@@ -97,9 +97,9 @@ namespace RUINORERP.Server.BizService
             try
             {
                 int index = 0;
-                string 登陆时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
-                var UserName = ByteDataAnalysis.GetShortString(gd.Two, ref index);
-                var pwd = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string 登陆时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                var UserName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                var pwd = ByteDataAnalysis.GetString(gd.Two, ref index);
 
                 string msg = string.Empty;
 
@@ -118,28 +118,17 @@ namespace RUINORERP.Server.BizService
                     }
                     //登陆时间
                     UserSession.User.登陆时间 = System.DateTime.Now;
-
+                    UserSession.User.UserID = user.User_ID;
+                    UserSession.User.IsSuperUser = user.IsSuperUser;
+                    UserSession.User.Online = true;
+                    UserSession.User.ServerAuthentication = true;
                     //通知客户端
-                    OriginalData exMsg = new OriginalData();
-                    exMsg.cmd = (byte)ServerCmdEnum.给客户端发提示消息;
-                    exMsg.One = null;
-                    //这种可以写一个扩展方法
-                    ByteBuff tx = new ByteBuff(100);
-                    tx.PushString("用户【" + UserSession.User.姓名 + "】登陆成功");
-                    exMsg.Two = tx.toByte();
-                    UserSession.AddSendData(exMsg);
+                    UserService.给客户端发提示消息(UserSession, "用户【" + UserSession.User.姓名 + "】登陆成功");
                 }
                 else
                 {
                     //通知客户端
-                    OriginalData exMsg = new OriginalData();
-                    exMsg.cmd = (byte)ServerCmdEnum.给客户端发提示消息;
-                    exMsg.One = null;
-                    //这种可以写一个扩展方法
-                    ByteBuff tx = new ByteBuff(100);
-                    tx.PushString("用户登陆出错，用户名或密码错误！");
-                    exMsg.Two = tx.toByte();
-                    UserSession.AddSendData(exMsg);
+                    UserService.给客户端发提示消息(UserSession, "用户登陆出错，用户名或密码错误！");
                 }
             }
             catch (Exception ex)
@@ -187,19 +176,37 @@ namespace RUINORERP.Server.BizService
             return rs;
         }
 
+        /// <summary>
+        /// 有人上线掉线都要通知客户端
+        /// </summary>
+        /// <param name="PlayerSession"></param>
         public static void 发送在线列表(SessionforBiz PlayerSession)
         {
             try
             {
                 ByteBuff tx = new ByteBuff(100);
-                tx.PushInt(frmMain.Instance.sessionListBiz.Count);
+
+                List<UserInfo> userInfos = new List<UserInfo>();
+
+               // tx.PushInt(frmMain.Instance.sessionListBiz.Count);
                 foreach (var item in frmMain.Instance.sessionListBiz)
                 {
-
-                    tx.PushString(item.Value.SessionID);
-                    tx.PushString(item.Value.User.用户名);
-                    tx.PushString(item.Value.User.姓名);
+                    userInfos.Add(item.Value.User);
+                    //tx.PushString(item.Value.SessionID);
+                    //tx.PushString(item.Value.User.用户名);
+                    //tx.PushString(item.Value.User.姓名);
+                    //tx.PushInt64(item.Value.User.UserID);
                 }
+                string json = JsonConvert.SerializeObject(userInfos,
+                      new JsonSerializerSettings
+                      {
+                          Converters = new List<JsonConverter> { new CustomCollectionJsonConverter() },
+                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                      });
+
+              
+                tx.PushString(json);
+
 
                 PlayerSession.AddSendData((byte)ServerCmdEnum.发送在线列表, null, tx.toByte());
             }
@@ -252,7 +259,7 @@ namespace RUINORERP.Server.BizService
 
             return rs;
         }
-        public static bool 转发消息(SessionforBiz PlayerSession, OriginalData gd)
+        public static bool 转发弹窗消息(SessionforBiz PlayerSession, OriginalData gd)
         {
             bool rs = false;
 
@@ -261,10 +268,10 @@ namespace RUINORERP.Server.BizService
             {
 
                 int index = 0;
-                string sendtime = ByteDataAnalysis.GetShortString(gd.Two, ref index);
-                string sessonid = ByteDataAnalysis.GetShortString(gd.Two, ref index);
-                string receiver = ByteDataAnalysis.GetShortString(gd.Two, ref index);
-                var Message = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string sessonid = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string receiver = ByteDataAnalysis.GetString(gd.Two, ref index);
+                var Message = ByteDataAnalysis.GetString(gd.Two, ref index);
                 SessionforBiz sb = null;
                 frmMain.Instance.sessionListBiz.TryGetValue(sessonid, out sb);
                 if (sb != null)
@@ -275,7 +282,7 @@ namespace RUINORERP.Server.BizService
                     tx.PushString(sb.SessionID);
                     tx.PushString(sb.User.姓名);//sender
                     tx.PushString(Message);
-                    sb.AddSendData((byte)ServerCmdEnum.转发消息, null, tx.toByte());
+                    sb.AddSendData((byte)ServerCmdEnum.转发弹窗消息, null, tx.toByte());
                 }
                 return rs;
             }
@@ -287,6 +294,27 @@ namespace RUINORERP.Server.BizService
             return rs;
         }
 
+        public static bool 给客户端发提示消息(SessionforBiz UserSession, string Message)
+        {
+            bool rs = false;
+            try
+            {
+                //通知客户端一条消息
+                OriginalData exMsg = new OriginalData();
+                exMsg.cmd = (byte)ServerCmdEnum.给客户端发提示消息;
+                exMsg.One = null;
+                ByteBuff tx = new ByteBuff(100);
+                tx.PushString(Message);
+                exMsg.Two = tx.toByte();
+                UserSession.AddSendData(exMsg);
+
+            }
+            catch (Exception ex)
+            {
+                rs = false;
+            }
+            return rs;
+        }
         public static bool 转发消息结果(SessionforBiz PlayerSession)
         {
             bool rs = false;
@@ -371,8 +399,6 @@ namespace RUINORERP.Server.BizService
             {
                 ByteBuff tx = new ByteBuff(50);
                 tx.PushString(System.DateTime.Now.ToString());
-                tx.PushString("admin");
-                tx.PushString("Server");
                 tx.PushString("你好，这只是一个消息测试");
                 PlayerSession.AddSendData((byte)ServerCmdEnum.给客户端发提示消息, null, tx.toByte());
             }

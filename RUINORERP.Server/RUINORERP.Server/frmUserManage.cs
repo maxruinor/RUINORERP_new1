@@ -52,6 +52,8 @@ namespace RUINORERP.Server
             //dataGridView1.DataSource = userInfoBindingSource;
 
 
+            DataGridViewColumn LastbeatTime = dataGridView1.Columns["最后心跳时间" + "DataGridViewTextBoxColumn"];
+
             // 获取SessionID列
             DataGridViewColumn sessionIDColumn = dataGridView1.Columns["sessionIDDataGridViewTextBoxColumn"];
 
@@ -65,60 +67,52 @@ namespace RUINORERP.Server
 
         public void UserInfos_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            // 在这里处理集合变化的逻辑
-            switch (e.Action)
-            {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                    SessionforBiz biz = frmMain.Instance.sessionListBiz[((UserInfo)e.NewItems[e.NewStartingIndex]).SessionId];
-                    userInfoBindingSource.Add(((UserInfo)e.NewItems[e.NewStartingIndex]));
-                    // 处理添加元素的逻辑
-                    //userInfoBindingSource.DataSource = frmMain.Instance.userInfos;
-                    //dataGridView1.DataSource = null;
-                    //dataGridView1.DataSource = userInfoBindingSource;
-                    dataGridView1.Refresh();
-                    break;
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-
-                    userInfos.Remove((UserInfo)e.OldItems[e.OldStartingIndex]);                 // 处理删除元素的逻辑
-                    userInfoBindingSource.Remove((UserInfo)e.OldItems[e.OldStartingIndex]);
-                    dataGridView1.Refresh();
-                    break;
-                    // 可以根据需要处理其他事件类型
-            }
-        }
-
-        public void UserInfo_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
             try
             {
-
-                // 当用户信息发生变化时，刷新数据
-                if (((UserInfo)sender).SessionId != null)
+                // 在这里处理集合变化的逻辑
+                switch (e.Action)
                 {
-                    SessionforBiz biz = frmMain.Instance.sessionListBiz[((UserInfo)sender).SessionId];
-
-                    for (int i = 0; i < dataGridView1.Rows.Count; i++)
-                    {
-                        if (dataGridView1.Rows[i].DataBoundItem is UserInfo userInfo)
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                        if (e.NewItems.Count == 1)
                         {
-                            if (userInfo.SessionId == biz.SessionID)
+                            UserInfo newItem = e.NewItems[e.NewStartingIndex] as UserInfo;
+                            if (!userInfos.Contains(newItem))
                             {
-                                foreach (DataGridViewColumn dc in dataGridView1.Columns)
-                                {
-                                    if (dc.DataPropertyName == e.PropertyName)
-                                    {
-                                        dataGridView1.Rows[i].Cells[e.PropertyName].Value = HLH.Lib.Helper.ReflectionHelper.GetPropertyValue(((UserInfo)sender), e.PropertyName);
-                                        //dataGridView1.Refresh();
-                                        dataGridView1.PerformLayout();
-                                        break;
-                                    }
-                                }
+                                userInfos.Add(newItem);                 // 处理删除元素的逻辑
                             }
+                            if (!userInfoBindingSource.Contains(newItem))
+                            {
+                                userInfoBindingSource.Add(newItem);
+                            }
+                            dataGridView1.Refresh();
                         }
-                    }
-                    //RefreshData();
-                }
 
+                        //SessionforBiz biz = frmMain.Instance.sessionListBiz[((UserInfo)e.NewItems[e.NewStartingIndex]).SessionId];
+                        //userInfoBindingSource.Add(((UserInfo)e.NewItems[e.NewStartingIndex]));
+                        // 处理添加元素的逻辑
+                        //userInfoBindingSource.DataSource = frmMain.Instance.userInfos;
+                        //dataGridView1.DataSource = null;
+                        //dataGridView1.DataSource = userInfoBindingSource;
+                      
+                        break;
+                    case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
+                        if (e.OldItems.Count == 1)
+                        {
+                            UserInfo old = e.OldItems[e.OldStartingIndex] as UserInfo;
+                            if (userInfos.Contains(old))
+                            {
+                                userInfos.Remove(old);                 // 处理删除元素的逻辑
+                            }
+                            if (userInfoBindingSource.Contains(old))
+                            {
+                                userInfoBindingSource.Remove(old);
+                            }
+                            dataGridView1.Refresh();
+                        }
+
+                        break;
+                        // 可以根据需要处理其他事件类型
+                }
             }
             catch (Exception ex)
             {
@@ -127,6 +121,49 @@ namespace RUINORERP.Server
             }
 
 
+        }
+
+        public void UserInfo_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            try
+            {
+                if (sender != null && sender is UserInfo info)
+                {
+                    // 当用户信息发生变化时，刷新数据
+                    if (frmMain.Instance.sessionListBiz.ContainsKey(info.SessionId))
+                    {
+                        SessionforBiz biz = frmMain.Instance.sessionListBiz[info.SessionId];
+                        for (int i = 0; i < dataGridView1.Rows.Count; i++)
+                        {
+                            if (dataGridView1.Rows[i].DataBoundItem is UserInfo userInfo)
+                            {
+                                if (userInfo.SessionId == biz.SessionID)
+                                {
+                                    foreach (DataGridViewColumn dc in dataGridView1.Columns)
+                                    {
+                                        if (dc.DataPropertyName == e.PropertyName)
+                                        {
+                                            dataGridView1.Rows[i].Cells[e.PropertyName + "DataGridViewTextBoxColumn"].Value = HLH.Lib.Helper.ReflectionHelper.GetPropertyValue(info, e.PropertyName);
+
+                                            //dataGridView1.Refresh();
+                                            dataGridView1.PerformLayout();
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        //RefreshData();
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+
+            }
         }
 
 

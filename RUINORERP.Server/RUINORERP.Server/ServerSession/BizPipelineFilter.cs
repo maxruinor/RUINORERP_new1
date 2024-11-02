@@ -160,7 +160,6 @@ namespace RUINORERP.Server.ServerSession
                 //var outs = Tools.Hex2Str(Head, 0, 18, true);
 
                 gpi.Body = PackageContents;
-                PacketProcess pp = new PacketProcess();
                 //gpi.kd = pp.UnClientPack(Head, HeaderLen, PackageContents);
                 gpi.kd = CryptoProtocol.DecryptionClientPack(Head, HeaderLen, PackageContents);
                 gpi.ecode = SpecialOrder.正常;

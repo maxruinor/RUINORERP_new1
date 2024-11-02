@@ -89,7 +89,37 @@ namespace TransInstruction
             return gd;
         }
 
-        public static OriginalData SendMessage(string Message, string sessonid, string receiver)
+
+        /// <summary>
+        /// 客户机向服务器发送请求协助处理,协助的内容。相关的单据数据
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <returns></returns>
+        public static OriginalData 请求协助处理(long RequestUserID, string RequestContent, string BillData,string BillType)
+        {
+            var tx = new ByteBuff(2 + 4);
+           
+            tx.PushString(System.DateTime.Now.ToString());
+            tx.PushInt64(RequestUserID);//请示的人姓名。后面单据数据要保存时要名称开头
+            tx.PushString(RequestContent);
+            tx.PushString(BillData);
+            tx.PushString(BillType);
+            OriginalData gd = new OriginalData();
+            gd.cmd = (byte)ClientCmdEnum.请求协助处理;
+            gd.One = null;
+            gd.Two = tx.toByte();
+            return gd;
+        }
+
+
+        /// <summary>
+        /// 发送弹窗消息 用于客户端指定接收者的弹窗消息，或服务器根据规则发送的弹窗消息
+        /// </summary>
+        /// <param name="Message"></param>
+        /// <param name="sessonid"></param>
+        /// <param name="receiver"></param>
+        /// <returns></returns>
+        public static OriginalData SendPopMessage(string Message, string sessonid, string receiver)
         {
             var tx = new ByteBuff(2 + 4);
             //tx.PushInt16((Int16)ClientCmdEnum.用户登陆);
@@ -99,7 +129,7 @@ namespace TransInstruction
             tx.PushString(receiver);//receiver接收者
             tx.PushString(Message);
             OriginalData gd = new OriginalData();
-            gd.cmd = (byte)ClientCmdEnum.发送消息;
+            gd.cmd = (byte)ClientCmdEnum.发送弹窗消息;
             gd.One = null;
             gd.Two = tx.toByte();
             return gd;

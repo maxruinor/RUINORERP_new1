@@ -90,7 +90,7 @@ namespace RUINORERP.Server.Commands
                             byte[] source = gd.Two;
                             try
                             {
-                                string msg = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                                string msg = ByteDataAnalysis.GetString(gd.Two, ref index);
                             }
                             catch (Exception ex)
                             {
@@ -111,20 +111,53 @@ namespace RUINORERP.Server.Commands
                             }
                             break;
 
+                        case ClientCmdEnum.实时汇报异常:
+                            foreach (var item in frmMain.Instance.sessionListBiz)
+                            {
+                                SessionforBiz sessionforBiz=item.Value as SessionforBiz;
+                                //自己的不会上传。 只转给超级管理员。
+                                if (sessionforBiz.User.IsSuperUser)
+                                {
+                                    SystemService.转发异常数据(Player, sessionforBiz, gd);
+                                }
+                            }
+                             
+                            break;
                         case ClientCmdEnum.请求缓存:
                             index = 0;
-                            string datatime = ByteDataAnalysis.GetLongString(gd.Two, ref index);
-                            string tn = ByteDataAnalysis.GetLongString(gd.Two, ref index);
-                            foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+                            string datatime = ByteDataAnalysis.GetString(gd.Two, ref index);
+                            string RequestTableName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                            //如果指定了表名，则只发送指定表的数据，否则全部发送
+                            if (!string.IsNullOrEmpty(RequestTableName) && BizCacheHelper.Manager.NewTableList.Keys.Contains(RequestTableName))
                             {
-                                UserService.发送缓存数据列表(Player, tableName);
+                                UserService.发送缓存数据列表(Player, RequestTableName);
+                            }
+                            else
+                            {
+                                foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+                                {
+                                    UserService.发送缓存数据列表(Player, tableName);
+                                }
+                            }
+                            break;
+                        case ClientCmdEnum.请求协助处理:
+
+                            foreach (var item in frmMain.Instance.sessionListBiz)
+                            {
+                                SessionforBiz sessionforBiz = item.Value as SessionforBiz;
+                                //自己的不会上传。 只转给超级管理员。
+                                if (sessionforBiz.User.IsSuperUser)
+                                {
+                                    SystemService.转发协助处理(Player, sessionforBiz, gd);
+                                    break;//一个人处理就可以了
+                                }
                             }
                             break;
 
-                        case ClientCmdEnum.发送消息:
-                            UserService.转发消息(Player, gd);
-                            UserService.转发消息结果(Player);
 
+                        case ClientCmdEnum.发送弹窗消息:
+                            UserService.转发弹窗消息(Player, gd);
+                            UserService.转发消息结果(Player);
                             break;
 
                         case ClientCmdEnum.客户端心跳包:
@@ -149,7 +182,7 @@ namespace RUINORERP.Server.Commands
                             string ss = "";
                             //角色上线后的操作指令(session, package);
                             ss = ActionForServer.Try解析封包为实际逻辑(gd);
-                            TransInstruction.Tool4DataProcess .ShowMsg("========要处理的其它指令=========" + ss);
+                            TransInstruction.Tool4DataProcess.ShowMsg("========要处理的其它指令=========" + ss);
 
                             break;
                     }
@@ -254,13 +287,14 @@ namespace RUINORERP.Server.Commands
                     Int16 累加数 = ByteDataAnalysis.GetInt16(gd.Two, ref index);
                     int falg = ByteDataAnalysis.GetInt(gd.Two, ref index);
                     Int64 userid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                    //人物
-                    //byte r = ByteDataAnalysis.Getbyte(gd.Two, ref index);
-                    string empName = ByteDataAnalysis.GetShortString(gd.Two, ref index);
-                    string ver = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                    string empName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string ver = ByteDataAnalysis.GetString(gd.Two, ref index);
                     long ComputerFreeTime = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                    string strCurrentFormUI = ByteDataAnalysis.GetShortString(gd.Two, ref index);
-                    string strCurrentModule = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                    string strCurrentFormUI = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string strCurrentModule = ByteDataAnalysis.GetString(gd.Two, ref index);
+
+                    //还可以添加锁定等状态
+
                     PlayerSession.User.心跳数 = 累加数.ObjToInt();
                     PlayerSession.User.最后心跳时间 = DateTime.Now;
                     PlayerSession.User.客户端版本 = ver;
@@ -268,16 +302,7 @@ namespace RUINORERP.Server.Commands
                     PlayerSession.User.当前窗体 = strCurrentFormUI;
                     PlayerSession.User.当前模块 = strCurrentModule;
 
-                    //ByteBuff tx = new ByteBuff(100);
-                    //tx.PushInt(frmMain.Instance.sessionListBiz.Count);
-                    //foreach (var item in frmMain.Instance.sessionListBiz)
-                    //{
-
-                    //    tx.PushString(item.Value.SessionID);
-                    //    tx.PushString(item.Value.User.用户名);
-                    //    tx.PushString(item.Value.User.姓名);
-                    //}
-                    // frmMain.Instance.PrintInfoLog($"收到{PlayerSession.User.姓名 + "|" + empName}心跳包,累加数{累加数}");
+                    
                     //不用回复，如果规则不对，直接T出？
                     // UserService.回复心跳(PlayerSession, tx);
 

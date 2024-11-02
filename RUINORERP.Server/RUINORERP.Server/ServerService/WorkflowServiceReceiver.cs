@@ -11,6 +11,7 @@ using TransInstruction;
 using TransInstruction.DataPortal;
 using RUINORERP.Global;
 using RUINORERP.Server.Workflow.WFPush;
+using RUINORERP.Server.BizService;
 
 namespace RUINORERP.Server.ServerService
 {
@@ -23,9 +24,9 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 登陆时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
-                var UserName = ByteDataAnalysis.GetShortString(gd.Two, ref index);
-                var pwd = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string 登陆时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                var UserName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                var pwd = ByteDataAnalysis.GetString(gd.Two, ref index);
 
 
                 string msg = string.Empty;
@@ -45,27 +46,12 @@ namespace RUINORERP.Server.ServerService
                         UserSession.User.姓名 = user.tb_employee.Employee_Name;
                     }
 
-                    //通知客户端
-                    OriginalData exMsg = new OriginalData();
-                    exMsg.cmd = (byte)ServerCmdEnum.给客户端发提示消息;
-                    exMsg.One = null;
-                    //这种可以写一个扩展方法
-                    ByteBuff tx = new ByteBuff(100);
-                    tx.PushString(UserSession.User.姓名 + "用户登陆成功");
-                    exMsg.Two = tx.toByte();
-                    UserSession.AddSendData(exMsg);
+                    UserService.给客户端发提示消息(UserSession, UserSession.User.姓名 + "用户登陆成功");
                 }
                 else
                 {
                     //通知客户端
-                    OriginalData exMsg = new OriginalData();
-                    exMsg.cmd = (byte)ServerCmdEnum.给客户端发提示消息;
-                    exMsg.One = null;
-                    //这种可以写一个扩展方法
-                    ByteBuff tx = new ByteBuff(100);
-                    tx.PushString("用户登陆出错，用户名或密码错误！");
-                    exMsg.Two = tx.toByte();
-                    UserSession.AddSendData(exMsg);
+                    UserService.给客户端发提示消息(UserSession, "用户登陆出错，用户名或密码错误！");
                 }
             }
             catch (Exception ex)
@@ -81,11 +67,11 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 long billID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
-                string opinion = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string opinion = ByteDataAnalysis.GetString(gd.Two, ref index);
                 //ApprovalWFData data = new ApprovalWFData();
                 //data.Status = "你";
                 //data.BillId = billID;
@@ -108,11 +94,11 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 long billID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
-                string opinion = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string opinion = ByteDataAnalysis.GetString(gd.Two, ref index);
 
                 //这里工作流ID要传送的，这里暂时用了单号去找
                 ApprovalWFData data = new ApprovalWFData();
@@ -122,7 +108,7 @@ namespace RUINORERP.Server.ServerService
                 ApprovalEntity aEntity = new ApprovalEntity();
                 aEntity.ApprovalResults = true;
                 aEntity.BillID = billID;
-              //  aEntity.ApprovalComments = opinion;
+                //  aEntity.ApprovalComments = opinion;
                 data.approvalEntity = aEntity;
                 WFController wc = Startup.GetFromFac<WFController>();
                 wc.PublishEvent(Program.WorkflowHost, data, frmMain.Instance.workflowlist);
@@ -141,11 +127,11 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 long billID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
-                string opinion = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string opinion = ByteDataAnalysis.GetString(gd.Two, ref index);
 
                 ApprovalWFData approvalWFData = new ApprovalWFData();
 
@@ -153,7 +139,7 @@ namespace RUINORERP.Server.ServerService
                 data.BillID = billID;
                 data.bizType = (Global.BizType)BizType;
                 data.ApprovalResults = ApprovalResults;
-               // data.ApprovalComments = opinion;
+                // data.ApprovalComments = opinion;
 
                 approvalWFData.approvalEntity = data;
 
@@ -183,14 +169,14 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 int workflowBizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
 
                 WorkflowBizType workflowBiz = (WorkflowBizType)workflowBizType;
                 switch (workflowBiz)
                 {
                     case WorkflowBizType.基础数据信息推送:
-                        string tableName = ByteDataAnalysis.GetShortString(gd.Two, ref index);
+                        string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
                         PushData data = new PushData();
                         data.InputData = tableName;
                         var workflowId = Program.WorkflowHost.StartWorkflow<PushData>("PushBaseInfoWorkflow", data);

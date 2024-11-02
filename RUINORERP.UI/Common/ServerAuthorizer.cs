@@ -94,26 +94,7 @@ namespace RUINORERP.UI.Common
         {
             try
             {
-                //ip
-                /*
-                if (!IPAddress.TryParse(txtServerIP.Text, out myip))
-                {
-                    IPHostEntry ipHostInfo = Dns.GetHostEntry("192.168.0.254");
-                    if (myip == null)
-                    {
-                        //ipHostInfo = Dns.GetHostEntry(txtServerIP.Text);
-                        ipHostInfo = Dns.GetHostEntry("192.168.0.254");
-                    }
 
-                    myip = ipHostInfo.AddressList[0];
-                }
-                else
-                {
-                    //主机名
-                    IPHostEntry ipHostInfo = Dns.GetHostEntry(txtServerIP.Text);
-                    myip = ipHostInfo.AddressList[0];
-                }
-                */
                 IPHostEntry ipHostInfo = null;
                 if (IsIpAddress(UserGlobalConfig.Instance.ServerIP))
                 {
@@ -132,7 +113,7 @@ namespace RUINORERP.UI.Common
                     UserGlobalConfig.Instance.ServerIP = "192.168.0.254";
                 }
 
-                TransPackProcess tpp = new TransPackProcess();
+                //TransPackProcess tpp = new TransPackProcess();
 
                 if (_ecs == null)
                 {
@@ -147,11 +128,10 @@ namespace RUINORERP.UI.Common
                 }
 
                 //连接上准备
-                OriginalData od = ActionForClient.UserReayLogin();
+                //OriginalData od = ActionForClient.UserReayLogin();
+                //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
+                //_ecs.client.Send(buffer);
 
-              
-                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
-                _ecs.client.Send(buffer);
                 OriginalData od1 = ActionForClient.UserLogin(userName, password);
                 byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(od1);
                 _ecs.client.Send(buffer1);

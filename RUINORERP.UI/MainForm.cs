@@ -69,6 +69,9 @@ using RUINORERP.Common.Helper;
 using System.Windows.Input;
 using SourceLibrary.Security;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+using Mysqlx;
+using IMessage = RUINORERP.UI.IM.IMessage;
+using RUINORERP.Model.CommonModel;
 
 
 
@@ -79,11 +82,26 @@ namespace RUINORERP.UI
     public partial class MainForm : KryptonForm
     {
 
+
+        #region 当前系统中所有用户信息
+        private List<UserInfo> userInfos = new List<UserInfo>();
+
+        /// <summary>
+        /// 当前系统所有用户信息列表
+        /// </summary>
+        public List<UserInfo> UserInfos { get => userInfos; set => userInfos = value; }
+
+
+        #endregion
+
+
         /// <summary>
         /// 这个用来缓存，录入表单时的详情产品数据。后面看优化为一个全局缓存。
         /// </summary>
         public List<View_ProdDetail> list = new List<View_ProdDetail>();
 
+        //一个消息缓存列表，有处理过的。未处理的。未看的。临时性还是固定到表的？
+        public Queue<IMessage> MessageList = new Queue<IMessage>();
 
         ///// <summary>
         ///// 用于连接上服务器后。保存与服务器连接的id
@@ -297,6 +315,10 @@ namespace RUINORERP.UI
         private async void MainForm_Load(object sender, EventArgs e)
         {
             InitRemind();
+            //手动初始化 
+            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
+            BizCacheHelper.InitManager();
+            await InitConfig(false);
             timer1.Start();
             tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
             List<tb_Company> company = await companyController.QueryAsync();
@@ -376,11 +398,7 @@ namespace RUINORERP.UI
 
             Stopwatch stopwatchInitConfig = Stopwatch.StartNew();
 
-            //手动初始化 
-            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
-            BizCacheHelper.InitManager();
 
-            await InitConfig(false);
             stopwatchInitConfig.Stop();
             MainForm.Instance.uclog.AddLog($"InitConfig  执行时间：{stopwatchInitConfig.ElapsedMilliseconds} 毫秒");
             Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
@@ -390,6 +408,8 @@ namespace RUINORERP.UI
             MainForm.Instance.uclog.AddLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
+
+
 
             tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
             List<tb_MenuInfo> menuList = menuInfoController.Query();
@@ -404,6 +424,12 @@ namespace RUINORERP.UI
             timerStatus.Interval = 1000; // 设置定时器间隔为1000毫秒（1秒）
             timerStatus.Tick += (sender, e) => RefreshData();
             timerStatus.Start();
+
+
+            //手动初始化 
+            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
+            BizCacheHelper.InitManager();
+            UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
         }
 
         private void RefreshData()
@@ -417,7 +443,16 @@ namespace RUINORERP.UI
             {
                 lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}，sessionID:{ecs.client.Socket.LocalEndPoint}";
             }
-
+            if (MessageList.Count > 0)
+            {
+                IM.IMessage MessageInfo = MessageList.Dequeue();
+                //NotificationBox notificationBox = new NotificationBox();
+                //notificationBox.ShowForm(MessageInfo.Content);
+                MessagePrompt messager = new MessagePrompt();
+                messager.Content = MessageInfo.Content;
+                messager.Show();
+                //MainForm.Instance.ShowMsg(MessageInfo.Content);
+            }
 
         }
 
@@ -784,22 +819,16 @@ namespace RUINORERP.UI
                     this.cmbRoles.SelectedIndexChanged += new System.EventHandler(this.cmbRoles_SelectedIndexChanged);
                 }
 
-                //MainForm.Instance.logger.LogInformation("成功登陆服务器");
                 //记入审计日志
                 AuditLogHelper.Instance.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
                     MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
-
-                    // LoginWebServer();
-
-                    OriginalData odforCache = ActionForClient.请求发送缓存(string.Empty);
-                    TransPackProcess tpp = new TransPackProcess();
-                    byte[] buffer1 = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(odforCache));
-                    ecs.client.Send(buffer1);
                 }
 
+
+                UIBizSrvice.RequestCache(nameof(tb_RoleInfo));
             }
             else
             {
@@ -1853,8 +1882,6 @@ namespace RUINORERP.UI
         #region 最后一次活动时间
 
 
-
-
         [StructLayout(LayoutKind.Sequential)]
         struct LASTINPUTINFO
         {
@@ -1946,12 +1973,6 @@ namespace RUINORERP.UI
             {
 
             }
-
-            //MoveForm f = new MoveForm();
-            //f.Opener = this;
-            //f.Show();
-            //this.ListMoveForms.Add(f);
-
         }
 
 
@@ -1988,7 +2009,6 @@ namespace RUINORERP.UI
         private void InitRemind()
         {
             taskbarNotifier1 = new TaskbarNotifier();
-
             taskbarNotifier1.SetBackgroundBitmap(global::RUINORERP.UI.Properties.Resources.skin, Color.FromArgb(255, 0, 255));
             taskbarNotifier1.SetCloseBitmap(global::RUINORERP.UI.Properties.Resources.close, Color.FromArgb(255, 0, 255), new System.Drawing.Point(127, 8));
             taskbarNotifier1.TitleRectangle = new System.Drawing.Rectangle(40, 9, 70, 25);
@@ -2049,7 +2069,7 @@ namespace RUINORERP.UI
 
         #endregion
 
-        private async void cmbRoles_SelectedIndexChanged(object sender, EventArgs e)
+        private void cmbRoles_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (toolStripDropDownBtnRoles.DropDownItems[0] is ToolStripComboBox comboBoxRoles)
             {
@@ -2107,9 +2127,9 @@ namespace RUINORERP.UI
             LoginWebServer();
 
             OriginalData odforCache = ActionForClient.请求发送缓存(string.Empty);
-            TransPackProcess tpp = new TransPackProcess();
-            byte[] buffer1 = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(odforCache));
+            byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(odforCache);
             ecs.client.Send(buffer1);
+            SystemOptimizerService.异常信息发送("测试异常信息发送");
         }
 
         private async void LoginWebServer()

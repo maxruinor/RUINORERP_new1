@@ -102,6 +102,7 @@ namespace RUINORERP.Business.Security
 
         /// <summary>
         /// 获取角色的数据归属控制权，如果为真时则只能看到自己负责的数据
+        /// 借入借出 这种 和  收款帐号。 自己的东西只能自己看自己处理？
         /// </summary>
         /// <param name="context"></param>
         /// <returns>不限制返回false</returns>

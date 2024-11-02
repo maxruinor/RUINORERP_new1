@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using HLH.Lib.Helper;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Server.BizService;
@@ -40,7 +41,7 @@ namespace RUINORERP.Server
         {
             //这里添加所有缓存
             LoadCacheToUI();
- 
+
 
         }
 
@@ -51,12 +52,21 @@ namespace RUINORERP.Server
             cmbUser.Items.Clear();
             foreach (var user in frmMain.Instance.sessionListBiz)
             {
-                cmbUser.Items.Add(user.Key);
+                SessionforBiz sessionforBiz = user.Value as SessionforBiz;
+                SuperValue skv = new SuperValue(sessionforBiz.User.姓名, user.Key);
+                cmbUser.Items.Add(skv);
             }
 
             //加载所有缓存的表
             listBoxTableList.Items.Clear();
+
+            List<string> tableList = new List<string>();
             foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+            {
+                tableList.Add(tableName);
+            }
+            tableList.Sort();
+            foreach (var tableName in tableList)
             {
                 listBoxTableList.Items.Add(tableName);
             }

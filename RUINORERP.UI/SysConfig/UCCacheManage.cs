@@ -1,4 +1,5 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
+using FastReport.Table;
 using HLH.Lib.Helper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model;
@@ -42,8 +43,15 @@ namespace RUINORERP.UI.SysConfig
             //加载所有缓存的表
             listBoxTableList.Items.Clear();
 
+            List<string> list = new List<string >();
 
             foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+            {
+                list.Add(tableName);
+            }
+
+            list.Sort();
+            foreach (var tableName in list)
             {
                 var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 if (CacheList == null)
@@ -60,7 +68,6 @@ namespace RUINORERP.UI.SysConfig
                     }
 
                 }
-
             }
         }
 

@@ -5,6 +5,7 @@ using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
 using RUINORERP.AutoMapper;
 using RUINORERP.Business;
 using RUINORERP.Business.Processor;
@@ -847,19 +848,16 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-
-            //foreach (KryptonPage page in Kpages)      
-            //{
-            //    if (!(page is KryptonStorePage) && !kryptonWorkspace1.AllPages().Contains(page))
-            //    {
-            //        kryptonWorkspace1.Root.Children.Add(CreateCell(page.UniqueName, page));
-            //    }
-            //}
+            #region 请求缓存
+            //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
+            UIBizSrvice.RequestCache<M>();
+            UIBizSrvice.RequestCache<C>();
+            #endregion
 
             List<M> list = new List<M>();
             _UCMasterQuery.bindingSourceMaster.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             _UCMasterQuery.ShowSummaryCols();
-
+    
         }
 
         private KryptonWorkspaceCell CreateCell(KryptonPage[] kryptonPages)

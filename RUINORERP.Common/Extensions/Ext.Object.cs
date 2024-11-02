@@ -212,18 +212,33 @@ namespace RUINORERP.Common.Extensions
 
         public static long ToLong(this object thisValue)
         {
-            long reval = 0L;
             if (thisValue == null) return 0;
-            if (thisValue != DBNull.Value && long.TryParse(thisValue.ToString(), out reval))
+            if (thisValue is long) return (long)thisValue; // 如果已经是long类型，直接返回
+            if (thisValue is string strValue)
             {
-                return reval;
+                // 尝试将字符串转换为long
+                if (long.TryParse(strValue, out long reval))
+                {
+                    return reval;
+                }
+                else
+                {
+                    throw new ArgumentException("字符串不能转换为long类型。");
+                }
             }
-            else
+            if (thisValue is IConvertible convertible)
             {
-                throw new Exception("请完善这个ToLong方法！");
+                // 尝试使用IConvertible接口转换为long
+                try
+                {
+                    return convertible.ToInt64(null);
+                }
+                catch
+                {
+                    throw new ArgumentException("对象不能转换为long类型。");
+                }
             }
-
-            return reval;
+            throw new ArgumentException("不支持的对象类型转换为long。");
         }
 
         /// <summary>

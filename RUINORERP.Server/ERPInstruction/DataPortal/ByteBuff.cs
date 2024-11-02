@@ -148,6 +148,7 @@ namespace TransInstruction.DataPortal
 
         /// <summary>
         /// 长度有限制int的最大值
+        /// 这个在业务打包时要成对使用。比方 客户端发送一个长字符串，服务端解析时也要用长字符串的方法来解析
         /// </summary>
         /// <param name="val"></param>
         public void PushString(string val)
@@ -163,18 +164,20 @@ namespace TransInstruction.DataPortal
 
         /// <summary>
         /// 添加长字符串，以0结尾
+        /// 这个在业务打包时要成对使用。比方 客户端发送一个长字符串，服务端解析时也要用长字符串的方法来解析
+        /// 本来想 int64来保存长度。缓存太多。实际int32足够了暂时不用这个方法。省得 没有成对使用时。解析出错。
         /// </summary>
         /// <param name="val"></param>
-        public void PushLongString(string val)
-        {
-            var arr = Tool4DataProcess.StrToBytes(val);
-            PushInt64(arr.Length + 1);
-            foreach (byte by in arr)
-            {
-                PushByte(by);
-            }
-            PushByte(0); //最后是结束符
-        }
+        //public void PushLongString(string val)
+        //{
+        //    var arr = Tool4DataProcess.StrToBytes(val);
+        //    PushInt64(arr.Length + 1);
+        //    foreach (byte by in arr)
+        //    {
+        //        PushByte(by);
+        //    }
+        //    PushByte(0); //最后是结束符
+        //}
 
 
 

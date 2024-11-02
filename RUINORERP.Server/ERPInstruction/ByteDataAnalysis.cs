@@ -127,10 +127,10 @@ namespace TransInstruction
                 byte[] lenByte = new byte[4];
                 lenByte = source.Skip(Index).Take(4).ToArray();
                 int len = BitConverter.ToInt32(lenByte, 0);
-                if (len > 255)
-                {
-                    return "";
-                }
+                //if (len > 255)
+                //{
+                //    return "";
+                //}
                 //消息长度？ 暂时用下面直接减
                 Index = Index + 4;
 
@@ -155,7 +155,7 @@ namespace TransInstruction
         /// <param name="UnparsedData"></param>
         /// <param name="Index">前面多少位不是索引</param>
         /// <returns></returns>
-        public static string GetShortString(byte[] buffer, out byte[] UnparsedData, ref int Index)
+        public static string GetString(byte[] buffer, out byte[] UnparsedData, ref int Index)
         {   //4000+12 05 14 15+0
             string rs = string.Empty;
             UnparsedData = new byte[1];//只是因为下面提前返回。要设置一个默认值
@@ -206,7 +206,7 @@ namespace TransInstruction
         /// <param name="buffer"></param>
         /// <param name="Index"></param>
         /// <returns></returns>
-        public static string GetShortString(byte[] buffer, ref int Index)
+        public static string GetString(byte[] buffer, ref int Index)
         {   //4000+12 05 14 15+0
             string rs = string.Empty;
             if (buffer.Length < Index)
@@ -224,10 +224,10 @@ namespace TransInstruction
                 byte[] lenByte = new byte[4];
                 lenByte = buffer.Skip(Index).Take(4).ToArray();
                 int len = BitConverter.ToInt32(lenByte, 0);
-                if (len > 255)
-                {
-                    return "";
-                }
+                //if (len > 255)
+                //{
+                //    return "";
+                //}
                 //消息长度？ 暂时用下面直接减
                 Index = Index + 4;
 
@@ -244,46 +244,46 @@ namespace TransInstruction
             return rs;
         }
 
-        /// <summary>
-        /// 解析字符串不超过255字节 ，为什么？忘记了
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="Index"></param>
-        /// <returns></returns>
-        public static string GetLongString(byte[] buffer, ref int Index)
-        {   //4000+12 05 14 15+0
-            string rs = string.Empty;
-            if (buffer.Length < Index)
-            {
-                return rs = "长度不够";
-            }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="buffer"></param>
+        ///// <param name="Index"></param>
+        ///// <returns></returns>
+        //public static string GetLongString(byte[] buffer, ref int Index)
+        //{   //4000+12 05 14 15+0
+        //    string rs = string.Empty;
+        //    if (buffer.Length < Index)
+        //    {
+        //        return rs = "长度不够";
+        //    }
 
-            if (buffer.Length == Index)
-            {
-                return rs = "已经全部解析";
-            }
+        //    if (buffer.Length == Index)
+        //    {
+        //        return rs = "已经全部解析";
+        //    }
 
-            try
-            {
-                //长字符串  是long格式保存的长度占8个字节
-                byte[] lenByte = new byte[8];
-                lenByte = buffer.Skip(Index).Take(8).ToArray();
-                long len = BitConverter.ToInt64(lenByte, 0);
+        //    try
+        //    {
+        //        //长字符串  是long格式保存的长度占8个字节
+        //        byte[] lenByte = new byte[8];
+        //        lenByte = buffer.Skip(Index).Take(8).ToArray();
+        //        long len = BitConverter.ToInt64(lenByte, 0);
                
-                //消息长度中，占用了8位，移位
-                Index = Index + 8;
-                byte[] msg = new byte[len];
-                //msg.Length-1减1是去掉结束符
-                msg = buffer.Skip(Index).Take(msg.Length - 1).ToArray();
-                rs = System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
-                Index = Index + msg.Length + 1;//减1是去掉结束符,这里要加上去
-            }
-            catch (Exception ex)
-            {
+        //        //消息长度中，占用了8位，移位
+        //        Index = Index + 8;
+        //        byte[] msg = new byte[len];
+        //        //msg.Length-1减1是去掉结束符
+        //        msg = buffer.Skip(Index).Take(msg.Length - 1).ToArray();
+        //        rs = System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
+        //        Index = Index + msg.Length + 1;//减1是去掉结束符,这里要加上去
+        //    }
+        //    catch (Exception ex)
+        //    {
 
-            }
-            return rs;
-        }
+        //    }
+        //    return rs;
+        //}
         /// <summary>
         /// 
         /// </summary>

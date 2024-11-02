@@ -180,6 +180,7 @@ namespace RUINORERP.Server
             //将会话数据转换为用户数据
             foreach (var session in frmMain.Instance.sessionListBiz.Values)
             {
+                session.User.PropertyChanged -= frmusermange.UserInfo_PropertyChanged;
                 session.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
             }
 
@@ -200,7 +201,7 @@ namespace RUINORERP.Server
             //timer.Start();
         }
 
- 
+
 
 
         public async Task InitConfig(bool LoadData = true)
@@ -287,12 +288,13 @@ namespace RUINORERP.Server
                          })
                          .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
                          .UseSession<SessionforBiz>()
-                         
+
 
                      //注册用于处理连接、关闭的Session处理器
                      .UseSessionHandler(async (session) =>
                      {
                          SessionforBiz sessionforBiz = session as SessionforBiz;
+                         sessionforBiz.User.PropertyChanged -= frmusermange.UserInfo_PropertyChanged;
                          sessionforBiz.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
                          sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
                          frmusermange.userInfos.Add(sessionforBiz.User);
@@ -307,7 +309,7 @@ namespace RUINORERP.Server
                          //}
                          PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session {session.RemoteEndPoint} closed: {reason}");
                          sessionListBiz.Remove(sg.SessionID, out sg);
-                       
+
                          if (sg != null)
                          {
                              frmusermange.userInfos.Remove(sg.User);
@@ -453,6 +455,10 @@ ApplicationInsights
 
         private void PrintMsg(string t)//这个就是我们的函数，我们把要对控件进行的操作放在这里
         {
+            if (!this.IsHandleCreated)
+            {
+                return;
+            }
             if (!richTextBox1.InvokeRequired)//判断是否需要进行唤醒的请求，如果控件与主线程在一个线程内，可以写成 if(!InvokeRequired)
             {
                 // MessageBox.Show("同一线程内");
@@ -462,7 +468,11 @@ ApplicationInsights
             {
                 // MessageBox.Show("不是同一个线程");
                 printMsg a1 = new printMsg(PrintMsg);
-                Invoke(a1, new object[] { t });//执行唤醒操作
+                if (this.IsHandleCreated)
+                {
+                    Invoke(a1, new object[] { t });//执行唤醒操作
+                }
+
             }
         }
 
@@ -519,7 +529,10 @@ ApplicationInsights
 
                     // 将消息格式化为带时间戳和行号的字符串
                     string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n";
+                    if (frmMain.Instance.InvokeRequired)
+                    {
 
+                    }
                     frmMain.Instance.Invoke(new EventHandler(delegate
                     {
                         frmMain.Instance.richTextBox1.SelectionColor = Color.Black;

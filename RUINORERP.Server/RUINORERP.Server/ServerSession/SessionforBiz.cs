@@ -5,11 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using ERPBizService;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Server.BizService;
 using RUINORERP.Server.Commands;
 using SuperSocket;
 using SuperSocket.Channel;
 using SuperSocket.Server;
 using TransInstruction;
+using TransInstruction.DataPortal;
 
 
 namespace RUINORERP.Server.ServerSession
@@ -19,7 +21,8 @@ namespace RUINORERP.Server.ServerSession
         private UserInfo _User = new UserInfo();
         public UserInfo User
         {
-            get {
+            get
+            {
 
                 if (_User.SessionId == null)
                 {
@@ -68,21 +71,41 @@ namespace RUINORERP.Server.ServerSession
         public bool UseXT = false;
         protected override async ValueTask OnSessionConnectedAsync()
         {
-            // m_二次登陆 = new Dictionary<int, string>();
-            //User = new S游戏玩家();
-            string msg;
-            byte[] head;
-            // 发送 256个固定值
-            TransInstruction.Tool4DataProcess.StrToHex("310631B5316D315B314231D33170319031D43189313931A231AA314A315731A5316031FB31BD31AF3188318A3126313B31253177317C318531DA316031C631AD31D031F531AE31F0310531173120311331B531D731DD3109313331583030316B31BB317F31F331143120314631B4312D31E331D2318831F1315231BE31F131AD315F31D231F7310C3183311931E4314931BC311831EA31053120318B3129311D31663143313B3114312931E8317631F1315231D4315331F431AD31DF318731E0319131F2310431903116318931FF3196312A314931BB319831C731103126319B310731C8310B31A83165314C31D931DD31CC31903185314F31A6313931A1312E", 0, -1, out head, out msg);
-            
+            try
+            {
+                //通知客户端一条消息
+                OriginalData WelcomeMsg = new OriginalData();
+                WelcomeMsg.cmd = (byte)ServerCmdEnum.首次连接欢迎消息;
+                WelcomeMsg.One = null;
+                ByteBuff tx = new ByteBuff(100);
+                tx.PushString("欢迎连接到贝思特服务器，请登录。");
+                WelcomeMsg.Two = tx.toByte();
+                EncryptedData MsgByte = CryptoProtocol.EncryptionServerPackToClient(WelcomeMsg);
+                //三个字节数组合并成一个
+                byte[] buffer = new byte[MsgByte.head.Length + MsgByte.one.Length + MsgByte.two.Length];
+                Buffer.BlockCopy(MsgByte.head, 0, buffer, 0, MsgByte.head.Length);
+                Buffer.BlockCopy(MsgByte.one, 0, buffer, MsgByte.head.Length, MsgByte.one.Length);
+                Buffer.BlockCopy(MsgByte.two, 0, buffer, MsgByte.head.Length + MsgByte.one.Length, MsgByte.two.Length);
+                await (this as IAppSession).SendAsync(buffer);
 
-            await (this as IAppSession).SendAsync(head);
+                //string msg;
+                //byte[] head;
+                //// 发送 256个固定值
+                //Tool4DataProcess.StrToHex("310631B5316D315B314231D33170319031D43189313931A231AA314A315731A5316031FB31BD31AF3188318A3126313B31253177317C318531DA316031C631AD31D031F531AE31F0310531173120311331B531D731DD3109313331583030316B31BB317F31F331143120314631B4312D31E331D2318831F1315231BE31F131AD315F31D231F7310C3183311931E4314931BC311831EA31053120318B3129311D31663143313B3114312931E8317631F1315231D4315331F431AD31DF318731E0319131F2310431903116318931FF3196312A314931BB319831C731103126319B310731C8310B31A83165314C31D931DD31CC31903185314F31A6313931A1312E", 0, -1, out head, out msg);
+                //await (this as IAppSession).SendAsync(head);
 
-            //Console.WriteLine($@"{DateTime.Now} {SessionName} New Session connected: {RemoteEndPoint}.");
+                ////发送欢迎消息：在第一次连接时，服务器可能会发送一条欢迎消息或登录提示给客户端，例如：“欢迎连接到服务器，请登录。”
+                ////Console.WriteLine($@"{DateTime.Now} {SessionName} New Session connected: {RemoteEndPoint}.");
 
-            //发送消息给客户端
-            // var msg = $@"Welcome to {SessionName}: {RemoteEndPoint}";
-            // await (this as IAppSession).SendAsync(Encoding.UTF8.GetBytes(msg + "\r\n"));
+                ////发送消息给客户端
+                //// var msg = $@"Welcome to {SessionName}: {RemoteEndPoint}";
+                //// await (this as IAppSession).SendAsync(Encoding.UTF8.GetBytes(msg + "\r\n"));
+            }
+            catch (Exception exx)
+            {
+
+            }
+
         }
 
         protected override async ValueTask OnSessionClosedAsync(CloseEventArgs e)
@@ -112,7 +135,7 @@ namespace RUINORERP.Server.ServerSession
             (this as IAppSession).SendAsync(data);
         }
 
- 
+
 
         //思路 每个都有对应的队列来控制所有的数据发出
         //在角色上线后执行

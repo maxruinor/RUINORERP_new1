@@ -56,6 +56,7 @@ using NPOI.SS.Formula.Functions;
 using SourceGrid;
 using RUINORERP.UI.FormProperty;
 using SourceGrid.Cells.Models;
+using FastReport.Table;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -96,8 +97,50 @@ namespace RUINORERP.UI.BaseForm
 
             frm.flowLayoutPanelButtonsArea.Controls.Add(button快速录入数据);
 
+            KryptonButton button请求协助处理 = new KryptonButton();
+            button请求协助处理.Text = "请求协助处理";
+            button请求协助处理.Click += button请求协助处理_Click;
+
+            frm.flowLayoutPanelButtonsArea.Controls.Add(button请求协助处理);
 
 
+
+        }
+
+        private void button请求协助处理_Click(object sender, EventArgs e)
+        {
+            //弹出一个弹出框，让用户输入协助处理的内容。
+            //再把单据相关内容发送到服务器转发到管理员那里
+
+            frmInputContent frm = new frmInputContent();
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                //发送协助处理请求
+                //先获取当前单据的ID
+                #region
+                try
+                {
+                    if (EditEntity != null)
+                    {
+                        #region  单据数据  后面优化可以多个单?限制5个？
+
+                        string json = JsonConvert.SerializeObject(EditEntity,
+                            new JsonSerializerSettings
+                            {
+                                ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                            });
+                        OriginalData odforCache = ActionForClient.请求协助处理(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID, frm.Content, json, typeof(T).Name);
+                        byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
+                        MainForm.Instance.ecs.client.Send(buffer);
+                        #endregion
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "请求协助处理");
+                }
+                #endregion
+            }
 
         }
 
@@ -1537,7 +1580,7 @@ namespace RUINORERP.UI.BaseForm
         //否则就是调用解析时用加小尾巴
         //注册时处理了所以用上面不加小尾巴
         //BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller`1");
-        
+
         /// <summary>
         /// 结案处理
         /// 一般会自动结案，但是有些需要人工结案
@@ -1592,19 +1635,19 @@ namespace RUINORERP.UI.BaseForm
                 BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                 ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
-                    {
+                {
                     if (ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
                         string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
                         byte[] bytes = UI.Common.ImageHelper.imageToByteArray(frm.CloseCaseImage);
-                          HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                    ////上传新文件时要加后缀名
+                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                        ////上传新文件时要加后缀名
                         string uploadRsult = await httpWebService.UploadImageAsync(strCloseCaseImagePath + ".jpg", bytes, "upload");
                         if (uploadRsult.Contains("UploadSuccessful"))
                         {
                             EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
                             //这里更新数据库
-                            await ctr.BaseSaveOrUpdate(EditEntity); 
+                            await ctr.BaseSaveOrUpdate(EditEntity);
                         }
                     }
 
@@ -2771,6 +2814,11 @@ namespace RUINORERP.UI.BaseForm
         private void BaseBillEditGeneric_Load(object sender, EventArgs e)
         {
             timerAutoSave.Start();
+            #region 请求缓存
+            //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
+            UIBizSrvice.RequestCache<T>();
+            UIBizSrvice.RequestCache<C>();
+            #endregion
         }
 
         private async void timerAutoSave_Tick(object sender, EventArgs e)

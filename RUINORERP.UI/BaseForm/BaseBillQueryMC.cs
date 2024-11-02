@@ -9,7 +9,6 @@ using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
-using NPOI.SS.Formula.Functions;
 using OfficeOpenXml;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 using RUINOR.Core;
@@ -1451,7 +1450,11 @@ namespace RUINORERP.UI.BaseForm
 
             _UCBillMasterQuery.ShowSummaryCols();
 
-
+            #region 请求缓存
+            //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
+            UIBizSrvice.RequestCache<M>();
+            UIBizSrvice.RequestCache<C>();
+            #endregion
 
         }
 

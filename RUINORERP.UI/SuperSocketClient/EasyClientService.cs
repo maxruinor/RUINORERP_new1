@@ -25,16 +25,7 @@ namespace RUINORERP.UI.SuperSocketClient
 {
     public class EasyClientService
     {
-        #region 当前用户信息
-        private List<UserInfo> userInfos = new List<UserInfo>();
-        public List<UserInfo> UserInfos { get => userInfos; set => userInfos = value; }
 
-        private UserInfo _currentUser = new UserInfo();
-
-        public UserInfo CurrentUser { get => _currentUser; set => _currentUser = value; }
-
-
-        #endregion
 
 
         public delegate void ConnectClosed(bool isconect);
@@ -66,8 +57,6 @@ namespace RUINORERP.UI.SuperSocketClient
         /// <param name="od"></param>
         public void AddSendData(OriginalData od)
         {
-            TransPackProcess tpp = new TransPackProcess();
-
             byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
             DataQueue.Enqueue(buffer);
         }
@@ -133,9 +122,13 @@ namespace RUINORERP.UI.SuperSocketClient
                     }
                     catch (Exception)
                     {
-
+                        
 
                     }
+                }
+                else
+                {
+
                 }
                 //断线重连
 
@@ -422,11 +415,11 @@ namespace RUINORERP.UI.SuperSocketClient
                 OnConnectClosed(IsConnected);
             }
 
-            // 清空用户信息列表
-            lock (userInfos)
-            {
-                userInfos.Clear();
-            }
+            //// 清空用户信息列表
+            //lock (userInfos)
+            //{
+            //    userInfos.Clear();
+            //}
 
             // 通知发送数据线程停止
             _stopThreadEvent.Set();
@@ -513,26 +506,26 @@ namespace RUINORERP.UI.SuperSocketClient
                             Program.AppContextData.IsOnline = Successed;
                             break;
                         case ServerCmdEnum.发送在线列表:
-                            //try
-                            //{
-                            //    MainForm.Instance.Invoke(new Action(() =>
-                            //    {
-                            //        IM.UCMessager.Instance.listboxForUsers.Items.Clear();
-                            //    }));
-
-                            //}
-                            //catch (Exception)
-                            //{
-
-                            //}
-                            //ClientService.接收在线用户列表(od);
+                            ClientService.接收在线用户列表(od);
                             break;
-                        case ServerCmdEnum.转发消息:
+                        case ServerCmdEnum.转发弹窗消息:
                             //别人发消息过来了
                             #region 
-                            //IM.UCMessager.Instance.接收消息(od);
+                            ClientService.接收服务器弹窗消息(od);
                             #endregion
 
+                            break;
+                        case ServerCmdEnum.转发异常:
+                            //服务转发异常来了。管理员看看啊。
+                            #region 
+                            ClientService.接收服务器转发异常消息(od);
+                            #endregion
+                            break;
+                        case ServerCmdEnum.转发协助处理:
+                            //服务转发协助处理:来了。管理员看看啊。
+                            #region 
+                            ClientService.接收服务器转发的协助处理请求(od);
+                            #endregion
                             break;
                         case ServerCmdEnum.关机:
                             //执行关机代码
@@ -551,8 +544,8 @@ namespace RUINORERP.UI.SuperSocketClient
                             break;
 
                         case ServerCmdEnum.给客户端发提示消息:
-                            ClientService.接收服务器消息(od);
-
+                            ClientService.接收服务器提示消息(od);
+                           
                             break;
                         case ServerCmdEnum.心跳回复:
                             break;
@@ -594,7 +587,6 @@ namespace RUINORERP.UI.SuperSocketClient
             MainForm.Instance.uclog.AddLog(msg);
             MainForm.Instance.lblServerInfo.Text = msg;
             IsConnected = false;
-            userInfos = new List<UserInfo>();
             reConnect++;
             if (reConnect > 30)
             {

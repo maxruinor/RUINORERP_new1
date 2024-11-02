@@ -24,6 +24,7 @@ using SourceGrid.Cells.Models;
 using static RUINOR.Runtime.InteropServices.APIs.APIsStructs;
 using System.Diagnostics;
 using RUINORERP.Global.Model;
+using RUINORERP.Business.Security;
 
 namespace RUINORERP.UI.BI
 {
@@ -66,8 +67,16 @@ namespace RUINORERP.UI.BI
                 base.InitRequiredToControl(new tb_FM_PayeeInfoValidator(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
                 PicRowImage.Visible = true;
-            }
 
+                //只能自己的
+                if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+                {
+                    _EditEntity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
+                    cmbEmployee_ID.Enabled = false;
+                }
+
+                //限制只看到自己的
+            }
 
 
             entity.PropertyChanged += (sender, s2) =>

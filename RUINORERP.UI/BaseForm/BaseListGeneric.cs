@@ -1846,23 +1846,9 @@ namespace RUINORERP.UI.BaseForm
             {
                 tsbtnSelected.Visible = false;
             }
-            #region
-            //if (this.Parent is KryptonPage kp)
-            //{
-            //    List<tb_MenuInfo> menuInfos = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_CustomerVendor).Name && m.ClassPath == this.ToString()).ToList();
-            //    if (menuInfos == null)
-            //    {
-            //        MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
-            //        return;
-            //    }
-            //    else
-            //    {
-            //        //这个共用了客户和供应商 所以特殊处理，会有两行
-            //        CurMenuInfo = menuInfos.Where(m => m.CaptionCN.Contains(kp.Text)).FirstOrDefault();
-            //    }
-
-            //}
-
+            #region 请求缓存
+            //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
+            UIBizSrvice.RequestCache<T>();
             #endregion
 
             if (!this.DesignMode)
@@ -1882,6 +1868,8 @@ namespace RUINORERP.UI.BaseForm
             //默认收起查询框
             Refreshs();
 
+
+
         }
 
 
@@ -1889,6 +1877,9 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
+
+
+
 
 
     }

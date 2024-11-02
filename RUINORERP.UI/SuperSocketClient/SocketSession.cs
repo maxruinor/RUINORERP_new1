@@ -275,8 +275,8 @@ namespace RUINORERP.UI.SuperSocketClient
 
         public void AddSendData(OriginalData d)
         {
-            TransPackProcess tpp = new TransPackProcess();
-            byte[] buffer = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(d));
+          
+            byte[] buffer = CryptoProtocol.EncryptClientPackToServer(d);
             AddSendData(buffer);
         }
 
@@ -287,8 +287,8 @@ namespace RUINORERP.UI.SuperSocketClient
             gd.cmd = cmd;
             gd.One = one;
             gd.Two = two;
-            TransPackProcess tpp = new TransPackProcess();
-            byte[] buffer = Tool4DataProcess.HexStrTobyte(tpp.ClientPackingAsHexString(gd));
+    
+            byte[] buffer = CryptoProtocol.EncryptClientPackToServer(gd);
             AddSendData(buffer);
         }
 

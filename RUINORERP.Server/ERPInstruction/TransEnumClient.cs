@@ -19,6 +19,7 @@
     /// </summary>
     public enum ClientCmdEnum
     {
+        空指令 = 0x0,
         准备登陆 = 0x13,
         用户登陆 = 0x10,
         请求缓存 = 0x1,

@@ -57,9 +57,6 @@ namespace RUINORERP.Model.Context
         #endregion
 
 
- 
-
-
         /// <summary>
         /// 是否为调试状态 这个是设置到上线后的一个 日志记录等
         /// </summary>
@@ -79,7 +76,15 @@ namespace RUINORERP.Model.Context
         /// sugarClient
         /// </summary>
         public ISqlSugarClient Db { get; set; }
+
+        /// <summary>
+        /// 内存中的业务级的用户信息
+        /// </summary>
         public UserInfo OnlineUser { get; set; } = new UserInfo();
+
+        /// <summary>
+        /// 数据库级的用户信息
+        /// </summary>
         public ICurrentUserInfo CurUserInfo { get; set; }
         public string Status { get; set; }
 

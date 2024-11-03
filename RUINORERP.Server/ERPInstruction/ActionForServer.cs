@@ -34,49 +34,56 @@ namespace TransInstruction
         {
 
             //调试用 文字部分最有规律 
-
             string rs = string.Empty;
-            #region 第一部分
-            if (gd.One != null)
+            try
             {
 
-            }
-            #endregion
-
-            #region 第二部分
-            if (gd.Two != null)
-            {
-                int indexOK = 0;
-                int index = 0;
-
-                //通常最开始是2位指令
-                #region 通常最开始是指令
-                UInt32 cmd = gd.cmd;
-                if (gd.Two != null)
+                #region 第一部分
+                if (gd.One != null)
                 {
-                    cmd <<= 8;
-                    cmd |= gd.Two[1];
-                    cmd <<= 8;
-                    cmd |= gd.Two[0];
+
                 }
-                PackageSourceType pst = TransProtocol.CheckType(cmd, out rs);
                 #endregion
 
+                #region 第二部分
+                if (gd.Two != null)
+                {
+                    int indexOK = 0;
+                    int index = 0;
 
-                indexOK = index;
-                //======================================
-                //先分别取4位
-                index = 2;
-                bool success = false;
-                string s1 = ByteDataAnalysis.TryGetString(gd.Two, out success, ref index);
-                string s2 = ByteDataAnalysis.TryGetString(gd.Two, out success, ref index);
+                    //通常最开始是2位指令
+                    #region 通常最开始是指令
+                    UInt32 cmd = gd.cmd;
+                    if (gd.Two != null)
+                    {
+                        cmd <<= 8;
+                        cmd |= gd.Two[1];
+                        cmd <<= 8;
+                        cmd |= gd.Two[0];
+                    }
+                    PackageSourceType pst = TransProtocol.CheckType(cmd, out rs);
+                    #endregion
 
-                int value = ByteDataAnalysis.TryGetInt(gd.Two, out success, ref index);
-                //
-                int a = 1;
+
+                    indexOK = index;
+                    //======================================
+                    //先分别取4位
+                    index = 2;
+                    bool success = false;
+                    string s1 = ByteDataAnalysis.TryGetString(gd.Two, out success, ref index);
+                    string s2 = ByteDataAnalysis.TryGetString(gd.Two, out success, ref index);
+
+                    int value = ByteDataAnalysis.TryGetInt(gd.Two, out success, ref index);
+                    //
+                    int a = 1;
+                }
+                #endregion
             }
-            #endregion
+            catch (Exception ex)
+            {
 
+
+            }
             return rs;
         }
 
@@ -1217,7 +1224,7 @@ namespace TransInstruction
             return rs;
         }
 
-        
+
 
     }
 }

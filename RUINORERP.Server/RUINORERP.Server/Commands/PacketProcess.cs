@@ -254,7 +254,7 @@ namespace RUINORERP.Server.Commands
                 //排除心跳回复
                 if (cmd != 13)
                 {
-                    TransInstruction.Tool4DataProcess.ShowMsg($"+++[{outs.Length / 3}]:{outs}\r\n");
+                    Comm.CommService.ShowExceptionMsg($"+++[{outs.Length / 3}]:{outs}\r\n");
                 }
 
             }
@@ -390,7 +390,7 @@ namespace RUINORERP.Server.Commands
                 //排除心跳回复
                 if (cmd != 13)
                 {
-                    TransInstruction.Tool4DataProcess.ShowMsg($"+++[{outs.Length / 3}]:{outs}\r\n");
+                    Comm.CommService.ShowExceptionMsg($"+++[{outs.Length / 3}]:{outs}\r\n");
                 }
 
             }

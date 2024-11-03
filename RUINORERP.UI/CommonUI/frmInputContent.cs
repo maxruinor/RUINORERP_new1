@@ -30,6 +30,7 @@ namespace RUINORERP.UI.CommonUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            Content = txtContent.Text;
             if (Content.IsNullOrEmpty())
             {
                 MessageBox.Show("请填写要解决的问题！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -40,7 +41,6 @@ namespace RUINORERP.UI.CommonUI
                 MessageBox.Show("请详细说明要解决的问题！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            Content = txtContent.Text;
             this.DialogResult = DialogResult.OK;
             this.Close();
         }

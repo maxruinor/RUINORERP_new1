@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using RUINORERP.Common.Extensions;
 using RUINORERP.UI.SuperSocketClient;
+using SourceGrid2.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,40 +20,40 @@ namespace RUINORERP.UI.Common
     internal class ServerAuthorizer
     {
 
-        /// <summary>
-        /// 3秒超时返回
-        /// </summary>
-        /// <param name="userName"></param>
-        /// <param name="password"></param>
-        /// <param name="timeOutSec"></param>
-        /// <returns></returns>
-        public async Task LongRunningOperationAsync(EasyClientService _ecs, string userName, string password, int timeOutSec)
-        {
-            using (var tokenSource = new CancellationTokenSource())
-            {
-                var startTime = DateTime.Now;
-                // 在任务执行期间定期检查 CancellationToken，
-                //發送帳號密碼
-                LoginServerByEasyClient(_ecs, userName, password);
+        ///// <summary>
+        ///// 3秒超时返回
+        ///// </summary>
+        ///// <param name="userName"></param>
+        ///// <param name="password"></param>
+        ///// <param name="timeOutSec"></param>
+        ///// <returns></returns>
+        //public async Task LongRunningOperationAsync(EasyClientService _ecs, string userName, string password, int timeOutSec)
+        //{
+        //    using (var tokenSource = new CancellationTokenSource())
+        //    {
+        //        var startTime = DateTime.Now;
+        //        // 在任务执行期间定期检查 CancellationToken，
+        //        //發送帳號密碼
+        //        LoginServerByEasyClient(_ecs, userName, password);
 
-                //等待授权成功后需要1秒钟
-                await Task.Delay(TimeSpan.FromSeconds(1));
+        //        //等待授权成功后需要1秒钟
+        //        await Task.Delay(TimeSpan.FromSeconds(1));
 
-                // 如果它已取消，可以安全地退出。
-                while (!_ecs.LoginStatus)
-                {
-                    if ((DateTime.Now - startTime) >= TimeSpan.FromSeconds(timeOutSec))
-                    {
-                        tokenSource.Cancel();
-                    }
-                    if (tokenSource.IsCancellationRequested)
-                    {
-                        return;
-                    }
-                    await Task.Delay(TimeSpan.FromSeconds(2));
-                }
-            }
-        }
+        //        // 如果它已取消，可以安全地退出。
+        //        while (!_ecs.LoginStatus)
+        //        {
+        //            if ((DateTime.Now - startTime) >= TimeSpan.FromSeconds(timeOutSec))
+        //            {
+        //                tokenSource.Cancel();
+        //            }
+        //            if (tokenSource.IsCancellationRequested)
+        //            {
+        //                return;
+        //            }
+        //            await Task.Delay(TimeSpan.FromSeconds(2));
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// 登录服务器并等待响应，最多等待指定的超时时间。
@@ -68,7 +69,7 @@ namespace RUINORERP.UI.Common
                 var startTime = DateTime.Now;
 
                 // 发送用户名和密码到服务器
-                LoginServerByEasyClient(_ecs, userName, password);
+                bool rs = await LoginServerByEasyClient(_ecs, userName, password);
 
                 // 等待服务器响应，直到超时或收到登录状态
                 while (!_ecs.LoginStatus)
@@ -86,12 +87,13 @@ namespace RUINORERP.UI.Common
                     await Task.Delay(TimeSpan.FromSeconds(2), tokenSource.Token); // 等待2秒再次检查
                 }
 
-                return _ecs.LoginStatus; // 登录状态已更新，返回结果
+                return _ecs.LoginStatus && rs; // 登录状态已更新，返回结果
             }
         }
 
-        public async void LoginServerByEasyClient(EasyClientService _ecs, string userName, string password)
+        public async Task<bool> LoginServerByEasyClient(EasyClientService _ecs, string userName, string password)
         {
+            bool rs = false;
             try
             {
 
@@ -135,12 +137,16 @@ namespace RUINORERP.UI.Common
                 OriginalData od1 = ActionForClient.UserLogin(userName, password);
                 byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(od1);
                 _ecs.client.Send(buffer1);
+
+                rs = true;
             }
             catch (Exception ex)
             {
                 MainForm.Instance.logger.LogError(ex.Message);
-                //MainForm.Instance.PrintInfoLog(ex.Message);
+                MainForm.Instance.ShowStatusText(ex.Message);
+                rs = false;
             }
+            return rs;
         }
 
 

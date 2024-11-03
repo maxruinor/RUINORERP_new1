@@ -1,5 +1,6 @@
 ﻿using HLH.Lib.Helper;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Server.BizService;
@@ -41,7 +42,9 @@ namespace RUINORERP.Server
         {
             //这里添加所有缓存
             LoadCacheToUI();
-
+            frmMain.Instance._logger.LogError("启动了服务器5566");
+            frmMain.Instance._logger.Error("启动了服务器55667788");
+            frmMain.Instance._logger.LogInformation("123131");
 
         }
 

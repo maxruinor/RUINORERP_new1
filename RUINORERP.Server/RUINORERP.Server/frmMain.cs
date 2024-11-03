@@ -38,6 +38,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TransInstruction;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace RUINORERP.Server
 {
@@ -65,14 +66,14 @@ namespace RUINORERP.Server
             _logger = logger;
             _services = Startup.Services;
 
-            //ILoggerFactory loggerFactory = LoggerFactory.Create(logbuilder => logbuilder
-            // .AddFilter("Microsoft", LogLevel.Debug)
-            // .AddFilter("System", LogLevel.Debug)
-            // .AddFilter("Namespace.Class", LogLevel.Debug)
-            // //.AddFile()//成功写入到文件
-            // .AddLog4Net()
-            //);
-            //_logger = loggerFactory.CreateLogger<frmMain>();
+            ILoggerFactory loggerFactory = LoggerFactory.Create(logbuilder => logbuilder
+             .AddFilter("Microsoft", LogLevel.Debug)
+             .AddFilter("System", LogLevel.Debug)
+             .AddFilter("Namespace.Class", LogLevel.Debug)
+             //.AddFile()//成功写入到文件
+             .AddLog4Net()
+            );
+            _logger = loggerFactory.CreateLogger<frmMain>();
 
 
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
@@ -91,6 +92,8 @@ namespace RUINORERP.Server
             ServerStart = true;
             try
             {
+                _logger.Error("ErrorError11");
+                _logger.LogError("LogErrorLogError11");
                 PrintInfoLog("开始启动服务器");
                 _logger.LogInformation("开始启动socket服务器");
                 // BaseKXGame.Instance.Initinal();
@@ -106,6 +109,7 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
+                frmMain.Instance._logger.LogError("StartServerUI", ex);
                 //log4netHelper.error("StartServer总异常", ex);
                 _logger.LogInformation(ex, "StartServer总异常");
                 Console.WriteLine("StartServer总异常" + ex.Message);
@@ -165,6 +169,15 @@ namespace RUINORERP.Server
 
         private async void frmMain_Load(object sender, EventArgs e)
         {
+
+            _logger.Error("ErrorError2233");
+            _logger.LogError("LogErrorLogError2233");
+
+
+            var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
+            logger.LogError($"{DateTime.Now} LogError 日志");
+
+            _logger.LogError("启动了服务器123");
             this.IsMdiContainer = true; // 设置父窗体为MDI容器
             menuStrip1.MdiWindowListItem = 窗口ToolStripMenuItem;
             InitAll();
@@ -176,13 +189,6 @@ namespace RUINORERP.Server
             IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
             cache.Set("test1", "test123");
             await InitConfig(false);
-
-            //将会话数据转换为用户数据
-            foreach (var session in frmMain.Instance.sessionListBiz.Values)
-            {
-                session.User.PropertyChanged -= frmusermange.UserInfo_PropertyChanged;
-                session.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
-            }
 
             //timer = new System.Timers.Timer(500);
             //timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
@@ -233,129 +239,137 @@ namespace RUINORERP.Server
         async Task StartServer()
         {
             frmMain.Instance.PrintInfoLog("StartServer Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
-            //var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
-            //logger.LogError($"{DateTime.Now} LogError 日志");
-
-            _host = MultipleServerHostBuilder.Create()
-
-                     /*
-                              //登陆器
-                              .AddServer<ServiceforLander<LanderPackageInfo>, LanderPackageInfo, LanderCommandLinePipelineFilter>(builder =>
-                              {
-                                  builder.ConfigureServerOptions((ctx, config) =>
-                                  {
-                                      //获取服务配置
-                                      return config.GetSection("ServiceforLander");
-                                  })
-                              .UseSession<SessionforLander>()
-                              //注册用于处理连接、关闭的Session处理器
-                              .UseSessionHandler(async (session) =>
-                              {
-                                  sessionListLander.Add(session as SessionforLander);
-                                  PrintMsg($"{DateTime.Now} [SessionforLander] Session-登陆器 connected: {session.RemoteEndPoint}");
-                                  await Task.Delay(0);
-                              }, async (session, reason) =>
-                              {
-                                  sessionListLander.Remove(session as SessionforLander);
-                                  PrintMsg($"{DateTime.Now} [SessionforLander] Session-登陆器 {session.RemoteEndPoint} closed: {reason}");
-                                  await Task.Delay(0);
-                              })
-                           //.ConfigureServices((context, services) =>
-                           //{
 
 
-                           //})
+            try
+            {
+                _host = MultipleServerHostBuilder.Create()
 
-                           .UseCommand(commandOptions =>
-                               {
-                                   commandOptions.AddCommand<BaseCommand>();
-                                   commandOptions.AddCommand<getmsgCommand>();
-                                   commandOptions.AddCommand<loginCommand>();
-                                   commandOptions.AddCommand<LanderCommand>();
-                               });
-
-
-                              })
-                     */
-                     //一线
-                     .AddServer<ServiceforBiz<BizPackageInfo>, BizPackageInfo, BizPipelineFilter>(builder =>
-                     {
-                         builder.ConfigureServerOptions((ctx, config) =>
-                         {
-                             //获取服务配置
-                             // ReSharper disable once ConvertToLambdaExpression
-                             return config.GetSection("ServiceforBiz");
-                         })
-                         .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
-                         .UseSession<SessionforBiz>()
-
-
-                     //注册用于处理连接、关闭的Session处理器
-                     .UseSessionHandler(async (session) =>
-                     {
-                         SessionforBiz sessionforBiz = session as SessionforBiz;
-                         sessionforBiz.User.PropertyChanged -= frmusermange.UserInfo_PropertyChanged;
-                         sessionforBiz.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
-                         sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
-                         frmusermange.userInfos.Add(sessionforBiz.User);
-                         PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session connected: {session.RemoteEndPoint}");
-                         await Task.Delay(0);
-                     }, async (session, reason) =>
-                     {
-                         SessionforBiz sg = session as SessionforBiz;
-                         //if (sg.player != null && sg.player.Online)
-                         //{
-                         //   // SephirothServer.CommandServer.RoleService.角色退出(sg);
-                         //}
-                         PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session {session.RemoteEndPoint} closed: {reason}");
-                         sessionListBiz.Remove(sg.SessionID, out sg);
-
-                         if (sg != null)
-                         {
-                             frmusermange.userInfos.Remove(sg.User);
-                         }
-
-                         await Task.Delay(0);
-                     })
-                             .ConfigureServices((context, services) =>
+                    /*
+                             //登陆器
+                             .AddServer<ServiceforLander<LanderPackageInfo>, LanderPackageInfo, LanderCommandLinePipelineFilter>(builder =>
                              {
-                                 IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
-                                 // services = Startup.Services;
-                                 //services.AddMemoryCache();
-                                 services.AddMemoryCacheSetupWithInstance(cache);
+                                 builder.ConfigureServerOptions((ctx, config) =>
+                                 {
+                                     //获取服务配置
+                                     return config.GetSection("ServiceforLander");
+                                 })
+                             .UseSession<SessionforLander>()
+                             //注册用于处理连接、关闭的Session处理器
+                             .UseSessionHandler(async (session) =>
+                             {
+                                 sessionListLander.Add(session as SessionforLander);
+                                 PrintMsg($"{DateTime.Now} [SessionforLander] Session-登陆器 connected: {session.RemoteEndPoint}");
+                                 await Task.Delay(0);
+                             }, async (session, reason) =>
+                             {
+                                 sessionListLander.Remove(session as SessionforLander);
+                                 PrintMsg($"{DateTime.Now} [SessionforLander] Session-登陆器 {session.RemoteEndPoint} closed: {reason}");
+                                 await Task.Delay(0);
                              })
+                          //.ConfigureServices((context, services) =>
+                          //{
 
-                             .UseCommand(commandOptions =>
-                             {
-                                 commandOptions.AddCommand<BizCommand>();
-                                 commandOptions.AddCommand<XTCommand>();
-                             });
-                     })
 
-                 .ConfigureLogging((hostingContext, logging) =>
-                 {
-                     logging.ClearProviders(); //去掉默认添加的日志提供程序
-                     var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                     // IMPORTANT: This needs to be added *before* configuration is loaded, this lets
-                     // the defaults be overridden by the configuration.
-                     if (isWindows)
-                     {
-                         // Default the EventLogLoggerProvider to warning or above
-                         logging.AddFilter<EventLogLoggerProvider>(level => level >= Microsoft.Extensions.Logging.LogLevel.Information);
-                     }
-                     logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                     logging.AddConsole();
-                     logging.AddDebug();
-                     if (isWindows)
-                     {
-                         // Add the EventLogLoggerProvider on windows machines
-                         //logging.AddEventLog();//这个写到了事件查看器中。没有必要
-                         logging.AddFile();
-                         //logging.AddLog4Net();
-                     }
-                 }).UseLog4Net()
+                          //})
 
-             .Build();
+                          .UseCommand(commandOptions =>
+                              {
+                                  commandOptions.AddCommand<BaseCommand>();
+                                  commandOptions.AddCommand<getmsgCommand>();
+                                  commandOptions.AddCommand<loginCommand>();
+                                  commandOptions.AddCommand<LanderCommand>();
+                              });
+
+
+                             })
+                    */
+                    //一线
+                    .AddServer<ServiceforBiz<BizPackageInfo>, BizPackageInfo, BizPipelineFilter>(builder =>
+                    {
+                        builder.ConfigureServerOptions((ctx, config) =>
+                        {
+                            //获取服务配置
+                            // ReSharper disable once ConvertToLambdaExpression
+                            return config.GetSection("ServiceforBiz");
+                        })
+                        .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
+                        .UseSession<SessionforBiz>()
+
+
+                    //注册用于处理连接、关闭的Session处理器
+                    .UseSessionHandler(async (session) =>
+                    {
+                        SessionforBiz sessionforBiz = session as SessionforBiz;
+                        sessionforBiz.User.PropertyChanged -= frmusermange.UserInfo_PropertyChanged;
+                        sessionforBiz.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
+                        sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
+                        frmusermange.userInfos.Add(sessionforBiz.User);
+                        PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session connected: {session.RemoteEndPoint}");
+                        await Task.Delay(0);
+                    }, async (session, reason) =>
+                    {
+                        SessionforBiz sg = session as SessionforBiz;
+                        //if (sg.player != null && sg.player.Online)
+                        //{
+                        //   // SephirothServer.CommandServer.RoleService.角色退出(sg);
+                        //}
+                        PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session {session.RemoteEndPoint} closed: {reason}");
+                        sessionListBiz.Remove(sg.SessionID, out sg);
+
+                        if (sg != null)
+                        {
+                            frmusermange.userInfos.Remove(sg.User);
+                        }
+
+                        await Task.Delay(0);
+                    })
+                            .ConfigureServices((context, services) =>
+                            {
+                                IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
+                                // services = Startup.Services;
+                                //services.AddMemoryCache();
+                                services.AddMemoryCacheSetupWithInstance(cache);
+                            })
+
+                            .UseCommand(commandOptions =>
+                            {
+                                commandOptions.AddCommand<BizCommand>();
+                                commandOptions.AddCommand<XTCommand>();
+                            });
+                    })
+
+                .ConfigureLogging((hostingContext, logging) =>
+                {
+                    logging.ClearProviders(); //去掉默认添加的日志提供程序
+                    var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                    // IMPORTANT: This needs to be added *before* configuration is loaded, this lets
+                    // the defaults be overridden by the configuration.
+                    if (isWindows)
+                    {
+                        // Default the EventLogLoggerProvider to warning or above
+                        logging.AddFilter<EventLogLoggerProvider>(level => level >= Microsoft.Extensions.Logging.LogLevel.Information);
+                    }
+                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                    logging.AddConsole();
+                    logging.AddDebug();
+                    if (isWindows)
+                    {
+                        // Add the EventLogLoggerProvider on windows machines
+                        //logging.AddEventLog();//这个写到了事件查看器中。没有必要
+                        // logging.AddFile();
+                        logging.AddLog4Net();
+                    }
+                }).UseLog4Net()
+
+            .Build();
+
+            }
+            catch (Exception hostex)
+            {
+                frmMain.Instance._logger.LogError("hostex", hostex);
+            }
+
 
             try
             {
@@ -365,6 +379,7 @@ namespace RUINORERP.Server
             {
                 frmMain.Instance.PrintInfoLog("_host.RunAsync()" + e.Message);
                 _logger.LogError("socket _host RunAsync", e.Message);
+                frmMain.Instance._logger.LogError("hostex", e);
             }
 
         }
@@ -388,7 +403,11 @@ namespace RUINORERP.Server
             try
             {
                 await DrainAllServers();
-                _host.StopAsync().GetAwaiter().GetResult();
+                if (_host != null)
+                {
+                    _host.StopAsync().GetAwaiter().GetResult();
+                }
+
             }
             catch (Exception e)
             {
@@ -403,6 +422,10 @@ namespace RUINORERP.Server
 
         public async Task DrainAllServers()
         {
+            if (_host == null)
+            {
+                return;
+            }
             //_host.StopAsync();
             foreach (var service in _host.Services.GetServices<IHostedService>())
             {

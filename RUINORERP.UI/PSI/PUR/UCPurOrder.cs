@@ -311,8 +311,6 @@ namespace RUINORERP.UI.PSI.PUR
                 }
             }
 
-
-
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.UnitPrice * b.Discount * c.Quantity, c => c.SubtotalAmount);
             listCols.SetCol_Formula<tb_PurOrderDetail>((a, b, c) => a.TransactionPrice * c.Quantity, c => c.SubtotalAmount);

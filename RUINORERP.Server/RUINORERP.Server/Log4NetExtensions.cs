@@ -23,9 +23,8 @@ namespace RUINORERP.Server
         /// <returns></returns>
         public static IHostBuilder UseLog4Net(this IHostBuilder hostBuilder)
         {
-           //没有起到作用？
-            //只是初始化而已
-            ILoggerRepository repository = LogManager.CreateRepository("SuperSocket");
+            //初始化
+            ILoggerRepository repository = LogManager.CreateRepository("SuperSocket");//这一行不能去掉
             var log4netRepository = LogManager.GetRepository("SuperSocket");
             XmlConfigurator.Configure(log4netRepository, new FileInfo("ConfigBySS/log4net.config"));
             return hostBuilder;

@@ -122,7 +122,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     }
                     catch (Exception)
                     {
-                        
+
 
                     }
                 }
@@ -170,24 +170,24 @@ namespace RUINORERP.UI.SuperSocketClient
                     MainForm.HeartbeatCounter = 0;
                 }
                 var tx = new ByteBuff(36);
-
                 tx.PushInt16(MainForm.HeartbeatCounter++); //累加数
-                                                           //tx.PushInt(PlayerSession._Player.v位置.x);
-                                                           //tx.PushInt(PlayerSession._Player.v位置.y);
-                                                           //  tx.PushInt(newx);
-                                                           // tx.PushInt(newy);
-
-                //可以添加，离开电脑没有动桌面的秒数
                 tx.PushInt(0);
-                // long SysStatmp = SephirothInstruction.Helper.CommonTimeStamp.GetTimeStampSeconds(System.DateTime.Now);
-                // tx.PushInt((int)SysStatmp);//系统当前时间  这里打开的话就会有这种错误  Too Fast Client Time  OST 1656993523 NST 1656993564 DST 41 OCT 17 NCT 91 DCT 74
                 tx.PushInt64(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
-                tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
+                if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
+                {
+                    tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
+                }
+                else
+                {
+                    tx.PushString("");
+                }
                 tx.PushString(System.Environment.MachineName + ":" + MainForm.Instance.AppContext.OnlineUser.客户端版本);
                 MainForm.Instance.AppContext.OnlineUser.静止时间 = MainForm.GetLastInputTime();
                 tx.PushInt64(MainForm.Instance.AppContext.OnlineUser.静止时间);//电脑空闲时间
                 tx.PushString(MainForm.Instance.AppContext.log.Path);
                 tx.PushString(MainForm.Instance.AppContext.log.ModName);
+                tx.PushBool(MainForm.Instance.AppContext.OnlineUser.在线状态);
+                tx.PushBool(MainForm.Instance.AppContext.OnlineUser.授权状态);
 
                 gd.cmd = (byte)ClientCmdEnum.客户端心跳包;
                 gd.One = null;
@@ -455,7 +455,11 @@ namespace RUINORERP.UI.SuperSocketClient
             {  // 引入延迟重连策略
                 while (_reconnectAttempts < MaxReconnectAttempts)
                 {
-                    await Reconnect();
+                    bool reconnectSuccess = await Reconnect();
+                    if (reconnectSuccess)
+                    {
+                        break;
+                    }
                 }
                 MainForm.Instance.LogLock();
             }
@@ -537,15 +541,31 @@ namespace RUINORERP.UI.SuperSocketClient
                             break;
                         case ServerCmdEnum.强制用户退出:
                             //加个倒计时？
-                            // MainForm.Instance.Close();
-                            //System.Windows.Forms.Application.Exit();
-                            System.Environment.Exit(0);
+                            try
+                            {
+                                // 保存当前工作
+                                // SaveCurrentWork();
+
+                                // 通知用户
+                                // NotifyUserAboutForcedExit();
+
+                                // 关闭所有资源
+                                //CloseAllResources();
+
+                                // 安全退出
+                                Environment.Exit(0);
+                            }
+                            catch (Exception ex)
+                            {
+                                // 异常处理
+                                // LogError(ex, "强制用户退出时发生错误");
+                            }
                             Process.GetCurrentProcess().Kill();
                             break;
 
                         case ServerCmdEnum.给客户端发提示消息:
                             ClientService.接收服务器提示消息(od);
-                           
+
                             break;
                         case ServerCmdEnum.心跳回复:
                             break;
@@ -607,11 +627,12 @@ namespace RUINORERP.UI.SuperSocketClient
             await Reconnect();
         }
 
-        private async Task Reconnect()
+        private async Task<bool> Reconnect()
         {
+            bool connected = false;
             if (_isConnecting || _reconnectAttempts >= MaxReconnectAttempts)
             {
-                return;
+                return false;
             }
             _reconnectAttempts++;
             try
@@ -626,10 +647,11 @@ namespace RUINORERP.UI.SuperSocketClient
                 MainForm.Instance.lblServerInfo.Text = msg;
 
                 // 尝试重新连接
-                var connected = await Connect(_cancellationTokenSource.Token);
+                connected = await Connect(_cancellationTokenSource.Token);
                 if (connected)
                 {
                     _reconnectAttempts = 0; // 重置重连尝试次数
+
                 }
             }
             catch (OperationCanceledException)
@@ -640,6 +662,7 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 _isConnecting = false; // 完成重连尝试，无论成功与否
             }
+            return connected;
         }
 
 

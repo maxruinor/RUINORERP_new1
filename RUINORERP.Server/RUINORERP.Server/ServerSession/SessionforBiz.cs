@@ -55,12 +55,7 @@ namespace RUINORERP.Server.ServerSession
         public int HeartbeatCounter;
         public int HeartbeatCounterCheck;
 
-        private ConcurrentDictionary<int, TransDataEntity> _TransDataEntityList = new ConcurrentDictionary<int, TransDataEntity>();
-        /// <summary>
-        /// 保存攻击数据
-        /// </summary>
-        public ConcurrentDictionary<int, TransDataEntity> TransDataEntityList { get => _TransDataEntityList; set => _TransDataEntityList = value; }
-
+     
         //  public PacketProcess _dataSender;
         private string SessionName => "[SessionforBiz]";
 
@@ -111,10 +106,9 @@ namespace RUINORERP.Server.ServerSession
         protected override async ValueTask OnSessionClosedAsync(CloseEventArgs e)
         {
             Console.WriteLine($@"{DateTime.Now} {SessionName} Session {RemoteEndPoint} closed: {e.Reason}.");
-            //frmServerUI.Instance.SessionListGame
             if (User != null)
             {
-                if (User.Online)
+                if (User.在线状态)
                 {
                     // Tools.ShowMsg("非正常退出" + player.GameId);
                     // SephirothServer.CommandServer.RoleService.角色退出(this);
@@ -156,7 +150,7 @@ namespace RUINORERP.Server.ServerSession
             }
             else
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("包头长居然为0!");
+                Comm.CommService.ShowExceptionMsg("包头长居然为0!");
             }
             if (gde.one.Length > 0)
             {

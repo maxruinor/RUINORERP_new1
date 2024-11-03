@@ -17,6 +17,7 @@ using RUINORERP.Server.Comm;
 using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RUINORERP.Business.CommService;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Server.Commands
 {
@@ -29,9 +30,13 @@ namespace RUINORERP.Server.Commands
     public class BizCommand : IAsyncCommand<BizPackageInfo>
     {
         private IMemoryCache _cache;
-        public BizCommand(IMemoryCache cache)
+
+        //保存在Log4net_cath
+        public ILogger<BizCommand> _logger { get; set; }
+        public BizCommand(IMemoryCache cache, ILogger<BizCommand> logger)
         {
             _cache = cache;
+            _logger = logger;
         }
         public async ValueTask ExecuteAsync(IAppSession session, BizPackageInfo package)
         {
@@ -114,14 +119,14 @@ namespace RUINORERP.Server.Commands
                         case ClientCmdEnum.实时汇报异常:
                             foreach (var item in frmMain.Instance.sessionListBiz)
                             {
-                                SessionforBiz sessionforBiz=item.Value as SessionforBiz;
+                                SessionforBiz sessionforBiz = item.Value as SessionforBiz;
                                 //自己的不会上传。 只转给超级管理员。
-                                if (sessionforBiz.User.IsSuperUser)
+                                if (sessionforBiz.User.超级用户)
                                 {
                                     SystemService.转发异常数据(Player, sessionforBiz, gd);
                                 }
                             }
-                             
+
                             break;
                         case ClientCmdEnum.请求缓存:
                             index = 0;
@@ -146,7 +151,7 @@ namespace RUINORERP.Server.Commands
                             {
                                 SessionforBiz sessionforBiz = item.Value as SessionforBiz;
                                 //自己的不会上传。 只转给超级管理员。
-                                if (sessionforBiz.User.IsSuperUser)
+                                if (sessionforBiz.User.超级用户)
                                 {
                                     SystemService.转发协助处理(Player, sessionforBiz, gd);
                                     break;//一个人处理就可以了
@@ -172,29 +177,30 @@ namespace RUINORERP.Server.Commands
                             ////发送角色信息在登陆前显示在，再点一下才能进去
                             //RoleService.f发送角色列表(Player);
                             //Tools.ShowMsg(Player.SessionID);
-
                             break;
-
-
-
+                        case ClientCmdEnum.空指令:
+                            break;
                         default:
-                            //
-                            string ss = "";
-                            //角色上线后的操作指令(session, package);
-                            ss = ActionForServer.Try解析封包为实际逻辑(gd);
-                            TransInstruction.Tool4DataProcess.ShowMsg("========要处理的其它指令=========" + ss);
+                            string exMsg = string.Empty;
+                            //这里日志都能生效
+                            exMsg = ActionForServer.Try解析封包为实际逻辑(gd);
+                            exMsg += "========要处理的其它指令=========" + exMsg;
+                            Comm.CommService.ShowExceptionMsg(exMsg);
+                            _logger.Error(exMsg);
+                            // _logger.LogError("LogErrorLogError");
 
+                            // frmMain.Instance._logger.Error("启动了服务器556677889999");
                             break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    TransInstruction.Tool4DataProcess.ShowMsg("指令测试结果异常：" + ex.Message + ex.StackTrace);
+                    Comm.CommService.ShowExceptionMsg("指令测试结果异常：" + ex.Message + ex.StackTrace);
                     if (ex.InnerException != null)
                     {
                         if (ex.InnerException != null)
                         {
-                            TransInstruction.Tool4DataProcess.ShowMsg("sql：" + ex.InnerException.Message);
+                            Comm.CommService.ShowExceptionMsg("sql：" + ex.InnerException.Message);
                         }
 
                     }
@@ -204,10 +210,6 @@ namespace RUINORERP.Server.Commands
                     //InstructionService.OtherEvent -= InstructionService_OtherEvent;
                 }
 
-                //if (!(rs.Contains("心跳") || rs.Contains("等待")))
-                //{
-                //    Tools.ShowMsg("客户端指令测试结果：" + rs);
-                //}
             }
         }
 
@@ -215,7 +217,7 @@ namespace RUINORERP.Server.Commands
         {
             if (!msg.ToString().Contains("心跳"))
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("OtherEvent：" + msg.ToString());
+                Comm.CommService.ShowExceptionMsg("OtherEvent：" + msg.ToString());
             }
         }
 
@@ -292,17 +294,19 @@ namespace RUINORERP.Server.Commands
                     long ComputerFreeTime = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                     string strCurrentFormUI = ByteDataAnalysis.GetString(gd.Two, ref index);
                     string strCurrentModule = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    bool 在线状态 = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                    bool 授权状态 = ByteDataAnalysis.Getbool(gd.Two, ref index);
 
                     //还可以添加锁定等状态
-
                     PlayerSession.User.心跳数 = 累加数.ObjToInt();
-                    PlayerSession.User.最后心跳时间 = DateTime.Now;
+                    PlayerSession.User.最后心跳时间 = DateTime.Now.ToString();
                     PlayerSession.User.客户端版本 = ver;
                     PlayerSession.User.静止时间 = ComputerFreeTime;
                     PlayerSession.User.当前窗体 = strCurrentFormUI;
                     PlayerSession.User.当前模块 = strCurrentModule;
+                    PlayerSession.User.在线状态 = 在线状态;
+                    PlayerSession.User.授权状态 = 授权状态;
 
-                    
                     //不用回复，如果规则不对，直接T出？
                     // UserService.回复心跳(PlayerSession, tx);
 

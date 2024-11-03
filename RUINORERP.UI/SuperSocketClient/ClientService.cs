@@ -1,6 +1,7 @@
 ﻿using AutoUpdateTools;
 using Netron.GraphLib;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
@@ -67,44 +68,30 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 int index = 0;
                 ByteBuff bg = new ByteBuff(gd.Two);
-//                int counter = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 //清空
                 MainForm.Instance.UserInfos = new List<UserInfo>();
-                //for (int i = 0; i < counter; i++)
-                //{
-                //    string sessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
-                //    string userName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                //    string EmpName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                //    long Userid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                //    UserInfo userinfo = new UserInfo();
-                //    userinfo.UserID = Userid;
-                //    userinfo.SessionId = sessionID;
-                //    userinfo.用户名 = userName;
-                //    userinfo.姓名 = EmpName;
-                //    userinfo.Online = true;
-                //    if (MainForm.Instance.ecs.UserInfos.Contains(userinfo) == false)
-                //    {
-                //        MainForm.Instance.ecs.UserInfos.Add(userinfo);
-                //    }
-                //}
                 string json = ByteDataAnalysis.GetString(gd.Two, ref index);
                 if (!string.IsNullOrEmpty(json))
                 {
                     if (json != "null")
                     {
-                        object objList = JsonConvert.DeserializeObject(json);
-                        if (objList is List<UserInfo>)
+
+                        UserInfo[] userInfoList = JsonConvert.DeserializeObject<UserInfo[]>(json);
+                        if (userInfoList != null)//(Newtonsoft.Json.Linq.JArray))
                         {
-                            MainForm.Instance.UserInfos = (List<UserInfo>)objList;
+                            foreach (var item in userInfoList)
+                            {
+                                MainForm.Instance.UserInfos.Add(item);
+
+                            }
                         }
                     }
 
                 }
-
             }
             catch (Exception ex)
             {
-                MainForm.Instance.PrintInfoLog("用户登陆:" + ex.Message);
+                MainForm.Instance.PrintInfoLog("接收在线用户列表:" + ex.Message);
             }
             return rs;
 
@@ -145,9 +132,27 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 int index = 0;
                 ByteBuff bg = new ByteBuff(gd.Two);
+                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 姓名 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 Message = ByteDataAnalysis.GetString(gd.Two, ref index);
+                bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
                 MainForm.Instance.PrintInfoLog(Message);
-                MainForm.Instance.ShowStatusText(Message);
+                if (MustDisplay)
+                {
+                    IM.IMessage MessageInfo = new IM.IMessage();
+                    MessageInfo.SendTime = sendtime;
+                    //MessageInfo.Id = SessionID;
+                    MessageInfo.Sender = 姓名;
+                    MessageInfo.Content = Message;
+                    MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog(Message);
+                    MainForm.Instance.ShowStatusText(Message);
+                }
+
             }
             catch (Exception ex)
             {
@@ -242,7 +247,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     System.IO.Directory.CreateDirectory(fi.Directory.FullName);
                 }
                 File.WriteAllText(PathwithFileName, BillData);
-              
+
 
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
             }

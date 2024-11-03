@@ -6,6 +6,7 @@ using System.Text;
 using RUINORERP.Server.Commands;
 using TransInstruction.DataPortal;
 using TransInstruction;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Server.ServerSession
 {
@@ -160,8 +161,19 @@ namespace RUINORERP.Server.ServerSession
                 //var outs = Tools.Hex2Str(Head, 0, 18, true);
 
                 gpi.Body = PackageContents;
-                //gpi.kd = pp.UnClientPack(Head, HeaderLen, PackageContents);
-                gpi.kd = CryptoProtocol.DecryptionClientPack(Head, HeaderLen, PackageContents);
+                try
+                {
+                    gpi.kd = CryptoProtocol.DecryptionClientPack(Head, HeaderLen, PackageContents);
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance._logger.LogError("服务器解来自客户端的包（SEP):" + ex.ToString());
+                    gpi.kd = new KxData();
+                }
+                finally
+                {
+                 
+                }
                 gpi.ecode = SpecialOrder.正常;
                 #endregion
 

@@ -53,7 +53,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("发送缓存数据:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("发送缓存数据:" + ex.Message);
             }
 
         }
@@ -83,7 +83,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
             }
 
         }
@@ -119,9 +119,9 @@ namespace RUINORERP.Server.BizService
                     //登陆时间
                     UserSession.User.登陆时间 = System.DateTime.Now;
                     UserSession.User.UserID = user.User_ID;
-                    UserSession.User.IsSuperUser = user.IsSuperUser;
-                    UserSession.User.Online = true;
-                    UserSession.User.ServerAuthentication = true;
+                    UserSession.User.超级用户 = user.IsSuperUser;
+                    UserSession.User.在线状态 = true;
+                    UserSession.User.授权状态 = true;
                     //通知客户端
                     UserService.给客户端发提示消息(UserSession, "用户【" + UserSession.User.姓名 + "】登陆成功");
                 }
@@ -133,7 +133,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
             }
             return user;
         }
@@ -212,7 +212,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
             }
 
         }
@@ -226,16 +226,23 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
             }
 
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="PlayerSession"></param>
+        /// <param name="Message"></param>
+        /// <param name="MustDisplay"></param>
+        /// <returns></returns>
         public static bool 给客户端发消息(SessionforBiz PlayerSession, string Message, bool MustDisplay)
         {
             bool rs = false;
             try
             {
-                int index = 0;
                 SessionforBiz sb = null;
                 frmMain.Instance.sessionListBiz.TryGetValue(PlayerSession.SessionID, out sb);
                 if (sb != null)

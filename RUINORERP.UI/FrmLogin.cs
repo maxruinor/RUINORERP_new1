@@ -167,16 +167,17 @@ namespace RUINORERP.UI
                                 ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
                                 bool result = await serverAuthorizer.loginRunningOperationAsync(ecs, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
                                 //UITools.SuperSleep(1000);
-                                if (result)
-                                {
-
-                                }
-                                else
+                                if (!result)
                                 {
                                     MessageBox.Show("验证失败或超时请重试");
                                     //MainForm.Instance.logger.LogInformation("验证失败或超时请重试");
                                     //base.Cursor = Cursors.Default;
                                     return;
+                                }
+                                else
+                                {
+                                    MainForm.Instance.AppContext.OnlineUser.授权状态 = true;
+                                    MainForm.Instance.AppContext.OnlineUser.在线状态 = true;
                                 }
                             }
                             else
@@ -197,10 +198,10 @@ namespace RUINORERP.UI
                             UserGlobalConfig.Instance.IsSupperUser = Program.AppContextData.IsSuperUser;
                             UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
                             UserGlobalConfig.Instance.Serialize();
-                             
+
                             //先指定一下服务器IP
                             //BizCodeGenerator.Instance.RedisServerIP = UserGlobalConfig.Instance.ServerIP;
-
+                            Program.AppContextData.IsOnline = true;
                             this.DialogResult = DialogResult.OK;
                             this.Close();
                             return;

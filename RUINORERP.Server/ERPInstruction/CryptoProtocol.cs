@@ -239,7 +239,8 @@ namespace TransInstruction
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(ex.ToString());
+                    throw new Exception("DecryptionClientPack 解密时出错" + ex.ToString());
+
                 }
             }
 
@@ -427,7 +428,7 @@ namespace TransInstruction
         /// <returns></returns>
         public static byte[] EncryptClientPackToServer(OriginalData gd)
         {
-        
+
             byte cmd = gd.cmd;
             byte[] one = gd.One;
             byte[] two = gd.Two;
@@ -506,11 +507,11 @@ namespace TransInstruction
             {
                 掩码 = 加密(KEY, two, one.Length + 18, 掩码);//先加入加密的头部
             }
-            byte[] buffer= new byte[head.Length + one.Length + two.Length];
+            byte[] buffer = new byte[head.Length + one.Length + two.Length];
             Buffer.BlockCopy(head, 0, buffer, 0, head.Length);
             Buffer.BlockCopy(one, 0, buffer, head.Length, one.Length);
             Buffer.BlockCopy(two, 0, buffer, head.Length + one.Length, two.Length);
-            return buffer; 
+            return buffer;
         }
 
 

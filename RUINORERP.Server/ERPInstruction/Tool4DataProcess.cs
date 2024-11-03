@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Text;
 
 namespace TransInstruction
@@ -8,22 +9,8 @@ namespace TransInstruction
     /// </summary>
     public static class Tool4DataProcess
     {
-        public static string GetTime()
-        {
-            return DateTime.Now.ToString("u").Substring(11, 8);
-        }
-        public static void ShowMsg(string msg)
-        {
-            Console.WriteLine(GetTime() + " > " + msg);
-            //frmMain.Instance.PrintInfoLog(GetTime() + " > " + msg);
-        }
+         
 
-
-        public static void ShowMsg(string msg, Exception ex)
-        {
-            Console.WriteLine(GetTime() + " > " + msg);
-            //frmMain.Instance.PrintInfoLog(GetTime() + " > " + msg + ex.Message + ex.StackTrace);
-        }
 
 
         public static object[] Sclie(object[] buff, int start, int size)

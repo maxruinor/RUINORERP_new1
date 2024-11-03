@@ -451,7 +451,6 @@ namespace RUINORERP.Server
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
-
             frmMain.Instance.PrintInfoLog("Application_ThreadException:" + e.Exception.Message);
             frmMain.Instance.PrintInfoLog(e.Exception.StackTrace);
             //log4netHelper.fatal("ÏµÍ³¼¶Application_ThreadException", e.Exception);

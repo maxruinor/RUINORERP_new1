@@ -30,6 +30,16 @@
         {
             components = new System.ComponentModel.Container();
             dataGridView1 = new System.Windows.Forms.DataGridView();
+            contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
+            toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
+            推送版本更新ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            推送缓存数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            userInfoBindingSource = new System.Windows.Forms.BindingSource(components);
             dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             用户名DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             姓名DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -42,18 +52,9 @@
             客户端IPDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             静止时间DataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             userIDDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            onlineDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            serverAuthenticationDataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
-            toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
-            toolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
-            toolStripMenuItem5 = new System.Windows.Forms.ToolStripMenuItem();
-            toolStripMenuItem6 = new System.Windows.Forms.ToolStripMenuItem();
-            推送版本更新ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            推送缓存数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            userInfoBindingSource = new System.Windows.Forms.BindingSource(components);
+            超级用户DataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            在线状态DataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            授权状态DataGridViewCheckBoxColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)userInfoBindingSource).BeginInit();
@@ -66,7 +67,7 @@
             dataGridView1.AutoGenerateColumns = false;
             dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { dataGridViewTextBoxColumn1, 用户名DataGridViewTextBoxColumn, 姓名DataGridViewTextBoxColumn, 当前模块DataGridViewTextBoxColumn, 当前窗体DataGridViewTextBoxColumn, 登陆时间DataGridViewTextBoxColumn, 心跳数DataGridViewTextBoxColumn, 最后心跳时间DataGridViewTextBoxColumn, 客户端版本DataGridViewTextBoxColumn, 客户端IPDataGridViewTextBoxColumn, 静止时间DataGridViewTextBoxColumn, userIDDataGridViewTextBoxColumn, onlineDataGridViewCheckBoxColumn, serverAuthenticationDataGridViewCheckBoxColumn });
+            dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { dataGridViewTextBoxColumn1, 用户名DataGridViewTextBoxColumn, 姓名DataGridViewTextBoxColumn, 当前模块DataGridViewTextBoxColumn, 当前窗体DataGridViewTextBoxColumn, 登陆时间DataGridViewTextBoxColumn, 心跳数DataGridViewTextBoxColumn, 最后心跳时间DataGridViewTextBoxColumn, 客户端版本DataGridViewTextBoxColumn, 客户端IPDataGridViewTextBoxColumn, 静止时间DataGridViewTextBoxColumn, userIDDataGridViewTextBoxColumn, 超级用户DataGridViewCheckBoxColumn, 在线状态DataGridViewCheckBoxColumn, 授权状态DataGridViewCheckBoxColumn });
             dataGridView1.ContextMenuStrip = contextMenuStrip1;
             dataGridView1.DataSource = userInfoBindingSource;
             dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -75,92 +76,6 @@
             dataGridView1.Size = new System.Drawing.Size(1295, 450);
             dataGridView1.TabIndex = 0;
             dataGridView1.DataError += dataGridView1_DataError;
-            // 
-            // dataGridViewTextBoxColumn1
-            // 
-            dataGridViewTextBoxColumn1.DataPropertyName = "SessionId";
-            dataGridViewTextBoxColumn1.HeaderText = "SessionId";
-            dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-            // 
-            // 用户名DataGridViewTextBoxColumn
-            // 
-            用户名DataGridViewTextBoxColumn.DataPropertyName = "用户名";
-            用户名DataGridViewTextBoxColumn.HeaderText = "用户名";
-            用户名DataGridViewTextBoxColumn.Name = "用户名DataGridViewTextBoxColumn";
-            // 
-            // 姓名DataGridViewTextBoxColumn
-            // 
-            姓名DataGridViewTextBoxColumn.DataPropertyName = "姓名";
-            姓名DataGridViewTextBoxColumn.HeaderText = "姓名";
-            姓名DataGridViewTextBoxColumn.Name = "姓名DataGridViewTextBoxColumn";
-            // 
-            // 当前模块DataGridViewTextBoxColumn
-            // 
-            当前模块DataGridViewTextBoxColumn.DataPropertyName = "当前模块";
-            当前模块DataGridViewTextBoxColumn.HeaderText = "当前模块";
-            当前模块DataGridViewTextBoxColumn.Name = "当前模块DataGridViewTextBoxColumn";
-            // 
-            // 当前窗体DataGridViewTextBoxColumn
-            // 
-            当前窗体DataGridViewTextBoxColumn.DataPropertyName = "当前窗体";
-            当前窗体DataGridViewTextBoxColumn.HeaderText = "当前窗体";
-            当前窗体DataGridViewTextBoxColumn.Name = "当前窗体DataGridViewTextBoxColumn";
-            // 
-            // 登陆时间DataGridViewTextBoxColumn
-            // 
-            登陆时间DataGridViewTextBoxColumn.DataPropertyName = "登陆时间";
-            登陆时间DataGridViewTextBoxColumn.HeaderText = "登陆时间";
-            登陆时间DataGridViewTextBoxColumn.Name = "登陆时间DataGridViewTextBoxColumn";
-            // 
-            // 心跳数DataGridViewTextBoxColumn
-            // 
-            心跳数DataGridViewTextBoxColumn.DataPropertyName = "心跳数";
-            心跳数DataGridViewTextBoxColumn.HeaderText = "心跳数";
-            心跳数DataGridViewTextBoxColumn.Name = "心跳数DataGridViewTextBoxColumn";
-            // 
-            // 最后心跳时间DataGridViewTextBoxColumn
-            // 
-            最后心跳时间DataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            最后心跳时间DataGridViewTextBoxColumn.DataPropertyName = "最后心跳时间";
-            最后心跳时间DataGridViewTextBoxColumn.HeaderText = "最后心跳时间";
-            最后心跳时间DataGridViewTextBoxColumn.Name = "最后心跳时间DataGridViewTextBoxColumn";
-            // 
-            // 客户端版本DataGridViewTextBoxColumn
-            // 
-            客户端版本DataGridViewTextBoxColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            客户端版本DataGridViewTextBoxColumn.DataPropertyName = "客户端版本";
-            客户端版本DataGridViewTextBoxColumn.HeaderText = "客户端版本";
-            客户端版本DataGridViewTextBoxColumn.Name = "客户端版本DataGridViewTextBoxColumn";
-            // 
-            // 客户端IPDataGridViewTextBoxColumn
-            // 
-            客户端IPDataGridViewTextBoxColumn.DataPropertyName = "客户端IP";
-            客户端IPDataGridViewTextBoxColumn.HeaderText = "客户端IP";
-            客户端IPDataGridViewTextBoxColumn.Name = "客户端IPDataGridViewTextBoxColumn";
-            // 
-            // 静止时间DataGridViewTextBoxColumn
-            // 
-            静止时间DataGridViewTextBoxColumn.DataPropertyName = "静止时间";
-            静止时间DataGridViewTextBoxColumn.HeaderText = "静止时间";
-            静止时间DataGridViewTextBoxColumn.Name = "静止时间DataGridViewTextBoxColumn";
-            // 
-            // userIDDataGridViewTextBoxColumn
-            // 
-            userIDDataGridViewTextBoxColumn.DataPropertyName = "UserID";
-            userIDDataGridViewTextBoxColumn.HeaderText = "UserID";
-            userIDDataGridViewTextBoxColumn.Name = "userIDDataGridViewTextBoxColumn";
-            // 
-            // onlineDataGridViewCheckBoxColumn
-            // 
-            onlineDataGridViewCheckBoxColumn.DataPropertyName = "Online";
-            onlineDataGridViewCheckBoxColumn.HeaderText = "Online";
-            onlineDataGridViewCheckBoxColumn.Name = "onlineDataGridViewCheckBoxColumn";
-            // 
-            // serverAuthenticationDataGridViewCheckBoxColumn
-            // 
-            serverAuthenticationDataGridViewCheckBoxColumn.DataPropertyName = "ServerAuthentication";
-            serverAuthenticationDataGridViewCheckBoxColumn.HeaderText = "ServerAuthentication";
-            serverAuthenticationDataGridViewCheckBoxColumn.Name = "serverAuthenticationDataGridViewCheckBoxColumn";
             // 
             // contextMenuStrip1
             // 
@@ -221,6 +136,96 @@
             // 
             userInfoBindingSource.DataSource = typeof(Model.CommonModel.UserInfo);
             // 
+            // dataGridViewTextBoxColumn1
+            // 
+            dataGridViewTextBoxColumn1.DataPropertyName = "SessionId";
+            dataGridViewTextBoxColumn1.HeaderText = "SessionId";
+            dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            // 
+            // 用户名DataGridViewTextBoxColumn
+            // 
+            用户名DataGridViewTextBoxColumn.DataPropertyName = "用户名";
+            用户名DataGridViewTextBoxColumn.HeaderText = "用户名";
+            用户名DataGridViewTextBoxColumn.Name = "用户名DataGridViewTextBoxColumn";
+            // 
+            // 姓名DataGridViewTextBoxColumn
+            // 
+            姓名DataGridViewTextBoxColumn.DataPropertyName = "姓名";
+            姓名DataGridViewTextBoxColumn.HeaderText = "姓名";
+            姓名DataGridViewTextBoxColumn.Name = "姓名DataGridViewTextBoxColumn";
+            // 
+            // 当前模块DataGridViewTextBoxColumn
+            // 
+            当前模块DataGridViewTextBoxColumn.DataPropertyName = "当前模块";
+            当前模块DataGridViewTextBoxColumn.HeaderText = "当前模块";
+            当前模块DataGridViewTextBoxColumn.Name = "当前模块DataGridViewTextBoxColumn";
+            // 
+            // 当前窗体DataGridViewTextBoxColumn
+            // 
+            当前窗体DataGridViewTextBoxColumn.DataPropertyName = "当前窗体";
+            当前窗体DataGridViewTextBoxColumn.HeaderText = "当前窗体";
+            当前窗体DataGridViewTextBoxColumn.Name = "当前窗体DataGridViewTextBoxColumn";
+            // 
+            // 登陆时间DataGridViewTextBoxColumn
+            // 
+            登陆时间DataGridViewTextBoxColumn.DataPropertyName = "登陆时间";
+            登陆时间DataGridViewTextBoxColumn.HeaderText = "登陆时间";
+            登陆时间DataGridViewTextBoxColumn.Name = "登陆时间DataGridViewTextBoxColumn";
+            // 
+            // 心跳数DataGridViewTextBoxColumn
+            // 
+            心跳数DataGridViewTextBoxColumn.DataPropertyName = "心跳数";
+            心跳数DataGridViewTextBoxColumn.HeaderText = "心跳数";
+            心跳数DataGridViewTextBoxColumn.Name = "心跳数DataGridViewTextBoxColumn";
+            // 
+            // 最后心跳时间DataGridViewTextBoxColumn
+            // 
+            最后心跳时间DataGridViewTextBoxColumn.DataPropertyName = "最后心跳时间";
+            最后心跳时间DataGridViewTextBoxColumn.HeaderText = "最后心跳时间";
+            最后心跳时间DataGridViewTextBoxColumn.Name = "最后心跳时间DataGridViewTextBoxColumn";
+            // 
+            // 客户端版本DataGridViewTextBoxColumn
+            // 
+            客户端版本DataGridViewTextBoxColumn.DataPropertyName = "客户端版本";
+            客户端版本DataGridViewTextBoxColumn.HeaderText = "客户端版本";
+            客户端版本DataGridViewTextBoxColumn.Name = "客户端版本DataGridViewTextBoxColumn";
+            // 
+            // 客户端IPDataGridViewTextBoxColumn
+            // 
+            客户端IPDataGridViewTextBoxColumn.DataPropertyName = "客户端IP";
+            客户端IPDataGridViewTextBoxColumn.HeaderText = "客户端IP";
+            客户端IPDataGridViewTextBoxColumn.Name = "客户端IPDataGridViewTextBoxColumn";
+            // 
+            // 静止时间DataGridViewTextBoxColumn
+            // 
+            静止时间DataGridViewTextBoxColumn.DataPropertyName = "静止时间";
+            静止时间DataGridViewTextBoxColumn.HeaderText = "静止时间";
+            静止时间DataGridViewTextBoxColumn.Name = "静止时间DataGridViewTextBoxColumn";
+            // 
+            // userIDDataGridViewTextBoxColumn
+            // 
+            userIDDataGridViewTextBoxColumn.DataPropertyName = "UserID";
+            userIDDataGridViewTextBoxColumn.HeaderText = "UserID";
+            userIDDataGridViewTextBoxColumn.Name = "userIDDataGridViewTextBoxColumn";
+            // 
+            // 超级用户DataGridViewCheckBoxColumn
+            // 
+            超级用户DataGridViewCheckBoxColumn.DataPropertyName = "超级用户";
+            超级用户DataGridViewCheckBoxColumn.HeaderText = "超级用户";
+            超级用户DataGridViewCheckBoxColumn.Name = "超级用户DataGridViewCheckBoxColumn";
+            // 
+            // 在线状态DataGridViewCheckBoxColumn
+            // 
+            在线状态DataGridViewCheckBoxColumn.DataPropertyName = "在线状态";
+            在线状态DataGridViewCheckBoxColumn.HeaderText = "在线状态";
+            在线状态DataGridViewCheckBoxColumn.Name = "在线状态DataGridViewCheckBoxColumn";
+            // 
+            // 授权状态DataGridViewCheckBoxColumn
+            // 
+            授权状态DataGridViewCheckBoxColumn.DataPropertyName = "授权状态";
+            授权状态DataGridViewCheckBoxColumn.HeaderText = "授权状态";
+            授权状态DataGridViewCheckBoxColumn.Name = "授权状态DataGridViewCheckBoxColumn";
+            // 
             // frmUserManage
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -251,6 +256,8 @@
         private System.Windows.Forms.ToolStripMenuItem 推送版本更新ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 推送缓存数据ToolStripMenuItem;
         private System.Windows.Forms.DataGridViewTextBoxColumn sessionIDDataGridViewTextBoxColumn;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn onlineDataGridViewCheckBoxColumn;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn serverAuthenticationDataGridViewCheckBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn 用户名DataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn 姓名DataGridViewTextBoxColumn;
@@ -263,7 +270,8 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn 客户端IPDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn 静止时间DataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn userIDDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn onlineDataGridViewCheckBoxColumn;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn serverAuthenticationDataGridViewCheckBoxColumn;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn 超级用户DataGridViewCheckBoxColumn;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn 在线状态DataGridViewCheckBoxColumn;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn 授权状态DataGridViewCheckBoxColumn;
     }
 }

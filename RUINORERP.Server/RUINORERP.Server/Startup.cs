@@ -41,7 +41,6 @@ using SuperSocket.Command;
 using RUINORERP.Server.Commands;
 using Microsoft.Extensions.Options;
 using RUINORERP.Global;
-using RUINORERP.Business.AutoMapper;
 #pragma warning disable CS0105 // using 指令以前在此命名空间中出现过
 using RUINORERP.Common.Log4Net;
 #pragma warning restore CS0105 // using 指令以前在此命名空间中出现过
@@ -262,11 +261,6 @@ namespace RUINORERP.Server
                         var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
                         // IMPORTANT: This needs to be added *before* configuration is loaded, this lets
                         // the defaults be overridden by the configuration.
-                        if (isWindows)
-                        {
-                            // Default the EventLogLoggerProvider to warning or above
-                            //logging.AddFilter<EventLogLoggerProvider>(level => level >= LogLevel.Information);
-                        }
                         logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                         logging.AddConsole();
                         logging.AddDebug();
@@ -274,14 +268,16 @@ namespace RUINORERP.Server
                         {
                             // Add the EventLogLoggerProvider on windows machines
                             //logging.AddEventLog();//这个写到了事件查看器中。没有必要
-                            logging.AddFile();
-                            //logging.AddLog4Net();
+                            //logging.AddFile();
+                            logging.AddLog4Net();
                         }
                     }).UseLog4Net()
                     ;
                 }).BuildAsServer();
             return server;
         }
+
+
 
         /// <summary>
         /// 使用csla有值

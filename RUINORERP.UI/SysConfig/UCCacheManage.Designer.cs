@@ -29,17 +29,17 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.listBoxTableList = new System.Windows.Forms.ListBox();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.btnRefreshCache = new Krypton.Toolkit.KryptonButton();
             this.chkALL = new Krypton.Toolkit.KryptonCheckBox();
             this.btnSave = new Krypton.Toolkit.KryptonButton();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
-            this.listBoxTableList = new System.Windows.Forms.ListBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.请求缓存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.btnRefreshCache = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -75,6 +75,18 @@
             this.kryptonSplitContainer1.SplitterDistance = 179;
             this.kryptonSplitContainer1.TabIndex = 1;
             // 
+            // listBoxTableList
+            // 
+            this.listBoxTableList.ContextMenuStrip = this.contextMenuStrip1;
+            this.listBoxTableList.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listBoxTableList.FormattingEnabled = true;
+            this.listBoxTableList.ItemHeight = 12;
+            this.listBoxTableList.Location = new System.Drawing.Point(0, 0);
+            this.listBoxTableList.Name = "listBoxTableList";
+            this.listBoxTableList.Size = new System.Drawing.Size(179, 615);
+            this.listBoxTableList.TabIndex = 0;
+            this.listBoxTableList.SelectedIndexChanged += new System.EventHandler(this.listBoxTableList_SelectedIndexChanged);
+            // 
             // kryptonSplitContainer2
             // 
             this.kryptonSplitContainer2.Cursor = System.Windows.Forms.Cursors.Default;
@@ -102,8 +114,8 @@
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
+            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -127,6 +139,15 @@
             this.dataGridView1.Use是否使用内置右键功能 = true;
             this.dataGridView1.XmlFileName = "";
             // 
+            // btnRefreshCache
+            // 
+            this.btnRefreshCache.Location = new System.Drawing.Point(457, 7);
+            this.btnRefreshCache.Name = "btnRefreshCache";
+            this.btnRefreshCache.Size = new System.Drawing.Size(99, 35);
+            this.btnRefreshCache.TabIndex = 2;
+            this.btnRefreshCache.Values.Text = "刷新缓存";
+            this.btnRefreshCache.Click += new System.EventHandler(this.btnRefreshCache_Click);
+            // 
             // chkALL
             // 
             this.chkALL.Location = new System.Drawing.Point(135, 22);
@@ -143,17 +164,6 @@
             this.btnSave.TabIndex = 0;
             this.btnSave.Values.Text = "保存";
             // 
-            // listBoxTableList
-            // 
-            this.listBoxTableList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listBoxTableList.FormattingEnabled = true;
-            this.listBoxTableList.ItemHeight = 12;
-            this.listBoxTableList.Location = new System.Drawing.Point(0, 0);
-            this.listBoxTableList.Name = "listBoxTableList";
-            this.listBoxTableList.Size = new System.Drawing.Size(179, 615);
-            this.listBoxTableList.TabIndex = 0;
-            this.listBoxTableList.SelectedIndexChanged += new System.EventHandler(this.listBoxTableList_SelectedIndexChanged);
-            // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -168,15 +178,6 @@
             this.请求缓存ToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.请求缓存ToolStripMenuItem.Text = "请求缓存";
             this.请求缓存ToolStripMenuItem.Click += new System.EventHandler(this.请求缓存ToolStripMenuItem_Click);
-            // 
-            // btnRefreshCache
-            // 
-            this.btnRefreshCache.Location = new System.Drawing.Point(457, 7);
-            this.btnRefreshCache.Name = "btnRefreshCache";
-            this.btnRefreshCache.Size = new System.Drawing.Size(99, 35);
-            this.btnRefreshCache.TabIndex = 2;
-            this.btnRefreshCache.Values.Text = "刷新缓存";
-            this.btnRefreshCache.Click += new System.EventHandler(this.btnRefreshCache_Click);
             // 
             // UCCacheManage
             // 

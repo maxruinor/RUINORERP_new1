@@ -45,13 +45,6 @@ namespace RUINORERP.Server
             //dataGridView1.DataSource = null;
             dataGridView1.DataSource = userInfoBindingSource;
 
-
-
-            //BindingSource userInfoBindingSource = new BindingSource();
-            //userInfoBindingSource.DataSource = userInfos;
-            //dataGridView1.DataSource = userInfoBindingSource;
-
-
             DataGridViewColumn LastbeatTime = dataGridView1.Columns["最后心跳时间" + "DataGridViewTextBoxColumn"];
 
             // 获取SessionID列
@@ -75,7 +68,7 @@ namespace RUINORERP.Server
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                         if (e.NewItems.Count == 1)
                         {
-                            UserInfo newItem = e.NewItems[e.NewStartingIndex] as UserInfo;
+                            UserInfo newItem = e.NewItems[0] as UserInfo;
                             if (!userInfos.Contains(newItem))
                             {
                                 userInfos.Add(newItem);                 // 处理删除元素的逻辑
@@ -84,7 +77,7 @@ namespace RUINORERP.Server
                             {
                                 userInfoBindingSource.Add(newItem);
                             }
-                            dataGridView1.Refresh();
+
                         }
 
                         //SessionforBiz biz = frmMain.Instance.sessionListBiz[((UserInfo)e.NewItems[e.NewStartingIndex]).SessionId];
@@ -93,12 +86,12 @@ namespace RUINORERP.Server
                         //userInfoBindingSource.DataSource = frmMain.Instance.userInfos;
                         //dataGridView1.DataSource = null;
                         //dataGridView1.DataSource = userInfoBindingSource;
-                      
+
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                         if (e.OldItems.Count == 1)
                         {
-                            UserInfo old = e.OldItems[e.OldStartingIndex] as UserInfo;
+                            UserInfo old = e.OldItems[0] as UserInfo;
                             if (userInfos.Contains(old))
                             {
                                 userInfos.Remove(old);                 // 处理删除元素的逻辑
@@ -107,12 +100,17 @@ namespace RUINORERP.Server
                             {
                                 userInfoBindingSource.Remove(old);
                             }
-                            dataGridView1.Refresh();
+
                         }
 
                         break;
                         // 可以根据需要处理其他事件类型
                 }
+                if (userInfos.Count == 0)
+                {
+                    dataGridView1.Rows.Clear();
+                }
+                RefreshDataGridView();
             }
             catch (Exception ex)
             {
@@ -123,8 +121,29 @@ namespace RUINORERP.Server
 
         }
 
+
+        /// <summary>
+        /// 刷新DataGridView控件
+        /// 如果当前线程不是UI线程，它会使用Invoke来调用自己。如果当前线程是UI线程，它将直接更新UI。
+        /// </summary>
+        private void RefreshDataGridView()
+        {
+            if (this.dataGridView1.InvokeRequired)
+            {
+                // 如果当前线程不是UI线程，则使用Invoke来更新UI
+                this.dataGridView1.Invoke(new MethodInvoker(RefreshDataGridView));
+            }
+            else
+            {
+                // 如果当前线程是UI线程，则直接更新UI
+                this.userInfoBindingSource.ResetBindings(false);
+                this.dataGridView1.Refresh();
+            }
+        }
+
         public void UserInfo_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+
             try
             {
                 if (sender != null && sender is UserInfo info)
@@ -143,10 +162,9 @@ namespace RUINORERP.Server
                                     {
                                         if (dc.DataPropertyName == e.PropertyName)
                                         {
-                                            dataGridView1.Rows[i].Cells[e.PropertyName + "DataGridViewTextBoxColumn"].Value = HLH.Lib.Helper.ReflectionHelper.GetPropertyValue(info, e.PropertyName);
-
-                                            //dataGridView1.Refresh();
-                                            dataGridView1.PerformLayout();
+                                            dataGridView1.Rows[i].Cells[dc.Name].Value = HLH.Lib.Helper.ReflectionHelper.GetPropertyValue(info, e.PropertyName);
+                                            dataGridView1.Refresh();
+                                            // dataGridView1.PerformLayout();
                                             break;
                                         }
                                     }
@@ -173,26 +191,31 @@ namespace RUINORERP.Server
             {
                 if (dataGridView1.CurrentRow != null)
                 {
-
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
                     {
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
                         if (SB.State == SuperSocket.SessionState.Closed)
                         {
-                            userInfos.Remove(userInfo);
                             SessionforBiz biz = new SessionforBiz();
                             frmMain.Instance.sessionListBiz.TryRemove(SB.SessionID, out biz);
-                            UserInfo user = userInfos.FirstOrDefault(c => c.SessionId == biz.SessionID);
-                            userInfos.Remove(user);
+                            if (biz != null)
+                            {
+                                UserInfo user = userInfos.FirstOrDefault(c => c.SessionId == biz.SessionID);
+                                userInfos.Remove(user);
+                            }
+
                         }
                         if (SB.State == SuperSocket.SessionState.Connected)
                         {
                             await SB.CloseAsync(SuperSocket.Channel.CloseReason.RemoteClosing);
-                            userInfos.Remove(userInfo);
                             SessionforBiz biz = new SessionforBiz();
                             frmMain.Instance.sessionListBiz.TryRemove(SB.SessionID, out biz);
-                            UserInfo user = userInfos.FirstOrDefault(c => c.SessionId == biz.SessionID);
-                            userInfos.Remove(user);
+                            if (biz != null)
+                            {
+                                UserInfo user = userInfos.FirstOrDefault(c => c.SessionId == biz.SessionID);
+                                userInfos.Remove(user);
+                            }
+
                         }
                     }
                 }
@@ -317,6 +340,11 @@ namespace RUINORERP.Server
         }
 
         private void toolStripMenuItem5_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolStripMenuItem5_Click_1(object sender, EventArgs e)
         {
 
         }

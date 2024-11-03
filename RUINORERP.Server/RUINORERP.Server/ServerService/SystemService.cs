@@ -46,7 +46,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
             }
 
         }
@@ -81,7 +81,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("发送缓存数据列表:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
             }
 
         }

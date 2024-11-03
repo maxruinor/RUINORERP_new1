@@ -107,7 +107,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        private void button请求协助处理_Click(object sender, EventArgs e)
+        private async void button请求协助处理_Click(object sender, EventArgs e)
         {
             //弹出一个弹出框，让用户输入协助处理的内容。
             //再把单据相关内容发送到服务器转发到管理员那里
@@ -123,7 +123,7 @@ namespace RUINORERP.UI.BaseForm
                     if (EditEntity != null)
                     {
                         #region  单据数据  后面优化可以多个单?限制5个？
-
+                        await Save(false);
                         string json = JsonConvert.SerializeObject(EditEntity,
                             new JsonSerializerSettings
                             {

@@ -56,7 +56,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
             }
             return user;
         }
@@ -83,7 +83,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
             }
             return rs;
         }
@@ -116,7 +116,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
             }
             return rs;
         }
@@ -151,7 +151,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
             }
             return rs;
         }
@@ -180,7 +180,7 @@ namespace RUINORERP.Server.ServerService
                         PushData data = new PushData();
                         data.InputData = tableName;
                         var workflowId = Program.WorkflowHost.StartWorkflow<PushData>("PushBaseInfoWorkflow", data);
-                        TransInstruction.Tool4DataProcess.ShowMsg("启动了工作流:" + workflowId);
+                        Comm.CommService.ShowExceptionMsg("启动了工作流:" + workflowId);
 
 
 
@@ -201,7 +201,7 @@ namespace RUINORERP.Server.ServerService
             }
             catch (Exception ex)
             {
-                TransInstruction.Tool4DataProcess.ShowMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
             }
             return rs;
         }

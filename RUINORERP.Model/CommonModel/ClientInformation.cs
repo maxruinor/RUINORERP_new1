@@ -20,7 +20,7 @@ namespace RUINORERP.Model.CommonModel
         private string _当前窗体;
         private DateTime _登陆时间;
         private int _心跳数;
-        private DateTime _最后心跳时间;
+        private string _最后心跳时间;
         private string _客户端版本;
         private string _客户端IP;
         private long _静止时间;
@@ -118,7 +118,7 @@ namespace RUINORERP.Model.CommonModel
             }
         }
 
-        public DateTime 最后心跳时间
+        public string 最后心跳时间
         {
             get { return _最后心跳时间; }
             set
@@ -191,7 +191,7 @@ namespace RUINORERP.Model.CommonModel
                 }
             }
         }
-        public bool IsSuperUser
+        public bool 超级用户
         {
             get => _IsSuperUser;
             set
@@ -199,12 +199,15 @@ namespace RUINORERP.Model.CommonModel
                 if (_IsSuperUser != value)
                 {
                     _IsSuperUser = value;
-                    OnPropertyChanged(nameof(IsSuperUser));
+                    OnPropertyChanged(nameof(超级用户));
                 }
             }
         }
 
-        public bool Online
+        /// <summary>
+        /// 登陆过，还保持连接时，客户端会定时发送心跳包，服务器会记录最后一次收到心跳包的时间
+        /// </summary>
+        public bool 在线状态
         {
             get => _online;
             set
@@ -212,12 +215,15 @@ namespace RUINORERP.Model.CommonModel
                 if (_online != value)
                 {
                     _online = value;
-                    OnPropertyChanged(nameof(Online));
+                    OnPropertyChanged(nameof(在线状态));
                 }
             }
         }
 
-        public bool ServerAuthentication
+        /// <summary>
+        /// 登陆成功 的正常状态
+        /// </summary>
+        public bool 授权状态
         {
             get => _serverAuthentication;
             set
@@ -225,7 +231,7 @@ namespace RUINORERP.Model.CommonModel
                 if (_serverAuthentication != value)
                 {
                     _serverAuthentication = value;
-                    OnPropertyChanged(nameof(ServerAuthentication));
+                    OnPropertyChanged(nameof(授权状态));
                 }
             }
         }

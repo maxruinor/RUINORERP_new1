@@ -120,10 +120,6 @@
       <Project>{2389a8f1-d1bc-4637-b980-c9d10985c2d2}</Project>
       <Name>RUINORERP.Repository</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RUINORERP.Server\ERPBizService\ERPBizService.csproj">
-      <Project>{5f871350-e102-49bb-91b7-ae3c040ce7ba}</Project>
-      <Name>ERPBizService</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Server\ERPInstruction\TransInstruction.csproj">
       <Project>{0854936b-0b08-4b46-8fa8-89be146617c6}</Project>
       <Name>TransInstruction</Name>

@@ -374,7 +374,7 @@ namespace RUINORERP.UI
                     .ToExpression();//注意 这一句 不能少
                     list = dc.BaseQueryByWhere(exp);
 
-                    MainForm.Instance.AppContext.IsOnline = true;
+                 
                     try
                     {
                         bool rs = mc.CheckMenuInitialized();
@@ -451,6 +451,7 @@ namespace RUINORERP.UI
                 MessagePrompt messager = new MessagePrompt();
                 messager.Content = MessageInfo.Content;
                 messager.Show();
+                messager.TopMost = true;
                 //MainForm.Instance.ShowMsg(MessageInfo.Content);
             }
 
@@ -873,8 +874,9 @@ namespace RUINORERP.UI
             MainForm.Instance.Invoke(new Action(() =>
             {
                 this.SystemOperatorState.Text = "注销";
-                ecs.LoginStatus = false;
                 Program.AppContextData.IsOnline = false;
+                MainForm.Instance.AppContext.OnlineUser.授权状态 = false;
+                MainForm.Instance.AppContext.OnlineUser.在线状态 = false;
                 ClearUI();
                 ClearRoles();
                 System.GC.Collect();
@@ -1842,8 +1844,15 @@ namespace RUINORERP.UI
 
         private void toolBtnExit_Click(object sender, EventArgs e)
         {
-            Application.Exit();
-            System.Environment.Exit(0);
+            // 使用Invoke确保在UI线程上调用Application.Exit()
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new MethodInvoker(() => Application.Exit()));
+            }
+            else
+            {
+                Application.Exit();
+            }
         }
 
         private void toolBtnlogOff_Click(object sender, EventArgs e)
@@ -2130,6 +2139,8 @@ namespace RUINORERP.UI
             byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(odforCache);
             ecs.client.Send(buffer1);
             SystemOptimizerService.异常信息发送("测试异常信息发送");
+
+            MainForm.Instance.logger.LogError("出现应用程序未处理的异常2,请更新到新版本，如果无法解决，请联系管理员");
         }
 
         private async void LoginWebServer()

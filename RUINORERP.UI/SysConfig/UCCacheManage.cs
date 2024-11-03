@@ -29,7 +29,15 @@ namespace RUINORERP.UI.SysConfig
 
         private void 请求缓存ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            if (listBoxTableList.SelectedItem is SuperValue kv)
+            {
+                string tableName = kv.superDataTypeName;
+                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                if (CacheList == null)
+                {
+                    UIBizSrvice.RequestCache(tableName);
+                }
+            }
         }
 
         private void UCCacheManage_Load(object sender, EventArgs e)
@@ -43,7 +51,7 @@ namespace RUINORERP.UI.SysConfig
             //加载所有缓存的表
             listBoxTableList.Items.Clear();
 
-            List<string> list = new List<string >();
+            List<string> list = new List<string>();
 
             foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
             {
@@ -106,7 +114,7 @@ namespace RUINORERP.UI.SysConfig
                 dataGridView1.DataSource = null;
                 return;
             }
-            
+
         }
     }
 }

@@ -45,6 +45,7 @@
     <None Remove="Log4net_file.config" />
     <None Remove="ResourceFile\server.ico" />
     <None Remove="ResourceFile\ser_png.png" />
+    <None Remove="Startup.cs~RFf2da576.TMP" />
     <None Remove="Workflow\Json\myflow.json" />
     <None Remove="Workflow\Json\审批流程.json" />
   </ItemGroup>

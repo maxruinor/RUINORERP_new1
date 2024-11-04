@@ -85,7 +85,7 @@ namespace RUINORERP.Server
             #region  注册
             Services = new ServiceCollection();
 
-            ConfigureServices(Services);
+        
 
             //注册当前程序集的所有类成员
             //builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
@@ -151,17 +151,22 @@ namespace RUINORERP.Server
 
             //注册是最后的覆盖前面的 ，AOP测试时，业务控制器中的方法不生效。与 ConfigureContainer(builder); 中注册的方式有关。可能参数不对。
 
+            ConfigureServices(Services);
+
             string conn = AppSettings.GetValue("ConnectString");
             Program.InitAppcontextValue(Program.AppContextData);
             Services.AddLogging(logBuilder =>
             {
                 logBuilder.ClearProviders();
                 //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
-                logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", conn, Program.AppContextData));
+          //引用的long4net.dll要版本一样。
+                logBuilder.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", conn, Program.AppContextData));
+                logBuilder.AddLog4Net();
             });
-            //后面需要研究
-            builder.Populate(Services);//将自带的也注入到autofac
-                                       //覆盖上面自动dll批量注入的方法，因为要用单例模式
+
+
+
+            //覆盖上面自动dll批量注入的方法，因为要用单例模式
             builder.RegisterType(typeof(WorkflowRegisterService))
                  .AsImplementedInterfaces() //加上这一行，会出错
                  .EnableInterfaceInterceptors()
@@ -189,9 +194,12 @@ namespace RUINORERP.Server
             //    ILifetimeScope LifetimeScope { get; }
             //    ILifetimeScope RegisterTypes(Action<ContainerBuilder> configurationAction);
             //}
+
+            //后面需要研究
+            builder.Populate(Services);//将自带的也注入到autofac
         }
 
-
+        /* 先注释掉，以后再研究
         public IServer GetMultipleServerHost(IServiceCollection _services)
         {
             var server = MultipleServerHostBuilder.Create()
@@ -242,19 +250,7 @@ namespace RUINORERP.Server
                        services.AddSingleton<XTCommand>();
                        //services.AddSingleton<IAsyncCommand>(XTCommand);
                    })
-                    /*
-                     .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-                     .ConfigureContainer<ContainerBuilder>(builder =>
-                     {
-
-                         //builder.Populate()
-                         //builder.
-                         // builder.RegisterType<ADD>().As<IAsyncCommand<IAppSession, StringPackageInfo>>();
-                         // builder.RegisterType<MULT>().As<IAsyncCommand<IAppSession, StringPackageInfo>>();
-                         // builder.RegisterType<SUB>().As<IAsyncCommand<IAppSession, StringPackageInfo>>();
-                         // builder.RegisterType<DIV>().As<IAsyncCommand<MySession, StringPackageInfo>>();
-                     })
-                    */
+             
                     .ConfigureLogging((hostingContext, logging) =>
                     {
                         logging.ClearProviders(); //去掉默认添加的日志提供程序
@@ -276,7 +272,7 @@ namespace RUINORERP.Server
                 }).BuildAsServer();
             return server;
         }
-
+        */
 
 
         /// <summary>
@@ -293,7 +289,8 @@ namespace RUINORERP.Server
             {
                 services.AddAutofac();
 
-                //services.AddLogging(configure => configure.AddConsole());
+                //services.AddLogging(configure => configure.AddLog4Net());
+
                 //services.AddTransient<Business.UseCsla.Itb_LocationTypeDal, Business.UseCsla.tb_LocationTypeDal>();
                 //services.AddTransient<Csla.Runtime.IRuntimeInfo, Csla.Runtime.RuntimeInfo>();
                 //services.AddTransient<tb_LocationType>();
@@ -443,7 +440,7 @@ namespace RUINORERP.Server
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
             IConfiguration configuration = cfgBuilder.Build();
             AppSettings.Configuration = configuration;
-            string conn = AppSettings.GetValue("ConnectString");
+           // string conn = AppSettings.GetValue("ConnectString");
             ///services.AddSqlsugarSetup(configuration);
             services.AddSqlsugarSetup(Program.AppContextData, configuration);
 

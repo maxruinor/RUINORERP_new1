@@ -57,6 +57,7 @@ using SourceGrid;
 using RUINORERP.UI.FormProperty;
 using SourceGrid.Cells.Models;
 using FastReport.Table;
+using FastReport.DevComponents.AdvTree;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -86,12 +87,27 @@ namespace RUINORERP.UI.BaseForm
             button保存当前单据.Click += button保存当前单据_Click;
             frm.flowLayoutPanelButtonsArea.Controls.Add(button保存当前单据);
 
-            KryptonButton button加载最新数据 = new KryptonButton();
+            KryptonContextMenu kcm加载最新数据 = new KryptonContextMenu();
+            KryptonContextMenuItem menuItem选择要加载的数据 = new KryptonContextMenuItem("选择要加载的数据");
+            menuItem选择要加载的数据.Text = "选择要加载的数据";
+            menuItem选择要加载的数据.Click += MenuItem选择要加载的数据_Click;
+
+            KryptonContextMenuItems kryptonContextMenuItems1 = new KryptonContextMenuItems();
+
+            kcm加载最新数据.Items.AddRange(new KryptonContextMenuItemBase[] {
+            kryptonContextMenuItems1});
+
+            kryptonContextMenuItems1.Items.AddRange(new KryptonContextMenuItemBase[] {
+            menuItem选择要加载的数据});
+ 
+            KryptonDropButton button加载最新数据 = new KryptonDropButton();
             button加载最新数据.Text = "加载最新数据";
             button加载最新数据.Click += button加载最新数据_Click;
+            button加载最新数据.KryptonContextMenu = kcm加载最新数据;
             frm.flowLayoutPanelButtonsArea.Controls.Add(button加载最新数据);
 
             KryptonButton button快速录入数据 = new KryptonButton();
+
             button快速录入数据.Text = "快速录入数据";
             button快速录入数据.Click += button快速录入数据_Click;
 
@@ -105,6 +121,21 @@ namespace RUINORERP.UI.BaseForm
 
 
 
+        }
+
+ 
+
+        private void MenuItem选择要加载的数据_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.FileName = "";
+            openFileDialog1.Filter = "cache files (*.cache)|*.cache|All files (*.*)|*.*";
+            //加载最新数据
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                EditEntity = manager.Deserialize<T>(openFileDialog1.FileName);
+                OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
+                MainForm.Instance.uclog.AddLog("成功加载选择的数据。");
+            }
         }
 
         private async void button请求协助处理_Click(object sender, EventArgs e)
@@ -177,7 +208,7 @@ namespace RUINORERP.UI.BaseForm
         private void button加载最新数据_Click(object sender, EventArgs e)
         {
             //RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
-            EditEntity = manager.Deserialize<T>(CurMenuInfo.CaptionCN);
+            EditEntity = manager.Deserialize<T>(CurMenuInfo.CaptionCN+ ".cache");
             OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
             MainForm.Instance.uclog.AddLog("成功加载上次的数据。");
         }
@@ -584,7 +615,7 @@ namespace RUINORERP.UI.BaseForm
                             if (ktb.DataBindings.Count > 0)
                             {
                                 binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
-                                //string filedName = binding.BindingMemberInfo.BindingField;
+                                                               //string filedName = binding.BindingMemberInfo.BindingField;
                             }
                             else
                             {
@@ -916,8 +947,8 @@ namespace RUINORERP.UI.BaseForm
      /// <param name="whereLambda"></param>
      /// <param name="queryParameters"></param>
      public void InitFilterForControl<P, Dto>(BaseEntity entity, System.Windows.Forms.Control item,
- Expression<Func<P, object>> DisplayColExp, Expression<Func<P, bool>> whereLambda,
- List<QueryParameter<P>> queryParameters) where P : class
+    Expression<Func<P, object>> DisplayColExp, Expression<Func<P, bool>> whereLambda,
+    List<QueryParameter<P>> queryParameters) where P : class
      {
          InitFilterForControl<P, Dto>(entity, item, DisplayColExp, whereLambda, null, queryParameters);
      }
@@ -2851,9 +2882,9 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (EditEntity != null)
                 {
-                    #region 自动保存单据数据  后面优化可以多个单?限制5个？
+                    #region 自动保存单据数据  后面优化可以多个单?限制5个？Cache
                     await Save(false);
-                    string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data", CurMenuInfo.CaptionCN);
+                    string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data", CurMenuInfo.CaptionCN+ ".cache");
                     System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
                     //判断目录是否存在
                     if (!System.IO.Directory.Exists(fi.Directory.FullName))
@@ -2869,12 +2900,12 @@ namespace RUINORERP.UI.BaseForm
 
                     /*
                      var settings = new JsonSerializerSettings
-{
+    {
     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
     NullValueHandling = NullValueHandling.Ignore
-};
+    };
 
-string jsonString = JsonConvert.SerializeObject(myObject, settings);
+    string jsonString = JsonConvert.SerializeObject(myObject, settings);
                      */
 
 

@@ -26,19 +26,19 @@ namespace RUINORERP.Extensions
     public static class SqlsugarSetup
     {
 
-
-
         public delegate void CheckHandler(string sql);
 
         [Browsable(true), Description("引发外部事件")]
         public static event CheckHandler CheckEvent;
-
+      
         public static void AddSqlsugarSetup(this IServiceCollection services,
         ApplicationContext AppContextData, IConfiguration configuration,
             string dbName = "ConnectString")
         {
+            
             var logProvider = new Log4NetProviderByCustomeDb("Log4net_db.config", configuration.GetSection("ConnectString").Value, AppContextData);
             var logger = logProvider.CreateLogger("SqlsugarSetup");
+
             StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
             var memoryCache = new MemoryCache(new MemoryCacheOptions());
             SqlSugarScope sqlSugar = new SqlSugarScope(new ConnectionConfig()
@@ -134,6 +134,7 @@ namespace RUINORERP.Extensions
                     {
                         //Console.WriteLine("执行成功：" + sql);//输出sql
                         //Console.WriteLine(Common.DB.SqlProfiler.FormatParam(sql, pars));
+                        //logger.LogInformation(SqlProfiler.FormatParam(sql, pars as SugarParameter[]));
                     };
 
                 });

@@ -13,6 +13,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
+using RUINORERP.Common.Helper;
+using RUINORERP.Common.Log4Net;
 using RUINORERP.Extensions;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
@@ -32,6 +34,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -66,14 +69,14 @@ namespace RUINORERP.Server
             _logger = logger;
             _services = Startup.Services;
 
-            ILoggerFactory loggerFactory = LoggerFactory.Create(logbuilder => logbuilder
-             .AddFilter("Microsoft", LogLevel.Debug)
-             .AddFilter("System", LogLevel.Debug)
-             .AddFilter("Namespace.Class", LogLevel.Debug)
-             //.AddFile()//成功写入到文件
-             .AddLog4Net()
-            );
-            _logger = loggerFactory.CreateLogger<frmMain>();
+            //ILoggerFactory loggerFactory = LoggerFactory.Create(logbuilder => logbuilder
+            // .AddFilter("Microsoft", LogLevel.Debug)
+            // .AddFilter("System", LogLevel.Debug)
+            // .AddFilter("Namespace.Class", LogLevel.Debug)
+            // //.AddFile()//成功写入到文件
+            // .AddLog4Net()
+            //);
+            //_logger = loggerFactory.CreateLogger<frmMain>();
 
 
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
@@ -174,8 +177,8 @@ namespace RUINORERP.Server
             _logger.LogError("LogErrorLogError2233");
 
 
-            var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
-            logger.LogError($"{DateTime.Now} LogError 日志");
+            // var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
+            //logger.LogError($"{DateTime.Now} LogError 日志");
 
             _logger.LogError("启动了服务器123");
             this.IsMdiContainer = true; // 设置父窗体为MDI容器
@@ -309,17 +312,25 @@ namespace RUINORERP.Server
                         await Task.Delay(0);
                     }, async (session, reason) =>
                     {
-                        SessionforBiz sg = session as SessionforBiz;
-                        //if (sg.player != null && sg.player.Online)
-                        //{
-                        //   // SephirothServer.CommandServer.RoleService.角色退出(sg);
-                        //}
-                        PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session {session.RemoteEndPoint} closed: {reason}");
-                        sessionListBiz.Remove(sg.SessionID, out sg);
-
-                        if (sg != null)
+                        try
                         {
-                            frmusermange.userInfos.Remove(sg.User);
+                            SessionforBiz sg = session as SessionforBiz;
+                            //if (sg.player != null && sg.player.Online)
+                            //{
+                            //   // SephirothServer.CommandServer.RoleService.角色退出(sg);
+                            //}
+                            PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session {session.RemoteEndPoint} closed: {reason}");
+                            sessionListBiz.Remove(sg.SessionID, out sg);
+
+                            if (sg != null)
+                            {
+                                frmusermange.userInfos.Remove(sg.User);
+                            }
+
+                        }
+                        catch (Exception quitex)
+                        {
+                            frmMain.Instance._logger.LogError("客户端退出", quitex);
                         }
 
                         await Task.Delay(0);
@@ -352,15 +363,18 @@ namespace RUINORERP.Server
                     }
                     logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                     logging.AddConsole();
-                    logging.AddDebug();
                     if (isWindows)
                     {
                         // Add the EventLogLoggerProvider on windows machines
                         //logging.AddEventLog();//这个写到了事件查看器中。没有必要
-                        // logging.AddFile();
+                        logging.ClearProviders();
+                        //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
+                        //引用的long4net.dll要版本一样。
+                        string conn = AppSettings.GetValue("ConnectString");
+                        logging.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", conn, Program.AppContextData));
                         logging.AddLog4Net();
                     }
-                }).UseLog4Net()
+                })//.UseLog4Net()
 
             .Build();
 
@@ -379,7 +393,6 @@ namespace RUINORERP.Server
             {
                 frmMain.Instance.PrintInfoLog("_host.RunAsync()" + e.Message);
                 _logger.LogError("socket _host RunAsync", e.Message);
-                frmMain.Instance._logger.LogError("hostex", e);
             }
 
         }
@@ -403,11 +416,6 @@ namespace RUINORERP.Server
             try
             {
                 await DrainAllServers();
-                if (_host != null)
-                {
-                    _host.StopAsync().GetAwaiter().GetResult();
-                }
-
             }
             catch (Exception e)
             {

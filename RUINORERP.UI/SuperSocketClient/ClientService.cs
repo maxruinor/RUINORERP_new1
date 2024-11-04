@@ -239,7 +239,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 MessageInfo.Sender = userinfo.姓名;
                 MessageInfo.Content = RequestContent;
                 //保存最新的协助处理请求信息 单据信息
-                string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + $"\\FormProperty\\Data\\{userinfo.姓名}", BillType + sendtime);
+                string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + $"\\FormProperty\\Data\\{userinfo.姓名}", BillType+ System.DateTime.Now.ToString("yyyyMMddHHmmss")+ ".cache");
                 System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
                 //判断目录是否存在
                 if (!System.IO.Directory.Exists(fi.Directory.FullName))
@@ -253,7 +253,7 @@ namespace RUINORERP.UI.SuperSocketClient
             }
             catch (Exception ex)
             {
-                MainForm.Instance.PrintInfoLog("用户登陆:" + ex.Message);
+                MainForm.Instance.PrintInfoLog("接收服务器转发的协助处理请求:" + ex.Message);
             }
 
         }

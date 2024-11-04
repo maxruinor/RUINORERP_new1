@@ -374,7 +374,7 @@ namespace RUINORERP.UI
                     .ToExpression();//注意 这一句 不能少
                     list = dc.BaseQueryByWhere(exp);
 
-                 
+
                     try
                     {
                         bool rs = mc.CheckMenuInitialized();
@@ -824,8 +824,16 @@ namespace RUINORERP.UI
                 AuditLogHelper.Instance.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
-                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
-                    MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
+                    try
+                    {
+                        MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
+                        MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError("更新最后登陆时间出错。", ex);
+                    }
+
                 }
 
 
@@ -852,7 +860,8 @@ namespace RUINORERP.UI
                 this.SystemOperatorState.Text = "登出";
                 AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
-                MainForm.Instance.AppContext.Db.Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntity();
+                var result = MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
+                    .UpdateColumns(it => new { it.Lastlogout_at }).ExecuteCommand();
                 ClearData();
                 ClearUI();
                 Program.AppContextData.IsOnline = false;

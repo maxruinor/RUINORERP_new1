@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.timerAutoSave = new System.Windows.Forms.Timer(this.components);
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             this.SuspendLayout();
@@ -43,6 +44,10 @@
             // 
             this.timerAutoSave.Interval = 1000;
             this.timerAutoSave.Tick += new System.EventHandler(this.timerAutoSave_Tick);
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
             // 
             // BaseBillEditGeneric
             // 
@@ -61,5 +66,6 @@
         #endregion
 
         private System.Windows.Forms.Timer timerAutoSave;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
     }
 }

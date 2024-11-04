@@ -192,7 +192,7 @@ namespace RUINORERP.Common.Log4Net
             adoNetAppender.ConnectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version=1.0.3300.0, Culture=neutral, PublicKeyToken=b77a5c561934e089";
             if (string.IsNullOrEmpty(_ConnectionString))
             {
-                adoNetAppender.ConnectionString = "data source=192.168.0.254;initial catalog=erpnew;persist security info=True;user id=sa;password=SA!@#123sa;MultipleActiveResultSets=True;";
+                adoNetAppender.ConnectionString = "Server=192.168.0.254;Database=erpnew;UID=sa;Password=SA!@#123sa;Max Pool Size=1000;MultipleActiveResultSets=True;Min Pool Size=0;Connection Lifetime=0;";
             }
             else
             {
@@ -209,9 +209,7 @@ namespace RUINORERP.Common.Log4Net
                         });
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_level", DbType = System.Data.DbType.String, Size = 50, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%level")) });
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@logger", DbType = System.Data.DbType.String, Size = 255, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%logger")) });
-            // adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Exception", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(new ExceptionLayout()) });
-            // adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Exception", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%Exception")) });
-
+         
             log4net.Layout.PatternLayout layout = new CustomLayout() { ConversionPattern = "%property{Operator}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Operator", DbType = System.Data.DbType.String, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });
@@ -219,8 +217,6 @@ namespace RUINORERP.Common.Log4Net
             layout = new CustomLayout() { ConversionPattern = "%property{User_ID}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@User_ID", DbType = System.Data.DbType.Int64, Size = 40, Layout = new Layout2RawLayoutAdapter(layout) });
-
-
 
             layout = new CustomLayout() { ConversionPattern = "%property{ModName}" };
             layout.ActivateOptions();

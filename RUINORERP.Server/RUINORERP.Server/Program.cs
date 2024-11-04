@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using AutoMapper;
+using RUINORERP.Common.Log4Net;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.IO;
@@ -98,9 +100,9 @@ namespace RUINORERP.Server
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             //log4netHelper配置这个文件的代码
-            //ILoggerRepository repository = LogManager.CreateRepository("erpServer");
-            //XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
-            //Log4NetRepository.loggerRepository = repository;
+             ILoggerRepository repository = LogManager.CreateRepository("erpServer");
+             XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
+             //Host..loggerRepository = repository;
 
 
 #pragma warning disable CS0168 // 声明了变量，但从未使用过
@@ -128,7 +130,7 @@ namespace RUINORERP.Server
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
                     BusinessHelper.Instance.SetContext(AppContextData);
-
+                    
                     //Program.AppContextData.SetServiceProvider(services);
                     //Program.AppContextData.Status = "init";
 
@@ -444,7 +446,7 @@ namespace RUINORERP.Server
                 Step = step,
                 Workflow = workflow
             });
-
+           
 
             frmMain.Instance.PrintInfoLog(workflow.Id + step.Id + exception.Message);
         }

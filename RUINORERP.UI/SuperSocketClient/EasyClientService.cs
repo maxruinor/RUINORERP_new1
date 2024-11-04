@@ -353,8 +353,6 @@ namespace RUINORERP.UI.SuperSocketClient
             if (_isConnecting)
             {
                 _cancellationTokenSource.Cancel(); // 取消正在进行的连接尝试
-                await Task.Run(() => _threadSendDataWorker.Join()); // 等待发送数据线程结束
-                _threadSendDataWorker = null;
             }
             await client.Close(); // 关闭客户端连接
             _stopThreadEvent.Set();

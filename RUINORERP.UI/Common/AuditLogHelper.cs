@@ -103,6 +103,10 @@ namespace RUINORERP.UI.Common
             // CommBillData cbd = bcf.GetBillData<T>(entity);
             //将操作记录保存到数据库中
             tb_AuditLogs auditLog = new tb_AuditLogs();
+            if (MainForm.Instance.AppContext.CurUserInfo == null)
+            {
+                return;
+            }
             auditLog.UserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
             auditLog.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
             auditLog.ActionType = action;

@@ -104,12 +104,15 @@ namespace RUINORERP.Server
                         }
 
                         break;
+                    default:
+                       // return;
+                        break;
                         // 可以根据需要处理其他事件类型
                 }
-                if (userInfos.Count == 0)
-                {
-                    dataGridView1.Rows.Clear();
-                }
+                //if (userInfos.Count == 0)
+                //{
+                //   // dataGridView1.Rows.Clear();
+                //}
                 RefreshDataGridView();
             }
             catch (Exception ex)
@@ -128,17 +131,26 @@ namespace RUINORERP.Server
         /// </summary>
         private void RefreshDataGridView()
         {
-            if (this.dataGridView1.InvokeRequired)
+            try
             {
-                // 如果当前线程不是UI线程，则使用Invoke来更新UI
-                this.dataGridView1.Invoke(new MethodInvoker(RefreshDataGridView));
+                if (this.dataGridView1.InvokeRequired)
+                {
+                    // 如果当前线程不是UI线程，则使用Invoke来更新UI
+                    this.dataGridView1.Invoke(new MethodInvoker(RefreshDataGridView));
+                }
+                else
+                {
+                    // 如果当前线程是UI线程，则直接更新UI
+                    this.userInfoBindingSource.ResetBindings(false);
+                    this.dataGridView1.Refresh();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // 如果当前线程是UI线程，则直接更新UI
-                this.userInfoBindingSource.ResetBindings(false);
-                this.dataGridView1.Refresh();
+
+
             }
+
         }
 
         public void UserInfo_PropertyChanged(object sender, PropertyChangedEventArgs e)

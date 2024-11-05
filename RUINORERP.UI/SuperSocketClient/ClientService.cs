@@ -247,8 +247,6 @@ namespace RUINORERP.UI.SuperSocketClient
                     System.IO.Directory.CreateDirectory(fi.Directory.FullName);
                 }
                 File.WriteAllText(PathwithFileName, BillData);
-
-
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
             }
             catch (Exception ex)

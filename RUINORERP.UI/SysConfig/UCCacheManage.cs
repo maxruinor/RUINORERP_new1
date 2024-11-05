@@ -3,6 +3,7 @@ using FastReport.Table;
 using HLH.Lib.Helper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model;
+using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using System;
 using System.Collections.Generic;
@@ -61,10 +62,12 @@ namespace RUINORERP.UI.SysConfig
             list.Sort();
             foreach (var tableName in list)
             {
+             
                 var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 if (CacheList == null)
                 {
-                    listBoxTableList.Items.Add(tableName);
+                    SuperValue kv = new SuperValue(tableName + "[" + 0 + "]", tableName);
+                    listBoxTableList.Items.Add(kv);
                 }
                 else
                 {

@@ -88,8 +88,8 @@ namespace RUINORERP.UI.BaseForm
             frm.flowLayoutPanelButtonsArea.Controls.Add(button保存当前单据);
 
             KryptonContextMenu kcm加载最新数据 = new KryptonContextMenu();
-            KryptonContextMenuItem menuItem选择要加载的数据 = new KryptonContextMenuItem("选择要加载的数据");
-            menuItem选择要加载的数据.Text = "选择要加载的数据";
+            KryptonContextMenuItem menuItem选择要加载的数据 = new KryptonContextMenuItem("选择数据");
+            menuItem选择要加载的数据.Text = "选择数据";
             menuItem选择要加载的数据.Click += MenuItem选择要加载的数据_Click;
 
             KryptonContextMenuItems kryptonContextMenuItems1 = new KryptonContextMenuItems();
@@ -101,7 +101,7 @@ namespace RUINORERP.UI.BaseForm
             menuItem选择要加载的数据});
  
             KryptonDropButton button加载最新数据 = new KryptonDropButton();
-            button加载最新数据.Text = "加载最新数据";
+            button加载最新数据.Text = "加载数据";
             button加载最新数据.Click += button加载最新数据_Click;
             button加载最新数据.KryptonContextMenu = kcm加载最新数据;
             frm.flowLayoutPanelButtonsArea.Controls.Add(button加载最新数据);

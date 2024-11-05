@@ -34,6 +34,8 @@ namespace RUINORERP.Server
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmCacheManage));
             splitContainer1 = new System.Windows.Forms.SplitContainer();
             listBoxTableList = new System.Windows.Forms.ListBox();
+            contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
+            推送缓存数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             dataGridView1 = new System.Windows.Forms.DataGridView();
             bindingSource1 = new System.Windows.Forms.BindingSource(components);
             bindingSource2 = new System.Windows.Forms.BindingSource(components);
@@ -41,17 +43,16 @@ namespace RUINORERP.Server
             toolStripButton加载缓存 = new System.Windows.Forms.ToolStripButton();
             toolStripButton刷新缓存 = new System.Windows.Forms.ToolStripButton();
             cmbUser = new System.Windows.Forms.ToolStripComboBox();
-            contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
-            推送缓存数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            加载缓存数据ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
             splitContainer1.SuspendLayout();
+            contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)bindingSource1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)bindingSource2).BeginInit();
             toolStrip1.SuspendLayout();
-            contextMenuStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // splitContainer1
@@ -82,6 +83,19 @@ namespace RUINORERP.Server
             listBoxTableList.Size = new System.Drawing.Size(219, 623);
             listBoxTableList.TabIndex = 0;
             listBoxTableList.SelectedIndexChanged += listBoxTableList_SelectedIndexChanged;
+            // 
+            // contextMenuStrip1
+            // 
+            contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 推送缓存数据ToolStripMenuItem, 加载缓存数据ToolStripMenuItem });
+            contextMenuStrip1.Name = "contextMenuStrip1";
+            contextMenuStrip1.Size = new System.Drawing.Size(181, 70);
+            // 
+            // 推送缓存数据ToolStripMenuItem
+            // 
+            推送缓存数据ToolStripMenuItem.Name = "推送缓存数据ToolStripMenuItem";
+            推送缓存数据ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            推送缓存数据ToolStripMenuItem.Text = "推送缓存数据";
+            推送缓存数据ToolStripMenuItem.Click += 推送缓存数据ToolStripMenuItem_Click;
             // 
             // dataGridView1
             // 
@@ -124,18 +138,12 @@ namespace RUINORERP.Server
             cmbUser.Name = "cmbUser";
             cmbUser.Size = new System.Drawing.Size(121, 25);
             // 
-            // contextMenuStrip1
+            // 加载缓存数据ToolStripMenuItem
             // 
-            contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 推送缓存数据ToolStripMenuItem });
-            contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new System.Drawing.Size(181, 48);
-            // 
-            // 推送缓存数据ToolStripMenuItem
-            // 
-            推送缓存数据ToolStripMenuItem.Name = "推送缓存数据ToolStripMenuItem";
-            推送缓存数据ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            推送缓存数据ToolStripMenuItem.Text = "推送缓存数据";
-            推送缓存数据ToolStripMenuItem.Click += 推送缓存数据ToolStripMenuItem_Click;
+            加载缓存数据ToolStripMenuItem.Name = "加载缓存数据ToolStripMenuItem";
+            加载缓存数据ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            加载缓存数据ToolStripMenuItem.Text = "加载缓存数据";
+            加载缓存数据ToolStripMenuItem.Click += 加载缓存数据ToolStripMenuItem_Click;
             // 
             // frmCacheManage
             // 
@@ -151,12 +159,12 @@ namespace RUINORERP.Server
             splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
+            contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ((System.ComponentModel.ISupportInitialize)bindingSource1).EndInit();
             ((System.ComponentModel.ISupportInitialize)bindingSource2).EndInit();
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
-            contextMenuStrip1.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -176,5 +184,6 @@ namespace RUINORERP.Server
         private System.Windows.Forms.ToolStripComboBox cmbUser;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem 推送缓存数据ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 加载缓存数据ToolStripMenuItem;
     }
 }

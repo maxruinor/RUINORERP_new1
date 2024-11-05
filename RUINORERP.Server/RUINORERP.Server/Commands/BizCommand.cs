@@ -72,7 +72,10 @@ namespace RUINORERP.Server.Commands
                     int index = 0;
                     if (CleintCmd != ClientCmdEnum.客户端心跳包 && CleintCmd != ClientCmdEnum.角色处于等待)
                     {
-
+                        if (frmMain.Instance.IsDebug)
+                        {
+                            frmMain.Instance.PrintMsg(CleintCmd.ToString());
+                        }
                     }
                     switch (CleintCmd)
                     {
@@ -132,6 +135,7 @@ namespace RUINORERP.Server.Commands
                             index = 0;
                             string datatime = ByteDataAnalysis.GetString(gd.Two, ref index);
                             string RequestTableName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                            
                             //如果指定了表名，则只发送指定表的数据，否则全部发送
                             if (!string.IsNullOrEmpty(RequestTableName) && BizCacheHelper.Manager.NewTableList.Keys.Contains(RequestTableName))
                             {
@@ -144,6 +148,9 @@ namespace RUINORERP.Server.Commands
                                     UserService.发送缓存数据列表(Player, tableName);
                                 }
                             }
+                            break;
+                        case ClientCmdEnum.更新缓存:
+                            UserService.接收更新缓存指令(Player, gd);
                             break;
                         case ClientCmdEnum.请求协助处理:
 

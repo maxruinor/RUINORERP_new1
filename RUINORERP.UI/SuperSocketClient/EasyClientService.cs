@@ -305,7 +305,6 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 return false;
             }
-
             _isConnecting = true;
             try
             {
@@ -348,13 +347,17 @@ namespace RUINORERP.UI.SuperSocketClient
         }
 
 
-        public async void Stop()
+        public async Task<bool> Stop()
         {
             if (_isConnecting)
             {
                 _cancellationTokenSource.Cancel(); // 取消正在进行的连接尝试
             }
-            await client.Close(); // 关闭客户端连接
+            bool rs = await client.Close(); // 关闭客户端连接
+            if (rs)
+            {
+                isConnected = false;
+            }
             _stopThreadEvent.Set();
             if (_threadSendDataWorker != null && _threadSendDataWorker.ThreadState == System.Threading.ThreadState.Running)
             {
@@ -376,6 +379,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     _threadSendDataWorker = null;
                 }
             }
+            return rs;
         }
 
 
@@ -481,6 +485,9 @@ namespace RUINORERP.UI.SuperSocketClient
                     OriginalData od = e.Package.od;
                     switch (msg)
                     {
+                        case ServerCmdEnum.转发更新缓存:
+                            ClientService.接收转发更新缓存(od);
+                            break;
                         case ServerCmdEnum.发送缓存数据列表:
                             ClientService.接收缓存数据列表(od);
                             break;

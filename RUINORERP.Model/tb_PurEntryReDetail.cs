@@ -38,9 +38,9 @@ namespace RUINORERP.Model
         #region 属性
         private long _PurEntryRe_CID;
         /// <summary>
-        /// 
+        /// 采购入库退回单明细ID
         /// </summary>
- 
+
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurEntryRe_CID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
         public long PurEntryRe_CID
         { 

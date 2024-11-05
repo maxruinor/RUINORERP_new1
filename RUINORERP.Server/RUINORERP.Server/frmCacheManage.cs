@@ -87,11 +87,30 @@ namespace RUINORERP.Server
                 if (listBoxTableList.SelectedItem != null)
                 {
                     string tableName = listBoxTableList.SelectedItem.ToString();
-                    SessionforBiz PlayerSession = frmMain.Instance.sessionListBiz[cmbUser.SelectedItem.ToString()];
+
+                    SuperValue skv = cmbUser.SelectedItem as SuperValue;
+
+                    SessionforBiz PlayerSession = frmMain.Instance.sessionListBiz[skv.superDataTypeName];
                     UserService.发送缓存数据列表(PlayerSession, tableName);
                 }
 
             }
+            else
+            {
+                MessageBox.Show("请选择接收用户");
+            }
+        }
+
+        private void 加载缓存数据ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            if (listBoxTableList.SelectedItem != null)
+            {
+                string tableName = listBoxTableList.SelectedItem.ToString();
+                BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+            }
+
+
         }
     }
 }

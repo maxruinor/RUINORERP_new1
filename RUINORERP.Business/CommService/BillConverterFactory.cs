@@ -164,6 +164,12 @@ namespace RUINORERP.Business.CommService
                     cbd.BillID = purEntryRe.PurEntryRe_ID;
                     cbd.BillNo = purEntryRe.PurEntryReNo;
                     break;
+
+                case BizType.采购退货入库:
+                    var PurReturnEntry = Entity as tb_PurReturnEntry;
+                    cbd.BillID = PurReturnEntry.PurReEntry_ID;
+                    cbd.BillNo = PurReturnEntry.PurReEntryNo;
+                    break;
                 /*
             case BizType.返厂出库:
                 var Return = Entity as tb_Return;

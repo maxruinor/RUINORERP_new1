@@ -152,7 +152,13 @@ namespace RUINORERP.Business
             rs.Succeeded = false;
             try
             {
-
+                //判断是否能反审? 意思是。我这个入库单错了。但是你都当入库成功进行了后面的操作了，现在要反审，那肯定不行。所以，要判断，
+                if (entity.tb_PurReturnEntries != null
+                    && (entity.tb_PurReturnEntries.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_PurReturnEntries.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                {
+                    rs.ErrorMsg = "存在已确认或已完结，或已审核的采购退回入库单，不能反审采购退回单。 ";
+                    return rs;
+                }
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();

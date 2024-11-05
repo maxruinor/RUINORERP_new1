@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using RUINORERP.Model;
+using System;
 using System.ComponentModel;
 using TransInstruction.DataPortal;
 namespace TransInstruction
@@ -91,14 +93,59 @@ namespace TransInstruction
 
 
         /// <summary>
+        /// 表名为空则是所有表
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <returns></returns>
+        public static OriginalData 更新缓存(string TableName)
+        {
+            var tx = new ByteBuff(2 + 4);
+            //tx.PushInt16((Int16)ClientCmdEnum.用户登陆);
+            //tx.PushInt((int)6);//加一个其他东西？比方随便时间，或当前时间的到分钟
+            tx.PushString(System.DateTime.Now.ToString());
+            tx.PushString(TableName);
+            OriginalData gd = new OriginalData();
+            gd.cmd = (byte)ClientCmdEnum.请求缓存;
+            gd.One = null;
+            gd.Two = tx.toByte();
+            return gd;
+        }
+
+        /// <summary>
+        /// 表名为空则是所有表
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <returns></returns>
+        public static OriginalData 更新缓存<T>(object entity)
+        {
+            var tx = new ByteBuff(2 + 4);
+            //发送缓存数据
+            string json = JsonConvert.SerializeObject(entity,
+               new JsonSerializerSettings
+               {
+                   ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+               });
+            tx.PushString(System.DateTime.Now.ToString());
+            tx.PushString(typeof(T).Name);
+            tx.PushString(json);
+            OriginalData gd = new OriginalData();
+            gd.cmd = (byte)ClientCmdEnum.更新缓存;
+            gd.One = null;
+            gd.Two = tx.toByte();
+            return gd;
+        }
+
+
+
+        /// <summary>
         /// 客户机向服务器发送请求协助处理,协助的内容。相关的单据数据
         /// </summary>
         /// <param name="TableName"></param>
         /// <returns></returns>
-        public static OriginalData 请求协助处理(long RequestUserID, string RequestContent, string BillData,string BillType)
+        public static OriginalData 请求协助处理(long RequestUserID, string RequestContent, string BillData, string BillType)
         {
             var tx = new ByteBuff(2 + 4);
-           
+
             tx.PushString(System.DateTime.Now.ToString());
             tx.PushInt64(RequestUserID);//请示的人姓名。后面单据数据要保存时要名称开头
             tx.PushString(RequestContent);

@@ -1773,12 +1773,12 @@ namespace RUINORERP.UI
         /// <summary>
         /// 清除数据相关的
         /// </summary>
-        private void ClearData()
+        private async void ClearData()
         {
             AppContext.CurUserInfo = null;
             AppContext.IsSuperUser = false;
             RUINORERP.Extensions.SqlsugarSetup.CheckEvent -= SqlsugarSetup_CheckEvent;
-            ecs.Stop();
+           await ecs.Stop();
         }
 
         /// <summary>

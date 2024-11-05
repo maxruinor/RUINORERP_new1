@@ -235,10 +235,11 @@ namespace RUINORERP.Business
                         }
                         #endregion
 
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Sum(c => c.Quantity);
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID 
+                        && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Sum(c => c.Quantity);
                         if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                         {
-                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"                                    或存在针对当前采购订单重复录入了采购入库单，审核失败！";
+                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
                             MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
@@ -359,7 +360,7 @@ namespace RUINORERP.Business
             rs.Succeeded = false;
             try
             {
-                //判断是否能反审?
+                //判断是否能反审? 意思是。我这个入库单错了。但是你都当入库成功进行了后面的操作了，现在要反审，那肯定不行。所以，要判断，
                 if (entity.tb_PurEntryRes != null
                     && (entity.tb_PurEntryRes.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_PurEntryRes.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {

@@ -26,7 +26,15 @@ namespace HLH.Lib.Helper
 
         public override string ToString()
         {
-            return superStrValue.ToString();
+            if (superStrValue== null)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return superStrValue.ToString();
+            }
+       
         }
 
         public SuperValue(string strValue, string DataTypeName)

@@ -38,6 +38,11 @@ namespace RUINORERP.UI.SysConfig
                 {
                     UIBizSrvice.RequestCache(tableName);
                 }
+                else
+                {
+                    //更新式请求？
+                    UIBizSrvice.RequestCache(tableName);
+                }
             }
         }
 

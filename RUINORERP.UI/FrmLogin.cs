@@ -158,10 +158,34 @@ namespace RUINORERP.UI
                         UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
                         UserGlobalConfig.Instance.ServerPort = txtPort.Text;
 
+                        if (ecs != null)
+                        {
+                            if (ecs.client != null && ecs.client.IsConnected == true)
+                            {
+                                if (!ecs.client.Socket.Connected)
+                                {
+                                    await ecs.Stop();
+                                }
+                            }
+                        }
+
+                        //远程授权 ，如果切换了服务器。前面的链接就要断开重新来。
+                        if (ecs != null && ecs.IsConnected)
+                        {
+                            if (ecs.ServerIp != txtServerIP.Text || ecs.Port.ToString() != txtPort.Text)
+                            {
+                                await ecs.Stop();
+                            }
+                        }
+
+
                         //传入帐号密码返回结果
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData);
                         if (ok)
                         {
+
+
+
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
                             {
                                 ServerAuthorizer serverAuthorizer = new ServerAuthorizer();

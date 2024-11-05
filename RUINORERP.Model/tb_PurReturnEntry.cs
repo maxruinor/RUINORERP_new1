@@ -195,13 +195,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime? _BillDate;
+        private DateTime _BillDate;
         /// <summary>
         /// 单据日期
         /// </summary>
         [AdvQueryAttribute(ColName = "BillDate",ColDesc = "单据日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BillDate" ,IsNullable = true,ColumnDescription = "单据日期" )]
-        public DateTime? BillDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BillDate" ,IsNullable = false,ColumnDescription = "单据日期" )]
+        public DateTime BillDate
         { 
             get{return _BillDate;}
             set{

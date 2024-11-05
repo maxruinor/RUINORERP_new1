@@ -662,7 +662,7 @@ namespace RUINORERP.UI
             }
             SystemOptimizerService.异常信息发送(error.Message, error);
             MainForm.Instance.uclog.AddLog("应用域", str);
-            MainForm.Instance.logger.LogError("出现应用程序未处理的异常2,请更新到新版本，如果无法解决，请联系管理员", error);
+            MainForm.Instance.logger.LogError("当前域_未处理异常2,请更新到新版本，如果无法解决，请联系管理员", error);
             MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }

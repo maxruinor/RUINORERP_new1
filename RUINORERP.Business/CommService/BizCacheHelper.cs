@@ -442,136 +442,16 @@ namespace RUINORERP.Business.CommService
             // 遍历类型名称数组
             foreach (string typeName in typeNames)
             {
-                switch (typeName)
-                {
-                    case "tb_Currency":
-                        SetDictDataSource<tb_Currency>(k => k.Currency_ID, v => v.CurrencyName, LoadData);
-                        break;
-                    case "tb_BOM_S":
-                        SetDictDataSource<tb_BOM_S>(k => k.BOM_ID, v => v.BOM_Name, LoadData);
-                        break;
-                    case "tb_ProductType":
-                        SetDictDataSource<tb_ProductType>(k => k.Type_ID, v => v.TypeName, LoadData);
-                        break;
-                    case "tb_PaymentMethod":
-                        SetDictDataSource<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, LoadData);
-                        break;
-                    case "tb_Unit":
-                        SetDictDataSource<tb_Unit>(k => k.Unit_ID, v => v.UnitName, LoadData);
-                        break;
-                    case "tb_Department":
-                        SetDictDataSource<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, LoadData);
-                        break;
-                    case "tb_LocationType":
-                        SetDictDataSource<tb_LocationType>(k => k.LocationType_ID, v => v.TypeName, LoadData);
-                        break;
-                    case "tb_Location":
-                        SetDictDataSource<tb_Location>(k => k.Location_ID, v => v.Name, LoadData);
-                        break;
-                    case "tb_CustomerVendor":
-                        SetDictDataSource<tb_CustomerVendor>(k => k.CustomerVendor_ID, v => v.CVName, LoadData);
-                        break;
-                    case "tb_CustomerVendorType":
-                        SetDictDataSource<tb_CustomerVendorType>(k => k.Type_ID, v => v.TypeName, LoadData);
-                        break;
-                    case "tb_ProdCategories":
-                        SetDictDataSource<tb_ProdCategories>(k => k.Category_ID, v => v.Category_name, LoadData);
-                        break;
-                    case "tb_Prod":
-                        SetDictDataSource<tb_Prod>(k => k.ProdBaseID, v => v.CNName, LoadData);
-                        break;
-                    case "View_ProdDetail":
-                        SetDictDataSource<View_ProdDetail>(k => k.ProdDetailID, v => v.CNName, LoadData);
-                        break;
-                    case "tb_ProdPropertyType":
-                        SetDictDataSource<tb_ProdPropertyType>(k => k.PropertyType_ID, v => v.PropertyTypeName, LoadData);
-                        break;
-                    case "tb_ProdProperty":
-                        SetDictDataSource<tb_ProdProperty>(k => k.Property_ID, v => v.PropertyName, LoadData);
-                        break;
-                    case "tb_Employee":
-                        SetDictDataSource<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, LoadData);
-                        break;
-                    case "tb_UserInfo":
-                        SetDictDataSource<tb_UserInfo>(k => k.User_ID, v => v.UserName, LoadData);
-                        break;
-                    case "tb_RoleInfo":
-                        SetDictDataSource<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, LoadData);
-                        break;
-                    case "tb_MenuInfo":
-                        SetDictDataSource<tb_MenuInfo>(k => k.MenuID, v => v.MenuName, LoadData);
-                        break;
-                    case "tb_FieldInfo":
-                        SetDictDataSource<tb_FieldInfo>(k => k.FieldInfo_ID, v => v.FieldName, LoadData);
-                        break;
-                    case "tb_ModuleDefinition":
-                        SetDictDataSource<tb_ModuleDefinition>(k => k.ModuleID, v => v.ModuleName, LoadData);
-                        break;
-                    case "tb_BizType":
-                        SetDictDataSource<tb_BizType>(k => k.Type_ID, v => v.TypeName, LoadData);
-                        break;
-                    case "tb_StorageRack":
-                        SetDictDataSource<tb_StorageRack>(k => k.Rack_ID, v => v.RackName, LoadData);
-                        break;
-                    case "tb_OutInStockType":
-                        SetDictDataSource<tb_OutInStockType>(k => k.Type_ID, v => v.TypeName, LoadData);
-                        break;
-                    case "tb_OnlineStoreInfo":
-                        SetDictDataSource<tb_OnlineStoreInfo>(k => k.Store_ID, v => v.StoreName, LoadData);
-                        break;
-                    case "tb_ProjectGroup":
-                        SetDictDataSource<tb_ProjectGroup>(k => k.ProjectGroup_ID, v => v.ProjectGroupName, LoadData);
-                        break;
-                    case "tb_FM_Account":
-                        SetDictDataSource<tb_FM_Account>(k => k.Account_id, v => v.Account_name, LoadData);
-                        break;
-                    case "tb_FM_ExpenseType":
-                        SetDictDataSource<tb_FM_ExpenseType>(k => k.ExpenseType_id, v => v.Expense_name, LoadData);
-                        break;
-                    case "tb_FM_Subject":
-                        SetDictDataSource<tb_FM_Subject>(k => k.subject_id, v => v.subject_name, LoadData);
-                        break;
-                    case "tb_RolePropertyConfig":
-                        SetDictDataSource<tb_RolePropertyConfig>(k => k.RolePropertyID, v => v.RolePropertyName, LoadData);
-                        break;
-                    case "tb_CartoonBox":
-                        SetDictDataSource<tb_CartoonBox>(k => k.CartonID, v => v.CartonName, LoadData);
-                        break;
-                    case "tb_Files":
-                        SetDictDataSource<tb_Files>(k => k.Doc_ID, v => v.FileName, LoadData);
-                        break;
-                    case "tb_BOMConfigHistory":
-                        SetDictDataSource<tb_BOMConfigHistory>(k => k.BOM_S_VERID, v => v.VerNo, LoadData);
-                        break;
-                    case "tb_BoxRules":
-                        SetDictDataSource<tb_BoxRules>(k => k.BoxRules_ID, v => v.BoxRuleName, LoadData);
-                        break;
-                    case "tb_FM_PayeeInfo":
-                        SetDictDataSource<tb_FM_PayeeInfo>(k => k.PayeeInfoID, v => v.Account_name, LoadData);
-                        break;
-                    case "tb_Unit_Conversion":
-                        SetDictDataSource<tb_Unit_Conversion>(k => k.UnitConversion_ID, v => v.UnitConversion_Name, LoadData);
-                        break;
-                    default:
-                        // Console.WriteLine("未知类型: " + typeName);
-                        _logger.LogInformation("SetDictDataSource 未知类型" + typeName);
-                        break;
-                }
+                SetDictDataSource(typeName, LoadData);
 
             }
         }
 
+
         /// <summary>
-        /// 初始化数据字典,并且提取出结果
+        /// 缓存列表
         /// </summary>
-        public void InitDict(bool LoadData = true)
-        {
-            try
-            {
-                Manager.Cache.Clear();
-                Manager.CacheEntityList.Clear();
-                Manager.NewTableList.Clear();
-                string[] typeNames = {
+        string[] typeNames = {
             "tb_Currency",
             "tb_BOM_S",
             "tb_ProductType",
@@ -592,7 +472,7 @@ namespace RUINORERP.Business.CommService
             "tb_UserInfo",
             "tb_RoleInfo",
             "tb_MenuInfo",
-            "tb_FieldInfo",
+            //"tb_FieldInfo",
             "tb_ModuleDefinition", 
             // "tb_Files", // 要完善
             "tb_BizType",
@@ -611,6 +491,160 @@ namespace RUINORERP.Business.CommService
             "tb_RolePropertyConfig",
             "tb_Unit_Conversion"
         };
+
+        public void SetDictDataSource(string typeName, bool LoadData = true)
+        {
+            // 遍历类型名称数组
+            switch (typeName)
+            {
+                case "tb_Currency":
+                    SetDictDataSource<tb_Currency>(k => k.Currency_ID, v => v.CurrencyName, LoadData);
+                    break;
+                case "tb_BOM_S":
+                    SetDictDataSource<tb_BOM_S>(k => k.BOM_ID, v => v.BOM_Name, LoadData);
+                    break;
+                case "tb_ProductType":
+                    SetDictDataSource<tb_ProductType>(k => k.Type_ID, v => v.TypeName, LoadData);
+                    break;
+                case "tb_PaymentMethod":
+                    SetDictDataSource<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, LoadData);
+                    break;
+                case "tb_Unit":
+                    SetDictDataSource<tb_Unit>(k => k.Unit_ID, v => v.UnitName, LoadData);
+                    break;
+                case "tb_Department":
+                    SetDictDataSource<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, LoadData);
+                    break;
+                case "tb_LocationType":
+                    SetDictDataSource<tb_LocationType>(k => k.LocationType_ID, v => v.TypeName, LoadData);
+                    break;
+                case "tb_Location":
+                    SetDictDataSource<tb_Location>(k => k.Location_ID, v => v.Name, LoadData);
+                    break;
+                case "tb_CustomerVendor":
+                    SetDictDataSource<tb_CustomerVendor>(k => k.CustomerVendor_ID, v => v.CVName, LoadData);
+                    break;
+                case "tb_CustomerVendorType":
+                    SetDictDataSource<tb_CustomerVendorType>(k => k.Type_ID, v => v.TypeName, LoadData);
+                    break;
+                case "tb_ProdCategories":
+                    SetDictDataSource<tb_ProdCategories>(k => k.Category_ID, v => v.Category_name, LoadData);
+                    break;
+                case "tb_Prod":
+                    SetDictDataSource<tb_Prod>(k => k.ProdBaseID, v => v.CNName, LoadData);
+                    break;
+                case "View_ProdDetail":
+                    SetDictDataSource<View_ProdDetail>(k => k.ProdDetailID, v => v.CNName, LoadData);
+                    break;
+                case "tb_ProdPropertyType":
+                    SetDictDataSource<tb_ProdPropertyType>(k => k.PropertyType_ID, v => v.PropertyTypeName, LoadData);
+                    break;
+                case "tb_ProdProperty":
+                    SetDictDataSource<tb_ProdProperty>(k => k.Property_ID, v => v.PropertyName, LoadData);
+                    break;
+                case "tb_Employee":
+                    SetDictDataSource<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, LoadData);
+                    break;
+                case "tb_UserInfo":
+                    SetDictDataSource<tb_UserInfo>(k => k.User_ID, v => v.UserName, LoadData);
+                    break;
+                case "tb_RoleInfo":
+                    SetDictDataSource<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, LoadData);
+                    break;
+                case "tb_MenuInfo":
+                    SetDictDataSource<tb_MenuInfo>(k => k.MenuID, v => v.MenuName, LoadData);
+                    break;
+                case "tb_FieldInfo":
+                    SetDictDataSource<tb_FieldInfo>(k => k.FieldInfo_ID, v => v.FieldName, LoadData);
+                    break;
+                case "tb_ModuleDefinition":
+                    SetDictDataSource<tb_ModuleDefinition>(k => k.ModuleID, v => v.ModuleName, LoadData);
+                    break;
+                case "tb_BizType":
+                    SetDictDataSource<tb_BizType>(k => k.Type_ID, v => v.TypeName, LoadData);
+                    break;
+                case "tb_StorageRack":
+                    SetDictDataSource<tb_StorageRack>(k => k.Rack_ID, v => v.RackName, LoadData);
+                    break;
+                case "tb_OutInStockType":
+                    SetDictDataSource<tb_OutInStockType>(k => k.Type_ID, v => v.TypeName, LoadData);
+                    break;
+                case "tb_OnlineStoreInfo":
+                    SetDictDataSource<tb_OnlineStoreInfo>(k => k.Store_ID, v => v.StoreName, LoadData);
+                    break;
+                case "tb_ProjectGroup":
+                    SetDictDataSource<tb_ProjectGroup>(k => k.ProjectGroup_ID, v => v.ProjectGroupName, LoadData);
+                    break;
+                case "tb_FM_Account":
+                    SetDictDataSource<tb_FM_Account>(k => k.Account_id, v => v.Account_name, LoadData);
+                    break;
+                case "tb_FM_ExpenseType":
+                    SetDictDataSource<tb_FM_ExpenseType>(k => k.ExpenseType_id, v => v.Expense_name, LoadData);
+                    break;
+                case "tb_FM_Subject":
+                    SetDictDataSource<tb_FM_Subject>(k => k.subject_id, v => v.subject_name, LoadData);
+                    break;
+                case "tb_RolePropertyConfig":
+                    SetDictDataSource<tb_RolePropertyConfig>(k => k.RolePropertyID, v => v.RolePropertyName, LoadData);
+                    break;
+                case "tb_CartoonBox":
+                    SetDictDataSource<tb_CartoonBox>(k => k.CartonID, v => v.CartonName, LoadData);
+                    break;
+                case "tb_Files":
+                    SetDictDataSource<tb_Files>(k => k.Doc_ID, v => v.FileName, LoadData);
+                    break;
+                case "tb_BOMConfigHistory":
+                    SetDictDataSource<tb_BOMConfigHistory>(k => k.BOM_S_VERID, v => v.VerNo, LoadData);
+                    break;
+                case "tb_BoxRules":
+                    SetDictDataSource<tb_BoxRules>(k => k.BoxRules_ID, v => v.BoxRuleName, LoadData);
+                    break;
+                case "tb_FM_PayeeInfo":
+                    SetDictDataSource<tb_FM_PayeeInfo>(k => k.PayeeInfoID, v => v.Account_name, LoadData);
+                    break;
+                case "tb_Unit_Conversion":
+                    SetDictDataSource<tb_Unit_Conversion>(k => k.UnitConversion_ID, v => v.UnitConversion_Name, LoadData);
+                    break;
+                default:
+                    // Console.WriteLine("未知类型: " + typeName);
+                    _logger.LogInformation("SetDictDataSource 未知类型" + typeName);
+                    break;
+            }
+        }
+
+
+
+
+        /// <summary>
+        /// 初始化数据字典,并且提取出结果
+        /// </summary>
+        public void InitDict(string tableName)
+        {
+            //typeNames.ToList<string>()
+            try
+            {
+                Manager.Cache.Clear();
+                Manager.CacheEntityList.Clear();
+                Manager.NewTableList.Clear();
+                SetDictDataSource(tableName, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation("InitDict" + ex.Message);
+            }
+        }
+
+
+        /// <summary>
+        /// 初始化数据字典,并且提取出结果
+        /// </summary>
+        public void InitDict(bool LoadData = true)
+        {
+            try
+            {
+                Manager.Cache.Clear();
+                Manager.CacheEntityList.Clear();
+                Manager.NewTableList.Clear();
                 SetDictDataSource(typeNames.ToList<string>(), LoadData);
             }
             catch (Exception ex)

@@ -1,4 +1,5 @@
 ﻿using AutoUpdateTools;
+using FastReport.Table;
 using Netron.GraphLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -111,7 +112,22 @@ namespace RUINORERP.UI.SuperSocketClient
                     if (json != "null")
                     {
                         object objList = JsonConvert.DeserializeObject(json);
-                        MyCacheManager.Instance.AddCacheEntityList(objList, tablename);
+                        if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
+                        {
+                            //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(tableName)).ToList();
+                            var lastlist = ((IEnumerable<dynamic>)objList).ToList();
+                            if (lastlist != null)
+                            {
+                                MyCacheManager.Instance.UpdateEntityList(tablename, lastlist);
+                                //foreach (var item in lastlist)
+                                //{
+                                //    // 将item转换为JObject
+                                //    var obj = JObject.Parse(item.ToString());
+                                //}
+                            }
+                        }
+
+                       
                         MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
                     }
 
@@ -239,7 +255,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 MessageInfo.Sender = userinfo.姓名;
                 MessageInfo.Content = RequestContent;
                 //保存最新的协助处理请求信息 单据信息
-                string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + $"\\FormProperty\\Data\\{userinfo.姓名}", BillType+ System.DateTime.Now.ToString("yyyyMMddHHmmss")+ ".cache");
+                string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + $"\\FormProperty\\Data\\{userinfo.姓名}", BillType + System.DateTime.Now.ToString("yyyyMMddHHmmss") + ".cache");
                 System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
                 //判断目录是否存在
                 if (!System.IO.Directory.Exists(fi.Directory.FullName))
@@ -256,5 +272,24 @@ namespace RUINORERP.UI.SuperSocketClient
 
         }
 
+        internal static void 接收转发更新缓存(OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+
+                // 将item转换为JObject
+                var obj = JObject.Parse(json);
+                MyCacheManager.Instance.UpdateEntityList(tableName, obj);
+
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收转发更新缓存:" + ex.Message);
+            }
+        }
     }
 }

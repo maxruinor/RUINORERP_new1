@@ -2,14 +2,21 @@
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
+using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.Comm;
+using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
+using RUINORERP.WF.BizOperation.Condition;
+using SharpYaml.Tokens;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using TransInstruction;
@@ -66,7 +73,11 @@ namespace RUINORERP.Server.BizService
                 {
                     //发送缓存数据
                     var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-
+                    if (CacheList == null)
+                    {
+                        //启动时服务器都没有加载缓存，则不发送
+                        return;
+                    }
                     string json = JsonConvert.SerializeObject(CacheList,
                        new JsonSerializerSettings
                        {
@@ -88,6 +99,40 @@ namespace RUINORERP.Server.BizService
 
         }
 
+        public static void 接收更新缓存指令(SessionforBiz UserSession, OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                //更新服务器的缓存
+                // 将item转换为JObject
+                var obj = JObject.Parse(json);
+
+                MyCacheManager.Instance.UpdateEntityList(tableName, obj);
+                //再转发给其他客户端
+                //发送缓存数据
+
+                ByteBuff tx = new ByteBuff(200);
+                tx.PushString(时间);
+                tx.PushString(tableName);
+                tx.PushString(json);
+
+                foreach (var item in frmMain.Instance.sessionListBiz)
+                {
+                    SessionforBiz sessionforBiz = item.Value as SessionforBiz;
+                    sessionforBiz.AddSendData((byte)ServerCmdEnum.转发更新缓存, null, tx.toByte());
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
+            }
+
+        }
 
 
         public async static Task<tb_UserInfo> 接收用户登陆指令(SessionforBiz UserSession, OriginalData gd)
@@ -188,7 +233,7 @@ namespace RUINORERP.Server.BizService
 
                 List<UserInfo> userInfos = new List<UserInfo>();
 
-               // tx.PushInt(frmMain.Instance.sessionListBiz.Count);
+                // tx.PushInt(frmMain.Instance.sessionListBiz.Count);
                 foreach (var item in frmMain.Instance.sessionListBiz)
                 {
                     userInfos.Add(item.Value.User);
@@ -204,7 +249,7 @@ namespace RUINORERP.Server.BizService
                           ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
                       });
 
-              
+
                 tx.PushString(json);
 
 

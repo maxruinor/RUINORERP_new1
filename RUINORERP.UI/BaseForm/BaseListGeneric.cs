@@ -46,6 +46,7 @@ using SqlSugar;
 using NPOI.SS.Formula.Functions;
 using SourceGrid.Cells.Models;
 using RUINORERP.Business.CommService;
+using SixLabors.ImageSharp.Memory;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -1633,7 +1634,10 @@ namespace RUINORERP.UI.BaseForm
                             //只处理需要缓存的表
                             if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
                             {
-
+                                //如果有更新变动就上传到服务器再分发到所有客户端
+                                OriginalData odforCache = ActionForClient.更新缓存<T>(rr.ReturnObject);
+                                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                MainForm.Instance.ecs.client.Send(buffer);
                             }
 
                         }

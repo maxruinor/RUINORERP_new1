@@ -51,6 +51,25 @@ namespace RUINORERP.Model
             }
         }
 
+
+        private long _PurEntryRe_CID;
+        /// <summary>
+        /// 采购入库退回单明细ID在这里是以行为标准去对比。
+        /// 一个退回单。从采购供应商回来后可以多次退回，按这个累计
+        /// </summary>
+
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "PurEntryRe_CID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "")]
+        public long PurEntryRe_CID
+        {
+            get { return _PurEntryRe_CID; }
+            set
+            {
+                base.PrimaryKeyID = _PurEntryRe_CID;
+                SetProperty(ref _PurEntryRe_CID, value);
+            }
+        }
+
+
         private long _PurReEntry_ID;
         /// <summary>
         /// 

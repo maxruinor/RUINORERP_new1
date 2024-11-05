@@ -95,6 +95,7 @@ namespace SuperSocket.ProtoBase
 
         /// <summary>
         /// Sets the last length of the item.
+        /// 设置项目的最后一个长度。
         /// </summary>
         /// <param name="length">The length.</param>
         public void SetLastItemLength(int length)

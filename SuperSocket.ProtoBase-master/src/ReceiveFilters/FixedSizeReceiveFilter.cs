@@ -38,11 +38,11 @@ namespace SuperSocket.ProtoBase
         /// Filters the received data.
         /// </summary>
         /// <param name="data">The received data.</param>
-        /// <param name="rest">The length of the rest data after filtering.</param>
+        /// <param name="rest">过滤后剩余数据的长度。The length of the rest data after filtering.</param>
         /// <returns>the received packageInfo instance</returns>
         public virtual TPackageInfo Filter(BufferList data, out int rest)
         {
-            rest = 0;
+            rest = 0;//过滤后剩余数据的长度。
             var total = data.Total;
 
             //Haven't received a full request package
@@ -55,7 +55,16 @@ namespace SuperSocket.ProtoBase
             if (total > m_Size)
             {
                 rest = total - m_Size;
-                data.SetLastItemLength(data.Last.Count - rest);
+                //负数会出错。
+                if ((data.Last.Count - rest) < 0)
+                {
+                    data.SetLastItemLength(Math.Abs(data.Last.Count - rest));
+                }
+                else
+                {
+                    data.SetLastItemLength(data.Last.Count - rest);
+                }
+
             }
 
             var bufferStream = this.GetBufferStream(data);

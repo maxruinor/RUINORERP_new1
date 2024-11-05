@@ -57,6 +57,8 @@ namespace RUINORERP.Server
         public IServiceCollection _services { get; set; }
         public IServiceProvider _ServiceProvider { get; set; }
 
+        public bool IsDebug { get; set; } = false;
+
         private static frmMain _main;
         public static frmMain Instance
         {
@@ -484,7 +486,7 @@ ApplicationInsights
 
         delegate void printMsg(string s);//创建一个代理
 
-        private void PrintMsg(string t)//这个就是我们的函数，我们把要对控件进行的操作放在这里
+        public void PrintMsg(string t)//这个就是我们的函数，我们把要对控件进行的操作放在这里
         {
             if (!this.IsHandleCreated)
             {
@@ -542,7 +544,10 @@ ApplicationInsights
 
         private void SqlsugarSetup_CheckEvent(string sql)
         {
-            Instance.PrintInfoLog(sql);
+            if (IsDebug)
+            {
+                Instance.PrintInfoLog(sql);
+            }
         }
 
 
@@ -687,6 +692,22 @@ ApplicationInsights
         private void toolStripButton3_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void tsmY_Click(object sender, EventArgs e)
+        {
+            tsmY.Checked = true;
+            tsmNo.Checked = !tsmY.Checked;
+            IsDebug = tsmY.Checked;
+            PrintMsg($"当前调式模式:{IsDebug}");
+        }
+
+        private void tsmNo_Click(object sender, EventArgs e)
+        {
+            tsmY.Checked = false;
+            tsmNo.Checked = !tsmY.Checked;
+            IsDebug = !tsmNo.Checked;
+            PrintMsg($"当前调式模式:{IsDebug}");
         }
     }
 }

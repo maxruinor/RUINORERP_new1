@@ -42,6 +42,9 @@
             toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             toolStripButton5 = new System.Windows.Forms.ToolStripButton();
+            toolStripddbtnDebug = new System.Windows.Forms.ToolStripDropDownButton();
+            tsmY = new System.Windows.Forms.ToolStripMenuItem();
+            tsmNo = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             menuStrip1.SuspendLayout();
@@ -114,7 +117,7 @@
             // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripButton4, toolStripButton1, toolStripButton3, toolStripButton5 });
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripButton4, toolStripButton1, toolStripButton3, toolStripButton5, toolStripddbtnDebug });
             toolStrip1.Location = new System.Drawing.Point(0, 25);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(800, 25);
@@ -157,6 +160,32 @@
             toolStripButton5.Size = new System.Drawing.Size(76, 22);
             toolStripButton5.Text = "缓存管理";
             toolStripButton5.Click += toolStripButton5_Click;
+            // 
+            // toolStripddbtnDebug
+            // 
+            toolStripddbtnDebug.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            toolStripddbtnDebug.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { tsmY, tsmNo });
+            toolStripddbtnDebug.Image = (System.Drawing.Image)resources.GetObject("toolStripddbtnDebug.Image");
+            toolStripddbtnDebug.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripddbtnDebug.Name = "toolStripddbtnDebug";
+            toolStripddbtnDebug.Size = new System.Drawing.Size(85, 22);
+            toolStripddbtnDebug.Text = "调式模式";
+            // 
+            // tsmY
+            // 
+            tsmY.Name = "tsmY";
+            tsmY.Size = new System.Drawing.Size(180, 22);
+            tsmY.Text = "是";
+            tsmY.Click += tsmY_Click;
+            // 
+            // tsmNo
+            // 
+            tsmNo.Checked = true;
+            tsmNo.CheckState = System.Windows.Forms.CheckState.Checked;
+            tsmNo.Name = "tsmNo";
+            tsmNo.Size = new System.Drawing.Size(180, 22);
+            tsmNo.Text = "否";
+            tsmNo.Click += tsmNo_Click;
             // 
             // toolStripSeparator1
             // 
@@ -212,6 +241,9 @@
         private System.Windows.Forms.ToolStripMenuItem 垂直平铺ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 关闭ToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButton5;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripddbtnDebug;
+        private System.Windows.Forms.ToolStripMenuItem tsmY;
+        private System.Windows.Forms.ToolStripMenuItem tsmNo;
     }
 }
 

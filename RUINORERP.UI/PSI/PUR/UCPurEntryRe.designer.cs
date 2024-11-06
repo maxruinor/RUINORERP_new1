@@ -145,7 +145,7 @@
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainer2);
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
-            this.kryptonSplitContainer1.SplitterDistance = 255;
+            this.kryptonSplitContainer1.SplitterDistance = 254;
             this.kryptonSplitContainer1.TabIndex = 4;
             // 
             // cmbProcessWay
@@ -452,7 +452,7 @@
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblDiscountAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.cmbPaytype_ID);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblPaytype_ID);
-            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 486);
+            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 487);
             this.kryptonSplitContainer2.SplitterDistance = 381;
             this.kryptonSplitContainer2.TabIndex = 2;
             // 

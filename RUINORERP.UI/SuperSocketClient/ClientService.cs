@@ -114,23 +114,11 @@ namespace RUINORERP.UI.SuperSocketClient
                         object objList = JsonConvert.DeserializeObject(json);
                         if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
                         {
-                            //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(tableName)).ToList();
-                            var lastlist = ((IEnumerable<dynamic>)objList).ToList();
-                            if (lastlist != null)
-                            {
-                                MyCacheManager.Instance.UpdateEntityList(tablename, lastlist);
-                                //foreach (var item in lastlist)
-                                //{
-                                //    // 将item转换为JObject
-                                //    var obj = JObject.Parse(item.ToString());
-                                //}
-                            }
+                            var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
+                            MyCacheManager.Instance.UpdateEntityList(tablename, jsonlist);
                         }
-
-                       
-                        MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
                     }
-
+                    MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
                 }
             }
             catch (Exception ex)

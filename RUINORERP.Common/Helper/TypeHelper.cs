@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,6 +7,57 @@ namespace RUINORERP.Common.Helper
 {
     public static class TypeHelper
     {
+
+        public static List<object> ConvertJArrayToList(Type type, JArray jArray)
+        {
+            // 确保提供的类型是类类型
+            if (!type.IsClass)
+            {
+                throw new InvalidOperationException("The type must be a class.");
+            }
+
+            // 创建一个泛型列表的实例
+            List<object> list = new List<object>();
+
+            // 遍历 JArray 中的每个 JObject
+            foreach (JToken token in jArray)
+            {
+                if (token.Type != JTokenType.Object)
+                {
+                    throw new InvalidOperationException("JArray must contain JObject elements.");
+                }
+
+                // 将 JObject 转换为指定的类型
+                object item = token.ToObject(type);
+
+                // 添加到列表中
+                list.Add(item);
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// 判断缓存集合中实际类型：如果List<T> 则返回true 否则json List ==>JArray
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static bool IsGenericList(Type type)
+        {
+            return (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(List<>)));
+        }
+
+        public static bool IsJArrayList(Type type)
+        {
+           return type.Name == "JArray" && type.FullName == "Newtonsoft.Json.Linq.JArray";
+        }
+
+        public static Type GetFirstArgumentType(Type type)
+        {
+            return type.GetGenericArguments()[0];
+        }
+
+
         private const char DefaultNestedTypeDelimiter = '+';
 
         private static readonly Dictionary<Type, string> _builtInTypeNames = new Dictionary<Type, string>

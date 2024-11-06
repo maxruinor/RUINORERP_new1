@@ -2,7 +2,7 @@
 using RUINORERP.Model.Models;
 using RUINORERP.Model;
 
-namespace RUINORERP.AutoMapper
+namespace RUINORERP.Extensions
 {
     public class CustomProfile : Profile
     {

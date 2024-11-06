@@ -11,6 +11,8 @@ using RUINORERP.Model.Base;
 using System.Collections;
 using SharpYaml.Tokens;
 using Newtonsoft.Json.Linq;
+using Mapster;
+using System.Linq;
 
 namespace RUINORERP.Extensions.Middlewares
 {
@@ -22,6 +24,9 @@ namespace RUINORERP.Extensions.Middlewares
     /// 
     /// 2023-10-25 相对于基础资料的缓存 应该只保留 CacheEntityList，单个实体可以从缓存列表中再找，删除也可以，更新也同理
     /// 暂时不去掉CacheEntity单个实体的代码
+    /// 2024-11-6  经常一系列优化:缓存 由服务器和客户端共同维护，服务器缓存基础数据，客户端缓存基础数据，客户端缓存业务数据
+    /// 上传分发等。使用了json 序列化，反序列化，内存占用小，传输速度快。
+    /// List<JObject> 通过 AI暂时得到这个类型性能一般。相对各种反射要好一些。
     /// </summary>
     public class MyCacheManager
     {
@@ -258,6 +263,12 @@ namespace RUINORERP.Extensions.Middlewares
         }
         */
 
+
+        /// <summary>
+        /// 更新缓存列表
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="newlist">强类型</param>
         public void UpdateEntityList<T>(List<T> newlist)
         {
             //newlist是引用类型不可以对他操作，不然会体现到上现操作。例如查询
@@ -274,23 +285,17 @@ namespace RUINORERP.Extensions.Middlewares
                 if (CacheEntityList.Exists(tableName))
                 {
                     //列中的数据，已经ADD delete正常操作了。存的旧值是正常的，新的中列表list如果在旧中没有就添加。其他不管？
-                    //
-                    List<T> oldlist = CacheEntityList.Get(tableName) as List<T>;
-                    if (oldlist == null)
+                    var cachelist = CacheEntityList.Get(tableName);
+                    if (cachelist != null)
                     {
-                        oldlist = new List<T>();
+                        //不管是强类型的集合还是json的集合，直接替换。（如果知道哪种情况性能列好可以默认哪种。以后再优化吧。TODO:by watson)
+                        CacheEntityList.Update(tableName, k => newlist);
                     }
-                    foreach (var item in newlist)
+                    else
                     {
-                        if (!oldlist.Exists(n => n.GetPropertyValue(pair.Key).ToString() == item.GetPropertyValue(pair.Key).ToString()))
-                        {
-                            oldlist.Add(item);
-                        }
+                        CacheEntityList.Add(tableName, newlist);
                     }
-                    if (newlist.Count != oldlist.Count)
-                    {
-                        CacheEntityList.Update(tableName, k => oldlist);
-                    }
+
 
                 }
                 else
@@ -327,10 +332,14 @@ namespace RUINORERP.Extensions.Middlewares
             */
         }
 
-
-        public void UpdateEntityList(string tableName, object newObj)
+        /// <summary>
+        /// 更新缓存列表,
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="newJarryList">根据不同类型，强类型 或josn判断了;也可能是一个JObject对象 也可能是一个强类型对象集合。也可能是一个json对象集合Newtonsoft.Json.Linq.JArray</param>
+        public void UpdateEntityList(string tableName, Newtonsoft.Json.Linq.JArray newJarryList)
         {
-            if (newObj == null)
+            if (newJarryList == null)
             {
                 return;
             }
@@ -345,53 +354,245 @@ namespace RUINORERP.Extensions.Middlewares
                 {
                     //列中的数据，已经ADD delete正常操作了。存的旧值是正常的，新的中列表list如果在旧中没有就添加。其他不管？
                     var cachelist = CacheEntityList.Get(tableName);
-
                     // 获取原始 List<T> 的类型参数
                     Type listType = cachelist.GetType();
-                    Type elementType = listType.GetGenericArguments()[0];
 
-                    // 创建一个新的 List<object>
-                    List<object> oldlist = new List<object>();
-
-                    // 遍历原始列表并转换元素
-                    foreach (var item in (IEnumerable)cachelist)
+                    if (TypeHelper.IsGenericList(listType))
                     {
-                        //或直接在这里取。取到返回也可以
-                        oldlist.Add(item);
+                        Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                        #region  强类型
+                        List<object> myList = TypeHelper.ConvertJArrayToList(elementType, newJarryList);
+                        CacheEntityList.Update(tableName, k => myList);
+                        #endregion
                     }
-
-                    JObject jObject = JObject.FromObject(newObj);
-                    // 获取DepartmentID属性的值
-                    var Newid = jObject[pair.Key]?.ToString();
-
-                    if (!oldlist.Exists(n => n.GetPropertyValue(pair.Key).ToString() == Newid.ToString()))
+                    else if (TypeHelper.IsJArrayList(listType))
                     {
-                        oldlist.Add(jObject);
+                        #region  jsonlist
+                        JArray oldlist = (JArray)newJarryList;
+                        CacheEntityList.Update(tableName, k => oldlist);
+                        #endregion
                     }
-                    else
-                    {
-                        var oldItem = oldlist.Find(n => n.GetPropertyValue(pair.Key).ToString() == Newid.ToString());
-                        oldItem = jObject;
-                    }
-
-                    CacheEntityList.Update(tableName, k => oldlist);
-
-
                 }
-
+                else
+                {
+                    AddCacheEntityList(tableName, newJarryList);
+                }
                 #endregion
-
-
-
             }
             else
             {
-                //??服务器都没有 不应该更新
-                AddCacheEntityList(tableName, newObj);
+                AddCacheEntityList(tableName, newJarryList);
             }
         }
+        /*
+
+        /// <summary>
+        /// 更新缓存列表,
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="newJObj">根据不同类型，强类型 或josn判断了;也可能是一个JObject对象 也可能是一个强类型对象集合。也可能是一个json对象集合Newtonsoft.Json.Linq.JArray</param>
+        public void UpdateEntityList(string tableName, JObject newJObj)
+        {
+            if (newJObj == null)
+            {
+                return;
+            }
+
+            //更新列表中的一个值
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                #region 处理新表
+                //只处理需要缓存的表  并且基础信息的列查算是一次查出来？即使筛选则  新旧合并？
+                if (CacheEntityList.Exists(tableName))
+                {
+                    //列中的数据，已经ADD delete正常操作了。存的旧值是正常的，新的中列表list如果在旧中没有就添加。其他不管？
+                    var cachelist = CacheEntityList.Get(tableName);
+                    // 获取原始 List<T> 的类型参数
+                    Type listType = cachelist.GetType();
+                    if (TypeHelper.IsGenericList(listType))
+                    {
+                        Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                        #region  强类型
+                        // 创建一个新的 List<object>
+                        List<object> oldlist = new List<object>();
+                        // 遍历原始列表并转换元素
+                        foreach (object item in (IEnumerable)cachelist)
+                        {
+                            //或直接在这里取。取到返回也可以
+                            oldlist.Add(item);
+                        }
+                        var newTObj = newJObj.ToObject(elementType);
+                        // 获取DepartmentID属性的值
+                        var Newid = newTObj.GetPropertyValue(pair.Key).ToString();
+                        var itemToUpdate = oldlist.FirstOrDefault(n => n.GetPropertyValue(pair.Key).ToString() == Newid);
+                        if (itemToUpdate != null)
+                        {
+                            // 使用反射更新属性
+                            //这里也像下面一样。直接删除添加新的？
+                            //    然后要所有的缓存都看一下是不是都是List<JObject> 的类型
+                            //    存储和使用的时候都统一一下？
+                            //foreach (var property in newObj)
+                            //{
+                            //    var propInfo = elementType.GetProperty(property.Key);
+                            //    if (propInfo != null && propInfo.CanWrite)
+                            //    {
+                            //        propInfo.SetValue(itemToUpdate, property.Value.ToObject(propInfo.PropertyType));
+                            //    }
+                            //}
+                            oldlist.Remove(itemToUpdate);
+                        }
+                        else
+                        {
+                            // 如果在旧列表中没有找到，添加新对象
+                            oldlist.Add(newTObj);
+                        }
+
+                        CacheEntityList.Update(tableName, k => oldlist);
+                        #endregion
+                    }
+                    else if (TypeHelper.IsJArrayList(listType))
+                    {
+                        #region  jsonlist
+                        // 创建一个新的 List<object>
+                        List<JObject> oldlist = new List<JObject>();
+                        // 遍历原始列表并转换元素
+                        foreach (JObject item in (IEnumerable)cachelist)
+                        {
+                            //或直接在这里取。取到返回也可以
+                            oldlist.Add(item);
+                        }
+
+                        // 获取DepartmentID属性的值
+                        var Newid = newJObj[pair.Key]?.ToString();
+                        var itemToUpdate = oldlist.FirstOrDefault(n => n[pair.Key]?.ToString() == Newid);
+                        if (itemToUpdate != null)
+                        {
+                            // 使用反射更新属性
+                            //这里也像下面一样。直接删除添加新的？
+                            //foreach (var property in jObject)
+                            //{
+                            //    var propInfo = elementType.GetProperty(property.Key);
+                            //    if (propInfo != null && propInfo.CanWrite)
+                            //    {
+                            //        propInfo.SetValue(itemToUpdate, property.Value.ToObject(propInfo.PropertyType));
+                            //    }
+                            //}
+                            oldlist.Remove(newJObj);
+                        }
+                        else
+                        {
+                            // 如果在旧列表中没有找到，添加新对象
+                            oldlist.Add(newJObj);
+                        }
+                        CacheEntityList.Update(tableName, k => oldlist);
+                        #endregion
+                    }
+                }
+                else
+                {
+                    AddCacheEntityList(tableName, newJObj);
+                }
+                #endregion
+            }
+            else
+            {
+                AddCacheEntityList(tableName, newJObj);
+            }
+        }
+        */
 
 
+        /// <summary>
+        /// 更新缓存列表,
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="newJObj">根据不同类型，强类型 或josn判断了;也可能是一个JObject对象 也可能是一个强类型对象集合。也可能是一个json对象集合Newtonsoft.Json.Linq.JArray</param>
+        public void UpdateEntityList(string tableName, JObject newJObj)
+        {
+            if (newJObj == null)
+            {
+                return;
+            }
+
+            //更新列表中的一个值
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                #region 处理新表
+                //只处理需要缓存的表  并且基础信息的列查算是一次查出来？即使筛选则  新旧合并？
+                if (CacheEntityList.Exists(tableName))
+                {
+                    //列中的数据，已经ADD delete正常操作了。存的旧值是正常的，新的中列表list如果在旧中没有就添加。其他不管？
+                    var cachelist = CacheEntityList.Get(tableName);
+                    // 获取原始 List<T> 的类型参数
+                    Type listType = cachelist.GetType();
+                    if (TypeHelper.IsGenericList(listType))
+                    {
+                        Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                        #region  强类型
+                        // 创建一个新的 List<object>
+                        List<object> oldlist = new List<object>();
+                        // 遍历原始列表并转换元素
+                        foreach (object item in (IEnumerable)cachelist)
+                        {
+                            //或直接在这里取。取到返回也可以
+                            oldlist.Add(item);
+                        }
+                        var newTObj = newJObj.ToObject(elementType);
+                        // 获取DepartmentID属性的值
+                        var Newid = newTObj.GetPropertyValue(pair.Key).ToString();
+                        var itemToUpdate = oldlist.FirstOrDefault(n => n.GetPropertyValue(pair.Key).ToString() == Newid);
+                        if (itemToUpdate != null)
+                        {
+                            // 使用反射更新属性
+                            //这里也像下面一样。直接删除添加新的？
+                            //    然后要所有的缓存都看一下是不是都是List<JObject> 的类型
+                            //    存储和使用的时候都统一一下？
+                            //foreach (var property in newObj)
+                            //{
+                            //    var propInfo = elementType.GetProperty(property.Key);
+                            //    if (propInfo != null && propInfo.CanWrite)
+                            //    {
+                            //        propInfo.SetValue(itemToUpdate, property.Value.ToObject(propInfo.PropertyType));
+                            //    }
+                            //}
+                            oldlist.Remove(itemToUpdate);
+                        }
+
+                        // 如果在旧列表中没有找到，添加新对象
+                        oldlist.Add(newTObj);
+
+                        CacheEntityList.Update(tableName, k => oldlist);
+                        #endregion
+                    }
+                    else if (TypeHelper.IsJArrayList(listType))
+                    {
+                        #region  jsonlist
+                        JArray varJarray = (JArray)cachelist;
+                        var Newid = newJObj[pair.Key]?.ToString();
+                        //如果旧列表中有这个值，则直接删除，把新的添加上
+                        var olditem = varJarray.FirstOrDefault(n => n[pair.Key].ToString() == Newid); ;
+                        if (olditem != null)
+                        {
+                            varJarray.Remove(olditem);
+                        }
+                        varJarray.Add(newJObj);
+                        CacheEntityList.Update(tableName, v => varJarray);
+                        #endregion
+                    }
+                }
+                else
+                {
+                    AddCacheEntityList(tableName, newJObj);
+                }
+                #endregion
+            }
+            else
+            {
+                AddCacheEntityList(tableName, newJObj);
+            }
+        }
         /// <summary>
         /// 更新列表中的一个值
         /// </summary>
@@ -406,20 +607,60 @@ namespace RUINORERP.Extensions.Middlewares
                 if (CacheEntityList.Exists(tableName))
                 {
                     string key = pair.Key;
-                    object Newkey = typeof(T).GetProperty(key).GetValue(entity, null);
-                    var oldlist = CacheEntityList.Get(tableName) as List<T>;
-                    if (oldlist == null)
+                    string Newid = entity.GetPropertyValue<T>(key).ToString();
+                    var cachelist = CacheEntityList.Get(tableName);
+                    if (cachelist != null)
                     {
-                        oldlist = new List<T>();
+                        // 获取原始 List<T> 的类型参数
+                        Type listType = cachelist.GetType();
+
+
+                        if (TypeHelper.IsGenericList(listType))
+                        {
+                            Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                            #region  强类型
+                            // 创建一个新的 List<object>
+                            List<object> oldlist = new List<object>();
+                            // 遍历原始列表并转换元素
+                            foreach (object item in (IEnumerable)cachelist)
+                            {
+                                //或直接在这里取。取到返回也可以
+                                oldlist.Add(item);
+                            }
+                            //如果旧列表中有这个值，则直接删除，把新的添加上
+                            var olditem = oldlist.FirstOrDefault(n => n.GetPropertyValue(pair.Key).ToString() == Newid);
+                            if (olditem != null)
+                            {
+                                oldlist.Remove(olditem);
+                            }
+                            oldlist.Add(entity);
+                            CacheEntityList.Update(tableName, v => oldlist);
+                            #endregion
+                        }
+                        else if (TypeHelper.IsJArrayList(listType))
+                        {
+                            #region  非强类型
+                            JObject jObject = JObject.FromObject(entity);
+                            //var Newid = jObject[pair.Key]?.ToString();
+                            JArray varJarray = (JArray)cachelist;
+                            //如果旧列表中有这个值，则直接删除，把新的添加上
+                            var olditem = varJarray.FirstOrDefault(n => n[key].ToString() == Newid); ;
+                            if (olditem != null)
+                            {
+                                varJarray.Remove(olditem);
+                            }
+                            varJarray.Add(jObject);
+                            CacheEntityList.Update(tableName, v => varJarray);
+                            #endregion
+                        }
+
                     }
-                    //如果旧列表中有这个值，则直接删除，把新的添加上
-                    var olditem = oldlist.Find(n => n.GetPropertyValue(pair.Key).ToString() == entity.GetPropertyValue(pair.Key).ToString());
-                    if (olditem != null)
+                    else
                     {
-                        oldlist.Remove(olditem);
+                        List<T> clist = new List<T>();
+                        clist.Add((T)entity);
+                        CacheEntityList.Add(tableName, clist);
                     }
-                    oldlist.Add(entity);
-                    CacheEntityList.Update(tableName, v => oldlist);
                 }
                 else
                 {
@@ -432,6 +673,11 @@ namespace RUINORERP.Extensions.Middlewares
         }
 
 
+        /// <summary>
+        /// 更新缓存列表中对应表的一个实体
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="newlist">jsonlist</param>
         public void UpdateEntityList(Type type, List<object> newlist)
         {
             //newlist是引用类型不可以对他操作，不然会体现到上现操作。例如查询
@@ -447,7 +693,7 @@ namespace RUINORERP.Extensions.Middlewares
         /// 更新缓存列表中对应表的一个列表集合
         /// </summary>
         /// <param name="tableName"></param>
-        /// <param name="newlist"></param>
+        /// <param name="newlist">很可能是JSONLIST</param>
         public void UpdateEntityList(string tableName, List<object> newlist)
         {
             //newlist是引用类型不可以对他操作，不然会体现到上现操作。例如查询
@@ -463,28 +709,13 @@ namespace RUINORERP.Extensions.Middlewares
                 if (CacheEntityList.Exists(tableName))
                 {
                     //列中的数据，已经ADD delete正常操作了。存的旧值是正常的，新的中列表list如果在旧中没有就添加。其他不管？
-                    //
                     List<object> oldlist = CacheEntityList.Get(tableName) as List<object>;
                     if (oldlist == null)
                     {
                         oldlist = new List<object>();
                     }
-                    //直接覆盖
-
-                    //foreach (var item in newlist)
-                    //{
-                    //    if (!oldlist.Exists(n => n.GetPropertyValue(pair.Key).ToString() == item.GetPropertyValue(pair.Key).ToString()))
-                    //    {
-                    //        oldlist.Add(item);
-                    //    }
-                    //}
-                    //if (newlist.Count != oldlist.Count)
-                    //{
-
                     object obj = null;
                     CacheEntityList.TryUpdate(tableName, k => newlist, out obj);
-                    //}
-
                 }
                 else
                 {
@@ -496,32 +727,32 @@ namespace RUINORERP.Extensions.Middlewares
         }
 
 
-        public void AddCacheEntityList<T>(T entity)
-        {
-            if (entity == null)
-            {
-                return;
-            }
-            string tableName = typeof(T).Name;
-            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (NewTableList.TryGetValue(tableName, out pair))
-            {
-                //只处理需要缓存的表
-                if (CacheEntityList.Exists(tableName))
-                {
-                    //设置属性的值
-                    UpdateEntityList<T>(entity);
-                }
-                else
-                {
-                    //没有对应的列表 则插入
-                    List<T> list = new List<T>();
-                    list.Add(entity);
-                    CacheEntityList.Add(tableName, list);
-                }
-            }
+        //public void AddCacheEntityList<T>(T entity)
+        //{
+        //    if (entity == null)
+        //    {
+        //        return;
+        //    }
+        //    string tableName = typeof(T).Name;
+        //    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+        //    if (NewTableList.TryGetValue(tableName, out pair))
+        //    {
+        //        //只处理需要缓存的表
+        //        if (CacheEntityList.Exists(tableName))
+        //        {
+        //            //设置属性的值
+        //            UpdateEntityList<T>(entity);
+        //        }
+        //        else
+        //        {
+        //            //没有对应的列表 则插入
+        //            List<T> list = new List<T>();
+        //            list.Add(entity);
+        //            CacheEntityList.Add(tableName, list);
+        //        }
+        //    }
 
-        }
+        //}
 
         public void AddCacheEntityList(string tableName, object objList)
         {
@@ -529,16 +760,26 @@ namespace RUINORERP.Extensions.Middlewares
             {
                 return;
             }
-            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-
             //只处理需要缓存的表
             if (!CacheEntityList.Exists(tableName))
             {
                 CacheEntityList.Add(tableName, objList);
             }
-
         }
 
+
+        public void AddCacheEntityList<T>(string tableName, List<T> objList)
+        {
+            if (objList == null)
+            {
+                return;
+            }
+            //只处理需要缓存的表
+            if (!CacheEntityList.Exists(tableName))
+            {
+                CacheEntityList.Add(tableName, objList);
+            }
+        }
 
 
 
@@ -566,6 +807,29 @@ namespace RUINORERP.Extensions.Middlewares
         //        }
         //    }
         //}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expkey"></param>
+        /// <returns></returns>
+        //public void DeleteEntity<T>(long ID)
+        //{
+        //    string tableName = typeof(T).Name;
+        //    //只处理需要缓存的表
+        //    if (TableList.ContainsKey(tableName))
+        //    {
+        //        string key = TableList[tableName].Split(':')[0];
+        //        string value = TableList[tableName].Split(':')[1];
+        //        string dckey = tableName + ":" + key + ":" + ID.ToString();
+        //        if (CacheEntity.Exists(dckey))
+        //        {
+        //            CacheEntity.Remove(dckey);
+        //        }
+        //    }
+        //}
+
 
         /// <summary>
         /// TODO
@@ -626,27 +890,6 @@ namespace RUINORERP.Extensions.Middlewares
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="expkey"></param>
-        /// <returns></returns>
-        //public void DeleteEntity<T>(long ID)
-        //{
-        //    string tableName = typeof(T).Name;
-        //    //只处理需要缓存的表
-        //    if (TableList.ContainsKey(tableName))
-        //    {
-        //        string key = TableList[tableName].Split(':')[0];
-        //        string value = TableList[tableName].Split(':')[1];
-        //        string dckey = tableName + ":" + key + ":" + ID.ToString();
-        //        if (CacheEntity.Exists(dckey))
-        //        {
-        //            CacheEntity.Remove(dckey);
-        //        }
-        //    }
-        //}
 
 
         /// <summary>
@@ -692,24 +935,6 @@ namespace RUINORERP.Extensions.Middlewares
                 }
             }
         }
-
-
-
-
-
-        //[Obsolete]
-        //private void delete<T>(Expression<Func<T, int>> expkey, object value)
-        //{
-        //    //  var mb = expkey.GetMemberInfo();
-        //    // string key = mb.Name;
-        //    string key = expkey.Body.ToString().Split('.')[1];
-        //    string tableName = expkey.Parameters[0].Type.Name;
-        //    key = tableName + ":" + key + ":" + value.ToString();
-        //    if (Cache.Exists(key))
-        //    {
-        //        Cache.Remove(key);
-        //    }
-        //}
 
 
         /// <summary>

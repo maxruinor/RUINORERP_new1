@@ -122,6 +122,11 @@ namespace RUINORERP.Server.BizService
 
                 foreach (var item in frmMain.Instance.sessionListBiz)
                 {
+                    //排除更新者自己
+                    if (item.Key == UserSession.SessionID)
+                    {
+                        continue;
+                    }
                     SessionforBiz sessionforBiz = item.Value as SessionforBiz;
                     sessionforBiz.AddSendData((byte)ServerCmdEnum.转发更新缓存, null, tx.toByte());
                 }

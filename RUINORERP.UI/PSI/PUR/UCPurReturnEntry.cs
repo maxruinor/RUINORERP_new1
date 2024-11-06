@@ -84,7 +84,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 return;
             }
-            
+
             EditEntity = entity;
             if (entity.PurReEntry_ID > 0)
             {
@@ -107,6 +107,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
             }
 
+            //DataBindingHelper.BindData4CmbByEnum<tb_PurReturnEntry>(entity, k => k.ShippingWay, typeof(PurReProcessWay), cmbProcessWay, true);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
@@ -184,23 +185,27 @@ namespace RUINORERP.UI.PSI.PUR
 
             };
 
+
+            //绑定这个。数据联动
+            DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, v => v.PurEntryReNo, txtPurEntryRe_ID, BindDataType4TextBox.Text, true);
+            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_PurReturnEntry>(entity, v => v.PurEntryRe_ID, txtPurEntryRe_ID, true);
+
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            //创建表达式
+            var lambda = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsVendor == true)
+                            .ToExpression();//注意 这一句 不能少
+            queryFilterC.FilterLimitExpressions.Add(lambda);
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                //创建表达式
-                var lambda = Expressionable.Create<tb_CustomerVendor>()
-                                .And(t => t.IsVendor == true)
-                                .ToExpression();//注意 这一句 不能少
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-                queryFilterC.FilterLimitExpressions.Add(lambda);
-                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+
+
                 DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
 
-
-                //绑定这个。数据联动
-                DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, v => v.PurEntryReNo, txtPurEntryRe_ID, BindDataType4TextBox.Text, true);
-                DataBindingHelper.BindData4TextBoxWithTagQuery<tb_PurReturnEntry>(entity, v => v.PurEntryRe_ID, txtPurEntryRe_ID, true);
 
 
                 //创建表达式  草稿 结案 和没有提交的都不显示
@@ -444,7 +449,19 @@ namespace RUINORERP.UI.PSI.PUR
                 List<string> tipsMsg = new List<string>();
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
-                    tb_PurEntryReDetail item = purEntryRe.tb_PurEntryReDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                    tb_PurEntryReDetail item = new tb_PurEntryReDetail();
+                    var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                    if (aa.Count > 0 && details[i].PurEntryRe_CID > 0)
+                    {
+                        item = purEntryRe.tb_PurEntryReDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
+                        && c.PurEntryRe_CID == details[i].PurEntryRe_CID);
+                    }
+                    else
+                    {
+                        item = purEntryRe.tb_PurEntryReDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                    }
+                    #region 
+
                     details[i].Quantity = details[i].Quantity - item.DeliveredQuantity;// 减掉已经入的数量
                     details[i].SubtotalTrPriceAmount = details[i].TransactionPrice * details[i].Quantity;
 
@@ -457,6 +474,8 @@ namespace RUINORERP.UI.PSI.PUR
                         item.tb_proddetail = await AppContext.Db.Queryable<tb_ProdDetail>().Where(c => c.ProdDetailID == item.ProdDetailID).SingleAsync();
                         tipsMsg.Add($"当前行的SKU:{item.tb_proddetail.SKU}已退回数量为{details[i].Quantity}，已全部交付。当前行数据将不会加载到明细！");
                     }
+                    #endregion
+
                 }
 
                 if (NewDetails.Count == 0)

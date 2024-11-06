@@ -99,7 +99,7 @@ namespace RUINORERP.UI.BaseForm
 
             kryptonContextMenuItems1.Items.AddRange(new KryptonContextMenuItemBase[] {
             menuItem选择要加载的数据});
- 
+
             KryptonDropButton button加载最新数据 = new KryptonDropButton();
             button加载最新数据.Text = "加载数据";
             button加载最新数据.Click += button加载最新数据_Click;
@@ -123,7 +123,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
- 
+
 
         private void MenuItem选择要加载的数据_Click(object sender, EventArgs e)
         {
@@ -208,7 +208,7 @@ namespace RUINORERP.UI.BaseForm
         private void button加载最新数据_Click(object sender, EventArgs e)
         {
             //RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
-            EditEntity = manager.Deserialize<T>(CurMenuInfo.CaptionCN+ ".cache");
+            EditEntity = manager.Deserialize<T>(CurMenuInfo.CaptionCN + ".cache");
             OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
             MainForm.Instance.uclog.AddLog("成功加载上次的数据。");
         }
@@ -2845,11 +2845,17 @@ namespace RUINORERP.UI.BaseForm
         private void BaseBillEditGeneric_Load(object sender, EventArgs e)
         {
             timerAutoSave.Start();
-            #region 请求缓存
-            //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-            UIBizSrvice.RequestCache<T>();
-            UIBizSrvice.RequestCache<C>();
-            #endregion
+            if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                if (!this.DesignMode)
+                {
+                    #region 请求缓存
+                    //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
+                    UIBizSrvice.RequestCache<T>();
+                    UIBizSrvice.RequestCache<C>();
+                    #endregion
+                }
+            }
         }
 
         private async void timerAutoSave_Tick(object sender, EventArgs e)
@@ -2884,7 +2890,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     #region 自动保存单据数据  后面优化可以多个单?限制5个？Cache
                     await Save(false);
-                    string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data", CurMenuInfo.CaptionCN+ ".cache");
+                    string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + "\\FormProperty\\Data", CurMenuInfo.CaptionCN + ".cache");
                     System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
                     //判断目录是否存在
                     if (!System.IO.Directory.Exists(fi.Directory.FullName))

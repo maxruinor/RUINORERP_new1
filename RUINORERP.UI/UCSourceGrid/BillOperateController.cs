@@ -289,7 +289,6 @@ namespace RUINORERP.UI.UCSourceGrid
                                     object value = ReflectionHelper.GetPropertyValue(obj, rc.ValueParameters[i].PointToColName);
                                     lastPara.Add(value);
                                 }
-
                             }
                             else
                             {
@@ -299,12 +298,9 @@ namespace RUINORERP.UI.UCSourceGrid
                         var lastnewValue = string.Format(newValue, lastPara.ToArray());
                         ReflectionHelper.SetPropertyValue(setcurrentObj, rc.ColTargetName, lastnewValue.ToString());
                         CurrGridDefine.grid[sender.Position.Row, targetCol.ColIndex].Value = lastnewValue.ToString();
-
                     }
-
                 }
             }
-
             #endregion
 
             //这里计算是一些公共的，针对具体单据的计算 需要用一个事件抛出来处理

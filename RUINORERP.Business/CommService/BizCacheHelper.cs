@@ -20,8 +20,13 @@ using RUINORERP.Model.Context;
 using log4net.Repository.Hierarchy;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
+using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.CommService
 {
+    /// <summary>
+    /// 缓存帮助类
+    /// 主要思路：以表名为key:值是两种情况：1）IsGenericList ，2）Jarrry  jsonList
+    /// </summary>
     public class BizCacheHelper
     {
         private readonly ApplicationContext _context;
@@ -226,23 +231,15 @@ namespace RUINORERP.Business.CommService
             return entity;
         }
 
-        private bool IsGenericList(Type type)
-        {
-            return (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(List<>)));
-        }
 
-        private Type GetFirstArgumentType(Type type)
-        {
-            return type.GetGenericArguments()[0];
-        }
 
 
         /// <summary>
         /// 通过表和主键名去找，int为主键类型
         /// 重点重要学习代码
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="expkey"></param>
+        /// <typeparam name="tableName">表名</typeparam>
+        /// <param name="IdValue">对应主键的值</param>
         /// <returns></returns>
         public object GetValue(string tableName, object IdValue)
         {
@@ -256,9 +253,8 @@ namespace RUINORERP.Business.CommService
                 //设置属性的值
                 if (Manager.CacheEntityList.Exists(tableName))
                 {
-                    //Type listType = typeof(List<>);
                     var rslist = Manager.CacheEntityList.Get(tableName);
-                    if (IsGenericList(rslist.GetType()))
+                    if (TypeHelper.IsGenericList(rslist.GetType()))
                     {
                         //var firstArgumentType = GetFirstArgumentType(rslist.GetType());
                         //listType.MakeGenericType(GetFirstArgumentType(rslist.GetType()));
@@ -280,17 +276,11 @@ namespace RUINORERP.Business.CommService
                                 }
 
                             }
-                            //var obj = lastlist.Find(t => t.GetPropertyValue(key) == IdValue);
-                            //if (obj != null)
-                            // {
-                            // entity = obj.GetPropertyValue(pair.Value);
-                            //}
                         }
-
                     }
-                    else if (rslist != null && rslist.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
+                    else if (rslist != null && TypeHelper.IsJArrayList(rslist.GetType()))
                     {
-                        //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(tableName)).ToList();
+
                         var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
                         if (lastlist != null)
                         {
@@ -314,11 +304,7 @@ namespace RUINORERP.Business.CommService
                                 }
 
                             }
-                            //var obj = lastlist.Find(t => t.GetPropertyValue(key) == IdValue);
-                            //if (obj != null)
-                            // {
-                            // entity = obj.GetPropertyValue(pair.Value);
-                            //}
+
                         }
 
                     }
@@ -422,9 +408,13 @@ namespace RUINORERP.Business.CommService
                     if (Manager.NewTableList.ContainsKey(tableName))
                     {
                         //设置属性的值
-                        if (!Manager.CacheEntityList.Exists(tableName))
+                        if (Manager.CacheEntityList.Exists(tableName))
                         {
                             Manager.UpdateEntityList<T>(list);
+                        }
+                        else
+                        {
+                             Manager.AddCacheEntityList<T>(tableName,list);
                         }
                     }
                 }
@@ -452,6 +442,7 @@ namespace RUINORERP.Business.CommService
         /// 缓存列表
         /// </summary>
         string[] typeNames = {
+            "tb_Company",
             "tb_Currency",
             "tb_BOM_S",
             "tb_ProductType",
@@ -497,6 +488,9 @@ namespace RUINORERP.Business.CommService
             // 遍历类型名称数组
             switch (typeName)
             {
+                case "tb_Company":
+                    SetDictDataSource<tb_Company>(k => k.ID, v => v.CNName, LoadData);
+                    break;
                 case "tb_Currency":
                     SetDictDataSource<tb_Currency>(k => k.Currency_ID, v => v.CurrencyName, LoadData);
                     break;

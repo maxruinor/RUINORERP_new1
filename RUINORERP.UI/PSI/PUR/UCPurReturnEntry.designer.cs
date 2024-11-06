@@ -29,12 +29,10 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
-            this.cmbProcessWay = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
             this.dtpBillDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
             this.txtPurEntryRe_ID = new Krypton.Toolkit.KryptonTextBox();
             this.lblPurEntryRe_ID = new Krypton.Toolkit.KryptonLabel();
@@ -83,7 +81,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbProcessWay)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).BeginInit();
@@ -106,12 +103,10 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbProcessWay);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel2);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPaytype_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.dtpBillDate);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbPaytype_ID);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel1);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDataStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtPurEntryRe_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPurEntryRe_ID);
@@ -147,21 +142,12 @@
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainer2);
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
-            this.kryptonSplitContainer1.SplitterDistance = 240;
+            this.kryptonSplitContainer1.SplitterDistance = 237;
             this.kryptonSplitContainer1.TabIndex = 4;
-            // 
-            // cmbProcessWay
-            // 
-            this.cmbProcessWay.DropDownWidth = 100;
-            this.cmbProcessWay.IntegralHeight = false;
-            this.cmbProcessWay.Location = new System.Drawing.Point(361, 111);
-            this.cmbProcessWay.Name = "cmbProcessWay";
-            this.cmbProcessWay.Size = new System.Drawing.Size(167, 21);
-            this.cmbProcessWay.TabIndex = 150;
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(779, 55);
+            this.kryptonLabel2.Location = new System.Drawing.Point(783, 57);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel2.TabIndex = 148;
@@ -177,7 +163,7 @@
             // 
             // dtpBillDate
             // 
-            this.dtpBillDate.Location = new System.Drawing.Point(847, 51);
+            this.dtpBillDate.Location = new System.Drawing.Point(851, 57);
             this.dtpBillDate.Name = "dtpBillDate";
             this.dtpBillDate.Size = new System.Drawing.Size(153, 21);
             this.dtpBillDate.TabIndex = 149;
@@ -190,14 +176,6 @@
             this.cmbPaytype_ID.Name = "cmbPaytype_ID";
             this.cmbPaytype_ID.Size = new System.Drawing.Size(167, 21);
             this.cmbPaytype_ID.TabIndex = 96;
-            // 
-            // kryptonLabel1
-            // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(296, 111);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel1.TabIndex = 146;
-            this.kryptonLabel1.Values.Text = "处理方式";
             // 
             // lblDataStatus
             // 
@@ -226,7 +204,7 @@
             // 
             // lblShippingWay
             // 
-            this.lblShippingWay.Location = new System.Drawing.Point(779, 105);
+            this.lblShippingWay.Location = new System.Drawing.Point(783, 90);
             this.lblShippingWay.Name = "lblShippingWay";
             this.lblShippingWay.Size = new System.Drawing.Size(62, 20);
             this.lblShippingWay.TabIndex = 129;
@@ -234,14 +212,14 @@
             // 
             // txtShippingWay
             // 
-            this.txtShippingWay.Location = new System.Drawing.Point(847, 102);
+            this.txtShippingWay.Location = new System.Drawing.Point(851, 87);
             this.txtShippingWay.Name = "txtShippingWay";
             this.txtShippingWay.Size = new System.Drawing.Size(153, 23);
             this.txtShippingWay.TabIndex = 130;
             // 
             // lblTrackNo
             // 
-            this.lblTrackNo.Location = new System.Drawing.Point(779, 131);
+            this.lblTrackNo.Location = new System.Drawing.Point(783, 116);
             this.lblTrackNo.Name = "lblTrackNo";
             this.lblTrackNo.Size = new System.Drawing.Size(62, 20);
             this.lblTrackNo.TabIndex = 131;
@@ -249,14 +227,14 @@
             // 
             // txtTrackNo
             // 
-            this.txtTrackNo.Location = new System.Drawing.Point(847, 128);
+            this.txtTrackNo.Location = new System.Drawing.Point(851, 113);
             this.txtTrackNo.Name = "txtTrackNo";
             this.txtTrackNo.Size = new System.Drawing.Size(153, 23);
             this.txtTrackNo.TabIndex = 132;
             // 
             // lblReceiptInvoiceClosed
             // 
-            this.lblReceiptInvoiceClosed.Location = new System.Drawing.Point(559, 62);
+            this.lblReceiptInvoiceClosed.Location = new System.Drawing.Point(558, 54);
             this.lblReceiptInvoiceClosed.Name = "lblReceiptInvoiceClosed";
             this.lblReceiptInvoiceClosed.Size = new System.Drawing.Size(62, 20);
             this.lblReceiptInvoiceClosed.TabIndex = 115;
@@ -264,7 +242,7 @@
             // 
             // chkReceiptInvoiceClosed
             // 
-            this.chkReceiptInvoiceClosed.Location = new System.Drawing.Point(632, 65);
+            this.chkReceiptInvoiceClosed.Location = new System.Drawing.Point(631, 57);
             this.chkReceiptInvoiceClosed.Name = "chkReceiptInvoiceClosed";
             this.chkReceiptInvoiceClosed.Size = new System.Drawing.Size(19, 13);
             this.chkReceiptInvoiceClosed.TabIndex = 116;
@@ -272,7 +250,7 @@
             // 
             // lblGenerateVouchers
             // 
-            this.lblGenerateVouchers.Location = new System.Drawing.Point(559, 94);
+            this.lblGenerateVouchers.Location = new System.Drawing.Point(558, 86);
             this.lblGenerateVouchers.Name = "lblGenerateVouchers";
             this.lblGenerateVouchers.Size = new System.Drawing.Size(62, 20);
             this.lblGenerateVouchers.TabIndex = 119;
@@ -280,7 +258,7 @@
             // 
             // chkGenerateVouchers
             // 
-            this.chkGenerateVouchers.Location = new System.Drawing.Point(632, 97);
+            this.chkGenerateVouchers.Location = new System.Drawing.Point(631, 89);
             this.chkGenerateVouchers.Name = "chkGenerateVouchers";
             this.chkGenerateVouchers.Size = new System.Drawing.Size(19, 13);
             this.chkGenerateVouchers.TabIndex = 120;
@@ -288,7 +266,7 @@
             // 
             // lblVoucherNO
             // 
-            this.lblVoucherNO.Location = new System.Drawing.Point(559, 120);
+            this.lblVoucherNO.Location = new System.Drawing.Point(558, 112);
             this.lblVoucherNO.Name = "lblVoucherNO";
             this.lblVoucherNO.Size = new System.Drawing.Size(62, 20);
             this.lblVoucherNO.TabIndex = 121;
@@ -296,7 +274,7 @@
             // 
             // txtVoucherNO
             // 
-            this.txtVoucherNO.Location = new System.Drawing.Point(632, 116);
+            this.txtVoucherNO.Location = new System.Drawing.Point(631, 108);
             this.txtVoucherNO.Name = "txtVoucherNO";
             this.txtVoucherNO.Size = new System.Drawing.Size(139, 23);
             this.txtVoucherNO.TabIndex = 122;
@@ -319,7 +297,7 @@
             // 
             // lblIsIncludeTax
             // 
-            this.lblIsIncludeTax.Location = new System.Drawing.Point(665, 61);
+            this.lblIsIncludeTax.Location = new System.Drawing.Point(664, 53);
             this.lblIsIncludeTax.Name = "lblIsIncludeTax";
             this.lblIsIncludeTax.Size = new System.Drawing.Size(36, 20);
             this.lblIsIncludeTax.TabIndex = 109;
@@ -327,7 +305,7 @@
             // 
             // chkIsIncludeTax
             // 
-            this.chkIsIncludeTax.Location = new System.Drawing.Point(713, 65);
+            this.chkIsIncludeTax.Location = new System.Drawing.Point(712, 57);
             this.chkIsIncludeTax.Name = "chkIsIncludeTax";
             this.chkIsIncludeTax.Size = new System.Drawing.Size(19, 13);
             this.chkIsIncludeTax.TabIndex = 110;
@@ -384,7 +362,7 @@
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(792, 79);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(307, 113);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
             this.lblEmployee_ID.TabIndex = 93;
@@ -394,9 +372,9 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(847, 78);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(362, 112);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
-            this.cmbEmployee_ID.Size = new System.Drawing.Size(153, 21);
+            this.cmbEmployee_ID.Size = new System.Drawing.Size(167, 21);
             this.cmbEmployee_ID.TabIndex = 94;
             // 
             // lblPurReEntryNO
@@ -467,7 +445,7 @@
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalQty);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalTaxAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalTaxAmount);
-            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 501);
+            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 504);
             this.kryptonSplitContainer2.SplitterDistance = 392;
             this.kryptonSplitContainer2.TabIndex = 2;
             // 
@@ -563,7 +541,6 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbProcessWay)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).EndInit();
@@ -623,10 +600,8 @@
         private Krypton.Toolkit.KryptonTextBox txtPurEntryRe_ID;
         private Krypton.Toolkit.KryptonLabel lblPurEntryRe_ID;
         private Krypton.Toolkit.KryptonLabel lblDataStatus;
-        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonDateTimePicker dtpBillDate;
-        private Krypton.Toolkit.KryptonComboBox cmbProcessWay;
         private Krypton.Toolkit.KryptonTextBox txtDiscountAmount;
         private Krypton.Toolkit.KryptonLabel lblDiscountAmount;
     }

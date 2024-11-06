@@ -112,5 +112,55 @@ namespace RUINORERP.Server
 
 
         }
+
+        private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+
+            #region 画行号
+
+            if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
+            {
+                DataGridViewPaintParts paintParts =
+                    e.PaintParts & ~DataGridViewPaintParts.Focus;
+
+                e.Paint(e.ClipBounds, paintParts);
+                e.Handled = true;
+            }
+
+            if (e.ColumnIndex < 0 && e.RowIndex >= 0)
+            {
+                e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
+                Rectangle indexRect = e.CellBounds;
+                indexRect.Inflate(-2, -2);
+
+                TextRenderer.DrawText(e.Graphics,
+                    (e.RowIndex + 1).ToString(),
+                    e.CellStyle.Font,
+                    indexRect,
+                    e.CellStyle.ForeColor,
+                    TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+                e.Handled = true;
+            }
+
+            #endregion
+
+
+            //画总行数行号
+            if (e.ColumnIndex < 0 && e.RowIndex < 0)
+            {
+                e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
+                Rectangle indexRect = e.CellBounds;
+                indexRect.Inflate(-2, -2);
+
+                TextRenderer.DrawText(e.Graphics,
+                    (this.dataGridView1.Rows.Count + "#").ToString(),
+                    e.CellStyle.Font,
+                    indexRect,
+                    e.CellStyle.ForeColor,
+                    TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+                e.Handled = true;
+            }
+        }
     }
 }
+

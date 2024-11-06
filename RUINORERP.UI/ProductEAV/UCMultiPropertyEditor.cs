@@ -1257,6 +1257,11 @@ namespace RUINORERP.UI.ProductEAV
 
         private void dataGridViewProd_DoubleClick(object sender, EventArgs e)
         {
+            LoadProdDetail();
+        }
+
+        private void LoadProdDetail()
+        {
             if (dataGridViewProd.CurrentRow != null)
             {
                 EditEntity = null;
@@ -1319,9 +1324,7 @@ namespace RUINORERP.UI.ProductEAV
 
                 }
             }
-
         }
-
 
 
         /// <summary>
@@ -1458,7 +1461,10 @@ namespace RUINORERP.UI.ProductEAV
         private async void btnOk_Click(object sender, EventArgs e)
         {
 
+
             List<string> MixByTreeGrid = new List<string>();
+
+
 
             #region 获取最新的组合关系。并且保存为一个新的数组与现有的组合关系进行比较 取差集
             List<tb_Prod_Attr_Relation> attr_Relations = GetProdDetailsFromTreeGrid();
@@ -1467,6 +1473,7 @@ namespace RUINORERP.UI.ProductEAV
             {
                 var array = attr_Relations.Where(c => c.ProdDetailID == item.Key).ToList().Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
                 MixByTreeGrid.Add(string.Join(",", array));
+
             }
             #endregion
             if (MixByTreeGrid.Count > 0)
@@ -1484,15 +1491,50 @@ namespace RUINORERP.UI.ProductEAV
 
             }
 
-            /*
-            List<KeyValuePair<long, string[]>> attrGoupsByID = GetAttrGoupsByIDName(listView1, g => g.GroupID, lvitem => lvitem.Text);
-            List<string> MixByListView = ArrayCombination.Combination4Table(attrGoupsByID);
-            var addItem差集 = MixByListView.Except(MixByTreeGrid).ToList();
-            if (addItem差集.Count == 0)
+
+            #region 判断是否有重复的属性值。将属性值添加到列表，按一定规则排序，然后判断是否有重复
+
+            List<string> DuplicateAttributes = new List<string>();
+            foreach (var item in existDetails)
             {
-              
+                // da 是一个 string 数组
+                string[] da = attr_Relations
+                .Where(c => c.ProdDetailID == item.Key)
+                .ToList()
+                .Select(c => c.tb_prodpropertyvalue.PropertyValueName)
+                .ToArray();
+
+                // 将 da 转换为排序后的列表
+                List<string> sortedDa = da.OrderBy(x => x).ToList();
+
+                // 将排序后的列表转换为字符串
+                string sortedDaString = string.Join(", ", sortedDa);
+
+                // 添加到 DuplicateAttributes 集合中
+                DuplicateAttributes.Add(sortedDaString);
             }
-             */
+            // 找出 DuplicateAttributes 中的重复值
+            var duplicates = DuplicateAttributes
+                .GroupBy(s => s)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+
+            if (duplicates.Count > 0)
+            {
+                // 输出重复的值
+                foreach (var dup in duplicates)
+                {
+                    MainForm.Instance.ShowMsg("属性值重复:" + dup);
+                }
+                MessageBox.Show("产品明细中，属性值重复,保存失败，请重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+
+            #endregion
+
+
 
             //https://github.com/ValeraT1982/ObjectsComparer
             var _comparer = new ObjectsComparer.Comparer<tb_Prod>(
@@ -1536,7 +1578,9 @@ namespace RUINORERP.UI.ProductEAV
             {
                 EditEntity.PropertyType = (int)ProductAttributeType.可配置多属性;
             }
-            //
+            //生成属性后 所有的属性值都按一个规则排序，再比较是否有相同的。如果有则提示不能保存。
+
+
 
             //如果SKU为空。则是新的数据 detailid=0;
             foreach (var item in EditEntity.tb_ProdDetails)
@@ -1560,7 +1604,7 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
             }
-            //EditEntity.tb_Prod_Attr_Relations = attr_Relations
+
             tb_ProdController<tb_Prod> pctr = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
             ReturnResults<tb_Prod> rr = new ReturnResults<tb_Prod>();
             rr = await pctr.SaveOrUpdateAsync(EditEntity);
@@ -1682,11 +1726,38 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-        private void 删除SKU明细toolStripMenuItem_Click(object sender, EventArgs e)
+        private async void 删除SKU明细toolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (treeGridView1.CurrentCell != null)
             {
-
+                if (dataGridViewProd.CurrentRow != null)
+                {
+                    EditEntity = null;
+                    oldOjb = null;
+                    if (dataGridViewProd.CurrentRow.DataBoundItem is tb_Prod Prod)
+                    {
+                        var detailID = treeGridView1.CurrentRow.NodeName;
+                        var detail = Prod.tb_ProdDetails.FirstOrDefault(c => c.ProdDetailID.ToString() == detailID);
+                        if (detail != null)
+                        {
+                            if (detail.ProdDetailID > 0)
+                            {
+                                //删除
+                                if (MessageBox.Show("确定删除该SKU明细吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                {
+                                    bool counter = await MainForm.Instance.AppContext.Db.DeleteNav<tb_ProdDetail>(detail)
+                                        .Include(c => c.tb_Prod_Attr_Relations)
+                                        .ExecuteCommandAsync(); ;
+                                    if (counter)
+                                    {
+                                        //刷新
+                                    }
+                                }
+                            }
+                            LoadProdDetail();
+                        }
+                    }
+                }
             }
         }
 

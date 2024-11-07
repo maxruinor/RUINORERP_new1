@@ -34,6 +34,8 @@ using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 using Expression = System.Linq.Expressions.Expression;
 using ConstantExpression = System.Linq.Expressions.ConstantExpression;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
+using FastReport.DevComponents.DotNetBar;
 
 
 namespace RUINORERP.UI.Common
@@ -64,7 +66,7 @@ namespace RUINORERP.UI.Common
 
     public class DataBindingHelper
     {
-       
+
 
         /// <summary>
         /// 感叹号的快速查询功能
@@ -199,14 +201,25 @@ namespace RUINORERP.UI.Common
                                             //条件如果有限制了。就不能全部加载
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
-                                                var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
-                                                if (lastlist != null)
+                                                Type listType = rslist.GetType();
+                                                if (TypeHelper.IsGenericList(listType))
                                                 {
-                                                    #region  
+                                                    var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+
                                                     NewBsList.DataSource = lastlist;
-                                                    Common.DataBindingHelper.InitDataToCmb(NewBsList, ValueField, display, ktbcombo);
+                                                }
+                                                else if (TypeHelper.IsJArrayList(listType))
+                                                {
+                                                    Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + targetEntity.Name);
+                                                    List<object> myList = TypeHelper.ConvertJArrayToList(elementType, rslist as JArray);
+
+                                                    #region  jsonlist
+                                                    NewBsList.DataSource = myList;
                                                     #endregion
                                                 }
+
+                                                Common.DataBindingHelper.InitDataToCmb(NewBsList, ValueField, display, ktbcombo);
+
                                             }
                                             else
                                             {
@@ -274,7 +287,7 @@ namespace RUINORERP.UI.Common
                                 frmedit.StartPosition = FormStartPosition.CenterScreen;
                                 ucBaseList.Dock = DockStyle.Fill;
                                 frmedit.kryptonPanel1.Controls.Add(ucBaseList);
-                    
+
 
                                 BizTypeMapper mapper = new BizTypeMapper();
                                 var BizTypeText = mapper.GetBizType(typeof(P).Name).ToString();
@@ -321,7 +334,7 @@ namespace RUINORERP.UI.Common
                                             RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, display, ktbTxt.Text);
                                             RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ValueField, selectValue);
                                             bsa.Tag = bs.Current;
-                                            
+
                                         }
                                     }
 
@@ -342,7 +355,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-    
+
 
 
         /// <summary>
@@ -1001,7 +1014,7 @@ namespace RUINORERP.UI.Common
             #endregion
         }
 
- 
+
 
         public static void BindData4Cmb<T>(object entity, string expkey, string expValue, string tableName, KryptonComboBox cmbBox) where T : class
         {
@@ -1778,119 +1791,33 @@ namespace RUINORERP.UI.Common
                 {
                     value = BizCacheHelper.Manager.NewTableList[tableName].Value;
                 }
+                List<T> tlist = new List<T>();
                 BindingSource bs = new BindingSource();
-                List<T> tlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
-
-
-
-                if (tlist == null || tlist.Count == 0)
+                var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                if (cachelist == null)
                 {
                     Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
                     tlist = bdc.GetBindSource<T>(tableName);
-
                 }
                 else
                 {
-                    //可不可以在这里过滤掉公共限制条件的数据。因为缓存时为了显示原始记录。没有限制
-                    //暂时没有实现，有难度因为T是未知的     https://www.cnblogs.com/sportsky/p/16006713.html
-                    /*
-                    BaseProcessor baseProcessor = MainForm.Instance.AppContext.GetRequiredServiceByName<BaseProcessor>(tableName + "Processor");
-                    QueryFilter queryFilter = baseProcessor.GetQueryFilter();
-
-                    //限制
-                    if (queryFilter.FilterLimitExpressions != null && queryFilter.FilterLimitExpressions.Count > 0)
+                    Type listType = cachelist.GetType();
+                    if (TypeHelper.IsGenericList(listType))
                     {
-
-                        // 获取属性信息
-                        BinaryExpression binaryExpression = (BinaryExpression)queryFilter.FilterLimitExpressions[0].Body;
-                        switch (binaryExpression.NodeType)
-                        {
-                            case ExpressionType.Equal:
-                                // 等于
-                                break;
-                            case ExpressionType.GreaterThan:
-                                // 大于
-                                break;
-                            case ExpressionType.GreaterThanOrEqual:
-                                // 大于等于
-                                break;
-                            case ExpressionType.LessThan:
-                                // 小于
-                                break;
-                            case ExpressionType.LessThanOrEqual:
-                                // 小于等于
-                                break;
-                            case ExpressionType.And:
-                                // 与
-                                break;
-                            case ExpressionType.Or:
-                                // 或
-                                break;
-                            case ExpressionType.Not:
-                                // 非
-                                break;
-                            case ExpressionType.OrElse:
-
-                                break;
-                            default:
-                                break;
-                        }
-
-                        重新建一个小项目。做一个实体，来调试性完成这个通用方法
-
-                        if (binaryExpression.NodeType == ExpressionType.Equal)
-                        {
-
-                        }
-                        //PropertyInfo propertyInfo = (PropertyInfo)binaryExpression.NodeType;
-
-                        // 创建参数表达式
-                        ParameterExpression parameter = Expression.Parameter(typeof(T), "t");
-
-                        // 创建属性表达式
-                        // MemberExpression property = Expression.Property(parameter, propertyInfo);
-
-                        // 创建常量表达式
-                        ConstantExpression value1 = Expression.Constant(true);
-
-                        // 创建相等比较表达式
-                        // BinaryExpression equal = Expression.Equal(property, value1);
-
-                        // 创建过滤条件
-                        //Expression<Func<T, bool>> filter = Expression.Lambda<Func<T, bool>>(equal, parameter);
-
-                        // 执行过滤操作
-                        //  tlist.Where(filter.Compile()).ToList();
-
-                       
-                        // 获取 Employee_Name 属性
-                        PropertyInfo propertyInfo = typeof(T).GetProperty("is_available");
-                        // 构建过滤条件
-                        ParameterExpression parameter = Expression.Parameter(typeof(T), "t");
-                        MemberExpression property = Expression.Property(parameter, propertyInfo);
-                        ConstantExpression value1 = Expression.Constant(true);
-                        BinaryExpression equal = Expression.Equal(property, value1);
-
-                        // 创建过滤表达式
-                        Expression<Func<T, bool>> filterExpression1 = Expression.Lambda<Func<T, bool>>(equal, parameter);
-
-                        
-
-
-
-                        // 将 LambdaExpression 转换为 Expression<Func<T, bool>>
-                        //Expression<Func<T, bool>> filterExpression = Expression.Lambda<Func<T, bool>>(queryFilter.GetFilterExpression<T>().Body, queryFilter.GetFilterExpression<T>().Parameters);
-
-                        //Func<T, bool> compiledFilter = queryFilter.GetFilterExpression<T>().Compile();
-
-                        // 过滤列表
-                        // List<T> lastList = tlist.Where(filter.Compile()).ToList();
-                        // InsertSelectItem<T>(key, value, lastList);
-                        // bs.DataSource = lastList;
+                        tlist = cachelist as List<T>;
                     }
-                    */
+                    else if (TypeHelper.IsJArrayList(listType))
+                    {
+                        List<T> lastOKList = new List<T>();
+                        var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
+                        var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
+                        foreach (var item in lastlist)
+                        {
+                            lastOKList.Add(item);
+                        }
+                        tlist = lastOKList;
+                    }
                     InsertSelectItem<T>(key, value, tlist);
-
                 }
 
                 #region exp process
@@ -1914,32 +1841,20 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox"></param>
         public static void InitDataToCmbWithCondition<T>(string key, string value, string tableName, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
         {
-            //if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
-            //{
-            //    if (string.IsNullOrEmpty(value))
-            //    {
-            //        value = BizCacheHelper.Manager.NewTableList[tableName].Value;
-            //    }
+
             BindingSource bs = new BindingSource();
-            //    List<T> tlist = CacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
-            //    if (tlist == null || tlist.Count == 0)
-            //    {
+
+
             Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
             var list = bdc.GetBindSource<T>(tableName, expCondition);
             // Func<T, bool> funCondition = ExpressionHelper.ConvertToFunc<T>(expCondition);
             List<T> Newlist = list.ToList();
             InsertSelectItem<T>(key, value, Newlist);
             bs.DataSource = Newlist;
-            //}
-            //else
-            //{
-            //    List<T> Newlist = tlist.Where(expCondition.Compile()).ToList();
-            //    InsertSelectItem<T>(key, value, Newlist);
-            //    bs.DataSource = Newlist;
-            //}
+
             ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
 
-            // }
+
         }
 
 
@@ -2022,38 +1937,38 @@ namespace RUINORERP.UI.Common
 
 
 
-        /// <summary>
-        /// 绑定数据到下拉（使用了缓存机制）
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="expression"></param>
-        /// <param name="expValue"></param>
-        /// <param name="cmbBox"></param>
-        public static void InitDataToCmb(string key, string tableName, ComboBox cmbBox)
-        {
+        ///// <summary>
+        ///// 绑定数据到下拉（使用了缓存机制）
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="expression"></param>
+        ///// <param name="expValue"></param>
+        ///// <param name="cmbBox"></param>
+        //public static void InitDataToCmb(string key, string tableName, ComboBox cmbBox)
+        //{
 
-            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
-            {
-                string ShowName = BizCacheHelper.Manager.NewTableList[tableName].Value;
+        //    if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+        //    {
+        //        string ShowName = BizCacheHelper.Manager.NewTableList[tableName].Value;
 
-                BindingSource bs = new BindingSource();
-                var objlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                var tlist = ((IEnumerable<dynamic>)objlist).ToList();
-                if (tlist == null || tlist.Count == 0)
-                {
-                    Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
-                    var list = bdc.GetBindSourceList(tableName);
-                    // InsertSelectItem<T>(key, value, tlist);
-                    // bs.DataSource = list;
-                }
-                else
-                {
-                    // InsertSelectItem<T>(key, value, tlist);
-                    bs.DataSource = tlist;
-                }
-                ComboBoxHelper.InitDropList(bs, cmbBox, key, ShowName, ComboBoxStyle.DropDownList, false, true);
-            }
-        }
+        //        BindingSource bs = new BindingSource();
+        //        var objlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+        //        var tlist = ((IEnumerable<dynamic>)objlist).ToList();
+        //        if (tlist == null || tlist.Count == 0)
+        //        {
+        //            Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+        //            var list = bdc.GetBindSourceList(tableName);
+        //            // InsertSelectItem<T>(key, value, tlist);
+        //            // bs.DataSource = list;
+        //        }
+        //        else
+        //        {
+        //            // InsertSelectItem<T>(key, value, tlist);
+        //            bs.DataSource = tlist;
+        //        }
+        //        ComboBoxHelper.InitDropList(bs, cmbBox, key, ShowName, ComboBoxStyle.DropDownList, false, true);
+        //    }
+        //}
 
 
         /// <summary>
@@ -2062,7 +1977,7 @@ namespace RUINORERP.UI.Common
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        /// <param name="list"></param>
+        /// <param name="list">强类型的集合</param>
         public static void InsertSelectItem<T>(string key, string value, List<T> list)
         {
             bool haveDefautValue = false;
@@ -2150,20 +2065,38 @@ namespace RUINORERP.UI.Common
             if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
             {
                 BindingSource bs = new BindingSource();
-                List<T> tlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName) as List<T>;
-                if (tlist == null || tlist.Count == 0)
+                List<T> tlist = new List<T>();
+                var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                if (tlist == null)
                 {
                     Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
-                    var list = bdc.GetBindSource<T>(tableName);
+                    tlist = bdc.GetBindSource<T>(tableName);
                     if (HasSelectItem)
                     {
                         InsertSelectItem<T>(key, value, tlist);
                     }
 
-                    bs.DataSource = list;
+                    bs.DataSource = tlist;
                 }
                 else
                 {
+                    Type listType = cachelist.GetType();
+                    if (TypeHelper.IsGenericList(listType))
+                    {
+                        tlist = cachelist as List<T>;
+                    }
+                    else if (TypeHelper.IsJArrayList(listType))
+                    {
+                        List<T> lastOKList = new List<T>();
+                        var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
+                        var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
+                        foreach (var item in lastlist)
+                        {
+                            lastOKList.Add(item);
+                        }
+                        tlist = lastOKList;
+                    }
+
                     if (HasSelectItem)
                     {
                         InsertSelectItem<T>(key, value, tlist);

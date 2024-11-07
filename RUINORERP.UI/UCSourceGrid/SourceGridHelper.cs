@@ -3,6 +3,8 @@ using DevAge.Drawing;
 using DevAge.Windows.Forms;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Utils;
+using Newtonsoft.Json.Linq;
+
 //using Google.Protobuf.Reflection;
 //using NetTaste;
 using RUINORERP.Business;
@@ -2072,32 +2074,6 @@ namespace RUINORERP.UI.UCSourceGrid
                                     var Pvalue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(PObj, item.ColName);
                                     if (Pvalue.ToString() == valValue)//暂时以字符串来比较
                                     {
-                                        /*
-                                        #region 判断是否是重复的行值,
-                                        var dcKeyValue = ReflectionHelper.GetPropertyValue(PObj, BizKeyCol.ColName);
-
-                                        //循环找已经设置好的行的值对象，按主键去找
-                                        foreach (var dgdr in dci.ParentGridDefine.grid.Rows)
-                                        {
-                                            //排除新行和自己行
-                                            if (dgdr.RowData == null || dgdr.Index == _editor.EditPosition.Row)
-                                            {
-                                                continue;
-                                            }
-                                            var rowObj = dgdr.RowData;
-                                            //也找到主键列的值来比较
-                                            var rowvalueforKeyCol = ReflectionHelper.GetPropertyValue(rowObj, BizKeyCol.ColName);
-                                            //如果通过主键找并且不与自己相同的行比，
-                                            if (rowvalueforKeyCol.ToString() == dcKeyValue.ToString() && dgdr.Index != _editor.EditPosition.Row)
-                                            {
-                                                //如果他的行里的对象，存在这个值了，则不能重复添加
-                                                cancelEvent.Cancel = true;
-                                                MainForm.Instance.uclog.AddLog("数据行不能重复添加，请按【ESC】，取消当前行信息录入！", Global.UILogType.警告);
-                                                return;
-                                            }
-                                        }
-                                        #endregion
-                                        */
                                         proObj = PObj;
                                         //TODO
                                         //实时改变当前行指定列的下拉值的范围？
@@ -2121,7 +2097,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                                 //手动构造
                                                 var limitedValue = ReflectionHelper.GetPropertyValue(PObj, col.Key.ColName);
 
-                                                #region  实时修改下拉列表的值
+                                                #region  实时修改下拉列表的值 比方包装箱规？
 
                                                 string tableName = col.Value.FKRelationCol.FKTableName;
                                                 string typeName = "RUINORERP.Model." + tableName;
@@ -2151,6 +2127,9 @@ namespace RUINORERP.UI.UCSourceGrid
 
                                                         var tlist = Oldlist;
 
+
+                                                        //由于缓存机制改为jsonlist 下面代码要调试
+
                                                         //下面是动态查询,但是硬编码才性能最好。并且代码可行。所以这种由
                                                         //一个列的内容决定另一个列的内容。但是条件中，注意对应字段是否存在另一个集合中，
                                                         //有时，外键字段可能不存在另一个集合中。因为名称改了。如 单位，与单位换算中的单位ID就不一样。
@@ -2162,8 +2141,8 @@ namespace RUINORERP.UI.UCSourceGrid
                                                             case "ProdDetailID":
                                                                 tlist = Oldlist.Where(m => m.ProdDetailID == limitedValue.ToLong()).ToList();
                                                                 break;
-                                                                //case "Unit_ID"://特别写列。反正这里是硬编码 Unit_ID 在换算表中是指向 Source_unit_id
-                                                                //    tlist = Oldlist.Where(m => m.Source_unit_id == limitedValue.ToLong()).ToList();
+                                                                case "Unit_ID"://特别写列。反正这里是硬编码 Unit_ID 在换算表中是指向 Source_unit_id
+                                                                  tlist = Oldlist.Where(m => m.Source_unit_id == limitedValue.ToLong()).ToList();
                                                                 break;
                                                             default:
                                                                 //throw new Exception("请实现限制时：" + col.Key.ColName + "的动态查询");
@@ -2767,7 +2746,7 @@ namespace RUINORERP.UI.UCSourceGrid
             string tableName = dci.FKRelationCol.FKTableName;
             string typeName = "RUINORERP.Model." + tableName;
             var _editor = new SourceGrid.Cells.Editors.ComboBox(typeof(string));
-
+            //缓存下拉
             if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
             {
                 string ColID = BizCacheHelper.Manager.NewTableList[tableName].Key;
@@ -2781,14 +2760,23 @@ namespace RUINORERP.UI.UCSourceGrid
                     ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
                     foreach (var item in tlist)
                     {
-
-                        //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
-                        //这里要不要利用process中设置的条件来判断呢？
-
-
-                        string id = ReflectionHelper.GetPropertyValue(item, ColID).ToString();
-                        ids.Add(id.ToString());//设置一个主键集合 
-                        OutNames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());//设置一个显示名称的集合
+                        if (item is JObject)
+                        {
+                            //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
+                            //这里要不要利用process中设置的条件来判断呢？
+                            string id = item[ColID].ToString();
+                            ids.Add(id.ToString());//设置一个主键集合 
+                            OutNames.TryAdd(id, item[ColName].ToString());//设置一个显示名称的集合
+                        }
+                        else
+                        {
+                            //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
+                            //这里要不要利用process中设置的条件来判断呢？
+                            string id = ReflectionHelper.GetPropertyValue(item, ColID).ToString();
+                            ids.Add(id.ToString());//设置一个主键集合 
+                            OutNames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());//设置一个显示名称的集合
+                        }
+                        
                     }
                     if (tlist == null || tlist.Count == 0)
                     {

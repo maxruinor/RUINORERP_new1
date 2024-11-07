@@ -709,7 +709,6 @@ namespace RUINORERP.UI.SuperSocketClient
             */
             string msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接成功{LoginStatus},{this.client.LocalEndPoint}";
             MainForm.Instance.uclog.AddLog(msg);
-            MainForm.Instance.lblServerInfo.Text = msg;
         }
 
         #region 线程

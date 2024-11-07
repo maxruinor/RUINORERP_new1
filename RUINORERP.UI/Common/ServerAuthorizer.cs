@@ -72,7 +72,7 @@ namespace RUINORERP.UI.Common
                 bool rs = await LoginServerByEasyClient(_ecs, userName, password);
 
                 // 等待服务器响应，直到超时或收到登录状态
-                while (!_ecs.LoginStatus)
+                while (!_ecs.LoginStatus && rs)
                 {
                     if ((DateTime.Now - startTime) >= TimeSpan.FromSeconds(timeOutSec))
                     {
@@ -126,7 +126,7 @@ namespace RUINORERP.UI.Common
                     //ecs.ServerIp = "127.0.0.1";
                     _ecs.ServerIp = UserGlobalConfig.Instance.ServerIP;
                     _ecs.Port = UserGlobalConfig.Instance.ServerPort.ToInt();
-                    await _ecs.Connect();
+                    rs = await _ecs.Connect();
                 }
 
                 //连接上准备
@@ -138,7 +138,7 @@ namespace RUINORERP.UI.Common
                 byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(od1);
                 _ecs.client.Send(buffer1);
 
-                rs = true;
+                rs = _ecs.client.IsConnected;
             }
             catch (Exception ex)
             {

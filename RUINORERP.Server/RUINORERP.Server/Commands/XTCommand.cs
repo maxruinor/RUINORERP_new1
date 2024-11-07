@@ -10,6 +10,8 @@ using System.IO;
 using RUINORERP.Server.Commands;
 using RUINORERP.Server.ServerSession;
 using TransInstruction;
+using SuperSocket.Server.Abstractions.Session;
+using System.Threading;
 
 
 namespace RUINORERP.Server
@@ -21,7 +23,7 @@ namespace RUINORERP.Server
     [AsyncKeyUpperCommandFilter]
     public class XTCommand : IAsyncCommand<BizPackageInfo>
     {
-        public async ValueTask ExecuteAsync(IAppSession session, BizPackageInfo package)
+        public async ValueTask ExecuteAsync(IAppSession session, BizPackageInfo package, CancellationToken cancellationToken)
         {
 
             await Task.Delay(0);

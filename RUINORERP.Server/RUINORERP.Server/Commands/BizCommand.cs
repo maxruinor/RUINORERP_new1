@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RUINORERP.Business.CommService;
 using Microsoft.Extensions.Logging;
+using SuperSocket.Server.Abstractions.Session;
 
 namespace RUINORERP.Server.Commands
 {
@@ -38,7 +39,8 @@ namespace RUINORERP.Server.Commands
             _cache = cache;
             _logger = logger;
         }
-        public async ValueTask ExecuteAsync(IAppSession session, BizPackageInfo package)
+
+        public async ValueTask ExecuteAsync(IAppSession session, BizPackageInfo package, CancellationToken cancellationToken)
         {
             SessionforBiz Player = session as SessionforBiz;
             await Task.Delay(0);
@@ -135,7 +137,10 @@ namespace RUINORERP.Server.Commands
                             index = 0;
                             string datatime = ByteDataAnalysis.GetString(gd.Two, ref index);
                             string RequestTableName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                            
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintMsg("请求缓存表：" + RequestTableName);
+                            }
                             //如果指定了表名，则只发送指定表的数据，否则全部发送
                             if (!string.IsNullOrEmpty(RequestTableName) && BizCacheHelper.Manager.NewTableList.Keys.Contains(RequestTableName))
                             {
@@ -352,6 +357,7 @@ namespace RUINORERP.Server.Commands
 
             }
         }
+
 
     }
 

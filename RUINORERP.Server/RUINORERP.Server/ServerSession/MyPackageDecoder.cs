@@ -1,4 +1,5 @@
-﻿using SuperSocket.ProtoBase;
+﻿using Microsoft.Extensions.Logging;
+using SuperSocket.ProtoBase;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -14,34 +15,21 @@ namespace RUINORERP.Server.ServerSession
     {
         public BizPackageInfo Decode(ref ReadOnlySequence<byte> buffer, object context)
         {
-            /*
-            tcp.ReceiveTimeout = 10000; //10秒
-            rxi = 0;
-            if (len != 0)
-            {
-                ret.Two = new byte[len];
-                while (rxi < len)
-                {
-                    rxi += tcp.Receive(ret.Two, len - rxi, System.Net.Sockets.SocketFlags.None);
-                }
-                try
-                {
-                    掩码 = 加密(KEY, ret.Two, pi, 掩码);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(ex.ToString());
-                }
-                outs += Tools.Hex2Str(ret.Two, 0, len, true);
-            }
-            Tools.ShowMsg($"---[{outs.Length / 3}]:{outs}\r\n");
-            */
+
             var package = new BizPackageInfo();
-            var reader = new SequenceReader<byte>(buffer);
-            reader.TryRead(out byte packageKey);
-            package.Key = "packageKey";
-            //reader.Advance(2);// skip the length   
-            package.Body = reader.Sequence.ToArray();
+            try
+            {
+                var reader = new SequenceReader<byte>(buffer);
+                reader.TryRead(out byte packageKey);
+                package.Key = "packageKey";
+                //reader.Advance(2);// skip the length   
+                package.Body = reader.Sequence.ToArray();
+            }
+            catch (Exception ex)
+            {
+                frmMain.Instance._logger.LogError("Decode" + ex);
+            }
+
             return package;
         }
     }

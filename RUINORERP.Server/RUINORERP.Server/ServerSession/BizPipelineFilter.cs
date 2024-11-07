@@ -114,69 +114,78 @@ namespace RUINORERP.Server.ServerSession
         /// <returns></returns>
         protected override BizPackageInfo DecodePackage(ref ReadOnlySequence<byte> buffer)
         {
-            //得到的是整个包
-            byte[] PackageContents = new byte[buffer.Length];
-            var reader = new SequenceReader<byte>(buffer);
-            reader.TryCopyTo(PackageContents);
             BizPackageInfo gpi = new BizPackageInfo();
-            gpi.Body = PackageContents;
-            KxData kd = new KxData();
+            try
+            {
+                //得到的是整个包
+                byte[] PackageContents = new byte[buffer.Length];
+                KxData kd = new KxData();
 
-            //Key就是两种指令 在注册中 指定不同的处理类
-            //连接后，服务器发送固定256后，就会收到一个256长度，内容会变化的值，暂时不知道规则
-            if (PackageContents.Length == 256)
-            {
-                gpi.Key = "XT";
-                //gpi.Key = "KXGame";
-                gpi.ecode = SpecialOrder.固定256;
-                return gpi;
-            }
-            if (PackageContents.Length == 18)
-            {
-                gpi.Key = "XT";
-                //gpi.Key = "KXGame";
-                gpi.ecode = SpecialOrder.长度等于18;
-                return gpi;
-            }
-            if (PackageContents.Length < 18)
-            {
-                gpi.Key = "XT";
-                //gpi.Key = "KXGame";
-                gpi.ecode = SpecialOrder.长度小于18;
-                gpi.Flag = "空包";
+
+                var reader = new SequenceReader<byte>(buffer);
+                reader.TryCopyTo(PackageContents);
                 gpi.Body = PackageContents;
-                kd.cmd = 1;//0可以算空包吗？
-                return gpi;
+                //Key就是两种指令 在注册中 指定不同的处理类
+                //连接后，服务器发送固定256后，就会收到一个256长度，内容会变化的值，暂时不知道规则
+                if (PackageContents.Length == 256)
+                {
+                    gpi.Key = "XT";
+                    //gpi.Key = "KXGame";
+                    gpi.ecode = SpecialOrder.固定256;
+                    return gpi;
+                }
+                if (PackageContents.Length == 18)
+                {
+                    gpi.Key = "XT";
+                    //gpi.Key = "KXGame";
+                    gpi.ecode = SpecialOrder.长度等于18;
+                    return gpi;
+                }
+                if (PackageContents.Length < 18)
+                {
+                    gpi.Key = "XT";
+                    //gpi.Key = "KXGame";
+                    gpi.ecode = SpecialOrder.长度小于18;
+                    gpi.Flag = "空包";
+                    gpi.Body = PackageContents;
+                    kd.cmd = 1;//0可以算空包吗？
+                    return gpi;
+                }
+                else
+                {
+                    try
+                    {
+                        gpi.Key = "KXGame";
+                        #region  解包体 包括包头重新解一次
+                        byte[] Head = new byte[HeaderLen];
+                        // Array.Copy(buffer, 0 , Head, 0, 18);
+                        //return BitConverter.ToInt32(Head, 0);
+                        //reader.Advance(1); // skip the first byte
+                        reader.TryCopyTo(Head);
+                        // reader.TryReadBigEndian(out short packageKey);
+                        //var outs = Tools.Hex2Str(Head, 0, 18, true);
+
+                        gpi.Body = PackageContents;
+
+                        gpi.kd = CryptoProtocol.DecryptionClientPack(Head, HeaderLen, PackageContents);
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.Instance._logger.LogError("服务器解来自客户端的包（SEP):" + ex.ToString());
+                        gpi.kd = new KxData();
+                    }
+                    finally
+                    {
+
+                    }
+                    gpi.ecode = SpecialOrder.正常;
+                    #endregion
+
+                }
             }
-            else
+            catch (Exception exx)
             {
-                gpi.Key = "KXGame";
-                #region  解包体 包括包头重新解一次
-                byte[] Head = new byte[HeaderLen];
-                // Array.Copy(buffer, 0 , Head, 0, 18);
-                //return BitConverter.ToInt32(Head, 0);
-                //reader.Advance(1); // skip the first byte
-                reader.TryCopyTo(Head);
-                // reader.TryReadBigEndian(out short packageKey);
-                //var outs = Tools.Hex2Str(Head, 0, 18, true);
-
-                gpi.Body = PackageContents;
-                try
-                {
-                    gpi.kd = CryptoProtocol.DecryptionClientPack(Head, HeaderLen, PackageContents);
-                }
-                catch (Exception ex)
-                {
-                    frmMain.Instance._logger.LogError("服务器解来自客户端的包（SEP):" + ex.ToString());
-                    gpi.kd = new KxData();
-                }
-                finally
-                {
-                 
-                }
-                gpi.ecode = SpecialOrder.正常;
-                #endregion
-
+                frmMain.Instance._logger.LogError("DecodePackage（SEP):" + exx.ToString());
             }
             return gpi;
         }

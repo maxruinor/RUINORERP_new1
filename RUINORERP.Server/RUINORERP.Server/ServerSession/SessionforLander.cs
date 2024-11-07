@@ -3,8 +3,9 @@ using System.Text;
 using System.Threading.Tasks;
 using log4net;
 using SuperSocket;
-using SuperSocket.Channel;
+using SuperSocket.Server.Abstractions.Session;
 using SuperSocket.Server;
+using SuperSocket.Connection;
 
 namespace RUINORERP.Server.ServerSession
 {

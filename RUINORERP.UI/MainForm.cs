@@ -314,6 +314,7 @@ namespace RUINORERP.UI
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
+
             InitRemind();
             //手动初始化 
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
@@ -435,14 +436,23 @@ namespace RUINORERP.UI
         private void RefreshData()
         {
             // 更新状态栏信息
+            //if (ecs.client.Socket == null)
+            //{
+            //    lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}";
+            //}
+            //else
+            //{
+            //    lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}，sessionID:{ecs.client.Socket.LocalEndPoint}";
+            //}
             if (ecs.client.Socket == null)
             {
-                lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}";
+                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort},Connected:{ecs.IsConnected}";
             }
             else
             {
-                lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}，sessionID:{ecs.client.Socket.LocalEndPoint}";
+                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort}，Connected:{ecs.IsConnected}，LocIP:{ecs.client.Socket.LocalEndPoint}";
             }
+            lblServerInfo.Text = lblServerStatus.ToolTipText;
             if (MessageList.Count > 0)
             {
                 IM.IMessage MessageInfo = MessageList.Dequeue();
@@ -852,7 +862,7 @@ namespace RUINORERP.UI
         }
 
 
-        private void Logout()
+        private async void Logout()
         {
             try
             {
@@ -860,12 +870,11 @@ namespace RUINORERP.UI
                 this.SystemOperatorState.Text = "登出";
                 AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
-                var result = MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
-                    .UpdateColumns(it => new { it.Lastlogout_at }).ExecuteCommand();
-                ClearData();
+                var result =await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
+                .UpdateColumns(it => new { it.Lastlogout_at }).ExecuteCommandAsync();
                 ClearUI();
-                Program.AppContextData.IsOnline = false;
-                ecs.LoginStatus = false;
+            
+                ClearData();
                 Application.DoEvents();
 
             }
@@ -1775,10 +1784,12 @@ namespace RUINORERP.UI
         /// </summary>
         private async void ClearData()
         {
+            Program.AppContextData.IsOnline = false;
+            ecs.LoginStatus = false;
             AppContext.CurUserInfo = null;
             AppContext.IsSuperUser = false;
             RUINORERP.Extensions.SqlsugarSetup.CheckEvent -= SqlsugarSetup_CheckEvent;
-           await ecs.Stop();
+            await ecs.Stop();
         }
 
         /// <summary>
@@ -2175,5 +2186,14 @@ namespace RUINORERP.UI
 
         }
 
+        private void lblServerStatus_DoubleClick(object sender, EventArgs e)
+        {
+            lblServerInfo.Visible = true;
+        }
+
+        private void lblServerStatus_Click(object sender, EventArgs e)
+        {
+            lblServerInfo.Visible = false;
+        }
     }
 }

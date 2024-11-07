@@ -330,55 +330,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                 return;
             }
 
-            //bindingSourceList.Current
-
-            //control.DataBindings.Add()
-            //control.CausesValidation = true;
-            //control.DataBindings.EndCurrentEdit();
-            //  this.Tag = bindingSourceList.Current;
-            /*
-            string ucTypeName = control.GetType().Name;
-            if (ucTypeName == "KryptonComboBox")
-            {
-                KryptonComboBox ktb = control as KryptonComboBox;
-                //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
-                if (bindingSourceList.Current != null)
-                {
-                    object obj = bindingSourceList.Current;
-                    //从缓存中重新加载 
-                    BindingSource NewBsList = new BindingSource();
-                    //将List<T>类型的结果是object的转换为指定类型的List
-                    //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
-                    // var rslist = CacheHelper.Manager.CacheEntityList.Get(typeof(T).Name);
-                    // var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
-                    if (bindingSourceList.DataSource != null)
-                    {
-                        NewBsList.DataSource = bindingSourceList.DataSource;
-                       // Common.DataBindingHelper.InitDataToCmb(NewBsList, ktb.ValueMember, ktb.DisplayMember,ktb );
-
-                        Binding binding = null;
-                        if (control.DataBindings.Count > 0)
-                        {
-                            binding = control.DataBindings[0]; //这个是下拉绑定的实体集合
-                                                               //string filedName = binding.BindingMemberInfo.BindingField;
-                        }
-                        else
-                        {
-                            // binding = new Binding();
-                        }
-                        string SelectField = binding.BindingMemberInfo.BindingField;
-                        ////因为选择中 实体数据并没有更新，下面两行是将对象对应的属性给一个选中的值。
-                        object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(obj, SelectField);
-
-                        RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, SelectField, selectValue);
-
-                        //实体更新后会反应的下拉选中状态
-                    }
-
-                }
-            }
-            */
-            //SelectedData()
             if (control != null)
             {
                 control.CausesValidation = true;

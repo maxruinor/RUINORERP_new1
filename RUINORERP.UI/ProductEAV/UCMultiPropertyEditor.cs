@@ -1525,7 +1525,7 @@ namespace RUINORERP.UI.ProductEAV
                 // 输出重复的值
                 foreach (var dup in duplicates)
                 {
-                    MainForm.Instance.ShowMsg("属性值重复:" + dup);
+                    MainForm.Instance.PrintInfoLog("属性值重复:" + dup);
                 }
                 MessageBox.Show("产品明细中，属性值重复,保存失败，请重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;

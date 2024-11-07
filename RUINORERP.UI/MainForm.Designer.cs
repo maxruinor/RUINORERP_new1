@@ -64,6 +64,7 @@ namespace RUINORERP.UI
             this.cmbRoles = new System.Windows.Forms.ToolStripComboBox();
             this.lblStatusGlobal = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lblServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripBtnUpdate = new System.Windows.Forms.ToolStripButton();
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
@@ -360,6 +361,7 @@ namespace RUINORERP.UI
             this.SystemOperatorState,
             this.toolStripddbtnSkin,
             this.toolStripDropDownBtnRoles,
+            this.lblServerStatus,
             this.lblStatusGlobal,
             this.lblServerInfo});
             this.statusStrip1.Location = new System.Drawing.Point(0, 627);
@@ -391,13 +393,13 @@ namespace RUINORERP.UI
             // toolStripMenuItem3
             // 
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(98, 22);
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem3.Text = "2010";
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(98, 22);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem1.Text = "2017";
             // 
             // toolStripDropDownBtnRoles
@@ -425,11 +427,26 @@ namespace RUINORERP.UI
             // 
             // lblServerInfo
             // 
+            this.lblServerInfo.Margin = new System.Windows.Forms.Padding(50, 3, 0, 2);
             this.lblServerInfo.Name = "lblServerInfo";
-            this.lblServerInfo.Padding = new System.Windows.Forms.Padding(380, 0, 0, 0);
-            this.lblServerInfo.Size = new System.Drawing.Size(399, 17);
+            this.lblServerInfo.Padding = new System.Windows.Forms.Padding(300, 0, 0, 0);
+            this.lblServerInfo.Size = new System.Drawing.Size(319, 17);
             this.lblServerInfo.Text = "....";
             this.lblServerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.lblServerInfo.Visible = false;
+            // 
+            // lblServerStatus
+            // 
+            this.lblServerStatus.AutoToolTip = true;
+            this.lblServerStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.lblServerStatus.DoubleClickEnabled = true;
+            this.lblServerStatus.Image = global::RUINORERP.UI.Properties.Resources.ServerStatus;
+            this.lblServerStatus.Margin = new System.Windows.Forms.Padding(100, 3, 0, 2);
+            this.lblServerStatus.Name = "lblServerStatus";
+            this.lblServerStatus.Size = new System.Drawing.Size(16, 17);
+            this.lblServerStatus.Text = "服务器状态";
+            this.lblServerStatus.Click += new System.EventHandler(this.lblServerStatus_Click);
+            this.lblServerStatus.DoubleClick += new System.EventHandler(this.lblServerStatus_DoubleClick);
             // 
             // toolStrip1
             // 
@@ -709,6 +726,7 @@ namespace RUINORERP.UI
         public System.Windows.Forms.ToolStripStatusLabel lblStatusGlobal;
         private System.Windows.Forms.Timer statusTimer;
         private System.Windows.Forms.ToolStripButton btntsbRefresh;
+        private System.Windows.Forms.ToolStripStatusLabel lblServerStatus;
         public System.Windows.Forms.ToolStripStatusLabel lblServerInfo;
     }
 }

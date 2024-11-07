@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using System.Net;
 using RUINORERP.Business;
 
+
 namespace RUINORERP.UI
 {
     public partial class FrmLogin : Krypton.Toolkit.KryptonForm
@@ -174,7 +175,14 @@ namespace RUINORERP.UI
                         {
                             if (ecs.ServerIp != txtServerIP.Text || ecs.Port.ToString() != txtPort.Text)
                             {
-                                await ecs.Stop();
+                                //IP都换了。要全部重新连接
+                                ecs.LoginStatus = false;
+                                Program.AppContextData.IsOnline = false;
+                                bool status = await ecs.Stop();
+                                if (status)
+                                {
+                                    MainForm.Instance.ShowMsg("服务器切换中，请稍后...");
+                                }
                             }
                         }
 

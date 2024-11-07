@@ -131,12 +131,28 @@ namespace RUINORERP.Business.CommService
                 //设置属性的值
                 if (Manager.CacheEntityList.Exists(tableName))
                 {
-                    List<T> list = Manager.CacheEntityList.Get(tableName) as List<T>;
-                    entity = list.Find(t => t.GetPropertyValue(key).ToString() == IdValue.ToString());
-                    if (entity != null)
+                    var cachelist = Manager.CacheEntityList.Get(tableName);
+                    // 获取原始 List<T> 的类型参数
+                    Type listType = cachelist.GetType();
+                    if (TypeHelper.IsGenericList(listType))
                     {
-                        return (T)entity;
+                        List<T> list = Manager.CacheEntityList.Get(tableName) as List<T>;
+                        entity = list.Find(t => t.GetPropertyValue(key).ToString() == IdValue.ToString());
+                        if (entity != null)
+                        {
+                            return (T)entity;
+                        }
                     }
+                    else if (TypeHelper.IsJArrayList(listType))
+                    {
+                        JArray varJarray = (JArray)cachelist;
+                        JToken olditem = varJarray.FirstOrDefault(n => n[pair.Key].ToString() == IdValue.ToString()); 
+                        if (olditem != null)
+                        {
+                            return olditem.ToObject<T>(); 
+                        }
+                    }
+
                 }
             }
             return (T)entity;
@@ -165,72 +181,47 @@ namespace RUINORERP.Business.CommService
 
                     // 获取原始 List<T> 的类型参数
                     Type listType = cachelist.GetType();
-                    Type elementType = listType.GetGenericArguments()[0];
 
-                    // 创建一个新的 List<object>
-                    List<object> convertedList = new List<object>();
-
-                    // 遍历原始列表并转换元素
-                    foreach (var item in (IEnumerable)cachelist)
+                    if (TypeHelper.IsGenericList(listType))
                     {
-                        //或直接在这里取。取到返回也可以
-                        convertedList.Add(item);
-                    }
+                        Type elementType = listType.GetGenericArguments()[0];
+                        // 创建一个新的 List<object>
+                        List<object> convertedList = new List<object>();
 
-                    entity = convertedList.Find(t => t.GetPropertyValue(key).ToString() == PrimaryKeyValue.ToString());
-                    if (entity != null)
-                    {
-                        return entity;
-                    }
-                }
-            }
-            return entity;
-        }
-
-
-        /// <summary>
-        /// 通过表和主键名去找，int为主键类型
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="expkey"></param>
-        /// <returns></returns>
-        public object GetValue<T>(object IdValue)
-        {
-            object entity = new object();
-            //Lazy<>
-            if (IdValue == null)
-            {
-                return default(T);
-            }
-            string tableName = typeof(T).Name;
-
-            //  (T)Convert.ChangeType(value, typeof(T))
-
-
-            //只处理需要缓存的表
-            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (Manager.NewTableList.TryGetValue(tableName, out pair))
-            {
-                string key = pair.Key;
-                string KeyValue = IdValue.ToString();
-                //设置属性的值
-                if (Manager.CacheEntityList.Exists(tableName))
-                {
-                    List<T> list = Manager.CacheEntityList.Get(tableName) as List<T>;
-                    if (list != null)
-                    {
-                        var obj = list.Find(t => t.GetPropertyValue(key).ToString() == IdValue.ToString());
-                        if (obj != null)
+                        // 遍历原始列表并转换元素
+                        foreach (var item in (IEnumerable)cachelist)
                         {
-                            entity = obj.GetPropertyValue(pair.Value);
+                            //或直接在这里取。取到返回也可以
+                            convertedList.Add(item);
                         }
+                        entity = convertedList.FirstOrDefault(t => t.GetPropertyValue(key).ToString() == PrimaryKeyValue.ToString());
+                        if (entity != null)
+                        {
+                            return entity;
+                        }
+
                     }
+                    else if (TypeHelper.IsJArrayList(listType))
+                    {
+                        #region  jsonlist
+                        JArray varJarray = (JArray)cachelist;
+                        //如果旧列表中有这个值，则直接删除，把新的添加上
+                        var olditem = varJarray.FirstOrDefault(n => n[pair.Key].ToString() == PrimaryKeyValue.ToString());
+                        Type type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                        if (olditem != null)
+                        {
+                            return olditem.ToObject(type);
+                        }
+                        #endregion
+                    }
+
 
                 }
             }
             return entity;
         }
 
+ 
 
 
 
@@ -367,16 +358,6 @@ namespace RUINORERP.Business.CommService
 
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="expkey"></param>
-        /// <returns></returns>
-        public void DeleteEntity<T>(T value)
-        {
-            Manager.DeleteEntityList<T>(value);
-        }
 
         /// <summary>
         /// 保存，并且初始化值
@@ -414,7 +395,7 @@ namespace RUINORERP.Business.CommService
                         }
                         else
                         {
-                             Manager.AddCacheEntityList<T>(tableName,list);
+                            Manager.AddCacheEntityList<T>(tableName, list);
                         }
                     }
                 }

@@ -25,6 +25,9 @@ using SuperSocket;
 using SuperSocket.Command;
 using SuperSocket.ProtoBase;
 using SuperSocket.Server;
+using SuperSocket.Server.Abstractions;
+using SuperSocket.Server.Abstractions.Session;
+using SuperSocket.Server.Host;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -323,9 +326,9 @@ namespace RUINORERP.Server
                             //}
                             PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session {session.RemoteEndPoint} closed: {reason}");
                             sessionListBiz.Remove(sg.SessionID, out sg);
-
                             if (sg != null)
                             {
+                                PrintMsg(sg.User.用户名 + "断开连接");
                                 frmusermange.userInfos.Remove(sg.User);
                             }
 
@@ -351,7 +354,7 @@ namespace RUINORERP.Server
                                 commandOptions.AddCommand<XTCommand>();
                             });
                     })
-
+                
                 .ConfigureLogging((hostingContext, logging) =>
                 {
                     logging.ClearProviders(); //去掉默认添加的日志提供程序
@@ -374,7 +377,7 @@ namespace RUINORERP.Server
                         //引用的long4net.dll要版本一样。
                         string conn = AppSettings.GetValue("ConnectString");
                         logging.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", conn, Program.AppContextData));
-                        logging.AddLog4Net();
+                        //logging.AddLog4Net(Log4NetProviderByCustomeDb);
                     }
                 })//.UseLog4Net()
 
@@ -459,7 +462,7 @@ namespace RUINORERP.Server
                 {
                     try
                     {
-                        await session.CloseAsync(SuperSocket.Channel.CloseReason.ServerShutdown);
+                        await session.CloseAsync(SuperSocket.Connection.CloseReason.ServerShutdown);
                     }
                     catch (Exception ex)
                     {

@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using SuperSocket;
 using RUINORERP.Server.ServerSession;
 using TransInstruction;
+using System.Threading;
+using SuperSocket.Server.Abstractions.Session;
 
 
 namespace RUINORERP.Server.Commands
@@ -19,7 +21,7 @@ namespace RUINORERP.Server.Commands
     [AsyncKeyUpperCommandFilter]
     public class loginCommand : IAsyncCommand<LanderPackageInfo>
     {
-        public async ValueTask ExecuteAsync(IAppSession session, LanderPackageInfo package)
+        public async ValueTask ExecuteAsync(IAppSession session, LanderPackageInfo package, CancellationToken cancellationToken)
         {
             //  "login|gm|123123";
             await Task.Delay(0);

@@ -58,12 +58,10 @@ namespace RUINORERP.UI.SysConfig
             listBoxTableList.Items.Clear();
 
             List<string> list = new List<string>();
-
             foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
             {
                 list.Add(tableName);
             }
-
             list.Sort();
             foreach (var tableName in list)
             {

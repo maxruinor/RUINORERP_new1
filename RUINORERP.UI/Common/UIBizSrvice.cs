@@ -127,9 +127,13 @@ namespace RUINORERP.UI.Common
             {
                 foreach (var item in kvlist)
                 {
-                    OriginalData odforCache = ActionForClient.请求发送缓存(item.Value);
-                    byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
-                    MainForm.Instance.ecs.client.Send(buffer);
+                    var rslist = BizCacheHelper.Manager.CacheEntityList.Get(item.Value);
+                    if (rslist == null)
+                    {
+                        OriginalData odforCache = ActionForClient.请求发送缓存(item.Value);
+                        byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
+                        MainForm.Instance.ecs.client.Send(buffer);
+                    }
                 }
             }
 

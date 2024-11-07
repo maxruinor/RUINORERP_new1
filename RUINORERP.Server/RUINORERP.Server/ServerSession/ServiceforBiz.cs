@@ -5,8 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using SuperSocket;
-using SuperSocket.Channel;
+using SuperSocket.Connection;
 using SuperSocket.Server;
+using SuperSocket.Server.Abstractions;
+using SuperSocket.Server.Abstractions.Session;
 
 namespace RUINORERP.Server.ServerSession
 {

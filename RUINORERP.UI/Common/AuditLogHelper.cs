@@ -42,7 +42,7 @@ namespace RUINORERP.UI.Common
         {
             m_instance = new AuditLogHelper();
         }
-        public void CreateAuditLog<T>(string action, T entity, string description) where T : class
+        public async void CreateAuditLog<T>(string action, T entity, string description) where T : class
         {
 
             //将操作记录保存到数据库中
@@ -77,7 +77,7 @@ namespace RUINORERP.UI.Common
             auditLog.ActionTime = DateTime.Now;
             try
             {
-                MainForm.Instance.AppContext.Db.Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
+                await MainForm.Instance.AppContext.Db.CopyNew().Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
             }
             catch (Exception ex)
             {
@@ -91,7 +91,7 @@ namespace RUINORERP.UI.Common
             CreateAuditLog<T>(action, entity, "");
         }
         //创建一个审计功能的方法，将单据的操作记录下来
-        public void CreateAuditLog(string action, string description)
+        public async void CreateAuditLog(string action, string description)
         {
 
             //将操作记录保存到数据库中
@@ -100,7 +100,7 @@ namespace RUINORERP.UI.Common
             //var BizType = mapper.GetBizType(typeof(T).Name);
 
             BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
-            // CommBillData cbd = bcf.GetBillData<T>(entity);
+
             //将操作记录保存到数据库中
             tb_AuditLogs auditLog = new tb_AuditLogs();
             if (MainForm.Instance.AppContext.CurUserInfo == null)
@@ -112,11 +112,6 @@ namespace RUINORERP.UI.Common
             auditLog.ActionType = action;
             auditLog.ObjectType = -1;// (int)BizType;
 
-            //string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            //long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-            //auditLog.ObjectId = pkid;
-            // auditLog.ObjectId = cbd.BillID;
-            // auditLog.ObjectNo = cbd.BillNo;
             if (description.IsNotEmptyOrNull())
             {
                 auditLog.Notes = description;
@@ -124,13 +119,12 @@ namespace RUINORERP.UI.Common
             auditLog.ActionTime = DateTime.Now;
             try
             {
-                MainForm.Instance.AppContext.Db.CopyNew().Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
+              await  MainForm.Instance.AppContext.Db.CopyNew().Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
             }
             catch (Exception ex)
             {
                 MainForm.Instance.uclog.AddLog($"审计日志{GetAuditLogProperties(auditLog)}记录失败:{ex.Message}", Global.UILogType.错误);
             }
-
 
         }
 

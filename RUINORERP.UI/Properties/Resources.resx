@@ -217,8 +217,8 @@
   <data name="WF_Information" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.Information.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="help2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ResourceFile\help2.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="refresh1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ResourceFile\refresh.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="WF_Edit_RedoHS" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.Edit_RedoHS.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -246,6 +246,9 @@
   </data>
   <data name="Exit1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\Exit.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="edit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ResourceFile\edit.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Help0" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\Help0.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -280,8 +283,8 @@
   <data name="home1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\home.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="WF_DrawEllipse" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\WorkFlowDesigner\Resources\WF.DrawEllipse.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="WF_ClassShape" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\WorkFlowDesigner\Resources\WF.ClassShape.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="export_48x48" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\export_48x48.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -294,6 +297,12 @@
   </data>
   <data name="WF_PrintPreviewHS" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.PrintPreviewHS.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="skin" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ToolForm\skin.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="money1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ResourceFile\money.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="search_48x48" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\search_48x48.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -309,6 +318,9 @@
   </data>
   <data name="help1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\help1.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="WF_Data_Schema" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\WorkFlowDesigner\Resources\WF.Data_Schema.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="WF_DrawRectangle" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.DrawRectangle.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -358,14 +370,14 @@
   <data name="file_apply" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\file_apply.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="_1616_favorites_" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\1616_favorites_.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="import_48x48" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\import_48x48.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="import_48x481" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\import_48x48.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="download" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ResourceFile\download.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="WF_ShowGridlines2HS" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.ShowGridlines2HS.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -424,17 +436,11 @@
   <data name="delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\delete.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="WF_DiagramIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\WorkFlowDesigner\Resources\WF.DiagramIcon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="WF_AlignTableCellMiddleLeftJust" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.AlignTableCellMiddleLeftJust.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="export_48x481" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\export_48x48.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="refresh1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ResourceFile\refresh.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="delete_48x48" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\delete_48x48.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -478,9 +484,6 @@
   <data name="ok" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\ok.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="WF_Ungroup" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\WorkFlowDesigner\Resources\WF.Ungroup.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="exit_y" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\exit_y.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -496,11 +499,11 @@
   <data name="WF_saveHS" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.saveHS.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="info" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ResourceFile\info.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="WF_ThumbnailView" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.ThumbnailView.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="WF_ClassShape" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\WorkFlowDesigner\Resources\WF.ClassShape.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="WF_plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.plus.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -523,9 +526,6 @@
   <data name="WF_PropertiesHS" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.PropertiesHS.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="bg" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ResourceFile\bg.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="WF_LayoutShapes" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.LayoutShapes.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -541,8 +541,8 @@
   <data name="WF_down" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.down.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="WF_Data_Schema" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\WorkFlowDesigner\Resources\WF.Data_Schema.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="WF_DiagramIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\WorkFlowDesigner\Resources\WF.DiagramIcon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="help5" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\help.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -562,8 +562,8 @@
   <data name="undo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\undo.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="skin" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ToolForm\skin.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="help2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ResourceFile\help2.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="check" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\check.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -571,8 +571,8 @@
   <data name="WF_Group" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.Group.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="edit" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ResourceFile\edit.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="bg" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ResourceFile\bg.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="users" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\users.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -580,8 +580,11 @@
   <data name="WF_Drawing" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\WorkFlowDesigner\Resources\WF.Drawing.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="download" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ResourceFile\download.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="WF_DrawEllipse" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\WorkFlowDesigner\Resources\WF.DrawEllipse.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="_1616_favorites_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\1616_favorites_.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="help3" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\help3.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -592,13 +595,13 @@
   <data name="check_grey" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\check_grey.gif;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="money1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ResourceFile\money.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="WF_Ungroup" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\WorkFlowDesigner\Resources\WF.Ungroup.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="user blue" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\ResourceFile\user blue.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="info" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\ResourceFile\info.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="ServerStatus" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\ResourceFile\ServerStatus.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

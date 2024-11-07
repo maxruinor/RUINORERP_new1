@@ -20,7 +20,15 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 var tx = new ByteBuff(100);
                 tx.PushString(System.DateTime.Now.ToString());
-                tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
+                if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee == null)
+                {
+                    tx.PushString(string.Empty);
+                }
+                else
+                {
+                    tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
+                }
+
                 tx.PushString(MainForm.Instance.AppContext.log.MachineName);
                 tx.PushString(HLH.Lib.Net.IpAddressHelper.GetLocIP());
                 tx.PushString(message);
@@ -33,7 +41,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 {
                     MainForm.Instance.ecs.AddSendData(gd);
                 }
-                
+
             }
             catch (Exception)
             {
@@ -60,7 +68,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 //如果自己是超级管理员就不发送
                 //if (!MainForm.Instance.AppContext.IsSuperUser)
                 //{
-                   MainForm.Instance.ecs.AddSendData(gd);
+                MainForm.Instance.ecs.AddSendData(gd);
                 //}
 
             }

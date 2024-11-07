@@ -12,6 +12,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -31,10 +32,40 @@ namespace RUINORERP.Server
             LoadCacheToUI();
         }
 
+        /// <summary>
+        /// 所有实体表都在这个命名空间下，不需要每次都反射
+        /// </summary>
+        //Assembly assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
         private void listBoxTableList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(listBoxTableList.SelectedItem.ToString());
-            dataGridView1.DataSource = CacheList;
+
+            if (listBoxTableList.SelectedItem is SuperValue kv)
+            {
+                string tableName = kv.superDataTypeName;
+                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                if (CacheList == null)
+                {
+                    dataGridView1.DataSource = null;
+                    return;
+                }
+                // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
+
+                // 使用 GetType 方法获取 PrintHelper<T> 的类型
+                //Type type = assembly.GetType("RUINORERP.Model." + tableName);
+                //dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(type);
+                dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                //dataGridView1.XmlFileName = "UCCacheManage" + tableName;
+                dataGridView1.DataSource = null;
+                dataGridView1.DataSource = CacheList;
+            }
+            else
+            {
+                dataGridView1.DataSource = null;
+                return;
+            }
+
+            //var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(listBoxTableList.SelectedItem.ToString());
+            //dataGridView1.DataSource = CacheList;
 
         }
 
@@ -71,7 +102,22 @@ namespace RUINORERP.Server
             tableList.Sort();
             foreach (var tableName in tableList)
             {
-                listBoxTableList.Items.Add(tableName);
+                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                if (CacheList == null)
+                {
+                    SuperValue kv = new SuperValue(tableName + "[" + 0 + "]", tableName);
+                    listBoxTableList.Items.Add(kv);
+                }
+                else
+                {
+                    var lastlist = ((IEnumerable<dynamic>)CacheList).ToList();
+                    if (lastlist != null)
+                    {
+                        SuperValue kv = new SuperValue(tableName + "[" + lastlist.Count + "]", tableName);
+                        listBoxTableList.Items.Add(kv);
+                    }
+
+                }
             }
         }
 
@@ -84,9 +130,9 @@ namespace RUINORERP.Server
         {
             if (cmbUser.SelectedItem != null)
             {
-                if (listBoxTableList.SelectedItem != null)
+                if (listBoxTableList.SelectedItem is SuperValue kv)
                 {
-                    string tableName = listBoxTableList.SelectedItem.ToString();
+                    string tableName = kv.superDataTypeName;
 
                     SuperValue skv = cmbUser.SelectedItem as SuperValue;
 
@@ -106,11 +152,12 @@ namespace RUINORERP.Server
 
             if (listBoxTableList.SelectedItem != null)
             {
-                string tableName = listBoxTableList.SelectedItem.ToString();
-                BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                if (listBoxTableList.SelectedItem is SuperValue kv)
+                {
+                    string tableName = kv.superDataTypeName;
+                    BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                }
             }
-
-
         }
 
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)

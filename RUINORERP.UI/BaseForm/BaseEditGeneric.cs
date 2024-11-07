@@ -21,6 +21,11 @@ using System.Text.RegularExpressions;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.UI.Common;
 using RUINORERP.Business.CommService;
+using RUINORERP.Common.Helper;
+using FastReport.Table;
+using Newtonsoft.Json.Linq;
+using System.Web.UI;
+using Control = System.Windows.Forms.Control;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -225,23 +230,34 @@ namespace RUINORERP.UI.BaseForm
                         BindingSource NewBsList = new BindingSource();
                         //将List<T>类型的结果是object的转换为指定类型的List
                         //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
-                        var rslist = BizCacheHelper.Manager.CacheEntityList.Get(fktableName);
-                        var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
-                        if (lastlist != null)
+                        var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(fktableName);
+                        if (cachelist != null)
                         {
-                            NewBsList.DataSource = lastlist;
-                            //Common.DataBindingHelper.BindData4Cmb(NewBsList, bs.DataSource, ktb.ValueMember, ktb.DisplayMember, ktb);
+                            // 获取原始 List<T> 的类型参数
+                            Type listType = cachelist.GetType();
+                            if (TypeHelper.IsGenericList(listType))
+                            {
+                                #region  强类型时
+                                NewBsList.DataSource = ((IEnumerable<dynamic>)cachelist);
+                                #endregion
+                            }
+                            else if (TypeHelper.IsJArrayList(listType))
+                            {
+                                Type elementType =  Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
+                                List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
+
+                                #region  jsonlist
+                                NewBsList.DataSource = myList;
+                                #endregion
+
+                            }
                             Common.DataBindingHelper.InitDataToCmb(NewBsList, ktb.ValueMember, ktb.DisplayMember, ktb);
-
-
                             ////因为选择中 实体数据并没有更新，下面两行是将对象对应的属性给一个选中的值。
                             object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(obj, ktb.ValueMember);
-
                             Binding binding = null;
                             if (ktb.DataBindings.Count > 0)
                             {
                                 binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
-                                //string filedName = binding.BindingMemberInfo.BindingField;
                             }
                             else
                             {
@@ -249,8 +265,6 @@ namespace RUINORERP.UI.BaseForm
                             }
 
                             RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ktb.ValueMember, selectValue);
-
-                            //实体更新后会反应的下拉选中状态
                         }
 
                     }

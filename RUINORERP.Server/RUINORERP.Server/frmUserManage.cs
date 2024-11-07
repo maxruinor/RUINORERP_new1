@@ -4,6 +4,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.ServerSession;
 using RUINORERP.Server.ToolsUI;
+using SuperSocket.Server.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -105,7 +106,7 @@ namespace RUINORERP.Server
 
                         break;
                     default:
-                       // return;
+                        // return;
                         break;
                         // 可以根据需要处理其他事件类型
                 }
@@ -206,7 +207,7 @@ namespace RUINORERP.Server
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
                     {
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SuperSocket.SessionState.Closed)
+                        if (SB.State == SessionState.Closed)
                         {
                             SessionforBiz biz = new SessionforBiz();
                             frmMain.Instance.sessionListBiz.TryRemove(SB.SessionID, out biz);
@@ -217,9 +218,9 @@ namespace RUINORERP.Server
                             }
 
                         }
-                        if (SB.State == SuperSocket.SessionState.Connected)
+                        if (SB.State == SessionState.Connected)
                         {
-                            await SB.CloseAsync(SuperSocket.Channel.CloseReason.RemoteClosing);
+                            await SB.CloseAsync(SuperSocket.Connection.CloseReason.RemoteClosing);
                             SessionforBiz biz = new SessionforBiz();
                             frmMain.Instance.sessionListBiz.TryRemove(SB.SessionID, out biz);
                             if (biz != null)
@@ -239,7 +240,7 @@ namespace RUINORERP.Server
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
                     {
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SuperSocket.SessionState.Connected)
+                        if (SB.State == SessionState.Connected)
                         {
                             UserService.强制用户退出(SB);
                         }
@@ -254,7 +255,7 @@ namespace RUINORERP.Server
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
                     {
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SuperSocket.SessionState.Connected)
+                        if (SB.State == SessionState.Connected)
                         {
                             UserService.删除列配置文件(SB);
                         }
@@ -272,7 +273,7 @@ namespace RUINORERP.Server
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
                     {
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SuperSocket.SessionState.Connected)
+                        if (SB.State == SessionState.Connected)
                         {
                             frmMessager frm = new frmMessager();
                             if (frm.ShowDialog() == DialogResult.OK)
@@ -293,7 +294,7 @@ namespace RUINORERP.Server
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
                     {
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SuperSocket.SessionState.Connected)
+                        if (SB.State == SessionState.Connected)
                         {
                             UserService.推送版本更新(SB);
                         }
@@ -310,7 +311,7 @@ namespace RUINORERP.Server
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
                     {
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SuperSocket.SessionState.Connected)
+                        if (SB.State == SessionState.Connected)
                         {
                             foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
                             {
@@ -330,7 +331,7 @@ namespace RUINORERP.Server
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
                     {
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SuperSocket.SessionState.Connected)
+                        if (SB.State == SessionState.Connected)
                         {
                             UserService.强制用户关机(SB);
                         }

@@ -8,10 +8,11 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.Commands;
 using SuperSocket;
-using SuperSocket.Channel;
+using SuperSocket.Server.Abstractions.Session;
 using SuperSocket.Server;
 using TransInstruction;
 using TransInstruction.DataPortal;
+using SuperSocket.Connection;
 
 
 namespace RUINORERP.Server.ServerSession

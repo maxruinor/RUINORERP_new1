@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using SuperSocket;
 using RUINORERP.Server.ServerSession;
+using System.Threading;
+using SuperSocket.Server.Abstractions.Session;
 
 namespace RUINORERP.Server.Commands
 {
@@ -17,7 +19,7 @@ namespace RUINORERP.Server.Commands
     [AsyncKeyUpperCommandFilter]
     public class getmsgCommand : IAsyncCommand<LanderPackageInfo>
     {
-        public async ValueTask ExecuteAsync(IAppSession session, LanderPackageInfo package)
+        public async ValueTask ExecuteAsync(IAppSession session, LanderPackageInfo package, CancellationToken cancellationToken)
         {
             
             await Task.Delay(0);

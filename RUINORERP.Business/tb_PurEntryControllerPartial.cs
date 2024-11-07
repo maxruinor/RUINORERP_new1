@@ -151,15 +151,16 @@ namespace RUINORERP.Business
                     #endregion
 
                     #region 更新采购价格
+                    //注意这里的人是指采购订单录入的人。不是采购入库的人。
                     tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
                     tb_PriceRecord priceRecord = _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
-                    .Where(c => c.Employee_ID == entity.Employee_ID.Value && c.ProdDetailID == child.ProdDetailID).First();
+                    .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID && c.ProdDetailID == child.ProdDetailID).First();
                     //如果存在则更新，否则插入
                     if (priceRecord == null)
                     {
                         priceRecord = new tb_PriceRecord();
                     }
-                    priceRecord.Employee_ID = entity.Employee_ID.Value;
+                    priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
                     if (child.TransactionPrice != priceRecord.PurPrice)
                     {
                         priceRecord.PurPrice = child.TransactionPrice;

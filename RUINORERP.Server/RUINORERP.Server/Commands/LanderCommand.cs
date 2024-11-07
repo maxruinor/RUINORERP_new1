@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Buffers;
+using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.Server.ServerSession;
 using SuperSocket;
 using SuperSocket.Command;
+using SuperSocket.Server.Abstractions.Session;
 
 namespace RUINORERP.Server.Commands
 {
@@ -13,7 +15,7 @@ namespace RUINORERP.Server.Commands
     [Command(Key = unchecked((short) (0xFF * 256 + 0xFE)))]
     public class LanderCommand : IAsyncCommand<BizPackageInfo>
     {
-        public async ValueTask ExecuteAsync(IAppSession session, BizPackageInfo package)
+        public async ValueTask ExecuteAsync(IAppSession session, BizPackageInfo package, CancellationToken cancellationToken)
         {
             await Task.Delay(0);
             HandleData(session, package.Body);

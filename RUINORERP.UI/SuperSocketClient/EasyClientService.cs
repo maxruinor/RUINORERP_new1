@@ -20,6 +20,7 @@ using System.Diagnostics;
 using SourceLibrary.Security;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using RUINORERP.Model.CommonModel;
+using System.Drawing;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -99,6 +100,7 @@ namespace RUINORERP.UI.SuperSocketClient
         {
             _stopThreadEvent = new AutoResetEvent(false);
             client = new EasyClient<BizPackageInfo>();
+          
             client.Initialize(new BizPipelineFilter());
             client.Connected += OnClientConnected;
             client.NewPackageReceived += OnPackageReceived;
@@ -408,6 +410,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
         private async void OnClientClosed(object sender, EventArgs e)
         {
+             
             // 设置连接状态为断开
             IsConnected = false;
 
@@ -416,7 +419,7 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 OnConnectClosed(IsConnected);
             }
-
+           
             //// 清空用户信息列表
             //lock (userInfos)
             //{

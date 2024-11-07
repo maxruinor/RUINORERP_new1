@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RUINORERP.Business.CommService;
 using Microsoft.Extensions.Logging;
 using SuperSocket.Server.Abstractions.Session;
+using System.Diagnostics;
 
 namespace RUINORERP.Server.Commands
 {
@@ -141,18 +142,19 @@ namespace RUINORERP.Server.Commands
                             {
                                 frmMain.Instance.PrintMsg("请求缓存表：" + RequestTableName);
                             }
+                            Stopwatch stopwatchSender = Stopwatch.StartNew();
+                            stopwatchSender.Start();
                             //如果指定了表名，则只发送指定表的数据，否则全部发送
                             if (!string.IsNullOrEmpty(RequestTableName) && BizCacheHelper.Manager.NewTableList.Keys.Contains(RequestTableName))
                             {
                                 UserService.发送缓存数据列表(Player, RequestTableName);
                             }
-                            else
+                            stopwatchSender.Stop();
+                            if (frmMain.Instance.IsDebug)
                             {
-                                foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
-                                {
-                                    UserService.发送缓存数据列表(Player, tableName);
-                                }
+                                frmMain.Instance.PrintInfoLog($"发送缓存数据{RequestTableName} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
                             }
+
                             break;
                         case ClientCmdEnum.更新缓存:
                             UserService.接收更新缓存指令(Player, gd);

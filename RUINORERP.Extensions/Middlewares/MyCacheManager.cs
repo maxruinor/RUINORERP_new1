@@ -362,14 +362,22 @@ namespace RUINORERP.Extensions.Middlewares
                         Type elementType = TypeHelper.GetFirstArgumentType(listType);
                         #region  强类型
                         List<object> myList = TypeHelper.ConvertJArrayToList(elementType, newJarryList);
-                        CacheEntityList.Update(tableName, k => myList);
+                        // 合并列表并排除重复项
+                        var combinedList = CombineLists(elementType, (List<object>)cachelist, myList, pair.Key);
+                        CacheEntityList.Update(tableName, k => combinedList);
+                         
                         #endregion
                     }
                     else if (TypeHelper.IsJArrayList(listType))
                     {
                         #region  jsonlist
-                        JArray oldlist = (JArray)newJarryList;
-                        CacheEntityList.Update(tableName, k => oldlist);
+                        //JArray oldlist = (JArray)newJarryList;
+                        //CacheEntityList.Update(tableName, k => oldlist);
+                        JArray oldlist = (JArray)cachelist;
+                        // 合并JArray并排除重复项
+                        var combinedList = CombineJArrays(oldlist, newJarryList, pair.Key);
+                        CacheEntityList.Update(tableName, k => combinedList);
+
                         #endregion
                     }
                 }
@@ -384,6 +392,30 @@ namespace RUINORERP.Extensions.Middlewares
                 AddCacheEntityList(tableName, newJarryList);
             }
         }
+
+
+        private List<object> CombineLists(Type elementType, List<object> cacheList, List<object> newList, string key)
+        {
+            var combinedList = cacheList
+                .Concat(newList)
+                .GroupBy(item => item.GetPropertyValue(key))
+                .Select(group => group.First())
+                .ToList();
+
+            return combinedList;
+        }
+
+        private JArray CombineJArrays(JArray cacheArray, JArray newArray, string key)
+        {
+            var combinedArray = cacheArray
+                .Concat(newArray)
+                .GroupBy(token => token[key])
+                .Select(group => group.First())
+                .ToArray();
+
+            return new JArray(combinedArray);
+        }
+
         /*
 
         /// <summary>

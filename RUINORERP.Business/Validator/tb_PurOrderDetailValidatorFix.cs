@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 17:24:06
+// 时间：09/13/2024 18:44:23
 // **************************************
 using System;
 using SqlSugar;
@@ -19,18 +19,24 @@ using FluentValidation;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 箱规表验证类
+    /// 采购订单明细表验证类
     /// </summary>
-    public partial class tb_SaleOrderDetailValidator : BaseValidatorGeneric<tb_SaleOrderDetail>
+    /*public partial class tb_PurOrderDetailValidator:AbstractValidator<tb_PurOrderDetail>*/
+    public partial class tb_PurOrderDetailValidator : BaseValidatorGeneric<tb_PurOrderDetail>
     {
+
         public override void Initialize()
         {
             // 这里添加额外的初始化代码
             RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("明细中，数量：要大于零。");
             RuleFor(x => x.Discount).GreaterThan(0).WithMessage("明细中，折扣：要大于零。");
-            RuleFor(x => x.UnitPrice).GreaterThan(0).When(c => c.Gift == false).WithMessage("明细中，单价：非赠品时要大于零。");
-            RuleFor(x => x.TransactionPrice).GreaterThan(0).When(c => c.Gift == false).WithMessage("明细中，成交价：非赠品时要大于零。");
+            RuleFor(x => x.UnitPrice).GreaterThan(0).When(c => c.IsGift == false).WithMessage("明细中，单价：非赠品时要大于零。");
+            RuleFor(x => x.TransactionPrice).GreaterThan(0).When(c => c.IsGift == false).WithMessage("明细中，单价：非赠品时要大于零。");
         }
     }
+
+
 }
+
+
 

@@ -143,7 +143,7 @@ namespace TransInstruction
                 bool success = false;
                 string 角色名 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 string 种族 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                byte sex = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                byte sex = ByteDataAnalysis.GetByte(gd.Two, ref index);
                 string 职业 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 //5*6 5个1位为1，5个0 25位全为0   00000 10000  100000  100000  100000  100000  
                 index += 30;//by by watson tx.PushString(f获取行会名称());
@@ -152,9 +152,9 @@ namespace TransInstruction
                 index += 5;
                 string HunterSuit = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
                 int t1 = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                byte b2 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
-                byte b3 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
-                byte b4 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                byte b2 = ByteDataAnalysis.GetByte(gd.Two, ref index);
+                byte b3 = ByteDataAnalysis.GetByte(gd.Two, ref index);
+                byte b4 = ByteDataAnalysis.GetByte(gd.Two, ref index);
 
                 string 所属地 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
                 //0000
@@ -197,7 +197,7 @@ namespace TransInstruction
                 List<string> W物品List = new List<string>();
                 for (int i = 0; i < 32; i++)  //身上有29个可以放东西的位置 ？
                 {
-                    byte 是否穿戴物品 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                    byte 是否穿戴物品 = ByteDataAnalysis.GetByte(gd.Two, ref index);
                     if (是否穿戴物品 == 0)
                     {
                         continue;
@@ -207,7 +207,7 @@ namespace TransInstruction
                         //有物品 f详细信息
                         string 物品外观2D = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
                         int 物品等级 = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                        byte 物品颜色 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                        byte 物品颜色 = ByteDataAnalysis.GetByte(gd.Two, ref index);
                         string 物品外观3D = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
                         string v英文名称 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
                         //var 合成名称 = V中文名称.Split('\n')[0]; //为了频道 看方法 f详细信息
@@ -228,18 +228,18 @@ namespace TransInstruction
                         // float v总耐久 = BitConverter.ToSingle(vi总耐久);
                         int vi当前耐久 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                         // float v当前耐久 = BitConverter.ToSingle(vi当前耐久);
-                        byte 物品信息v数量 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                        byte 物品信息v数量 = ByteDataAnalysis.GetByte(gd.Two, ref index);
                         if (物品信息v数量 == 1)
                         {
-                            byte ww数量 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                            byte ww数量 = ByteDataAnalysis.GetByte(gd.Two, ref index);
                         }
                         Int64 出售价格 = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                         Int64 维修价格 = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                         int V限时道具 = ByteDataAnalysis.GetInt(gd.Two, ref index);//可能是一个到期时间Unix
-                        byte 镶金边 = ByteDataAnalysis.Getbyte(gd.Two, ref index); //tx.PushByte(t); //镶金边  0x01 镶金边 0x02不可交易
+                        byte 镶金边 = ByteDataAnalysis.GetByte(gd.Two, ref index); //tx.PushByte(t); //镶金边  0x01 镶金边 0x02不可交易
                         int v集中力 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                         int v分散力 = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                        byte v封包格式 = ByteDataAnalysis.Getbyte(gd.Two, ref index); //f输出封包
+                        byte v封包格式 = ByteDataAnalysis.GetByte(gd.Two, ref index); //f输出封包
                         if (v封包格式 == 4)
                         {
                             //太复杂了
@@ -252,7 +252,7 @@ namespace TransInstruction
 
 
                 string s6 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
-                byte b22 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                byte b22 = ByteDataAnalysis.GetByte(gd.Two, ref index);
                 int st7 = ByteDataAnalysis.GetInt(gd.Two, ref index);
                 string s7 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
                 string s8 = ByteDataAnalysis.GetString(gd.Two, out UnparsedData, ref index);
@@ -309,7 +309,7 @@ namespace TransInstruction
                     {
                         break;
                     }
-                    int strLen = ByteDataAnalysis.Getint(buffer, out UnparsedData, ref indexFalg);
+                    int strLen = ByteDataAnalysis.GetInt(buffer, out UnparsedData, ref indexFalg);
                     //如果得到一个首位数字，但是不可能大于总长度-4
                     if (strLen > gd.Two.Length - 4)
                     {
@@ -418,7 +418,7 @@ namespace TransInstruction
                     {
                         break;
                     }
-                    int strLen = ByteDataAnalysis.Getint(buffer, out UnparsedData, ref indexFalg);
+                    int strLen = ByteDataAnalysis.GetInt(buffer, out UnparsedData, ref indexFalg);
                     //如果得到一个首位数字，但是不可能大于总长度-4
                     if (strLen > gd.Two.Length - 4)
                     {
@@ -560,7 +560,7 @@ namespace TransInstruction
             int _gameZz = Ue4Z / 100 + 26009;
             rslist.Add(Ue4Zz + "像Z(" + _gameZz + ")");
 
-            byte Bb = ByteDataAnalysis.Getbyte(data.Two, ref index);
+            byte Bb = ByteDataAnalysis.GetByte(data.Two, ref index);
 
 
 
@@ -937,7 +937,8 @@ namespace TransInstruction
                 msg = new byte[msglen];
                 //msg.Length-1减1是去掉结束符
                 msg = source.Skip(passlen + 4).Take(msg.Length - 1).ToArray();
-                rs += System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
+                //rs += System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
+                rs += System.Text.Encoding.UTF8.GetString(msg);
 
 
 
@@ -960,7 +961,7 @@ namespace TransInstruction
             {
                 int index = 0;
                 int cmd = ByteDataAnalysis.GetInt16(buffer, ref index);
-                byte counterForRole = ByteDataAnalysis.Getbyte(buffer, ref index);
+                byte counterForRole = ByteDataAnalysis.GetByte(buffer, ref index);
                 for (int i = 0; i < (int)counterForRole; i++)
                 {
                     string roleName = ByteDataAnalysis.GetString(buffer, ref index);
@@ -1114,7 +1115,7 @@ namespace TransInstruction
                 int index = 0;
                 Int16 cmd = ByteDataAnalysis.GetInt16(source, ref index);
 
-                int mtype = ByteDataAnalysis.Getbyte(source, ref index);
+                int mtype = ByteDataAnalysis.GetByte(source, ref index);
                 MessageType mt = new MessageType();
                 mt = (MessageType)mtype;
                 //1是说话，2，是呼喊  3是黄色警告，150 是提示右下角灰色文字
@@ -1160,12 +1161,12 @@ namespace TransInstruction
             {
                 case 0xB0:
                     //人物
-                    byte r = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                    byte r = ByteDataAnalysis.GetByte(gd.Two, ref index);
                     string rw = ByteDataAnalysis.GetString(gd.Two, ref index);
                     rs += rw;
                     break;
                 case 0x00B1:
-                    byte g = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                    byte g = ByteDataAnalysis.GetByte(gd.Two, ref index);
                     string gaiwu = ByteDataAnalysis.GetString(gd.Two, ref index);
                     string gaiwuz = ByteDataAnalysis.GetString(gd.Two, ref index);
                     rs += gaiwuz + gaiwu;
@@ -1175,7 +1176,7 @@ namespace TransInstruction
                     // 未知
                     break;
                 case 0x00B3:
-                    byte n = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                    byte n = ByteDataAnalysis.GetByte(gd.Two, ref index);
                     string npc = ByteDataAnalysis.GetString(gd.Two, ref index);
                     rs += npc;
                     //npc

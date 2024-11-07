@@ -457,7 +457,7 @@ namespace TransInstruction
                             int Y = ByteDataAnalysis.GetInt(gd.One, ref index);
                             int Mapx = X / 100 + 26009;
                             int Mapy = Y / 100 + 26009;
-                            byte 装备位置 = ByteDataAnalysis.Getbyte(gd.Two, ref index);
+                            byte 装备位置 = ByteDataAnalysis.GetByte(gd.Two, ref index);
                             rs += "显示周边" + string.Format("id:{0},x:{1},y:{2}", GameID, Mapx, Mapy);
                         }
                         break;

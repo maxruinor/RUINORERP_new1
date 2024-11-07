@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace TransInstruction.DataPortal
@@ -12,7 +13,9 @@ namespace TransInstruction.DataPortal
         private byte[] buff;
         private int popP; //push
         private int pushP;
-        private int initSize; //初始化时的大小
+        //private int initSize; //初始化时的大小
+        private  int initSize = 100; // 初始大小，可以根据需要调整
+        private  int growSize = 1024; // 增长大小，每次扩展的大小
         public ByteBuff(byte[] arr)
         {
             buff = arr;
@@ -38,7 +41,7 @@ namespace TransInstruction.DataPortal
         {
             if (size == 0)
             {
-                size = 50;//默认申请50个空间
+                size = 100;//默认申请50个空间
             }
             buff = new byte[size];
             popP = 0;
@@ -46,13 +49,27 @@ namespace TransInstruction.DataPortal
             initSize = size;
         }
         public int Length { get { return buff.Length; } }
-        public void PushBytes(byte[] val)
+        //public void PushBytes(byte[] val)
+        //{
+        //    foreach (byte by in val)
+        //    {
+        //        PushByte(by);
+        //    }
+        //}
+
+        public void PushBytes(byte[] vals)
         {
-            foreach (byte by in val)
+            if (vals == null || vals.Length == 0) return;
+
+            int bytesNeeded = pushP + vals.Length - buff.Length;
+            if (bytesNeeded > 0)
             {
-                PushByte(by);
+                Array.Resize(ref buff, buff.Length + Math.Max(growSize, bytesNeeded));
             }
+            Array.Copy(vals, 0, buff, pushP, vals.Length);
+            pushP += vals.Length;
         }
+
         public void PushBytes4String(string hexstr)
         {
             byte[] t;
@@ -87,9 +104,14 @@ namespace TransInstruction.DataPortal
         {
             if (pushP >= buff.Length)
             {
-                var newt = new byte[buff.Length + initSize];
-                Array.Copy(buff, newt, buff.Length);
-                buff = newt;
+                 
+
+                // 扩展缓冲区
+                //byte[] newBuff = new byte[buff.Length + growSize];
+                //Array.Copy(buff, newBuff, buff.Length);
+                //buff = newBuff;
+                //比上面手动复制更高效
+                Array.Resize(ref buff, buff.Length + growSize);
             }
             buff[pushP++] = val;
         }
@@ -153,13 +175,25 @@ namespace TransInstruction.DataPortal
         /// <param name="val"></param>
         public void PushString(string val)
         {
-            var arr = Tool4DataProcess.StrToBytes(val);
-            PushInt(arr.Length + 1);
-            foreach (byte by in arr)
+            if (val == null)
             {
-                PushByte(by);
+                PushInt(0);
+                return;
             }
+             
+            byte[] byteArray = Encoding.UTF8.GetBytes(val);
+            PushInt(byteArray.Length);
+            // 推送整个字节数组
+            PushBytes(byteArray);
             PushByte(0); //最后是结束符
+
+            //var arr = Tool4DataProcess.StrToBytes(val);
+            //PushInt(arr.Length + 1);
+            //foreach (byte by in arr)
+            //{
+            //    PushByte(by);
+            //}
+            //PushByte(0); //最后是结束符
         }
 
         /// <summary>
@@ -185,15 +219,30 @@ namespace TransInstruction.DataPortal
         /// 将全部数据导出，已经pop的数据也导出
         /// </summary>
         /// <returns></returns>
+        //public byte[] toByte()
+        //{
+        //    byte[] ret = new byte[pushP];
+        //    for (int i = 0; i < pushP; i++)
+        //    {
+        //        ret[i] = buff[i];
+        //    }
+        //    return ret;
+        //}
+
         public byte[] toByte()
         {
+            // 返回buff的一个副本，避免外部对内部状态的影响
             byte[] ret = new byte[pushP];
-            for (int i = 0; i < pushP; i++)
-            {
-                ret[i] = buff[i];
-            }
+            Array.Copy(buff, ret, pushP);
             return ret;
         }
+        //或者，如果可以接受返回 buff 的一个视图，可以使用 ArraySegment<byte>：
+        //public ArraySegment<byte> toByte()
+        //{
+        //    // 返回buff的一个视图，不创建新的数组
+        //    return new ArraySegment<byte>(buff, 0, pushP);
+        //}
+
         public void Step(int step)
         {
             popP += step;

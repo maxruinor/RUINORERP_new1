@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
+using RUINORERP.Common.Helper;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
@@ -16,6 +17,8 @@ using RUINORERP.WF.BizOperation.Condition;
 using SharpYaml.Tokens;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
@@ -78,23 +81,72 @@ namespace RUINORERP.Server.BizService
                         //启动时服务器都没有加载缓存，则不发送
                         return;
                     }
-                    string json = JsonConvert.SerializeObject(CacheList,
-                       new JsonSerializerSettings
-                       {
-                           Converters = new List<JsonConverter> { new CustomCollectionJsonConverter() },
-                           ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                       });
+                    if (CacheList is JArray)
+                    {
 
-                    ByteBuff tx = new ByteBuff(200);
-                    tx.PushString(tableName);
-                    tx.PushString(json);
-                    PlayerSession.AddSendData((byte)ServerCmdEnum.发送缓存数据列表, null, tx.toByte());
+                    }
+
+                    if (TypeHelper.IsGenericList(CacheList.GetType()))
+                    {
+                        var lastlist = ((IEnumerable<dynamic>)CacheList).ToList();
+                        if (lastlist != null)
+                        {
+                            int pageSize = 100; // 每页100行
+                            for (int i = 0; i < lastlist.Count; i += pageSize)
+                            {
+                                // 计算当前页的结束索引，确保不会超出数组界限
+                                int endIndex = Math.Min(i + pageSize, lastlist.Count);
+
+                                // 获取当前页的JArray片段
+                                object page = lastlist.Skip(i).Take(endIndex - i).ToArray();
+
+                                // 处理当前页
+                                发送缓存数据(PlayerSession, tableName, page);
+
+                                // 如果当前页是最后一页，可能不足200行，需要特殊处理
+                                if (endIndex == lastlist.Count)
+                                {
+                                    //处理最后一页的逻辑，如果需要的话
+                                    //发送完成！
+                                    if (frmMain.Instance.IsDebug)
+                                    {
+                                        frmMain.Instance.PrintMsg($"{tableName}最后一页发送完成,总行数:{endIndex}");
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
                 }
 
             }
             catch (Exception ex)
             {
                 Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+            }
+
+        }
+
+
+        private static void 发送缓存数据(SessionforBiz PlayerSession, string tableName, object list)
+        {
+            try
+            {
+                string json = JsonConvert.SerializeObject(list,
+                      new JsonSerializerSettings
+                      {
+                          Converters = new List<JsonConverter> { new CustomCollectionJsonConverter() },
+                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                      });
+                ByteBuff tx = new ByteBuff(200);
+                tx.PushString(tableName);
+                tx.PushString(json);
+                PlayerSession.AddSendData((byte)ServerCmdEnum.发送缓存数据列表, null, tx.toByte());
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("发送缓存数据:" + ex.Message);
             }
 
         }
@@ -134,7 +186,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("接收更新缓存指令:" + ex.Message);
             }
 
         }
@@ -183,7 +235,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("接收用户登陆指令:" + ex.Message);
             }
             return user;
         }

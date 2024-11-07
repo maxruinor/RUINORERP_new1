@@ -56,7 +56,7 @@ namespace RUINORERP.Server.ServerSession
         public int HeartbeatCounter;
         public int HeartbeatCounterCheck;
 
-     
+
         //  public PacketProcess _dataSender;
         private string SessionName => "[SessionforBiz]";
 
@@ -145,6 +145,10 @@ namespace RUINORERP.Server.ServerSession
         /// <param name="gde"></param>
         public void AddSendData(EncryptedData gde)
         {
+            try
+            {
+
+          
             if (gde.head.Length > 0)
             {
                 DataQueue.Enqueue(gde.head);
@@ -161,15 +165,24 @@ namespace RUINORERP.Server.ServerSession
             {
                 DataQueue.Enqueue(gde.two);
             }
-
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("发送数据时出错：DataQueue AddSendData" + ex.Message);
+            }
         }
-
 
         public void AddSendData(OriginalData d)
         {
-            //EncryptedData gde = PacketProcess.EncryptedDataPack(d.cmd, d.One, d.Two);
-            EncryptedData gde = CryptoProtocol.EncryptionServerPackToClient(d.cmd, d.One, d.Two);
-            AddSendData(gde);
+            try
+            {
+                EncryptedData gde = CryptoProtocol.EncryptionServerPackToClient(d.cmd, d.One, d.Two);
+                AddSendData(gde);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("发送数据时出错：AddSendData" + ex.Message);
+            }
         }
 
         public void AddSendData(byte cmd, byte[] one, byte[] two)
@@ -179,9 +192,15 @@ namespace RUINORERP.Server.ServerSession
             gd.cmd = cmd;
             gd.One = one;
             gd.Two = two;
-            EncryptedData gde = CryptoProtocol.EncryptionServerPackToClient(gd.cmd, gd.One, gd.Two);
-            AddSendData(gde);
-
+            try
+            {
+                EncryptedData gde = CryptoProtocol.EncryptionServerPackToClient(gd.cmd, gd.One, gd.Two);
+                AddSendData(gde);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("发送数据时出错：AddSendData" + ex.Message);
+            }
 
             //再执行一次就会变成解码了
             //TransPackProcess tpp = new TransPackProcess();

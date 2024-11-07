@@ -89,6 +89,7 @@ namespace TransInstruction
                 Egd.one = gd.One;
                 Egd.two = gd.Two;
             }
+
             return Egd;
         }
 
@@ -531,7 +532,7 @@ namespace TransInstruction
             {
                 return new byte[0];
             }
-            return System.Text.Encoding.GetEncoding("GB2312").GetBytes(val);
+            return System.Text.Encoding.UTF8.GetBytes(val);
         }
         public static UInt32 加密(byte[] KEY, byte[] buff, int start, UInt32 掩码)  //加解密函数 调用这个即可 数组指针 长度
         {

@@ -88,10 +88,6 @@
       <Project>{335975ac-0c5f-4016-956a-5e34ba886670}</Project>
       <Name>BNR</Name>
     </ProjectReference>
-    <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
-      <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
-      <Name>HLH.Lib</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Business\RUINORERP.Business.csproj">
       <Project>{e573f9da-cfcc-446d-9450-58874895a73f}</Project>
       <Name>RUINORERP.Business</Name>

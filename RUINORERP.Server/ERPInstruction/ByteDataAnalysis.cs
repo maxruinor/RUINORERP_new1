@@ -1,38 +1,225 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace TransInstruction
 {
+
+    public class ByteDataAnalysis
+    {
+        public static bool Getbool(byte[] buffer, ref int Index)
+        {
+            if (buffer.Length <= Index)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            bool b = buffer[Index++] == 1;
+            return b;
+        }
+
+        public static int GetInt(byte[] buffer, ref int Index)
+        {
+            if (buffer.Length < Index + 4)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            int value = BitConverter.ToInt32(buffer, Index);
+            Index += 4;
+            return value;
+        }
+
+        public static int GetInt(byte[] buffer, out byte[] UnparsedData, ref int Index)
+        {
+            // 检查是否有足够的数据来读取一个int
+            if (buffer.Length < Index + 4)
+            {
+                UnparsedData = Array.Empty<byte>(); // 没有足够的数据，返回空数组
+                return 0; // 或者抛出异常，取决于你的错误处理策略
+            }
+
+            // 读取int值
+            int value = BitConverter.ToInt32(buffer, Index);
+            Index += 4; // 更新索引位置
+
+            // 获取剩余的未解析数据
+            UnparsedData = new byte[buffer.Length - Index];
+            if (UnparsedData.Length > 0)
+            {
+                Array.Copy(buffer, Index, UnparsedData, 0, UnparsedData.Length);
+            }
+
+            return value;
+        }
+
+        public static Int64 GetInt64(byte[] buffer, ref int Index)
+        {
+            if (buffer.Length < Index + 8)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            Int64 value = BitConverter.ToInt64(buffer, Index);
+            Index += 8;
+            return value;
+        }
+
+        public static float GetFloat(byte[] buffer, ref int Index)
+        {
+            if (buffer.Length < Index + 4)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            float value = BitConverter.ToSingle(buffer, Index);
+            Index += 4;
+            return value;
+        }
+
+        public static Int16 GetInt16(byte[] buffer, ref int Index)
+        {
+            if (buffer.Length < Index + 2)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            Int16 value = BitConverter.ToInt16(buffer, Index);
+            Index += 2;
+            return value;
+        }
+
+        public static byte GetByte(byte[] buffer, ref int Index)
+        {
+            if (buffer.Length <= Index)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            byte value = buffer[Index++];
+            return value;
+        }
+
+        public static byte[] GetBytes(byte[] buffer, int DataLen, ref int Index)
+        {
+            if (buffer.Length < Index + DataLen)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            byte[] bytes = new byte[DataLen];
+            Array.Copy(buffer, Index, bytes, 0, DataLen);
+            Index += DataLen;
+            return bytes;
+        }
+
+        public static string GetString(byte[] buffer, ref int Index)
+        {
+            if (buffer.Length < Index + 4)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            //byte[] lenByte = new byte[4];
+            //lenByte = buffer.Skip(Index).Take(4).ToArray();
+            //int len = BitConverter.ToInt32(lenByte, 0);
+
+            int len = BitConverter.ToInt32(buffer, Index);
+            Index += 4;
+
+            if (buffer.Length < Index + len)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            byte[] msg = new byte[len];
+            Array.Copy(buffer, Index, msg, 0, len);
+            Index += len;
+            Index += 1;//减1是去掉结束符,这里要加上去
+            return Encoding.UTF8.GetString(msg);
+        }
+
+        public static string GetString(byte[] buffer, out byte[] UnparsedData, ref int Index)
+        {
+            if (buffer.Length < Index + 4)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            int len = BitConverter.ToInt32(buffer, Index);
+            Index += 4;
+
+            if (buffer.Length < Index + len)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            byte[] msg = new byte[len];
+            Array.Copy(buffer, Index, msg, 0, len);
+            Index += len;
+            Index += 1;//减1是去掉结束符,这里要加上去
+            UnparsedData = new byte[buffer.Length - Index];
+            Array.Copy(buffer, Index, UnparsedData, 0, UnparsedData.Length);
+
+            return Encoding.UTF8.GetString(msg);
+        }
+
+        public static int TryGetInt(byte[] buffer, out bool success, ref int Index)
+        {
+            success = true;
+            if (buffer.Length < Index + 4)
+            {
+                success = false;
+                return 0;
+            }
+
+            int value = BitConverter.ToInt32(buffer, Index);
+            Index += 4;
+            return value;
+        }
+
+        public static string TryGetString(byte[] buffer, out bool success, ref int Index)
+        {
+            success = false;
+            if (buffer.Length < Index + 4)
+                return null;
+
+            int len = BitConverter.ToInt32(buffer, Index);
+            Index += 4;
+
+            if (buffer.Length < Index + len)
+                return null;
+
+            byte[] msg = new byte[len];
+            Array.Copy(buffer, Index, msg, 0, len);
+            Index += len;
+
+            success = true;
+            return Encoding.UTF8.GetString(msg);
+        }
+    }
+
+
     /// <summary>
     /// 工具类 想法是减少对包的解析过程的复杂度
     /// </summary>
-    public class ByteDataAnalysis
+    public class ByteDataAnalysisold
     {
+        /*
+                /// <summary>
+                /// 
+                /// </summary>
+                /// <param name="buffer"></param>
+                /// <param name="Index">已经解析掉的数据长度</param>
+                /// <returns></returns>
+                public static bool Getbool(byte[] buffer, ref int Index)
+                {
+                    bool b = false;
+                    try
+                    {
+                        byte[] sz = new byte[1];
+                        sz = buffer.Skip(Index).Take(1).ToArray();
+                        if (sz[0] == 1)
+                        {
+                            b = true;
+                        }
+                        Index = Index + 1;
+                    }
+                    catch (Exception ex)
+                    {
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="Index">已经解析掉的数据长度</param>
-        /// <returns></returns>
+                    }
+                    return b;
+                }
+                */
         public static bool Getbool(byte[] buffer, ref int Index)
         {
-            bool b = false;
-            try
+            if (buffer.Length < Index + 1)
             {
-                byte[] sz = new byte[1];
-                sz = buffer.Skip(Index).Take(1).ToArray();
-                if (sz[0] == 1)
-                {
-                    b = true;
-                }
-                Index = Index + 1;
+                return false; // 或者抛出异常
             }
-            catch (Exception ex)
-            {
 
-            }
+            bool b = buffer[Index] == 1;
+            Index++;
             return b;
         }
 
@@ -137,7 +324,8 @@ namespace TransInstruction
                 byte[] msg = new byte[len];
                 //msg.Length-1减1是去掉结束符
                 msg = source.Skip(Index).Take(msg.Length - 1).ToArray();
-                rs = System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
+                //                rs = System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
+                rs = System.Text.Encoding.UTF8.GetString(msg);
                 Index = Index + msg.Length + 1;//减1是去掉结束符,这里要加上去
             }
             catch (Exception ex)
@@ -184,7 +372,8 @@ namespace TransInstruction
                 byte[] msg = new byte[len];
                 //msg.Length-1减1是去掉结束符
                 msg = buffer.Skip(Index).Take(msg.Length - 1).ToArray();
-                rs = System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
+                //rs = System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
+                rs = System.Text.Encoding.UTF8.GetString(msg);
                 Index = Index + msg.Length + 1;//减1是去掉结束符,这里要加上去
 
                 UnparsedData = new byte[buffer.Length - Index];//只是因为下面提前返回。要设置一个默认值
@@ -200,6 +389,8 @@ namespace TransInstruction
         }
 
 
+
+        /*
         /// <summary>
         /// 解析字符串不超过255字节 ，为什么？忘记了
         /// </summary>
@@ -234,7 +425,8 @@ namespace TransInstruction
                 byte[] msg = new byte[len];
                 //msg.Length-1减1是去掉结束符
                 msg = buffer.Skip(Index).Take(msg.Length - 1).ToArray();
-                rs = System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
+                //rs = System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
+                rs = System.Text.Encoding.UTF8.GetString(msg);
                 Index = Index + msg.Length + 1;//减1是去掉结束符,这里要加上去
             }
             catch (Exception ex)
@@ -244,46 +436,29 @@ namespace TransInstruction
             return rs;
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="buffer"></param>
-        ///// <param name="Index"></param>
-        ///// <returns></returns>
-        //public static string GetLongString(byte[] buffer, ref int Index)
-        //{   //4000+12 05 14 15+0
-        //    string rs = string.Empty;
-        //    if (buffer.Length < Index)
-        //    {
-        //        return rs = "长度不够";
-        //    }
+        */
 
-        //    if (buffer.Length == Index)
-        //    {
-        //        return rs = "已经全部解析";
-        //    }
+        public static string GetString(byte[] buffer, ref int Index)
+        {
+            if (buffer.Length < Index + 4)
+            {
+                return string.Empty; // 或者抛出异常，取决于你的错误处理策略
+            }
 
-        //    try
-        //    {
-        //        //长字符串  是long格式保存的长度占8个字节
-        //        byte[] lenByte = new byte[8];
-        //        lenByte = buffer.Skip(Index).Take(8).ToArray();
-        //        long len = BitConverter.ToInt64(lenByte, 0);
-               
-        //        //消息长度中，占用了8位，移位
-        //        Index = Index + 8;
-        //        byte[] msg = new byte[len];
-        //        //msg.Length-1减1是去掉结束符
-        //        msg = buffer.Skip(Index).Take(msg.Length - 1).ToArray();
-        //        rs = System.Text.Encoding.GetEncoding("GB2312").GetString(msg);
-        //        Index = Index + msg.Length + 1;//减1是去掉结束符,这里要加上去
-        //    }
-        //    catch (Exception ex)
-        //    {
+            int len = BitConverter.ToInt32(buffer, Index);
+            Index += 4; // 移动索引，跳过长度字段
 
-        //    }
-        //    return rs;
-        //}
+            if (buffer.Length < Index + len)
+            {
+                return string.Empty; // 或者抛出异常
+            }
+
+            byte[] msg = new byte[len];
+            Buffer.BlockCopy(buffer, Index, msg, 0, len);
+            Index += len; // 移动索引，跳过消息体
+
+            return System.Text.Encoding.UTF8.GetString(msg);
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -324,7 +499,7 @@ namespace TransInstruction
         }
 
 
-
+        /*
         public static int GetInt(byte[] buffer, ref int Index)
         {
             int y = 0;
@@ -345,23 +520,50 @@ namespace TransInstruction
             }
             return y;
         }
+        */
+
+        public static int GetInt(byte[] buffer, ref int Index)
+        {
+            if (buffer.Length < Index + 4)
+            {
+                return 0; // 或者抛出异常
+            }
+
+            int value = BitConverter.ToInt32(buffer, Index);
+            Index += 4;
+            return value;
+        }
+
 
         public static Int64 GetInt64(byte[] buffer, ref int Index)
         {
-            Int64 y = 0;
-            try
+            if (buffer.Length < Index + 8)
             {
-                byte[] sz = new byte[8];
-                sz = buffer.Skip(Index).Take(8).ToArray();
-                y = BitConverter.ToInt64(sz, 0);
-                Index = Index + 8;
+                // 如果剩余的缓冲区长度不足以读取一个 Int64，返回 0 或者抛出异常
+                return 0; // 或者抛出异常，取决于你的错误处理策略
             }
-            catch (Exception ex)
-            {
 
-            }
-            return y;
+            Int64 value = BitConverter.ToInt64(buffer, Index);
+            Index += 8; // 移动索引，跳过 8 个字节的 Int64 字段
+            return value;
         }
+
+        //public static Int64 GetInt64(byte[] buffer, ref int Index)
+        //{
+        //    Int64 y = 0;
+        //    try
+        //    {
+        //        byte[] sz = new byte[8];
+        //        sz = buffer.Skip(Index).Take(8).ToArray();
+        //        y = BitConverter.ToInt64(sz, 0);
+        //        Index = Index + 8;
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //    }
+        //    return y;
+        //}
 
         public static float GetFloat(byte[] buffer, ref int Index)
         {

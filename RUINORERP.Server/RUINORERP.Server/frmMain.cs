@@ -151,10 +151,15 @@ namespace RUINORERP.Server
                                 bool rs = item.Value.DataQueue.TryDequeue(out sendData);
                                 if (sendData != null && rs)
                                 {
+                                    if (sendData.Length > 338420)
+                                    {
+
+                                    }
                                     if (sendData.Length > 0)
                                     {
                                         item.Value.Send(sendData);
                                     }
+                            
                                 }
                             }
                         }
@@ -163,6 +168,7 @@ namespace RUINORERP.Server
                 }
                 catch (Exception ex)
                 {
+
                     frmMain.Instance.PrintInfoLog(ex.Message + "StartSendService!#");
                     _logger.LogError("数据发送服务出错:Task StartSendService", ex);
                 }
@@ -299,12 +305,11 @@ namespace RUINORERP.Server
                         {
                             //获取服务配置
                             // ReSharper disable once ConvertToLambdaExpression
-                            return config.GetSection("ServiceforBiz");
+                             return config.GetSection("ServiceforBiz");
                         })
                         .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
                         .UseSession<SessionforBiz>()
-
-
+                        
                     //注册用于处理连接、关闭的Session处理器
                     .UseSessionHandler(async (session) =>
                     {
@@ -324,7 +329,7 @@ namespace RUINORERP.Server
                             //{
                             //   // SephirothServer.CommandServer.RoleService.角色退出(sg);
                             //}
-                            PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session {session.RemoteEndPoint} closed: {reason}");
+                            PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序]  {session.RemoteEndPoint} closed，原因：: {reason.Reason}");
                             sessionListBiz.Remove(sg.SessionID, out sg);
                             if (sg != null)
                             {
@@ -354,7 +359,7 @@ namespace RUINORERP.Server
                                 commandOptions.AddCommand<XTCommand>();
                             });
                     })
-                
+
                 .ConfigureLogging((hostingContext, logging) =>
                 {
                     logging.ClearProviders(); //去掉默认添加的日志提供程序
@@ -376,8 +381,9 @@ namespace RUINORERP.Server
                         //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
                         //引用的long4net.dll要版本一样。
                         string conn = AppSettings.GetValue("ConnectString");
+                        logging.AddLog4Net();
                         logging.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", conn, Program.AppContextData));
-                        //logging.AddLog4Net(Log4NetProviderByCustomeDb);
+
                     }
                 })//.UseLog4Net()
 
@@ -556,6 +562,7 @@ ApplicationInsights
 
         public void PrintInfoLog(string msg)
         {
+            Console.WriteLine(msg);
             if (!System.Diagnostics.Process.GetCurrentProcess().MainModule.ToString().ToLower().Contains("iis"))
             {
 #pragma warning disable CS0168 // 声明了变量，但从未使用过

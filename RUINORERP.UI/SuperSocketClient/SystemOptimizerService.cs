@@ -20,14 +20,22 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 var tx = new ByteBuff(100);
                 tx.PushString(System.DateTime.Now.ToString());
-                if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee == null)
+                if (MainForm.Instance.AppContext.CurUserInfo==null)
                 {
-                    tx.PushString(string.Empty);
+                    tx.PushString(MainForm.Instance.AppContext.SessionId);
                 }
                 else
                 {
-                    tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
+                    if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee == null)
+                    {
+                        tx.PushString(MainForm.Instance.AppContext.SessionId);
+                    }
+                    else
+                    {
+                        tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
+                    }
                 }
+                
 
                 tx.PushString(MainForm.Instance.AppContext.log.MachineName);
                 tx.PushString(HLH.Lib.Net.IpAddressHelper.GetLocIP());

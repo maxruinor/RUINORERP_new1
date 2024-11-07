@@ -95,15 +95,14 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="7.0.0" />
     <PackageReference Include="SqlSugarCore" Version="5.1.4.130" />
-    <PackageReference Include="SuperSocket.Command" Version="2.0.0-beta.28" />
-    <PackageReference Include="SuperSocket.Server" Version="2.0.0-beta.28" />
-    <PackageReference Include="SuperSocket.SessionContainer" Version="2.0.0-beta.18" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
     <PackageReference Include="WorkflowCore.Persistence.SqlServer" Version="3.9.0" />
     <PackageReference Include="WorkflowCore.Users" Version="3.9.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\SuperSocket-master\src\SuperSocket.Command\SuperSocket.Command.csproj" />
+    <ProjectReference Include="..\..\..\SuperSocket-master\src\SuperSocket.Server\SuperSocket.Server.csproj" />
     <ProjectReference Include="..\..\BNR\BNR.csproj" />
     <ProjectReference Include="..\..\HLH.Lib\HLH.Lib.csproj" />
     <ProjectReference Include="..\..\RUINORERP.Business\RUINORERP.Business.csproj" />

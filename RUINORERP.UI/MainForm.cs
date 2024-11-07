@@ -397,11 +397,7 @@ namespace RUINORERP.UI
                 }
             }
 
-            Stopwatch stopwatchInitConfig = Stopwatch.StartNew();
-
-
-            stopwatchInitConfig.Stop();
-            MainForm.Instance.uclog.AddLog($"InitConfig  执行时间：{stopwatchInitConfig.ElapsedMilliseconds} 毫秒");
+     
             Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
             LoadUIMenus();
             LoadUIForIM_LogPages();

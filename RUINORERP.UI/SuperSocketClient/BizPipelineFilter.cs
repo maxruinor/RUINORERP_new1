@@ -58,7 +58,7 @@ namespace RUINORERP.UI.SuperSocketClient
             return len;
             try
             {
-               
+
                 //int intValue = 123456;
                 //byte[] intBytes = BitConverter.GetBytes(intValue);
 
@@ -193,11 +193,15 @@ namespace RUINORERP.UI.SuperSocketClient
                     //var outs = Tools.Hex2Str(Head, 0, 18, true);
 
 
-                  ///  TransPackProcess pp = new TransPackProcess();
+                    ///  TransPackProcess pp = new TransPackProcess();
                     gpi.Body = PackageContents;
+                    if (PackageContents.Length > 338420)
+                    {
+
+                    }
                     gpi.od = TransInstruction.CryptoProtocol.DecryptServerPack(gpi.Body);
-                  //  gpi.od = pp.UnServerPack(gpi.Body);
-               
+                    //  gpi.od = pp.UnServerPack(gpi.Body);
+
                     gpi.ecode = SpecialOrder.正常;
                     #endregion
 

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HLH.Lib.Net;
 
+
 namespace RUINORERP.Business.Security
 {
     public static class PTPrincipal

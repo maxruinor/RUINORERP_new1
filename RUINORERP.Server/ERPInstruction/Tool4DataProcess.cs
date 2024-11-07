@@ -31,8 +31,12 @@ namespace TransInstruction
             if (val == null)
             {
                 return new byte[0];
+
             }
-            return System.Text.Encoding.GetEncoding("GB2312").GetBytes(val);
+
+            var arr = Encoding.UTF8.GetBytes(val);
+            return arr;
+            //return System.Text.Encoding.GetEncoding("GB2312").GetBytes(val);
         }
 
         /// <summary> 
@@ -235,7 +239,8 @@ namespace TransInstruction
             {
                 count = bys.Length;
             }
-            return System.Text.Encoding.GetEncoding("GB2312").GetString(bys, start, count);
+            //return System.Text.Encoding.GetEncoding("GB2312").GetString(bys, start, count);
+            return System.Text.Encoding.UTF8.GetString(bys, start, count);
         }
  
 

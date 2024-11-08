@@ -26,11 +26,27 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        public  virtual void Query()
+        public virtual void Query()
         {
 
         }
 
+        /// <summary>
+        /// 如果基础是一个列表查询时会加载集合。这里保存后面用
+        /// </summary>
+        //public BindingSource ListDataSource { get; set; }
+
+        public System.Windows.Forms.BindingSource _ListDataSoure = null;
+
+        [Description("列表中的要显示的数据来源[BindingSource]"), Category("自定属性"), Browsable(true)]
+        /// <summary>
+        /// 列表的数据源(实际要显示的)
+        /// </summary>
+        public System.Windows.Forms.BindingSource ListDataSoure
+        {
+            get { return _ListDataSoure; }
+            set { _ListDataSoure = value; }
+        }
 
         #region 关闭窗体和退出
 
@@ -109,7 +125,7 @@ namespace RUINORERP.UI.BaseForm
                 Form frm = (thisform as Control).Parent.Parent as Form;
                 frm.Close();
             }
-             
+
 
 
             /*

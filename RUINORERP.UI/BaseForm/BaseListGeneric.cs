@@ -43,7 +43,6 @@ using RUINORERP.UI.FormProperty;
 using System.Web.UI;
 using Control = System.Windows.Forms.Control;
 using SqlSugar;
-using NPOI.SS.Formula.Functions;
 using SourceGrid.Cells.Models;
 using RUINORERP.Business.CommService;
 using SixLabors.ImageSharp.Memory;
@@ -587,17 +586,17 @@ namespace RUINORERP.UI.BaseForm
         #endregion
 
 
-        public System.Windows.Forms.BindingSource _ListDataSoure = null;
+        //public System.Windows.Forms.BindingSource _ListDataSoure = null;
 
-        [Description("列表中的要显示的数据来源[BindingSource]"), Category("自定属性"), Browsable(true)]
-        /// <summary>
-        /// 列表的数据源(实际要显示的)
-        /// </summary>
-        public System.Windows.Forms.BindingSource ListDataSoure
-        {
-            get { return _ListDataSoure; }
-            set { _ListDataSoure = value; }
-        }
+        //[Description("列表中的要显示的数据来源[BindingSource]"), Category("自定属性"), Browsable(true)]
+        ///// <summary>
+        ///// 列表的数据源(实际要显示的)
+        ///// </summary>
+        //public System.Windows.Forms.BindingSource ListDataSoure
+        //{
+        //    get { return _ListDataSoure; }
+        //    set { _ListDataSoure = value; }
+        //}
 
 
         /// <summary>
@@ -958,7 +957,6 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.ecs.AddSendData(beatDataDel);
                 }
             }
-
         }
 
         protected virtual void Modify()

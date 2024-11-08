@@ -14,8 +14,8 @@ namespace TransInstruction.DataPortal
         private int popP; //push
         private int pushP;
         //private int initSize; //初始化时的大小
-        private  int initSize = 100; // 初始大小，可以根据需要调整
-        private  int growSize = 1024; // 增长大小，每次扩展的大小
+        private int initSize = 100; // 初始大小，可以根据需要调整
+        private int growSize = 1024; // 增长大小，每次扩展的大小
         public ByteBuff(byte[] arr)
         {
             buff = arr;
@@ -104,7 +104,7 @@ namespace TransInstruction.DataPortal
         {
             if (pushP >= buff.Length)
             {
-                 
+
 
                 // 扩展缓冲区
                 //byte[] newBuff = new byte[buff.Length + growSize];
@@ -175,12 +175,13 @@ namespace TransInstruction.DataPortal
         /// <param name="val"></param>
         public void PushString(string val)
         {
-            if (val == null)
+            if (val == null || string.IsNullOrEmpty(val))
             {
                 PushInt(0);
+                PushByte(0); //最后是结束符
                 return;
             }
-             
+
             byte[] byteArray = Encoding.UTF8.GetBytes(val);
             PushInt(byteArray.Length);
             // 推送整个字节数组

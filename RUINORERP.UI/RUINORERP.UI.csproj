@@ -1089,6 +1089,7 @@
     <Compile Include="CommonUI\frmInputContent.Designer.cs">
       <DependentUpon>frmInputContent.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
     <Compile Include="FM\UCExpenseClaimStatistics.cs">
       <SubType>UserControl</SubType>

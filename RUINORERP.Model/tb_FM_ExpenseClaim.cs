@@ -104,7 +104,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "PayeeInfoID", ColDesc = "收款信息")]
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "PayeeInfoID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "收款信息")]
-        [FKRelationAttribute("tb_Employee", "PayeeInfoID")]
+        [FKRelationAttribute("tb_FM_PayeeInfo", "PayeeInfoID")]
         public long PayeeInfoID
         {
             get { return _PayeeInfoID; }

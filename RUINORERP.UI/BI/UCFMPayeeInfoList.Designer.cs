@@ -34,6 +34,11 @@
             this.kryptonHeaderGroupTop.SuspendLayout();
             this.SuspendLayout();
             // 
+            // frm
+            // 
+            this.frm.Location = new System.Drawing.Point(104, 104);
+            this.frm.Load += new System.EventHandler(this.frm_Load);
+            // 
             // kryptonHeaderGroupTop
             // 
             this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(467, 85);

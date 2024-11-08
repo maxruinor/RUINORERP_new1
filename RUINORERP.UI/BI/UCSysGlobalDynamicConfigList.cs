@@ -21,7 +21,7 @@ using SqlSugar;
 using RUINORERP.Global;
 using RUINORERP.Common.Extensions;
 using RUINORERP.UI.SysConfig;
-using NPOI.SS.Formula.Functions;
+
 
 namespace RUINORERP.UI.BI
 {

@@ -41,7 +41,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 if (islogin)
                 {
                     string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    int userid = ByteDataAnalysis.GetInt(gd.Two, ref index);
+                    long userid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                     string userName = ByteDataAnalysis.GetString(gd.Two, ref index);
                     string empName = ByteDataAnalysis.GetString(gd.Two, ref index);
                     //UserInfo onlineuser = new UserInfo();
@@ -136,27 +136,8 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 int index = 0;
                 ByteBuff bg = new ByteBuff(gd.Two);
-                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string 姓名 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 Message = ByteDataAnalysis.GetString(gd.Two, ref index);
-                bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
                 MainForm.Instance.PrintInfoLog(Message);
-                if (MustDisplay)
-                {
-                    IM.IMessage MessageInfo = new IM.IMessage();
-                    MessageInfo.SendTime = sendtime;
-                    //MessageInfo.Id = SessionID;
-                    MessageInfo.Sender = 姓名;
-                    MessageInfo.Content = Message;
-                    MainForm.Instance.MessageList.Enqueue(MessageInfo);
-                }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog(Message);
-                    MainForm.Instance.ShowStatusText(Message);
-                }
-
             }
             catch (Exception ex)
             {

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using MySqlX.XDevAPI;
-using NPOI.SS.Formula.Functions;
 using NSoup.Helper;
 using Org.BouncyCastle.Asn1.Ocsp;
 using RUINORERP.Business;
@@ -311,7 +310,7 @@ namespace RUINORERP.UI.Common
                 HttpWebResponse response = await request.GetResponseAsync() as HttpWebResponse;
                 Stream instream = response.GetResponseStream();
                 StreamReader sr = new StreamReader(instream, Encoding.UTF8);
-                return sr.ReadToEnd();
+                return "上传成功"+sr.ReadToEnd();
             }
             catch (Exception ex)
             {

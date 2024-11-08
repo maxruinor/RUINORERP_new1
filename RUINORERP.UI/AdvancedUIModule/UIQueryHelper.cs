@@ -519,7 +519,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                                 //注意这样调用不能用同名重载的方法名
                                 MethodInfo mf2 = dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { mytype });
-                                object[] args2 = new object[6] { newDto, cmb, ColName, queryField.SubFilter, null, null };
+                                object[] args2 = new object[7] { newDto, cmb, ColName, queryField.SubFilter, null, null, false };
                                 mf2.Invoke(dbh, args2);
 
 
@@ -564,7 +564,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                             }
                             //注意这样调用不能用同名重载的方法名
                             MethodInfo mf2 = dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { queryField.SubFilter.QueryTargetType });
-                            object[] args2 = new object[6] { newDto, tb_box_cmb, ColName, queryField.SubFilter, queryField.SubFilter.QueryTargetType, ColName };
+                            object[] args2 = new object[7] { newDto, tb_box_cmb, ColName, queryField.SubFilter, queryField.SubFilter.QueryTargetType, ColName, false };
                             mf2.Invoke(dbh, args2);
 
                             // DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(entity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));

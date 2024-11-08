@@ -42,7 +42,6 @@ namespace RUINORERP.Business.Processor
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-
             //var lambda = Expressionable.Create<tb_CustomerVendor>()
             //           .And(t => t.isdeleted == false)
             //           .And(t => t.Is_available == true)

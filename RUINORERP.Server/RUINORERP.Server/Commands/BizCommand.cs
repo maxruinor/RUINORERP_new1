@@ -328,8 +328,7 @@ namespace RUINORERP.Server.Commands
                 }
                 catch (Exception ex)
                 {
-
-
+                    Console.WriteLine("HeartbeatCmd时出错" + ex.Message);
                 }
 #pragma warning restore CS0168 // 声明了变量，但从未使用过
             }

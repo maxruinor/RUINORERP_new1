@@ -25,7 +25,7 @@ using RUINORERP.Common.Extensions;
 using System.Collections;
 using RUINORERP.Business.Processor;
 using RUINORERP.Global;
-using NPOI.SS.Formula.Functions;
+ 
 
 
 namespace RUINORERP.UI.ProductEAV

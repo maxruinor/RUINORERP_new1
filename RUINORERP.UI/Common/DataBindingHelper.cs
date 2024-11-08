@@ -36,6 +36,8 @@ using ConstantExpression = System.Linq.Expressions.ConstantExpression;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using FastReport.DevComponents.DotNetBar;
+using System.Web.WebSockets;
+using RUINORERP.UI.SS;
 
 
 namespace RUINORERP.UI.Common
@@ -92,8 +94,36 @@ namespace RUINORERP.UI.Common
             {
                 InitFilterForControlRef<P>(entity, item, DisplayColExp.GetMemberInfo().Name, queryFilter, KeyValueTypeForDgv, ValueFieldColExp.GetMemberInfo().Name);
             }
-
         }
+
+        /// <summary>
+        /// 关联可以查询带出。也可以添加的下拉框
+        /// 一般用于外键的单表
+        /// </summary>
+        /// <typeparam name="P"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="item"></param>
+        /// <param name="DisplayColExp"></param>
+        /// <param name="queryFilter"></param>
+        /// <param name="KeyValueTypeForDgv"></param>
+        /// <param name="ValueFieldColExp"></param>
+        /// <param name="CanEdit"></param>
+        public static void InitFilterForControlByExpCanEdit<P>(BaseEntity entity, Control item,
+            Expression<Func<P, object>> DisplayColExp, QueryFilter queryFilter,
+            bool CanEdit, Type KeyValueTypeForDgv = null,
+            Expression<Func<P, object>> ValueFieldColExp = null) where P : class
+        {
+            if (ValueFieldColExp == null)
+            {
+                InitFilterForControlRef<P>(entity, item, DisplayColExp.GetMemberInfo().Name, queryFilter, KeyValueTypeForDgv, null, CanEdit);
+            }
+            else
+            {
+                InitFilterForControlRef<P>(entity, item, DisplayColExp.GetMemberInfo().Name, queryFilter, KeyValueTypeForDgv, ValueFieldColExp.GetMemberInfo().Name, CanEdit);
+            }
+        }
+
+
         /// <summary>
         /// 关联查询时带出的快速查询的功能
         /// 如果是反射调用 方法名不能用相同的重载的名字。无法识别匹配
@@ -110,7 +140,7 @@ namespace RUINORERP.UI.Common
         /// <param name="QueryConditions"></param>
         /// <param name="ValueFieldCol">是指源头的ID列名,被引用的实体的ID列</param>
         public static void InitFilterForControlRef<P>(BaseEntity entity, System.Windows.Forms.Control item, string DisplayCol, QueryFilter queryFilter,
-            Type KeyValueTypeForDgv = null, string ValueFieldCol = null) where P : class
+            Type KeyValueTypeForDgv = null, string ValueFieldCol = null, bool CanEdit = false) where P : class
         {
             if (item is Control)
             {
@@ -137,19 +167,50 @@ namespace RUINORERP.UI.Common
                             bsa.UniqueName = "btnQuery";
                             bsa.Tag = ktb;
                             ktb.Tag = targetEntity;
-
-                            //bsa.Click += BsaEdit_Click;
                             bsa.Click += (sender, e) =>
                             {
                                 #region
                                 KryptonComboBox ktbcombo = bsa.Owner as KryptonComboBox;
-                                //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
-                                UCAdvFilterGeneric<P> ucBaseList = new UCAdvFilterGeneric<P>();
-                                ucBaseList.QueryConditionFilter = queryFilter;
 
-                                ucBaseList.KeyValueTypeForDgv = KeyValueTypeForDgv;
-                                // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
-                                ucBaseList.control = item;
+                                //取外键表名的代码
+                                string fktableName = string.Empty;
+                                BindingSource bsFKName = new BindingSource();
+                                bsFKName = ktb.DataSource as BindingSource;//这个是对应的是主体实体
+                                if (bsFKName.Current == null)
+                                {
+                                    fktableName = bsFKName.DataSource.GetType().GetGenericArguments()[0].Name;
+                                }
+                                else
+                                {
+                                    fktableName = bsFKName.Current.GetType().Name;//这个会出错，current 可能会为空。
+                                }
+                                //这里调用权限判断
+                                //调用通用的查询编辑基础资料。
+                                //需要对应的类名，如果修改新增了数据要重新加载下拉数据
+                                tb_MenuInfo menuinfo = MainForm.Instance.MenuList.FirstOrDefault(t => t.EntityName == fktableName.ToString());
+                                if (menuinfo == null)
+                                {
+                                    MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，请联系管理员。");
+                                    return;
+                                }
+
+
+                                //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
+                                BaseUControl ucBaseList = null;
+                                if (CanEdit)
+                                {
+                                    //编辑模式
+                                    ucBaseList = Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                                }
+                                else
+                                {
+                                    UCAdvFilterGeneric<P> ucBaseListAdv = new UCAdvFilterGeneric<P>();
+                                    ucBaseListAdv.QueryConditionFilter = queryFilter;
+                                    ucBaseListAdv.KeyValueTypeForDgv = KeyValueTypeForDgv;
+                                    ucBaseListAdv.control = item;
+                                    ucBaseList = ucBaseListAdv;
+                                }
+
                                 ucBaseList.Runway = BaseListRunWay.选中模式;
                                 //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
                                 frmBaseEditList frmedit = new frmBaseEditList();
@@ -161,7 +222,6 @@ namespace RUINORERP.UI.Common
                                 var BizTypeText = mapper.GetBizType(typeof(P).Name).ToString();
                                 frmedit.Text = "关联查询" + "-" + BizTypeText;
 
-
                                 if (frmedit.ShowDialog() == DialogResult.OK)
                                 {
                                     string ucTypeName = bsa.Owner.GetType().Name;
@@ -171,7 +231,7 @@ namespace RUINORERP.UI.Common
                                         if (ucBaseList.Tag != null)
                                         {
                                             //来自查询的数据源和选中值
-                                            BindingSource bs = ucBaseList.Tag as BindingSource;
+                                            BindingSource bs = ucBaseList.ListDataSoure as BindingSource;
 
                                             //控件加载时绑定信息
                                             Binding binding = null;
@@ -189,6 +249,10 @@ namespace RUINORERP.UI.Common
                                             if (string.IsNullOrEmpty(ValueField))
                                             {
                                                 throw new Exception("ValueField主键字段名不能为空" + ktbcombo.ValueMember);
+                                            }
+                                            if (bs == null)
+                                            {
+                                                bs = bsFKName;
                                             }
                                             object selectItem = bs.Current;
                                             object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(selectItem, ValueField);
@@ -1804,7 +1868,20 @@ namespace RUINORERP.UI.Common
                     Type listType = cachelist.GetType();
                     if (TypeHelper.IsGenericList(listType))
                     {
-                        tlist = cachelist as List<T>;
+                        if (listType.FullName.Contains("System.Collections.Generic.List`1[[System.Object"))
+                        {
+                            List<T> lastOKList = new List<T>();
+                            var lastlist = ((IEnumerable<dynamic>)cachelist).ToList();
+                            foreach (var item in lastlist)
+                            {
+                                lastOKList.Add(item);
+                            }
+                            tlist = lastOKList;
+                        }
+                        else
+                        {
+                            tlist = cachelist as List<T>;
+                        }
                     }
                     else if (TypeHelper.IsJArrayList(listType))
                     {
@@ -1829,6 +1906,10 @@ namespace RUINORERP.UI.Common
                 InsertSelectItem<T>(key, value, newlist);
                 bs.DataSource = newlist;
                 ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, true);
+                if (cmbBox.Tag == null)
+                {
+                    cmbBox.Tag = tableName;
+                }
             }
         }
 
@@ -1851,7 +1932,7 @@ namespace RUINORERP.UI.Common
             List<T> Newlist = list.ToList();
             InsertSelectItem<T>(key, value, Newlist);
             bs.DataSource = Newlist;
-
+            cmbBox.Tag = tableName;
             ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
 
 

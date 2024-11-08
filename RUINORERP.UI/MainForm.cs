@@ -2159,7 +2159,7 @@ namespace RUINORERP.UI
             MainForm.Instance.logger.LogError("出现应用程序未处理的异常2,请更新到新版本，如果无法解决，请联系管理员");
         }
 
-        private async void LoginWebServer()
+        public async void LoginWebServer()
         {
             try
             {

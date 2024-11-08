@@ -271,7 +271,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         }
                         //注意这样调用不能用同名重载的方法名
                         MethodInfo mf2 = dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { queryField.SubFilter.QueryTargetType });
-                        object[] args2 = new object[6] { newDto, tb_box_cmb, DisplayColName, queryField.SubFilter, queryField.SubFilter.QueryTargetType, IDColName };
+                        object[] args2 = new object[7] { newDto, tb_box_cmb, DisplayColName, queryField.SubFilter, queryField.SubFilter.QueryTargetType, IDColName, false };
                         mf2.Invoke(dbh, args2);
 
                         #endregion
@@ -427,7 +427,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                                     var whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryTargetType, queryField.SubFilter.GetFilterLimitExpression(mytype));
                                     #region 
                                     //绑定下拉
-                                   
+
                                     if (pair.Key == queryField.FieldName)
                                     {
                                         MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimited").MakeGenericMethod(new Type[] { mytype });
@@ -441,13 +441,13 @@ namespace RUINORERP.UI.AdvancedUIModule
                                         object[] args1 = new object[7] { newDto, pair.Key, queryField.FieldName, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
                                         mf1.Invoke(dbh, args1);
                                     }
-                                    
+
                                     #endregion
                                 }
 
                                 //注意这样调用不能用同名重载的方法名
                                 MethodInfo mf22 = dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { mytype });
-                                object[] args22 = new object[6] { newDto, DefaultCmb, pair.Value, queryField.SubFilter, null, null };
+                                object[] args22 = new object[7] { newDto, DefaultCmb, pair.Value, queryField.SubFilter, null, null,false };
                                 mf22.Invoke(dbh, args22);
 
 

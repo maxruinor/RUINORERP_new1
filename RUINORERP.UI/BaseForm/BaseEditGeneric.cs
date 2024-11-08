@@ -133,11 +133,6 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-
-
-
-
-
         public void InitHelpInfoToControl(System.Windows.Forms.Control.ControlCollection Controls)
         {
             foreach (var item in Controls)
@@ -243,7 +238,7 @@ namespace RUINORERP.UI.BaseForm
                             }
                             else if (TypeHelper.IsJArrayList(listType))
                             {
-                                Type elementType =  Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
+                                Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
                                 List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 
                                 #region  jsonlist
@@ -278,8 +273,6 @@ namespace RUINORERP.UI.BaseForm
         {
             ProcessHelpInfo(true, sender);
         }
-
-
 
 
         public void ProcessHelpInfo(bool fromBtn, object sender)
@@ -385,8 +378,6 @@ namespace RUINORERP.UI.BaseForm
                         tipTxt += obj.HelpInfos[filedName].ToString();
                     }
                 }
-
-
             }
             return tipTxt;
         }
@@ -479,14 +470,6 @@ namespace RUINORERP.UI.BaseForm
                             KryptonComboBox ktb = item as KryptonComboBox;
                             if ((item as Control).DataBindings.Count > 0)
                             {
-                                //ButtonSpecAny bsa = new ButtonSpecAny();
-                                // bsa.Image = Image.FromStream(Common.DataBindingHelper.GetResource("help4"));
-                                // bsa.Tag = ktb;
-                                //bsa.Click += Bsa_Click;
-                                // ktb.ButtonSpecs.Add(bsa);
-                                // ktb.StateCommon.Border.Color1 =  Color.FromArgb(255, 128, 128);
-                                //可以边框为红色不？
-                                //或必填项目有特别提示？
                                 #region 找到绑定的字段
                                 if (ktb.DataBindings.Count > 0)
                                 {
@@ -496,7 +479,6 @@ namespace RUINORERP.UI.BaseForm
                                     {
                                         ktb.StateCommon.ComboBox.Border.Color1 = Color.FromArgb(255, 128, 128);
                                     }
-
                                 }
                                 #endregion
 
@@ -532,6 +514,10 @@ namespace RUINORERP.UI.BaseForm
                         if (item.GetType().Name == "KryptonComboBox")
                         {
                             KryptonComboBox ktb = item as KryptonComboBox;
+                            if (ktb.ButtonSpecs.Count > 0)
+                            {
+                                return;
+                            }
                             if ((item as Control).DataBindings.Count > 0)
                             {
                                 if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)

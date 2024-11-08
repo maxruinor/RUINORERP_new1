@@ -29,8 +29,12 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("菜单枚举类型修复");
-            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("节点1");
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("菜单枚举类型修复");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("采购订单价格修复");
+            System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("采购入库单价格修复");
+            System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("销售订单价格修复");
+            System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("销售出库单价格修复");
+            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("节点3");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCDataCorrectionCenter));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.treeViewTableList = new Krypton.Toolkit.KryptonTreeView();
@@ -159,13 +163,25 @@
             this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeView1.Location = new System.Drawing.Point(0, 0);
             this.treeView1.Name = "treeView1";
-            treeNode3.Name = "菜单枚举类型修复";
-            treeNode3.Text = "菜单枚举类型修复";
-            treeNode4.Name = "节点1";
-            treeNode4.Text = "节点1";
+            treeNode1.Name = "菜单枚举类型修复";
+            treeNode1.Text = "菜单枚举类型修复";
+            treeNode2.Name = "采购订单价格修复";
+            treeNode2.Text = "采购订单价格修复";
+            treeNode3.Name = "采购入库单价格修复";
+            treeNode3.Text = "采购入库单价格修复";
+            treeNode4.Name = "销售订单价格修复";
+            treeNode4.Text = "销售订单价格修复";
+            treeNode5.Name = "销售出库单价格修复";
+            treeNode5.Text = "销售出库单价格修复";
+            treeNode6.Name = "节点3";
+            treeNode6.Text = "节点3";
             this.treeView1.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
+            treeNode1,
+            treeNode2,
             treeNode3,
-            treeNode4});
+            treeNode4,
+            treeNode5,
+            treeNode6});
             this.treeView1.Size = new System.Drawing.Size(532, 354);
             this.treeView1.TabIndex = 0;
             this.treeView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseDoubleClick);

@@ -52,13 +52,13 @@ using Newtonsoft.Json;
 using RUINORERP.UI.SS;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using NPOI.SS.Formula.Functions;
 using SourceGrid;
 using RUINORERP.UI.FormProperty;
 using SourceGrid.Cells.Models;
 using FastReport.Table;
 using FastReport.DevComponents.AdvTree;
 using Newtonsoft.Json.Linq;
+
 
 
 namespace RUINORERP.UI.BaseForm
@@ -555,94 +555,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        /// <summary>
-        /// 编辑对应的外键实体  
-        /// 就是在编辑复杂实体时，需要其他的一些基础资料表的配合。不需要一个一个去找。直接在这个窗体下操作添加
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void BsaEdit_Click(object sender, EventArgs e)
-        {
-            ButtonSpecAny bsa = sender as ButtonSpecAny;
-            KryptonComboBox ktb = bsa.Owner as KryptonComboBox;
-            #region 找到绑定的字段
-            //取外键表名的代码
-            string fktableName = string.Empty;
-            if (ktb.Tag != null)
-            {
-                fktableName = ktb.Tag.ToString();
-            }
-            #endregion
-
-
-            //暂时认为基础数据都是这个基类出来的 否则可以根据菜单中的基类类型来判断生成
-            BaseUControl ucBaseList = new UCAdvFilterGeneric<T>(); // Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
-            ucBaseList.Runway = BaseListRunWay.选中模式;
-            ucBaseList.CurMenuInfo = CurMenuInfo;
-            //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
-            frmBaseEditList frmedit = new frmBaseEditList();
-            frmedit.StartPosition = FormStartPosition.CenterScreen;
-            ucBaseList.Dock = DockStyle.Fill;
-            frmedit.kryptonPanel1.Controls.Add(ucBaseList);
-            BizTypeMapper mapper = new BizTypeMapper();
-            var BizTypeText = mapper.GetBizType(typeof(T).Name).ToString();
-            frmedit.Text = "关联查询" + "-" + BizTypeText;
-            if (frmedit.ShowDialog() == DialogResult.OK)
-            {
-                string ucTypeName = bsa.Owner.GetType().Name;
-                if (ucTypeName == "KryptonComboBox")
-                {
-                    //选中的值，一定要在重新加载前保存，下面会清空重新加载会变为第一个项
-                    if (ucBaseList.Tag != null)
-                    {
-                        object obj = ucBaseList.Tag;
-                        //从缓存中重新加载 
-                        BindingSource NewBsList = new BindingSource();
-                        //将List<T>类型的结果是object的转换为指定类型的List
-                        //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
-                        var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(fktableName);
-                        if (cachelist != null)
-                        {
-                            // 获取原始 List<T> 的类型参数
-                            Type listType = cachelist.GetType();
-                            if (TypeHelper.IsGenericList(listType))
-                            {
-                                #region  强类型时
-                                NewBsList.DataSource = ((IEnumerable<dynamic>)cachelist);
-                                #endregion
-                            }
-                            else if (TypeHelper.IsJArrayList(listType))
-                            {
-                                Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
-                                List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
-
-                                #region  jsonlist
-                                NewBsList.DataSource = myList;
-                                #endregion
-
-                            }
-                     
-                            Common.DataBindingHelper.InitDataToCmb(NewBsList, ktb.ValueMember, ktb.DisplayMember, ktb);
-                            ////因为选择中 实体数据并没有更新，下面两行是将对象对应的属性给一个选中的值。
-                            object selectValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(obj, ktb.ValueMember);
-                            Binding binding = null;
-                            if (ktb.DataBindings.Count > 0)
-                            {
-                                binding = ktb.DataBindings[0]; //这个是下拉绑定的实体集合
-                            }
-                            else
-                            {
-                                // binding = new Binding();
-                            }
-
-                            RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(binding.DataSource, ktb.ValueMember, selectValue);
-                        }
-                    }
-                }
-
-            }
-        }
-
+ 
 
         private void Bsa_Click(object sender, EventArgs e)
         {
@@ -883,61 +796,6 @@ namespace RUINORERP.UI.BaseForm
 
 
         #region 基础资料下拉添加编辑项
-
-        public void InitEditItemToControl(BaseEntity entity, System.Windows.Forms.Control.ControlCollection Controls)
-        {
-            //思路通过控件的数据源 调试时是产品，对应绑定的关联表的主键及 可的到对应的关联对象实体名。再通过菜单中对应关系找到相差窗体类。
-            //https://www.cnblogs.com/GaoUpUp/p/17187770.html
-            foreach (var control in Controls)
-            {
-                if (control is Control)
-                {
-                    InitEditFilterForControl(entity, control as Control);
-                }
-
-            }
-        }
-
-        /// <summary>
-        /// 单个控件的过滤器设置
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="item"></param>
-        public void InitEditFilterForControl(BaseEntity entity, System.Windows.Forms.Control item)
-        {
-            if (item is Control)
-            {
-                if (item is VisualControlBase)
-                {
-                    if (item.GetType().Name == "KryptonComboBox")
-                    {
-                        KryptonComboBox ktb = item as KryptonComboBox;
-                        if ((item as Control).DataBindings.Count > 0)
-                        {
-                            if (ktb.DataBindings.Count > 0 && ktb.DataSource is BindingSource)
-                            {
-                                ButtonSpecAny bsa = new ButtonSpecAny();
-                                bsa.Image = System.Drawing.Image.FromStream(Common.DataBindingHelper.GetResource("help4"));
-                                bsa.Tag = ktb;
-                                bsa.Click += BsaEdit_Click;
-                                ktb.ButtonSpecs.Add(bsa);
-                                //可以边框为红色不？
-                                //或必填项目有特别提示？
-                                //    string filedName = ktb.DataBindings[0].BindingMemberInfo.BindingField;
-
-                            }
-
-
-
-                        }
-                    }
-                }
-            }
-        }
-
-
-
-       
 
 
 
@@ -1842,8 +1700,8 @@ namespace RUINORERP.UI.BaseForm
                     {
                         if (ReflectionHelper.ExistPropertyName<T>("Created_by") && ReflectionHelper.GetPropertyValue(editEntity, "Created_by").ToString() != AppContext.CurUserInfo.Id.ToString())
                         {
-                            MessageBox.Show("只有创建人才能删除提交过的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            rss.ErrorMsg = "只有创建人才能删除提交过的单据。";
+                            MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            rss.ErrorMsg = "只有创建人才能删除提交的单据。";
                             rss.Succeeded = false;
                             return rss;
                         }
@@ -2098,8 +1956,6 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-
-
             // 如果没有条件列表 直接查全部。
             // CommonUI.frmQuery<T> frm = new CommonUI.frmQuery<T>();
             //frm.QueryConditions = QueryConditions;
@@ -2116,7 +1972,6 @@ namespace RUINORERP.UI.BaseForm
             ucBaseList.QueryConditionFilter = QueryConditionFilter;
             ucBaseList.CurMenuInfo = CurMenuInfo;
             ucBaseList.KeyValueTypeForDgv = typeof(T);
-            //ucBaseList.control = toolStripbtnQuery;
             ucBaseList.Runway = BaseListRunWay.选中模式;
             //从这里调用 就是来自于关联窗体，下面这个公共基类用于这个情况。暂时在那个里面来控制.Runway = BaseListRunWay.窗体;
             frmBaseEditList frm = new frmBaseEditList();

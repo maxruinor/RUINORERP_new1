@@ -24,7 +24,6 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using SqlSugar;
@@ -35,7 +34,6 @@ using RUINORERP.Business.Security;
 using RUINORERP.Business.Processor;
 using Krypton.Toolkit;
 using RUINORERP.UI.PSI.PUR;
-using NPOI.SS.Formula.Functions;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using RUINORERP.Global.Model;
 
@@ -231,7 +229,9 @@ namespace RUINORERP.UI.ProductEAV
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
                 base.InitRequiredToControl(new tb_PackingValidator(), kryptonPanelMainInfo.Controls);
-                base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
+                //UIBaseTool uIBaseTool = new();
+                //uIBaseTool.CurMenuInfo = CurMenuInfo;
+                //uIBaseTool.InitEditItemToControl<tb_Packing>(entity, kryptonPanelMainInfo.Controls);
 
                 var lambdaProdBundle = Expressionable.Create<tb_ProdBundle>()
                    .And(t => t.Is_enabled == true)
@@ -298,7 +298,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                     {
-                        MainForm.Instance.logger.LogInformation($"UCpacking删除:{typeof(T).Name}，主键值：{EditEntity.Pack_ID.ToString()} "); //如果要生效 要将配置文件
+                        MainForm.Instance.logger.LogInformation($"UCpacking删除:{typeof(tb_Packing).Name}，主键值：{EditEntity.Pack_ID.ToString()} "); //如果要生效 要将配置文件
                     }
                     bindingSourceSub.Clear();
                     //提示一下删除成功

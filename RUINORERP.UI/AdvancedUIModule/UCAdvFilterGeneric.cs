@@ -1,7 +1,6 @@
 ﻿using Krypton.Toolkit;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
-
 using RUINORERP.UI.Common;
 using System;
 using System.Collections.Generic;
@@ -39,6 +38,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 {
     /// <summary>
     /// 传入要查询的实体的类型和他的查询参数实体类型
+    /// 主要用于高级查询
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public partial class UCAdvFilterGeneric<T> : UCAdvFilter where T : class
@@ -296,16 +296,16 @@ namespace RUINORERP.UI.AdvancedUIModule
             // LimitQueryConditions = QueryConditionFilter.GetFilterExpression<T>();
 
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, QueryConditionFilter.GetFilterExpression<T>(), QueryDto, pageNum, pageSize) as List<T>;
-            if (QueryConditionFilter.FilterLimitExpressions ==null)
+            if (QueryConditionFilter.FilterLimitExpressions == null)
             {
                 QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
             }
-            
+
             list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<T>;
 
             bindingSourceList.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             dataGridView1.DataSource = bindingSourceList;
-      
+
         }
 
 
@@ -322,7 +322,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                     OnSelectDataRow(bindingSourceList.Current);
                 }
                 //将选中的值保存到这里，用在 复杂编辑UI时 编辑外键的其他资料
-                base.Tag = bindingSourceList;
+                base.Tag = bindingSourceList;//传过去的是bindingSourceList。选中的值用bindingSourceList.Current
                 //退出
                 Form frm = (this as Control).Parent.Parent as Form;
                 frm.DialogResult = DialogResult.OK;
@@ -423,7 +423,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
 
-           // UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
+            // UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
 
             PanelForQuery.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance
 | System.Reflection.BindingFlags.NonPublic).SetValue(PanelForQuery, true, null);
@@ -503,6 +503,11 @@ namespace RUINORERP.UI.AdvancedUIModule
                 {
                     LoadQueryConditionToUI(4);
                 }
+                #region 请求缓存
+                //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
+                UIBizSrvice.RequestCache<T>();
+                #endregion
+
             }
         }
 

@@ -31,8 +31,6 @@ namespace RUINORERP.UI.Common
     public static class UIHelper
     {
 
-
-
         /// <summary>
         /// 数组中值相乘带小数对于像这样的数组:[1,2,3,4]，我想得到 1*2*3*4 的乘积.
         /// </summary>
@@ -987,6 +985,17 @@ namespace RUINORERP.UI.Common
             {
                 return string.Empty;
             }
+            //如果是decimal类型，直接返回
+            if (value.GetType().Name == "Decimal")
+            {
+                return value.ToString();
+            }
+            //如果是decimal类型，直接返回
+            if (value.GetType().Name != "Int64")
+            {
+                return value.ToString();
+            }
+
             string NameValue = string.Empty;
 
             //如果是修改人创建人统一处理,并且要放在前面
@@ -1104,6 +1113,11 @@ namespace RUINORERP.UI.Common
             {
                 return string.Empty;
             }
+            //如果是KEY类型，直接返回
+            if (value.GetType().Name != "Int64")
+            {
+                return value.ToString();
+            }
             string NameValue = string.Empty;
             //如果是修改人创建人统一处理,并且要放在前面
             //定义两个字段为了怕后面修改，不使用字符串
@@ -1176,55 +1190,6 @@ namespace RUINORERP.UI.Common
 
             return NameValue;
         }
-
-
-
-        /*
-        public static string ShowGridColumnsNameValue(string tableName, string idColName, object value)
-        {
-            string NameValue = string.Empty;
-            //自己引用自己的特殊处理 如类目 BOM?
-            if (typeof(tb_ProdCategories).Name == tableName)
-            {
-                #region
-                if (!CacheHelper.Manager.FkPairTableList.ContainsKey(tableName))
-                {
-                    List<KeyValuePair<string, string>> kvSelflist = new List<KeyValuePair<string, string>>();
-                    Expression<Func<tb_ProdCategories, long?>> expKey = c => c.parent_id;
-                    MemberInfo minfo = expKey.GetMemberInfo();
-                    string key = minfo.Name;
-                    KeyValuePair<string, string> kv = new KeyValuePair<string, string>(key, typeof(tb_ProdCategories).Name);
-                    kvSelflist.Add(kv);
-                    if (kvSelflist.Count > 0)
-                    {
-                        CacheHelper.Manager.FkPairTableList.TryAdd(tableName, kvSelflist);
-                    }
-                }
-
-                #endregion
-            }
-            CacheHelper.Manager.SetFkColList(typeof(tb_ProdPropertyValue));
-
-            List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
-            if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(typeof(tb_ProdPropertyValue).Name, out kvlist))
-            {
-                var kv = kvlist.Find(k => k.Key == idColName);
-                //如果找不到呢？
-                if (kv.Key == null)
-                {
-                    return string.Empty;
-                }
-                string baseTableName = kv.Value;
-                object obj = BizCacheHelper.Instance.GetValue(baseTableName, value);
-                if (obj != null)
-                {
-                    NameValue = obj.ToString();
-                }
-            }
-            return NameValue;
-        }
-        */
-
 
 
         #region 注入窗体-开始

@@ -125,10 +125,10 @@ namespace RUINORERP.Model
 
         private bool _IsExclusive= true;
         /// <summary>
-        /// 是否可用
+        /// 责任人专属
         /// </summary>
-        [AdvQueryAttribute(ColName = "IsExclusive",ColDesc = "是否可用")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExclusive" ,IsNullable = false,ColumnDescription = "是否可用" )]
+        [AdvQueryAttribute(ColName = "IsExclusive",ColDesc = "责任人专属")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExclusive" ,IsNullable = false,ColumnDescription = "责任人专属")]
         public bool IsExclusive
         { 
             get{return _IsExclusive;}

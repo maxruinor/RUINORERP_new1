@@ -42,9 +42,7 @@ using HLH.Lib.List;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using System.IO;
 using OfficeOpenXml.Style;
-using NPOI.SS.Util;
 using log4net.Core;
-using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;
 using FileInfo = System.IO.FileInfo;
 

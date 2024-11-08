@@ -118,7 +118,7 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("UserInfos_CollectionChanged时出错" + ex.Message);
 
             }
 
@@ -148,7 +148,7 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("RefreshDataGridView时出错" + ex.Message);
 
             }
 
@@ -192,7 +192,7 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("UserInfo_PropertyChanged时出错" + ex.Message);
 
             }
         }

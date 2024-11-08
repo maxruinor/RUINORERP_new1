@@ -32,6 +32,9 @@ namespace RUINORERP.Business
             RuleFor(x => x.Discount).GreaterThan(0).WithMessage("明细中，折扣：要大于零。");
             RuleFor(x => x.UnitPrice).GreaterThan(0).When(c => c.IsGift == false).WithMessage("明细中，单价：非赠品时要大于零。");
             RuleFor(x => x.TransactionPrice).GreaterThan(0).When(c => c.IsGift == false).WithMessage("明细中，单价：非赠品时要大于零。");
+
+            //如果成交小计不等于成交价*数量，则抛出异常
+            RuleFor(x => x.TransactionPrice * x.Quantity).Equal(x => x.SubtotalAmount).WithMessage("明细中，成交小计：要等于成交价*数量。");
         }
     }
 

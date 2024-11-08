@@ -459,7 +459,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("强制用户退出时出错" + ex.Message);
             }
 #pragma warning restore CS0168 // 声明了变量，但从未使用过
 
@@ -477,7 +477,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("删除列配置文件时出错" + ex.Message);
             }
 #pragma warning restore CS0168 // 声明了变量，但从未使用过
 
@@ -495,7 +495,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("强制用户关机时出错" + ex.Message);
             }
 #pragma warning restore CS0168 // 声明了变量，但从未使用过
 
@@ -513,7 +513,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("发消息给客户端时出错" + ex.Message);
             }
 #pragma warning restore CS0168 // 声明了变量，但从未使用过
 
@@ -532,7 +532,7 @@ namespace RUINORERP.Server.BizService
             }
             catch (Exception ex)
             {
-
+                Console.WriteLine("推送版本更新时出错" + ex.Message);
             }
 #pragma warning restore CS0168 // 声明了变量，但从未使用过
 

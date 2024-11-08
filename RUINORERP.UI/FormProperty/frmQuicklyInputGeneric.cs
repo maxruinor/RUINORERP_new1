@@ -1,7 +1,6 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
 using HLH.WinControl.MyTypeConverter;
 using MathNet.Numerics.LinearAlgebra.Factorization;
-using NPOI.SS.Formula.Functions;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.UCSourceGrid;

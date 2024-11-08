@@ -171,6 +171,7 @@ namespace RUINORERP.Server.ServerSession
                     }
                     catch (Exception ex)
                     {
+                        Console.WriteLine("服务器解来自客户端的包时出错" + ex.Message);
                         frmMain.Instance._logger.LogError("服务器解来自客户端的包（SEP):" + ex.ToString());
                         gpi.kd = new KxData();
                     }

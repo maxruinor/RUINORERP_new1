@@ -39,7 +39,7 @@ using FastReport.DevComponents.DotNetBar.Controls;
 using Krypton.Toolkit;
 using FastReport.DevComponents.DotNetBar;
 using Command = RUINOR.Core.Command;
-using NPOI.SS.Formula.Functions;
+ 
 using NPOI.Util;
 using NPOI.POIFS.Properties;
 

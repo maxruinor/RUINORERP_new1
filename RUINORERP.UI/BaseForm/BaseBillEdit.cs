@@ -25,7 +25,6 @@ using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINORERP.UI.UCSourceGrid;
 using FluentValidation;
 using RUINORERP.Model.CommonModel;
-using NPOI.SS.Formula.Functions;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.UI.Common;

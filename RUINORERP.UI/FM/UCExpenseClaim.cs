@@ -35,7 +35,6 @@ using RUINOR.Core;
 using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using Krypton.Toolkit;
-using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;
 using RUINORERP.UI.SysConfig;
 using SourceGrid.Cells.Editors;
@@ -44,6 +43,8 @@ using SourceGrid.Cells.Models;
 using RUINORERP.UI.BI;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
 
 namespace RUINORERP.UI.FM
 {
@@ -123,7 +124,47 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ExpenseClaim>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
+            //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
+            if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
+            {
+                base.InitRequiredToControl(new tb_FM_ExpenseClaimValidator(), kryptonPanel1.Controls);
+                //UIBaseTool uIBaseTool = new();
+                //uIBaseTool.CurMenuInfo = CurMenuInfo;
+                //uIBaseTool.AddEditableQueryControl<tb_Employee>(cmbEmployee_ID, false);
 
+
+                #region 收款信息可以根据报销人带出 ，并且可以添加
+
+                //创建表达式
+                var lambda = Expressionable.Create<tb_FM_PayeeInfo>()
+                                .And(t => t.Is_enabled == true)
+                                .And(t => t.Employee_ID == AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了只能处理自己 的收款信息
+                                .ToExpression();//注意 这一句 不能少
+
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+                queryFilterC.FilterLimitExpressions.Add(lambda);
+                //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterC, true);
+
+
+                #endregion
+
+                if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
+                {
+                    entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                    EditEntity.Employee_ID = entity.Employee_ID;
+                    /*
+                       var obj = BizCacheHelper.Instance.GetEntity(nameof(tb_Employee), entity.Employee_ID);
+                       if (obj != null)
+                       {
+                           var emp = obj as tb_Employee;
+                           cmbEmployee_ID.SelectedIndex = cmbEmployee_ID.FindStringExact(emp.Employee_Name);
+                       }
+                      */
+                }
+
+            }
             if (entity.tb_FM_ExpenseClaimDetails != null && entity.tb_FM_ExpenseClaimDetails.Count > 0)
             {
                 //新建和草稿时子表编辑也可以保存。
@@ -165,7 +206,7 @@ namespace RUINORERP.UI.FM
                         {
                             DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                             //添加收款信息。展示给财务看
-                           
+
                             txtAccount_No.Text = cv.Account_No;
                             if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
                             {
@@ -180,7 +221,7 @@ namespace RUINORERP.UI.FM
                         }
                         else
                         {
-                             //cmbAccount_type
+                            //cmbAccount_type
                             txtAccount_No.Text = "";
                         }
                     }
@@ -437,7 +478,7 @@ namespace RUINORERP.UI.FM
                         return false;
                     }
                 }
-                
+
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
                 if (NeedValidated)
                 {
@@ -519,9 +560,14 @@ namespace RUINORERP.UI.FM
                                         var upladurl = configManager.GetValue("WebServerUploadUrl");
                                         string uploadRsult = await httpWebService.UploadImageAsyncOK(upladurl, fileName, valueImageWeb.CellImageBytes, "upload");
                                         //string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, "upload");
-                                        if (true)
+                                        if (uploadRsult.Contains("上传成功"))
                                         {
                                             MainForm.Instance.PrintInfoLog(uploadRsult);
+                                        }
+                                        else
+                                        {
+                                            MainForm.Instance.PrintInfoLog("请重试！ "+uploadRsult);
+                                            MainForm.Instance.LoginWebServer();
                                         }
 
 

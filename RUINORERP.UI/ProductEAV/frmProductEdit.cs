@@ -28,7 +28,6 @@ using static RUINORERP.UI.Common.DataBindingHelper;
 using Microsoft.International.Converters.PinYinConverter;
 using RUINORERP.Common.Extensions;
 using System.Drawing.Imaging;
-using NPOI.SS.Formula.Functions;
 using SqlSugar;
 using RUINORERP.Business.Processor;
 using Netron.GraphLib;

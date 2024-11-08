@@ -1,5 +1,4 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
-using NPOI.SS.Formula.Functions;
 using Pipelines.Sockets.Unofficial.Arenas;
 using RUINORERP.Business;
 using RUINORERP.Common.Extensions;

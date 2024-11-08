@@ -39,7 +39,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Model.CommonModel;
 using Krypton.Toolkit;
 using RUINORERP.UI.MRP.MP;
-using NPOI.SS.Formula.Functions;
+ 
 using RUINORERP.Business.CommService;
 
 

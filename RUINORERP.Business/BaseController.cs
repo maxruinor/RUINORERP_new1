@@ -33,10 +33,6 @@ namespace RUINORERP.Business
 
         }
 
-
-
-
-
         public virtual Task<TT> GetEntityAsync<TT>(long id)
         {
             //子类重写

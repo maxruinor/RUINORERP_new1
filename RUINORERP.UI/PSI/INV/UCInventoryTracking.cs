@@ -152,7 +152,7 @@ namespace RUINORERP.UI.PSI.INV
             base.MasterInvisibleCols.Add(c => c.Inv_Cost);
         }
 
-        private void 纵向库存跟踪ToolStripMenuItem_Click(object sender, EventArgs e)
+        private  void 纵向库存跟踪ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_UCMasterQuery.bindingSourceMaster.Current != null)
             {
@@ -187,7 +187,7 @@ namespace RUINORERP.UI.PSI.INV
 
 
 
-        private void 库存异常检测ToolStripMenuItem_Click(object sender, EventArgs e)
+        private  void 库存异常检测ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //进出加起来不等于期末的
             int ErrorCounter = 0;

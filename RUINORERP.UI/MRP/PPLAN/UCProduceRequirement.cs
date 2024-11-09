@@ -411,11 +411,7 @@ namespace RUINORERP.UI.MRP.MP
 
         }
 
-
-        //设计关联列和目标列
-        View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
-        List<View_ProdDetail> list = new List<View_ProdDetail>();
-
+ 
         #region for 目标分析
 
         SourceGridDefine sgdTarget = null;
@@ -511,7 +507,7 @@ namespace RUINORERP.UI.MRP.MP
             bindingSourceTarget.DataSource = lines;
             sgdTarget.BindingSourceLines = bindingSourceTarget;
 
-            sgdTarget.SetDependencyObject<ProductSharePart, tb_ProductionDemandTargetDetail>(list);
+            sgdTarget.SetDependencyObject<ProductSharePart, tb_ProductionDemandTargetDetail>(MainForm.Instance.list);
             sgdTarget.HasRowHeader = true;
             sghTarget.InitGrid(gridTargetItems, sgdTarget, true, nameof(tb_ProductionDemandTargetDetail));
         }
@@ -610,7 +606,7 @@ namespace RUINORERP.UI.MRP.MP
             bindingSourcePurchase.DataSource = lines;
             sgdPur.BindingSourceLines = bindingSourcePurchase;
 
-            sgdPur.SetDependencyObject<ProductSharePart, tb_PurGoodsRecommendDetail>(list);
+            sgdPur.SetDependencyObject<ProductSharePart, tb_PurGoodsRecommendDetail>(MainForm.Instance.list);
             sgdPur.HasRowHeader = true;
             sghPur.InitGrid(gridPurItems, sgdPur, true, nameof(tb_PurGoodsRecommendDetail));
             sghPur.OnCalculateColumnValue += SghPur_OnCalculateColumnValue;
@@ -722,15 +718,7 @@ namespace RUINORERP.UI.MRP.MP
 
             ColNameDataDicStockLess.TryAdd(expRefBizType.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType)));
 
-
-            //提出来。因为下面两个加载
-            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-            .AndIF(true, w => w.CNName.Length > 0)
-            // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-            .ToExpression();//注意 这一句 不能少
-                            // StringBuilder sb = new StringBuilder();
-            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list = dc.BaseQueryByWhere(exp);
+ 
 
             LoadTargetItems();
             LoadPurItems();
@@ -1483,7 +1471,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
             //将产品详情转换为基本信息列表
-            List<BaseProductInfo> BaseProductInfoList = mapper.Map<List<BaseProductInfo>>(list);
+            List<BaseProductInfo> BaseProductInfoList = mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
 
             //合并的实体中有指定的业务主键关联，不然无法给值  TODO:不科学，后面要修改完善！！！数据太多查出来性能不好。
             DataTable dtAll = lastNeedIitems.ToDataTable<BaseProductInfo, tb_ProductionDemandDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);
@@ -1549,7 +1537,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
             //将产品详情转换为基本信息列表
-            List<BaseProductInfo> BaseProductInfoList = mapper.Map<List<BaseProductInfo>>(list);
+            List<BaseProductInfo> BaseProductInfoList = mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
 
             //合并的实体中有指定的业务主键关联，不然无法给值
             DataTable dtAll = lastNeeditems.ToDataTable<BaseProductInfo, tb_ProduceGoodsRecommendDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);

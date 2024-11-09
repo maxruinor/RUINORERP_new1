@@ -102,7 +102,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="dto"></param>
         [MustOverride]
-        protected virtual void Query()
+        protected virtual async void Query()
         {
             //var eer = errorProviderForAllInput.GetError(txtPDNo);
 
@@ -164,7 +164,7 @@ namespace RUINORERP.UI.PSI.SAL
                     case NavigatorMenuType.销售出库业绩汇总:
 
                         #region 销售出库业绩汇总 
-                        var SaleOutList = GetSaleOutDataListFromProc();
+                        List<Proc_SaleOutStatisticsByEmployee> SaleOutList = GetSaleOutDataListFromProc();
                         if (kryptonNavigator1.SelectedPage != null)
                         {
                             UCQueryShow queryShow = kryptonNavigator1.SelectedPage.Controls.Find(navigatorMenu.menuType.ToString() + "QueryShow", true).FirstOrDefault() as UCQueryShow;
@@ -177,7 +177,8 @@ namespace RUINORERP.UI.PSI.SAL
                             UCBillMasterQuery queryMaster = kryptonNavigator1.SelectedPage.Controls.Find(navigatorMenu.menuType.ToString(), true).FirstOrDefault() as UCBillMasterQuery;
                             if (queryMaster != null)
                             {
-                                queryMaster.bindingSourceMaster.DataSource = SaleOutList.ToBindingSortCollection();
+                                 
+                                queryMaster.bindingSourceMaster.DataSource =SaleOutList.ToBindingSortCollection();
                                 queryMaster.ShowSummaryCols();
                             }
 
@@ -216,7 +217,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-        public List<Proc_SaleOrderStatisticsByEmployee> GetSaleOrderDataListFromProc(UCBillMasterQuery queryMaster)
+        public  List<Proc_SaleOrderStatisticsByEmployee> GetSaleOrderDataListFromProc(UCBillMasterQuery queryMaster)
         {
 
             //先固定两个特殊的查询条件集合
@@ -296,7 +297,7 @@ namespace RUINORERP.UI.PSI.SAL
             var StartQuery = new SugarParameter("@Start ", paraOrder.Start.ToString("yyyy-MM-dd"));//string 格式  '2024-04-01'
             var EndQuery = new SugarParameter("@End ", paraOrder.End.ToString("yyyy-MM-dd"));
             var sqloutput = new SugarParameter("@sqlOutput", null, true);//设置为output
-            var SaleOrderDataList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_SaleOrderStatisticsByEmployee>("Proc_SaleOrderStatisticsByEmployee",
+            var SaleOrderDataList =  MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_SaleOrderStatisticsByEmployee>("Proc_SaleOrderStatisticsByEmployee",
                 GroupByField, ProjectGroups, Employees, StartQuery, EndQuery, sqloutput);//返回List
 
             //动态 控制显示列
@@ -317,7 +318,7 @@ namespace RUINORERP.UI.PSI.SAL
             return SaleOrderDataList;
         }
 
-        public List<Proc_SaleOutStatisticsByEmployee> GetSaleOutDataListFromProc()
+        public  List<Proc_SaleOutStatisticsByEmployee> GetSaleOutDataListFromProc()
         {
             //带有output的存储过程 
             Proc_SaleOutStatisticsByEmployeePara paraOut = UIparaOut as Proc_SaleOutStatisticsByEmployeePara;
@@ -353,7 +354,7 @@ namespace RUINORERP.UI.PSI.SAL
             var EndQuery = new SugarParameter("@End ", paraOut.End.ToString("yyyy-MM-dd"));
             var sqloutput = new SugarParameter("@sqlOutput", null, true);//设置为output
                                                                          //var list = db.Ado.UseStoredProcedure().SqlQuery<Class1>("sp_school", nameP, ageP);//返回List
-            var SaleOutList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_SaleOutStatisticsByEmployee>("Proc_SaleOutStatisticsByEmployee"
+            var SaleOutList =  MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_SaleOutStatisticsByEmployee>("Proc_SaleOutStatisticsByEmployee"
                 , ProjectGroups, Employees, StartQuery, EndQuery, sqloutput);//返回List
             return SaleOutList;
         }
@@ -438,7 +439,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
             }
-            
+
         }
 
 

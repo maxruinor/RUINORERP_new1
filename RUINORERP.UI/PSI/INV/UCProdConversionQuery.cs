@@ -49,11 +49,9 @@ namespace RUINORERP.UI.PSI.INV
             base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
 
 
-            //View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
-            List<View_ProdDetail> list = new List<View_ProdDetail>();
-            list = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().ToList();
+            
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
-            foreach (var item in list)
+            foreach (var item in MainForm.Instance.list)
             {
                 proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
             }

@@ -37,6 +37,7 @@ namespace RUINORERP.Model
         /// 表中行数据可能存在的图片列。将来可能会扩展到多张图片
         /// </summary>
         [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
         public DataRowImage RowImage { get => _RowImage; set => _RowImage = value; }
 
 

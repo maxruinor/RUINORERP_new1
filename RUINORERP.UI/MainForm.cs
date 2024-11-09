@@ -325,7 +325,7 @@ namespace RUINORERP.UI
             List<tb_Company> company = await companyController.QueryAsync();
             if (company != null)
             {
-                this.Text = company[0].CNName + "企业数字化集成ERP v1.0" + "_" + AppContext.OnlineUser.客户端版本;
+                this.Text = company[0].CNName + "企业数字化集成ERP v2.0" + "_" + AppContext.OnlineUser.客户端版本;
             }
 
             // logger.LogInformation("打开主窗体准备进入系统");
@@ -358,10 +358,17 @@ namespace RUINORERP.UI
             }
             else
             {
-
+                authorizeController = Startup.GetFromFac<AuthorizeController>();
                 using (StatusBusy busy = new StatusBusy("系统正在【初始化】 请稍候"))
                 {
-                    //给一个默认值
+                    tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
+                    List<tb_MenuInfo> menuList = await menuInfoController.QueryAsync();
+                    //var rslist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(tb_MenuInfo));
+                    //if (rslist != null)
+                    //{
+                    MainForm.Instance.AppContext.UserMenuList = menuList;// rslist as List<tb_MenuInfo>;
+                                                                         //}
+                                                                         //给一个默认值
                     if (UserGlobalConfig.Instance.MenuPersonalizationlist == null)
                     {
                         UserGlobalConfig.Instance.MenuPersonalizationlist = new ConcurrentDictionary<string, MenuPersonalization>();
@@ -371,7 +378,6 @@ namespace RUINORERP.UI
                     View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
                     Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
                     .AndIF(true, w => w.CNName.Length > 0)
-                    // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
                     .ToExpression();//注意 这一句 不能少
                     list = dc.BaseQueryByWhere(exp);
 
@@ -397,7 +403,7 @@ namespace RUINORERP.UI
                 }
             }
 
-     
+
             Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
             LoadUIMenus();
             LoadUIForIM_LogPages();
@@ -408,13 +414,7 @@ namespace RUINORERP.UI
 
 
 
-            tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
-            List<tb_MenuInfo> menuList = menuInfoController.Query();
-            //var rslist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(tb_MenuInfo));
-            //if (rslist != null)
-            //{
-            MainForm.Instance.AppContext.UserMenuList = menuList;// rslist as List<tb_MenuInfo>;
-            //}
+
             LoginWebServer();
 
             System.Windows.Forms.Timer timerStatus = new System.Windows.Forms.Timer();
@@ -427,8 +427,10 @@ namespace RUINORERP.UI
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
             BizCacheHelper.InitManager();
             UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
-        }
+           
 
+        }
+        public AuthorizeController authorizeController;
         private void RefreshData()
         {
             // 更新状态栏信息
@@ -866,10 +868,10 @@ namespace RUINORERP.UI
                 this.SystemOperatorState.Text = "登出";
                 AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
-                var result =await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
+                var result = await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
                 .UpdateColumns(it => new { it.Lastlogout_at }).ExecuteCommandAsync();
                 ClearUI();
-            
+
                 ClearData();
                 Application.DoEvents();
 

@@ -32,6 +32,7 @@ using RUINORERP.Common.Extensions;
 using System.Threading;
 using SuperSocket.ClientEngine;
 using RUINORERP.UI.SuperSocketClient;
+using RUINORERP.Business.Security;
 
 
 namespace RUINORERP.UI
@@ -74,6 +75,8 @@ namespace RUINORERP.UI
             //services.AddScoped(typeof(SqlSugarRepository<>)); // 仓储注册
             //services.AddUnitOfWork<SqlSugarUnitOfWork>(); // 事务与工作单元注册
 
+    
+  
 
             #region 自动注入对应的服务接口
             //services.AddSingleton<IDictDataService, DictDataService>();//services.AddScoped<IUserService, UserService>();

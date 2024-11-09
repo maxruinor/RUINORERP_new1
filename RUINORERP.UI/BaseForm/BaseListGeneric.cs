@@ -1636,6 +1636,7 @@ namespace RUINORERP.UI.BaseForm
                                 OriginalData odforCache = ActionForClient.更新缓存<T>(rr.ReturnObject);
                                 byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
                                 MainForm.Instance.ecs.client.Send(buffer);
+                                
                             }
 
                         }

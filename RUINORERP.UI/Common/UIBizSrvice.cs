@@ -18,6 +18,62 @@ namespace RUINORERP.UI.Common
 {
     public static class UIBizSrvice
     {
+
+        #region 从缓存中取产品显示数据
+
+        public static List<KeyValuePair<object, string>> GetProductList()
+        {
+            List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
+            List<View_ProdDetail> list = new List<View_ProdDetail>();
+            var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(View_ProdDetail));
+            if (cachelist == null)
+            {
+                list = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().ToList();
+            }
+            else
+            {
+                #region 利用缓存
+                Type listType = cachelist.GetType();
+                if (TypeHelper.IsGenericList(listType))
+                {
+                    if (listType.FullName.Contains("System.Collections.Generic.List`1[[System.Object"))
+                    {
+                        List<View_ProdDetail> lastOKList = new List<View_ProdDetail>();
+                        var lastlist = ((IEnumerable<dynamic>)cachelist).ToList();
+                        foreach (var item in lastlist)
+                        {
+                            lastOKList.Add(item);
+                        }
+                        list = lastOKList;
+                    }
+                    else
+                    {
+                        list = cachelist as List<View_ProdDetail>;
+                    }
+                }
+                else if (TypeHelper.IsJArrayList(listType))
+                {
+                    List<View_ProdDetail> lastOKList = new List<View_ProdDetail>();
+                    var objlist = TypeHelper.ConvertJArrayToList(typeof(View_ProdDetail), cachelist as Newtonsoft.Json.Linq.JArray);
+                    var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
+                    foreach (var item in lastlist)
+                    {
+                        lastOKList.Add(item);
+                    }
+                    list = lastOKList;
+                }
+
+                #endregion
+            }
+            foreach (var item in list)
+            {
+                proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
+            }
+            return proDetailList;
+        }
+
+        #endregion
+
         /// <summary>
         /// 保存收款人信息
         /// </summary>

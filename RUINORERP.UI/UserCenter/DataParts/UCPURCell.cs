@@ -35,7 +35,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
 
-        private void QueryPUROrderStatus()
+        private  void QueryPUROrderStatus()
         {
             try
             {

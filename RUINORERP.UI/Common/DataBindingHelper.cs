@@ -190,8 +190,9 @@ namespace RUINORERP.UI.Common
                                 tb_MenuInfo menuinfo = MainForm.Instance.MenuList.FirstOrDefault(t => t.EntityName == fktableName.ToString());
                                 if (menuinfo == null)
                                 {
-                                    MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，请联系管理员。");
-                                    return;
+                                    //MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，请联系管理员。");
+                                    //没有权限就只能查询。有权限就可以新增？
+                                    CanEdit = false;
                                 }
 
 

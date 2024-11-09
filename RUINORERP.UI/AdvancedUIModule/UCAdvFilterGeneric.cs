@@ -324,6 +324,8 @@ namespace RUINORERP.UI.AdvancedUIModule
                 //将选中的值保存到这里，用在 复杂编辑UI时 编辑外键的其他资料
                 base.Tag = bindingSourceList;//传过去的是bindingSourceList。选中的值用bindingSourceList.Current
                 //退出
+
+                ListDataSoure = bindingSourceList;
                 Form frm = (this as Control).Parent.Parent as Form;
                 frm.DialogResult = DialogResult.OK;
                 frm.Close();

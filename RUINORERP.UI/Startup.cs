@@ -47,6 +47,7 @@ using FluentValidation;
 using RUINORERP.Business.Processor;
 using WorkflowCore.Services;
 using RUINORERP.UI.SysConfig;
+using RUINORERP.Business.Security;
 
 
 namespace RUINORERP.UI
@@ -535,6 +536,8 @@ namespace RUINORERP.UI
         /// <param name="services"></param>
         public static void ConfigureServices(IServiceCollection services)
         {
+
+
             services.AddSingleton(typeof(ConfigManager));
             services.AddSingleton(typeof(MainForm_test));//MDI最大。才开一次才能单例
             services.AddSingleton(typeof(MainForm));//MDI最大。才开一次才能单例
@@ -631,13 +634,14 @@ namespace RUINORERP.UI
             string conn = AppSettings.GetValue("ConnectString");
             services.AddSqlsugarSetup(Program.AppContextData, configuration);
 
-            
+            //services.AddSingleton<ApplicationContext>(Program.AppContextData);
+            //services.AddTransient<BaseController, AuthorizeController>();
 
             //  services.AddSingleton(typeof(AutoMapperConfig));
             // IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
             //services.AddScoped<IMapper, Mapper>();
             //services.AddSingleton<IMapper>(mapper);
-            
+
 
             //services.AddSingleton(IDefinitionLoader);
 
@@ -842,6 +846,14 @@ namespace RUINORERP.UI
                 if (tempTypes[i].Name == "Roles")
                 {
 
+                }
+                if (tempTypes[i].Name == "IAuthorizeController")
+                {
+                    builder.RegisterType<AuthorizeController>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
                 }
                 if (tempTypes[i].Name == "QueryFilter")
                 {

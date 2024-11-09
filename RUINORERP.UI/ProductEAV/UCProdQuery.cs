@@ -6,7 +6,7 @@ using Krypton.Toolkit;
 using Krypton.Toolkit.Suite.Extended.TreeGridView;
 using Krypton.Workspace;
 using Netron.GraphLib;
- 
+
 using Org.BouncyCastle.Math;
 using RUINORERP.Business;
 using RUINORERP.Common.CollectionExtension;
@@ -310,6 +310,29 @@ namespace RUINORERP.UI.ProductEAV
                 e.Value = "";
                 return;
             }
+
+            //图片特殊处理 要优化处理。会被覆盖值
+            if (newSumDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
+            {
+                if (e.Value != null)
+                {
+                    if (!(e.Value is byte[]))
+                    {
+                        return;
+                    }
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    if (image != null)
+                    {
+                        //缩略图 这里用缓存 ?
+                        Image thumbnailthumbnail = this.thumbnail(image, 100, 100);
+                        e.Value = thumbnailthumbnail;
+                        return;
+                    }
+
+                }
+            }
+
             //固定字典值显示
             string colDbName = newSumDataGridView产品.Columns[e.ColumnIndex].Name;
             if (ColNameDataDictionary.ContainsKey(colDbName))
@@ -336,24 +359,10 @@ namespace RUINORERP.UI.ProductEAV
             if (!string.IsNullOrEmpty(colName))
             {
                 e.Value = colName;
+                return;
             }
 
-            //图片特殊处理
-            if (newSumDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    if (image != null)
-                    {
-                        //缩略图 这里用缓存 ?
-                        Image thumbnailthumbnail = this.thumbnail(image, 100, 100);
-                        e.Value = thumbnailthumbnail;
-                    }
-
-                }
-            }
+  
 
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
 
@@ -735,7 +744,7 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         public bool MultipleChoices { get; set; } = false;
 
-       
+
         //改版
         //返回值将单个值对象等，改为数组
         public object QueryValue { get => _queryValue; set => _queryValue = value; }

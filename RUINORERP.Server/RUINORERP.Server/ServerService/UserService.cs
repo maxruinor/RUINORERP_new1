@@ -181,6 +181,11 @@ namespace RUINORERP.Server.BizService
                     }
                     SessionforBiz sessionforBiz = item.Value as SessionforBiz;
                     sessionforBiz.AddSendData((byte)ServerCmdEnum.转发更新缓存, null, tx.toByte());
+
+                    if (frmMain.Instance.IsDebug)
+                    {
+                        frmMain.Instance.PrintMsg($"转发更新缓存{tableName}给：" + item.Value.User.姓名);
+                    }
                 }
 
             }

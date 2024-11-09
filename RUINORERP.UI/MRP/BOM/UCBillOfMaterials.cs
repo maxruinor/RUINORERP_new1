@@ -1034,10 +1034,7 @@ namespace RUINORERP.UI.MRP.BOM
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
-        //设计关联列和目标列
-        View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
-        List<View_ProdDetail> list = new List<View_ProdDetail>();
-
+     
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             LoadGrid1();
@@ -1125,15 +1122,9 @@ namespace RUINORERP.UI.MRP.BOM
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
 
-            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-        .AndIF(true, w => w.CNName.Length > 0)
-        // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-        .ToExpression();//注意 这一句 不能少
-                        // StringBuilder sb = new StringBuilder();
-            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list = dc.BaseQueryByWhere(exp);
+        
 
-            sgd.SetDependencyObject<ProductSharePart, tb_BOM_SDetail>(list);
+            sgd.SetDependencyObject<ProductSharePart, tb_BOM_SDetail>(MainForm.Instance.list);
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_BOM_SDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;

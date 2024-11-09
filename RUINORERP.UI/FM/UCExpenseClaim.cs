@@ -150,6 +150,21 @@ namespace RUINORERP.UI.FM
 
                 #endregion
 
+
+                #region 报销人
+ 
+                var lambdaEmp = Expressionable.Create<tb_Employee>()
+                                .And(t => t.Is_enabled == true)
+                                .ToExpression(); 
+                BaseProcessor baseProcessorEmp = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_Employee).Name + "Processor");
+                QueryFilter queryFilterEmp = baseProcessor.GetQueryFilter();
+                queryFilterEmp.FilterLimitExpressions.Add(lambdaEmp);
+                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_Employee>(entity, cmbEmployee_ID, c => c.Employee_Name, queryFilterEmp, true);
+
+
+                #endregion
+
+
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                 {
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;

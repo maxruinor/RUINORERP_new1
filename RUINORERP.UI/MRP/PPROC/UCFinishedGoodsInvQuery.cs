@@ -32,7 +32,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.DeliveryBillNo);
-         
+
             base.ChildRelatedEntityType = typeof(tb_PurOrderDetail);
             //  base.OnQueryRelatedChild += UCPurEntryQuery_OnQueryRelatedChild;
         }
@@ -53,12 +53,8 @@ namespace RUINORERP.UI.PSI.PUR
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
-
-            //View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
-            List<View_ProdDetail> list = new List<View_ProdDetail>();
-            list = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().ToList();
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
-            foreach (var item in list)
+            foreach (var item in MainForm.Instance.list)
             {
                 proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
             }
@@ -107,7 +103,7 @@ namespace RUINORERP.UI.PSI.PUR
             // base.ChildRelatedSummaryCols.Add(c => c.Quantity);
         }
 
- 
+
 
         /*
 

@@ -8,14 +8,95 @@ using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 
 namespace RUINORERP.Business.Security
 {
+    public interface IAuthorizeController
+    {
+        bool GetQueryPageLayoutCustomize();
+        bool GetQueryGridColCustomize();
+        bool GetBillGridColCustomize();
+        bool GetSaleLimitedAuth();
+        bool GetOwnershipControl();
+        bool GetPurBizLimitedAuth();
+        bool GetExclusiveLimitedAuth();
+        int GetMoneyDataPrecision();
+        bool GetDebugAuth();
+        bool GetShowDebugInfoAuthorization();
+    }
+
 
     /// <summary>
     /// 特殊授权管理器
     /// 系统配置管理器
     /// </summary>
-    public class AuthorizeController
+    public class AuthorizeController : IAuthorizeController
     {
+        private readonly ApplicationContext _context;
 
+        public AuthorizeController(ApplicationContext context)
+        {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+        }
+
+        public bool GetQueryPageLayoutCustomize()
+        {
+            return GetCustomizeOrDefault(_context.rolePropertyConfig?.QueryPageLayoutCustomize, _context.SysConfig.QueryPageLayoutCustomize);
+        }
+
+        public bool GetQueryGridColCustomize()
+        {
+            return GetCustomizeOrDefault(_context.rolePropertyConfig?.QueryGridColCustomize, _context.SysConfig.QueryGridColCustomize);
+        }
+
+        public bool GetBillGridColCustomize()
+        {
+            return GetCustomizeOrDefault(_context.rolePropertyConfig?.BillGridColCustomize, _context.SysConfig.BillGridColCustomize);
+        }
+
+        public bool GetSaleLimitedAuth()
+        {
+            return !_context.IsSuperUser && (_context.rolePropertyConfig?.SaleBizLimited ?? _context.SysConfig.SaleBizLimited);
+        }
+
+        public bool GetOwnershipControl()
+        {
+            return !_context.IsSuperUser && (_context.rolePropertyConfig?.OwnershipControl ?? _context.SysConfig.OwnershipControl);
+        }
+
+        public bool GetPurBizLimitedAuth()
+        {
+            return !_context.IsSuperUser && (_context.rolePropertyConfig?.PurchsaeBizLimited ?? _context.SysConfig.PurchsaeBizLimited);
+        }
+
+        public bool GetExclusiveLimitedAuth()
+        {
+            return !_context.IsSuperUser && (_context.rolePropertyConfig?.ExclusiveLimited ?? false);
+        }
+
+        public int GetMoneyDataPrecision()
+        {
+            return !_context.IsSuperUser ? (_context.rolePropertyConfig?.MoneyDataPrecision ?? _context.SysConfig.MoneyDataPrecision) : 4;
+        }
+
+        public bool GetDebugAuth()
+        {
+            return GetShowDebugInfoAuthorization();
+        }
+
+        public bool GetShowDebugInfoAuthorization()
+        {
+            if (_context.SysConfig.ShowDebugInfo)
+            {
+                return _context.rolePropertyConfig?.ShowDebugInfo ?? _context.SysConfig.ShowDebugInfo;
+            }
+            else
+            {
+                return _context.IsSuperUser && _context.SysConfig.IsDebug;
+            }
+        }
+
+        private bool GetCustomizeOrDefault(bool? roleProperty, bool sysConfigDefault)
+        {
+            return roleProperty ?? sysConfigDefault;
+        }
         /// <summary>
         /// 查询页布局自定义
         /// </summary>

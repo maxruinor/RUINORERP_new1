@@ -118,7 +118,11 @@ namespace RUINORERP.UI.SuperSocketClient
                             MyCacheManager.Instance.UpdateEntityList(tablename, jsonlist);
                         }
                     }
-                    MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
+                    if (MainForm.Instance.authorizeController.GetDebugAuth())
+                    {
+                        MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
+                    }
+
                 }
             }
             catch (Exception ex)
@@ -233,6 +237,11 @@ namespace RUINORERP.UI.SuperSocketClient
                 }
                 File.WriteAllText(PathwithFileName, BillData);
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
+
+                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                {
+                    MainForm.Instance.PrintInfoLog($"收到服务器转发{userinfo.姓名}的协助处理请求！");
+                }
             }
             catch (Exception ex)
             {
@@ -253,7 +262,10 @@ namespace RUINORERP.UI.SuperSocketClient
                 // 将item转换为JObject
                 var obj = JObject.Parse(json);
                 MyCacheManager.Instance.UpdateEntityList(tableName, obj);
-
+                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                {
+                    MainForm.Instance.PrintInfoLog($"接收转发更新缓存{tableName}成功！");
+                }
             }
             catch (Exception ex)
             {

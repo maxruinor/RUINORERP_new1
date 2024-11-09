@@ -94,12 +94,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     switch (item.Cells[0].Value)
                     {
-                       case "未提交":
-                           sqlquery = string.Format($"SELECT CASE WHEN DataStatus = 1 THEN	'未提交' ELSE '' END AS 订单状态,SaleDate,SOrder_ID ,SOrderNo FROM	 tb_SaleOrder WHERE	DataStatus = 1 " + WhereClause);
-                           break;
-                       case "未审核":
-                           sqlquery = string.Format($"SELECT CASE WHEN DataStatus = 2 THEN	'未审核' ELSE '' END AS 订单状态,SaleDate,SOrder_ID ,SOrderNo FROM	 tb_SaleOrder WHERE	(DataStatus = 2 OR ApprovalStatus = 0) " + WhereClause);
-                           break;
+                        case "未提交":
+                            sqlquery = string.Format($"SELECT CASE WHEN DataStatus = 1 THEN	'未提交' ELSE '' END AS 订单状态,SaleDate,SOrder_ID ,SOrderNo FROM	 tb_SaleOrder WHERE	DataStatus = 1 " + WhereClause);
+                            break;
+                        case "未审核":
+                            sqlquery = string.Format($"SELECT CASE WHEN DataStatus = 2 THEN	'未审核' ELSE '' END AS 订单状态,SaleDate,SOrder_ID ,SOrderNo FROM	 tb_SaleOrder WHERE	(DataStatus = 2 OR ApprovalStatus = 0) " + WhereClause);
+                            break;
                         case "未出库":
                             sqlquery = string.Format($"SELECT CASE WHEN DataStatus = 4 THEN	'未出库' ELSE '' END AS 订单状态,SaleDate,SOrder_ID ,SOrderNo FROM	 tb_SaleOrder WHERE	DataStatus = 4 " + WhereClause);
                             break;
@@ -149,7 +149,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             long lastInputTime = MainForm.GetLastInputTime();
             if (lastInputTime > 10000 && kryptonTreeGridView1.Rows.Count > 0)
             {
-               // MainForm.Instance.ShowMsg($"您有需要处理的盘点单。");
+                // MainForm.Instance.ShowMsg($"您有需要处理的盘点单。");
             }
             //if (MainForm.GetLastInputTime() > 10000 && kryptonTreeGridView1.Rows.Count > 0)
             //{

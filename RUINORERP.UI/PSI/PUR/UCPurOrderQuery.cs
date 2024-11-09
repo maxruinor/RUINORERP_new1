@@ -24,6 +24,8 @@ using System.Diagnostics;
 using System.Linq.Dynamic.Core;
 using RUINORERP.Common.Helper;
 using System.Linq.Expressions;
+using RUINORERP.Business.CommService;
+using FastReport.Table;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -48,21 +50,14 @@ namespace RUINORERP.UI.PSI.PUR
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
-
             System.Linq.Expressions.Expression<Func<tb_PurOrder, int?>> exprDataStatus;
             exprDataStatus = (p) => p.DataStatus;
             base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
 
-            List<View_ProdDetail> list = new List<View_ProdDetail>();
-            list = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().ToList();
-            List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
-            foreach (var item in list)
-            {
-                proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
-            }
+ 
             System.Linq.Expressions.Expression<Func<tb_SaleOrderDetail, long>> expProdDetailID;
             expProdDetailID = (p) => p.ProdDetailID;// == name;
-            base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
+            base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, UIBizSrvice.GetProductList());
         }
 
         public override void BuildLimitQueryConditions()

@@ -34,10 +34,28 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.PDNo);
-
+            base.ChildRelatedEntityType = typeof(tb_ProductionDemandTargetDetail);
+            base.OnQueryRelatedChild += UCPurEntryQuery_OnQueryRelatedChild;
             //显示转出库单
             tsbtnBatchConversion.Visible = false;
             //base._UCBillMasterQuery.ColDisplayType = typeof(tb_ProductionDemand);
+        }
+        private async void UCPurEntryQuery_OnQueryRelatedChild(object obj, BindingSource bindingSource)
+        {
+            if (obj != null)
+            {
+                if (obj is tb_ProductionDemand Production)
+                {
+                    if (Production.PDID == 0)
+                    {
+                        bindingSource.DataSource = null;
+                    }
+                    else
+                    {
+                        bindingSource.DataSource = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemandTargetDetail>().Where(c => c.PDID == Production.PDID).ToListAsync();
+                    }
+                }
+            }
         }
 
         public override void SetGridViewDisplayConfig()
@@ -69,7 +87,7 @@ namespace RUINORERP.UI.MRP.MP
             //expr2 = (p) => p.Gift;// == name;
             //base.ChildColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
 
-            
+
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
             foreach (var item in MainForm.Instance.list)
             {

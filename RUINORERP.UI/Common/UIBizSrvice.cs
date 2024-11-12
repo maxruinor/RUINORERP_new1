@@ -170,7 +170,6 @@ namespace RUINORERP.UI.Common
                 {
                     if (type == null)
                     {
-
                         type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
                     }
 

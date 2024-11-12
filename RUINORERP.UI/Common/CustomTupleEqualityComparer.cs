@@ -59,7 +59,7 @@ namespace RUINORERP.UI.Common
             foreach (var field in fields)
             {
                 var value = field.GetValue(obj);
-                if (value is Tuple)
+                if (value is Tuple && value.GetType() == typeof(Tuple<int, string>))
                 {
                     hash = hash * 23 + GetHashCode((T)value);
                 }

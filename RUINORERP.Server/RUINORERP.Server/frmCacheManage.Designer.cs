@@ -143,6 +143,7 @@ namespace RUINORERP.Server
             // 
             // cmbUser
             // 
+            cmbUser.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             cmbUser.Name = "cmbUser";
             cmbUser.Size = new System.Drawing.Size(121, 25);
             // 

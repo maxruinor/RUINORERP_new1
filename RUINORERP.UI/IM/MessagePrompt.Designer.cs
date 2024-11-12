@@ -32,11 +32,11 @@
             this.bindingSourceEdit = new System.Windows.Forms.BindingSource(this.components);
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.timerForToolTip = new System.Windows.Forms.Timer(this.components);
-            this.txtBillNO = new Krypton.Toolkit.KryptonTextBox();
+            this.txtSender = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
-            this.txtBillType = new Krypton.Toolkit.KryptonTextBox();
+            this.txtSubject = new Krypton.Toolkit.KryptonTextBox();
             this.lblUnitName = new Krypton.Toolkit.KryptonLabel();
             this.lblDesc = new Krypton.Toolkit.KryptonLabel();
             this.txtContent = new Krypton.Toolkit.KryptonTextBox();
@@ -61,12 +61,12 @@
             // 
             this.timerForToolTip.Interval = 1000;
             // 
-            // txtBillNO
+            // txtSender
             // 
-            this.txtBillNO.Location = new System.Drawing.Point(74, 7);
-            this.txtBillNO.Name = "txtBillNO";
-            this.txtBillNO.Size = new System.Drawing.Size(208, 23);
-            this.txtBillNO.TabIndex = 68;
+            this.txtSender.Location = new System.Drawing.Point(74, 7);
+            this.txtSender.Name = "txtSender";
+            this.txtSender.Size = new System.Drawing.Size(208, 23);
+            this.txtSender.TabIndex = 68;
             // 
             // kryptonLabel1
             // 
@@ -95,12 +95,12 @@
             this.btnOk.Values.Text = "确定";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // txtBillType
+            // txtSubject
             // 
-            this.txtBillType.Location = new System.Drawing.Point(74, 34);
-            this.txtBillType.Name = "txtBillType";
-            this.txtBillType.Size = new System.Drawing.Size(208, 23);
-            this.txtBillType.TabIndex = 9;
+            this.txtSubject.Location = new System.Drawing.Point(74, 34);
+            this.txtSubject.Name = "txtSubject";
+            this.txtSubject.Size = new System.Drawing.Size(208, 23);
+            this.txtSubject.TabIndex = 9;
             // 
             // lblUnitName
             // 
@@ -133,9 +133,9 @@
             // 
             // kryptonGroupBoxCurrentNode.Panel
             // 
-            this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtBillNO);
+            this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtSender);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.kryptonLabel1);
-            this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtBillType);
+            this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtSubject);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblUnitName);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblDesc);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtContent);
@@ -184,9 +184,7 @@
         public System.Windows.Forms.ErrorProvider errorProviderForAllInput;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxCurrentNode;
-        private Krypton.Toolkit.KryptonTextBox txtBillNO;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
-        private Krypton.Toolkit.KryptonTextBox txtBillType;
         private Krypton.Toolkit.KryptonLabel lblUnitName;
         private Krypton.Toolkit.KryptonLabel lblDesc;
         private Krypton.Toolkit.KryptonTextBox txtContent;
@@ -194,5 +192,7 @@
         private Krypton.Toolkit.KryptonButton btnOk;
         private System.Windows.Forms.Timer timerForToolTip;
         internal System.Windows.Forms.ToolTip toolTipBase;
+        public Krypton.Toolkit.KryptonTextBox txtSender;
+        public Krypton.Toolkit.KryptonTextBox txtSubject;
     }
 }

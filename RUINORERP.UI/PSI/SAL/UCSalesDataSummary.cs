@@ -102,7 +102,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="dto"></param>
         [MustOverride]
-        protected virtual async void Query()
+        protected virtual  void Query()
         {
             //var eer = errorProviderForAllInput.GetError(txtPDNo);
 

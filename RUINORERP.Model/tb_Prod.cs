@@ -135,6 +135,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _VendorModelCode;
+        /// <summary>
+        /// 厂商型号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "VendorModelCode", ColDesc = "厂商型号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "VendorModelCode", Length = 50, IsNullable = true, ColumnDescription = "厂商型号")]
+        public string VendorModelCode
+        {
+            get { return _VendorModelCode; }
+            set
+            {
+                SetProperty(ref _VendorModelCode, value);
+            }
+        }
+
         private string _ShortCode;
         /// <summary>
         /// 短码

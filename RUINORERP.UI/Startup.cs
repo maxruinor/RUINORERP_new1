@@ -48,6 +48,7 @@ using RUINORERP.Business.Processor;
 using WorkflowCore.Services;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Business.Security;
+using Castle.Core.Logging;
 
 
 namespace RUINORERP.UI
@@ -99,7 +100,7 @@ namespace RUINORERP.UI
         {
             #region  注册
             Services = new ServiceCollection();
-           
+
             #region 模仿csla 为了上下文
             //为了上下文
             // ApplicationContext defaults
@@ -118,7 +119,7 @@ namespace RUINORERP.UI
             //如果注册为名称的，需要这样操作
             builder.RegisterType<RUINORERP.UI.SS.MenuInit>().Named<UserControl>("MENU")
             .AsImplementedInterfaces().AsSelf();
-  
+
 
 
             ConfigureContainerForDll(builder);
@@ -552,8 +553,10 @@ namespace RUINORERP.UI
             services.AddScoped(typeof(UserControl));
             services.AddScoped(typeof(BaseListWithTree));
 
-
-
+            services.AddScoped(typeof(Model.CacheInfo));
+            services.AddScoped(typeof(Model.TranMessage));
+            services.AddScoped(typeof(Model.LastCacheFetchInfo));
+            services.AddScoped(typeof(Model.CacheFetchManager));
             // services.AddSingleton(new AppSettings(WebHostEnvironment));
             //services.AddScoped<ICurrentUser, CurrentUser>();
             //services.AddSingleton(Configuration);
@@ -910,8 +913,8 @@ namespace RUINORERP.UI
                 //基类本身
                 if (tempTypes[i].Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
                 {
-                     builder.RegisterGeneric(typeof(BaseValidatorGeneric<>));
-                     builder.RegisterGeneric(typeof(AbstractValidator<>)); 
+                    builder.RegisterGeneric(typeof(BaseValidatorGeneric<>));
+                    builder.RegisterGeneric(typeof(AbstractValidator<>));
                 }
                 //子类
                 if (tempTypes[i].BaseType.Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
@@ -1198,6 +1201,7 @@ namespace RUINORERP.UI
         {
             // return ServiceProvider.GetService<T>();
             //use csla
+            Console.WriteLine($"AutofacContainerScope : {typeof(T).FullName}");
             return AutofacContainerScope.Resolve<T>();
             //原来模式
             // return AutoFacContainer.Resolve<T>();

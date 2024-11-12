@@ -381,17 +381,25 @@ namespace RUINORERP.UI.BaseForm
                         {
 
                         }
-
-                        //取关联值来显示
-                        string displayText = GetDisplayText(kryptonOutlookGrid1.Columns[i].Name, value);
-                        if (!string.IsNullOrEmpty(displayText))
-                        {
-                            values[i] = displayText;
-                        }
-                        else
+                        if (value.GetType().Name=="DateTime")
                         {
                             values[i] = value;
                         }
+                        else
+                        {
+                            //取关联值来显示
+                            //string displayText = UIHelper.GetDisplayText(kryptonOutlookGrid1.Columns[i].Name, value);
+                            string displayText = UIHelper.GetDisplayText(ColNameDataDictionary, kryptonOutlookGrid1.Columns[i].Name, value, ColDisplayTypes, entityType).ToString();
+                            if (!string.IsNullOrEmpty(displayText))
+                            {
+                                values[i] = displayText;
+                            }
+                            else
+                            {
+                                values[i] = value;
+                            }
+                        }
+                        
 
                     }
                     else
@@ -484,7 +492,15 @@ namespace RUINORERP.UI.BaseForm
             //Calculate the total preferred width
             foreach (DataGridViewColumn c in kryptonOutlookGrid1.Columns)
             {
-                PreferredTotalWidth += Math.Min(c.GetPreferredWidth(DataGridViewAutoSizeColumnMode.DisplayedCells, true), 250);
+                try
+                {
+                    PreferredTotalWidth += Math.Min(c.GetPreferredWidth(DataGridViewAutoSizeColumnMode.DisplayedCells, true), 250);
+                }
+                catch (Exception ex)
+                {
+
+                }
+
             }
 
             if (kryptonOutlookGrid1.Width > PreferredTotalWidth)
@@ -545,11 +561,11 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (kryptonOutlookGrid1.CurrentRow.Tag is BaseEntity entity)
                 {
-                     
-                        //特殊情况处理 当前行的业务类型：销售出库  库存盘点 对应一个集合，再用原来的方法来处理
-                        GridRelated.GuideToForm(kryptonOutlookGrid1.Columns[e.ColumnIndex].Name, entity);
-                     
-                   
+
+                    //特殊情况处理 当前行的业务类型：销售出库  库存盘点 对应一个集合，再用原来的方法来处理
+                    GridRelated.GuideToForm(kryptonOutlookGrid1.Columns[e.ColumnIndex].Name, entity);
+
+
                 }
             }
         }

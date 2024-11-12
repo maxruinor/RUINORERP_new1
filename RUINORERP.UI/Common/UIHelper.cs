@@ -31,6 +31,75 @@ namespace RUINORERP.UI.Common
     public static class UIHelper
     {
 
+
+
+        public static object GetDisplayText(ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ColNameDataDictionary,
+            string colDbName, object Value, List<Type> ColDisplayTypes = null, Type entityType = null)
+        {
+            string DisplayText = string.Empty;
+            //固定字典值显示
+            if (ColNameDataDictionary.ContainsKey(colDbName))
+            {
+                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
+                //意思是通过列名找，再通过值找到对应的文本
+                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
+                if (kvlist != null)
+                {
+                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == Value.ToString().ToLower());
+                    if (kv.Value != null)
+                    {
+                        DisplayText = kv.Value;
+                    }
+                }
+            }
+
+            Type dataType = Value.GetType();
+            // We need to check whether the property is NULLABLE
+            if (dataType.IsGenericType && dataType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                // If it is NULLABLE, then get the underlying type. eg if "Nullable<int>" then this will return just "int"
+                dataType = dataType.GetGenericArguments()[0];
+            }
+            //下次优化时。要注释一下 什么类型的字段 数据 要特殊处理。实际可能又把另一个情况弄错。
+            switch (dataType.FullName)
+            {
+                case "System.Boolean":
+                    break;
+                case "System.DateTime":
+                    ///DisplayText = Value.ToString();
+                    return Value;
+                    //DisplayText = DateTime.Parse(Value.ToString()).ToString("yyyy-MM-dd");
+                    break;
+                case "System.Int32":
+                case "System.String":
+                    DisplayText = Value.ToString();
+                    break;
+                default:
+                    break;
+            }
+
+
+            if (!string.IsNullOrEmpty(DisplayText))
+            {
+                return DisplayText;
+            }
+
+            //动态字典值显示
+            string colName = string.Empty;
+            if (ColDisplayTypes != null && ColDisplayTypes.Count > 0)
+            {
+                colName = UIHelper.ShowGridColumnsNameValue(ColDisplayTypes.ToArray(), colDbName, Value);
+            }
+            else
+            {
+                colName = UIHelper.ShowGridColumnsNameValue(entityType, colDbName, Value);
+            }
+            if (!string.IsNullOrEmpty(colName))
+            {
+                DisplayText = colName;
+            }
+            return DisplayText;
+        }
         /// <summary>
         /// 数组中值相乘带小数对于像这样的数组:[1,2,3,4]，我想得到 1*2*3*4 的乘积.
         /// </summary>

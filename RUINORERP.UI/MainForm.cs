@@ -70,8 +70,13 @@ using System.Windows.Input;
 using SourceLibrary.Security;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using Mysqlx;
-using IMessage = RUINORERP.UI.IM.IMessage;
 using RUINORERP.Model.CommonModel;
+using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json.Linq;
+using NPOI.SS.Formula.Functions;
+using Mysqlx.Prepare;
+using FastReport.DevComponents.DotNetBar;
+using FastReport.Table;
 
 
 
@@ -94,6 +99,10 @@ namespace RUINORERP.UI
 
         #endregion
 
+        /// <summary>
+        /// 保存服务器的一些缓存信息。让客户端可以根据一些机制来获取。得到最新的信息
+        /// </summary>
+        public ConcurrentDictionary<string, CacheInfo> CacheInfoList = new ConcurrentDictionary<string, CacheInfo>();
 
         /// <summary>
         /// 这个用来缓存，录入表单时的详情产品数据。后面看优化为一个全局缓存。
@@ -101,7 +110,7 @@ namespace RUINORERP.UI
         public List<View_ProdDetail> list = new List<View_ProdDetail>();
 
         //一个消息缓存列表，有处理过的。未处理的。未看的。临时性还是固定到表的？
-        public Queue<IMessage> MessageList = new Queue<IMessage>();
+        public Queue<TranMessage> MessageList = new Queue<TranMessage>();
 
         ///// <summary>
         ///// 用于连接上服务器后。保存与服务器连接的id
@@ -312,8 +321,16 @@ namespace RUINORERP.UI
 
         private string version = string.Empty;
 
+
+        /// <summary>
+        /// https://www.cnblogs.com/fanfan-90/p/12151924.html
+        /// </summary>
+        public IMemoryCache cache { get; set; }
         private async void MainForm_Load(object sender, EventArgs e)
         {
+            IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
+
+            //cache.Set("test1", "test123");
 
             InitRemind();
             //手动初始化 
@@ -427,7 +444,7 @@ namespace RUINORERP.UI
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
             BizCacheHelper.InitManager();
             UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
-           
+
 
         }
         public AuthorizeController authorizeController;
@@ -444,19 +461,21 @@ namespace RUINORERP.UI
             //}
             if (ecs.client.Socket == null)
             {
-                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort},Connected:{ecs.IsConnected}";
+                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort},Connected:{ecs.IsConnected},FreeTime:{GetLastInputTime()}";
             }
             else
             {
-                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort}，Connected:{ecs.IsConnected}，LocIP:{ecs.client.Socket.LocalEndPoint}";
+                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort}，Connected:{ecs.IsConnected}，LocIP:{ecs.client.Socket.LocalEndPoint},FreeTime:{GetLastInputTime()}";
             }
             lblServerInfo.Text = lblServerStatus.ToolTipText;
             if (MessageList.Count > 0)
             {
-                IM.IMessage MessageInfo = MessageList.Dequeue();
+                TranMessage MessageInfo = MessageList.Dequeue();
                 //NotificationBox notificationBox = new NotificationBox();
                 //notificationBox.ShowForm(MessageInfo.Content);
                 MessagePrompt messager = new MessagePrompt();
+                messager.txtSender.Text = MessageInfo.SenderName;
+                messager.txtSubject.Text = "请求协助";
                 messager.Content = MessageInfo.Content;
                 messager.Show();
                 messager.TopMost = true;
@@ -1906,6 +1925,8 @@ namespace RUINORERP.UI
 
         #region 特殊的操作
 
+        public static bool FreeTimeExecuteCnce = false;
+
         #region 最后一次活动时间
 
 
@@ -1940,6 +1961,16 @@ namespace RUINORERP.UI
             {
                 timeInSeconds = 0;
             }
+
+            if (timeInSeconds == 0)
+            {
+                FreeTimeExecuteCnce = false;
+            }
+            else
+            {
+                FreeTimeExecuteCnce = true;
+            }
+
 
             return timeInSeconds;
         }
@@ -2114,10 +2145,11 @@ namespace RUINORERP.UI
                 }
             }
         }
-
+        private CacheFetchManager _cacheFetchManager = new CacheFetchManager();
         private void timer1_Tick(object sender, EventArgs e)
         {
-            if (MainForm.GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
+            //!MainForm.Instance.AppContext.IsOnline  屏蔽了更新工作台。可能会卡列。需要优化
+            if (GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
             {
                 //刷新工作台数据？
                 //指向工作台
@@ -2130,10 +2162,65 @@ namespace RUINORERP.UI
                         cell.SelectedPage = databaord;
                         kryptonDockableWorkspace1.ActivePage = kryptonDockableWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == "工作台");
                     }
-
                 }
             }
 
+            //超过60 就去抓一下缓存  如果不好用。则用线程定时器
+            if (GetLastInputTime() > 30 && MainForm.Instance.AppContext.IsOnline)
+            {
+                var tableNames = CacheInfoList.Keys.ToList();
+                string nextTableName = _cacheFetchManager.GetNextTableName(tableNames);
+                if (nextTableName != null)
+                {
+                    // 您的抓取缓存逻辑FetchCacheForTable
+                    //UIBizSrvice.RequestCache(nextTableName);
+                    bool needRequestCache = false;
+                    Type elementType = null;
+                    #region
+                    var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(nextTableName);
+                    if (cachelist != null)
+                    {
+                        Type listType = cachelist.GetType();
+                        if (TypeHelper.IsGenericList(listType))
+                        {
+                            #region  强类型
+                            List<object> oldlist = new List<object>();
+                            foreach (object ca in (IEnumerable)cachelist)
+                            {
+                                oldlist.Add(ca);
+                            }
+                            if (oldlist.Count == 0)
+                            {
+
+                            }
+                            #endregion
+                        }
+                        else if (TypeHelper.IsJArrayList(listType))
+                        {
+                            elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + nextTableName);
+                            List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
+
+                            #region  jsonlist
+                            if (myList.Count == 0)
+                            {
+                                needRequestCache = true;
+                            }
+                            #endregion
+                        }
+                    }
+                    else
+                    {
+                        //请求发送缓存
+                        needRequestCache = true;
+                    }
+                    #endregion
+                    if (needRequestCache)
+                    {
+                        UIBizSrvice.RequestCache(nextTableName, elementType);
+                        _cacheFetchManager.UpdateLastCacheFetchInfo(nextTableName);
+                    }
+                }
+            }
         }
 
         public void ShowStatusText(string text)
@@ -2158,7 +2245,7 @@ namespace RUINORERP.UI
             ecs.client.Send(buffer1);
             SystemOptimizerService.异常信息发送("测试异常信息发送");
 
-            MainForm.Instance.logger.LogError("出现应用程序未处理的异常2,请更新到新版本，如果无法解决，请联系管理员");
+
         }
 
         public async void LoginWebServer()

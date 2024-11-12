@@ -20,6 +20,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.Commands;
+using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
 using SuperSocket;
 using SuperSocket.Command;
@@ -37,6 +38,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -44,12 +46,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TransInstruction;
+using WorkflowCore.Primitives;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace RUINORERP.Server
 {
     public partial class frmMain : Form
     {
+
+
+        /// <summary>
+        /// 保存服务器的一些缓存信息。让客户端可以根据一些机制来获取。得到最新的信息
+        /// 将来要考虑放到还有其它信息时，key中换为实例。查找时添加类型?
+        /// </summary>
+        public ConcurrentDictionary<string, CacheInfo> CacheInfoList = new ConcurrentDictionary<string, CacheInfo>();
+
+
         /// <summary>
         /// 保存启动的工作流队列 2023-11-18
         /// 暂时用的是通过C端传的单号来找到对应的流程号。实际不科学
@@ -57,6 +69,10 @@ namespace RUINORERP.Server
         public ConcurrentDictionary<string, string> workflowlist = new ConcurrentDictionary<string, string>();
         public ILogger<frmMain> _logger { get; set; }
 
+
+        //一个消息缓存列表，有处理过的。未处理的。未看的。临时性还是固定到表的？
+
+        public Queue<TranMessage> MessageList = new Queue<TranMessage>();
         public IServiceCollection _services { get; set; }
         public IServiceProvider _ServiceProvider { get; set; }
 
@@ -159,7 +175,7 @@ namespace RUINORERP.Server
                                     {
                                         item.Value.Send(sendData);
                                     }
-                            
+
                                 }
                             }
                         }
@@ -186,7 +202,6 @@ namespace RUINORERP.Server
 
             _logger.Error("ErrorError2233");
             _logger.LogError("LogErrorLogError2233");
-
 
             // var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
             //logger.LogError($"{DateTime.Now} LogError 日志");
@@ -219,10 +234,36 @@ namespace RUINORERP.Server
             //});
             //timer.Enabled = true;
             //timer.Start();
+
+            // 每120秒（120000毫秒）执行一次检查
+            System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 120000);
+            //timerStatus.Interval = 30000; // 设置定时器间隔为1000毫秒（1秒）
+            //timerStatus.Tick += (sender, e) => RefreshData();
         }
 
+        private void CheckAndRemoveExpiredSessions(object state)
+        {
+            var currentTime = DateTime.Now;
+            var keysToRemove = new ConcurrentBag<string>();
 
+            // 遍历会话集合，检查每个会话的LastActiveTime
+            foreach (var kvp in sessionListBiz)
+            {
+                if ((currentTime - kvp.Value.LastActiveTime).TotalMinutes > 1)
+                {
+                    keysToRemove.Add(kvp.Key);
+                }
+            }
 
+            // 删除过期的会话
+            foreach (var key in keysToRemove)
+            {
+                if (sessionListBiz.TryRemove(key, out var removedSession))
+                {
+                    Console.WriteLine($"移除过期会话: {key}");
+                }
+            }
+        }
 
         public async Task InitConfig(bool LoadData = true)
         {
@@ -284,9 +325,7 @@ namespace RUINORERP.Server
                           //.ConfigureServices((context, services) =>
                           //{
 
-
                           //})
-
                           .UseCommand(commandOptions =>
                               {
                                   commandOptions.AddCommand<BaseCommand>();
@@ -294,8 +333,6 @@ namespace RUINORERP.Server
                                   commandOptions.AddCommand<loginCommand>();
                                   commandOptions.AddCommand<LanderCommand>();
                               });
-
-
                              })
                     */
                     //一线
@@ -305,11 +342,11 @@ namespace RUINORERP.Server
                         {
                             //获取服务配置
                             // ReSharper disable once ConvertToLambdaExpression
-                             return config.GetSection("ServiceforBiz");
+                            return config.GetSection("ServiceforBiz");
                         })
                         .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
                         .UseSession<SessionforBiz>()
-                        
+
                     //注册用于处理连接、关闭的Session处理器
                     .UseSessionHandler(async (session) =>
                     {
@@ -318,6 +355,23 @@ namespace RUINORERP.Server
                         sessionforBiz.User.PropertyChanged += frmusermange.UserInfo_PropertyChanged;
                         sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
                         frmusermange.userInfos.Add(sessionforBiz.User);
+                        if (sessionforBiz.User != null)
+                        {
+                            while (MessageList.Count > 0 && sessionforBiz.User.超级用户)
+                            {
+                                TranMessage MessageInfo = MessageList.Dequeue();
+                                SystemService.process请求协助处理(sessionforBiz, MessageInfo);
+                            }
+
+                        }
+                        //广播出去
+                        foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+                        {
+                            BizService.UserService.发送在线列表(PlayerSession);
+                        }
+
+
+
                         PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session connected: {session.RemoteEndPoint}");
                         await Task.Delay(0);
                     }, async (session, reason) =>
@@ -336,7 +390,11 @@ namespace RUINORERP.Server
                                 PrintMsg(sg.User.用户名 + "断开连接");
                                 frmusermange.userInfos.Remove(sg.User);
                             }
-
+                            //广播出去
+                            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+                            {
+                                BizService.UserService.发送在线列表(PlayerSession);
+                            }
                         }
                         catch (Exception quitex)
                         {
@@ -427,6 +485,8 @@ namespace RUINORERP.Server
             try
             {
                 await DrainAllServers();
+                // 记得在程序结束时清理定时器资源
+                timer.Dispose();
             }
             catch (Exception e)
             {
@@ -477,18 +537,17 @@ namespace RUINORERP.Server
                     }
                 }
             }
-
         }
 
         /*
          * 控制台-可以在控制台查看日志输出
-调试-vs工具 -》开始调试-》输出窗口进行查看日志输出
-EventSource-可使用PerfView 实用工具收集和查看日志
-EventLog-》仅在windows系统下可以使用事件查看器查看日志
-TraceSource
-AzureAppServicesFile
-AzureAppServicesBlob
-ApplicationInsights
+        调试-vs工具 -》开始调试-》输出窗口进行查看日志输出
+        EventSource-可使用PerfView 实用工具收集和查看日志
+        EventLog-》仅在windows系统下可以使用事件查看器查看日志
+        TraceSource
+        AzureAppServicesFile
+        AzureAppServicesBlob
+        ApplicationInsights
          * **/
 
         #region show UI

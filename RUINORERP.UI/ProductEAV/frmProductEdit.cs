@@ -874,6 +874,7 @@ namespace RUINORERP.UI.ProductEAV
             DataBindingHelper.BindData4CmbByEnum<tb_Prod>(entity, k => k.SourceType, typeof(GoodsSource), cmbSourceType, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ProductNo, txtNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ShortCode, txtShortCode, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.VendorModelCode, txtVendorModelCode, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.Model, txtModel, BindDataType4TextBox.Text, false);
             //DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.SourceType, txtSourceType, BindDataType4TextBox.Text, false);

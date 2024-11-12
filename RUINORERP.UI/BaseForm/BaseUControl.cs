@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using RUINORERP.Model;
 using Krypton.Workspace;
 using Krypton.Navigator;
+using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -47,6 +48,14 @@ namespace RUINORERP.UI.BaseForm
             get { return _ListDataSoure; }
             set { _ListDataSoure = value; }
         }
+
+        private QueryFilter _QueryConditionFilter = new QueryFilter();
+
+        /// <summary>
+        /// 查询条件  将来 把querypara优化掉
+        /// </summary>
+        public QueryFilter QueryConditionFilter { get => _QueryConditionFilter; set => _QueryConditionFilter = value; }
+
 
         #region 关闭窗体和退出
 

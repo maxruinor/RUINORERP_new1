@@ -75,8 +75,8 @@ namespace RUINORERP.UI
             //services.AddScoped(typeof(SqlSugarRepository<>)); // 仓储注册
             //services.AddUnitOfWork<SqlSugarUnitOfWork>(); // 事务与工作单元注册
 
-    
-  
+
+
 
             #region 自动注入对应的服务接口
             //services.AddSingleton<IDictDataService, DictDataService>();//services.AddScoped<IUserService, UserService>();
@@ -167,7 +167,7 @@ namespace RUINORERP.UI
             //}
             #endregion
         }
- 
+
 
         /// <summary>
         /// 注入服务
@@ -501,11 +501,10 @@ namespace RUINORERP.UI
                         #endregion
 
 
-                        // var form1=Startup.ServiceProvider.GetService<MainForm>();
-                        var form1 = Startup.GetFromFac<MainForm>();
-
-
-                        //   MainForm form1 = new MainForm(services, aa);
+                        var form1 = Startup.ServiceProvider.GetService<MainForm>();
+                        //var form1 = Startup.GetFromFac<MainForm>();
+                        //ILogger<MainForm> logger = null;
+                        //MainForm form1 = new MainForm(logger);
                         Application.Run(form1);
                     }
                     catch (Exception ex)

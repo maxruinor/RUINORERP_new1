@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.ServerSession;
@@ -107,6 +109,7 @@ namespace RUINORERP.Server
                 {
                     SuperValue kv = new SuperValue(tableName + "[" + 0 + "]", tableName);
                     listBoxTableList.Items.Add(kv);
+                    frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, 0));
                 }
                 else
                 {
@@ -115,6 +118,7 @@ namespace RUINORERP.Server
                     {
                         SuperValue kv = new SuperValue(tableName + "[" + lastlist.Count + "]", tableName);
                         listBoxTableList.Items.Add(kv);
+                        frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, lastlist.Count));
                     }
 
                 }

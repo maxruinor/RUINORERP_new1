@@ -52,6 +52,7 @@ using FluentValidation;
 using RUINORERP.Server.BizService;
 using Microsoft.Extensions.Caching.Memory;
 using Autofac.Core;
+using RUINORERP.Business.Security;
 
 namespace RUINORERP.Server
 {
@@ -642,7 +643,14 @@ namespace RUINORERP.Server
                 {
 
                 }
-
+                if (tempTypes[i].Name == "IAuthorizeController")
+                {
+                    builder.RegisterType<AuthorizeController>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
 
                 if (tempTypes[i].Name.Contains("UseCsla"))
                 {

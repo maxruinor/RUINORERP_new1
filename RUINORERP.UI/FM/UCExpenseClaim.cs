@@ -680,7 +680,7 @@ namespace RUINORERP.UI.FM
             return result;
         }
 
-        private async void btnInfo_Click(object sender, EventArgs e)
+        private  void btnInfo_Click(object sender, EventArgs e)
         {
             if (sender is KryptonButton btninfo)
             {

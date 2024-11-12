@@ -1,5 +1,6 @@
 ﻿using AutoUpdateTools;
 using FastReport.Table;
+using Microsoft.Extensions.Caching.Memory;
 using Netron.GraphLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Caching;
 using System.Windows.Forms;
 using TransInstruction;
 using TransInstruction.DataPortal;
@@ -97,6 +99,41 @@ namespace RUINORERP.UI.SuperSocketClient
             return rs;
 
         }
+        public static bool 接收缓存信息列表(OriginalData gd)
+        {
+            bool rs = false;
+            try
+            {
+                int index = 0;
+                ByteBuff bg = new ByteBuff(gd.Two);
+
+                //清空
+                MainForm.Instance.CacheInfoList = new System.Collections.Concurrent.ConcurrentDictionary<string, CacheInfo>();
+                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                if (!string.IsNullOrEmpty(json))
+                {
+                    if (json != "null")
+                    {
+
+                        CacheInfo[] CacheInfoList = JsonConvert.DeserializeObject<CacheInfo[]>(json);
+                        if (CacheInfoList != null)//(Newtonsoft.Json.Linq.JArray))
+                        {
+                            foreach (var item in CacheInfoList)
+                            {
+                                MainForm.Instance.CacheInfoList.TryAdd(item.CacheName, item);
+                            }
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收缓存信息列表:" + ex.Message);
+            }
+            return rs;
+
+        }
 
         public static bool 接收缓存数据列表(OriginalData gd)
         {
@@ -164,10 +201,10 @@ namespace RUINORERP.UI.SuperSocketClient
                 Message = ByteDataAnalysis.GetString(gd.Two, ref index);
                 bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
 
-                IM.IMessage MessageInfo = new IM.IMessage();
+                TranMessage MessageInfo = new TranMessage();
                 MessageInfo.SendTime = sendtime;
-                //  MessageInfo.Id = SessionID;
-                MessageInfo.Sender = 发送者姓名;
+                //  MessageInfo.SenderID = SessionID;
+                MessageInfo.SenderName = 发送者姓名;
                 MessageInfo.Content = Message;
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
             }
@@ -195,10 +232,10 @@ namespace RUINORERP.UI.SuperSocketClient
                 string ExCode = ByteDataAnalysis.GetString(gd.Two, ref index);
                 bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
 
-                IM.IMessage MessageInfo = new IM.IMessage();
+                TranMessage MessageInfo = new TranMessage();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;
-                MessageInfo.Sender = 发送者姓名;
+                MessageInfo.SenderName = 发送者姓名;
                 MessageInfo.Content = Msg;
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
             }
@@ -222,10 +259,10 @@ namespace RUINORERP.UI.SuperSocketClient
                 string BillData = ByteDataAnalysis.GetString(gd.Two, ref index);
                 string BillType = ByteDataAnalysis.GetString(gd.Two, ref index);
                 var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == RequestUserID);
-                IM.IMessage MessageInfo = new IM.IMessage();
+                TranMessage MessageInfo = new TranMessage();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;
-                MessageInfo.Sender = userinfo.姓名;
+                MessageInfo.SenderName = userinfo.姓名;
                 MessageInfo.Content = RequestContent;
                 //保存最新的协助处理请求信息 单据信息
                 string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + $"\\FormProperty\\Data\\{userinfo.姓名}", BillType + System.DateTime.Now.ToString("yyyyMMddHHmmss") + ".cache");
@@ -270,6 +307,40 @@ namespace RUINORERP.UI.SuperSocketClient
             catch (Exception ex)
             {
                 MainForm.Instance.PrintInfoLog("接收转发更新缓存:" + ex.Message);
+            }
+        }
+
+        internal static void 接收转发单据审核锁定(OriginalData gd)
+        {
+            try
+            {
+
+                int index = 0;
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+                int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
+                bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
+
+                using (ICacheEntry cacheEntry = MainForm.Instance.cache.CreateEntry(billid))
+                {
+                    BillLockInfo lockInfo = new BillLockInfo();
+                    lockInfo.LockedName = lockName;
+                    lockInfo.BillID = billid;
+                    lockInfo.BizType = BizType;
+                    cacheEntry.SetValue(lockInfo);
+                }
+
+                MainForm.Instance.cache.Set(billid, ApprovalResults, TimeSpan.FromDays(1));
+
+                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                {
+                    MainForm.Instance.PrintInfoLog($"接收转发单据审核锁定{BizType}成功！");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收转发单据审核锁定:" + ex.Message);
             }
         }
     }

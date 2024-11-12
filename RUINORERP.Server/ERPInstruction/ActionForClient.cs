@@ -12,6 +12,21 @@ namespace TransInstruction
     public class ActionForClient
     {
 
+        public static OriginalData 销售出库审批(long billid,string lockName, int BizType, bool ApprovalResults)
+        {
+            var tx = new ByteBuff(2 + 4);
+            tx.PushString(System.DateTime.Now.ToString());
+            tx.PushString(lockName);
+            tx.PushInt64(billid);
+            tx.PushInt((int)BizType);//加一个其他东西？比方随便时间，或当前时间的到分钟
+            tx.PushBool(ApprovalResults);
+            OriginalData gd = new OriginalData();
+            gd.cmd = (byte)ClientCmdEnum.单据审核锁定;
+            gd.One = new byte[] { (byte)ClientSubCmdEnum.审批 };
+            gd.Two = tx.toByte();
+            return gd;
+        }
+
         public static OriginalData 工作流提交(long billid, int BizType)
         {
             var tx = new ByteBuff(2 + 4);
@@ -142,15 +157,17 @@ namespace TransInstruction
         /// </summary>
         /// <param name="TableName"></param>
         /// <returns></returns>
-        public static OriginalData 请求协助处理(long RequestUserID, string RequestContent, string BillData, string BillType)
+        public static OriginalData 请求协助处理(long RequestUserID, string RequestEmpName, string RequestContent, string BillData, string EntityType)
         {
             var tx = new ByteBuff(2 + 4);
 
             tx.PushString(System.DateTime.Now.ToString());
             tx.PushInt64(RequestUserID);//请示的人姓名。后面单据数据要保存时要名称开头
+            tx.PushString(RequestEmpName);//请示的人姓名
             tx.PushString(RequestContent);
+            tx.PushString(EntityType);
             tx.PushString(BillData);
-            tx.PushString(BillType);
+   
             OriginalData gd = new OriginalData();
             gd.cmd = (byte)ClientCmdEnum.请求协助处理;
             gd.One = null;

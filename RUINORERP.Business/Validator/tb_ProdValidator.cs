@@ -34,6 +34,7 @@ namespace RUINORERP.Business
             RuleFor(tb_Prod => tb_Prod.ImagesPath).MaximumLength(1000).WithMessage("图片组:不能超过最大长度,1000.");
             RuleFor(tb_Prod => tb_Prod.ENName).MaximumLength(127).WithMessage("英文名称:不能超过最大长度,127.");
             RuleFor(tb_Prod => tb_Prod.Model).MaximumLength(25).WithMessage("型号:不能超过最大长度,25.");
+            RuleFor(tb_Prod => tb_Prod.VendorModelCode).MaximumLength(25).WithMessage("供应商型号:不能超过最大长度,25.");
             RuleFor(tb_Prod => tb_Prod.ShortCode).MaximumLength(25).WithMessage("短码:不能超过最大长度,25.");
             RuleFor(tb_Prod => tb_Prod.Specifications).MaximumLength(500).WithMessage("规格:不能超过最大长度,500.");
             RuleFor(tb_Prod => tb_Prod.SourceType).NotEmpty().When(x => x.SourceType.HasValue);

@@ -113,6 +113,8 @@ namespace RUINORERP.UI.ProductEAV
             this.openFileDialog4Img = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.txtVendorModelCode = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             this.kryptonNavigator1.SuspendLayout();
@@ -199,7 +201,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage3,
             this.kryptonPageImage,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 2;
+            this.kryptonNavigator1.SelectedIndex = 0;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1024, 614);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -226,6 +228,8 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.txtVendorModelCode);
             this.kryptonPanel1.Controls.Add(this.cmbSourceType);
             this.kryptonPanel1.Controls.Add(this.lblRack_ID);
             this.kryptonPanel1.Controls.Add(this.cmbRack_ID);
@@ -338,7 +342,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblModel
             // 
-            this.lblModel.Location = new System.Drawing.Point(69, 156);
+            this.lblModel.Location = new System.Drawing.Point(323, 76);
             this.lblModel.Name = "lblModel";
             this.lblModel.Size = new System.Drawing.Size(36, 20);
             this.lblModel.TabIndex = 135;
@@ -346,9 +350,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtModel
             // 
-            this.txtModel.Location = new System.Drawing.Point(112, 156);
+            this.txtModel.Location = new System.Drawing.Point(366, 76);
             this.txtModel.Name = "txtModel";
-            this.txtModel.Size = new System.Drawing.Size(205, 23);
+            this.txtModel.Size = new System.Drawing.Size(274, 23);
             this.txtModel.TabIndex = 136;
             // 
             // cmbType_ID
@@ -473,7 +477,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.txtName.Location = new System.Drawing.Point(112, 74);
             this.txtName.Name = "txtName";
-            this.txtName.Size = new System.Drawing.Size(528, 23);
+            this.txtName.Size = new System.Drawing.Size(205, 23);
             this.txtName.TabIndex = 77;
             // 
             // lblShortCode
@@ -996,6 +1000,21 @@ namespace RUINORERP.UI.ProductEAV
             this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(41, 155);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel1.TabIndex = 146;
+            this.kryptonLabel1.Values.Text = "厂商型号";
+            // 
+            // txtVendorModelCode
+            // 
+            this.txtVendorModelCode.Location = new System.Drawing.Point(112, 156);
+            this.txtVendorModelCode.Name = "txtVendorModelCode";
+            this.txtVendorModelCode.Size = new System.Drawing.Size(274, 23);
+            this.txtVendorModelCode.TabIndex = 147;
+            // 
             // frmProductEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -1150,5 +1169,7 @@ namespace RUINORERP.UI.ProductEAV
         internal Krypton.Toolkit.KryptonPanel kryptonPanelDetailGrid;
         private WinLib.Line.GroupLine groupLine2;
         private RUINOR.WinFormsUI.TileListView.TileListView listView1;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonTextBox txtVendorModelCode;
     }
 }

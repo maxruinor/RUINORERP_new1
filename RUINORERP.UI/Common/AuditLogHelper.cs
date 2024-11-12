@@ -1,4 +1,5 @@
 ﻿using FastReport.DevComponents.DotNetBar;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -108,6 +109,10 @@ namespace RUINORERP.UI.Common
                 return;
             }
             auditLog.UserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+            if (auditLog.UserName == null)
+            {
+                return;
+            }
             auditLog.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
             auditLog.ActionType = action;
             auditLog.ObjectType = -1;// (int)BizType;
@@ -119,7 +124,7 @@ namespace RUINORERP.UI.Common
             auditLog.ActionTime = DateTime.Now;
             try
             {
-              await  MainForm.Instance.AppContext.Db.CopyNew().Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
+                await MainForm.Instance.AppContext.Db.CopyNew().Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
             }
             catch (Exception ex)
             {
@@ -146,8 +151,15 @@ namespace RUINORERP.UI.Common
                     {
                         if (null != entityAttr)
                         {
-                            var value = property.GetValue(auditLog);
-                            sb.Append($"{property.Name}: {value}");
+                            try
+                            {
+                                var value = property.GetValue(auditLog);
+                                sb.Append($"{property.Name}: {value}");
+                            }
+                            catch (Exception ex)
+                            {
+                                MainForm.Instance.logger.LogError("GetAuditLogProperties。", ex);
+                            }
                         }
                     }
                 }

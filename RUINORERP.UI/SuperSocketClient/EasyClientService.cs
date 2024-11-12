@@ -488,6 +488,10 @@ namespace RUINORERP.UI.SuperSocketClient
                     OriginalData od = e.Package.od;
                     switch (msg)
                     {
+                        case ServerCmdEnum.转发单据审核锁定:
+                            //单个实例
+                            ClientService.接收转发单据审核锁定(od);
+                            break;
                         case ServerCmdEnum.转发更新缓存:
                             //单个实例
                             ClientService.接收转发更新缓存(od);
@@ -521,6 +525,9 @@ namespace RUINORERP.UI.SuperSocketClient
                             break;
                         case ServerCmdEnum.发送在线列表:
                             ClientService.接收在线用户列表(od);
+                            break;
+                        case ServerCmdEnum.发送缓存信息列表:
+                            ClientService.接收缓存信息列表(od);
                             break;
                         case ServerCmdEnum.转发弹窗消息:
                             //别人发消息过来了

@@ -60,7 +60,7 @@ namespace RUINORERP.UI.BaseForm
         /// 用来保存外键表名与外键主键列名  通过这个打到对应的名称。
         /// </summary>
         public static ConcurrentDictionary<string, string> FKValueColNameTBList = new ConcurrentDictionary<string, string>();
-
+ 
 
         /// <summary>
         /// 要统计的列
@@ -1407,12 +1407,6 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public BaseEntity QueryDto { get => _queryDto; set => _queryDto = value; }
 
-        private QueryFilter _QueryConditionFilter = new QueryFilter();
-
-        /// <summary>
-        /// 查询条件  将来 把querypara优化掉
-        /// </summary>
-        public QueryFilter QueryConditionFilter { get => _QueryConditionFilter; set => _QueryConditionFilter = value; }
 
         /// <summary>
         /// 默认不是模糊查询

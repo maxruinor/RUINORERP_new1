@@ -114,7 +114,7 @@ namespace RUINORERP.UI.MRP.MP
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.ManufacturingQty);
-
+            base.MasterSummaryCols.Add(c => c.QuantityDelivered);
             base.ChildSummaryCols.Add(c => c.ShouldSendQty);
             base.ChildSummaryCols.Add(c => c.SubtotalUnitCost);
 

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Memory;
+using NetTaste;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business;
@@ -13,6 +14,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
+using RUINORERP.Services;
 using RUINORERP.WF.BizOperation.Condition;
 using SharpYaml.Tokens;
 using System;
@@ -161,10 +163,11 @@ namespace RUINORERP.Server.BizService
                 string json = ByteDataAnalysis.GetString(gd.Two, ref index);
                 //更新服务器的缓存
                 // 将item转换为JObject
-                var obj = JObject.Parse(json);
+                JObject obj = JObject.Parse(json);
 
                 MyCacheManager.Instance.UpdateEntityList(tableName, obj);
                 //再转发给其他客户端
+
                 //发送缓存数据
 
                 ByteBuff tx = new ByteBuff(200);
@@ -188,6 +191,12 @@ namespace RUINORERP.Server.BizService
                     }
                 }
 
+                //如果是产品表有变化 还要需要更新产品视图的缓存
+                if (tableName == nameof(tb_Prod))
+                {
+                    var prod = obj.ToObject<tb_Prod>();
+                    BroadcastProdCatchData(UserSession, prod);
+                }
             }
             catch (Exception ex)
             {
@@ -196,6 +205,41 @@ namespace RUINORERP.Server.BizService
 
         }
 
+        private async static void BroadcastProdCatchData(SessionforBiz UserSession, tb_Prod prod)
+        {
+            View_ProdDetail ViewProdDetail = new View_ProdDetail();
+            ViewProdDetail = await Program.AppContextData.Db.CopyNew().Queryable<View_ProdDetail>()
+                .SingleAsync(p => p.ProdBaseID == prod.ProdBaseID);
+            MyCacheManager.Instance.UpdateEntityList<View_ProdDetail>(ViewProdDetail);
+            //发送缓存数据
+            string json = JsonConvert.SerializeObject(ViewProdDetail,
+               new JsonSerializerSettings
+               {
+                   ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+               });
+
+            string tableName = nameof(View_ProdDetail);
+            ByteBuff tx = new ByteBuff(200);
+            tx.PushString(System.DateTime.Now.ToString());
+            tx.PushString(tableName);
+            tx.PushString(json);
+
+            foreach (var item in frmMain.Instance.sessionListBiz)
+            {
+                //排除更新者自己
+                if (item.Key == UserSession.SessionID)
+                {
+                    continue;
+                }
+                SessionforBiz sessionforBiz = item.Value as SessionforBiz;
+                sessionforBiz.AddSendData((byte)ServerCmdEnum.转发更新缓存, null, tx.toByte());
+
+                if (frmMain.Instance.IsDebug)
+                {
+                    frmMain.Instance.PrintMsg($"转发更新缓存{tableName}给：" + item.Value.User.姓名);
+                }
+            }
+        }
 
         public async static Task<tb_UserInfo> 接收用户登陆指令(SessionforBiz UserSession, OriginalData gd)
         {
@@ -284,7 +328,7 @@ namespace RUINORERP.Server.BizService
         }
 
         /// <summary>
-        /// 有人上线掉线都要通知客户端
+        /// 有人上线掉线都要通知客户端 可以优化
         /// </summary>
         /// <param name="PlayerSession"></param>
         public static void 发送在线列表(SessionforBiz PlayerSession)
@@ -324,6 +368,38 @@ namespace RUINORERP.Server.BizService
 
         }
 
+
+        /// <summary>
+        /// 将服务器缓存信息情况发过去。当客户端空闲时再请求缓存数据
+        /// </summary>
+        /// <param name="PlayerSession"></param>
+        public static void 发送缓存信息列表(SessionforBiz PlayerSession)
+        {
+            try
+            {
+                ByteBuff tx = new ByteBuff(100);
+                List<CacheInfo> CacheInfos = new List<CacheInfo>();
+                foreach (var item in frmMain.Instance.CacheInfoList)
+                {
+                    CacheInfos.Add(item.Value);
+                }
+                string json = JsonConvert.SerializeObject(CacheInfos,
+                      new JsonSerializerSettings
+                      {
+                          Converters = new List<JsonConverter> { new CustomCollectionJsonConverter() },
+                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                      });
+
+
+                tx.PushString(json);
+                PlayerSession.AddSendData((byte)ServerCmdEnum.发送缓存信息列表, null, tx.toByte());
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
+            }
+
+        }
         public static void 回复心跳(SessionforBiz PlayerSession, ByteBuff tx)
         {
             try

@@ -73,7 +73,7 @@ namespace Krypton.Toolkit
             _maxDate = DateTime.MaxValue;
             _minDate = DateTime.MinValue;
             _format = DateTimePickerFormat.Long;
-            _calendarDimensions = new Size(1,1);
+            _calendarDimensions = new Size(1, 1);
             _calendarTodayText = "Today:";
             _calendarFirstDayOfWeek = Day.Default;
             _calendarShowToday = true;
@@ -396,7 +396,7 @@ namespace Krypton.Toolkit
             }
         }
 
-        
+
         /// <summary>
         /// The CalendarShowTodayCircle property replicates the one from the KryptonDateTimePicker control
         /// </summary>
@@ -537,10 +537,10 @@ namespace Krypton.Toolkit
         /// <param name="formattedValueTypeConverter">A TypeConverter associated with the formatted value type that provides custom conversion from the value type, or null if no such custom conversion is needed.</param>
         /// <param name="context">A bitwise combination of DataGridViewDataErrorContexts values describing the context in which the formatted value is needed.</param>
         /// <returns></returns>
-        protected override object GetFormattedValue(object value, int rowIndex, 
+        protected override object GetFormattedValue(object value, int rowIndex,
             ref DataGridViewCellStyle cellStyle,
-            TypeConverter valueTypeConverter, 
-            TypeConverter formattedValueTypeConverter, 
+            TypeConverter valueTypeConverter,
+            TypeConverter formattedValueTypeConverter,
             DataGridViewDataErrorContexts context)
         {
             if ((value == null) || (value == DBNull.Value))
@@ -548,12 +548,25 @@ namespace Krypton.Toolkit
                 return string.Empty;
             }
             else
-            {
-                var dt = (DateTime)value;
-                if (dt != null)
+            {   
+                //加了一个判断
+                if (value.GetType() == typeof(DateTime))
                 {
-                    return _dtc.ConvertToInvariantString(dt);
+                    var dt = (DateTime)value;
+                    if (dt != null)
+                    {
+                        return _dtc.ConvertToInvariantString(dt);
+                    }
                 }
+                else if (Value.GetType() == typeof(string))
+                {
+                    var dt = Convert.ToDateTime(value);
+                    if (dt != null)
+                    {
+                        return _dtc.ConvertToInvariantString(dt);
+                    }
+                }
+
             }
 
             return base.GetFormattedValue(value, rowIndex, ref cellStyle, valueTypeConverter, formattedValueTypeConverter, context);
@@ -567,9 +580,9 @@ namespace Krypton.Toolkit
         /// <param name="formattedValueTypeConverter">A TypeConverter for the display value type, or null to use the default converter.</param>
         /// <param name="valueTypeConverter">A TypeConverter for the cell value type, or null to use the default converter.</param>
         /// <returns></returns>
-        public override object ParseFormattedValue(object formattedValue, 
-            DataGridViewCellStyle cellStyle, 
-            TypeConverter formattedValueTypeConverter, 
+        public override object ParseFormattedValue(object formattedValue,
+            DataGridViewCellStyle cellStyle,
+            TypeConverter formattedValueTypeConverter,
             TypeConverter valueTypeConverter)
         {
             if (formattedValue == null)
@@ -746,7 +759,7 @@ namespace Krypton.Toolkit
         }
 
         private bool OwnsEditingDateTimePicker(int rowIndex) =>
-            rowIndex != -1 && DataGridView is { EditingControl: KryptonDataGridViewDateTimePickerEditingControl control } 
+            rowIndex != -1 && DataGridView is { EditingControl: KryptonDataGridViewDateTimePickerEditingControl control }
                            && (rowIndex == ((IDataGridViewEditingControl)control).EditingControlRowIndex);
 
         private static bool PartPainted(DataGridViewPaintParts paintParts, DataGridViewPaintParts paintPart) => (paintParts & paintPart) != 0;

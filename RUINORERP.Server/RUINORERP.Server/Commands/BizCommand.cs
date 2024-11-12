@@ -119,6 +119,7 @@ namespace RUINORERP.Server.Commands
                             if (UserService.用户登陆回复(Player, user))
                             {
                                 UserService.发送在线列表(Player);
+                                UserService.发送缓存信息列表(Player);
                             }
                             break;
 
@@ -160,19 +161,15 @@ namespace RUINORERP.Server.Commands
                             UserService.接收更新缓存指令(Player, gd);
                             break;
                         case ClientCmdEnum.请求协助处理:
-
-                            foreach (var item in frmMain.Instance.sessionListBiz)
-                            {
-                                SessionforBiz sessionforBiz = item.Value as SessionforBiz;
-                                //自己的不会上传。 只转给超级管理员。
-                                if (sessionforBiz.User.超级用户)
-                                {
-                                    SystemService.转发协助处理(Player, sessionforBiz, gd);
-                                    break;//一个人处理就可以了
-                                }
-                            }
+                            SystemService.process请求协助处理(gd);
                             break;
+                        case ClientCmdEnum.单据审核锁定:
 
+                            //意思是如:审核了销售出库单时，订单是无法再操作了。转发到所有电脑。保存等各种操作都要判断一下？
+                            //这种主要是比方业务订单UI没有关掉。仓库出库了。业务还可以反审等？不在线的不管。会重新打开。这时状态不一样。会判断好。
+                            //所有缓存到客户机。服务器不用缓存列表了？
+                            SystemService.process单据审核锁定(Player, gd);
+                            break;
 
                         case ClientCmdEnum.发送弹窗消息:
                             UserService.转发弹窗消息(Player, gd);

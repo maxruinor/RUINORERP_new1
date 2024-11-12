@@ -202,6 +202,7 @@ namespace RUINORERP.UI.Common
                                 {
                                     //编辑模式
                                     ucBaseList = Startup.GetFromFacByName<BaseUControl>(menuinfo.FormName);
+                                    ucBaseList.QueryConditionFilter = queryFilter;
                                 }
                                 else
                                 {
@@ -2149,7 +2150,7 @@ namespace RUINORERP.UI.Common
                 BindingSource bs = new BindingSource();
                 List<T> tlist = new List<T>();
                 var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (tlist == null)
+                if (cachelist == null)
                 {
                     Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
                     tlist = bdc.GetBindSource<T>(tableName);

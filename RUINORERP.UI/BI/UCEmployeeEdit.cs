@@ -213,7 +213,7 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private async void btnAddPayeeInfo_Click(object sender, EventArgs e)
+        private  void btnAddPayeeInfo_Click(object sender, EventArgs e)
         {
             object frm = Activator.CreateInstance(typeof(UCFMPayeeInfoEdit));
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))

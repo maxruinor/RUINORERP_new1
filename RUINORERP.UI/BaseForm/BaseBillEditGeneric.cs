@@ -58,6 +58,8 @@ using SourceGrid.Cells.Models;
 using FastReport.Table;
 using FastReport.DevComponents.AdvTree;
 using Newtonsoft.Json.Linq;
+using System.Web.Caching;
+using Microsoft.Extensions.Caching.Memory;
 
 
 
@@ -161,7 +163,8 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
                             });
-                        OriginalData odforCache = ActionForClient.请求协助处理(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID, frm.Content, json, typeof(T).Name);
+                        OriginalData odforCache = ActionForClient.请求协助处理(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
+                          MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name, frm.Content, json, typeof(T).Name);
                         byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
                         MainForm.Instance.ecs.client.Send(buffer);
                         #endregion
@@ -555,7 +558,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
- 
+
 
         private void Bsa_Click(object sender, EventArgs e)
         {
@@ -1147,6 +1150,23 @@ namespace RUINORERP.UI.BaseForm
                 rmr = await ctr.ApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
                 {
+                    //如果是出库单审核，则上传到服务器 锁定订单无法修改
+                    if (ae.bizType == BizType.销售出库单)
+                    {
+                        //锁定对应的订单
+                        if (EditEntity is tb_SaleOut saleOut)
+                        {
+                            if (saleOut.tb_saleorder != null)
+                            {
+                                OriginalData od = ActionForClient.销售出库审批(saleOut.tb_saleorder.SOrder_ID,
+                                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
+                                    (int)BizType.销售订单, ae.ApprovalResults);
+                                MainForm.Instance.ecs.AddSendData(od);
+                            }
+                        }
+
+                    }
+
                     //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
@@ -1636,6 +1656,18 @@ namespace RUINORERP.UI.BaseForm
             if (pkid == 0)
             {
                 entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.草稿);
+            }
+            else
+            {
+                BillLockInfo bli = MainForm.Instance.cache.Get<BillLockInfo>(pkid);
+                if (bli != null)
+                {
+                    return new ReturnMainSubResults<T>()
+                    {
+                        Succeeded = false,
+                        ErrorMsg = $"单据已被{bli.LockedName}锁定，请刷新后再试"
+                    };
+                }
             }
 
             ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
@@ -2259,12 +2291,12 @@ namespace RUINORERP.UI.BaseForm
 
                     /*
                      var settings = new JsonSerializerSettings
-    {
-    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-    NullValueHandling = NullValueHandling.Ignore
-    };
+        {
+        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+        NullValueHandling = NullValueHandling.Ignore
+        };
 
-    string jsonString = JsonConvert.SerializeObject(myObject, settings);
+        string jsonString = JsonConvert.SerializeObject(myObject, settings);
                      */
 
 

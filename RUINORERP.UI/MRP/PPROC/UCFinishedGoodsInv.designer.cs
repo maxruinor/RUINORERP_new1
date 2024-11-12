@@ -69,6 +69,8 @@
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -97,6 +99,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalQty);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblTotalNetMachineHours);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtTotalNetMachineHours);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblGeneEvidence);
@@ -161,7 +165,7 @@
             // 
             // lblGeneEvidence
             // 
-            this.lblGeneEvidence.Location = new System.Drawing.Point(734, 107);
+            this.lblGeneEvidence.Location = new System.Drawing.Point(734, 99);
             this.lblGeneEvidence.Name = "lblGeneEvidence";
             this.lblGeneEvidence.Size = new System.Drawing.Size(62, 20);
             this.lblGeneEvidence.TabIndex = 159;
@@ -169,7 +173,7 @@
             // 
             // chkGeneEvidence
             // 
-            this.chkGeneEvidence.Location = new System.Drawing.Point(797, 109);
+            this.chkGeneEvidence.Location = new System.Drawing.Point(797, 101);
             this.chkGeneEvidence.Name = "chkGeneEvidence";
             this.chkGeneEvidence.Size = new System.Drawing.Size(19, 13);
             this.chkGeneEvidence.TabIndex = 160;
@@ -478,6 +482,21 @@
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(743, 121);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(49, 20);
+            this.kryptonLabel1.TabIndex = 175;
+            this.kryptonLabel1.Values.Text = "总数量";
+            // 
+            // txtTotalQty
+            // 
+            this.txtTotalQty.Location = new System.Drawing.Point(797, 119);
+            this.txtTotalQty.Name = "txtTotalQty";
+            this.txtTotalQty.Size = new System.Drawing.Size(100, 23);
+            this.txtTotalQty.TabIndex = 176;
+            // 
             // UCFinishedGoodsInv
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -552,5 +571,7 @@
         private Krypton.Toolkit.KryptonLabel lblRef_BillNo;
         private Krypton.Toolkit.KryptonLabel lblTotalNetMachineHours;
         private Krypton.Toolkit.KryptonTextBox txtTotalNetMachineHours;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonTextBox txtTotalQty;
     }
 }

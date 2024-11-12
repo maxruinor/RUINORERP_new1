@@ -131,7 +131,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalMaterialCost.ToString(), txtTotalMaterialCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
 
-            //DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FinishedGoodsInv>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FinishedGoodsInv>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
@@ -356,6 +356,7 @@ namespace RUINORERP.UI.PSI.PUR
                 EditEntity.TotalMaterialCost = details.Sum(c => c.Qty * c.MaterialCost);
                 EditEntity.TotalApportionedCost = details.Sum(c => c.Qty * c.ApportionedCost);
                 EditEntity.TotalManuFee = details.Sum(c => c.Qty * c.ManuFee);
+                EditEntity.TotalQty = details.Sum(c => c.Qty);
                 EditEntity.TotalProductionCost = details.Sum(c => c.ProductionAllCost);
             }
             catch (Exception ex)
@@ -402,23 +403,24 @@ namespace RUINORERP.UI.PSI.PUR
                     return false;
                 }
 
-                //if (EditEntity.TotalQty != details.Sum(c => c.Quantity))
-                //{
-                //    System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                //    return;
-                //}
+                if (EditEntity.TotalQty != details.Sum(c => c.Qty))
+                {
+                    System.Windows.Forms.MessageBox.Show("单据总数量和明细数量的和不相等，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return false;
+                }
 
+
+                ///如果缴库数量大于制令单数据是错误的。TODO::
                 //if (_purorder != null)
-                //{
-                //    ///如果入库数量大于订单数据是错误的。
-                //    //if (EditEntity > _purorder.TotalQty)
-                //    //{
-                //    //    MainForm.Instance.uclog.AddLog("入库总数量不可能大于订单数量，请检查数据是否正确！PurOrderNo:" + _purorder.PurOrderNo, UILogType.错误);
-                //    //    MessageBox.Show("入库总数量不可能大于订单数量，请检查数据是否正确！");
-                //    //    return;
-                //    //}
+                //{    
+                //     if (EditEntity > _purorder.TotalQty)
+                //     {
+                //         MainForm.Instance.uclog.AddLog("入库总数量不可能大于订单数量，请检查数据是否正确！PurOrderNo:" + _purorder.PurOrderNo, UILogType.错误);
+                //         MessageBox.Show("入库总数量不可能大于订单数量，请检查数据是否正确！");
+                //         return;
+                //     }
                 //}
-
+                
 
                 if (NeedValidated && !base.Validator<tb_FinishedGoodsInvDetail>(details))
                 {

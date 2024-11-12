@@ -216,7 +216,7 @@ namespace RUINORERP.UI.BaseForm
 
         public virtual void BuildColNameDataDictionary()
         {
-
+            
         }
 
 

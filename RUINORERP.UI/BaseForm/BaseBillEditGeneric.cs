@@ -1211,6 +1211,20 @@ namespace RUINORERP.UI.BaseForm
             {
                 return ae;
             }
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            if (pkid > 0)
+            {
+                //判断是否锁定
+                BillLockInfo bli = MainForm.Instance.cache.Get<BillLockInfo>(pkid);
+                if (bli != null)
+                {
+                    MainForm.Instance.uclog.AddLog($"单据已被{bli.LockedName}锁定，请刷新后再试");
+                    return ae;
+                }
+            }
+
+
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
                 //反审，要审核过，并且通过了，才能反审。
@@ -1230,8 +1244,8 @@ namespace RUINORERP.UI.BaseForm
 
             BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
             CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+          
+ 
             ae.BillID = pkid;
             CommBillData cbd = bcf.GetBillData<T>(EditEntity);
             ae.BillNo = cbd.BillNo;
@@ -1272,6 +1286,23 @@ namespace RUINORERP.UI.BaseForm
                 rmr = await ctr.AntiApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
                 {
+                    //如果是出库单审核，则上传到服务器 锁定订单无法修改
+                    if (ae.bizType == BizType.销售出库单)
+                    {
+                        //锁定对应的订单
+                        if (EditEntity is tb_SaleOut saleOut)
+                        {
+                            if (saleOut.tb_saleorder != null)
+                            {
+                                OriginalData od = ActionForClient.销售出库反审(saleOut.tb_saleorder.SOrder_ID,
+                                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
+                                    (int)BizType.销售订单, ae.ApprovalResults);
+                                MainForm.Instance.ecs.AddSendData(od);
+                            }
+                        }
+
+                    }
+
                     ToolBarEnabledControl(MenuItemEnums.反审);
                     //这里推送到审核，启动工作流
                     AuditLogHelper.Instance.CreateAuditLog<T>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}");

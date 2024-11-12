@@ -34,7 +34,7 @@
             System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("采购入库单价格修复");
             System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("销售订单价格修复");
             System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("销售出库单价格修复");
-            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("节点3");
+            System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("生产计划数量修复");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCDataCorrectionCenter));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.treeViewTableList = new Krypton.Toolkit.KryptonTreeView();
@@ -173,8 +173,8 @@
             treeNode4.Text = "销售订单价格修复";
             treeNode5.Name = "销售出库单价格修复";
             treeNode5.Text = "销售出库单价格修复";
-            treeNode6.Name = "节点3";
-            treeNode6.Text = "节点3";
+            treeNode6.Name = "生产计划数量修复";
+            treeNode6.Text = "生产计划数量修复";
             this.treeView1.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1,
             treeNode2,

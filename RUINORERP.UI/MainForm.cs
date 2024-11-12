@@ -323,7 +323,7 @@ namespace RUINORERP.UI
 
 
         /// <summary>
-        /// https://www.cnblogs.com/fanfan-90/p/12151924.html
+        /// 转发单据审核锁定 https://www.cnblogs.com/fanfan-90/p/12151924.html
         /// </summary>
         public IMemoryCache cache { get; set; }
         private async void MainForm_Load(object sender, EventArgs e)

@@ -59,7 +59,6 @@ namespace RUINORERP.UI.PSI.SAL
             exprApprovalStatus = (p) => p.ApprovalStatus;
             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
-
             System.Linq.Expressions.Expression<Func<tb_SaleOrder, int?>> exprPayStatus;
             exprPayStatus = (p) => p.PayStatus;
             base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));

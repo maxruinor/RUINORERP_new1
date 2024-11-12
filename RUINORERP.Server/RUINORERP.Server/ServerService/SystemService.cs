@@ -161,6 +161,35 @@ namespace RUINORERP.Server.ServerService
                 Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
             }
         }
+
+        public static void process单据审核锁定释放(SessionforBiz Sender, OriginalData gd)
+        {
+            try
+            {
+                foreach (var item in frmMain.Instance.sessionListBiz)
+                {
+                    SessionforBiz sessionforBiz = item.Value as SessionforBiz;
+                    //自己的不管。 只转给其它人。要其它人要注意这个情况
+                    if (sessionforBiz.User.UserID == Sender.User.UserID)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        sessionforBiz.AddSendData((byte)ServerCmdEnum.转发单据审核锁定释放, null, gd.Two);
+                    }
+                }
+
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+            }
+        }
         /// <summary>
         /// 转发到能处理的人
         /// </summary>

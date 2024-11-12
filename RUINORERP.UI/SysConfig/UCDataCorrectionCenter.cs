@@ -586,6 +586,144 @@ namespace RUINORERP.UI.SysConfig
                 {
 
                 }
+
+                if (treeView1.SelectedNode.Text == "生产计划数量修复")
+                {
+
+                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_FinishedGoodsInv).Name)
+                    {
+                        //修复缴库库明细和等于主表的总数量
+                        List<tb_FinishedGoodsInv> FinishedGoodsInvList = await MainForm.Instance.AppContext.Db.Queryable<tb_FinishedGoodsInv>()
+                            .Includes(c => c.tb_FinishedGoodsInvDetails)
+                            .ToListAsync();
+                        List<tb_FinishedGoodsInv> updatelist = new();
+                        for (int i = 0; i < FinishedGoodsInvList.Count; i++)
+                        {
+                            if (FinishedGoodsInvList[i].TotalQty != FinishedGoodsInvList[i].tb_FinishedGoodsInvDetails.Sum(c => c.Qty))
+                            {
+                                if (!chkTestMode.Checked)
+                                {
+                                    FinishedGoodsInvList[i].TotalQty = FinishedGoodsInvList[i].tb_FinishedGoodsInvDetails.Sum(c => c.Qty);
+                                    updatelist.Add(FinishedGoodsInvList[i]);
+                                }
+                                else
+                                {
+                                    richTextBoxLog.AppendText($"{FinishedGoodsInvList[i]} 等待修复 \r\n");
+                                }
+                            }
+                        }
+                        if (!chkTestMode.Checked)
+                        {
+
+                            int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist).UpdateColumns(t => new { t.TotalQty }).ExecuteCommandAsync();
+                            richTextBoxLog.AppendText($"修复缴库库明细和等于主表的总数量 修复成功：{totalamountCounter} " + "\r\n");
+                        }
+                    }
+
+                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_ManufacturingOrder).Name)
+                    {
+
+                        //制令单已完成数量要等于=名下所有缴库单数量之和
+                        var ManufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
+                            .Includes(c => c.tb_FinishedGoodsInvs)
+                                     .ToListAsync();
+
+                        List<tb_ManufacturingOrder> updatelist = new();
+                        for (int i = 0; i < ManufacturingOrders.Count; i++)
+                        {
+                            if (ManufacturingOrders[i].QuantityDelivered != ManufacturingOrders[i].tb_FinishedGoodsInvs.Where(c => c.DataStatus == 4).Sum(c => c.TotalQty))
+                            {
+                                if (!chkTestMode.Checked)
+                                {
+                                    ManufacturingOrders[i].QuantityDelivered = ManufacturingOrders[i].tb_FinishedGoodsInvs.Where(c => c.DataStatus == 4).Sum(c => c.TotalQty);
+                                    updatelist.Add(ManufacturingOrders[i]);
+                                }
+                                else
+                                {
+                                    richTextBoxLog.AppendText($"{ManufacturingOrders[i].MONO} 等待修复 \r\n");
+                                }
+                            }
+                        }
+                        if (!chkTestMode.Checked)
+                        {
+                            int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist).UpdateColumns(t => new { t.QuantityDelivered }).ExecuteCommandAsync();
+                            richTextBoxLog.AppendText($"修复缴库单数量 修复成功：{totalamountCounter} " + "\r\n");
+                        }
+                    }
+
+                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_ProductionPlan).Name)
+                    {
+                        //计划完成数量等于他名下的需求单下的所有制令单完成数量之和
+                        var ProductionPlans = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionPlan>()
+                             .Includes(a => a.tb_ProductionPlanDetails)
+                            .Includes(c => c.tb_ProductionDemands, b => b.tb_ManufacturingOrders)
+                            .ToListAsync();
+
+                        List<tb_ProductionPlan> updatelist = new();
+                        for (int ii = 0; ii < ProductionPlans.Count; ii++)
+                        {
+                            List<tb_ProductionPlanDetail> updatePlanDetails = new List<tb_ProductionPlanDetail>();
+                            for (int jj = 0; jj < ProductionPlans[ii].tb_ProductionPlanDetails.Count; jj++)
+                            {
+                                int totalqty = 0;
+                                for (int kk = 0; kk < ProductionPlans[ii].tb_ProductionDemands.Count; kk++)
+                                {
+                                    totalqty += ProductionPlans[ii].tb_ProductionDemands[kk].tb_ManufacturingOrders.Where(c => (c.DataStatus == 4 || c.DataStatus == 8) && c.ProdDetailID == ProductionPlans[ii].tb_ProductionPlanDetails[jj].ProdDetailID).Sum(c => c.QuantityDelivered);
+                                }
+                                if (totalqty == 0)
+                                {
+                                    if (ProductionPlans[ii].tb_ProductionPlanDetails[jj].CompletedQuantity > 0)
+                                    {
+                                        richTextBoxLog.AppendText($"{ProductionPlans[ii].PPNo}计划明细中==>{totalqty}==========0时。明细保存的是{ProductionPlans[ii].tb_ProductionPlanDetails[jj].CompletedQuantity} \r\n");
+                                    }
+                                    //如果制令单数量为0，则跳过
+                                    continue;
+                                }
+                                if (totalqty != ProductionPlans[ii].tb_ProductionPlanDetails[jj].CompletedQuantity)
+                                {
+                                    if (!chkTestMode.Checked)
+                                    {
+
+                                        ProductionPlans[ii].tb_ProductionPlanDetails[jj].CompletedQuantity = totalqty;
+                                        updatePlanDetails.Add(ProductionPlans[ii].tb_ProductionPlanDetails[jj]);
+                                    }
+                                    else
+                                    {
+                                        richTextBoxLog.AppendText($"{ProductionPlans[ii].PPNo}计划明细{ProductionPlans[ii].tb_ProductionPlanDetails[jj].CompletedQuantity}==>{totalqty} 等待修复！！！！！ \r\n");
+                                    }
+                                }
+
+                            }
+
+                            if (!chkTestMode.Checked)
+                            {
+                                int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatePlanDetails).UpdateColumns(t => new { t.CompletedQuantity }).ExecuteCommandAsync();
+                                richTextBoxLog.AppendText($"{ProductionPlans[ii].PPNo}修复计划明细数量 修复成功：{totalamountCounter} " + "\r\n");
+                            }
+
+
+
+                            if (ProductionPlans[ii].TotalCompletedQuantity != ProductionPlans[ii].tb_ProductionPlanDetails.Sum(c => c.CompletedQuantity))
+                            {
+                                if (!chkTestMode.Checked)
+                                {
+                                    ProductionPlans[ii].TotalCompletedQuantity = ProductionPlans[ii].tb_ProductionPlanDetails.Sum(c => c.CompletedQuantity);
+                                    updatelist.Add(ProductionPlans[ii]);
+                                }
+                                else
+                                {
+                                    richTextBoxLog.AppendText($"PPNo:{ProductionPlans[ii].PPNo},{ProductionPlans[ii].TotalCompletedQuantity} 等待修复 为{ProductionPlans[ii].tb_ProductionPlanDetails.Sum(c => c.CompletedQuantity)} \r\n");
+                                }
+                            }
+                        }
+                        if (!chkTestMode.Checked)
+                        {
+                            int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updatelist).UpdateColumns(t => new { t.TotalCompletedQuantity }).ExecuteCommandAsync();
+                            richTextBoxLog.AppendText($"修复生产计划总数量 修复成功：{totalamountCounter} " + "\r\n");
+                        }
+
+                    }
+                }
             }
         }
 

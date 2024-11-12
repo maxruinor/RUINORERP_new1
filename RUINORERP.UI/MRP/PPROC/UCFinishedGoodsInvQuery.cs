@@ -48,6 +48,9 @@ namespace RUINORERP.UI.PSI.PUR
         public override void BuildColNameDataDictionary()
         {
             //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
+            System.Linq.Expressions.Expression<Func<tb_FinishedGoodsInv, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
 
             System.Linq.Expressions.Expression<Func<tb_FinishedGoodsInv, int?>> exprApprovalStatus;
             exprApprovalStatus = (p) => p.ApprovalStatus;
@@ -94,13 +97,22 @@ namespace RUINORERP.UI.PSI.PUR
 
         public override void BuildSummaryCols()
         {
-            // base.MasterSummaryCols.Add(c => c.t);
-            //base.MasterSummaryCols.Add(c => c.TotalAmount);
-            // base.MasterSummaryCols.Add(c => c.TotalTaxAmount);
-            //
-            // base.ChildSummaryCols.Add(c => c.Quantity);
-
-            // base.ChildRelatedSummaryCols.Add(c => c.Quantity);
+            base.MasterSummaryCols.Add(c => c.TotalQty);
+            base.MasterSummaryCols.Add(c => c.TotalProductionCost);
+            base.MasterSummaryCols.Add(c => c.TotalNetWorkingHours);
+            base.MasterSummaryCols.Add(c => c.TotalNetMachineHours);
+            base.MasterSummaryCols.Add(c => c.TotalMaterialCost);
+            base.MasterSummaryCols.Add(c => c.TotalManuFee);
+            base.MasterSummaryCols.Add(c => c.TotalApportionedCost);
+  
+            base.ChildSummaryCols.Add(c => c.Qty);
+            base.ChildSummaryCols.Add(c => c.ApportionedCost);
+            base.ChildSummaryCols.Add(c => c.MaterialCost);
+            base.ChildSummaryCols.Add(c => c.NetMachineHours);
+            base.ChildSummaryCols.Add(c => c.NetWorkingHours);
+            base.ChildSummaryCols.Add(c => c.ProductionAllCost);
+            base.ChildSummaryCols.Add(c => c.ManuFee);
+   
         }
 
 

@@ -343,5 +343,33 @@ namespace RUINORERP.UI.SuperSocketClient
                 MainForm.Instance.PrintInfoLog("接收转发单据审核锁定:" + ex.Message);
             }
         }
+
+        internal static void 接收转发单据审核锁定释放(OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+                int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
+                bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
+
+                BillLockInfo lockInfo = new BillLockInfo();
+                MainForm.Instance.cache.TryGetValue(billid, out lockInfo);
+                if (lockInfo!=null)
+                {
+                    MainForm.Instance.cache.Remove(billid);
+                }
+                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                {
+                    MainForm.Instance.PrintInfoLog($"接收转发单据审核锁定释放{BizType}成功！");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收转发单据审核锁定释放:" + ex.Message);
+            }
+        }
     }
 }

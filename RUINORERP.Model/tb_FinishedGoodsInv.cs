@@ -379,6 +379,23 @@ namespace RUINORERP.Model
             SetProperty(ref _GeneEvidence, value);
             }
         }
+
+
+        private int _TotalQty = ((0));
+        /// <summary>
+        /// 总数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalQty", ColDesc = "总数量")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "TotalQty", DecimalDigits = 0, IsNullable = false, ColumnDescription = "总数量")]
+        public int TotalQty
+        {
+            get { return _TotalQty; }
+            set
+            {
+                SetProperty(ref _TotalQty, value);
+            }
+        }
+
         private decimal _TotalNetMachineHours = ((0));
         /// <summary>
         /// 总机时

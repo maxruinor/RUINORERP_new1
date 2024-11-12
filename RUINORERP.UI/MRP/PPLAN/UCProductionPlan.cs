@@ -45,10 +45,10 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionPlan>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
-             
+
         }
 
- 
+
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_ProductionPlan);
@@ -67,7 +67,7 @@ namespace RUINORERP.UI.MRP.MP
         public override void BindData(tb_ProductionPlan entityPara, ActionStatus actionStatus = ActionStatus.无操作)
         {
 
-            tb_ProductionPlan entity = entityPara ;
+            tb_ProductionPlan entity = entityPara;
             if (entity == null)
             {
                 return;
@@ -141,7 +141,7 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
 
                 //如果是销售订单引入变化则加载明细及相关数据
@@ -210,7 +210,7 @@ namespace RUINORERP.UI.MRP.MP
         SourceGridDefine sgd = null;
         //        SourceGridHelper<View_ProdDetail, tb_ProductionPlanDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_ProductionPlanDetail>();
         SourceGridHelper sgh = new SourceGridHelper();
-     
+
         List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
@@ -289,7 +289,7 @@ namespace RUINORERP.UI.MRP.MP
             List<tb_ProductionPlanDetail> lines = new List<tb_ProductionPlanDetail>();
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
- 
+
             sgd.SetDependencyObject<ProductSharePart, tb_ProductionPlanDetail>(MainForm.Instance.list);
 
             sgd.HasRowHeader = true;
@@ -756,7 +756,7 @@ namespace RUINORERP.UI.MRP.MP
                 //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                 //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                 //MainForm.Instance.ecs.AddSendData(od);
-                base.Query();
+                base.Refreshs();
             }
             else
             {

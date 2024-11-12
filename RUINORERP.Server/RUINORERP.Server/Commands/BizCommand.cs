@@ -170,7 +170,9 @@ namespace RUINORERP.Server.Commands
                             //所有缓存到客户机。服务器不用缓存列表了？
                             SystemService.process单据审核锁定(Player, gd);
                             break;
-
+                        case ClientCmdEnum.单据审核锁定释放:
+                            SystemService.process单据审核锁定释放(Player, gd);
+                            break;
                         case ClientCmdEnum.发送弹窗消息:
                             UserService.转发弹窗消息(Player, gd);
                             UserService.转发消息结果(Player);

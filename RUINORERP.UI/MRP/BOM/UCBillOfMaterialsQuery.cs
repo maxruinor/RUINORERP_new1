@@ -162,10 +162,15 @@ namespace RUINORERP.UI.MRP.BOM
 
         public override void BuildColNameDataDictionary()
         {
+            System.Linq.Expressions.Expression<Func<View_BOM, int?>> exprDataStatus;
+            exprDataStatus = (p) => p.DataStatus;
+            MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+
+
             //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
-            //System.Linq.Expressions.Expression<Func<, int?>> exprApprovalStatus;
-            //exprApprovalStatus = (p) => p.ApprovalStatus;
-            //base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, GetKeyValuePairs(typeof(ApprovalStatus)));
+             System.Linq.Expressions.Expression<Func<View_BOM, int?>> exprApprovalStatus;
+             exprApprovalStatus = (p) => p.ApprovalStatus;
+             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
 
             //System.Linq.Expressions.Expression<Func<tb_SaleOrder, int?>> exprPayStatus;

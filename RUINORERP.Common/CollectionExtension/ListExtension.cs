@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -225,6 +226,9 @@ namespace RUINORERP.Common.CollectionExtension
             return dtReturn;
         }
         */
+
+
+
         public static DataTable ToDataTable<T>(this IList<T> varlist, List<Expression<Func<T, object>>> expColumns)
         {
             string[] cols = new string[expColumns.Count];
@@ -293,5 +297,95 @@ namespace RUINORERP.Common.CollectionExtension
             return dtReturn;
         }
 
+
+
+        /// <summary>
+        /// 生成的列要在指定的列中，如果为null，则不指定
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="varlist"></param>
+        /// <param name="columns">key:列名en,value 中文 </param>
+        /// <returns></returns>
+        public static DataTable ToDataTable<T>(this IList<T> varlist, bool IsShortDate = false, params KeyValuePair<string, string>[] columns)
+        {
+            DataTable dtReturn = new DataTable();
+            // column names 
+            PropertyInfo[] oProps = null;
+            if (varlist == null)
+                return dtReturn;
+            foreach (T rec in varlist)
+            {
+                if (oProps == null)
+                {
+                    oProps = ((Type)rec.GetType()).GetProperties();
+                    foreach (PropertyInfo pi in oProps)
+                    {
+                        Type colType = pi.PropertyType;
+                        if ((colType.IsGenericType) && (colType.GetGenericTypeDefinition() == typeof(Nullable<>)))
+                        {
+                            colType = colType.GetGenericArguments()[0];
+                        }
+                        if (columns != null || columns.Length > 0)
+                        {
+                            var col = columns.FirstOrDefault(c => c.Key == pi.Name);
+                            if (col.Key != null)
+                            {
+                                if (colType == typeof(DateTime) && IsShortDate)
+                                {
+                                    DataColumn dc = new DataColumn(col.Value, typeof(string));
+                                    dc.ColumnName = col.Key;
+                                    dc.Caption = col.Value;
+                                    dtReturn.Columns.Add(dc);
+                                }
+                                else
+                                {
+                                    DataColumn dc = new DataColumn(col.Value, colType);
+                                    dc.ColumnName = col.Key;
+                                    dc.Caption = col.Value;
+                                    dtReturn.Columns.Add(dc);
+                                }
+
+                            }
+                        }
+                        else
+                        {
+                            dtReturn.Columns.Add(new DataColumn(pi.Name, colType));
+                        }
+
+                    }
+                }
+                DataRow dr = dtReturn.NewRow();
+                foreach (PropertyInfo pi in oProps)
+                {
+                    Type colType = pi.PropertyType;
+                    if ((colType.IsGenericType) && (colType.GetGenericTypeDefinition() == typeof(Nullable<>)))
+                    {
+                        colType = colType.GetGenericArguments()[0];
+                    }
+
+                    //包含在指定点中，才给值
+                    if (dtReturn.Columns.Contains(pi.Name))
+                    {
+                        if (colType == typeof(DateTime) && IsShortDate)
+                        {
+                            dr[pi.Name] = pi.GetValue(rec, null) == null ? DBNull.Value : pi.GetValue(rec, null);
+                            dr[pi.Name] =Convert.ToDateTime(dr[pi.Name]).ToString("yyyy-MM-dd");
+                        }
+                        else
+                        {
+                            dr[pi.Name] = pi.GetValue(rec, null) == null ? DBNull.Value : pi.GetValue
+                                             (rec, null);
+                        }
+                    }
+                }
+
+                if (dtReturn.Rows.Count==53)
+                {
+
+                }
+                dtReturn.Rows.Add(dr);
+            }
+            return dtReturn;
+        }
     }
 }

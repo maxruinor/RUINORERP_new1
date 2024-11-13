@@ -177,10 +177,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Ribbon.dll</HintPath>
     </Reference>
-    <Reference Include="Krypton.Toolkit.Suite.Extended.TreeGridView, Version=80.24.7.190, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\dll\Krypton.Toolkit.Suite.Extended.TreeGridView.dll</HintPath>
-    </Reference>
     <Reference Include="Krypton.Workspace, Version=80.24.7.190, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Workspace.dll</HintPath>
@@ -1996,6 +1992,12 @@
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\DataParts\DataBoardUnit.cs" />
+    <Compile Include="UserCenter\DataParts\UCMRPCell.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCMRPCell.Designer.cs">
+      <DependentUpon>UCMRPCell.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\DataParts\UCPURCell.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2850,6 +2852,9 @@
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCMRPCell.resx">
+      <DependentUpon>UCMRPCell.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCPURCell.resx">
       <DependentUpon>UCPURCell.cs</DependentUpon>
     </EmbeddedResource>
@@ -3040,6 +3045,10 @@
     <ProjectReference Include="..\Krypton Toolkit\Krypton.Toolkit.Suite.Extended.Outlook.Grid\Krypton.Toolkit.Suite.Extended.Outlook.Grid 2022.csproj">
       <Project>{207b6d11-38d7-43e6-a381-0e8203cb5721}</Project>
       <Name>Krypton.Toolkit.Suite.Extended.Outlook.Grid 2022</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Krypton Toolkit\Krypton.Toolkit.Suite.Extended.TreeGridView\Krypton.Toolkit.Suite.Extended.TreeGridView 2022.csproj">
+      <Project>{fa46f8d6-e5f3-4525-ba4b-a0c063bf8d95}</Project>
+      <Name>Krypton.Toolkit.Suite.Extended.TreeGridView 2022</Name>
     </ProjectReference>
     <ProjectReference Include="..\Netron.Core\Netron.Core.csproj">
       <Project>{96aebbee-4203-45f3-bcf5-7b73bf256bda}</Project>

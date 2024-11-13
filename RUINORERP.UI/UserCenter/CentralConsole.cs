@@ -78,6 +78,8 @@ namespace RUINORERP.UI.UserCenter
         采购金额 = 4,
 
         库存单元 = 5,
+
+        生产单元 = 6,
         /// <summary>
         /// 显示其它出库入情况，盘点，销售退回
         /// </summary>

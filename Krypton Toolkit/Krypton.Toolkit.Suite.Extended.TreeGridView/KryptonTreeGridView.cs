@@ -29,6 +29,7 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
 #pragma warning disable CS8602, CS8604, CS8603, CS8600
+using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -218,7 +219,7 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                     //-------------------------- 
                     //Sort Data
                     //-------------------------- 
-                    _dataSource = FilterSortData(_dataSource, string.Empty, _dataSource.Columns[0].ColumnName);
+                    _dataSource = FilterSortData(_dataSource, SortFilter, _dataSource.Columns[0].ColumnName);
 
                     //-------------------------- 
                     //Add Columns
@@ -270,14 +271,48 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                             //-------------------------- 
                             //Others
                             //-------------------------- 
-                            var dgvtbc = new DataGridViewTextBoxColumn
+                            if (_dataSource.Columns[i].DataType == typeof(DateTime))
                             {
-                                HeaderText = _dataSource.Columns[i].Caption,
-                                DataPropertyName = _dataSource.Columns[i].ColumnName,
-                                AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-                            };
-                            dgvtbc.Name = _dataSource.Columns[i].ColumnName;
-                            Columns.Add(dgvtbc);
+                                KryptonDataGridViewDateTimePickerColumn dateColumn = new KryptonDataGridViewDateTimePickerColumn
+                                {
+                                    Name = _dataSource.Columns[i].ColumnName,
+                                    HeaderText = _dataSource.Columns[i].Caption,
+                                    DataPropertyName = _dataSource.Columns[i].ColumnName,
+                                    AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                                    DefaultCellStyle = new DataGridViewCellStyle
+                                    {
+                                        // 设置日期时间的显示格式
+                                        // "d" 表示短日期格式，"D" 表示长日期格式
+                                        // "f" 表示短日期时间，"F" 表示长日期时间
+                                        // "g" 表示一般日期时间，"G" 表示一般日期时间（带秒）
+                                        // "m" 或 "M" 表示月/年
+                                        // "r" 或 "R" 表示 RFC1123 模式
+                                        // "s" 表示 sortable 格式
+                                        // "t" 表示短时间
+                                        // "T" 表示长时间
+                                        // "u" 表示大学矩形式（yyyy-MM-dd HH:mm:ssZ）
+                                        // "U" 表示大学矩形式（dddd, dd MMM yyyy HH:mm:ss）
+                                        // "y" 或 "Y" 表示年月
+                                        Format = "d", // 长日期格式
+                                        FormatProvider = System.Globalization.CultureInfo.InvariantCulture
+                                    }
+                                };
+
+                                dateColumn.Format = DateTimePickerFormat.Short;
+                                Columns.Add(dateColumn);
+                            }
+                            else
+                            {
+                                var dgvtbc = new DataGridViewTextBoxColumn
+                                {
+                                    HeaderText = _dataSource.Columns[i].Caption,
+                                    DataPropertyName = _dataSource.Columns[i].ColumnName,
+                                    AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+                                };
+                                dgvtbc.Name = _dataSource.Columns[i].ColumnName;
+                                Columns.Add(dgvtbc);
+                            }
+
                         }
                     }
 
@@ -287,7 +322,7 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                         //Sort Data
                         //-------------------------- 
                         //_dataSource = FilterSortData(_dataSource, string.Empty, ParentIdColumnName);
-                        _dataSource = FilterSortData(_dataSource, string.Empty, ParentIdColumnName);
+                        _dataSource = FilterSortData(_dataSource, SortFilter, ParentIdColumnName);
                         //-------------------------- 
                         //Init nodes
                         //-------------------------- 
@@ -449,6 +484,8 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
         [Description("Returns the TreeGridNode for the given DataGridViewRow")]
         public KryptonTreeGridNodeRow GetNodeForRow(int index) => GetNodeForRow(base.Rows[index]);
 
+        [Description("DataTable视图排序过滤器： dataView.Sort = \"DateColumn ASC\"; // 按照日期列升序排序，若要降序则改为 \"DateColumn DESC\"")]
+        public string SortFilter { get; set; } = string.Empty;
 
         /// <summary>
         /// FilterSortData is used to sort a datatable directly.

@@ -296,7 +296,7 @@ namespace RUINORERP.Business.Security
             else
             {
                 //关掉系统的。如果是超级用户 就看是不是调试状态
-                if (context.IsSuperUser && context.SysConfig.IsDebug)
+                if (context.rolePropertyConfig.ShowDebugInfo)
                 {
                     return true;
                 }

@@ -382,6 +382,7 @@ namespace RUINORERP.UI.UserCenter
         private void BuilderDataOverview(tb_WorkCenterConfig centerConfig)
         {
             flowLayoutPane数据概览.Controls.Clear();
+            flowLayoutPane数据概览.AutoScroll = true;
             //  List<BizType> bizTypes = new List<BizType>();
             if (centerConfig != null)
             {
@@ -406,6 +407,10 @@ namespace RUINORERP.UI.UserCenter
                         case 数据概览.库存单元:
                             UCStockCell uCStockCell = new UCStockCell();
                             flowLayoutPane数据概览.Controls.Add(uCStockCell);
+                            break;
+                        case 数据概览.生产单元:
+                            UCMRPCell uCProduceCell = new UCMRPCell();
+                            flowLayoutPane数据概览.Controls.Add(uCProduceCell);
                             break;
                         default:
                             break;
@@ -468,7 +473,7 @@ namespace RUINORERP.UI.UserCenter
 
         private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, NodeParameter nodeParameter)
         {
-            if (QueryDto==null)
+            if (QueryDto == null)
             {
                 return;
             }

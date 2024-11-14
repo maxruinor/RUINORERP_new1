@@ -46,6 +46,7 @@
             this.kryptonTreeGridView1 = new Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView();
             this.订单状态 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.数量 = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.buttonSpecHeaderGroup2 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).BeginInit();
             this.kryptonHeaderGroup1.Panel.SuspendLayout();
@@ -73,6 +74,7 @@
             // kryptonHeaderGroup1
             // 
             this.kryptonHeaderGroup1.ButtonSpecs.Add(this.buttonSpecHeaderGroup1);
+            this.kryptonHeaderGroup1.ButtonSpecs.Add(this.buttonSpecHeaderGroup2);
             this.kryptonHeaderGroup1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonHeaderGroup1.Location = new System.Drawing.Point(0, 0);
             this.kryptonHeaderGroup1.Name = "kryptonHeaderGroup1";
@@ -253,10 +255,17 @@
             this.数量.ReadOnly = true;
             this.数量.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             // 
+            // buttonSpecHeaderGroup2
+            // 
+            this.buttonSpecHeaderGroup2.Checked = Krypton.Toolkit.ButtonCheckState.Unchecked;
+            this.buttonSpecHeaderGroup2.Type = Krypton.Toolkit.PaletteButtonSpecStyle.ArrowUp;
+            this.buttonSpecHeaderGroup2.UniqueName = "e135944788c145cfa57bb0f617ecb39a";
+            // 
             // UCStockCell
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.Controls.Add(this.kryptonHeaderGroup1);
             this.Name = "UCStockCell";
             this.Size = new System.Drawing.Size(715, 317);
@@ -300,5 +309,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
+        private Krypton.Toolkit.ButtonSpecHeaderGroup buttonSpecHeaderGroup2;
     }
 }

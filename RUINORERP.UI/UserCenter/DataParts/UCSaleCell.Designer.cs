@@ -64,7 +64,7 @@
             // kryptonHeaderGroup1.Panel
             // 
             this.kryptonHeaderGroup1.Panel.Controls.Add(this.kryptonPanelSaleMain);
-            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(610, 239);
+            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(580, 215);
             this.kryptonHeaderGroup1.TabIndex = 0;
             this.kryptonHeaderGroup1.ValuesPrimary.Heading = "销售";
             // 
@@ -89,13 +89,13 @@
             this.kryptonPanelSaleMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelSaleMain.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelSaleMain.Name = "kryptonPanelSaleMain";
-            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(608, 186);
+            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(578, 162);
             this.kryptonPanelSaleMain.TabIndex = 0;
             // 
             // lblMonthlyCustomer
             // 
             this.lblMonthlyCustomer.LabelStyle = Krypton.Toolkit.LabelStyle.TitleControl;
-            this.lblMonthlyCustomer.Location = new System.Drawing.Point(320, 79);
+            this.lblMonthlyCustomer.Location = new System.Drawing.Point(281, 78);
             this.lblMonthlyCustomer.Name = "lblMonthlyCustomer";
             this.lblMonthlyCustomer.Size = new System.Drawing.Size(38, 34);
             this.lblMonthlyCustomer.StateNormal.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
@@ -121,7 +121,7 @@
             this.kryptonTreeGridView1.ParentIdRootValue = ((long)(0));
             this.kryptonTreeGridView1.RowHeadersVisible = false;
             this.kryptonTreeGridView1.SelectFilter = "";
-            this.kryptonTreeGridView1.Size = new System.Drawing.Size(321, 164);
+            this.kryptonTreeGridView1.Size = new System.Drawing.Size(272, 164);
             this.kryptonTreeGridView1.SortColumnName = "";
             this.kryptonTreeGridView1.TabIndex = 1;
             this.kryptonTreeGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridView1_CellDoubleClick);
@@ -147,7 +147,7 @@
             // lblMonthlyPerformance
             // 
             this.lblMonthlyPerformance.LabelStyle = Krypton.Toolkit.LabelStyle.TitleControl;
-            this.lblMonthlyPerformance.Location = new System.Drawing.Point(320, 14);
+            this.lblMonthlyPerformance.Location = new System.Drawing.Point(281, 13);
             this.lblMonthlyPerformance.Name = "lblMonthlyPerformance";
             this.lblMonthlyPerformance.Size = new System.Drawing.Size(38, 34);
             this.lblMonthlyPerformance.StateNormal.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
@@ -162,7 +162,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonHeaderGroup1);
             this.Name = "UCSaleCell";
-            this.Size = new System.Drawing.Size(610, 239);
+            this.Size = new System.Drawing.Size(580, 215);
             this.Load += new System.EventHandler(this.UCSaleCell_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).EndInit();
             this.kryptonHeaderGroup1.Panel.ResumeLayout(false);

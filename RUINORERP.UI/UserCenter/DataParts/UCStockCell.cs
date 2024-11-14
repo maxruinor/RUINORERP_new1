@@ -27,6 +27,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         public UCStockCell()
         {
             InitializeComponent();
+            this.AutoSize = false;
         }
 
         private void UCStockCell_Load(object sender, EventArgs e)

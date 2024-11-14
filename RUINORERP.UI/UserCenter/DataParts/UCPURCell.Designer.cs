@@ -62,7 +62,7 @@
             // kryptonHeaderGroup1.Panel
             // 
             this.kryptonHeaderGroup1.Panel.Controls.Add(this.kryptonPanelSaleMain);
-            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(371, 224);
+            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(280, 194);
             this.kryptonHeaderGroup1.TabIndex = 0;
             this.kryptonHeaderGroup1.ValuesPrimary.Heading = "采购";
             // 
@@ -84,7 +84,7 @@
             this.kryptonPanelSaleMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelSaleMain.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelSaleMain.Name = "kryptonPanelSaleMain";
-            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(369, 171);
+            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(278, 141);
             this.kryptonPanelSaleMain.TabIndex = 0;
             // 
             // kryptonTreeGridView1
@@ -134,7 +134,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonHeaderGroup1);
             this.Name = "UCPURCell";
-            this.Size = new System.Drawing.Size(371, 224);
+            this.Size = new System.Drawing.Size(280, 194);
             this.Load += new System.EventHandler(this.UCPURCell_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).EndInit();
             this.kryptonHeaderGroup1.Panel.ResumeLayout(false);

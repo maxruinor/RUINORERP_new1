@@ -10,6 +10,7 @@ using System.Text;
 //using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace RUINORERP.Common.CollectionExtension
 {
@@ -297,6 +298,103 @@ namespace RUINORERP.Common.CollectionExtension
             return dtReturn;
         }
 
+        /// <summary>
+        /// 生成的列要在指定的列中，如果key不存在于实体，给空值。建字符列。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="varlist"></param>
+        /// <param name="columnsCaption">key:en列名,value 中文 ，如果key不存在于实体，给空值</param>
+        /// <returns></returns>
+        public static DataTable ToDataTable<T>(this IList<T> varlist, KeyValuePair<string, string>[] columnsCaption,
+            bool IsShortDate = false)
+        {
+            DataTable dtReturn = new DataTable();
+
+            //key是英文属性列名，value是列的类型。先把这一波全部列出来，再按参数添加
+            List<KeyValuePair<string, Type>> colsTypeList = new List<KeyValuePair<string, Type>>();
+
+            // column names 
+            PropertyInfo[] oProps = null;
+            if (varlist == null)
+                return dtReturn;
+
+            //找到实体中存在的属性当作列
+            oProps = typeof(T).GetProperties();
+            foreach (PropertyInfo pi in oProps)
+            {
+                Type colType = pi.PropertyType;
+                if ((colType.IsGenericType) && (colType.GetGenericTypeDefinition() == typeof(Nullable<>)))
+                {
+                    colType = colType.GetGenericArguments()[0];
+                }
+
+                if (columnsCaption != null || columnsCaption.Length > 0)
+                {
+                    var col = columnsCaption.FirstOrDefault(c => c.Key == pi.Name);
+                    if (col.Key != null)
+                    {
+                        colsTypeList.Add(new KeyValuePair<string, Type>(col.Key, colType));
+                    }
+                }
+
+            }
+
+            //添加列
+            foreach (var item in columnsCaption)
+            {
+                DataColumn dc = null;
+                KeyValuePair<string, Type> colType = colsTypeList.FirstOrDefault(c => c.Key == item.Key);
+                if (colType.Key != null)
+                {
+                    #region 参数集合中的列存在于实体属性中时
+                    if (colType.Value == typeof(DateTime) && IsShortDate)
+                    {
+                        dc = new DataColumn(item.Key, typeof(string));
+                    }
+                    else
+                    {
+                        dc = new DataColumn(item.Key, colType.Value);
+                    }
+                    #endregion
+                }
+                else
+                {
+                    dc = new DataColumn(item.Key, typeof(string));
+                }
+                dc.ColumnName = item.Key;
+                dc.Caption = item.Value;
+                dtReturn.Columns.Add(dc);
+            }
+
+            foreach (T rec in varlist)
+            {
+                DataRow dr = dtReturn.NewRow();
+                foreach (DataColumn col in dtReturn.Columns)
+                {
+                    var colsType = colsTypeList.FirstOrDefault(c => c.Key == col.ColumnName);
+                    if (colsType.Key != null)
+                    {
+                        if (colsType.Value == typeof(DateTime) && IsShortDate)
+                        {
+                            dr[col.ColumnName] = rec.GetPropertyValue<T>(col.ColumnName) == null ? DBNull.Value : rec.GetPropertyValue<T>(col.ColumnName);
+                            dr[col.ColumnName] = Convert.ToDateTime(dr[col.ColumnName]).ToString("yyyy-MM-dd");
+                        }
+                        else
+                        {
+                            dr[col.ColumnName] = rec.GetPropertyValue<T>(col.ColumnName) == null ? DBNull.Value : rec.GetPropertyValue<T>(col.ColumnName);
+                        }
+                    }
+                    else
+                    {
+                        dr[col.ColumnName] =DBNull.Value;
+                    }
+                }
+
+                dtReturn.Rows.Add(dr);
+            }
+
+            return dtReturn;
+        }
 
 
         /// <summary>
@@ -304,15 +402,22 @@ namespace RUINORERP.Common.CollectionExtension
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="varlist"></param>
-        /// <param name="columns">key:列名en,value 中文 </param>
+        /// <param name="columns">key:en列名,value 中文 </param>
+        /// <param name="AdditionalColumns">额外的列。通常如果有子树节点时。内容是动态的不是指定T的类型，所以额外添加，key:en列名,value 中文 </param>
         /// <returns></returns>
-        public static DataTable ToDataTable<T>(this IList<T> varlist, bool IsShortDate = false, params KeyValuePair<string, string>[] columns)
+        public static DataTable ToDataTable<T>(this IList<T> varlist, KeyValuePair<string, string>[] columns,
+            bool IsShortDate = false, params KeyValuePair<string, string>[] AdditionalColumns)
         {
             DataTable dtReturn = new DataTable();
+
+            //key是英文属性列名，value是列的类型。先把这一波全部列出来，再按参数添加
+            List<KeyValuePair<string, Type>> cols = new List<KeyValuePair<string, Type>>();
+
             // column names 
             PropertyInfo[] oProps = null;
             if (varlist == null)
                 return dtReturn;
+
             foreach (T rec in varlist)
             {
                 if (oProps == null)
@@ -346,6 +451,15 @@ namespace RUINORERP.Common.CollectionExtension
                                 }
 
                             }
+                            else
+                            {
+                                //不存在这个实体中的字段时。只添加列名。值也会为空。
+                                //DataColumn dc = new DataColumn(col.Value, typeof(string));
+                                //dc.ColumnName = col.Key;
+                                //dc.Caption = col.Value;
+                                //dtReturn.Columns.Add(dc);
+                            }
+
                         }
                         else
                         {
@@ -369,7 +483,7 @@ namespace RUINORERP.Common.CollectionExtension
                         if (colType == typeof(DateTime) && IsShortDate)
                         {
                             dr[pi.Name] = pi.GetValue(rec, null) == null ? DBNull.Value : pi.GetValue(rec, null);
-                            dr[pi.Name] =Convert.ToDateTime(dr[pi.Name]).ToString("yyyy-MM-dd");
+                            dr[pi.Name] = Convert.ToDateTime(dr[pi.Name]).ToString("yyyy-MM-dd");
                         }
                         else
                         {
@@ -379,13 +493,13 @@ namespace RUINORERP.Common.CollectionExtension
                     }
                 }
 
-                if (dtReturn.Rows.Count==53)
-                {
 
-                }
                 dtReturn.Rows.Add(dr);
             }
+
             return dtReturn;
         }
+
+
     }
 }

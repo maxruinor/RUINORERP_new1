@@ -35,11 +35,11 @@
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonCommandRefresh = new Krypton.Toolkit.KryptonCommand();
             this.kryptonPanelSaleMain = new Krypton.Toolkit.KryptonPanel();
+            this.lblMonthlyCustomer = new Krypton.Toolkit.KryptonLabel();
             this.kryptonTreeGridView1 = new Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView();
-            this.lblMonthlyPerformance = new Krypton.Toolkit.KryptonLabel();
             this.订单状态 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.数量 = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.lblMonthlyCustomer = new Krypton.Toolkit.KryptonLabel();
+            this.lblMonthlyPerformance = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).BeginInit();
             this.kryptonHeaderGroup1.Panel.SuspendLayout();
@@ -64,7 +64,7 @@
             // kryptonHeaderGroup1.Panel
             // 
             this.kryptonHeaderGroup1.Panel.Controls.Add(this.kryptonPanelSaleMain);
-            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(592, 340);
+            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(610, 239);
             this.kryptonHeaderGroup1.TabIndex = 0;
             this.kryptonHeaderGroup1.ValuesPrimary.Heading = "销售";
             // 
@@ -89,8 +89,20 @@
             this.kryptonPanelSaleMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelSaleMain.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelSaleMain.Name = "kryptonPanelSaleMain";
-            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(590, 287);
+            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(608, 186);
             this.kryptonPanelSaleMain.TabIndex = 0;
+            // 
+            // lblMonthlyCustomer
+            // 
+            this.lblMonthlyCustomer.LabelStyle = Krypton.Toolkit.LabelStyle.TitleControl;
+            this.lblMonthlyCustomer.Location = new System.Drawing.Point(320, 79);
+            this.lblMonthlyCustomer.Name = "lblMonthlyCustomer";
+            this.lblMonthlyCustomer.Size = new System.Drawing.Size(38, 34);
+            this.lblMonthlyCustomer.StateNormal.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.lblMonthlyCustomer.StateNormal.ShortText.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
+            this.lblMonthlyCustomer.TabIndex = 2;
+            this.lblMonthlyCustomer.Values.Image = global::RUINORERP.UI.Properties.Resources.users;
+            this.lblMonthlyCustomer.Values.Text = "";
             // 
             // kryptonTreeGridView1
             // 
@@ -108,21 +120,11 @@
             this.kryptonTreeGridView1.Name = "kryptonTreeGridView1";
             this.kryptonTreeGridView1.ParentIdRootValue = ((long)(0));
             this.kryptonTreeGridView1.RowHeadersVisible = false;
+            this.kryptonTreeGridView1.SelectFilter = "";
             this.kryptonTreeGridView1.Size = new System.Drawing.Size(321, 164);
+            this.kryptonTreeGridView1.SortColumnName = "";
             this.kryptonTreeGridView1.TabIndex = 1;
             this.kryptonTreeGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridView1_CellDoubleClick);
-            // 
-            // lblMonthlyPerformance
-            // 
-            this.lblMonthlyPerformance.LabelStyle = Krypton.Toolkit.LabelStyle.TitleControl;
-            this.lblMonthlyPerformance.Location = new System.Drawing.Point(320, 14);
-            this.lblMonthlyPerformance.Name = "lblMonthlyPerformance";
-            this.lblMonthlyPerformance.Size = new System.Drawing.Size(38, 34);
-            this.lblMonthlyPerformance.StateNormal.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
-            this.lblMonthlyPerformance.StateNormal.ShortText.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
-            this.lblMonthlyPerformance.TabIndex = 1;
-            this.lblMonthlyPerformance.Values.Image = global::RUINORERP.UI.Properties.Resources.money1;
-            this.lblMonthlyPerformance.Values.Text = "";
             // 
             // 订单状态
             // 
@@ -142,17 +144,17 @@
             this.数量.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.数量.Width = 120;
             // 
-            // lblMonthlyCustomer
+            // lblMonthlyPerformance
             // 
-            this.lblMonthlyCustomer.LabelStyle = Krypton.Toolkit.LabelStyle.TitleControl;
-            this.lblMonthlyCustomer.Location = new System.Drawing.Point(320, 79);
-            this.lblMonthlyCustomer.Name = "lblMonthlyCustomer";
-            this.lblMonthlyCustomer.Size = new System.Drawing.Size(38, 34);
-            this.lblMonthlyCustomer.StateNormal.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
-            this.lblMonthlyCustomer.StateNormal.ShortText.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
-            this.lblMonthlyCustomer.TabIndex = 2;
-            this.lblMonthlyCustomer.Values.Image = global::RUINORERP.UI.Properties.Resources.users;
-            this.lblMonthlyCustomer.Values.Text = "";
+            this.lblMonthlyPerformance.LabelStyle = Krypton.Toolkit.LabelStyle.TitleControl;
+            this.lblMonthlyPerformance.Location = new System.Drawing.Point(320, 14);
+            this.lblMonthlyPerformance.Name = "lblMonthlyPerformance";
+            this.lblMonthlyPerformance.Size = new System.Drawing.Size(38, 34);
+            this.lblMonthlyPerformance.StateNormal.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.lblMonthlyPerformance.StateNormal.ShortText.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(128)))));
+            this.lblMonthlyPerformance.TabIndex = 1;
+            this.lblMonthlyPerformance.Values.Image = global::RUINORERP.UI.Properties.Resources.money1;
+            this.lblMonthlyPerformance.Values.Text = "";
             // 
             // UCSaleCell
             // 
@@ -160,7 +162,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonHeaderGroup1);
             this.Name = "UCSaleCell";
-            this.Size = new System.Drawing.Size(592, 340);
+            this.Size = new System.Drawing.Size(610, 239);
             this.Load += new System.EventHandler(this.UCSaleCell_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).EndInit();
             this.kryptonHeaderGroup1.Panel.ResumeLayout(false);

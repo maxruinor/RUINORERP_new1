@@ -10,6 +10,8 @@
  */
 #endregion
 
+using System;
+
 namespace Krypton.Toolkit
 {
     /// <summary>
@@ -548,8 +550,8 @@ namespace Krypton.Toolkit
                 return string.Empty;
             }
             else
-            {   
-                //加了一个判断
+            {
+                //加了一个判断 by watson
                 if (value.GetType() == typeof(DateTime))
                 {
                     var dt = (DateTime)value;
@@ -560,11 +562,15 @@ namespace Krypton.Toolkit
                 }
                 else if (Value.GetType() == typeof(string))
                 {
-                    var dt = Convert.ToDateTime(value);
-                    if (dt != null)
+                    if (DateTime.TryParse(value.ToString(), out DateTime result))
                     {
-                        return _dtc.ConvertToInvariantString(dt);
+                        return _dtc.ConvertToInvariantString(result);
                     }
+                    else
+                    {
+                        return   string.Empty;
+                    }
+
                 }
 
             }
@@ -695,16 +701,39 @@ namespace Krypton.Toolkit
             _paintingDateTime.MinDate = MinDate;
 
             var drawText = CustomNullText;
-            if ((value == null) || (value == DBNull.Value))
+            if ((value == null) || (value == DBNull.Value) || string.IsNullOrEmpty(value.ToString()))
             {
-                _paintingDateTime.ValueNullable = value;
+                _paintingDateTime.ValueNullable = DBNull.Value;
                 _paintingDateTime.PerformLayout();
             }
             else
             {
-                _paintingDateTime.Value = (DateTime)value;
-                _paintingDateTime.PerformLayout();
-                drawText = _paintingDateTime.Text;
+                if (value.GetType()== typeof(string))
+                {
+                    // 尝试将字符串解析为 DateTime
+                    if (DateTime.TryParse(value.ToString(), out DateTime parsedDate))
+                    {
+                        _paintingDateTime.Value = parsedDate;
+                        _paintingDateTime.PerformLayout();
+                        drawText = _paintingDateTime.Text;
+                    }
+                    else
+                    {
+                        //_paintingDateTime.Value = System.DateTime.Now;
+                        //_paintingDateTime.PerformLayout();
+                        //drawText = _paintingDateTime.Text;
+                        _paintingDateTime.ValueNullable = value;
+                        _paintingDateTime.PerformLayout();
+                    }
+                }
+                else
+                {
+                    _paintingDateTime.Value = (DateTime)value;
+                    _paintingDateTime.PerformLayout();
+                    drawText = _paintingDateTime.Text;
+                }
+
+       
             }
 
             base.Paint(graphics, clipBounds, cellBounds, rowIndex,

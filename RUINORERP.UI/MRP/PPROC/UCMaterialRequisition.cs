@@ -133,8 +133,6 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4TextBox<tb_MaterialRequisition>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
 
 
-
-
             base.errorProviderForAllInput.DataSource = entity;
             base.errorProviderForAllInput.ContainerControl = this;
 
@@ -190,7 +188,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
                 //预计产量是来自于制令单，如果修改则要同步修改明细的发料数量
                 //影响明细的数量
-                if (s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.ExpectedQuantity))
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && s2.PropertyName == entity.GetPropertyName<tb_MaterialRequisition>(c => c.ExpectedQuantity))
                 {
                     if (EditEntity.tb_manufacturingorder.tb_bom_s == null && EditEntity.tb_manufacturingorder.BOM_ID > 0)
                     {

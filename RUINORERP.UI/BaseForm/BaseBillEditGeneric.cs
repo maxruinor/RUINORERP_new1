@@ -1690,14 +1690,17 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                BillLockInfo bli = MainForm.Instance.cache.Get<BillLockInfo>(pkid);
-                if (bli != null)
+                if (MainForm.Instance.cache!=null)
                 {
-                    return new ReturnMainSubResults<T>()
+                    BillLockInfo bli = MainForm.Instance.cache.Get<BillLockInfo>(pkid);
+                    if (bli != null)
                     {
-                        Succeeded = false,
-                        ErrorMsg = $"单据已被{bli.LockedName}锁定，请刷新后再试"
-                    };
+                        return new ReturnMainSubResults<T>()
+                        {
+                            Succeeded = false,
+                            ErrorMsg = $"单据已被{bli.LockedName}锁定，请刷新后再试"
+                        };
+                    }
                 }
             }
 

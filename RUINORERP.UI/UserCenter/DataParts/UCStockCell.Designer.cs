@@ -80,7 +80,7 @@
             // kryptonHeaderGroup1.Panel
             // 
             this.kryptonHeaderGroup1.Panel.Controls.Add(this.kryptonPanelSaleMain);
-            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(711, 436);
+            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(715, 317);
             this.kryptonHeaderGroup1.TabIndex = 0;
             this.kryptonHeaderGroup1.ValuesPrimary.Heading = "库存情况";
             // 
@@ -105,7 +105,7 @@
             this.kryptonPanelSaleMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelSaleMain.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelSaleMain.Name = "kryptonPanelSaleMain";
-            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(709, 383);
+            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(713, 264);
             this.kryptonPanelSaleMain.TabIndex = 0;
             // 
             // kryptonGroupBox2
@@ -137,7 +137,9 @@
             this.kryptonTreeGridViewOtherIn.Name = "kryptonTreeGridViewOtherIn";
             this.kryptonTreeGridViewOtherIn.ParentIdRootValue = ((long)(0));
             this.kryptonTreeGridViewOtherIn.RowHeadersVisible = false;
+            this.kryptonTreeGridViewOtherIn.SelectFilter = "";
             this.kryptonTreeGridViewOtherIn.Size = new System.Drawing.Size(367, 165);
+            this.kryptonTreeGridViewOtherIn.SortColumnName = "";
             this.kryptonTreeGridViewOtherIn.TabIndex = 2;
             this.kryptonTreeGridViewOtherIn.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridViewOtherIn_CellDoubleClick);
             // 
@@ -188,7 +190,9 @@
             this.kryptonTreeGridViewOtherOut.Name = "kryptonTreeGridViewOtherOut";
             this.kryptonTreeGridViewOtherOut.ParentIdRootValue = ((long)(0));
             this.kryptonTreeGridViewOtherOut.RowHeadersVisible = false;
+            this.kryptonTreeGridViewOtherOut.SelectFilter = "";
             this.kryptonTreeGridViewOtherOut.Size = new System.Drawing.Size(315, 162);
+            this.kryptonTreeGridViewOtherOut.SortColumnName = "";
             this.kryptonTreeGridViewOtherOut.TabIndex = 3;
             this.kryptonTreeGridViewOtherOut.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridViewOtherOut_CellDoubleClick);
             // 
@@ -225,7 +229,9 @@
             this.kryptonTreeGridView1.Location = new System.Drawing.Point(5, 209);
             this.kryptonTreeGridView1.Name = "kryptonTreeGridView1";
             this.kryptonTreeGridView1.ParentIdRootValue = ((long)(0));
+            this.kryptonTreeGridView1.SelectFilter = "";
             this.kryptonTreeGridView1.Size = new System.Drawing.Size(266, 162);
+            this.kryptonTreeGridView1.SortColumnName = "";
             this.kryptonTreeGridView1.TabIndex = 1;
             this.kryptonTreeGridView1.Visible = false;
             this.kryptonTreeGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridView1_CellDoubleClick);
@@ -253,7 +259,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonHeaderGroup1);
             this.Name = "UCStockCell";
-            this.Size = new System.Drawing.Size(711, 436);
+            this.Size = new System.Drawing.Size(715, 317);
             this.Load += new System.EventHandler(this.UCStockCell_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).EndInit();
             this.kryptonHeaderGroup1.Panel.ResumeLayout(false);

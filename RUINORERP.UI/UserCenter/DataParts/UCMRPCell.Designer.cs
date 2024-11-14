@@ -34,16 +34,14 @@
             this.kryptonHeaderGroup1 = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonCommandRefresh = new Krypton.Toolkit.KryptonCommand();
-            this.kryptonPanelSaleMain = new Krypton.Toolkit.KryptonPanel();
+            this.krypton生产 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonTreeGridView1 = new Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView();
-            this.订单状态 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.数量 = new System.Windows.Forms.DataGridViewLinkColumn();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).BeginInit();
             this.kryptonHeaderGroup1.Panel.SuspendLayout();
             this.kryptonHeaderGroup1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelSaleMain)).BeginInit();
-            this.kryptonPanelSaleMain.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.krypton生产)).BeginInit();
+            this.krypton生产.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -54,14 +52,16 @@
             // 
             // kryptonHeaderGroup1
             // 
+            this.kryptonHeaderGroup1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowOnly;
             this.kryptonHeaderGroup1.ButtonSpecs.Add(this.buttonSpecHeaderGroup1);
+            this.kryptonHeaderGroup1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonHeaderGroup1.Location = new System.Drawing.Point(0, 0);
             this.kryptonHeaderGroup1.Name = "kryptonHeaderGroup1";
             // 
             // kryptonHeaderGroup1.Panel
             // 
-            this.kryptonHeaderGroup1.Panel.Controls.Add(this.kryptonPanelSaleMain);
-            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(859, 353);
+            this.kryptonHeaderGroup1.Panel.Controls.Add(this.krypton生产);
+            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(1200, 353);
             this.kryptonHeaderGroup1.TabIndex = 0;
             this.kryptonHeaderGroup1.ValuesPrimary.Heading = "生产";
             // 
@@ -77,68 +77,51 @@
             this.kryptonCommandRefresh.Text = "刷新";
             this.kryptonCommandRefresh.Execute += new System.EventHandler(this.kryptonCommandRefresh_Execute);
             // 
-            // kryptonPanelSaleMain
+            // krypton生产
             // 
-            this.kryptonPanelSaleMain.Controls.Add(this.kryptonTreeGridView1);
-            this.kryptonPanelSaleMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanelSaleMain.Location = new System.Drawing.Point(0, 0);
-            this.kryptonPanelSaleMain.Name = "kryptonPanelSaleMain";
-            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(857, 300);
-            this.kryptonPanelSaleMain.TabIndex = 0;
+            this.krypton生产.Controls.Add(this.kryptonTreeGridView1);
+            this.krypton生产.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.krypton生产.Location = new System.Drawing.Point(0, 0);
+            this.krypton生产.Name = "krypton生产";
+            this.krypton生产.Size = new System.Drawing.Size(1198, 300);
+            this.krypton生产.TabIndex = 0;
             // 
             // kryptonTreeGridView1
             // 
             this.kryptonTreeGridView1.AllowUserToAddRows = false;
             this.kryptonTreeGridView1.AllowUserToDeleteRows = false;
             this.kryptonTreeGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.kryptonTreeGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.订单状态,
-            this.数量});
             this.kryptonTreeGridView1.DataSource = null;
+            this.kryptonTreeGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonTreeGridView1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.kryptonTreeGridView1.HideColumns = ((System.Collections.Generic.List<string>)(resources.GetObject("kryptonTreeGridView1.HideColumns")));
             this.kryptonTreeGridView1.ImageList = null;
-            this.kryptonTreeGridView1.Location = new System.Drawing.Point(3, 3);
+            this.kryptonTreeGridView1.Location = new System.Drawing.Point(0, 0);
             this.kryptonTreeGridView1.Name = "kryptonTreeGridView1";
             this.kryptonTreeGridView1.ParentIdRootValue = ((long)(0));
             this.kryptonTreeGridView1.RowHeadersVisible = false;
+            this.kryptonTreeGridView1.SelectFilter = "";
             this.kryptonTreeGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.kryptonTreeGridView1.Size = new System.Drawing.Size(412, 273);
+            this.kryptonTreeGridView1.Size = new System.Drawing.Size(1198, 300);
+            this.kryptonTreeGridView1.SortColumnName = "";
             this.kryptonTreeGridView1.TabIndex = 2;
             this.kryptonTreeGridView1.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridView1_CellContentDoubleClick);
-            // 
-            // 订单状态
-            // 
-            this.订单状态.Frozen = true;
-            this.订单状态.HeaderText = "订单状态";
-            this.订单状态.Name = "订单状态";
-            this.订单状态.ReadOnly = true;
-            this.订单状态.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.订单状态.Width = 150;
-            // 
-            // 数量
-            // 
-            this.数量.Frozen = true;
-            this.数量.HeaderText = "数量";
-            this.数量.Name = "数量";
-            this.数量.ReadOnly = true;
-            this.数量.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.数量.Width = 120;
             // 
             // UCMRPCell
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.Controls.Add(this.kryptonHeaderGroup1);
             this.Name = "UCMRPCell";
-            this.Size = new System.Drawing.Size(859, 353);
+            this.Size = new System.Drawing.Size(1200, 353);
             this.Load += new System.EventHandler(this.UCPURCell_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).EndInit();
             this.kryptonHeaderGroup1.Panel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1)).EndInit();
             this.kryptonHeaderGroup1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelSaleMain)).EndInit();
-            this.kryptonPanelSaleMain.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.krypton生产)).EndInit();
+            this.krypton生产.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridView1)).EndInit();
             this.ResumeLayout(false);
 
@@ -147,12 +130,10 @@
         #endregion
 
         private Krypton.Toolkit.KryptonHeaderGroup kryptonHeaderGroup1;
-        private Krypton.Toolkit.KryptonPanel kryptonPanelSaleMain;
+        private Krypton.Toolkit.KryptonPanel krypton生产;
         private System.Windows.Forms.Timer timer1;
         private Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView kryptonTreeGridView1;
         private Krypton.Toolkit.KryptonCommand kryptonCommandRefresh;
         private Krypton.Toolkit.ButtonSpecHeaderGroup buttonSpecHeaderGroup1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn 订单状态;
-        private System.Windows.Forms.DataGridViewLinkColumn 数量;
     }
 }

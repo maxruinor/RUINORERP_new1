@@ -2,7 +2,7 @@
 <AutoUpdater>
 	<Description>贝思特管理系统 autoUpdate</Description>
 	<Updater>
-		<Url>http://fact.tpddns.cn:520/updaterFiler/</Url>
+		<Url>http://fact.tpddns.cn:1688/updaterFiler/</Url>
 		<LastUpdateTime>2024-01-10</LastUpdateTime>
 	</Updater>
 	<Application applicationId = "贝思特管理系统">

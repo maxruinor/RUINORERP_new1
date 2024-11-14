@@ -35,6 +35,8 @@
             System.Windows.Forms.TreeNode treeNode4 = new System.Windows.Forms.TreeNode("销售订单价格修复");
             System.Windows.Forms.TreeNode treeNode5 = new System.Windows.Forms.TreeNode("销售出库单价格修复");
             System.Windows.Forms.TreeNode treeNode6 = new System.Windows.Forms.TreeNode("生产计划数量修复");
+            System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("制令单自制品修复");
+            System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("节点1");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCDataCorrectionCenter));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.treeViewTableList = new Krypton.Toolkit.KryptonTreeView();
@@ -175,13 +177,19 @@
             treeNode5.Text = "销售出库单价格修复";
             treeNode6.Name = "生产计划数量修复";
             treeNode6.Text = "生产计划数量修复";
+            treeNode7.Name = "制令单自制品修复";
+            treeNode7.Text = "制令单自制品修复";
+            treeNode8.Name = "节点1";
+            treeNode8.Text = "节点1";
             this.treeView1.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1,
             treeNode2,
             treeNode3,
             treeNode4,
             treeNode5,
-            treeNode6});
+            treeNode6,
+            treeNode7,
+            treeNode8});
             this.treeView1.Size = new System.Drawing.Size(532, 354);
             this.treeView1.TabIndex = 0;
             this.treeView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseDoubleClick);

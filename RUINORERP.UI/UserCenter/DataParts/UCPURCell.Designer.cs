@@ -62,7 +62,7 @@
             // kryptonHeaderGroup1.Panel
             // 
             this.kryptonHeaderGroup1.Panel.Controls.Add(this.kryptonPanelSaleMain);
-            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(459, 353);
+            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(371, 224);
             this.kryptonHeaderGroup1.TabIndex = 0;
             this.kryptonHeaderGroup1.ValuesPrimary.Heading = "采购";
             // 
@@ -84,7 +84,7 @@
             this.kryptonPanelSaleMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelSaleMain.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelSaleMain.Name = "kryptonPanelSaleMain";
-            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(457, 300);
+            this.kryptonPanelSaleMain.Size = new System.Drawing.Size(369, 171);
             this.kryptonPanelSaleMain.TabIndex = 0;
             // 
             // kryptonTreeGridView1
@@ -103,8 +103,10 @@
             this.kryptonTreeGridView1.Name = "kryptonTreeGridView1";
             this.kryptonTreeGridView1.ParentIdRootValue = ((long)(0));
             this.kryptonTreeGridView1.RowHeadersVisible = false;
+            this.kryptonTreeGridView1.SelectFilter = "";
             this.kryptonTreeGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.kryptonTreeGridView1.Size = new System.Drawing.Size(412, 273);
+            this.kryptonTreeGridView1.SortColumnName = "";
             this.kryptonTreeGridView1.TabIndex = 2;
             this.kryptonTreeGridView1.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridView1_CellContentDoubleClick);
             // 
@@ -132,7 +134,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonHeaderGroup1);
             this.Name = "UCPURCell";
-            this.Size = new System.Drawing.Size(459, 353);
+            this.Size = new System.Drawing.Size(371, 224);
             this.Load += new System.EventHandler(this.UCPURCell_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroup1.Panel)).EndInit();
             this.kryptonHeaderGroup1.Panel.ResumeLayout(false);

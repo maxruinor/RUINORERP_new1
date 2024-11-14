@@ -724,6 +724,46 @@ namespace RUINORERP.UI.SysConfig
 
                     }
                 }
+
+
+                if (treeView1.SelectedNode.Text == "制令单自制品修复")
+                {
+                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_ManufacturingOrder).Name)
+                    {
+                        List<tb_ManufacturingOrder> ManufacturingOrderList = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
+                           .Includes(c => c.tb_productiondemand, b => b.tb_ProduceGoodsRecommendDetails)
+                           .ToListAsync();
+
+                        List<tb_ManufacturingOrder> MoUpdatelist = new();
+                        foreach (tb_ManufacturingOrder ManufacturingOrder in ManufacturingOrderList)
+                        {
+                            if (!ManufacturingOrder.PDCID.HasValue)
+                            {
+                                if (!chkTestMode.Checked)
+                                {
+                                    var prddetail = ManufacturingOrder.tb_productiondemand.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == ManufacturingOrder.ProdDetailID);
+                                    if (prddetail==null)
+                                    {
+                                        continue;
+                                    }
+                                    ManufacturingOrder.PDCID = prddetail.PDCID;
+                                    MoUpdatelist.Add(ManufacturingOrder);
+                                    richTextBoxLog.AppendText($"PDCID 为空， 成功修复为 {prddetail.PDCID} \r\n");
+                                }
+                                else
+                                {
+                                    richTextBoxLog.AppendText($"PDCID 为空， 等待修复为  \r\n");
+                                }
+                            }
+                        }
+                        if (!chkTestMode.Checked)
+                        {
+                            int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(MoUpdatelist).UpdateColumns(t => new { t.PDCID }).ExecuteCommandAsync();
+                            richTextBoxLog.AppendText($"制令单 PDCID总数量 修复成功：{totalamountCounter} " + "\r\n");
+                        }
+                    }
+                }
+
             }
         }
 

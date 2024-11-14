@@ -328,7 +328,7 @@ namespace RUINORERP.UI
         public IMemoryCache cache { get; set; }
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
+             cache = Startup.GetFromFac<IMemoryCache>();
 
             //cache.Set("test1", "test123");
 
@@ -336,6 +336,9 @@ namespace RUINORERP.UI
             //手动初始化 
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
             BizCacheHelper.InitManager();
+
+      
+
             await InitConfig(false);
             timer1.Start();
             tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
@@ -429,9 +432,6 @@ namespace RUINORERP.UI
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
 
-
-
-
             LoginWebServer();
 
             System.Windows.Forms.Timer timerStatus = new System.Windows.Forms.Timer();
@@ -439,13 +439,13 @@ namespace RUINORERP.UI
             timerStatus.Tick += (sender, e) => RefreshData();
             timerStatus.Start();
 
-
             //手动初始化 
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
             BizCacheHelper.InitManager();
             UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
-
-
+            UIBizSrvice.RequestCache(typeof(tb_ProductType));
+            UIBizSrvice.RequestCache(typeof(View_ProdDetail));
+ 
         }
         public AuthorizeController authorizeController;
         private void RefreshData()

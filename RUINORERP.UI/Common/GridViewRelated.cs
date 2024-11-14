@@ -470,6 +470,25 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+            if (tableName == typeof(tb_MaterialReturn).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_MaterialReturn>()
+                    .Includes(c => c.tb_MaterialReturnDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.MRE_ID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.BillNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
+            if (tableName == typeof(tb_FinishedGoodsInv).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FinishedGoodsInv>()
+                    .Includes(c => c.tb_FinishedGoodsInvDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.FG_ID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.DeliveryBillNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
 
 
             if (tableName == typeof(tb_ManufacturingOrder).Name)

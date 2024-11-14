@@ -111,6 +111,8 @@ namespace RUINORERP.UI.PSI.INV
                     entity.tb_ProdBorrowingDetails.ForEach(c => c.BorrowID = 0);
                     entity.tb_ProdBorrowingDetails.ForEach(c => c.BorrowDetaill_ID = 0);
                 }
+                entity.Created_at = System.DateTime.Now;
+                BusinessHelper.Instance.InitEntity(entity);
             }
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);

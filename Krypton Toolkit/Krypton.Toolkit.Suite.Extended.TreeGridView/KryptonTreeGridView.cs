@@ -219,7 +219,15 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                     //-------------------------- 
                     //Sort Data
                     //-------------------------- 
-                    _dataSource = FilterSortData(_dataSource, SortFilter, _dataSource.Columns[0].ColumnName);
+                    if (SortColumnName.ToString().Length > 0)
+                    {
+                        _dataSource = FilterSortData(_dataSource, SelectFilter, SortColumnName);
+                    }
+                    else
+                    {
+                        _dataSource = FilterSortData(_dataSource, SelectFilter, _dataSource.Columns[0].ColumnName);
+                    }
+                    
 
                     //-------------------------- 
                     //Add Columns
@@ -321,8 +329,16 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                         //-------------------------- 
                         //Sort Data
                         //-------------------------- 
-                        //_dataSource = FilterSortData(_dataSource, string.Empty, ParentIdColumnName);
-                        _dataSource = FilterSortData(_dataSource, SortFilter, ParentIdColumnName);
+                        if (SortColumnName.ToString().Length > 0)
+                        {
+                            _dataSource = FilterSortData(_dataSource, SelectFilter, SortColumnName);
+                        }
+                        else
+                        {
+                            _dataSource = FilterSortData(_dataSource, SelectFilter, ParentIdColumnName);
+                        }
+
+
                         //-------------------------- 
                         //Init nodes
                         //-------------------------- 
@@ -484,8 +500,13 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
         [Description("Returns the TreeGridNode for the given DataGridViewRow")]
         public KryptonTreeGridNodeRow GetNodeForRow(int index) => GetNodeForRow(base.Rows[index]);
 
-        [Description("DataTable视图排序过滤器： dataView.Sort = \"DateColumn ASC\"; // 按照日期列升序排序，若要降序则改为 \"DateColumn DESC\"")]
-        public string SortFilter { get; set; } = string.Empty;
+        [Description("DataTable视图selct过滤器：不是 dataView.Sort = \"DateColumn ASC\"; // 按照日期列升序排序，若要降序则改为 \"DateColumn DESC\"")]
+        public string SelectFilter { get; set; } = string.Empty;
+
+
+        [Description("DataTable视图排序的列设置：不是 dataView.Sort = \"DateColumn ASC\"; // 按照日期列升序排序，若要降序则改为 \"DateColumn DESC\"")]
+        public string SortColumnName { get; set; } = string.Empty;
+
 
         /// <summary>
         /// FilterSortData is used to sort a datatable directly.

@@ -10,6 +10,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Windows.Forms;
 
 namespace RUINORERP.Common.Extensions
 {
@@ -415,6 +416,12 @@ namespace RUINORERP.Common.Extensions
                     object propertyValue = property.GetValue(obj, null);
                     if (propertyValue != null)
                     {
+                        //如果为日期时。值要特殊处理
+                        //if (property.PropertyType == typeof(DateTime))
+                        //{
+                        //    MessageBox.Show(propertyValue.ToString());
+                        //}
+
                         // 将属性值设置为 DataRow 的值
                         dataRow[propertyName] = propertyValue;
                     }

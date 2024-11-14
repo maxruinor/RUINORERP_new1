@@ -88,7 +88,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 //colNames.TryAdd("ID", "ID");
                 //colNames.TryAdd("ParentId", "上级ID");
                 colNames.TryAdd("PPNo", "单号");
-                colNames.TryAdd("RequirementDate", "日期");
+                colNames.TryAdd("RequirementDate", "计划日期");
                 colNames.TryAdd("TotalQuantity", "需求数量");
                 colNames.TryAdd("TotalCompletedQuantity", "交付数量");
                 colNames.TryAdd("MainContent", "主要内容");
@@ -147,7 +147,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         string PPNo = item.Cells[0].Value.ToString();
                         var ProductionPlan = PURList.FirstOrDefault(p => p.PPNo == PPNo);
                         item.Tag = ProductionPlan;
-                        item.Cells[0].Tag = "PPNo";//分析日期
+                        item.Cells[0].Tag = "PPNo";
                         item.Cells[6].Value = "计划";
                         item.Cells[9].Value = ProductionPlan.tb_employee.Employee_Name;
                         if (ProductionPlan.tb_department != null)
@@ -401,8 +401,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
     class CustomComparer : IComparer<KeyValuePair<string, string>>
     {
-        private readonly string[] desiredOrder = { "PPNo", "RequirementDate", "TotalQuantity", "TotalCompletedQuantity", "Project", "Priority", "Process", "ProgressBar", "Notes" };
-
+        private readonly string[] desiredOrder = { "PPNo", "RequirementDate", "TotalQuantity",
+            "TotalCompletedQuantity", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","Department","Project" };
         public int Compare(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
         {
             int indexX = Array.IndexOf(desiredOrder, x.Key);

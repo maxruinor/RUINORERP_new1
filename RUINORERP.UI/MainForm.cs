@@ -2239,13 +2239,13 @@ namespace RUINORERP.UI
         private void btntsbRefresh_Click(object sender, EventArgs e)
         {
             LoginWebServer();
-
-            OriginalData odforCache = ActionForClient.请求发送缓存(string.Empty);
-            byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(odforCache);
-            ecs.client.Send(buffer1);
-            SystemOptimizerService.异常信息发送("测试异常信息发送");
-
-
+            if (MainForm.Instance.AppContext.IsSuperUser)
+            {
+                OriginalData odforCache = ActionForClient.请求发送缓存(string.Empty);
+                byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                ecs.client.Send(buffer1);
+                SystemOptimizerService.异常信息发送("测试异常信息发送");
+            }
         }
 
         public async void LoginWebServer()

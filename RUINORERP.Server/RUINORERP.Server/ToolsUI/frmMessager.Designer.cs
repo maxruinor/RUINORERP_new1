@@ -126,8 +126,8 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.TextBox txtMessage;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox cmbUser;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.CheckBox chkMustDisplay;
+        public System.Windows.Forms.ComboBox cmbUser;
     }
 }

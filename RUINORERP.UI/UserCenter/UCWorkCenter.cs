@@ -186,6 +186,10 @@ namespace RUINORERP.UI.UserCenter
                 List<string> ToDoItems = centerConfig.ToDoList.Split(',').ToList();
                 foreach (var item in ToDoItems)
                 {
+                    if (string.IsNullOrEmpty(item))
+                    {
+                        continue;
+                    }
                     待办事项 ToDoItem = (待办事项)Enum.Parse(typeof(待办事项), item);
                     switch (ToDoItem)
                     {

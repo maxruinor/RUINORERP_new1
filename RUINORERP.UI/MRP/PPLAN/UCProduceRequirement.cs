@@ -39,9 +39,10 @@ using FastReport.DevComponents.DotNetBar.Controls;
 using Krypton.Toolkit;
 using FastReport.DevComponents.DotNetBar;
 using Command = RUINOR.Core.Command;
- 
+
 using NPOI.Util;
 using NPOI.POIFS.Properties;
+using Netron.GraphLib;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -54,7 +55,7 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionDemand>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
-             
+
         }
 
 
@@ -258,7 +259,7 @@ namespace RUINORERP.UI.MRP.MP
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                 
+
                 }
                 else
                 {
@@ -411,7 +412,7 @@ namespace RUINORERP.UI.MRP.MP
 
         }
 
- 
+
         #region for 目标分析
 
         SourceGridDefine sgdTarget = null;
@@ -718,13 +719,15 @@ namespace RUINORERP.UI.MRP.MP
 
             ColNameDataDicStockLess.TryAdd(expRefBizType.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType)));
 
- 
+
 
             LoadTargetItems();
             LoadPurItems();
             kryptonNavigator1.SelectedPage = KP分析目标;
-        }
 
+            GridRelated.SetRelatedInfo<tb_ManufacturingOrder>(c => c.MONO);
+        }
+        public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
 
 
         private void Sgh_OnLoadMultiRowData(object rows, SourceGrid.Position position)
@@ -1832,7 +1835,7 @@ protected async override Task<ApprovalEntity> ReReview()
             }
         }
 
-      
+
 
         /// <summary>
         /// 通过BOM找到不足的库存后。算出要制作的数量 。比方 如果PCBA仓库有的。制的数量少1，则要仓库发出1，一定会在制令单中体现
@@ -2027,7 +2030,7 @@ protected async override Task<ApprovalEntity> ReReview()
         }
 
 
-     
+
 
 
         /// <summary>
@@ -2109,7 +2112,7 @@ protected async override Task<ApprovalEntity> ReReview()
             if (EditEntity.tb_productionplan != null)
             {
                 tb_SaleOrderController<tb_SaleOrder> ctrSO = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                if (EditEntity.tb_productionplan.tb_saleorder == null && EditEntity.tb_productionplan.SOrder_ID!= null)
+                if (EditEntity.tb_productionplan.tb_saleorder == null && EditEntity.tb_productionplan.SOrder_ID != null)
                 {
                     EditEntity.tb_productionplan.tb_saleorder = await ctrSO.BaseQueryByIdNavAsync(EditEntity.tb_productionplan.SOrder_ID);
                 }
@@ -2142,7 +2145,7 @@ protected async override Task<ApprovalEntity> ReReview()
             List<tb_ProduceGoodsRecommendDetail> MakingProditems = EditEntity.tb_ProduceGoodsRecommendDetails;
             var MakingItem = MakingProditems.FirstOrDefault(c => c.ID == minKeyValue);
             tb_ManufacturingOrder ManufacturingOrder = await ctrPD.InitManufacturingOrder(EditEntity, MakingItem, !MiddlewareType);
-           
+
             tb_MenuInfo RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_ManufacturingOrder).Name && m.ClassPath.Contains("RUINORERP.UI.MRP.MP." + typeof(UCManufacturingOrder).Name)).FirstOrDefault();
             if (RelatedBillMenuInfo != null && ManufacturingOrder != null)
             {
@@ -2330,7 +2333,6 @@ protected async override Task<ApprovalEntity> ReReview()
                     {
                         item.Selected = kryptonTreeGridViewMaking.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToBool();
                     }
-
                 }
                 else
                 {
@@ -2339,126 +2341,147 @@ protected async override Task<ApprovalEntity> ReReview()
             }
         }
 
-        private void kryptonTreeGridViewMaking_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private async void kryptonTreeGridViewMaking_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == -1)
+            if (e.ColumnIndex == -1 || e.RowIndex == -1)
             {
                 return;
             }
-
-            Expression<Func<tb_ProduceGoodsRecommendDetail, object>> expSelected = c => c.Selected;
-            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            if (kryptonTreeGridViewMaking.CurrentRow != null && kryptonTreeGridViewMaking.CurrentCell != null)
             {
-                KryptonTreeGridView ktgv = sender as KryptonTreeGridView;
-                object ModifyValue = ktgv.CurrentCell.FormattedValue;
-                string ModifyColName = ktgv.CurrentCell.OwningColumn.Name;
-                long ID = ktgv.CurrentNode.Tag.ToLong();//id不是产品ID，也不是明细主键。是为了树形结构生成的id也能当行号
-                tb_ProduceGoodsRecommendDetail row = EditEntity.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ID == ID);
-                if (ModifyColName == expSelected.GetMemberInfo().Name)
+                Expression<Func<tb_ProduceGoodsRecommendDetail, object>> expSelected = c => c.Selected;
+                if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
                 {
-                    //提供要处理的行数。以数据行为标准，再反应到控件，因为控件中没有绑定父列
-                    List<tb_ProduceGoodsRecommendDetail> needProcessList = new List<tb_ProduceGoodsRecommendDetail>();
-                    for (int i = 0; i < EditEntity.tb_ProduceGoodsRecommendDetails.Count; i++)
+                    if (kryptonTreeGridViewMaking.Columns[e.ColumnIndex].Name == expSelected.GetMemberInfo().Name)
                     {
-                        if (EditEntity.tb_ProduceGoodsRecommendDetails[i].ID != ID)
-                        {
-                            needProcessList.Add(EditEntity.tb_ProduceGoodsRecommendDetails[i].DeepCloneByjson());
-                        }
-                    }
+                        #region 选择生成制令单
 
-                    DataGridViewCheckBoxCell checkBoxCell = (DataGridViewCheckBoxCell)kryptonTreeGridViewMaking.Rows[e.RowIndex].Cells[e.ColumnIndex];
-
-                    bool isChecked = (bool)checkBoxCell.EditingCellFormattedValue;
-                    //这个时间就直接更新值
-                    kryptonTreeGridViewMaking.Rows[e.RowIndex].Cells[e.ColumnIndex].Value = isChecked;
-                    //更新到行值中，
-                    ReflectionHelper.SetPropertyValue(row, ModifyColName, isChecked);
-                    if (isChecked)
-                    {
-                        rdb中间件式.Enabled = false;
-                        rdb上层驱动.Enabled = false;
-                        //当选择了当前行时，看属于哪种情况
-                        // 执行选中时的操作
-                        //其他就不选 
-                        if (rdb中间件式.Checked && isChecked)
+                        KryptonTreeGridView ktgv = sender as KryptonTreeGridView;
+                        object ModifyValue = ktgv.CurrentCell.FormattedValue;
+                        string ModifyColName = ktgv.CurrentCell.OwningColumn.Name;
+                        long ID = ktgv.CurrentNode.Tag.ToLong();//id不是产品ID，也不是明细主键。是为了树形结构生成的id也能当行号
+                        tb_ProduceGoodsRecommendDetail row = EditEntity.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ID == ID);
+                        if (ModifyColName == expSelected.GetMemberInfo().Name)
                         {
-                            #region   中间件式 如果是中间件式，则其它的不能勾选，除已经生成过的。
-                            for (int i = 0; i < kryptonTreeGridViewMaking.Rows.Count; i++)
+                            //提供要处理的行数。以数据行为标准，再反应到控件，因为控件中没有绑定父列
+                            List<tb_ProduceGoodsRecommendDetail> needProcessList = new List<tb_ProduceGoodsRecommendDetail>();
+                            for (int i = 0; i < EditEntity.tb_ProduceGoodsRecommendDetails.Count; i++)
                             {
-                                if (i != e.RowIndex)
+                                if (EditEntity.tb_ProduceGoodsRecommendDetails[i].ID != ID)
                                 {
-                                    kryptonTreeGridViewMaking.Rows[i].Cells[ktgv.CurrentCell.OwningColumn.Index].Value = false;
-
+                                    needProcessList.Add(EditEntity.tb_ProduceGoodsRecommendDetails[i].DeepCloneByjson());
                                 }
                             }
-                            #endregion
-                        }
-                        else
-                        {
-                            #region  上层驱动模式
-                            tb_ProduceGoodsRecommendDetail item = EditEntity.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ID == ID);
-                            if (item != null)
+
+                            DataGridViewCheckBoxCell checkBoxCell = (DataGridViewCheckBoxCell)kryptonTreeGridViewMaking.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
+                            bool isChecked = (bool)checkBoxCell.EditingCellFormattedValue;
+                            //这个时间就直接更新值
+                            kryptonTreeGridViewMaking.Rows[e.RowIndex].Cells[e.ColumnIndex].Value = isChecked;
+                            //更新到行值中，
+                            ReflectionHelper.SetPropertyValue(row, ModifyColName, isChecked);
+                            if (isChecked)
                             {
+                                rdb中间件式.Enabled = false;
+                                rdb上层驱动.Enabled = false;
+                                //当选择了当前行时，看属于哪种情况
+                                // 执行选中时的操作
+                                //其他就不选 
+                                if (rdb中间件式.Checked && isChecked)
+                                {
+                                    #region   中间件式 如果是中间件式，则其它的不能勾选，除已经生成过的。
+                                    for (int i = 0; i < kryptonTreeGridViewMaking.Rows.Count; i++)
+                                    {
+                                        if (i != e.RowIndex)
+                                        {
+                                            kryptonTreeGridViewMaking.Rows[i].Cells[ktgv.CurrentCell.OwningColumn.Index].Value = false;
+                                        }
+                                    }
+                                    #endregion
+                                }
+                                else
+                                {
+                                    #region  上层驱动模式
+                                    tb_ProduceGoodsRecommendDetail item = EditEntity.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ID == ID);
+                                    if (item != null)
+                                    {
+                                        SelectChildsLoop(needProcessList, item.ID.Value, e.RowIndex, true);
+                                    }
+                                    #endregion
+                                }
 
 
-                                SelectChildsLoop(needProcessList, item.ID.Value, e.RowIndex, true);
                             }
-                            #endregion
-                        }
-
-
-                    }
-                    else
-                    {
-                        #region 取消时
-
-                        //当选择了当前行时，看属于哪种情况
-                        // 执行选中时的操作
-                        //其他就不选 
-                        if (rdb中间件式.Checked)
-                        {
-
-                        }
-                        else
-                        {
-                            //如果取消时，看取消的上面有不有选中的，也要取消
-                            //当前行 上面已找到 row
-
-                            SelectParentsLoop(needProcessList, row.ParentId.Value, e.RowIndex, false);
-
-                            #region  上层驱动模式 取消子次
-                            tb_ProduceGoodsRecommendDetail item = EditEntity.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ID == ID);
-                            if (item != null)
+                            else
                             {
-                                SelectChildsLoop(needProcessList, item.ID.Value, e.RowIndex, false);
-                            }
-                            #endregion
-                        }
+                                #region 取消时
 
+                                //当选择了当前行时，看属于哪种情况
+                                // 执行选中时的操作
+                                //其他就不选 
+                                if (rdb中间件式.Checked)
+                                {
+
+                                }
+                                else
+                                {
+                                    //如果取消时，看取消的上面有不有选中的，也要取消
+                                    //当前行 上面已找到 row
+
+                                    SelectParentsLoop(needProcessList, row.ParentId.Value, e.RowIndex, false);
+
+                                    #region  上层驱动模式 取消子次
+                                    tb_ProduceGoodsRecommendDetail item = EditEntity.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ID == ID);
+                                    if (item != null)
+                                    {
+                                        SelectChildsLoop(needProcessList, item.ID.Value, e.RowIndex, false);
+                                    }
+                                    #endregion
+                                }
+
+                                #endregion
+                                bool s = false;
+                                for (int i = 0; i < kryptonTreeGridViewMaking.Rows.Count; i++)
+                                {
+                                    if (kryptonTreeGridViewMaking.Rows[i].Cells[expSelected.GetMemberInfo().Name].Value.ToBool() == false)
+                                    {
+                                        s = false;
+                                    }
+                                }
+                                if (!s)
+                                {
+                                    rdb中间件式.Enabled = true;
+                                    rdb上层驱动.Enabled = true;
+                                }
+                                if (EditEntity.tb_ProduceGoodsRecommendDetails.Where(c => c.Selected.Value).ToList().Count == 0 || s)
+                                {
+                                    rdb中间件式.Enabled = true;
+                                    rdb上层驱动.Enabled = true;
+                                }
+
+
+                            }
+
+
+                        }
                         #endregion
-                        bool s = false;
-                        for (int i = 0; i < kryptonTreeGridViewMaking.Rows.Count; i++)
-                        {
-                            if (kryptonTreeGridViewMaking.Rows[i].Cells[expSelected.GetMemberInfo().Name].Value.ToBool() == false)
-                            {
-                                s = false;
-                            }
-                        }
-                        if (!s)
-                        {
-                            rdb中间件式.Enabled = true;
-                            rdb上层驱动.Enabled = true;
-                        }
-                        if (EditEntity.tb_ProduceGoodsRecommendDetails.Where(c => c.Selected.Value).ToList().Count == 0 || s)
-                        {
-                            rdb中间件式.Enabled = true;
-                            rdb上层驱动.Enabled = true;
-                        }
-
-
                     }
-
-
+                    Expression<Func<tb_ProduceGoodsRecommendDetail, object>> moCol = c => c.RefBillNO;
+                    if (kryptonTreeGridViewMaking.Columns[e.ColumnIndex].Name == moCol.GetMemberInfo().Name)
+                    {
+                        string refbillNo = kryptonTreeGridViewMaking.CurrentCell.Value.ToString();
+                        if (!string.IsNullOrEmpty(refbillNo))
+                        {
+                            tb_ManufacturingOrder manufacturingOrder = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
+                           .Includes(c => c.tb_employee)
+                           .Includes(c => c.tb_location)
+                           .Includes(c => c.tb_bom_s)
+                           .Includes(c => c.tb_ManufacturingOrderDetails)
+                           .Where(c => c.MONO == refbillNo)
+                           .SingleAsync();
+                            GridRelated.GuideToForm("MONO", manufacturingOrder);
+                        }
+                    }
                 }
             }
         }

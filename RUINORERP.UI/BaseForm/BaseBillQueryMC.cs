@@ -1382,10 +1382,6 @@ namespace RUINORERP.UI.BaseForm
                         #endregion
                     }
                 }
-
-
-
-
             }
             catch (Exception ex)
             {

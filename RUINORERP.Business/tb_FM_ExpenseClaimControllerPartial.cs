@@ -202,21 +202,20 @@ namespace RUINORERP.Business
 
         }
 
-
-
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
             List<tb_FM_ExpenseClaim> list = await _appContext.Db.CopyNew().Queryable<tb_FM_ExpenseClaim>().Where(m => m.ClaimMainID == ID)
                             .Includes(a => a.tb_employee)
-                             .Includes(a => a.tb_currency)
+                            .Includes(a => a.tb_currency)
+                            .Includes(a => a.tb_fm_payeeinfo)
                             .Includes(a => a.tb_FM_ExpenseClaimDetails, b => b.tb_fm_expenseclaim)
                             .Includes(a => a.tb_FM_ExpenseClaimDetails, b => b.tb_department)
                             .Includes(a => a.tb_FM_ExpenseClaimDetails, b => b.tb_projectgroup)
-                             .Includes(a => a.tb_FM_ExpenseClaimDetails, b => b.tb_fm_account)
+                            .Includes(a => a.tb_FM_ExpenseClaimDetails, b => b.tb_fm_account)
                             .Includes(a => a.tb_FM_ExpenseClaimDetails, b => b.tb_fm_expensetype)
                             .Includes(a => a.tb_FM_ExpenseClaimDetails, b => b.tb_fm_subject)
                             .Includes(a => a.tb_FM_ExpenseClaimDetails, b => b.tb_fm_subject)
-                                 .ToListAsync();
+                            .ToListAsync();
             return list as List<T>;
         }
 

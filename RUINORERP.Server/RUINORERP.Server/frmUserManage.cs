@@ -361,6 +361,11 @@ namespace RUINORERP.Server
         {
 
         }
+
+        private void toolStripMenuItem5_Click_2(object sender, EventArgs e)
+        {
+
+        }
     }
 }
 

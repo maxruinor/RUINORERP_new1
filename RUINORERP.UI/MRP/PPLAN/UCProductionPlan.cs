@@ -35,6 +35,8 @@ using RUINORERP.Business.Security;
 using RUINORERP.Business.Processor;
 using Krypton.Toolkit;
 using RUINORERP.UI.PSI.PUR;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -734,37 +736,60 @@ namespace RUINORERP.UI.MRP.MP
             {
                 return false;
             }
-            List<tb_ProductionPlan> EditEntitys = new List<tb_ProductionPlan>();
-            EditEntitys.Add(EditEntity);
-            //已经审核的并且通过的情况才能结案
-            List<tb_ProductionPlan> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
-            if (needCloseCases.Count == 0)
+            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_ProductionPlan>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            ApprovalEntity ae = new ApprovalEntity();
+            ae.BillID = pkid;
+            CommBillData cbd = bcf.GetBillData<tb_ProductionPlan>(EditEntity);
+            ae.BillNo = cbd.BillNo;
+            ae.bizType = cbd.BizType;
+            ae.bizName = cbd.BizName;
+            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            frm.BindData(ae);
+            if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
-                MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
-                return false;
-            }
+                List<tb_ProductionPlan> EditEntitys = new List<tb_ProductionPlan>();
+                EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
+                //没有经验通过下面先不计算
+                if (!base.Validator(EditEntity))
+                {
+                    return false;
+                }
+                EditEntitys.Add(EditEntity);
+                //已经审核的并且通过的情况才能结案
+                List<tb_ProductionPlan> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
+                if (needCloseCases.Count == 0)
+                {
+                    MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
+                    return false;
+                }
+                tb_ProductionPlanController<tb_ProductionPlan> ctr = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();
+                ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
+                if (rs.Succeeded)
+                {
+                    //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
+                    //{
 
-            tb_ProductionPlanController<tb_ProductionPlan> ctr = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();
-            ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
-            if (rs.Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
+                    //}
+                    //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                    //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                    //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                    //MainForm.Instance.ecs.AddSendData(od);
+                    base.Refreshs();
+                    return true;
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog($"{EditEntity.PPNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                    return false;
+                }
 
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-                base.Refreshs();
             }
-            else
-            {
-                MainForm.Instance.PrintInfoLog($"{EditEntity.PPNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
-            }
-
             return true;
         }
+
 
 
 

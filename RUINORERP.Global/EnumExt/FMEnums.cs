@@ -12,11 +12,11 @@ namespace RUINORERP.Global.EnumExt
     /// </summary>
     public enum AccountType
     {
-        银行账户,
-        现金账户,
-        微信账户,
-        支付宝账户,
-        收款码,
+        银行账户=0,
+        现金账户=1,
+        微信账户=2,
+        支付宝账户=3,
+        收款码=4,
     }
 
 

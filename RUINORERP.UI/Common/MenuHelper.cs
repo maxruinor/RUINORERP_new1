@@ -454,7 +454,7 @@ namespace RUINORERP.UI.Common
                                     if (menu is BaseBillEdit bbe)
                                     {
                                         menu.CurMenuInfo = pr;
-                                        
+
                                     }
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
@@ -543,10 +543,19 @@ namespace RUINORERP.UI.Common
                             {
                                 OnSetQueryConditionsDelegate(baseQuery.QueryDtoProxy, nodeParameter);
                             }
-
-                            //SetQueryUI 这个方法里面 很多类型的细节没有实际代理优先级
-                            //baseQuery.GetQueryConditionToUI(baseQuery.QueryDtoProxy);
                             baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
+                        }
+
+ 
+                        //生产工作台 区别上面。为了不影响上面。 
+                        if (page.Controls[0] is BaseQuery ucbaseQuery && entity != null)
+                        {
+                            //set value这里设置属性？
+                            if (OnSetQueryConditionsDelegate != null)
+                            {
+                                OnSetQueryConditionsDelegate(ucbaseQuery.QueryDtoProxy, nodeParameter);
+                            }
+                            ucbaseQuery.LoadQueryParametersToUI(entity, nodeParameter);
                         }
 
                         cell.SelectedPage = page;

@@ -200,13 +200,19 @@ namespace RUINORERP.UI.SuperSocketClient
                 string 发送者姓名 = ByteDataAnalysis.GetString(gd.Two, ref index);
                 Message = ByteDataAnalysis.GetString(gd.Two, ref index);
                 bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
-
-                TranMessage MessageInfo = new TranMessage();
-                MessageInfo.SendTime = sendtime;
-                //  MessageInfo.SenderID = SessionID;
-                MessageInfo.SenderName = 发送者姓名;
-                MessageInfo.Content = Message;
-                MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                if (!MustDisplay)
+                {
+                    MainForm.Instance.PrintInfoLog(Message);
+                }
+                else
+                {
+                    TranMessage MessageInfo = new TranMessage();
+                    MessageInfo.SendTime = sendtime;
+                    //  MessageInfo.SenderID = SessionID;
+                    MessageInfo.SenderName = 发送者姓名;
+                    MessageInfo.Content = Message;
+                    MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                }
             }
             catch (Exception ex)
             {

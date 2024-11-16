@@ -177,6 +177,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Ribbon.dll</HintPath>
     </Reference>
+    <Reference Include="Krypton.Toolkit, Version=80.24.11.320, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\dll\Krypton.Toolkit.dll</HintPath>
+    </Reference>
     <Reference Include="Krypton.Workspace, Version=80.24.7.190, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\dll\Krypton.Workspace.dll</HintPath>
@@ -1302,6 +1306,12 @@
     <Compile Include="MainForm_test.Designer.cs">
       <DependentUpon>MainForm_test.cs</DependentUpon>
     </Compile>
+    <Compile Include="MRP\UCProdWorkbench.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\UCProdWorkbench.Designer.cs">
+      <DependentUpon>UCProdWorkbench.cs</DependentUpon>
+    </Compile>
     <Compile Include="MRP\BOM\UCBillOfMaterials.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1992,6 +2002,12 @@
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\DataParts\DataBoardUnit.cs" />
+    <Compile Include="UserCenter\DataParts\UCMRP.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCMRP.Designer.cs">
+      <DependentUpon>UCMRP.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\DataParts\UCMRPCell.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2550,6 +2566,9 @@
     <EmbeddedResource Include="MainForm_test.resx">
       <DependentUpon>MainForm_test.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="MRP\UCProdWorkbench.resx">
+      <DependentUpon>UCProdWorkbench.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MRP\BOM\UCBillOfMaterials.resx">
       <DependentUpon>UCBillOfMaterials.cs</DependentUpon>
     </EmbeddedResource>
@@ -2852,6 +2871,9 @@
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCMRP.resx">
+      <DependentUpon>UCMRP.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCMRPCell.resx">
       <DependentUpon>UCMRPCell.cs</DependentUpon>
     </EmbeddedResource>
@@ -3005,6 +3027,7 @@
     <None Include="Resources\1616_selected_ok_.png" />
     <None Include="ResourceFile\info.ico" />
     <None Include="ResourceFile\ServerStatus.png" />
+    <None Include="ResourceFile\6372970_about_detail_faq_help_info_icon.png" />
     <Content Include="ruinor.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3037,10 +3060,6 @@
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
       <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
       <Name>HLH.Lib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Krypton Components\Krypton.Toolkit\Krypton.Toolkit 2022.csproj">
-      <Project>{626b796f-f3a0-40b7-8fc2-38804726c1f5}</Project>
-      <Name>Krypton.Toolkit 2022</Name>
     </ProjectReference>
     <ProjectReference Include="..\Krypton Toolkit\Krypton.Toolkit.Suite.Extended.Outlook.Grid\Krypton.Toolkit.Suite.Extended.Outlook.Grid 2022.csproj">
       <Project>{207b6d11-38d7-43e6-a381-0e8203cb5721}</Project>

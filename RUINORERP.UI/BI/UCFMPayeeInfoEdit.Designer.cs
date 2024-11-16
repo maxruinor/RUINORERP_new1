@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            RUINORERP.Global.Model.DataRowImage dataRowImage1 = new RUINORERP.Global.Model.DataRowImage();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
@@ -77,7 +78,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(163, 499);
+            this.btnOk.Location = new System.Drawing.Point(171, 499);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -86,7 +87,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(281, 499);
+            this.btnCancel.Location = new System.Drawing.Point(289, 499);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -129,8 +130,16 @@
             // 
             this.PicRowImage.AllowDrop = true;
             this.PicRowImage.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.PicRowImage.Location = new System.Drawing.Point(132, 184);
+            this.PicRowImage.Location = new System.Drawing.Point(163, 204);
             this.PicRowImage.Name = "PicRowImage";
+            dataRowImage1.Dir = null;
+            dataRowImage1.image = null;
+            dataRowImage1.ImageBytes = null;
+            dataRowImage1.ImageFullName = null;
+            dataRowImage1.newhash = null;
+            dataRowImage1.oldhash = null;
+            dataRowImage1.realName = null;
+            this.PicRowImage.RowImage = dataRowImage1;
             this.PicRowImage.Size = new System.Drawing.Size(183, 176);
             this.PicRowImage.TabIndex = 70;
             this.PicRowImage.TabStop = false;
@@ -138,7 +147,7 @@
             // kryptonGroupBox1
             // 
             this.kryptonGroupBox1.CaptionVisible = false;
-            this.kryptonGroupBox1.Location = new System.Drawing.Point(306, 453);
+            this.kryptonGroupBox1.Location = new System.Drawing.Point(337, 441);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
             // 
             // kryptonGroupBox1.Panel
@@ -167,7 +176,7 @@
             // 
             // lblIs_enabled
             // 
-            this.lblIs_enabled.Location = new System.Drawing.Point(240, 462);
+            this.lblIs_enabled.Location = new System.Drawing.Point(271, 450);
             this.lblIs_enabled.Name = "lblIs_enabled";
             this.lblIs_enabled.Size = new System.Drawing.Size(62, 20);
             this.lblIs_enabled.TabIndex = 68;
@@ -176,7 +185,7 @@
             // groupboxIsDefault
             // 
             this.groupboxIsDefault.CaptionVisible = false;
-            this.groupboxIsDefault.Location = new System.Drawing.Point(129, 453);
+            this.groupboxIsDefault.Location = new System.Drawing.Point(160, 441);
             this.groupboxIsDefault.Name = "groupboxIsDefault";
             // 
             // groupboxIsDefault.Panel
@@ -205,7 +214,7 @@
             // 
             // lblIsDefault
             // 
-            this.lblIsDefault.Location = new System.Drawing.Point(63, 463);
+            this.lblIsDefault.Location = new System.Drawing.Point(94, 451);
             this.lblIsDefault.Name = "lblIsDefault";
             this.lblIsDefault.Size = new System.Drawing.Size(62, 20);
             this.lblIsDefault.TabIndex = 66;
@@ -215,14 +224,14 @@
             // 
             this.cmbAccount_type.DropDownWidth = 100;
             this.cmbAccount_type.IntegralHeight = false;
-            this.cmbAccount_type.Location = new System.Drawing.Point(132, 46);
+            this.cmbAccount_type.Location = new System.Drawing.Point(163, 66);
             this.cmbAccount_type.Name = "cmbAccount_type";
             this.cmbAccount_type.Size = new System.Drawing.Size(158, 21);
             this.cmbAccount_type.TabIndex = 30;
             // 
             // lblaccount_type
             // 
-            this.lblaccount_type.Location = new System.Drawing.Point(67, 46);
+            this.lblaccount_type.Location = new System.Drawing.Point(98, 66);
             this.lblaccount_type.Name = "lblaccount_type";
             this.lblaccount_type.Size = new System.Drawing.Size(62, 20);
             this.lblaccount_type.TabIndex = 29;
@@ -230,7 +239,7 @@
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(91, 21);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(122, 41);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(36, 20);
             this.lblEmployee_ID.TabIndex = 10;
@@ -240,14 +249,14 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(132, 19);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(163, 39);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
             this.cmbEmployee_ID.Size = new System.Drawing.Size(158, 21);
             this.cmbEmployee_ID.TabIndex = 11;
             // 
             // lblCustomerVendor_ID
             // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(330, 21);
+            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(95, 14);
             this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
             this.lblCustomerVendor_ID.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerVendor_ID.TabIndex = 12;
@@ -257,14 +266,14 @@
             // 
             this.cmbCustomerVendor_ID.DropDownWidth = 100;
             this.cmbCustomerVendor_ID.IntegralHeight = false;
-            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(398, 19);
+            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(163, 12);
             this.cmbCustomerVendor_ID.Name = "cmbCustomerVendor_ID";
             this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(158, 21);
             this.cmbCustomerVendor_ID.TabIndex = 13;
             // 
             // lblAccount_name
             // 
-            this.lblAccount_name.Location = new System.Drawing.Point(65, 76);
+            this.lblAccount_name.Location = new System.Drawing.Point(96, 96);
             this.lblAccount_name.Name = "lblAccount_name";
             this.lblAccount_name.Size = new System.Drawing.Size(62, 20);
             this.lblAccount_name.TabIndex = 16;
@@ -272,14 +281,14 @@
             // 
             // txtAccount_name
             // 
-            this.txtAccount_name.Location = new System.Drawing.Point(132, 73);
+            this.txtAccount_name.Location = new System.Drawing.Point(163, 93);
             this.txtAccount_name.Name = "txtAccount_name";
             this.txtAccount_name.Size = new System.Drawing.Size(256, 23);
             this.txtAccount_name.TabIndex = 17;
             // 
             // lblAccount_No
             // 
-            this.lblAccount_No.Location = new System.Drawing.Point(91, 104);
+            this.lblAccount_No.Location = new System.Drawing.Point(122, 124);
             this.lblAccount_No.Name = "lblAccount_No";
             this.lblAccount_No.Size = new System.Drawing.Size(36, 20);
             this.lblAccount_No.TabIndex = 19;
@@ -287,14 +296,14 @@
             // 
             // txtAccount_No
             // 
-            this.txtAccount_No.Location = new System.Drawing.Point(132, 102);
+            this.txtAccount_No.Location = new System.Drawing.Point(163, 122);
             this.txtAccount_No.Name = "txtAccount_No";
             this.txtAccount_No.Size = new System.Drawing.Size(256, 23);
             this.txtAccount_No.TabIndex = 18;
             // 
             // lblPaymentCodeImagePath
             // 
-            this.lblPaymentCodeImagePath.Location = new System.Drawing.Point(76, 184);
+            this.lblPaymentCodeImagePath.Location = new System.Drawing.Point(107, 204);
             this.lblPaymentCodeImagePath.Name = "lblPaymentCodeImagePath";
             this.lblPaymentCodeImagePath.Size = new System.Drawing.Size(49, 20);
             this.lblPaymentCodeImagePath.TabIndex = 20;
@@ -302,7 +311,7 @@
             // 
             // lblBelongingBank
             // 
-            this.lblBelongingBank.Location = new System.Drawing.Point(65, 133);
+            this.lblBelongingBank.Location = new System.Drawing.Point(96, 153);
             this.lblBelongingBank.Name = "lblBelongingBank";
             this.lblBelongingBank.Size = new System.Drawing.Size(62, 20);
             this.lblBelongingBank.TabIndex = 22;
@@ -310,14 +319,14 @@
             // 
             // txtBelongingBank
             // 
-            this.txtBelongingBank.Location = new System.Drawing.Point(132, 131);
+            this.txtBelongingBank.Location = new System.Drawing.Point(163, 151);
             this.txtBelongingBank.Name = "txtBelongingBank";
             this.txtBelongingBank.Size = new System.Drawing.Size(256, 23);
             this.txtBelongingBank.TabIndex = 23;
             // 
             // lblOpeningBank
             // 
-            this.lblOpeningBank.Location = new System.Drawing.Point(78, 158);
+            this.lblOpeningBank.Location = new System.Drawing.Point(109, 178);
             this.lblOpeningBank.Name = "lblOpeningBank";
             this.lblOpeningBank.Size = new System.Drawing.Size(49, 20);
             this.lblOpeningBank.TabIndex = 24;
@@ -325,14 +334,14 @@
             // 
             // txtOpeningBank
             // 
-            this.txtOpeningBank.Location = new System.Drawing.Point(132, 156);
+            this.txtOpeningBank.Location = new System.Drawing.Point(163, 176);
             this.txtOpeningBank.Name = "txtOpeningBank";
             this.txtOpeningBank.Size = new System.Drawing.Size(256, 23);
             this.txtOpeningBank.TabIndex = 25;
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(87, 366);
+            this.lblNotes.Location = new System.Drawing.Point(118, 387);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 26;
@@ -340,10 +349,10 @@
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(132, 366);
+            this.txtNotes.Location = new System.Drawing.Point(163, 387);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(256, 81);
+            this.txtNotes.Size = new System.Drawing.Size(256, 48);
             this.txtNotes.TabIndex = 27;
             // 
             // UCFMPayeeInfoEdit

@@ -34,6 +34,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.pageButtons = new Krypton.Toolkit.KryptonGroup();
+            this.btnAdvQuery = new Krypton.Toolkit.KryptonButton();
             this.btnQuery = new Krypton.Toolkit.KryptonButton();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.newSumDataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
@@ -45,7 +46,6 @@
             this.pageAdvQuery = new Krypton.Navigator.KryptonPage();
             this.kryptonSplitContainerAdvQuery = new Krypton.Toolkit.KryptonSplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.btnAdvQuery = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel2 = new Krypton.Toolkit.KryptonPanel();
             this.navigatorLeft = new Krypton.Navigator.KryptonNavigator();
             this.buttonLeft = new Krypton.Navigator.ButtonSpecNavigator();
@@ -77,7 +77,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.pageButtons)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pageButtons.Panel)).BeginInit();
             this.pageButtons.Panel.SuspendLayout();
-            this.pageButtons.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.navigatorTop)).BeginInit();
@@ -127,7 +126,7 @@
             this.pageButtons.Location = new System.Drawing.Point(100, 117);
             this.pageButtons.Name = "pageButtons";
             // 
-            // pageButtons.Panel
+            // 
             // 
             this.pageButtons.Panel.Controls.Add(this.btnAdvQuery);
             this.pageButtons.Panel.Controls.Add(this.btnQuery);
@@ -136,6 +135,15 @@
             this.pageButtons.Panel.Padding = new System.Windows.Forms.Padding(5);
             this.pageButtons.Size = new System.Drawing.Size(927, 544);
             this.pageButtons.TabIndex = 4;
+            // 
+            // btnAdvQuery
+            // 
+            this.btnAdvQuery.Location = new System.Drawing.Point(707, 18);
+            this.btnAdvQuery.Name = "btnAdvQuery";
+            this.btnAdvQuery.Size = new System.Drawing.Size(90, 25);
+            this.btnAdvQuery.TabIndex = 1;
+            this.btnAdvQuery.Values.Text = "查找";
+            this.btnAdvQuery.Click += new System.EventHandler(this.btnAdvQuery_Click);
             // 
             // btnQuery
             // 
@@ -226,7 +234,7 @@
             this.navigatorTop.PopupPages.AllowPopupPages = Krypton.Navigator.PopupPageAllow.OnlyCompatibleModes;
             this.navigatorTop.PopupPages.Element = Krypton.Navigator.PopupPageElement.Navigator;
             this.navigatorTop.PopupPages.Position = Krypton.Navigator.PopupPagePosition.BelowMatch;
-            this.navigatorTop.SelectedIndex = 1;
+            this.navigatorTop.SelectedIndex = 0;
             this.navigatorTop.Size = new System.Drawing.Size(927, 107);
             this.navigatorTop.TabIndex = 2;
             this.navigatorTop.Text = "kryptonNavigator2";
@@ -306,15 +314,6 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(733, 78);
             this.tableLayoutPanel1.TabIndex = 2;
-            // 
-            // btnAdvQuery
-            // 
-            this.btnAdvQuery.Location = new System.Drawing.Point(707, 18);
-            this.btnAdvQuery.Name = "btnAdvQuery";
-            this.btnAdvQuery.Size = new System.Drawing.Size(90, 25);
-            this.btnAdvQuery.TabIndex = 1;
-            this.btnAdvQuery.Values.Text = "查找";
-            this.btnAdvQuery.Click += new System.EventHandler(this.btnAdvQuery_Click);
             // 
             // kryptonPanel2
             // 
@@ -611,7 +610,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.pageButtons.Panel)).EndInit();
             this.pageButtons.Panel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pageButtons)).EndInit();
-            this.pageButtons.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.navigatorTop)).EndInit();

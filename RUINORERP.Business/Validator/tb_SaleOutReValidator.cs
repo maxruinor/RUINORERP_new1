@@ -43,7 +43,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.ShipCost).PrecisionScale(19,4,true).WithMessage("需退运费:小数位不能超过4。");
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
- RuleFor(tb_SaleOutRe =>tb_SaleOutRe.ReturnReason).MaximumLength(500).WithMessage("备注:不能超过最大长度,500.");
+ RuleFor(tb_SaleOutRe =>tb_SaleOutRe.ReturnReason).MaximumLength(500).WithMessage("退货原因:不能超过最大长度,500.");
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);

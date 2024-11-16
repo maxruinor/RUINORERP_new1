@@ -21,18 +21,10 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_SaleOutReValidator : BaseValidatorGeneric<tb_SaleOutRe>
     {
-        //public class CustomerValidator : AbstractValidator<tb_SaleOutRe>
-        //{
-        //    public CustomerValidator()
-        //    {
-        //        RuleFor(c => c.tb_SaleOutReDetails).NotNull();
-        //        RuleForEach(x => x.tb_SaleOutReDetails).NotNull();
-        //        //RuleFor(x => x.tb_SaleOutReDetails).SetInheritanceValidator(t =>
-        //        //{
-        //        //    t.Add<tb_SaleOutReDetail>(new tb_SaleOutReDetailValidator());
-        //        //});
-        //    }
-        //}
+        public override void Initialize()
+        {
+            RuleFor(tb_SaleOutRe => tb_SaleOutRe.ReturnReason).MinimumLength(5).WithMessage("退货原因:不能小于长度,5.");
+        }
 
     }
 }

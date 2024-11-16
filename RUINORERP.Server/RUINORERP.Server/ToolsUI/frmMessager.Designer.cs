@@ -32,8 +32,6 @@
             btnCancel = new System.Windows.Forms.Button();
             txtMessage = new System.Windows.Forms.TextBox();
             label1 = new System.Windows.Forms.Label();
-            cmbUser = new System.Windows.Forms.ComboBox();
-            label2 = new System.Windows.Forms.Label();
             chkMustDisplay = new System.Windows.Forms.CheckBox();
             SuspendLayout();
             // 
@@ -59,7 +57,7 @@
             // 
             // txtMessage
             // 
-            txtMessage.Location = new System.Drawing.Point(83, 53);
+            txtMessage.Location = new System.Drawing.Point(82, 27);
             txtMessage.Multiline = true;
             txtMessage.Name = "txtMessage";
             txtMessage.Size = new System.Drawing.Size(431, 287);
@@ -68,28 +66,11 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new System.Drawing.Point(21, 53);
+            label1.Location = new System.Drawing.Point(20, 27);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(56, 17);
             label1.TabIndex = 3;
             label1.Text = "消息内容";
-            // 
-            // cmbUser
-            // 
-            cmbUser.FormattingEnabled = true;
-            cmbUser.Location = new System.Drawing.Point(83, 12);
-            cmbUser.Name = "cmbUser";
-            cmbUser.Size = new System.Drawing.Size(431, 25);
-            cmbUser.TabIndex = 4;
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new System.Drawing.Point(21, 15);
-            label2.Name = "label2";
-            label2.Size = new System.Drawing.Size(44, 17);
-            label2.TabIndex = 5;
-            label2.Text = "接收人";
             // 
             // chkMustDisplay
             // 
@@ -107,8 +88,6 @@
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(567, 429);
             Controls.Add(chkMustDisplay);
-            Controls.Add(label2);
-            Controls.Add(cmbUser);
             Controls.Add(label1);
             Controls.Add(txtMessage);
             Controls.Add(btnCancel);
@@ -116,6 +95,7 @@
             Name = "frmMessager";
             StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             Text = "消息发送框";
+            Load += frmMessager_Load;
             ResumeLayout(false);
             PerformLayout();
         }
@@ -126,8 +106,6 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.TextBox txtMessage;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.CheckBox chkMustDisplay;
-        public System.Windows.Forms.ComboBox cmbUser;
     }
 }

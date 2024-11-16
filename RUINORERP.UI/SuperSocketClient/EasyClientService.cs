@@ -585,8 +585,7 @@ namespace RUINORERP.UI.SuperSocketClient
                             break;
 
                         case ServerCmdEnum.给客户端发提示消息:
-                            ClientService.接收服务器提示消息(od);
-
+                            ClientService.接收服务器弹窗消息(od);
                             break;
                         case ServerCmdEnum.心跳回复:
                             break;

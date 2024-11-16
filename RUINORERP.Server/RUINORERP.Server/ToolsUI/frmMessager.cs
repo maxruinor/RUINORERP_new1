@@ -33,5 +33,10 @@ namespace RUINORERP.Server.ToolsUI
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
+
+        private void frmMessager_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

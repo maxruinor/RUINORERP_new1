@@ -231,6 +231,7 @@ namespace RUINORERP.Business
 
 
                     }
+                    
                     //这部分是否能提出到上一级公共部分？
                     entitys[m].DataStatus = (int)DataStatus.完结;
                     BusinessHelper.Instance.EditEntity(entitys[m]);

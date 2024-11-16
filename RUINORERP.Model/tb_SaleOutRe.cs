@@ -325,10 +325,10 @@ namespace RUINORERP.Model
 
         private string _ReturnReason;
         /// <summary>
-        /// 备注
+        /// 退货原因
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReturnReason",ColDesc = "备注")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReturnReason" ,Length=1000,IsNullable = true,ColumnDescription = "备注" )]
+        [AdvQueryAttribute(ColName = "ReturnReason",ColDesc = "退货原因")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReturnReason" ,Length=1000,IsNullable = true,ColumnDescription = "退货原因")]
         public string ReturnReason
         { 
             get{return _ReturnReason;}

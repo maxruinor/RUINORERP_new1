@@ -1457,7 +1457,7 @@ protected async override Task<ApprovalEntity> ReReview()
             kryptonTreeGridViewStockLess.GridNodes.Clear();
 
             //主要业务表的列头
-            ConcurrentDictionary<string, string> colNames = UIHelper.GetFieldNameList<tb_ProductionDemandDetail>();
+            ConcurrentDictionary<string, string> colNames = UIHelper.GetFieldNameList<tb_ProductionDemandDetail>(true);
             //必须添加这两个列进DataTable,后面会通过这两个列来树型结构
             colNames.TryAdd("ID", "ID");
             colNames.TryAdd("ParentId", "上级ID");
@@ -1467,7 +1467,7 @@ protected async override Task<ApprovalEntity> ReReview()
             expressions.Add(c => c.ProductNo);
 
             //基本信息的列头
-            ConcurrentDictionary<string, string> BaseProductInfoColNames = UIHelper.GetFieldNameList<BaseProductInfo>()
+            ConcurrentDictionary<string, string> BaseProductInfoColNames = UIHelper.GetFieldNameList<BaseProductInfo>(true)
                 .exclude<BaseProductInfo>(expressions);
 
 
@@ -1523,7 +1523,7 @@ protected async override Task<ApprovalEntity> ReReview()
             kryptonTreeGridViewMaking.GridNodes.Clear();
 
             //主要业务表的列头
-            ConcurrentDictionary<string, string> colNames = UIHelper.GetFieldNameList<tb_ProduceGoodsRecommendDetail>();
+            ConcurrentDictionary<string, string> colNames = UIHelper.GetFieldNameList<tb_ProduceGoodsRecommendDetail>(true);
             //必须添加这两个列进DataTable,后面会通过这两个列来树型结构
             colNames.TryAdd("ID", "ID");
             colNames.TryAdd("ParentId", "上级ID");
@@ -1535,7 +1535,7 @@ protected async override Task<ApprovalEntity> ReReview()
             expressions.Add(c => c.ProductNo);
 
             //基本信息的列头
-            ConcurrentDictionary<string, string> BaseProductInfoColNames = UIHelper.GetFieldNameList<BaseProductInfo>()
+            ConcurrentDictionary<string, string> BaseProductInfoColNames = UIHelper.GetFieldNameList<BaseProductInfo>(true)
                 .exclude<BaseProductInfo>(expressions);
 
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();

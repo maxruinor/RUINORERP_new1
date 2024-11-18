@@ -365,7 +365,8 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                         //-------------------------- 
                         //Columns Collection
                         //-------------------------- 
-                        var c = new string[_dataSource.Columns.Count];
+                        //var c = new string[_dataSource.Columns.Count];
+                        var c = new object[_dataSource.Columns.Count];
 
                         //-------------------------- 
                         //Init RowCounter
@@ -377,11 +378,11 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                             //-------------------------- 
                             // Retrieve columns
                             //-------------------------- 
-                            var p = new string[_dataSource.Columns.Count];
-
+                            //var p = new string[_dataSource.Columns.Count];
+                            var p = new object[_dataSource.Columns.Count];
                             for (var i = 0; i < _dataSource.Columns.Count; i++)
                             {
-                                p[i] = dr[i].ToString().Trim();
+                                p[i] = dr[i];
                                 if (k > 0 && i == 0 && p[i] == c[i])
                                 {
                                     isChild = true;
@@ -447,7 +448,7 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                             }
                             //Nodes.Add(p);
                             k++;
-                            c = (string[])p.Clone();
+                            c = (object[])p.Clone();
                         }
                         boldFont.Dispose();
                     }
@@ -694,14 +695,17 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
 
                         }
 
-                        var NewP = new string[newDt.Columns.Count];
-
+                        //var NewP = new string[newDt.Columns.Count];
+                        var NewP = new object[newDt.Columns.Count];
                         foreach (DataColumn NewCol in newDt.Columns)
                         {
                             int i = newDt.Columns.IndexOf(NewCol.ColumnName);
-                            NewP[i] = dv[items][NewCol.ColumnName].ToString().Trim();
+                            // NewP[i] = dv[items][NewCol.ColumnName].ToString().Trim();
+                            NewP[i] = dv[items][NewCol.ColumnName];
                         }
                         rootNode = GridNodes.Add(NewP);
+
+                        //根据产品列的数据类型，重新更新一下。特别 是long int64的情况
 
                         //保存了ID当行号
                         rootNode.Tag = dv[items][idColumnName].ToString().Trim();
@@ -713,11 +717,14 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                         //-------------------------- 
                         // Retrieve columns
                         //-------------------------- 
-                        var p = new string[dt.Columns.Count];
+                        //var p = new string[dt.Columns.Count];
+                        var p = new object[dt.Columns.Count];
+
 
                         for (var i = 0; i < dt.Columns.Count; i++)
                         {
-                            p[i] = dv[items][i].ToString().Trim();
+                            //p[i] = dv[items][i].ToString().Trim();
+                            p[i] = dv[items][i];
                         }
 
                         //-------------------------- 
@@ -784,12 +791,13 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
 
                         }
 
-                        var NewP = new string[newDt.Columns.Count];
+                        //var NewP = new string[newDt.Columns.Count];
+                        var NewP = new object[newDt.Columns.Count];
 
                         foreach (DataColumn NewCol in newDt.Columns)
                         {
                             int i = newDt.Columns.IndexOf(NewCol.ColumnName);
-                            NewP[i] = dv[items][NewCol.ColumnName].ToString().Trim();
+                            NewP[i] = dv[items][NewCol.ColumnName];
                         }
                         childNode = parentNode.Nodes.Add(NewP);
                         //保存了ID当行号
@@ -799,11 +807,11 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                     else
                     {
                         // Retrieve columns
-                        var p = new string[dt.Columns.Count];
+                        var p = new object[dt.Columns.Count];
 
                         for (var i = 0; i < dt.Columns.Count; i++)
                         {
-                            p[i] = dv[items][i].ToString().Trim();
+                            p[i] = dv[items][i];
                         }
                         //-------------------------- 
                         //Add Node

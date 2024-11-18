@@ -27,7 +27,7 @@ namespace RUINORERP.Model.Dto
         /// <summary>
         /// 产品
         /// </summary>
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProdDetailID", IsNullable = true, ColumnDescription = "", IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProdDetailID", IsNullable = true, ColumnDescription = "产品", IsPrimaryKey = true)]
         public long? ProdDetailID { get; set; }
 
 

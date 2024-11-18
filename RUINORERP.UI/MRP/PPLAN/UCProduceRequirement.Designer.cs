@@ -158,7 +158,7 @@
             this.kp库存不足量需求,
             this.kryptonPage3,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 3;
+            this.kryptonNavigator1.SelectedIndex = 0;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1118, 485);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -267,7 +267,9 @@
             this.kryptonTreeGridViewStockLess.Location = new System.Drawing.Point(0, 0);
             this.kryptonTreeGridViewStockLess.Name = "kryptonTreeGridViewStockLess";
             this.kryptonTreeGridViewStockLess.ParentIdRootValue = ((long)(0));
+            this.kryptonTreeGridViewStockLess.SelectFilter = "";
             this.kryptonTreeGridViewStockLess.Size = new System.Drawing.Size(1116, 402);
+            this.kryptonTreeGridViewStockLess.SortColumnName = "";
             this.kryptonTreeGridViewStockLess.TabIndex = 11;
             this.kryptonTreeGridViewStockLess.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridViewStockLess_CellEndEdit);
             this.kryptonTreeGridViewStockLess.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.kryptonTreeGridViewStockLess_CellFormatting);
@@ -433,7 +435,9 @@
             this.kryptonTreeGridViewMaking.Name = "kryptonTreeGridViewMaking";
             this.kryptonTreeGridViewMaking.ParentIdRootValue = ((long)(0));
             this.kryptonTreeGridViewMaking.ReadOnly = true;
+            this.kryptonTreeGridViewMaking.SelectFilter = "";
             this.kryptonTreeGridViewMaking.Size = new System.Drawing.Size(1116, 407);
+            this.kryptonTreeGridViewMaking.SortColumnName = "";
             this.kryptonTreeGridViewMaking.TabIndex = 14;
             this.kryptonTreeGridViewMaking.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridViewMaking_CellContentClick);
             this.kryptonTreeGridViewMaking.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridViewMaking_CellEndEdit);

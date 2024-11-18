@@ -67,7 +67,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private async void kryptonCommandRefresh_Execute(object sender, EventArgs e)
         {
-           await uCMRP.QueryMRPDataStatus();
+            int PURListCount = await uCMRP.QueryMRPDataStatus();
+            kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + PURListCount.ToString() + "】计划生产中";
         }
 
         private void buttonSpecHeaderGroup2_Click(object sender, EventArgs e)

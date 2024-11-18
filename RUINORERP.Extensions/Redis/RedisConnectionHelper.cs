@@ -41,6 +41,7 @@ namespace RUINORERP.Extensions.Redis
                         if (_connection == null || !_connection.IsConnected)
                         {
                             _connection = CreateConnection(ConnectionString);
+                            //_connection = ConnectionMultiplexer.Connect(ConfigurationOptions);
                         }
                     }
                 }

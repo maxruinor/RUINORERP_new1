@@ -100,8 +100,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdBaseID",ColDesc = "货品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdBaseID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "货品" )]
+        [AdvQueryAttribute(ColName = "ProdBaseID",ColDesc = "产品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdBaseID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "产品" )]
         [FKRelationAttribute("tb_Prod","ProdBaseID")]
         public long? ProdBaseID
         { 

@@ -21,7 +21,9 @@ namespace RUINORERP.Extensions.Redis
         /// 连接方式
         /// </summary> 
         public static string ConnectionString { get; set; }
-
+        //修改端口 和密码
+        // private static readonly ConfigurationOptions ConfigurationOptions = ConfigurationOptions.Parse(“127.0.0.1:6379, password = 123456”);
+        private static readonly object Locker = new object();
         static RedisHelper()
         {
             DbNum = -1;
@@ -32,7 +34,8 @@ namespace RUINORERP.Extensions.Redis
             IConfiguration configuration = cfgBuilder.Build();
             string conn = configuration.GetValue<string>("RedisServer");
             ConnectionString = conn;
-            _connectin = string.IsNullOrEmpty(ConnectionString) ?
+          
+        _connectin = string.IsNullOrEmpty(ConnectionString) ?
                    RedisConnectionHelper.Instance :
                    RedisConnectionHelper.GetConnectionMultiplexer(ConnectionString);
         }

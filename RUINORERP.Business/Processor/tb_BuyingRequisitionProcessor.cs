@@ -40,6 +40,7 @@ namespace RUINORERP.Business.Processor
         {
             QueryFilter queryFilter = new QueryFilter();
             queryFilter.SetQueryField<tb_BuyingRequisition>(c => c.PuRequisitionNo);
+            queryFilter.SetQueryField<tb_BuyingRequisition>(c => c.RefBillNO);
             queryFilter.SetQueryField<tb_BuyingRequisition>(c => c.ApplicationDate);
             queryFilter.SetQueryField<tb_BuyingRequisition>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_BuyingRequisition>(c => c.Employee_ID);

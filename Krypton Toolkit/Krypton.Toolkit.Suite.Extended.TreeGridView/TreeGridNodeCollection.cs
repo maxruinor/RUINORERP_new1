@@ -92,6 +92,15 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
             return node;
         }
 
+
+        public KryptonTreeGridNodeRow? UpdateCell(KryptonTreeGridNodeRow treeGridNodeRow, int index, object[] value)
+        {
+            treeGridNodeRow.Cells[index].Value = value;
+            return treeGridNodeRow;
+        }
+
+
+
         public void Insert(int index, KryptonTreeGridNodeRow? item)
         {
             // The row needs to exist in the child collection before the parent is notified.

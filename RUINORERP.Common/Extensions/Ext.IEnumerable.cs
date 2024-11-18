@@ -230,7 +230,7 @@ namespace RUINORERP.Common.Extensions
         /// <param name="SubPartsfieldNameList"></param>
         /// <param name="MainfieldNameList"></param>
         /// <returns></returns>
-        public static DataTable ToDataTable<Sub, M>(this List<M> list, List<Sub> subList,
+        public static DataTable ToDataTable_old<Sub, M>(this List<M> list, List<Sub> subList,
             ConcurrentDictionary<string, string> SubPartsfieldNameList,
             ConcurrentDictionary<string, string> MainfieldNameList, Expression<Func<M, object>> RelatedKey)
         {
@@ -438,6 +438,97 @@ namespace RUINORERP.Common.Extensions
             }
 
             return dataTable;
+        }
+
+
+        public static DataTable ToDataTable<Sub, M>(this List<M> list, List<Sub> subList,
+    ConcurrentDictionary<string, string> SubPartsfieldNameList,
+    ConcurrentDictionary<string, string> MainfieldNameList, Expression<Func<M, object>> RelatedKey) where Sub : class where M : class
+        {
+            // 创建一个 DataTable 对象
+            DataTable dataTable = new DataTable();
+
+            // 获取主键名称
+            MemberInfo minfo = RelatedKey.GetMemberInfo();
+            string keyBizName = minfo.Name;
+
+            // 检查主键列是否存在于两个列表中
+            if (!SubPartsfieldNameList.ContainsKey(keyBizName) || !MainfieldNameList.ContainsKey(keyBizName))
+            {
+                throw new Exception("请确保两部分的列都包括指定的业务主键列:" + keyBizName);
+            }
+
+            // 构建 DataTable 的列
+            BuildDataTableColumns(dataTable, SubPartsfieldNameList, MainfieldNameList, keyBizName, typeof(Sub), typeof(M));
+
+            // 填充 DataTable 的数据
+            FillDataTableData<Sub, M>(dataTable, subList, list, SubPartsfieldNameList, MainfieldNameList, keyBizName);
+
+            return dataTable;
+        }
+
+        private static void BuildDataTableColumns(DataTable dataTable,
+            ConcurrentDictionary<string, string> SubPartsfieldNameList,
+            ConcurrentDictionary<string, string> MainfieldNameList,
+            string keyBizName, Type subType, Type mainType)
+        {
+            // 获取 Sub 类型的所有公共属性
+            PropertyInfo[] propertiesSub = subType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            // 获取 Main 类型的所有公共属性
+            PropertyInfo[] properties = mainType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            // 遍历属性并创建 DataColumn
+            foreach (PropertyInfo property in propertiesSub.Concat(properties))
+            {
+                string propertyName = property.Name;
+                if ((SubPartsfieldNameList.ContainsKey(propertyName) || MainfieldNameList.ContainsKey(propertyName)))
+                {
+                    Type colType = property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) ?
+                        Nullable.GetUnderlyingType(property.PropertyType) : property.PropertyType;
+                    DataColumn column = new DataColumn(propertyName, colType);
+                    column.Caption = SubPartsfieldNameList.ContainsKey(propertyName) ? SubPartsfieldNameList[propertyName] : MainfieldNameList[propertyName];
+                    //如果相同列名的列已经存在，则跳过
+                    if (!dataTable.Columns.Contains(column.ColumnName))
+                    {
+                        dataTable.Columns.Add(column);
+                    }
+
+
+                }
+            }
+        }
+
+        private static void FillDataTableData<BaseInfo, Detail>(DataTable dataTable, List<BaseInfo> BaseInfoList, List<Detail> DetailList,
+            ConcurrentDictionary<string, string> SubPartsfieldNameList,
+            ConcurrentDictionary<string, string> MainfieldNameList, string keyBizName) where BaseInfo : class where Detail : class
+        {
+            foreach (Detail mainObj in DetailList)
+            {
+                object keyValue = ReflectionHelper.GetPropertyValue(mainObj, keyBizName);
+                DataRow mainRow = dataTable.NewRow();
+                FillDataRow(mainRow, mainObj, MainfieldNameList, keyBizName);
+
+                //找到关联的子对象，并更新行根据主键
+                var subObj = BaseInfoList.Where(c => c.GetPropertyValue(keyBizName).Equals(keyValue)).FirstOrDefault();
+                if (subObj != null)
+                {
+                    FillDataRow(mainRow, subObj, SubPartsfieldNameList, keyBizName);
+                }
+                dataTable.Rows.Add(mainRow);
+            }
+        }
+
+        private static void FillDataRow(DataRow row, object obj, ConcurrentDictionary<string, string> fieldNameList, string keyBizName)
+        {
+            foreach (PropertyInfo property in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                string propertyName = property.Name;
+                if (fieldNameList.ContainsKey(propertyName))
+                {
+                    object value = property.GetValue(obj);
+                    row[propertyName] = value ?? DBNull.Value;
+                }
+            }
         }
 
 

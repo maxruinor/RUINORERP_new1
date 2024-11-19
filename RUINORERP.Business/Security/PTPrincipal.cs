@@ -223,10 +223,12 @@ namespace RUINORERP.Business.Security
             if (roleInfo == null)
             {
                 appcontext.CurrentRole = roles[0];
+                appcontext.CurrentUser_Role = CheckRoles[0];
             }
             else
             {
                 appcontext.CurrentRole = roleInfo;
+                appcontext.CurrentUser_Role = CheckRoles.FirstOrDefault(c => c.RoleID == roleInfo.RoleID);
             }
 
             //设置角色的属性配置，默认只取第一个角色组的配置,，并且设置提前了一级

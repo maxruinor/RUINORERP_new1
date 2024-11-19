@@ -29,13 +29,11 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCWorkCenter));
             System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("节点0");
             System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("节点1");
             System.Windows.Forms.TreeNode treeNode3 = new System.Windows.Forms.TreeNode("节点2");
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCWorkCenter));
             this.kryptonPanelRight = new Krypton.Toolkit.KryptonPanel();
-            this.kryptonTableLayoutPanel右边三部分 = new Krypton.Toolkit.KryptonTableLayoutPanel();
-            this.flowLayoutPane数据概览 = new System.Windows.Forms.FlowLayoutPanel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.kryptonPanelBig = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSplitContainerMain = new Krypton.Toolkit.KryptonSplitContainer();
@@ -43,11 +41,13 @@
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.RefreshData = new System.Windows.Forms.ToolStripMenuItem();
+            this.kryptonTableLayoutPanel右边三部分 = new Krypton.Toolkit.KryptonTableLayoutPanel();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.flowLayoutPane数据概览 = new System.Windows.Forms.FlowLayoutPanel();
             this.flowLayoutPanel常用菜单 = new System.Windows.Forms.FlowLayoutPanel();
+            this.kryptonContextMenu1 = new Krypton.Toolkit.KryptonContextMenu();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelRight)).BeginInit();
             this.kryptonPanelRight.SuspendLayout();
-            this.kryptonTableLayoutPanel右边三部分.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelBig)).BeginInit();
             this.kryptonPanelBig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerMain)).BeginInit();
@@ -57,6 +57,7 @@
             this.kryptonSplitContainerMain.Panel2.SuspendLayout();
             this.kryptonSplitContainerMain.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
+            this.kryptonTableLayoutPanel右边三部分.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonPanelRight
@@ -67,34 +68,6 @@
             this.kryptonPanelRight.Name = "kryptonPanelRight";
             this.kryptonPanelRight.Size = new System.Drawing.Size(818, 691);
             this.kryptonPanelRight.TabIndex = 7;
-            // 
-            // kryptonTableLayoutPanel右边三部分
-            // 
-            this.kryptonTableLayoutPanel右边三部分.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("kryptonTableLayoutPanel右边三部分.BackgroundImage")));
-            this.kryptonTableLayoutPanel右边三部分.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.kryptonTableLayoutPanel右边三部分.ColumnCount = 1;
-            this.kryptonTableLayoutPanel右边三部分.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.kryptonTableLayoutPanel右边三部分.Controls.Add(this.flowLayoutPanel1, 0, 2);
-            this.kryptonTableLayoutPanel右边三部分.Controls.Add(this.flowLayoutPane数据概览, 0, 0);
-            this.kryptonTableLayoutPanel右边三部分.Controls.Add(this.flowLayoutPanel常用菜单, 0, 1);
-            this.kryptonTableLayoutPanel右边三部分.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonTableLayoutPanel右边三部分.Location = new System.Drawing.Point(0, 0);
-            this.kryptonTableLayoutPanel右边三部分.Name = "kryptonTableLayoutPanel右边三部分";
-            this.kryptonTableLayoutPanel右边三部分.RowCount = 3;
-            this.kryptonTableLayoutPanel右边三部分.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 99.99999F));
-            this.kryptonTableLayoutPanel右边三部分.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
-            this.kryptonTableLayoutPanel右边三部分.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 223F));
-            this.kryptonTableLayoutPanel右边三部分.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.kryptonTableLayoutPanel右边三部分.Size = new System.Drawing.Size(818, 691);
-            this.kryptonTableLayoutPanel右边三部分.TabIndex = 0;
-            // 
-            // flowLayoutPane数据概览
-            // 
-            this.flowLayoutPane数据概览.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPane数据概览.Location = new System.Drawing.Point(3, 3);
-            this.flowLayoutPane数据概览.Name = "flowLayoutPane数据概览";
-            this.flowLayoutPane数据概览.Size = new System.Drawing.Size(812, 412);
-            this.flowLayoutPane数据概览.TabIndex = 0;
             // 
             // statusStrip1
             // 
@@ -177,6 +150,26 @@
             this.RefreshData.Text = "刷新数据";
             this.RefreshData.Click += new System.EventHandler(this.RefreshData_Click);
             // 
+            // kryptonTableLayoutPanel右边三部分
+            // 
+            this.kryptonTableLayoutPanel右边三部分.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("kryptonTableLayoutPanel右边三部分.BackgroundImage")));
+            this.kryptonTableLayoutPanel右边三部分.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.kryptonTableLayoutPanel右边三部分.ColumnCount = 1;
+            this.kryptonTableLayoutPanel右边三部分.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.kryptonTableLayoutPanel右边三部分.Controls.Add(this.flowLayoutPanel1, 0, 2);
+            this.kryptonTableLayoutPanel右边三部分.Controls.Add(this.flowLayoutPane数据概览, 0, 0);
+            this.kryptonTableLayoutPanel右边三部分.Controls.Add(this.flowLayoutPanel常用菜单, 0, 1);
+            this.kryptonTableLayoutPanel右边三部分.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonTableLayoutPanel右边三部分.Location = new System.Drawing.Point(0, 0);
+            this.kryptonTableLayoutPanel右边三部分.Name = "kryptonTableLayoutPanel右边三部分";
+            this.kryptonTableLayoutPanel右边三部分.RowCount = 3;
+            this.kryptonTableLayoutPanel右边三部分.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 99.99999F));
+            this.kryptonTableLayoutPanel右边三部分.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
+            this.kryptonTableLayoutPanel右边三部分.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 223F));
+            this.kryptonTableLayoutPanel右边三部分.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.kryptonTableLayoutPanel右边三部分.Size = new System.Drawing.Size(818, 691);
+            this.kryptonTableLayoutPanel右边三部分.TabIndex = 0;
+            // 
             // flowLayoutPanel1
             // 
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -184,6 +177,14 @@
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(812, 217);
             this.flowLayoutPanel1.TabIndex = 1;
+            // 
+            // flowLayoutPane数据概览
+            // 
+            this.flowLayoutPane数据概览.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPane数据概览.Location = new System.Drawing.Point(3, 3);
+            this.flowLayoutPane数据概览.Name = "flowLayoutPane数据概览";
+            this.flowLayoutPane数据概览.Size = new System.Drawing.Size(812, 412);
+            this.flowLayoutPane数据概览.TabIndex = 0;
             // 
             // flowLayoutPanel常用菜单
             // 
@@ -204,7 +205,6 @@
             this.Load += new System.EventHandler(this.BaseNavigatorGeneric_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelRight)).EndInit();
             this.kryptonPanelRight.ResumeLayout(false);
-            this.kryptonTableLayoutPanel右边三部分.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelBig)).EndInit();
             this.kryptonPanelBig.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerMain.Panel1)).EndInit();
@@ -214,6 +214,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerMain)).EndInit();
             this.kryptonSplitContainerMain.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);
+            this.kryptonTableLayoutPanel右边三部分.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -232,5 +233,6 @@
         private System.Windows.Forms.ToolStripMenuItem RefreshData;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel常用菜单;
+        private Krypton.Toolkit.KryptonContextMenu kryptonContextMenu1;
     }
 }

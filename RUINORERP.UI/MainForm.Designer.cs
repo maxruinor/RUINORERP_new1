@@ -62,9 +62,9 @@ namespace RUINORERP.UI
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripDropDownBtnRoles = new System.Windows.Forms.ToolStripDropDownButton();
             this.cmbRoles = new System.Windows.Forms.ToolStripComboBox();
+            this.lblServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblStatusGlobal = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblServerInfo = new System.Windows.Forms.ToolStripStatusLabel();
-            this.lblServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripBtnUpdate = new System.Windows.Forms.ToolStripButton();
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
@@ -84,6 +84,14 @@ namespace RUINORERP.UI
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.statusTimer = new System.Windows.Forms.Timer(this.components);
+            this.kcmUCworkbenches = new Krypton.Toolkit.KryptonContextMenu();
+            this.kryptonContextMenuItems1 = new Krypton.Toolkit.KryptonContextMenuItems();
+            this.kryptonContextMenuItem1 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonContextMenuItems2 = new Krypton.Toolkit.KryptonContextMenuItems();
+            this.kryptonContextMenuItem2 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonContextMenuItem3 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonContextMenuItem4 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kcmdSaveAsDefaultLayout = new Krypton.Toolkit.KryptonCommand();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             this.kryptonPage5.SuspendLayout();
@@ -393,13 +401,13 @@ namespace RUINORERP.UI
             // toolStripMenuItem3
             // 
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(98, 22);
             this.toolStripMenuItem3.Text = "2010";
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(98, 22);
             this.toolStripMenuItem1.Text = "2017";
             // 
             // toolStripDropDownBtnRoles
@@ -418,6 +426,19 @@ namespace RUINORERP.UI
             this.cmbRoles.Name = "cmbRoles";
             this.cmbRoles.Size = new System.Drawing.Size(121, 25);
             // 
+            // lblServerStatus
+            // 
+            this.lblServerStatus.AutoToolTip = true;
+            this.lblServerStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.lblServerStatus.DoubleClickEnabled = true;
+            this.lblServerStatus.Image = global::RUINORERP.UI.Properties.Resources.ServerStatus;
+            this.lblServerStatus.Margin = new System.Windows.Forms.Padding(100, 3, 0, 2);
+            this.lblServerStatus.Name = "lblServerStatus";
+            this.lblServerStatus.Size = new System.Drawing.Size(16, 17);
+            this.lblServerStatus.Text = "服务器状态";
+            this.lblServerStatus.Click += new System.EventHandler(this.lblServerStatus_Click);
+            this.lblServerStatus.DoubleClick += new System.EventHandler(this.lblServerStatus_DoubleClick);
+            // 
             // lblStatusGlobal
             // 
             this.lblStatusGlobal.Margin = new System.Windows.Forms.Padding(50, 3, 0, 2);
@@ -434,19 +455,6 @@ namespace RUINORERP.UI
             this.lblServerInfo.Text = "....";
             this.lblServerInfo.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.lblServerInfo.Visible = false;
-            // 
-            // lblServerStatus
-            // 
-            this.lblServerStatus.AutoToolTip = true;
-            this.lblServerStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.lblServerStatus.DoubleClickEnabled = true;
-            this.lblServerStatus.Image = global::RUINORERP.UI.Properties.Resources.ServerStatus;
-            this.lblServerStatus.Margin = new System.Windows.Forms.Padding(100, 3, 0, 2);
-            this.lblServerStatus.Name = "lblServerStatus";
-            this.lblServerStatus.Size = new System.Drawing.Size(16, 17);
-            this.lblServerStatus.Text = "服务器状态";
-            this.lblServerStatus.Click += new System.EventHandler(this.lblServerStatus_Click);
-            this.lblServerStatus.DoubleClick += new System.EventHandler(this.lblServerStatus_DoubleClick);
             // 
             // toolStrip1
             // 
@@ -628,6 +636,40 @@ namespace RUINORERP.UI
             this.statusTimer.Interval = 5000;
             this.statusTimer.Tick += new System.EventHandler(this.statusTimer_Tick);
             // 
+            // kcmUCworkbenches
+            // 
+            this.kcmUCworkbenches.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
+            this.kryptonContextMenuItems2});
+            // 
+            // kryptonContextMenuItem1
+            // 
+            this.kryptonContextMenuItem1.Text = "Menu Item";
+            // 
+            // kryptonContextMenuItems2
+            // 
+            this.kryptonContextMenuItems2.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
+            this.kryptonContextMenuItem2,
+            this.kryptonContextMenuItem3,
+            this.kryptonContextMenuItem4});
+            // 
+            // kryptonContextMenuItem2
+            // 
+            this.kryptonContextMenuItem2.KryptonCommand = this.kcmdSaveAsDefaultLayout;
+            this.kryptonContextMenuItem2.Text = "保存为默认布局";
+            // 
+            // kryptonContextMenuItem3
+            // 
+            this.kryptonContextMenuItem3.Text = "恢复默认布局";
+            // 
+            // kryptonContextMenuItem4
+            // 
+            this.kryptonContextMenuItem4.Text = "重新加载单元组件";
+            // 
+            // kcmdSaveAsDefaultLayout
+            // 
+            this.kcmdSaveAsDefaultLayout.Text = "SaveAsDefaultLayout";
+            this.kcmdSaveAsDefaultLayout.Execute += new System.EventHandler(this.kcmdSaveAsDefaultLayout_Execute);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -728,6 +770,14 @@ namespace RUINORERP.UI
         private System.Windows.Forms.ToolStripButton btntsbRefresh;
         private System.Windows.Forms.ToolStripStatusLabel lblServerStatus;
         public System.Windows.Forms.ToolStripStatusLabel lblServerInfo;
+        private KryptonContextMenu kcmUCworkbenches;
+        private KryptonContextMenuItems kryptonContextMenuItems2;
+        private KryptonContextMenuItem kryptonContextMenuItem2;
+        private KryptonContextMenuItem kryptonContextMenuItem3;
+        private KryptonContextMenuItem kryptonContextMenuItem4;
+        private KryptonContextMenuItems kryptonContextMenuItems1;
+        private KryptonContextMenuItem kryptonContextMenuItem1;
+        private KryptonCommand kcmdSaveAsDefaultLayout;
     }
 }
 

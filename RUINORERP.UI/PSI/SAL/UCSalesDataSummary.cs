@@ -976,7 +976,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             KryptonWorkspaceCell cell = new KryptonWorkspaceCell();
             UITools uITools = new UITools();
-            cell.Pages.Add(uITools.NewPage(title, control));
+            cell.Pages.Add(UIForKryptonHelper.NewPage(title, control));
             return cell;
         }
 

@@ -1081,6 +1081,7 @@
     <Compile Include="CommonUI\frmInputContent.Designer.cs">
       <DependentUpon>frmInputContent.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
     <Compile Include="FM\UCExpenseClaimStatistics.cs">
@@ -2104,6 +2105,12 @@
     <Compile Include="UserCenter\DataParts\UCStockCell.Designer.cs">
       <DependentUpon>UCStockCell.cs</DependentUpon>
     </Compile>
+    <Compile Include="UserCenter\DataParts\UCTodoList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCTodoList.Designer.cs">
+      <DependentUpon>UCTodoList.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\FlowPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2132,7 +2139,7 @@
       <DependentUpon>UCPreferenceSettings.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\UCWorkbenches.cs">
-      <SubType>Form</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UserCenter\UCWorkbenches.Designer.cs">
       <DependentUpon>UCWorkbenches.cs</DependentUpon>
@@ -2996,6 +3003,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCStockCell.resx">
       <DependentUpon>UCStockCell.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCTodoList.resx">
+      <DependentUpon>UCTodoList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\FlowPanel.resx">
       <DependentUpon>FlowPanel.cs</DependentUpon>

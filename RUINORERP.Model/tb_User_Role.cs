@@ -109,6 +109,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _WorkDefaultLayout;
+        /// <summary>
+        /// 工作台布局
+        /// </summary>
+        [AdvQueryAttribute(ColName = "WorkDefaultLayout", ColDesc = "工作台布局")]
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType = "String", ColumnName = "WorkDefaultLayout", Length = 2147483647, IsNullable = true, ColumnDescription = "工作台布局")]
+        public string WorkDefaultLayout
+        {
+            get { return _WorkDefaultLayout; }
+            set
+            {
+                SetProperty(ref _WorkDefaultLayout, value);
+            }
+        }
+
         #endregion
 
         #region 扩展属性

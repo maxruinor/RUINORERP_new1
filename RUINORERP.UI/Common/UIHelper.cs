@@ -31,8 +31,6 @@ namespace RUINORERP.UI.Common
     public static class UIHelper
     {
 
-
-
         public static object GetDisplayText(ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ColNameDataDictionary,
             string colDbName, object Value, List<Type> ColDisplayTypes = null, Type entityType = null)
         {

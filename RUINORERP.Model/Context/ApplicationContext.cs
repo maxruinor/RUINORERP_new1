@@ -108,6 +108,10 @@ namespace RUINORERP.Model.Context
         /// </summary>
         public tb_RoleInfo CurrentRole { get; set; }
 
+        /// <summary>
+        /// 当前用户角色（一个人可以我个角色。配置不一样。）
+        /// </summary>
+        public tb_User_Role CurrentUser_Role { get; set; }
 
         /// <summary>
         /// 当前角色

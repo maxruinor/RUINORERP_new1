@@ -77,6 +77,7 @@ using NPOI.SS.Formula.Functions;
 using Mysqlx.Prepare;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Table;
+using System.Xml;
 
 
 
@@ -328,7 +329,7 @@ namespace RUINORERP.UI
         public IMemoryCache cache { get; set; }
         private async void MainForm_Load(object sender, EventArgs e)
         {
-             cache = Startup.GetFromFac<IMemoryCache>();
+            cache = Startup.GetFromFac<IMemoryCache>();
 
             //cache.Set("test1", "test123");
 
@@ -337,7 +338,7 @@ namespace RUINORERP.UI
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
             BizCacheHelper.InitManager();
 
-      
+
 
             await InitConfig(false);
             timer1.Start();
@@ -445,7 +446,7 @@ namespace RUINORERP.UI
             UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
             UIBizSrvice.RequestCache(typeof(tb_ProductType));
             UIBizSrvice.RequestCache(typeof(View_ProdDetail));
- 
+
         }
         public AuthorizeController authorizeController;
         private void RefreshData()
@@ -928,7 +929,7 @@ namespace RUINORERP.UI
 
         #endregion
 
-
+        UCWorkbenches _UCWorkbenches = null;
         private void InitCenterPages()
         {
 
@@ -940,9 +941,9 @@ namespace RUINORERP.UI
             // Set correct initial ribbon palette buttons
             //UpdatePaletteButtons();
 
-             var _UCInitControlCenter = Startup.GetFromFac<UCInitControlCenter>(); //获取服务Service1
+            var _UCInitControlCenter = Startup.GetFromFac<UCInitControlCenter>(); //获取服务Service1
 
-          
+
             KryptonWorkspaceCell cell = kryptonDockableWorkspace1.ActiveCell;
             if (cell == null || kryptonDockableWorkspace1.PageCount == 0)
             {
@@ -952,7 +953,7 @@ namespace RUINORERP.UI
                 cell.CloseAction += Cell_CloseAction;
                 cell.SelectedPageChanged += Cell_SelectedPageChanged;
                 cell.ShowContextMenu += Cell_ShowContextMenu;
-               
+
                 #region 创建初始页
 
                 KryptonPage p = new KryptonPage();
@@ -971,7 +972,7 @@ namespace RUINORERP.UI
 
                 #endregion
 
-                UCWorkbenches _UCWorkbenches = Startup.GetFromFac<UCWorkbenches>(); //获取服务Service1
+                _UCWorkbenches = Startup.GetFromFac<UCWorkbenches>(); //获取服务Service1
                 #region 工作台
 
                 KryptonPage pWorkbenches = new KryptonPage();
@@ -985,7 +986,7 @@ namespace RUINORERP.UI
                 // frm.Show();
                 // Add the control for display inside the page
                 _UCWorkbenches.Dock = DockStyle.Fill;
-                _UCWorkbenches.TopLevel = false;
+                //_UCWorkbenches.TopLevel = false;
                 pWorkbenches.Controls.Add(_UCWorkbenches);
 
                 #endregion
@@ -1026,6 +1027,7 @@ namespace RUINORERP.UI
 
                 pWorkbenches.AllowDrop = false;
                 pWorkbenches.ClearFlags(KryptonPageFlags.All);
+
                 cell.Pages.Add(pWorkbenches);
             }
 
@@ -1040,13 +1042,30 @@ namespace RUINORERP.UI
             {
                 return;
             }
-            if (kwc.SelectedPage.TextTitle == "控制中心" || kwc.SelectedPage.TextTitle == "工作台")
+            if (kwc.SelectedPage.TextTitle == "控制中心"
+                || kwc.SelectedPage.TextTitle == "工作台"
+                )
             {
                 //不显示右键
                 e.Cancel = true;
             }
 
+            if (kwc.SelectedPage.TextTitle == "我的工作台")
+            {
+                //显示并自定义
+                // Yes we want to show a context menu
+                e.Cancel = false;
 
+                // Provide the navigator specific menu
+                e.KryptonContextMenu = kcmUCworkbenches;
+                
+
+                // Only enable the appropriate options
+                //kcmFirst.Enabled = (kryptonNavigator1.SelectedIndex > 0);
+                //kcmPrevious.Enabled = (kryptonNavigator1.SelectedIndex > 0);
+                //kcmNext.Enabled = (kryptonNavigator1.SelectedIndex < (kryptonNavigator1.Pages.Count - 1));
+                //kcmLast.Enabled = (kryptonNavigator1.SelectedIndex < (kryptonNavigator1.Pages.Count - 1));
+            }
 
             /*
              显示并自定义
@@ -1084,7 +1103,6 @@ namespace RUINORERP.UI
             //选到了第一个。或其他全关了
             //kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.ShowDisabled;
         }
-
 
 
         private void Cell_CloseAction(object sender, CloseActionEventArgs e)
@@ -2308,6 +2326,51 @@ namespace RUINORERP.UI
         private void lblServerStatus_Click(object sender, EventArgs e)
         {
             lblServerInfo.Visible = false;
+        }
+
+        private async void kcmdSaveAsDefaultLayout_Execute(object sender, EventArgs e)
+        {
+            try
+            {
+                //保存配置
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Encoding = new UTF8Encoding(false);
+                settings.NewLineChars = Environment.NewLine;
+                settings.Indent = true;
+                string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, "UCWorkbenchesPersistence");
+                if (_UCWorkbenches.ws != null)
+                {
+                    using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
+                    {
+                        _UCWorkbenches.ws.SaveElementToXml(xmlWriter);
+                        xmlWriter.Close();
+                    }
+                }
+
+                //保存超级用户的布局为默认布局
+                if (MainForm.Instance.AppContext.IsSuperUser && System.IO.File.Exists(xmlfilepath))
+                {
+                    //加载XML文件
+                    XmlDocument xmldoc = new XmlDocument();
+                    xmldoc.Load(xmlfilepath);
+                    //获取XML字符串
+                    string xmlStr = xmldoc.InnerXml;
+                    //字符串转XML
+                    //xmldoc.LoadXml(xmlStr);
+                    AppContext.CurrentUser_Role.WorkDefaultLayout = xmlStr;
+                    int affcet = await MainForm.Instance.AppContext.Db.Storageable<tb_User_Role>(AppContext.CurrentUser_Role).ExecuteCommandAsync();
+                    if (affcet > 0)
+                    {
+                        PrintInfoLog("工作台布局保存成功");
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+
+            }
         }
     }
 }

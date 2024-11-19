@@ -543,20 +543,26 @@ namespace RUINORERP.UI.Common
                             {
                                 OnSetQueryConditionsDelegate(baseQuery.QueryDtoProxy, nodeParameter);
                             }
-                            baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
+                            if (entity==null)
+                            {
+                                baseQuery.LoadQueryParametersToUI(entity, nodeParameter);
+                            }
+                            else
+                            {
+                                baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
+                            }
                         }
-
  
                         //生产工作台 区别上面。为了不影响上面。 
-                        if (page.Controls[0] is BaseQuery ucbaseQuery && entity != null)
-                        {
-                            //set value这里设置属性？
-                            if (OnSetQueryConditionsDelegate != null)
-                            {
-                                OnSetQueryConditionsDelegate(ucbaseQuery.QueryDtoProxy, nodeParameter);
-                            }
-                            ucbaseQuery.LoadQueryParametersToUI(entity, nodeParameter);
-                        }
+                        //if (page.Controls[0] is BaseQuery ucbaseQuery && entity != null)
+                        //{
+                        //    //set value这里设置属性？
+                        //    if (OnSetQueryConditionsDelegate != null)
+                        //    {
+                        //        OnSetQueryConditionsDelegate(ucbaseQuery.QueryDtoProxy, nodeParameter);
+                        //    }
+                        //    ucbaseQuery.LoadQueryParametersToUI(entity, nodeParameter);
+                        //}
 
                         cell.SelectedPage = page;
                     }

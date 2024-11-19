@@ -1300,12 +1300,6 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="MainForm_test.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MainForm_test.Designer.cs">
-      <DependentUpon>MainForm_test.cs</DependentUpon>
-    </Compile>
     <Compile Include="MRP\PPLAN\UCProductionPlanStatistics.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2137,6 +2131,12 @@
     <Compile Include="UserCenter\UCPreferenceSettings.Designer.cs">
       <DependentUpon>UCPreferenceSettings.cs</DependentUpon>
     </Compile>
+    <Compile Include="UserCenter\UCWorkbenches.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserCenter\UCWorkbenches.Designer.cs">
+      <DependentUpon>UCWorkbenches.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\UCWorkCenter.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2641,9 +2641,6 @@
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="MainForm_test.resx">
-      <DependentUpon>MainForm_test.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="MRP\PPLAN\UCProductionPlanStatistics.resx">
       <DependentUpon>UCProductionPlanStatistics.cs</DependentUpon>
     </EmbeddedResource>
@@ -3017,6 +3014,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\UCPreferenceSettings.resx">
       <DependentUpon>UCPreferenceSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\UCWorkbenches.resx">
+      <DependentUpon>UCWorkbenches.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\UCWorkCenter.resx">
       <DependentUpon>UCWorkCenter.cs</DependentUpon>

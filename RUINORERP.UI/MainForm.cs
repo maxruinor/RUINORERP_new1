@@ -940,8 +940,9 @@ namespace RUINORERP.UI
             // Set correct initial ribbon palette buttons
             //UpdatePaletteButtons();
 
-            var _UCInitControlCenter = Startup.GetFromFac<UCInitControlCenter>(); //获取服务Service1
+             var _UCInitControlCenter = Startup.GetFromFac<UCInitControlCenter>(); //获取服务Service1
 
+          
             KryptonWorkspaceCell cell = kryptonDockableWorkspace1.ActiveCell;
             if (cell == null || kryptonDockableWorkspace1.PageCount == 0)
             {
@@ -951,6 +952,7 @@ namespace RUINORERP.UI
                 cell.CloseAction += Cell_CloseAction;
                 cell.SelectedPageChanged += Cell_SelectedPageChanged;
                 cell.ShowContextMenu += Cell_ShowContextMenu;
+               
                 #region 创建初始页
 
                 KryptonPage p = new KryptonPage();
@@ -964,10 +966,29 @@ namespace RUINORERP.UI
                 // frm.Show();
                 // Add the control for display inside the page
                 _UCInitControlCenter.Dock = DockStyle.Fill;
+                //_UCInitControlCenter.TopLevel = false;
                 p.Controls.Add(_UCInitControlCenter);
 
                 #endregion
 
+                UCWorkbenches _UCWorkbenches = Startup.GetFromFac<UCWorkbenches>(); //获取服务Service1
+                #region 工作台
+
+                KryptonPage pWorkbenches = new KryptonPage();
+                pWorkbenches.Text = "我的工作台";
+                pWorkbenches.TextTitle = "我的工作台";
+                pWorkbenches.TextDescription = "我的工作台";
+                pWorkbenches.UniqueName = "我的工作台";
+                //  p.ImageSmall = imageListSmall.Images[image];
+                // Form2 frm = new Form2();
+                // frm.Controls.Add(_UCInitControlCenter);
+                // frm.Show();
+                // Add the control for display inside the page
+                _UCWorkbenches.Dock = DockStyle.Fill;
+                _UCWorkbenches.TopLevel = false;
+                pWorkbenches.Controls.Add(_UCWorkbenches);
+
+                #endregion
 
                 var _UCWorkCenter = Startup.GetFromFac<UCWorkCenter>(); //获取服务Service1
 
@@ -987,6 +1008,7 @@ namespace RUINORERP.UI
                 pUsercenter.Controls.Add(_UCWorkCenter);
 
                 #endregion
+
                 KryptonPage page = p;
                 //KryptonPage page = UI.Common.ControlHelper.NewPage("菜单初始化", 1, _MenuInit);
                 page.AllowDrop = false;
@@ -997,13 +1019,18 @@ namespace RUINORERP.UI
                            KryptonPageFlags.DockingAllowDocked |
                            KryptonPageFlags.DockingAllowClose);*/
                 cell.Pages.Add(page);
+
                 pUsercenter.AllowDrop = false;
                 pUsercenter.ClearFlags(KryptonPageFlags.All);
                 cell.Pages.Add(pUsercenter);
+
+                pWorkbenches.AllowDrop = false;
+                pWorkbenches.ClearFlags(KryptonPageFlags.All);
+                cell.Pages.Add(pWorkbenches);
             }
 
-            cell.SelectedPage = cell.Pages.Where(x => x.Text == "工作台").FirstOrDefault();
-            kryptonDockableWorkspace1.ActivePage = kryptonDockableWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == "工作台");
+            cell.SelectedPage = cell.Pages.Where(x => x.Text == "我的工作台").FirstOrDefault();
+            kryptonDockableWorkspace1.ActivePage = kryptonDockableWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == "我的工作台");
         }
 
         private void Cell_ShowContextMenu(object sender, ShowContextMenuArgs e)

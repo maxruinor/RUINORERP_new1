@@ -46,7 +46,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Packing>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
-            
+
             toolStripButton结案.Visible = false;
             toolStripBtnReverseReview.Visible = false;
             toolStripbtnReview.Visible = false;
@@ -55,11 +55,11 @@ namespace RUINORERP.UI.ProductEAV
             txtSKU.Enabled = false;
         }
 
-    
+
 
         internal override void LoadDataToUI(object Entity)
         {
- 
+
             ActionStatus actionStatus = ActionStatus.无操作;
             BindData(Entity as tb_Packing, actionStatus);
         }
@@ -108,7 +108,11 @@ namespace RUINORERP.UI.ProductEAV
                     if (entity.ProdBaseID.HasValue || entity.ProdDetailID.HasValue)
                     {
                         toolStripbtnAdd.Enabled = false;
-                        entity.Unit_ID = entity.tb_prod.Unit_ID;
+                        if (entity.Unit_ID == 0)
+                        {
+                            entity.Unit_ID = entity.tb_prod.Unit_ID;
+                        }
+                        
                     }
                     if (entity.tb_PackingDetails != null && entity.tb_PackingDetails.Count > 0)
                     {
@@ -171,7 +175,7 @@ namespace RUINORERP.UI.ProductEAV
                 //权限允许
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改))
                 {
-                    
+
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_Packing>(c => c.Length) ||
                       s2.PropertyName == entity.GetPropertyName<tb_Packing>(c => c.Width) ||
@@ -215,14 +219,17 @@ namespace RUINORERP.UI.ProductEAV
                         else
                         {
                             BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
-                            var prodDetail = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
-                            entity.property = prodDetail.prop;
-                            entity.SKU = prodDetail.SKU;
+                            if (entity.ProdDetailID.HasValue)
+                            {
+                                var prodDetail = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+                                entity.property = prodDetail.prop;
+                                entity.SKU = prodDetail.SKU;
+                            }
                         }
                     }
                 }
 
-                
+
 
             };
 
@@ -694,7 +701,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     return false;
                 }
-               
+
                 ReturnMainSubResults<tb_Packing> SaveResult = new ReturnMainSubResults<tb_Packing>();
                 if (NeedValidated)
                 {

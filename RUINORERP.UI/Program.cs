@@ -230,7 +230,7 @@ namespace RUINORERP.UI
             //});
             //services.AddSingleton<ISqlSugarClient>(sqlSugarScope); // SqlSugar 官网推荐用单例模式注入
             //  services.AddSqlsugarSetup();
-            services.AddSingleton(typeof(MainForm_test));
+           // services.AddSingleton(typeof(MainForm_test));
             // services.AddTransient(typeof(Form2));
 
             // 注入窗体

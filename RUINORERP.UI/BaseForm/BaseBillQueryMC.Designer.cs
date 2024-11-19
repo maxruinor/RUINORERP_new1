@@ -30,23 +30,8 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseBillQuery));
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
-            this.tsbtnBatchConversion = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
-            this.tsbtnAntiApproval = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSplitButtonPrint = new System.Windows.Forms.ToolStripSplitButton();
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripBtnExport = new System.Windows.Forms.ToolStripButton();
-            this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
-            this.toolStripbtnFunction = new System.Windows.Forms.ToolStripDropDownButton();
-            this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripButton12 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.最大行数 = new System.Windows.Forms.ToolStripLabel();
             this.txtMaxRow = new System.Windows.Forms.ToolStripTextBox();
@@ -57,6 +42,21 @@
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.groupLine1 = new WinLib.Line.GroupLine();
             this.kryptonDockingManagerQuery = new Krypton.Docking.KryptonDockingManager();
+            this.tsbtnBatchConversion = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.tsbtnAntiApproval = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSplitButtonPrint = new System.Windows.Forms.ToolStripSplitButton();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripBtnExport = new System.Windows.Forms.ToolStripButton();
+            this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
+            this.toolStripbtnFunction = new System.Windows.Forms.ToolStripDropDownButton();
+            this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripButton12 = new System.Windows.Forms.ToolStripButton();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).BeginInit();
             this.kryptonPanelMainBig.SuspendLayout();
@@ -96,136 +96,15 @@
             this.BaseToolStrip.TabIndex = 3;
             this.BaseToolStrip.Text = "toolStrip1";
             // 
-            // tsbtnBatchConversion
-            // 
-            this.tsbtnBatchConversion.Image = global::RUINORERP.UI.Properties.Resources.Synchronize;
-            this.tsbtnBatchConversion.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnBatchConversion.Name = "tsbtnBatchConversion";
-            this.tsbtnBatchConversion.Size = new System.Drawing.Size(79, 22);
-            this.tsbtnBatchConversion.Text = "转出库单";
-            this.tsbtnBatchConversion.Visible = false;
-            // 
-            // toolStripButton4
-            // 
-            this.toolStripButton4.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton4.Image")));
-            this.toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton4.Name = "toolStripButton4";
-            this.toolStripButton4.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton4.Text = "查询";
-            // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
-            // toolStripButton3
-            // 
-            this.toolStripButton3.Image = global::RUINORERP.UI.Properties.Resources.apply;
-            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton3.Name = "toolStripButton3";
-            this.toolStripButton3.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton3.Text = "提交";
-            // 
-            // toolStripButton1
-            // 
-            this.toolStripButton1.Image = global::RUINORERP.UI.Properties.Resources.审核;
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton1.Text = "审核";
-            // 
-            // tsbtnAntiApproval
-            // 
-            this.tsbtnAntiApproval.Image = global::RUINORERP.UI.Properties.Resources.反核;
-            this.tsbtnAntiApproval.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnAntiApproval.Name = "tsbtnAntiApproval";
-            this.tsbtnAntiApproval.Size = new System.Drawing.Size(53, 22);
-            this.tsbtnAntiApproval.Text = "反审";
-            // 
-            // toolStripButtonDelete
-            // 
-            this.toolStripButtonDelete.Image = global::RUINORERP.UI.Properties.Resources.Delete_ok;
-            this.toolStripButtonDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonDelete.Name = "toolStripButtonDelete";
-            this.toolStripButtonDelete.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButtonDelete.Text = "删除";
-            // 
-            // toolStripButton结案
-            // 
-            this.toolStripButton结案.Image = global::RUINORERP.UI.Properties.Resources.ok;
-            this.toolStripButton结案.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton结案.Name = "toolStripButton结案";
-            this.toolStripButton结案.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton结案.Text = "结案";
-            // 
-            // toolStripSplitButtonPrint
-            // 
-            this.toolStripSplitButtonPrint.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem1,
-            this.toolStripMenuItem2});
-            this.toolStripSplitButtonPrint.Image = global::RUINORERP.UI.Properties.Resources.print1;
-            this.toolStripSplitButtonPrint.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripSplitButtonPrint.Name = "toolStripSplitButtonPrint";
-            this.toolStripSplitButtonPrint.Size = new System.Drawing.Size(65, 22);
-            this.toolStripSplitButtonPrint.Text = "打印";
-            // 
-            // toolStripMenuItem1
-            // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(100, 22);
-            this.toolStripMenuItem1.Text = "预览";
-            // 
-            // toolStripMenuItem2
-            // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(100, 22);
-            this.toolStripMenuItem2.Text = "设计";
-            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripBtnExport
-            // 
-            this.toolStripBtnExport.Image = ((System.Drawing.Image)(resources.GetObject("toolStripBtnExport.Image")));
-            this.toolStripBtnExport.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripBtnExport.Name = "toolStripBtnExport";
-            this.toolStripBtnExport.Size = new System.Drawing.Size(53, 22);
-            this.toolStripBtnExport.Text = "导出";
-            // 
-            // toolStripbtnProperty
-            // 
-            this.toolStripbtnProperty.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnProperty.Image")));
-            this.toolStripbtnProperty.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripbtnProperty.Name = "toolStripbtnProperty";
-            this.toolStripbtnProperty.Size = new System.Drawing.Size(53, 22);
-            this.toolStripbtnProperty.Text = "属性";
-            // 
-            // toolStripbtnFunction
-            // 
-            this.toolStripbtnFunction.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.复制性新增ToolStripMenuItem});
-            this.toolStripbtnFunction.Image = global::RUINORERP.UI.Properties.Resources.objectItem;
-            this.toolStripbtnFunction.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripbtnFunction.Name = "toolStripbtnFunction";
-            this.toolStripbtnFunction.Size = new System.Drawing.Size(62, 22);
-            this.toolStripbtnFunction.Text = "功能";
-            // 
-            // 复制性新增ToolStripMenuItem
-            // 
-            this.复制性新增ToolStripMenuItem.Image = global::RUINORERP.UI.Properties.Resources.add;
-            this.复制性新增ToolStripMenuItem.Name = "复制性新增ToolStripMenuItem";
-            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
-            this.复制性新增ToolStripMenuItem.Text = "复制性新增";
-            // 
-            // toolStripButton12
-            // 
-            this.toolStripButton12.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton12.Image")));
-            this.toolStripButton12.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton12.Name = "toolStripButton12";
-            this.toolStripButton12.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton12.Text = "关闭";
             // 
             // toolStripSeparator3
             // 
@@ -323,6 +202,127 @@
             // kryptonDockingManagerQuery
             // 
             this.kryptonDockingManagerQuery.Strings.TextAutoHide = "自动隐藏";
+            // 
+            // tsbtnBatchConversion
+            // 
+            this.tsbtnBatchConversion.Image = global::RUINORERP.UI.Properties.Resources.Synchronize;
+            this.tsbtnBatchConversion.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbtnBatchConversion.Name = "tsbtnBatchConversion";
+            this.tsbtnBatchConversion.Size = new System.Drawing.Size(79, 22);
+            this.tsbtnBatchConversion.Text = "转出库单";
+            this.tsbtnBatchConversion.Visible = false;
+            // 
+            // toolStripButton4
+            // 
+            this.toolStripButton4.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton4.Image")));
+            this.toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton4.Name = "toolStripButton4";
+            this.toolStripButton4.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButton4.Text = "查询";
+            // 
+            // toolStripButton3
+            // 
+            this.toolStripButton3.Image = global::RUINORERP.UI.Properties.Resources.apply;
+            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton3.Name = "toolStripButton3";
+            this.toolStripButton3.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButton3.Text = "提交";
+            // 
+            // toolStripButton1
+            // 
+            this.toolStripButton1.Image = global::RUINORERP.UI.Properties.Resources.审核;
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButton1.Text = "审核";
+            // 
+            // tsbtnAntiApproval
+            // 
+            this.tsbtnAntiApproval.Image = global::RUINORERP.UI.Properties.Resources.反核;
+            this.tsbtnAntiApproval.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbtnAntiApproval.Name = "tsbtnAntiApproval";
+            this.tsbtnAntiApproval.Size = new System.Drawing.Size(53, 22);
+            this.tsbtnAntiApproval.Text = "反审";
+            // 
+            // toolStripButtonDelete
+            // 
+            this.toolStripButtonDelete.Image = global::RUINORERP.UI.Properties.Resources.Delete_ok;
+            this.toolStripButtonDelete.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonDelete.Name = "toolStripButtonDelete";
+            this.toolStripButtonDelete.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButtonDelete.Text = "删除";
+            // 
+            // toolStripButton结案
+            // 
+            this.toolStripButton结案.Image = global::RUINORERP.UI.Properties.Resources.ok;
+            this.toolStripButton结案.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton结案.Name = "toolStripButton结案";
+            this.toolStripButton结案.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButton结案.Text = "结案";
+            // 
+            // toolStripSplitButtonPrint
+            // 
+            this.toolStripSplitButtonPrint.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem1,
+            this.toolStripMenuItem2});
+            this.toolStripSplitButtonPrint.Image = global::RUINORERP.UI.Properties.Resources.print1;
+            this.toolStripSplitButtonPrint.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripSplitButtonPrint.Name = "toolStripSplitButtonPrint";
+            this.toolStripSplitButtonPrint.Size = new System.Drawing.Size(65, 22);
+            this.toolStripSplitButtonPrint.Text = "打印";
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItem1.Text = "预览";
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItem2.Text = "设计";
+            // 
+            // toolStripBtnExport
+            // 
+            this.toolStripBtnExport.Image = ((System.Drawing.Image)(resources.GetObject("toolStripBtnExport.Image")));
+            this.toolStripBtnExport.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripBtnExport.Name = "toolStripBtnExport";
+            this.toolStripBtnExport.Size = new System.Drawing.Size(53, 22);
+            this.toolStripBtnExport.Text = "导出";
+            // 
+            // toolStripbtnProperty
+            // 
+            this.toolStripbtnProperty.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnProperty.Image")));
+            this.toolStripbtnProperty.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnProperty.Name = "toolStripbtnProperty";
+            this.toolStripbtnProperty.Size = new System.Drawing.Size(53, 22);
+            this.toolStripbtnProperty.Text = "属性";
+            // 
+            // toolStripbtnFunction
+            // 
+            this.toolStripbtnFunction.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.复制性新增ToolStripMenuItem});
+            this.toolStripbtnFunction.Image = global::RUINORERP.UI.Properties.Resources.objectItem;
+            this.toolStripbtnFunction.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnFunction.Name = "toolStripbtnFunction";
+            this.toolStripbtnFunction.Size = new System.Drawing.Size(62, 22);
+            this.toolStripbtnFunction.Text = "功能";
+            // 
+            // 复制性新增ToolStripMenuItem
+            // 
+            this.复制性新增ToolStripMenuItem.Image = global::RUINORERP.UI.Properties.Resources.add;
+            this.复制性新增ToolStripMenuItem.Name = "复制性新增ToolStripMenuItem";
+            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.复制性新增ToolStripMenuItem.Text = "复制性新增";
+            // 
+            // toolStripButton12
+            // 
+            this.toolStripButton12.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton12.Image")));
+            this.toolStripButton12.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton12.Name = "toolStripButton12";
+            this.toolStripButton12.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButton12.Text = "关闭";
             // 
             // BaseBillQueryMC
             // 

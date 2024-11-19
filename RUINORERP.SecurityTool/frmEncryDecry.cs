@@ -10,16 +10,16 @@ using System.Security.Cryptography;
 
 namespace SecurityCore
 {
-    public partial class Form1 : Form
+    public partial class frmEncryDecry : Form
     {
-        public Form1()
+        public frmEncryDecry()
         {
             InitializeComponent();
         }
 
         private void btnEncrypt_Click(object sender, EventArgs e)
         {
-            //txtNewData.Text = DataProtection.Encrypt(txtOldData.Text.Trim(), DataProtection.Store.Machine);
+             txtNewData.Text = DataProtection.Encrypt(txtOldData.Text.Trim(), DataProtection.Store.Machine);
 
         }
 

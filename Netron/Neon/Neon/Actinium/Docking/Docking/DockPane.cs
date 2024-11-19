@@ -198,7 +198,7 @@ namespace Netron.Neon
 
                 DockContent oldValue = m_activeContent;
 
-                if (DockPanel.ActiveAutoHideContent == oldValue)
+                if (DockPanel != null && DockPanel.ActiveAutoHideContent == oldValue)
                     DockPanel.ActiveAutoHideContent = null;
 
                 m_activeContent = value;

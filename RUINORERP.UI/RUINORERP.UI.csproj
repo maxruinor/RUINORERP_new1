@@ -1306,6 +1306,30 @@
     <Compile Include="MainForm_test.Designer.cs">
       <DependentUpon>MainForm_test.cs</DependentUpon>
     </Compile>
+    <Compile Include="MRP\PPLAN\UCProductionPlanStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PPLAN\UCProductionPlanStatistics.Designer.cs">
+      <DependentUpon>UCProductionPlanStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MRP\PPROC\UCFinishedGoodsInvStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PPROC\UCFinishedGoodsInvStatistics.Designer.cs">
+      <DependentUpon>UCFinishedGoodsInvStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MRP\PPROC\UCMaterialReturnStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PPROC\UCMaterialReturnStatistics.Designer.cs">
+      <DependentUpon>UCMaterialReturnStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MRP\PPROC\UCMaterialRequisitionStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PPROC\UCMaterialRequisitionStatistics.Designer.cs">
+      <DependentUpon>UCMaterialRequisitionStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="MRP\UCProdWorkbench.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2566,6 +2590,18 @@
     <EmbeddedResource Include="MainForm_test.resx">
       <DependentUpon>MainForm_test.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PPLAN\UCProductionPlanStatistics.resx">
+      <DependentUpon>UCProductionPlanStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PPROC\UCFinishedGoodsInvStatistics.resx">
+      <DependentUpon>UCFinishedGoodsInvStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PPROC\UCMaterialReturnStatistics.resx">
+      <DependentUpon>UCMaterialReturnStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PPROC\UCMaterialRequisitionStatistics.resx">
+      <DependentUpon>UCMaterialRequisitionStatistics.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MRP\UCProdWorkbench.resx">
       <DependentUpon>UCProdWorkbench.cs</DependentUpon>
     </EmbeddedResource>
@@ -3432,7 +3468,6 @@
     <Folder Include="CRM\" />
     <Folder Include="IMResources\Icons\" />
     <Folder Include="IMResources\Images\" />
-    <Folder Include="MRP\MP\" />
     <Folder Include="MRP\RR\" />
     <Folder Include="Other\" />
     <Folder Include="PM\" />

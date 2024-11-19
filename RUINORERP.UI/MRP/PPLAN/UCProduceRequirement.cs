@@ -2255,7 +2255,11 @@ protected async override Task<ApprovalEntity> ReReview()
                             //同时要更新其子级的材料用量
                             KryptonTreeGridNodeRow tgn = ktgv.CurrentNode.Parent;
                             tb_ProduceGoodsRecommendDetail Prow = EditEntity.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ParentId == ID);
-                            updateSubItem(row, Prow);
+                            if (Prow!= null)
+                            {
+                                updateSubItem(row, Prow);
+                            }
+                            
                         }
                         else
                         {
@@ -2296,23 +2300,28 @@ protected async override Task<ApprovalEntity> ReReview()
             List<tb_BOM_SDetail> subBomDetails = await sDetailController.QueryByNavWithSubBom(c => c.BOM_ID == row.BOM_ID);
             //Prow.BOM_ID.ToBool
             //要通过上级BOM找到BOM明细再算出对应的数量,里面可能存在已经累计过的。相同的物料。这里只是算出差值。直接减掉。
-            decimal bomOutQty = Prow.tb_bom_s.OutputQty;
-            foreach (var item in EditEntity.tb_PurGoodsRecommendDetails)
+            if (Prow.BOM_ID.HasValue)
             {
-                tb_BOM_SDetail sDetail = subBomDetails.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
-                if (sDetail != null)
+                if (Prow.tb_bom_s==null)
                 {
-                    decimal totalDiffQty = sDetail.UsedQty * DiffQty / bomOutQty;
-                    item.RequirementQty = item.RequirementQty - totalDiffQty.ToInt();
-                    item.RecommendQty = item.RecommendQty - totalDiffQty.ToInt();
-
+                    Prow.tb_bom_s= await MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>().Where(c=>c.BOM_ID==Prow.BOM_ID.Value).FirstAsync();
                 }
+                decimal bomOutQty = Prow.tb_bom_s.OutputQty;
+                foreach (var item in EditEntity.tb_PurGoodsRecommendDetails)
+                {
+                    tb_BOM_SDetail sDetail = subBomDetails.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
+                    if (sDetail != null)
+                    {
+                        decimal totalDiffQty = sDetail.UsedQty * DiffQty / bomOutQty;
+                        item.RequirementQty = item.RequirementQty - totalDiffQty.ToInt();
+                        item.RecommendQty = item.RecommendQty - totalDiffQty.ToInt();
+
+                    }
+                }
+                //重新加载采购建议
+                sghPur.LoadItemDataToGrid<tb_PurGoodsRecommendDetail>(gridPurItems, sgdPur, EditEntity.tb_PurGoodsRecommendDetails, c => c.ProdDetailID);
             }
-            //重新加载采购建议
-            sghPur.LoadItemDataToGrid<tb_PurGoodsRecommendDetail>(gridPurItems, sgdPur, EditEntity.tb_PurGoodsRecommendDetails, c => c.ProdDetailID);
         }
-
-
 
 
         private void kryptonTreeGridViewMaking_CellEnter(object sender, DataGridViewCellEventArgs e)

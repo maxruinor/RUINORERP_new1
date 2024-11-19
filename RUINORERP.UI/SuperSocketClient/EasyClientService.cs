@@ -100,7 +100,7 @@ namespace RUINORERP.UI.SuperSocketClient
         {
             _stopThreadEvent = new AutoResetEvent(false);
             client = new EasyClient<BizPackageInfo>();
-          
+
             client.Initialize(new BizPipelineFilter());
             client.Connected += OnClientConnected;
             client.NewPackageReceived += OnPackageReceived;
@@ -190,7 +190,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 tx.PushString(MainForm.Instance.AppContext.log.ModName);
                 tx.PushBool(MainForm.Instance.AppContext.OnlineUser.在线状态);
                 tx.PushBool(MainForm.Instance.AppContext.OnlineUser.授权状态);
-
+                tx.PushString(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//客户端时间，用来对比服务器的时间，如果多个客户端时间与服务器不一样。则服务器有问题。
                 gd.cmd = (byte)ClientCmdEnum.客户端心跳包;
                 gd.One = null;
                 gd.Two = tx.toByte();
@@ -410,7 +410,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
         private async void OnClientClosed(object sender, EventArgs e)
         {
-             
+
             // 设置连接状态为断开
             IsConnected = false;
 
@@ -419,7 +419,7 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 OnConnectClosed(IsConnected);
             }
-           
+
             //// 清空用户信息列表
             //lock (userInfos)
             //{

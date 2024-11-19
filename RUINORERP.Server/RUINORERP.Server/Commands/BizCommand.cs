@@ -20,6 +20,7 @@ using RUINORERP.Business.CommService;
 using Microsoft.Extensions.Logging;
 using SuperSocket.Server.Abstractions.Session;
 using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace RUINORERP.Server.Commands
 {
@@ -90,7 +91,6 @@ namespace RUINORERP.Server.Commands
                         case ClientCmdEnum.工作流启动:
 
                             WorkflowServiceReceiver.启动工作流(Player, gd);
-
                             //  WorkflowServiceReceiver.接收工作流提交(Player, gd);
                             break;
                         case ClientCmdEnum.工作流指令:
@@ -281,7 +281,7 @@ namespace RUINORERP.Server.Commands
 
 
 #pragma warning disable CS0169 // 从不使用字段“BizCommand.Timer时间检测定时器”
-        Timer Timer时间检测定时器;
+        System.Threading.Timer Timer时间检测定时器;
 #pragma warning restore CS0169 // 从不使用字段“BizCommand.Timer时间检测定时器”
 
         private void HeartbeatCmd(IAppSession session, BizPackageInfo package)
@@ -309,6 +309,20 @@ namespace RUINORERP.Server.Commands
                     string strCurrentModule = ByteDataAnalysis.GetString(gd.Two, ref index);
                     bool 在线状态 = ByteDataAnalysis.Getbool(gd.Two, ref index);
                     bool 授权状态 = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                    string ClientDataTime = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    DateTime clientTime = DateTime.MinValue;
+                    if (DateTime.TryParse(ClientDataTime, out clientTime))
+                    {
+                        DateTime currentTime = DateTime.Now;
+                        TimeSpan timeDifference = currentTime - clientTime;
+                        if (Math.Abs(timeDifference.TotalHours) > 1)
+                        {
+                            // MessageBox.Show("当前时间与客户端时间相差1小时以上，请检查！", "时间差异提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            //当3个以前的客户端时间与服务器时间相差1小时以上，则断开连接
+                        }
+                    }
+
+                    System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
                     //还可以添加锁定等状态
                     PlayerSession.User.心跳数 = 累加数.ObjToInt();

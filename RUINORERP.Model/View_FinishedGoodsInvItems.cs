@@ -34,20 +34,6 @@ namespace RUINORERP.Model
         }
 
     
-        private long? _FG_ID;
-        
-        
-        /// <summary>
-        /// FG_ID
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "FG_ID",ColDesc = "FG_ID")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "FG_ID" ,IsNullable = true,ColumnDescription = "FG_ID" )]
-        [Display(Name = "FG_ID")]
-        public long? FG_ID 
-        { 
-            get{return _FG_ID;}            set{                SetProperty(ref _FG_ID, value);                }
-        }
 
         private string _DeliveryBillNo;
         

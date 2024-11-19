@@ -34,20 +34,7 @@ namespace RUINORERP.Model
         }
 
     
-        private long? _MR_ID;
-        
-        
-        /// <summary>
-        /// MR_ID
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "MR_ID",ColDesc = "MR_ID")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MR_ID" ,IsNullable = true,ColumnDescription = "MR_ID" )]
-        [Display(Name = "MR_ID")]
-        public long? MR_ID 
-        { 
-            get{return _MR_ID;}            set{                SetProperty(ref _MR_ID, value);                }
-        }
+ 
 
         private string _MaterialRequisitionNO;
         
@@ -139,20 +126,7 @@ namespace RUINORERP.Model
             get{return _CustomerVendor_ID;}            set{                SetProperty(ref _CustomerVendor_ID, value);                }
         }
 
-        private long? _MOID;
-        
-        
-        /// <summary>
-        /// 制令单
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "MOID",ColDesc = "制令单")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MOID" ,IsNullable = true,ColumnDescription = "制令单" )]
-        [Display(Name = "制令单")]
-        public long? MOID 
-        { 
-            get{return _MOID;}            set{                SetProperty(ref _MOID, value);                }
-        }
+ 
 
         private long? _ProjectGroup_ID;
         
@@ -319,20 +293,7 @@ namespace RUINORERP.Model
             get{return _DataStatus;}            set{                SetProperty(ref _DataStatus, value);                }
         }
 
-        private long? _Detail_ID;
-        
-        
-        /// <summary>
-        /// 明细
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Detail_ID",ColDesc = "明细")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Detail_ID" ,IsNullable = true,ColumnDescription = "明细" )]
-        [Display(Name = "明细")]
-        public long? Detail_ID 
-        { 
-            get{return _Detail_ID;}            set{                SetProperty(ref _Detail_ID, value);                }
-        }
+ 
 
         private long? _ProdDetailID;
         

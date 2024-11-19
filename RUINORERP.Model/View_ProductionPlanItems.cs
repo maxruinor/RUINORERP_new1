@@ -34,20 +34,7 @@ namespace RUINORERP.Model
         }
 
     
-        private long? _SOrder_ID;
-        
-        
-        /// <summary>
-        /// 销售单号
-        /// </summary>
 
-        [AdvQueryAttribute(ColName = "SOrder_ID",ColDesc = "销售单号")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SOrder_ID" ,IsNullable = true,ColumnDescription = "销售单号" )]
-        [Display(Name = "销售单号")]
-        public long? SOrder_ID 
-        { 
-            get{return _SOrder_ID;}            set{                SetProperty(ref _SOrder_ID, value);                }
-        }
 
         private string _SaleOrderNo;
         

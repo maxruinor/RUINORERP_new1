@@ -126,10 +126,10 @@ namespace RUINORERP.Model
 
         private int _Quantity= ((0));
         /// <summary>
-        /// 退回数量
+        /// 消耗数量
         /// </summary>
-        [AdvQueryAttribute(ColName = "Quantity",ColDesc = "退回数量")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Quantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "退回数量" )]
+        [AdvQueryAttribute(ColName = "Quantity",ColDesc = "消耗数量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Quantity" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "消耗数量")]
         public int Quantity
         { 
             get{return _Quantity;}

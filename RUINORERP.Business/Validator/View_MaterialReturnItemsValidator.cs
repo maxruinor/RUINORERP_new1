@@ -35,7 +35,7 @@ namespace RUINORERP.Business
  
  RuleFor(View_MaterialReturnItems =>View_MaterialReturnItems.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(View_MaterialReturnItems =>View_MaterialReturnItems.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
- RuleFor(View_MaterialReturnItems =>View_MaterialReturnItems.MR_ID).NotEmpty().When(x => x.MR_ID.HasValue);
+ 
  RuleFor(View_MaterialReturnItems =>View_MaterialReturnItems.MaterialRequisitionNO).MaximumLength(25).WithMessage("领料单号:不能超过最大长度,25.");
  RuleFor(View_MaterialReturnItems =>View_MaterialReturnItems.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
  RuleFor(View_MaterialReturnItems =>View_MaterialReturnItems.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);

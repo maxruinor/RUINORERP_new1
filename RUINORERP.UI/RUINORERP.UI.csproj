@@ -1508,6 +1508,48 @@
     <Compile Include="PSI\INV\UCInventoryTracking.Designer.cs">
       <DependentUpon>UCInventoryTracking.cs</DependentUpon>
     </Compile>
+    <Compile Include="PSI\INV\UCProdMergeStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdMergeStatistics.Designer.cs">
+      <DependentUpon>UCProdMergeStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\INV\UCStocktakeStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCStocktakeStatistics.Designer.cs">
+      <DependentUpon>UCStocktakeStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\INV\UCStockTransferStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCStockTransferStatistics.Designer.cs">
+      <DependentUpon>UCStockTransferStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\INV\UCStockInStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCStockInStatistics.Designer.cs">
+      <DependentUpon>UCStockInStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\INV\UCStockOutStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCStockOutStatistics.Designer.cs">
+      <DependentUpon>UCStockOutStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdSplitStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdSplitStatistics.Designer.cs">
+      <DependentUpon>UCProdSplitStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdReturningStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdReturningStatistics.Designer.cs">
+      <DependentUpon>UCProdReturningStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="PSI\INV\UCProdConversion.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2026,6 +2068,18 @@
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\DataParts\DataBoardUnit.cs" />
+    <Compile Include="UserCenter\DataParts\UCDataboard.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCDataboard.Designer.cs">
+      <DependentUpon>UCDataboard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCSale.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCSale.Designer.cs">
+      <DependentUpon>UCSale.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\DataParts\UCMRP.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2691,6 +2745,27 @@
     <EmbeddedResource Include="PSI\INV\UCInventoryTracking.resx">
       <DependentUpon>UCInventoryTracking.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCProdMergeStatistics.resx">
+      <DependentUpon>UCProdMergeStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCStocktakeStatistics.resx">
+      <DependentUpon>UCStocktakeStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCStockTransferStatistics.resx">
+      <DependentUpon>UCStockTransferStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCStockInStatistics.resx">
+      <DependentUpon>UCStockInStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCStockOutStatistics.resx">
+      <DependentUpon>UCStockOutStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCProdSplitStatistics.resx">
+      <DependentUpon>UCProdSplitStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCProdReturningStatistics.resx">
+      <DependentUpon>UCProdReturningStatistics.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCProdConversion.resx">
       <DependentUpon>UCProdConversion.cs</DependentUpon>
     </EmbeddedResource>
@@ -2906,6 +2981,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCSale.resx">
+      <DependentUpon>UCSale.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCMRP.resx">
       <DependentUpon>UCMRP.cs</DependentUpon>

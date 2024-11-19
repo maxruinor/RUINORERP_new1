@@ -202,20 +202,7 @@ namespace RUINORERP.Model
             get{return _Notes;}            set{                SetProperty(ref _Notes, value);                }
         }
 
-        private long? _MR_ID;
-        
-        
-        /// <summary>
-        /// 领料单
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "MR_ID",ColDesc = "领料单")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MR_ID" ,IsNullable = true,ColumnDescription = "领料单" )]
-        [Display(Name = "领料单")]
-        public long? MR_ID 
-        { 
-            get{return _MR_ID;}            set{                SetProperty(ref _MR_ID, value);                }
-        }
+ 
 
         private string _MaterialRequisitionNO;
         

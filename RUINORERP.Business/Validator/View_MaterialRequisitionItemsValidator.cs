@@ -26,13 +26,13 @@ namespace RUINORERP.Business
     {
      public View_MaterialRequisitionItemsValidator() 
      {
-      RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.MR_ID).NotEmpty().When(x => x.MR_ID.HasValue);
+      
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.MaterialRequisitionNO).MaximumLength(25).WithMessage("领料单号:不能超过最大长度,25.");
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.MONO).MaximumLength(50).WithMessage("制令单号:不能超过最大长度,50.");
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
- RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.MOID).NotEmpty().When(x => x.MOID.HasValue);
+ 
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.Location_ID).NotEmpty().When(x => x.Location_ID.HasValue);
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -40,7 +40,7 @@ namespace RUINORERP.Business
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
- RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.Detail_ID).NotEmpty().When(x => x.Detail_ID.HasValue);
+
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
  RuleFor(View_MaterialRequisitionItems =>View_MaterialRequisitionItems.ShouldSendQty).NotEmpty().When(x => x.ShouldSendQty.HasValue);

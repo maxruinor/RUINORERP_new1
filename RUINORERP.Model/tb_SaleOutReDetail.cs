@@ -253,10 +253,10 @@ namespace RUINORERP.Model
 
         private decimal _TaxRate= ((0));
         /// <summary>
-        /// 
+        /// 税率
         /// </summary>
-        [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TaxRate" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "税率")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TaxRate" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "税率")]
         public decimal TaxRate
         { 
             get{return _TaxRate;}
@@ -267,10 +267,10 @@ namespace RUINORERP.Model
 
         private decimal _SubtotalTaxAmount= ((0));
         /// <summary>
-        /// 
+        /// 税额
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalTaxAmount",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalTaxAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "SubtotalTaxAmount",ColDesc = "税额")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalTaxAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "税额")]
         public decimal SubtotalTaxAmount
         { 
             get{return _SubtotalTaxAmount;}

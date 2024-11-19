@@ -296,7 +296,8 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_NeverVisible<tb_SaleOutDetail>(c => c.SaleOutDetail_ID);
             listCols.SetCol_NeverVisible<tb_SaleOutDetail>(c => c.ProdDetailID);
             ControlChildColumnsInvisible(listCols);
-
+            listCols.SetCol_Format<tb_SaleOutDetail>(c => c.Discount, CustomFormatType.PercentFormat);
+            listCols.SetCol_Format<tb_SaleOutDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
 
             /*

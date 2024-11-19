@@ -96,7 +96,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 colNames.TryAdd("Department", "部门");//10
                 colNames.TryAdd("Project", "项目");//11
                 KeyValuePair<string, string>[] array = colNames.ToArray();
-                Array.Sort(array, new CustomComparer());
+                Array.Sort(array, new UCMRPCustomComparer());
 
                 //后面加一个生产请购单，用于跟踪采购来料这块。
                 if (_PURList != null)
@@ -454,7 +454,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
     }
 
-    class CustomComparer : IComparer<KeyValuePair<string, string>>
+    class UCMRPCustomComparer : IComparer<KeyValuePair<string, string>>
     {
         private readonly string[] desiredOrder = { "PPNo", "RequirementDate", "TotalQuantity",
             "TotalCompletedQuantity", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","Department","Project" };

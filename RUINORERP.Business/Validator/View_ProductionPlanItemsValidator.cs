@@ -26,7 +26,7 @@ namespace RUINORERP.Business
     {
      public View_ProductionPlanItemsValidator() 
      {
-      RuleFor(View_ProductionPlanItems =>View_ProductionPlanItems.SOrder_ID).NotEmpty().When(x => x.SOrder_ID.HasValue);
+      
  RuleFor(View_ProductionPlanItems =>View_ProductionPlanItems.SaleOrderNo).MaximumLength(25).WithMessage("销售单号:不能超过最大长度,25.");
  RuleFor(View_ProductionPlanItems =>View_ProductionPlanItems.PPNo).MaximumLength(50).WithMessage("计划单号:不能超过最大长度,50.");
  RuleFor(View_ProductionPlanItems =>View_ProductionPlanItems.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);

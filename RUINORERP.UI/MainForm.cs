@@ -967,6 +967,8 @@ namespace RUINORERP.UI
                 p.Controls.Add(_UCInitControlCenter);
 
                 #endregion
+
+
                 var _UCWorkCenter = Startup.GetFromFac<UCWorkCenter>(); //获取服务Service1
 
                 #region 工作台

@@ -129,8 +129,6 @@ namespace RUINORERP.UI.PSI.PUR
                 _PrintConfig = PrintHelper<View_PurEntryItems>.GetPrintConfig<View_PurEntryItems>();
             }
 
-
-            tb_CustomerVendor customerVendor = new tb_CustomerVendor();
             var dto = QueryDto as View_PurEntryItems;
             if (!dto.CustomerVendor_ID.HasValue)
             {
@@ -139,6 +137,7 @@ namespace RUINORERP.UI.PSI.PUR
             }
             else
             {
+                tb_CustomerVendor customerVendor = new tb_CustomerVendor();
                 customerVendor = await Startup.GetFromFac<tb_CustomerVendorController<tb_CustomerVendor>>().BaseQueryByIdAsync(dto.CustomerVendor_ID.Value);
                 statementByCV.CustomerVendor = customerVendor;
                 statementByCV.PurEntryItems = selectlist;

@@ -122,7 +122,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     }
                 }
 
-
                 #region 显示销售业绩
 
                 tb_RoleInfo CurrentRole = MainForm.Instance.AppContext.CurrentRole;
@@ -155,24 +154,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
                 #endregion
-
-
-                /*
-
-                KryptonTreeGridNodeRow kryptonTreeGridNodeRow1 = kryptonTreeGridNodeRow.Nodes.Add("kkkk");
-
-                //kryptonTreeGridNodeRow1.DataGridView.Rows[1].Cells[1].Value = "啦啦啦";
-
-                kryptonTreeGridNodeRow1.Cells[1].Value = "ooo";
-
-                kryptonTreeGridView1.GridNodes.Add("111");
-
-                kryptonTreeGridView1.GridNodes.Add("111");
-
-                kryptonTreeGridView1.GridNodes.Add("111");
-
-
-                kryptonTreeGridView1.ExpandAll();*/
+              
             }
             catch (Exception ex)
             {

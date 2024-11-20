@@ -2,7 +2,9 @@
 using Krypton.Docking;
 using Krypton.Navigator;
 using Krypton.Toolkit;
+using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
 using RUINORERP.Business.Security;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
@@ -26,24 +28,18 @@ namespace RUINORERP.UI.UserCenter
         {
             InitializeComponent();
         }
-
-       public  KryptonDockingWorkspace ws = null;
+        private const string xmlFileNameWithExtension = "UCWorkbenchesPersistence.xml";
+        public KryptonDockingWorkspace ws = null;
         private NavigatorMode _mode = NavigatorMode.HeaderBarCheckButtonHeaderGroup;
+        KryptonPage todoPage = null;
+        //创建面板并加入
+        KryptonPageCollection Kpages = new KryptonPageCollection();
+
         private void UCWorkbenches_Load(object sender, EventArgs e)
         {
             if (this.DesignMode)
             {
                 return;
-            }
-
-            //月销售，依客戶，依业务
-            tb_RoleInfo CurrentRole = MainForm.Instance.AppContext.CurrentRole;
-            tb_UserInfo CurrentUser = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
-            //先取人，无人再取角色。
-            tb_WorkCenterConfig centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID && c.User_ID == CurrentUser.User_ID);
-            if (centerConfig == null)
-            {
-                centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
 
 
@@ -57,10 +53,15 @@ namespace RUINORERP.UI.UserCenter
             ws = kryptonDockingManager1.ManageWorkspace(kryptonDockableWorkspaceQuery);
             kryptonDockingManager1.ManageControl(kryptonPanelMainBig, ws);
             kryptonDockingManager1.ManageFloating(MainForm.Instance);
-
+            kryptonDockableWorkspaceQuery.WorkspaceCellAdding += kryptonDockableWorkspaceQuery_WorkspaceCellAdding;
+            kryptonDockingManager1.FloatingWindowAdding += KryptonDockingManager1_FloatingWindowAdding;
+            kryptonDockingManager1.FloatingWindowRemoved += KryptonDockingManager1_FloatingWindowRemoved;
+            kryptonDockingManager1.ShowPageContextMenu += KryptonDockingManager1_ShowPageContextMenu;
+            kryptonDockableWorkspaceQuery.DockChanged += KryptonDockableWorkspaceQuery_DockChanged;
             UCTodoList todoList = Startup.GetFromFac<UCTodoList>();
 
-            var todoPage = UIForKryptonHelper.NewPage("代办事项", todoList);
+            todoPage = UIForKryptonHelper.NewPage("待办事项", todoList);
+            todoPage.AllowDrop = false;
 
             // Add initial docking pages
             //kryptonDockingManager1.AddToWorkspace("Workspace", new KryptonPage[] { NewDocument(), NewDocument() });
@@ -68,25 +69,318 @@ namespace RUINORERP.UI.UserCenter
             //kryptonDockingManager1.AddDockspace("Control", DockingEdge.Bottom, new KryptonPage[] { NewInput(), NewPropertyGrid(), NewInput(), NewPropertyGrid() });
 
             //UpdateModeButtons();
-
-            //创建面板并加入
-            KryptonPageCollection Kpages = new KryptonPageCollection();
             if (Kpages.Count == 0)
             {
-                BuilderDataOverview(Kpages, centerConfig);
+                BuilderComponents(Kpages);
+            }
+            LoadLayoutFromXml(Kpages);
+            LoadInitPages();
+
+            for (int i = 0; i < kryptonDockingManager1.Pages.Count(); i++)
+            {
+                kryptonDockingManager1.Pages[i].ClearFlags(KryptonPageFlags.DockingAllowClose);
             }
 
+            InitSettingPages();
+            // kryptonDockingManager1.ShowPageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowPageContextMenu);
+            // kryptonDockingManager1.ShowWorkspacePageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowWorkspacePageContextMenu);
+        }
+
+        private void KryptonDockingManager1_ShowPageContextMenu(object sender, ContextPageEventArgs e)
+        {
+            //不显示右键
+            e.Cancel = true;
+        }
+
+        private void KryptonDockingManager1_FloatingWindowRemoved(object sender, FloatingWindowEventArgs e)
+        {
+          
+        }
+
+        private void KryptonDockingManager1_FloatingWindowAdding(object sender, FloatingWindowEventArgs e)
+        {
+            e.FloatingWindow.CloseBox = false;
+        }
+
+        private void KryptonDockableWorkspaceQuery_DockChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void kryptonDockableWorkspaceQuery_WorkspaceCellAdding(object sender, WorkspaceCellEventArgs e)
+        {
+            e.Cell.Button.CloseButtonAction = CloseButtonAction.HidePage;
+            e.Cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
+            KryptonWorkspaceCell cell =e.Cell;
+            cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
+            cell.CloseAction += Cell_CloseAction;
+            cell.SelectedPageChanged += Cell_SelectedPageChanged;
+            cell.ShowContextMenu += Cell_ShowContextMenu;
+            cell.Dock = DockStyle.Fill;
+            cell.AllowDrop = true;
+            cell.AllowPageDrag = true;
+        }
+
+
+        /// <summary>
+        /// 数据概览
+        /// </summary>
+        private void BuilderComponents(KryptonPageCollection Kpages)
+        {
+            //先取人，无人再取角色。
+            tb_RoleInfo CurrentRole = MainForm.Instance.AppContext.CurrentRole;
+            tb_UserInfo CurrentUser = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
+
+            tb_WorkCenterConfig centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID && c.User_ID == CurrentUser.User_ID);
+            if (centerConfig == null)
+            {
+                centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
+            }
+            if (centerConfig != null)
+            {
+                List<string> DataOverviewItems = centerConfig.DataOverview.Split(',').ToList();
+                foreach (var item in DataOverviewItems)
+                {
+                    if (item.IsNullOrEmpty())
+                    {
+                        continue;
+                    }
+                    数据概览 DataOverview = (数据概览)Enum.Parse(typeof(数据概览), item);
+                    switch (DataOverview)
+                    {
+                        case 数据概览.销售单元:
+                            UCSaleCell uCSaleCell = new UCSaleCell();
+                            KryptonPage pSalecell = UIForKryptonHelper.NewPage("销售单元", uCSaleCell);
+                            //pSalecell.ClearFlags(KryptonPageFlags.DockingAllowClose);
+                            //pSalecell.ClearFlags(KryptonPageFlags.All);
+
+                            Kpages.Add(pSalecell);
+                            break;
+                        case 数据概览.采购单元:
+                            UCPURCell uCPURCell = new UCPURCell();
+                            KryptonPage pPURcell = UIForKryptonHelper.NewPage("采购单元", uCPURCell);
+                            // pPURcell.ClearFlags(KryptonPageFlags.All);
+                            //  pPURcell.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked | KryptonPageFlags.DockingAllowClose);
+                            Kpages.Add(pPURcell);
+                            break;
+                        case 数据概览.库存单元:
+                            UCStockCell uCStockCell = new UCStockCell();
+                            KryptonPage pStockcell = UIForKryptonHelper.NewPage("库存单元", uCStockCell);
+                            // pStockcell.ClearFlags(KryptonPageFlags.All);
+                            Kpages.Add(pStockcell);
+                            break;
+                        case 数据概览.生产单元:
+                            UCMRPCell uCProduceCell = new UCMRPCell();
+                            KryptonPage pProducecell = UIForKryptonHelper.NewPage("生产单元", uCProduceCell);
+                            // pProducecell.ClearFlags(KryptonPageFlags.All);
+                            Kpages.Add(pProducecell);
+
+                            break;
+                        default:
+                            break;
+                    }
+
+                }
+            }
+        }
+
+
+
+
+
+        private void btnSaveLayout_Click(object sender, EventArgs e)
+        {
+            SaveLayoutToXml();
+        }
+
+
+
+        private void InitSettingPages()
+        {
+            // Setup docking functionality
+            kryptonDockableWorkspaceQuery.AllowDrop = true;
+            kryptonDockableWorkspaceQuery.AllowPageDrag = true;
+            kryptonDockableWorkspaceQuery.Dock = DockStyle.Fill;
+            // Set correct initial ribbon palette buttons
+            //UpdatePaletteButtons();
+            foreach (var item in Kpages)
+            {
+                KryptonWorkspaceCell cell = kryptonDockableWorkspaceQuery.CellForPage(item);
+                cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
+                cell.CloseAction += Cell_CloseAction;
+                cell.SelectedPageChanged += Cell_SelectedPageChanged;
+                cell.ShowContextMenu += Cell_ShowContextMenu;
+                cell.Dock = DockStyle.Fill;
+                cell.AllowDrop = true;
+                cell.AllowPageDrag = true;
+            }
+        }
+        #region cell
+        private void Cell_ShowContextMenu(object sender, ShowContextMenuArgs e)
+        {
+            //KryptonWorkspaceCell kwc = sender as KryptonWorkspaceCell;
+            //if (kwc.SelectedPage == null)
+            //{
+            //    return;
+            //}
+            //不显示右键
+            e.Cancel = true;
+
+            /*
+             显示并自定义
+            // Yes we want to show a context menu
+            e.Cancel = false;
+
+            // Provide the navigator specific menu
+            e.KryptonContextMenu = kcmNavigator;
+
+            // Only enable the appropriate options
+            kcmFirst.Enabled = (kryptonNavigator1.SelectedIndex > 0);
+            kcmPrevious.Enabled = (kryptonNavigator1.SelectedIndex > 0);
+            kcmNext.Enabled = (kryptonNavigator1.SelectedIndex < (kryptonNavigator1.Pages.Count - 1));
+            kcmLast.Enabled = (kryptonNavigator1.SelectedIndex < (kryptonNavigator1.Pages.Count - 1));
+             */
+        }
+        private void Cell_SelectedPageChanged(object sender, EventArgs e)
+        {
+            KryptonWorkspaceCell kwc = sender as KryptonWorkspaceCell;
+            if (kwc.SelectedPage == null)
+            {
+                return;
+            }
+            kwc.Button.CloseButtonDisplay = ButtonDisplay.Hide;
+
+            //选到了第一个。或其他全关了
+            //kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.ShowDisabled;
+        }
+        private void Cell_CloseAction(object sender, CloseActionEventArgs e)
+        {
+            //关闭事件
+            e.Action = CloseButtonAction.HidePage;
+        }
+
+
+
+
+        #endregion
+
+
+        #region 布局
+        private void SaveLayoutToXml()
+        {
+            try
+            {
+                //保存配置
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Encoding = new UTF8Encoding(false);
+                settings.NewLineChars = Environment.NewLine;
+                settings.Indent = true;
+                string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, xmlFileNameWithExtension);
+                if (ws != null)
+                {
+                    using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
+                    {
+                        ws.SaveElementToXml(xmlWriter);
+                        xmlWriter.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+
+            }
+        }
+
+        private async void SaveAsDefaultLayoutToDb()
+        {
+            try
+            {
+                //保存配置
+                XmlWriterSettings settings = new XmlWriterSettings();
+                settings.Encoding = new UTF8Encoding(false);
+                settings.NewLineChars = Environment.NewLine;
+                settings.Indent = true;
+                string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, xmlFileNameWithExtension);
+                if (ws != null)
+                {
+                    using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
+                    {
+                        ws.SaveElementToXml(xmlWriter);
+                        xmlWriter.Close();
+                    }
+                }
+
+                //保存超级用户的布局为默认布局
+                if (MainForm.Instance.AppContext.IsSuperUser && System.IO.File.Exists(xmlfilepath))
+                {
+                    //加载XML文件
+                    XmlDocument xmldoc = new XmlDocument();
+                    xmldoc.Load(xmlfilepath);
+                    //获取XML字符串
+                    string xmlStr = xmldoc.InnerXml;
+                    //字符串转XML
+                    //xmldoc.LoadXml(xmlStr);
+                    MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout = xmlStr;
+                    int affcet = await MainForm.Instance.AppContext.Db.Storageable<tb_User_Role>(MainForm.Instance.AppContext.CurrentUser_Role).ExecuteCommandAsync();
+                    if (affcet > 0)
+                    {
+                        MainForm.Instance.PrintInfoLog("工作台布局保存成功");
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError("工作台布局保存异常", ex);
+            }
+        }
+
+        private void LoadDefaultLayoutFromDb(KryptonPageCollection Kpages)
+        {
+            //没有个性化文件时用默认的
+            if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout))
+            {
+                #region load
+                //加载XML文件
+                XmlDocument xmldoc = new XmlDocument();
+                //获取XML字符串
+                string xmlStr = xmldoc.InnerXml;
+                //字符串转XML
+                xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout);
+
+                XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
+                XmlReaderSettings settings = new XmlReaderSettings();
+                using (XmlReader reader = XmlReader.Create(nodeReader, settings))
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
+                        {
+                            //加载停靠信息
+                            ws.LoadElementFromXml(reader, Kpages);
+                        }
+                    }
+
+                }
+                #endregion
+            }
+        }
+
+
+        private void LoadLayoutFromXml(KryptonPageCollection Kpages)
+        {
             //加载布局
             try
             {
+                string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, xmlFileNameWithExtension);
                 //Location of XML file
-                string xmlFilePath = "UCWorkbenchesPersistence.xml";
-                if (System.IO.File.Exists(xmlFilePath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
+                if (System.IO.File.Exists(xmlfilepath))
                 {
                     #region load
                     // Create the XmlNodeReader object.
                     XmlDocument doc = new XmlDocument();
-                    doc.Load(xmlFilePath);
+                    doc.Load(xmlfilepath);
                     XmlNodeReader nodeReader = new XmlNodeReader(doc);
                     // Set the validation settings.
                     XmlReaderSettings settings = new XmlReaderSettings();
@@ -110,6 +404,7 @@ namespace RUINORERP.UI.UserCenter
                     }
                     #endregion
                 }
+                /*
                 else
                 {
                     //没有个性化文件时用默认的
@@ -140,13 +435,39 @@ namespace RUINORERP.UI.UserCenter
                         #endregion
                     }
                 }
+                */
             }
             catch (Exception ex)
             {
                 MainForm.Instance.uclog.AddLog("加载查询页布局配置文件出错。" + ex.Message, Global.UILogType.错误);
                 MainForm.Instance.logger.LogError(ex, "加载查询页布局配置文件出错。");
             }
+        }
 
+        #endregion
+
+        private void btnReload_Click(object sender, EventArgs e)
+        {
+            //KryptonPage[] pages = kryptonDockingManager1.PagesFloating;
+            //kryptonDockingManager1.RemovePages(pages, true);
+            //kryptonDockingManager1.ClearStoredPages(pages);
+            //kryptonDockingManager1.Clear();
+            //kryptonDockingManager1.ClearAllStoredPages();
+            //Kpages.Clear();
+         
+            todoPage.Visible = true;
+            //BuilderComponents(Kpages);
+            LoadInitPages();
+            foreach (KryptonPage page in Kpages)
+            {
+                //page.ClearFlags(KryptonPageFlags.DockingAllowClose);
+                page.Visible = true;
+            }
+        }
+
+
+        private void LoadInitPages()
+        {
             //如果加载过的停靠信息中不正常。就手动初始化
             foreach (KryptonPage page in Kpages)
             {
@@ -166,110 +487,42 @@ namespace RUINORERP.UI.UserCenter
                         case "单据信息":
 
                             kryptonDockingManager1.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "生产").ToArray());
-
-
                             kryptonDockingManager1.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "单据信息").ToArray());
                             break;
-                        case "关联信息":
-
-                            kryptonDockingManager1.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "关联信息").ToArray());
-
-                            break;
                         default:
+                            //kryptonDockingManager1.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == page.UniqueName).ToArray());
+
                             kryptonDockingManager1.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == page.UniqueName).ToArray());
+
+
                             break;
 
                     }
                 }
             }
-
-
-            kryptonDockingManager1.ShowPageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowPageContextMenu);
-            kryptonDockingManager1.ShowWorkspacePageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowWorkspacePageContextMenu);
         }
 
-
-
-        private void kryptonDockingManager_ShowPageContextMenu(object sender, ContextPageEventArgs e)
+        private void toolStripbtnProperty_Click(object sender, EventArgs e)
         {
-            // Create a set of custom menu items
-            KryptonContextMenuItems customItems = new KryptonContextMenuItems();
-            KryptonContextMenuSeparator customSeparator = new KryptonContextMenuSeparator();
-            KryptonContextMenuItem customItem1 = new KryptonContextMenuItem("Custom Item 1擦22", new EventHandler(OnCustomMenuItem));
-            KryptonContextMenuItem customItem2 = new KryptonContextMenuItem("Custom Item 1擦2", new EventHandler(OnCustomMenuItem));
-            customItem1.Tag = e.Page;
-            customItem2.Tag = e.Page;
-            customItems.Items.AddRange(new KryptonContextMenuItemBase[] { customSeparator, customItem1, customItem2 });
 
-            // Add set of custom items into the provided menu
-            e.KryptonContextMenu.Items.Add(customItems);
         }
 
-        private void kryptonDockingManager_ShowWorkspacePageContextMenu(object sender, ContextPageEventArgs e)
+        private void btnLayout_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
-            // Create a set of custom menu items
-            KryptonContextMenuItems customItems = new KryptonContextMenuItems();
-            KryptonContextMenuSeparator customSeparator = new KryptonContextMenuSeparator();
-            KryptonContextMenuItem customItem1 = new KryptonContextMenuItem("Custom Item 1擦3", new EventHandler(OnCustomMenuItem));
-            KryptonContextMenuItem customItem2 = new KryptonContextMenuItem("Custom Item 1擦4", new EventHandler(OnCustomMenuItem));
-            customItem1.Tag = e.Page;
-            customItem2.Tag = e.Page;
-            customItems.Items.AddRange(new KryptonContextMenuItemBase[] { customSeparator, customItem1, customItem2 });
-
-            // Add set of custom items into the provided menu
-            e.KryptonContextMenu.Items.Add(customItems);
-        }
-
-        private void OnCustomMenuItem(object sender, EventArgs e)
-        {
-            KryptonContextMenuItem menuItem = (KryptonContextMenuItem)sender;
-            KryptonPage page = (KryptonPage)menuItem.Tag;
-            MessageBox.Show("Clicked menu option '" + menuItem.Text + "' for the page '" + page.Text + "'.", "Page Context Menu");
-        }
-
-
-        /// <summary>
-        /// 数据概览
-        /// </summary>
-        private void BuilderDataOverview(KryptonPageCollection Kpages, tb_WorkCenterConfig centerConfig)
-        {
-            if (centerConfig != null)
+            switch (e.ClickedItem.Text)
             {
-                List<string> DataOverviewItems = centerConfig.DataOverview.Split(',').ToList();
-                foreach (var item in DataOverviewItems)
-                {
-                    if (item.IsNullOrEmpty())
-                    {
-                        continue;
-                    }
-                    数据概览 DataOverview = (数据概览)Enum.Parse(typeof(数据概览), item);
-                    switch (DataOverview)
-                    {
-                        case 数据概览.销售单元:
-                            UCSaleCell uCSaleCell = new UCSaleCell();
-                            Kpages.Add(UIForKryptonHelper.NewPage("销售单元", uCSaleCell));
-                            break;
-                        case 数据概览.采购单元:
-                            UCPURCell uCPURCell = new UCPURCell();
-                            Kpages.Add(UIForKryptonHelper.NewPage("采购单元", uCPURCell));
-                            break;
-                        case 数据概览.库存单元:
-                            UCStockCell uCStockCell = new UCStockCell();
-                            Kpages.Add(UIForKryptonHelper.NewPage("库存单元", uCStockCell));
-                            break;
-                        case 数据概览.生产单元:
-                            UCMRPCell uCProduceCell = new UCMRPCell();
-                            Kpages.Add(UIForKryptonHelper.NewPage("生产单元", uCProduceCell));
-                            break;
-                        default:
-                            break;
-                    }
-
-                }
+                case "网格分布":
+                    kryptonDockableWorkspaceQuery.ApplyGridPages();
+                    break;
+                case "纵向分布":
+                    kryptonDockableWorkspaceQuery.ApplyGridPages(false, Orientation.Vertical, 1);
+                    break;
+                case "横向分布":
+                    kryptonDockableWorkspaceQuery.ApplyGridPages(false, Orientation.Horizontal, 1);
+                    break;
+                default:
+                    break;
             }
-
-
-
         }
     }
 }

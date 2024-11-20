@@ -84,14 +84,8 @@ namespace RUINORERP.UI
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.statusTimer = new System.Windows.Forms.Timer(this.components);
-            this.kcmUCworkbenches = new Krypton.Toolkit.KryptonContextMenu();
             this.kryptonContextMenuItems1 = new Krypton.Toolkit.KryptonContextMenuItems();
             this.kryptonContextMenuItem1 = new Krypton.Toolkit.KryptonContextMenuItem();
-            this.kryptonContextMenuItems2 = new Krypton.Toolkit.KryptonContextMenuItems();
-            this.kryptonContextMenuItem2 = new Krypton.Toolkit.KryptonContextMenuItem();
-            this.kryptonContextMenuItem3 = new Krypton.Toolkit.KryptonContextMenuItem();
-            this.kryptonContextMenuItem4 = new Krypton.Toolkit.KryptonContextMenuItem();
-            this.kcmdSaveAsDefaultLayout = new Krypton.Toolkit.KryptonCommand();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             this.kryptonPage5.SuspendLayout();
@@ -636,39 +630,9 @@ namespace RUINORERP.UI
             this.statusTimer.Interval = 5000;
             this.statusTimer.Tick += new System.EventHandler(this.statusTimer_Tick);
             // 
-            // kcmUCworkbenches
-            // 
-            this.kcmUCworkbenches.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
-            this.kryptonContextMenuItems2});
-            // 
             // kryptonContextMenuItem1
             // 
             this.kryptonContextMenuItem1.Text = "Menu Item";
-            // 
-            // kryptonContextMenuItems2
-            // 
-            this.kryptonContextMenuItems2.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
-            this.kryptonContextMenuItem2,
-            this.kryptonContextMenuItem3,
-            this.kryptonContextMenuItem4});
-            // 
-            // kryptonContextMenuItem2
-            // 
-            this.kryptonContextMenuItem2.KryptonCommand = this.kcmdSaveAsDefaultLayout;
-            this.kryptonContextMenuItem2.Text = "保存为默认布局";
-            // 
-            // kryptonContextMenuItem3
-            // 
-            this.kryptonContextMenuItem3.Text = "恢复默认布局";
-            // 
-            // kryptonContextMenuItem4
-            // 
-            this.kryptonContextMenuItem4.Text = "重新加载单元组件";
-            // 
-            // kcmdSaveAsDefaultLayout
-            // 
-            this.kcmdSaveAsDefaultLayout.Text = "SaveAsDefaultLayout";
-            this.kcmdSaveAsDefaultLayout.Execute += new System.EventHandler(this.kcmdSaveAsDefaultLayout_Execute);
             // 
             // MainForm
             // 
@@ -770,14 +734,8 @@ namespace RUINORERP.UI
         private System.Windows.Forms.ToolStripButton btntsbRefresh;
         private System.Windows.Forms.ToolStripStatusLabel lblServerStatus;
         public System.Windows.Forms.ToolStripStatusLabel lblServerInfo;
-        private KryptonContextMenu kcmUCworkbenches;
-        private KryptonContextMenuItems kryptonContextMenuItems2;
-        private KryptonContextMenuItem kryptonContextMenuItem2;
-        private KryptonContextMenuItem kryptonContextMenuItem3;
-        private KryptonContextMenuItem kryptonContextMenuItem4;
         private KryptonContextMenuItems kryptonContextMenuItems1;
         private KryptonContextMenuItem kryptonContextMenuItem1;
-        private KryptonCommand kcmdSaveAsDefaultLayout;
     }
 }
 

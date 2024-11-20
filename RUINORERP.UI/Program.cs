@@ -501,11 +501,13 @@ namespace RUINORERP.UI
                         #endregion
 
 
-                        var form1 = Startup.ServiceProvider.GetService<MainForm>();
-                        //var form1 = Startup.GetFromFac<MainForm>();
+                         var form1 = Startup.ServiceProvider.GetService<MainForm>();
+                         Application.Run(form1);
+                        
                         //ILogger<MainForm> logger = null;
                         //MainForm form1 = new MainForm(logger);
-                        Application.Run(form1);
+                        //Application.Run(form1);
+
                     }
                     catch (Exception ex)
                     {

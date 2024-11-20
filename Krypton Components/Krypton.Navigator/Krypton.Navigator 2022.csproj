@@ -30,7 +30,7 @@
         <AssemblyName>Krypton.Navigator</AssemblyName>
         <!-- Set the CheckEolTargetFramework property to false to fix the warning -->
         <CheckEolTargetFramework>false</CheckEolTargetFramework>
-        <SignAssembly>False</SignAssembly>
+        <SignAssembly>True</SignAssembly>
         <AssemblyOriginatorKeyFile>StrongKrypton.snk</AssemblyOriginatorKeyFile>
         <ApplicationIcon>Krypton.ico</ApplicationIcon>
         <DelaySign>false</DelaySign>

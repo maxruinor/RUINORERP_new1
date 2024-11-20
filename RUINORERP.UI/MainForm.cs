@@ -956,11 +956,11 @@ namespace RUINORERP.UI
 
                 #region 创建初始页
 
-                KryptonPage p = new KryptonPage();
-                p.Text = "控制中心";
-                p.TextTitle = "控制中心";
-                p.TextDescription = "控制中心";
-                p.UniqueName = "控制中心";
+                KryptonPage pageControlCenter = new KryptonPage();
+                pageControlCenter.Text = "控制中心";
+                pageControlCenter.TextTitle = "控制中心";
+                pageControlCenter.TextDescription = "控制中心";
+                pageControlCenter.UniqueName = "控制中心";
                 //  p.ImageSmall = imageListSmall.Images[image];
                 // Form2 frm = new Form2();
                 // frm.Controls.Add(_UCInitControlCenter);
@@ -968,11 +968,12 @@ namespace RUINORERP.UI
                 // Add the control for display inside the page
                 _UCInitControlCenter.Dock = DockStyle.Fill;
                 //_UCInitControlCenter.TopLevel = false;
-                p.Controls.Add(_UCInitControlCenter);
+                pageControlCenter.Controls.Add(_UCInitControlCenter);
 
                 #endregion
 
                 _UCWorkbenches = Startup.GetFromFac<UCWorkbenches>(); //获取服务Service1
+                /*
                 #region 工作台
 
                 KryptonPage pWorkbenches = new KryptonPage();
@@ -990,49 +991,50 @@ namespace RUINORERP.UI
                 pWorkbenches.Controls.Add(_UCWorkbenches);
 
                 #endregion
-
-                var _UCWorkCenter = Startup.GetFromFac<UCWorkCenter>(); //获取服务Service1
+                */
+                
+                //var _UCWorkCenter = Startup.GetFromFac<UCWorkCenter>(); //获取服务Service1
 
                 #region 工作台
 
-                KryptonPage pUsercenter = new KryptonPage();
-                pUsercenter.Text = "工作台";
-                pUsercenter.TextTitle = "工作台";
-                pUsercenter.TextDescription = "工作台";
-                pUsercenter.UniqueName = "工作台";
+                KryptonPage pageWorkbenches = new KryptonPage();
+                pageWorkbenches.Text = "工作台";
+                pageWorkbenches.TextTitle = "工作台";
+                pageWorkbenches.TextDescription = "工作台";
+                pageWorkbenches.UniqueName = "工作台";
                 //  p.ImageSmall = imageListSmall.Images[image];
                 // Form2 frm = new Form2();
                 // frm.Controls.Add(_UCInitControlCenter);
                 // frm.Show();
                 // Add the control for display inside the page
-                _UCWorkCenter.Dock = DockStyle.Fill;
-                pUsercenter.Controls.Add(_UCWorkCenter);
+                _UCWorkbenches.Dock = DockStyle.Fill;
+                pageWorkbenches.Controls.Add(_UCWorkbenches);
 
                 #endregion
 
-                KryptonPage page = p;
+
                 //KryptonPage page = UI.Common.ControlHelper.NewPage("菜单初始化", 1, _MenuInit);
-                page.AllowDrop = false;
-                page.ClearFlags(KryptonPageFlags.All);
+                pageControlCenter.AllowDrop = false;
+                pageControlCenter.ClearFlags(KryptonPageFlags.All);
 
                 /*
                 page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden |
                            KryptonPageFlags.DockingAllowDocked |
                            KryptonPageFlags.DockingAllowClose);*/
-                cell.Pages.Add(page);
+                cell.Pages.Add(pageControlCenter);
 
-                pUsercenter.AllowDrop = false;
-                pUsercenter.ClearFlags(KryptonPageFlags.All);
-                cell.Pages.Add(pUsercenter);
+                pageWorkbenches.AllowDrop = false;
+                pageWorkbenches.ClearFlags(KryptonPageFlags.All);
+                cell.Pages.Add(pageWorkbenches);
 
-                pWorkbenches.AllowDrop = false;
-                pWorkbenches.ClearFlags(KryptonPageFlags.All);
+                //pWorkbenches.AllowDrop = false;
+                //pWorkbenches.ClearFlags(KryptonPageFlags.All);
 
-                cell.Pages.Add(pWorkbenches);
+                //cell.Pages.Add(pWorkbenches);
             }
 
-            cell.SelectedPage = cell.Pages.Where(x => x.Text == "我的工作台").FirstOrDefault();
-            kryptonDockableWorkspace1.ActivePage = kryptonDockableWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == "我的工作台");
+            cell.SelectedPage = cell.Pages.Where(x => x.Text == "工作台").FirstOrDefault();
+            kryptonDockableWorkspace1.ActivePage = kryptonDockableWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == "工作台");
         }
 
         private void Cell_ShowContextMenu(object sender, ShowContextMenuArgs e)
@@ -1044,28 +1046,14 @@ namespace RUINORERP.UI
             }
             if (kwc.SelectedPage.TextTitle == "控制中心"
                 || kwc.SelectedPage.TextTitle == "工作台"
+             
                 )
             {
                 //不显示右键
                 e.Cancel = true;
             }
 
-            if (kwc.SelectedPage.TextTitle == "我的工作台")
-            {
-                //显示并自定义
-                // Yes we want to show a context menu
-                e.Cancel = false;
-
-                // Provide the navigator specific menu
-                e.KryptonContextMenu = kcmUCworkbenches;
-                
-
-                // Only enable the appropriate options
-                //kcmFirst.Enabled = (kryptonNavigator1.SelectedIndex > 0);
-                //kcmPrevious.Enabled = (kryptonNavigator1.SelectedIndex > 0);
-                //kcmNext.Enabled = (kryptonNavigator1.SelectedIndex < (kryptonNavigator1.Pages.Count - 1));
-                //kcmLast.Enabled = (kryptonNavigator1.SelectedIndex < (kryptonNavigator1.Pages.Count - 1));
-            }
+           
 
             /*
              显示并自定义
@@ -1091,7 +1079,10 @@ namespace RUINORERP.UI
             {
                 return;
             }
-            if (kwc.SelectedPage.TextTitle == "控制中心" || kwc.SelectedPage.TextTitle == "工作台")
+            if (kwc.SelectedPage.TextTitle == "控制中心" 
+                || kwc.SelectedPage.TextTitle == "工作台"
+                
+                )
             {
                 kwc.Button.CloseButtonDisplay = ButtonDisplay.Hide;
             }
@@ -1108,6 +1099,7 @@ namespace RUINORERP.UI
         private void Cell_CloseAction(object sender, CloseActionEventArgs e)
         {
             //关闭事件
+            //e.Action = CloseButtonAction.RemovePage;
         }
 
 
@@ -2328,49 +2320,6 @@ namespace RUINORERP.UI
             lblServerInfo.Visible = false;
         }
 
-        private async void kcmdSaveAsDefaultLayout_Execute(object sender, EventArgs e)
-        {
-            try
-            {
-                //保存配置
-                XmlWriterSettings settings = new XmlWriterSettings();
-                settings.Encoding = new UTF8Encoding(false);
-                settings.NewLineChars = Environment.NewLine;
-                settings.Indent = true;
-                string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, "UCWorkbenchesPersistence");
-                if (_UCWorkbenches.ws != null)
-                {
-                    using XmlWriter xmlWriter = XmlWriter.Create(xmlfilepath, settings);
-                    {
-                        _UCWorkbenches.ws.SaveElementToXml(xmlWriter);
-                        xmlWriter.Close();
-                    }
-                }
-
-                //保存超级用户的布局为默认布局
-                if (MainForm.Instance.AppContext.IsSuperUser && System.IO.File.Exists(xmlfilepath))
-                {
-                    //加载XML文件
-                    XmlDocument xmldoc = new XmlDocument();
-                    xmldoc.Load(xmlfilepath);
-                    //获取XML字符串
-                    string xmlStr = xmldoc.InnerXml;
-                    //字符串转XML
-                    //xmldoc.LoadXml(xmlStr);
-                    AppContext.CurrentUser_Role.WorkDefaultLayout = xmlStr;
-                    int affcet = await MainForm.Instance.AppContext.Db.Storageable<tb_User_Role>(AppContext.CurrentUser_Role).ExecuteCommandAsync();
-                    if (affcet > 0)
-                    {
-                        PrintInfoLog("工作台布局保存成功");
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-
-
-            }
-        }
+        
     }
 }

@@ -165,26 +165,6 @@
     <Reference Include="K4os.Hash.xxHash, Version=1.0.8.0, Culture=neutral, PublicKeyToken=32cd54395057cec3, processorArchitecture=MSIL">
       <HintPath>..\packages\K4os.Hash.xxHash.1.0.8\lib\net462\K4os.Hash.xxHash.dll</HintPath>
     </Reference>
-    <Reference Include="Krypton.Docking, Version=80.24.7.190, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\dll\Krypton.Docking.dll</HintPath>
-    </Reference>
-    <Reference Include="Krypton.Navigator, Version=80.24.7.190, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\dll\Krypton.Navigator.dll</HintPath>
-    </Reference>
-    <Reference Include="Krypton.Ribbon, Version=80.24.7.190, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\dll\Krypton.Ribbon.dll</HintPath>
-    </Reference>
-    <Reference Include="Krypton.Toolkit, Version=80.24.11.320, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\dll\Krypton.Toolkit.dll</HintPath>
-    </Reference>
-    <Reference Include="Krypton.Workspace, Version=80.24.7.190, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\dll\Krypton.Workspace.dll</HintPath>
-    </Reference>
     <Reference Include="log4net, Version=2.0.17.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.17\lib\net45\log4net.dll</HintPath>
     </Reference>
@@ -3152,6 +3132,13 @@
     <None Include="ResourceFile\info.ico" />
     <None Include="ResourceFile\ServerStatus.png" />
     <None Include="ResourceFile\6372970_about_detail_faq_help_info_icon.png" />
+    <None Include="ResourceFile\Layout.png" />
+    <None Include="ResourceFile\col.png" />
+    <None Include="ResourceFile\row.png" />
+    <None Include="ResourceFile\grid.png" />
+    <None Include="ResourceFile\Save_ok.png" />
+    <None Include="ResourceFile\SaveLayout.png" />
+    <None Include="ResourceFile\reset.png" />
     <Content Include="ruinor.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3184,6 +3171,26 @@
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">
       <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
       <Name>HLH.Lib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Krypton Components\Krypton.Docking\Krypton.Docking 2022.csproj">
+      <Project>{125fce9b-8cc7-457e-924a-f86790e0609e}</Project>
+      <Name>Krypton.Docking 2022</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Krypton Components\Krypton.Navigator\Krypton.Navigator 2022.csproj">
+      <Project>{0E641AF7-5CFB-4B7D-8619-84DD79235EBA}</Project>
+      <Name>Krypton.Navigator 2022</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Krypton Components\Krypton.Ribbon\Krypton.Ribbon 2022.csproj">
+      <Project>{1e5a115a-2c68-4c89-b9bb-c49bc44e0da8}</Project>
+      <Name>Krypton.Ribbon 2022</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Krypton Components\Krypton.Toolkit\Krypton.Toolkit 2022.csproj">
+      <Project>{626b796f-f3a0-40b7-8fc2-38804726c1f5}</Project>
+      <Name>Krypton.Toolkit 2022</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Krypton Components\Krypton.Workspace\Krypton.Workspace 2022.csproj">
+      <Project>{b7f96102-cc71-424c-92f6-cbe090792414}</Project>
+      <Name>Krypton.Workspace 2022</Name>
     </ProjectReference>
     <ProjectReference Include="..\Krypton Toolkit\Krypton.Toolkit.Suite.Extended.Outlook.Grid\Krypton.Toolkit.Suite.Extended.Outlook.Grid 2022.csproj">
       <Project>{207b6d11-38d7-43e6-a381-0e8203cb5721}</Project>
@@ -3248,6 +3255,10 @@
     <ProjectReference Include="..\RUINORERP.Repository\RUINORERP.Repository.csproj">
       <Project>{21779b45-7fc1-432e-b098-4637d67a6e3a}</Project>
       <Name>RUINORERP.Repository</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.SecurityTool\RUINORERP.SecurityTool.csproj">
+      <Project>{fd780427-a7c6-4f2e-99f4-457e9b5bdc02}</Project>
+      <Name>RUINORERP.SecurityTool</Name>
     </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Server\ERPInstruction\TransInstruction.csproj">
       <Project>{47792353-943e-46a7-8f7b-7cdbf31f8d08}</Project>

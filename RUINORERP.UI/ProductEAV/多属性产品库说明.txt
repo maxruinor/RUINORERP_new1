@@ -18,7 +18,7 @@ WHERE dd.Prod_Detail_ID=20
 
 ProductNo:为中间库生成，以后分发可以将这个为标准。
 变体也是这个，这样多个平台 重复铺货。管理库存时以这个为准
-添加一个字段为sku码，可以是参考 引用 其它平台的ID->SKU
+添加一个字段为sku码，可以是参考 引用 其他平台的ID->SKU
 
 SELECT distinct a.ProductNo,c.SKU from tb_Prod_Base a LEFT JOIN tb_Prod_Attr_Relation b on a.Prod_Base_ID=b.Prod_Base_ID
 

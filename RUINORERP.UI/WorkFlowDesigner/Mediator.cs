@@ -996,7 +996,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
                             }
                             else
                             {
-                                //,但是如果这个对象还有其它线指向他，则只将这个线发出端的NextStepId置空
+                                //,但是如果这个对象还有其他线指向他，则只将这个线发出端的NextStepId置空
                                 if (e.From.BelongsTo.NodeStepPropertyValue is BaseStepBody UpLevelNodeStep)
                                 {
                                     UpLevelNodeStep.NextStepId = null;
@@ -1007,7 +1007,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
                         if (branchList.Count == TargetList.Count && branchList.Count > 1)
                         {
                             #region 有分支时 减掉一条线呢？
-                            //判断对其它节点和条件的影响，影响：NextStepId和SelectNextStep
+                            //判断对其他节点和条件的影响，影响：NextStepId和SelectNextStep
                             //找到当前线的发布节点的所有的点。
                             for (int i = 0; i < TargetList.Count; i++)
                             {

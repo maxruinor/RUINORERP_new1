@@ -600,7 +600,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 在已经查询出来的数据中，排除主键，获取其它列重复的记录
+        /// 在已经查询出来的数据中，排除主键，获取其他列重复的记录
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>

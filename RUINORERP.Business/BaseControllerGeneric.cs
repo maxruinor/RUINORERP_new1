@@ -611,14 +611,14 @@ namespace RUINORERP.Business
 
             }
 
-            //这个逻辑是为了 基础资料查询时，可用 启用不生效。其它生效
+            //这个逻辑是为了 基础资料查询时，可用 启用不生效。其他生效
             if (QueryConditionFilter.FilterLimitExpressions.Count > 0)
             {
-                //这个也可以！  其它情况可能还需要调试
+                //这个也可以！  其他情况可能还需要调试
                 //Expression<Func<T, bool>> expression1 = ExpressionUtils.RemoveConditions(QueryConditionFilter.GetFilterExpression<T>(), "Is_enabled", "Is_available");
 
                 //要移除的是  Is_available == false && Is_enabled == false ,可用启用条件是包含在结果中，不用处理。
-                //目标就是要全部查出来，然后再过滤（其它条件，如删除和客户供应商标记）
+                //目标就是要全部查出来，然后再过滤（其他条件，如删除和客户供应商标记）
                 Expression<Func<T, bool>> expression = ExpressionUtils.RemoveEqualityConditions(QueryConditionFilter.GetFilterExpression<T>(), "Is_enabled", "Is_available");
 
 

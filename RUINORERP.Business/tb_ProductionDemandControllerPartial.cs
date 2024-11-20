@@ -366,7 +366,7 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 如果后期其它 测试通过 。这个可以删除
+        /// 如果后期其他 测试通过 。这个可以删除
         /// </summary>
         /// <param name="_bomIDs"></param>
         /// <param name="locationID"></param>

@@ -58,6 +58,9 @@ namespace RUINORERP.UI.UserCenter
             kryptonDockingManager1.FloatingWindowRemoved += KryptonDockingManager1_FloatingWindowRemoved;
             kryptonDockingManager1.ShowPageContextMenu += KryptonDockingManager1_ShowPageContextMenu;
             kryptonDockableWorkspaceQuery.DockChanged += KryptonDockableWorkspaceQuery_DockChanged;
+            kryptonDockableWorkspaceQuery.ControlAdded += KryptonDockableWorkspaceQuery_ControlAdded;
+            kryptonDockingManager1.DockspaceAdding += KryptonDockingManager1_DockspaceAdding;
+            kryptonDockingManager1.DockspaceCellAdding += KryptonDockingManager1_DockspaceCellAdding;
             UCTodoList todoList = Startup.GetFromFac<UCTodoList>();
 
             todoPage = UIForKryptonHelper.NewPage("待办事项", todoList);
@@ -86,6 +89,40 @@ namespace RUINORERP.UI.UserCenter
             // kryptonDockingManager1.ShowWorkspacePageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowWorkspacePageContextMenu);
         }
 
+        private void KryptonDockingManager1_DockspaceCellAdding(object sender, DockspaceCellEventArgs e)
+        {
+            //设置待办事项无法拖动
+            if (e.DockspaceControl is KryptonDockspace dockspace)
+            {
+                var todo = dockspace.CellForPage(todoPage);
+                if (todo != null)
+                {
+                    todo.AllowPageDrag = false;
+                }
+            }
+        }
+
+        private void KryptonDockingManager1_DockspaceAdding(object sender, DockspaceEventArgs e)
+        {
+            if (e.DockspaceControl is KryptonDockspace dockspace)
+            {
+                var todo = dockspace.CellForPage(todoPage);
+                if (todo != null)
+                {
+                    todo.AllowPageDrag = false;
+                }
+            }
+        }
+
+        private void KryptonDockableWorkspaceQuery_ControlAdded(object sender, ControlEventArgs e)
+        {
+            if (e.Control is KryptonWorkspaceCell cell)
+            {
+                //cell.AllowPageDrag = false;
+            }
+        }
+
+
         private void KryptonDockingManager1_ShowPageContextMenu(object sender, ContextPageEventArgs e)
         {
             //不显示右键
@@ -94,7 +131,7 @@ namespace RUINORERP.UI.UserCenter
 
         private void KryptonDockingManager1_FloatingWindowRemoved(object sender, FloatingWindowEventArgs e)
         {
-          
+
         }
 
         private void KryptonDockingManager1_FloatingWindowAdding(object sender, FloatingWindowEventArgs e)
@@ -111,7 +148,7 @@ namespace RUINORERP.UI.UserCenter
         {
             e.Cell.Button.CloseButtonAction = CloseButtonAction.HidePage;
             e.Cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
-            KryptonWorkspaceCell cell =e.Cell;
+            KryptonWorkspaceCell cell = e.Cell;
             cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
             cell.CloseAction += Cell_CloseAction;
             cell.SelectedPageChanged += Cell_SelectedPageChanged;
@@ -119,6 +156,11 @@ namespace RUINORERP.UI.UserCenter
             cell.Dock = DockStyle.Fill;
             cell.AllowDrop = true;
             cell.AllowPageDrag = true;
+            //这里可以对具体的单元设置
+            if (cell.Pages.FirstOrDefault(c => c.Name == "") != null)
+            {
+
+            }
         }
 
 
@@ -454,7 +496,7 @@ namespace RUINORERP.UI.UserCenter
             //kryptonDockingManager1.Clear();
             //kryptonDockingManager1.ClearAllStoredPages();
             //Kpages.Clear();
-         
+
             todoPage.Visible = true;
             //BuilderComponents(Kpages);
             LoadInitPages();

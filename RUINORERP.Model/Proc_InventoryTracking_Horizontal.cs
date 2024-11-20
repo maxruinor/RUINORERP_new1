@@ -160,39 +160,39 @@ namespace RUINORERP.Model
                 }
         }
 
-        private int? _其它出库;
+        private int? _其他出库;
         
         
         /// <summary>
         /// 
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "其它出库",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "其它出库" , DecimalDigits = 255,Length=4,IsNullable = true,ColumnDescription = "其它出库")]
+        [AdvQueryAttribute(ColName = "其他出库",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "其他出库" , DecimalDigits = 255,Length=4,IsNullable = true,ColumnDescription = "其他出库")]
         [Display(Name = "")]
-        public int? 其它出库 
+        public int? 其他出库 
         { 
-            get{return _其它出库;}
+            get{return _其他出库;}
             set{
-                SetProperty(ref _其它出库, value);
+                SetProperty(ref _其他出库, value);
                 }
         }
 
-        private int? _其它入库;
+        private int? _其他入库;
         
         
         /// <summary>
         /// 
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "其它入库",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "其它入库" , DecimalDigits = 255,Length=4,IsNullable = true,ColumnDescription = "其它入库")]
+        [AdvQueryAttribute(ColName = "其他入库",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "其他入库" , DecimalDigits = 255,Length=4,IsNullable = true,ColumnDescription = "其他入库")]
         [Display(Name = "")]
-        public int? 其它入库 
+        public int? 其他入库 
         { 
-            get{return _其它入库;}
+            get{return _其他入库;}
             set{
-                SetProperty(ref _其它入库, value);
+                SetProperty(ref _其他入库, value);
                 }
         }
 

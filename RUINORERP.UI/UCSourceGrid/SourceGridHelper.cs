@@ -103,7 +103,7 @@ namespace RUINORERP.UI.UCSourceGrid
         public event GetTransferDataHandler OnGetTransferDataHandler;
         #endregion
 
-        //处理一个特殊情况：如BOM明细时，如果明细中的产品有配方，即他是由其它产品组成的,他的成本和制造费用自于配方表中的数据。要把这些数据带到BOM明细行中。如果没有配方则是来自于产品详情的成本，这里用一个事件处理
+        //处理一个特殊情况：如BOM明细时，如果明细中的产品有配方，即他是由其他产品组成的,他的成本和制造费用自于配方表中的数据。要把这些数据带到BOM明细行中。如果没有配方则是来自于产品详情的成本，这里用一个事件处理
 
         /// <summary>
         /// 关联列的赋值处理
@@ -244,7 +244,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         /// <typeparam name="Prod">产品视图实体</typeparam>
         /// <typeparam name="BillDetail">单据明细</typeparam>
-        /// <typeparam name="OtherInfo">其它展示，只读</typeparam>
+        /// <typeparam name="OtherInfo">其他展示，只读</typeparam>
         /// <param name="TagColsExps">目标列集合在明细部分，可能也同时存在于产品视图公共部分中</param>
         /// <param name="BizKeyTargetCol">业务主键 一般指产品ID,必需设置，否则会使用没有描述的规则过滤掉</param>
         /// <param name="ShowSelected">明细中是否需要显示选择一列，如果要显示，默认只是添加的表格中。默认是visble=false。要手动显示</param>
@@ -372,7 +372,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             var mb = BizKeyTargetColExp.GetMemberInfo();
             string key = mb.Name;
-            //如果是从查询或其它单据点击过来。加载的。就可以直接添加。
+            //如果是从查询或其他单据点击过来。加载的。就可以直接添加。
             //如果是编辑时多选带过来时。因为会提前默认加一个空行。这时空行得更新式添加，如果是从中间添加也可以
             //判断前一个KEY，业务主键是否为空值。
             //在实际应用中，选择 Stack<T> 还是 Queue< T > 取决于你的具体需求：
@@ -1407,7 +1407,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
             //这里按索引删除的话，索引会变化导致出错。所有删除一次。剩下的数据都上移一行。
             //这里按索引删除的话，删除一行时，后面的索引会变化导致出错。所以删除一次。剩下的数据都上移一行。
-            //我的想法是，将数组放到一个堆栈中，从上移出来一个值，按这个值，即行号删除一行时。 堆栈中的其它值都加1 。这样循环堆栈。直到完成。
+            //我的想法是，将数组放到一个堆栈中，从上移出来一个值，按这个值，即行号删除一行时。 堆栈中的其他值都加1 。这样循环堆栈。直到完成。
             // 创建一个堆栈来存储要删除的行索引
             Stack<int> stack = new Stack<int>(RowIndexs);
             while (stack.Count > 0)
@@ -2134,7 +2134,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                                         //一个列的内容决定另一个列的内容。但是条件中，注意对应字段是否存在另一个集合中，
                                                         //有时，外键字段可能不存在另一个集合中。因为名称改了。如 单位，与单位换算中的单位ID就不一样。
                                                         //条件是业务主键时
-                                                        //动态决定下拉值。有两种情况。一种是验证时。这时通过产品明细ID来限制。或其它字段。
+                                                        //动态决定下拉值。有两种情况。一种是验证时。这时通过产品明细ID来限制。或其他字段。
                                                         //另一种是实时修改时,用selectIndex?
                                                         switch (col.Key.ColName)
                                                         {
@@ -2515,7 +2515,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                                                     //一个列的内容决定另一个列的内容。但是条件中，注意对应字段是否存在另一个集合中，
                                                                     //有时，外键字段可能不存在另一个集合中。因为名称改了。如 单位，与单位换算中的单位ID就不一样。
                                                                     //条件是业务主键时
-                                                                    //动态决定下拉值。有两种情况。一种是验证时。这时通过产品明细ID来限制。或其它字段。
+                                                                    //动态决定下拉值。有两种情况。一种是验证时。这时通过产品明细ID来限制。或其他字段。
                                                                     //另一种是实时修改时,用selectIndex?
                                                                     switch (col.Key.ColName)
                                                                     {

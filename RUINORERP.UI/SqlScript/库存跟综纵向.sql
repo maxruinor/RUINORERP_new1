@@ -43,10 +43,10 @@ union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'归还' as 业务类型, ReturnNo as 单据编号 , sc.Location_ID as 库位,  Qty as 数量 ,ReturnDate as 日期 from  tb_ProdReturning sm LEFT JOIN tb_ProdReturningDetail sc on sm.ReturnID=sc.ReturnID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID
  WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
 union ALL
-SELECT '进出明细' as 经营历程,vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'其它出库' as 业务类型,BillNo as 单据编号 , sc.Location_ID as 库位,  -Qty as 数量 ,Out_date as 日期 from  tb_StockOut sm LEFT JOIN tb_StockOutDetail sc on sm.MainID=sc.MainID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
+SELECT '进出明细' as 经营历程,vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'其他出库' as 业务类型,BillNo as 单据编号 , sc.Location_ID as 库位,  -Qty as 数量 ,Out_date as 日期 from  tb_StockOut sm LEFT JOIN tb_StockOutDetail sc on sm.MainID=sc.MainID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
 WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
 union ALL
-SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'其它入库' as 业务类型, BillNo as 单据编号 , sc.Location_ID as 库位,  Qty as 数量 ,Enter_Date as 日期 from  tb_StockIN sm LEFT JOIN tb_StockINDetail sc on sm.MainID=sc.MainID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'其他入库' as 业务类型, BillNo as 单据编号 , sc.Location_ID as 库位,  Qty as 数量 ,Enter_Date as 日期 from  tb_StockIN sm LEFT JOIN tb_StockINDetail sc on sm.MainID=sc.MainID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID
  WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
 union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'库存盘点' as 业务类型,CheckNo as 单据编号 , sm.Location_ID as 库位,  DiffQty as 数量 ,Check_date as 日期 from tb_Stocktake sm LEFT JOIN tb_StocktakeDetail sc on sm.MainID=sc.MainID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sm.Location_ID 

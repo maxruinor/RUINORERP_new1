@@ -102,10 +102,10 @@ namespace RUINORERP.Model
 
         private string _BillNo;
         /// <summary>
-        /// 其它出库单号
+        /// 其他出库单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "BillNo", ColDesc = "其它出库单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BillNo", Length = 50, IsNullable = true, ColumnDescription = "其它出库单号")]
+        [AdvQueryAttribute(ColName = "BillNo", ColDesc = "其他出库单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BillNo", Length = 50, IsNullable = true, ColumnDescription = "其他出库单号")]
         public string BillNo
         {
             get { return _BillNo; }

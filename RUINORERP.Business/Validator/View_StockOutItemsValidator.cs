@@ -19,7 +19,7 @@ using FluentValidation;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 其它出库统计验证类
+    /// 其他出库统计验证类
     /// </summary>
     /*public partial class View_StockOutItemsValidator:AbstractValidator<View_StockOutItems>*/
     public partial class View_StockOutItemsValidator:BaseValidatorGeneric<View_StockOutItems>
@@ -29,7 +29,7 @@ namespace RUINORERP.Business
       RuleFor(View_StockOutItems =>View_StockOutItems.Type_ID).NotEmpty().When(x => x.Type_ID.HasValue);
  RuleFor(View_StockOutItems =>View_StockOutItems.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
  RuleFor(View_StockOutItems =>View_StockOutItems.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
- RuleFor(View_StockOutItems =>View_StockOutItems.BillNo).MaximumLength(25).WithMessage("其它出库单号:不能超过最大长度,25.");
+ RuleFor(View_StockOutItems =>View_StockOutItems.BillNo).MaximumLength(25).WithMessage("其他出库单号:不能超过最大长度,25.");
  RuleFor(View_StockOutItems =>View_StockOutItems.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(View_StockOutItems =>View_StockOutItems.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
  RuleFor(View_StockOutItems =>View_StockOutItems.RefNO).MaximumLength(25).WithMessage("引用单号:不能超过最大长度,25.");

@@ -15,7 +15,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         库存单元 = 5,
         库存显示 = 6,
         /// <summary>
-        /// 显示其它出库入情况，盘点，销售退回
+        /// 显示其他出库入情况，盘点，销售退回
         /// </summary>
         财务单元 = 8,
     }

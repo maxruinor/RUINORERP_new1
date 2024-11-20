@@ -92,7 +92,7 @@ namespace AdvancedDataGridView
             base.OnClick(e);
             if (this.CurrentCell != null)
             {
-                //树节点不让编辑，其它可以
+                //树节点不让编辑，其他可以
                 if (this.CurrentCell.GetType().Name != "TreeGridCell" && this.CurrentCellAddress.X > -1 && this.CurrentCellAddress.Y > -1)
                 {
                     if (!this.CurrentCell.Displayed)

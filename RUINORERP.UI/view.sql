@@ -127,7 +127,7 @@ FROM
 --	( B.Is_enabled = 1 ) 
 	--AND ( B.isdeleted = 0 )
 
-	--as 的一些列名规则可以参数到其它 。整体全部修改一次。订单的日期，明细的日期，摘要在明细中。主表叫备注
+	--as 的一些列名规则可以参数到其他 。整体全部修改一次。订单的日期，明细的日期，摘要在明细中。主表叫备注
 create view View_PurOrderItems
 as 
 SELECT

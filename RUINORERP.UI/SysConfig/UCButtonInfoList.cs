@@ -54,7 +54,7 @@ namespace RUINORERP.UI.BI
             //    return Tuple.Create(values);
             //});
 
-            // 使用 GroupBy 筛选出重复数据,排除掉主键，将其它所有列【SugarColumn】有效的，都参与比较
+            // 使用 GroupBy 筛选出重复数据,排除掉主键，将其他所有列【SugarColumn】有效的，都参与比较
             // 创建一个用于获取所有键属性值的匿名函数
             // 创建分组键选择器(Tuple) 一个对象中，哪些字段属性参与比较
             Func<tb_ButtonInfo, Tuple<object[]>> keySelector2 = p =>

@@ -892,7 +892,7 @@ namespace RUINORERP.UI.ProductEAV
 
         /// <summary>
         /// 这里字段是用来可以主动设置查询条件的
-        /// 其它 的实际是可以不设置
+        /// 其他 的实际是可以不设置
         /// </summary>
         public void BindData()
         {

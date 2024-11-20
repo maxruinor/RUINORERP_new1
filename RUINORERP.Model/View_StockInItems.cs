@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 其它入库统计
+    /// 其他入库统计
     /// </summary>
     [Serializable()]
     [SugarTable("View_StockInItems")]
@@ -83,12 +83,12 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 其它出库单号
+        /// 其他出库单号
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "BillNo",ColDesc = "其它出库单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BillNo" ,Length=50,IsNullable = true,ColumnDescription = "其它出库单号" )]
-        [Display(Name = "其它出库单号")]
+        [AdvQueryAttribute(ColName = "BillNo",ColDesc = "其他出库单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BillNo" ,Length=50,IsNullable = true,ColumnDescription = "其他出库单号" )]
+        [Display(Name = "其他出库单号")]
         public string BillNo 
         { 
             get{return _BillNo;}            set{                SetProperty(ref _BillNo, value);                }

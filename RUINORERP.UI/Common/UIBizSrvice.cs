@@ -115,7 +115,7 @@ namespace RUINORERP.UI.Common
                     }
                 }
 
-                //如果有默认值，则更新其它的为否
+                //如果有默认值，则更新其他的为否
                 if (true == payeeInfo.IsDefault)
                 {
                     //TODO等待完善
@@ -128,7 +128,7 @@ namespace RUINORERP.UI.Common
                     {
                         payeeInfos = await ctrPayeeInfo.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == payeeInfo.CustomerVendor_ID.Value);
                     }
-                    //排除自己后其它全默认为否
+                    //排除自己后其他全默认为否
                     payeeInfos = payeeInfos.Where(c => c.PayeeInfoID != payeeInfo.PayeeInfoID).ToList();
                     payeeInfos.ForEach(c => c.IsDefault = false);
                     await MainForm.Instance.AppContext.Db.Updateable<tb_FM_PayeeInfo>(payeeInfos).UpdateColumns(it => new { it.IsDefault }).ExecuteCommandAsync();

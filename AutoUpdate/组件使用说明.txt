@@ -8,7 +8,7 @@ AutoUpdaterList.xml  服务器和本地各一份
 
 rar等解压为一级目录根目录。
 不能包括AutoUpdate.exe
-7z.dll 7z64.dll  Sever7zipsharp 等解压相关程序。不然会说其它程序在使用
+7z.dll 7z64.dll  Sever7zipsharp 等解压相关程序。不然会说其他程序在使用
 
 本身。
 

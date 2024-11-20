@@ -19,7 +19,7 @@ using FluentValidation;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 其它费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单验证类
+    /// 其他费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单验证类
     /// </summary>
     /*public partial class tb_FM_OtherExpenseValidator:AbstractValidator<tb_FM_OtherExpense>*/
     public partial class tb_FM_OtherExpenseValidator:BaseValidatorGeneric<tb_FM_OtherExpense>

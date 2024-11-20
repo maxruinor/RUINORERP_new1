@@ -493,7 +493,7 @@ namespace RUINORERP.UI.ProductEAV
             //keyName.SetKeyName<tb_BoxRules, tb_CartoonBox>(a => a.BoxRuleName, b => b.BoxRuleName);
 
 
-            //选了纸箱规格后会影响其它列的值。自动生成
+            //选了纸箱规格后会影响其他列的值。自动生成
             listCols2.SetCol_RelatedValue<tb_BoxRules, tb_CartoonBox>(t => t.CartonID, t => t.BoxRuleName, "用{0}装箱{1}", new KeyNamePair<tb_BoxRules, tb_CartoonBox>(a => a.CartonID, b => b.CartonName), new KeyNamePair<tb_BoxRules>(a => a.PackingMethod));
             listCols2.SetCol_RelatedValue<tb_BoxRules, tb_CartoonBox>(t => t.PackingMethod, t => t.BoxRuleName, "用{0}装箱{1}", new KeyNamePair<tb_BoxRules, tb_CartoonBox>(a => a.CartonID, b => b.CartonName), new KeyNamePair<tb_BoxRules>(a => a.PackingMethod));
 

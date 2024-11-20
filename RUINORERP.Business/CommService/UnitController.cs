@@ -42,7 +42,7 @@ namespace RUINORERP.Business.CommService
             BaseController<T> bdc = _appContext.GetRequiredServiceByName<BaseController<T>>(typeof(T).Name + "Controller");
             BaseProcessor baseProcessor = _appContext.GetRequiredServiceByName<BaseProcessor>(tableName + "Processor");
             QueryFilter queryFilter = baseProcessor.GetQueryFilter();
-            //最好情况是新增时数据限制。其它可以显示
+            //最好情况是新增时数据限制。其他可以显示
             queryFilter.FilterLimitExpressions.Clear();//缓存清除限制条件,比方员工离职：被禁用的，实际他原来录的数据，还是可以用的。也能显示他的名字。
             ISugarQueryable<T> querySqlQueryable;
             querySqlQueryable = (ISugarQueryable<T>)bdc.BaseGetISugarQueryable(false, queryFilter, null);

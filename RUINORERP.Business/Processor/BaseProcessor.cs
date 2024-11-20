@@ -120,7 +120,7 @@ namespace RUINORERP.Business.Processor
                     if (binaryExpression != null && binaryExpression.Left != null && binaryExpression.NodeType == ExpressionType.AndAlso)
                     {
                         var binaryExpressionLeft = (BinaryExpression)binaryExpression.Left;
-                        //(t.Is_enabled == True)  后面包含 等其它形式再来补充
+                        //(t.Is_enabled == True)  后面包含 等其他形式再来补充
                         //左边是变量，右边是常量
                         if (binaryExpressionLeft.NodeType == ExpressionType.Equal)
                         {

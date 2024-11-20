@@ -180,7 +180,7 @@ namespace HLH.WinControl.MyDataGrid
             this.CurrentCellChanged += NewSumDataGridView_CurrentCellChanged;
             this.CurrentCellDirtyStateChanged += NewSumDataGridView_CurrentCellDirtyStateChanged;
 
-            #region 后加by watson 参考自其它dg
+            #region 后加by watson 参考自其他dg
 
             DataGridViewCellStyle c = new DataGridViewCellStyle();
             c.BackColor = Color.Yellow;
@@ -1324,7 +1324,7 @@ namespace HLH.WinControl.MyDataGrid
         {
             //数据重置时，认为不需要修改，才查询出来呢。
             dgvEdit = false;
-            ///这个方法是因为数据出来是 确定是否显示滚动条 ，方法中其它没有多验证了。by 2020
+            ///这个方法是因为数据出来是 确定是否显示滚动条 ，方法中其他没有多验证了。by 2020
             InitScrollWithSourceGrid();
             //求各前。判断一下
             if (IsShowSumRow)
@@ -1359,14 +1359,14 @@ namespace HLH.WinControl.MyDataGrid
                     //认为表格直接加载到窗体的。 则先把窗体的控件全移到panel中
                     if (this.Parent.GetType().BaseType.FullName == "System.Windows.Forms.Form")
                     {
-                        ///移动的只有四个控件。其它不是这个控制里面的。不处理
+                        ///移动的只有四个控件。其他不是这个控制里面的。不处理
                         List<Control> Clist = new List<Control>();
                         List<Control> Otherlist = new List<Control>();
                         Form frm = this.Parent as Form;
                         foreach (Control item in frm.Controls)
                         {
                             ///加入了四个控制  一个主DG，一个SUNDG两个滚动条。
-                            ///主dg 不应该店用tag属性，使用其它方法区别
+                            ///主dg 不应该店用tag属性，使用其他方法区别
                             if ((item.Tag != null && item.Tag.ToString() == "SUMDG") || (item is NewSumDataGridView))
                             {
                                 Clist.Add(item);

@@ -536,14 +536,14 @@ namespace RUINORERP.UI.Common
                         }
 
                         //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
-                        if (page.Controls[0] is BaseQuery baseQuery && nodeParameter != null)
+                        if (page.Controls[0] is BaseQuery baseQuery)
                         {
                             //set value这里设置属性？
                             if (OnSetQueryConditionsDelegate != null)
                             {
                                 OnSetQueryConditionsDelegate(baseQuery.QueryDtoProxy, nodeParameter);
                             }
-                            if (entity==null)
+                            if (entity!=null)
                             {
                                 baseQuery.LoadQueryParametersToUI(entity, nodeParameter);
                             }

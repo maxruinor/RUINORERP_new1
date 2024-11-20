@@ -11,7 +11,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.BaseForm
 {
     /// <summary>
-    /// 一个通用的 有查询条件及显示数据的UC，里面不用控件了。重复使用其它 的
+    /// 一个通用的 有查询条件及显示数据的UC，里面不用控件了。重复使用其他 的
     /// </summary>
     public partial class UCQueryShow : UserControl
     {

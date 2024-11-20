@@ -24,7 +24,7 @@ https://workflow-core.readthedocs.io/en/latest/json-yaml/  可以用关键词去
 
 
 锁单功能？
-比方A创建提交了一个SO，但是并没有退出。到下一个人审核前。他又修改了订单？这时是不是要取消流程。或在其它人审核时。要判断这个单是否锁定。
+比方A创建提交了一个SO，但是并没有退出。到下一个人审核前。他又修改了订单？这时是不是要取消流程。或在其他人审核时。要判断这个单是否锁定。
 using StackExchange.Redis;
 using System;
 using System.Threading.Tasks;

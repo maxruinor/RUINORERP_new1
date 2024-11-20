@@ -120,7 +120,7 @@
             this.kryptonGroupBox2.Panel.Controls.Add(this.kryptonTreeGridViewOtherIn);
             this.kryptonGroupBox2.Size = new System.Drawing.Size(371, 189);
             this.kryptonGroupBox2.TabIndex = 7;
-            this.kryptonGroupBox2.Values.Heading = "其它入库情况";
+            this.kryptonGroupBox2.Values.Heading = "其他入库情况";
             // 
             // kryptonTreeGridViewOtherIn
             // 
@@ -173,7 +173,7 @@
             this.kryptonGroupBox1.Panel.Controls.Add(this.kryptonTreeGridViewOtherOut);
             this.kryptonGroupBox1.Size = new System.Drawing.Size(319, 186);
             this.kryptonGroupBox1.TabIndex = 6;
-            this.kryptonGroupBox1.Values.Heading = "其它出库情况";
+            this.kryptonGroupBox1.Values.Heading = "其他出库情况";
             // 
             // kryptonTreeGridViewOtherOut
             // 

@@ -40,7 +40,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
         /// <summary>
-        /// 用于其它UI传入的数据载入。并不是刷新数据
+        /// 用于其他UI传入的数据载入。并不是刷新数据
         /// </summary>
         /// <param name="Entity"></param>
         internal override void LoadDataToUI(object Entity)

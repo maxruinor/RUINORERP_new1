@@ -176,7 +176,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (entity.RefBizType == (int)BizType.生产需求分析)
                 {
-                    /* ----------这个引用到了 不同的单据：需求分析。手动。销售订单。其它？。需要特殊处理 ----------- */
+                    /* ----------这个引用到了 不同的单据：需求分析。手动。销售订单。其他？。需要特殊处理 ----------- */
 
                     //先绑定这个。InitFilterForControl 这个才生效
                     DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, v => v.RefBillNO, txtRefBillID, BindDataType4TextBox.Text, true);

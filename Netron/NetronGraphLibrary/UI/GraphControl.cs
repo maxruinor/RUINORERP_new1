@@ -2536,7 +2536,7 @@ namespace Netron.GraphLib.UI
                             {
                                 if (n.IsSelected)
                                 {
-                                   //处理事件要在删除前处理，不然逻辑删除方法中无法引用到其它
+                                   //处理事件要在删除前处理，不然逻辑删除方法中无法引用到其他
                                     if (OnDeleteConnectionLine != null)
                                     {
                                         OnDeleteConnectionLine(this, new ConnectionEventArgs(n, true));

@@ -17,7 +17,7 @@ namespace RUINORERP.Global.Model
     /// </summary>
     public class DataRowImage
     {
-        //旧的hash值，除了第一次和数据库取出。其它都是修改newhash.实际作用是文件名。用于判断是否修改过
+        //旧的hash值，除了第一次和数据库取出。其他都是修改newhash.实际作用是文件名。用于判断是否修改过
 
         public string oldhash { get; set; }
         //以新的为标准，旧的是用来比较的。

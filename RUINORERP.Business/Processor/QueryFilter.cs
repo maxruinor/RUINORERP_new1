@@ -462,7 +462,7 @@ namespace RUINORERP.Business.Processor
             {
                 AddSubFilterToQueryField(queryField, expSubFieldLimitCondition, typeof(R));
             }
-            //上面没有调用其它方法来SET这里要添加
+            //上面没有调用其他方法来SET这里要添加
             if (!QueryFields.Contains(queryField))
             {
                 QueryFields.Add(queryField);
@@ -526,7 +526,7 @@ namespace RUINORERP.Business.Processor
             {
                 AddSubFilterToQueryField(queryField, expSubFieldLimitCondition, typeof(R));
             }
-            //上面没有调用其它方法来SET这里要添加
+            //上面没有调用其他方法来SET这里要添加
             if (!QueryFields.Contains(queryField))
             {
                 QueryFields.Add(queryField);
@@ -569,7 +569,7 @@ namespace RUINORERP.Business.Processor
                 AddSubFilterToQueryField(queryField, SubFieldLimitExp);
             }
 
-            //上面没有调用其它方法来SET这里要添加
+            //上面没有调用其他方法来SET这里要添加
             if (!QueryFields.Contains(queryField))
             {
                 QueryFields.Add(queryField);

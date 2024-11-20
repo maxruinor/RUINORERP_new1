@@ -11,7 +11,7 @@ using System.Text;
 namespace RUINORERP.Model.Dto
 {
     /// <summary>
-    /// 产品其它部分，用于动态合并，体现于明细中表格中,程序中来控制显示哪些字段？
+    /// 产品其他部分，用于动态合并，体现于明细中表格中,程序中来控制显示哪些字段？
     /// </summary>
     public class InventoryInfo
     {

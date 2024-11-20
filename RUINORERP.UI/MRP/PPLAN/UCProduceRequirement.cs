@@ -1808,7 +1808,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
             }
 
-            //生成请购单  请购单，可以来自于其它入口。所以这里不能用导航查询。只能主动查询
+            //生成请购单  请购单，可以来自于其他入口。所以这里不能用导航查询。只能主动查询
             //如果这个已经审核并且没有生成过请购单。这里可以显示，否则为灰色
             tb_BuyingRequisitionController<tb_BuyingRequisition> ctrBuy = Startup.GetFromFac<tb_BuyingRequisitionController<tb_BuyingRequisition>>();
             bool IsCreatePurRequisition = await ctrBuy.IsExistAsync(c => c.RefBillID == EditEntity.PDID && c.RefBizType == (int)BizType.生产需求分析);
@@ -2064,7 +2064,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
             tb_ProductionDemandController<tb_ProductionDemand> ctrPD = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
 
-            //生成请购单  请购单，可以来自于其它入口。所以这里不能用导航查询。只能主动查询
+            //生成请购单  请购单，可以来自于其他入口。所以这里不能用导航查询。只能主动查询
             //如果这个已经审核并且没有生成过请购单。这里可以显示，否则为灰色
             tb_ManufacturingOrderController<tb_ManufacturingOrder> ctrMO = Startup.GetFromFac<tb_ManufacturingOrderController<tb_ManufacturingOrder>>();
 
@@ -2274,7 +2274,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 if (ModifyColName == expSelected.GetMemberInfo().Name)
                 {
 
-                    //目前只支持一次生成一个制令单所以选中时，其它就不能勾选。不选就不管。
+                    //目前只支持一次生成一个制令单所以选中时，其他就不能勾选。不选就不管。
                     if (ModifyValue.ToBool())
                     {
                         foreach (var item in kryptonTreeGridViewMaking.Rows)
@@ -2398,7 +2398,7 @@ protected async override Task<ApprovalEntity> ReReview()
                                 //其他就不选 
                                 if (rdb中间件式.Checked && isChecked)
                                 {
-                                    #region   中间件式 如果是中间件式，则其它的不能勾选，除已经生成过的。
+                                    #region   中间件式 如果是中间件式，则其他的不能勾选，除已经生成过的。
                                     for (int i = 0; i < kryptonTreeGridViewMaking.Rows.Count; i++)
                                     {
                                         if (i != e.RowIndex)

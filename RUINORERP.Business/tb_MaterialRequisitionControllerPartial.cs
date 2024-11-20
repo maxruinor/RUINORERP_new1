@@ -134,7 +134,7 @@ namespace RUINORERP.Business
                         .Where(c => c.MOID == entity.MOID).Single();
 
 
-                    //如果领料明细中的产品。不存在于制令单明细中。审核失败。意思是领料的东西必须是制令单中的明细数据。如果不是 可以用其它 出库
+                    //如果领料明细中的产品。不存在于制令单明细中。审核失败。意思是领料的东西必须是制令单中的明细数据。如果不是 可以用其他 出库
                     foreach (var child in entity.tb_MaterialRequisitionDetails)
                     {
                         if (!entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))

@@ -452,7 +452,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                     QueryConditionFilter.InvisibleCols.Add(pkColName);
                 }
 
-                //目前没有想好，就是采购入库单中会有引用的采购订单ID，实际只要显示订单号即可。 其它类似业务也一样。就是引用另一个单的情况
+                //目前没有想好，就是采购入库单中会有引用的采购订单ID，实际只要显示订单号即可。 其他类似业务也一样。就是引用另一个单的情况
 
                 if (typeof(T).Name == typeof(tb_PurEntry).Name)
                 {

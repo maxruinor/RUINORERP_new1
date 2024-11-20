@@ -675,7 +675,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
     /// <summary>
-    /// 用于项这个单元格的删除操作，也可以集成其它功能？
+    /// 用于项这个单元格的删除操作，也可以集成其他功能？
     /// </summary>
     public class PopupMenuForDeleteSelect : SourceGrid.Cells.Controllers.ControllerBase
     {

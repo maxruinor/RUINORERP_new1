@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 其它入库统计
+    /// 其他入库统计
     /// </summary>
     public partial class View_StockInItemsController<T>:BaseController<T> where T : class
     {

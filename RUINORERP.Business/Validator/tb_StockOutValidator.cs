@@ -30,7 +30,7 @@ namespace RUINORERP.Business
  RuleFor(tb_StockOut =>tb_StockOut.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("接收单位:下拉选择值不正确。");
  RuleFor(tb_StockOut =>tb_StockOut.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
  RuleFor(tb_StockOut =>tb_StockOut.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
- RuleFor(tb_StockOut =>tb_StockOut.BillNo).MaximumLength(25).WithMessage("其它出库单号:不能超过最大长度,25.");
+ RuleFor(tb_StockOut =>tb_StockOut.BillNo).MaximumLength(25).WithMessage("其他出库单号:不能超过最大长度,25.");
 //***** 
  RuleFor(tb_StockOut =>tb_StockOut.TotalQty).NotNull().WithMessage("总数量:不能为空。");
  RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("总成本:小数位不能超过4。");

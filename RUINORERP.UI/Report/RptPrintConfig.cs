@@ -376,7 +376,7 @@ namespace RUINORERP.UI.Report
         private void 设为默认ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //设置一下默认，只能一行
-            //改一行，就会修改其它行
+            //改一行，就会修改其他行
             List<tb_PrintTemplate> Templates = bindingSourcePrintTemplate.DataSource as List<tb_PrintTemplate>;
             if (Templates != null && newSumDataGridView1.CurrentRow != null)
             {
@@ -387,7 +387,7 @@ namespace RUINORERP.UI.Report
                 tb_PrintTemplate printTemplate = Templates.Where(t => t.ID == currentID).FirstOrDefault();
                 printTemplate.IsDefaultTemplate = true;
 
-                //其它行是否
+                //其他行是否
                 Templates.Where(t => t.ID != currentID).ToList().ForEach(w => w.IsDefaultTemplate = false);
                 //保存
                 MainForm.Instance.AppContext.Db.Updateable<tb_PrintTemplate>(Templates).ExecuteCommand();

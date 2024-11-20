@@ -154,8 +154,8 @@ DECLARE @sqlOutput nvarchar(1000)
 exec Proc_WorkCenterPUR '', @sqlOutput 
 
 ---------------------------------------------------------------------------
----------------------------------------------------------------------------其它出入库
----其它出库
+---------------------------------------------------------------------------其他出入库
+---其他出库
 
 ﻿drop proc Proc_WorkCenterOtherOut
 go
@@ -216,7 +216,7 @@ DECLARE @sqlOutput nvarchar(1000)
 exec Proc_WorkCenterOtherOut null, @sqlOutput   
 
 
---------------------------------------------------------------------其它入库单
+--------------------------------------------------------------------其他入库单
 drop proc Proc_WorkCenterOtherIn
 go
 create proc Proc_WorkCenterOtherIn

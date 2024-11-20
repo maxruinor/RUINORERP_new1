@@ -96,7 +96,7 @@ namespace Krypton.Toolkit.Suite.Extended.Outlook.Grid
 
         private const string DEFAULT_ONE_ITEM = @"1 项";
 
-        private const string DEFAULT_OTHER = @"其它";
+        private const string DEFAULT_OTHER = @"其他";
 
         private const string DEFAULT_PALETTE_CUSTOM = @"自定义...";
 

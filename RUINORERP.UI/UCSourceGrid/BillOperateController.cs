@@ -161,7 +161,7 @@ namespace RUINORERP.UI.UCSourceGrid
             if (setcurrentObj != null)
             {
                 //将UI值转换后赋值给对象 很重要
-                //如果sender.value=null ，如果是将业务主键都置为null。则对应数据行清空。其它全部置为null
+                //如果sender.value=null ，如果是将业务主键都置为null。则对应数据行清空。其他全部置为null
                 if (sender.Value == null)
                 {
                     CurrGridDefine.grid[sender.Position.Row, sender.Position.Column].Value = null;
@@ -278,7 +278,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         List<object> lastPara = new List<object>();
                         for (int i = 0; i < rc.ValueParameters.Length; i++)
                         {
-                            //如果指向其它列有值。则取外键实体的名称的值
+                            //如果指向其他列有值。则取外键实体的名称的值
                             if (!string.IsNullOrEmpty(rc.ValueParameters[i].PointToColName))
                             {
                                 object id = ReflectionHelper.GetPropertyValue(setcurrentObj, rc.ValueParameters[i].ParameterColName);
@@ -715,7 +715,7 @@ namespace RUINORERP.UI.UCSourceGrid
             else if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.Image)
             {
                 // sender.Cell.View = CurrGridDefine.ImagesViewModel;
-                //如果有图片值才设置，不然还是和其它一样
+                //如果有图片值才设置，不然还是和其他一样
                 //if (sender.Value != null)
                 //{
                 //    sender.Cell.View = new SourceGrid.Cells.Views.SingleImage();
@@ -728,7 +728,7 @@ namespace RUINORERP.UI.UCSourceGrid
             else if (CurrGridDefine[sender.Position.Column].CustomFormat == CustomFormatType.WebPathImage)
             {
                 // sender.Cell.View = CurrGridDefine.ImagesViewModel;
-                //如果有图片值才设置，不然还是和其它一样
+                //如果有图片值才设置，不然还是和其他一样
                 //if (sender.Value != null)
                 //{
                 //    sender.Cell.View = CurrGridDefine.ImagesWebViewModel;
@@ -794,7 +794,7 @@ namespace RUINORERP.UI.UCSourceGrid
             //如果当前行有完整数据时，人为清空关键字段，则清空关联值
             if (sender.Value == null || sender.Value.IsNullOrEmpty())
             {
-                //一行数据中包括两个部分：一个是真实明细表中的字段，另一个是产品或其它公共部分。没有保存到数据库。只是参考引用显示作用。
+                //一行数据中包括两个部分：一个是真实明细表中的字段，另一个是产品或其他公共部分。没有保存到数据库。只是参考引用显示作用。
                 //真实明细是可以清空编辑的。公共部分不能清空编辑。清空认为重新输入，所以这里判断是否是公共部分，如果是，则进行清空关联值
                 if (!CurrGridDefine[sender.Position.Column].IsCoreContent)
                 {

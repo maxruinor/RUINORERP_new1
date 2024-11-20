@@ -30,7 +30,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 其它出库统计
+    /// 其他出库统计
     /// </summary>
     public partial class View_StockOutItemsProcessor:BaseProcessor 
     {

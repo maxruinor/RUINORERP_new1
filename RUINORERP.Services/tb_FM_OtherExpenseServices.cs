@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Services
 {
     /// <summary>
-    /// 其它费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单
+    /// 其他费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单
     /// </summary>
     public partial class tb_FM_OtherExpenseServices : BaseServices<tb_FM_OtherExpense>, Itb_FM_OtherExpenseServices
     {

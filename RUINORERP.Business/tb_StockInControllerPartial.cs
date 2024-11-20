@@ -90,7 +90,7 @@ namespace RUINORERP.Business
                  生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                  市场价格：参考市场上类似产品或物品的价格。
                   */
-                    //其它入库不需要计算成本。只有采购入库和缴库单算。
+                    //其他入库不需要计算成本。只有采购入库和缴库单算。
                     //inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
                     //inv.CostFIFO = child.Cost;
                     //inv.CostMonthlyWA = child.Cost;
@@ -159,7 +159,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        ///其它入库单反审会将数量减少
+        ///其他入库单反审会将数量减少
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>

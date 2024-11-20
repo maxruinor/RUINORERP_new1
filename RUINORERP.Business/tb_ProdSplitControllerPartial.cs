@@ -184,7 +184,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        ///其它入库单反审会将数量减少
+        ///其他入库单反审会将数量减少
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>

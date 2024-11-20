@@ -448,7 +448,7 @@ namespace RUINORERP.UI.Report
                 //{
                 //    TargetReport.Load(reportFile);  //载入报表文件    
                 //}
-                //新建的时候内容就会为空，这时可以打开文件，这个文件可以是其它模板
+                //新建的时候内容就会为空，这时可以打开文件，这个文件可以是其他模板
                 printTemplate.ActionStatus = ActionStatus.新增;
             }
             TargetReport.RegisterData(PrintDataSources, "rd");

@@ -314,7 +314,7 @@ namespace SourceGrid.Cells.Models
 //        24/09/01J91AT48VF0PV0D08YEE3BMYK-595b739fa14a661a47afb827184eb0a9_f7705f09bb2ca50b31660fa3221d9dd6 --更新后 中间是旧，最后是新
         /// </summary>
         /// 
-        ///旧的hash值，除了第一次和数据库取出。其它都是修改newhash.实际作用是文件名。用于判断是否修改过
+        ///旧的hash值，除了第一次和数据库取出。其他都是修改newhash.实际作用是文件名。用于判断是否修改过
         public string oldhash = string.Empty;
 
         //以新的为标准，旧的是用来比较的。

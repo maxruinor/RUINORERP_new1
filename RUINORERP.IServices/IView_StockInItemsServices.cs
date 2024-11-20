@@ -16,7 +16,7 @@ using RUINORERP.Model;
 namespace RUINORERP.IServices
 {
     /// <summary>
-    /// 其它入库统计
+    /// 其他入库统计
     /// </summary>
     public partial interface IView_StockInItemsServices : IBaseServices<View_StockInItems>
     {

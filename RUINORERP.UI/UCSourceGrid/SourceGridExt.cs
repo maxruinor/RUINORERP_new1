@@ -247,7 +247,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="colNameSourceExp">输入时的列</param>
         /// <param name="colNameTargetExp">程序控制要变化的列的值</param>
         /// <param name="NewValue">值内容，可以固定</param>
-        /// <param name="valueParameters">可以用这个集合的列取值后点位符替换，并且可以指向另一列值:其中有两种情况，T1时直接指向明细实体中的一个其它列，T2时指向明细实体中的一个关联列的外键实体的显示列（名称）</param>
+        /// <param name="valueParameters">可以用这个集合的列取值后点位符替换，并且可以指向另一列值:其中有两种情况，T1时直接指向明细实体中的一个其他列，T2时指向明细实体中的一个关联列的外键实体的显示列（名称）</param>
         public static void SetCol_RelatedValue<T, S>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameSourceExp, Expression<Func<T, object>> colNameTargetExp, string NewValue,
             params KeyNamePair[] valueParameters)
         {

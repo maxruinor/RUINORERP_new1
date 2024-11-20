@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Services
 {
     /// <summary>
-    /// 其它出库统计
+    /// 其他出库统计
     /// </summary>
     public partial class View_StockOutItemsServices : BaseServices<View_StockOutItems>, IView_StockOutItemsServices
     {

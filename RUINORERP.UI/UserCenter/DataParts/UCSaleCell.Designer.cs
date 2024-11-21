@@ -49,6 +49,7 @@
             // 
             // kryptonHeaderGroup1
             // 
+            this.kryptonHeaderGroup1.AutoSize = true;
             this.kryptonHeaderGroup1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowOnly;
             this.kryptonHeaderGroup1.ButtonSpecs.Add(this.buttonSpecHeaderGroup1);
             this.kryptonHeaderGroup1.ButtonSpecs.Add(this.buttonSpecHeaderGroup2);
@@ -106,6 +107,7 @@
             this.kryptonHeaderGroup1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelCell)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 

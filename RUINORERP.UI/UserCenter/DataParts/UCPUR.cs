@@ -30,6 +30,7 @@ using Krypton.Toolkit;
 using Krypton.Toolkit.Suite.Extended.Outlook.Grid;
 using Netron.Neon.TextEditor.Actions;
 using Org.BouncyCastle.Asn1.X509;
+using RUINORERP.UI.MRP.MP;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -168,7 +169,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         {
                             item.Cells[11].Value = Order.tb_department.DepartmentName;
                         }
-
+                        item.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(Order.DataStatus), Order.DataStatus).ToString();
                         string project = string.Empty;
                         #region 加载订单单明细
                         List<tb_PurOrderDetail> OrderDetails = Order.tb_PurOrderDetails;
@@ -208,7 +209,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                         ProduceDetailrow.Cells[3].Value = PurEntryDetail.Quantity;
                                         ProduceDetailrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                                         ProduceDetailrow.Cells[6].Value = "入库";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                                        PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(PurEntry.DataStatus), PurEntry.DataStatus).ToString();
+                                        ProduceDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(PurEntry.DataStatus), PurEntry.DataStatus).ToString();
                                         #region 采购退货单
                                         LoadPurEntryReData(PurEntry, ProduceDetailrow, OrderDetail, prodDetail, productType);
                                         #endregion

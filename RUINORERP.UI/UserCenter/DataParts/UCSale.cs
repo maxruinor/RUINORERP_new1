@@ -167,7 +167,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         {
                             item.Cells[11].Value = SaleOrder.tb_projectgroup.ProjectGroupName;
                         }
-
+                        item.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOrder.DataStatus), SaleOrder.DataStatus).ToString();
                         string project = string.Empty;
                         #region 加载订单单明细
                         List<tb_SaleOrderDetail> SaleOrderDetails = SaleOrder.tb_SaleOrderDetails;
@@ -199,17 +199,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                     foreach (tb_SaleOutDetail SaleOutDetail in SaleOut.tb_SaleOutDetails.Where(c => c.ProdDetailID == SaleOrderDetail.ProdDetailID && c.Location_ID == SaleOrderDetail.Location_ID))
                                     {
                                         //子级
-                                        KryptonTreeGridNodeRow ProduceDetailrow = PlanDetailsubrow.Nodes.Add(SaleOut.SaleOutNo.ToString());
-                                        ProduceDetailrow.Tag = SaleOut;//为了双击的时候能找到值对象。这里还是给主表对象。
-                                        ProduceDetailrow.Cells[0].Tag = "SaleOutNo";//保存列名 值对象的列名。比方值是编号：则是PDNo
-                                        ProduceDetailrow.Cells[1].Value = SaleOut.OutDate.ToString("yyyy-MM-dd");//出库日期
+                                        KryptonTreeGridNodeRow SaleOutDetailrow = PlanDetailsubrow.Nodes.Add(SaleOut.SaleOutNo.ToString());
+                                        SaleOutDetailrow.Tag = SaleOut;//为了双击的时候能找到值对象。这里还是给主表对象。
+                                        SaleOutDetailrow.Cells[0].Tag = "SaleOutNo";//保存列名 值对象的列名。比方值是编号：则是PDNo
+                                        SaleOutDetailrow.Cells[1].Value = SaleOut.OutDate.ToString("yyyy-MM-dd");//出库日期
                                         //ProduceDetailrow.Cells[2].Value = ProduceDetail.Quantity;
-                                        ProduceDetailrow.Cells[3].Value = SaleOutDetail.Quantity;
-                                        ProduceDetailrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                                        ProduceDetailrow.Cells[6].Value = "出库";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                                        PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOut.DataStatus), SaleOut.DataStatus).ToString();
+                                        SaleOutDetailrow.Cells[3].Value = SaleOutDetail.Quantity;
+                                        SaleOutDetailrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
+                                        SaleOutDetailrow.Cells[6].Value = "出库";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
+                                        SaleOutDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOut.DataStatus), SaleOut.DataStatus).ToString();
                                         #region 销售退货单
-                                        LoadSaleOutReData(SaleOut, ProduceDetailrow, SaleOrderDetail, prodDetail, productType);
+                                        LoadSaleOutReData(SaleOut, SaleOutDetailrow, SaleOrderDetail, prodDetail, productType);
                                         #endregion
                                         #region 采购订单
                                         //  LoadSelfMadeProducts(SaleOut, ProduceDetail, PlanDetailsubrow, prodDetail);

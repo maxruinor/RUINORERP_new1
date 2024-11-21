@@ -585,9 +585,9 @@ namespace RUINORERP.UI.MRP
             await uCMRP.QueryMRPDataStatus(_PURList);
         }
 
-        internal override void LoadQueryParametersToUI(object QueryParameters, QueryParameter nodeParameter)
+        internal override void LoadQueryParametersToUI(object LoadItems)
         {
-            if (QueryParameters != null && QueryParameters is List<tb_ProductionPlan> pplist)
+            if (LoadItems != null && LoadItems is List<tb_ProductionPlan> pplist)
             {
                 SubQuery(pplist);
             }

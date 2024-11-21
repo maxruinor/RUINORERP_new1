@@ -59,7 +59,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 if (nkv.Key != null)
                 {
                     object obj = BizCacheHelper.Instance.GetEntity<T>(ProdDetailID);
-                    if (obj != null && obj.GetType().Name != "Object")
+                    if (obj != null && obj.GetType().Name != "Object" && obj is T)
                     {
                         prodDetail = obj as T;
                     }
@@ -84,7 +84,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 //colNames.TryAdd("ID", "ID");
                 //colNames.TryAdd("ParentId", "上级ID");
                 colNames.TryAdd("PPNo", "单号");
-                colNames.TryAdd("RequirementDate", "计划日期");
+                colNames.TryAdd("RequirementDate", "单据日期");
                 colNames.TryAdd("TotalQuantity", "需求数量");
                 colNames.TryAdd("TotalCompletedQuantity", "交付数量");
                 colNames.TryAdd("MainContent", "主要内容");

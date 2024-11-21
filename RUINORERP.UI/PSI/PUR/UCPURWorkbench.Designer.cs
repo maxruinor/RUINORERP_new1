@@ -50,9 +50,9 @@
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.txtSaleOutNO = new Krypton.Toolkit.KryptonTextBox();
+            this.txtPURReNo = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
-            this.txtSaleOutReNO = new Krypton.Toolkit.KryptonTextBox();
+            this.txtPurReEntryNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblEntityName = new Krypton.Toolkit.KryptonLabel();
             this.txtSaleOrderNO = new Krypton.Toolkit.KryptonTextBox();
             this.lblFieldName = new Krypton.Toolkit.KryptonLabel();
@@ -257,9 +257,9 @@
             // kryptonPanelQuery
             // 
             this.kryptonPanelQuery.Controls.Add(this.kryptonLabel1);
-            this.kryptonPanelQuery.Controls.Add(this.txtSaleOutNO);
+            this.kryptonPanelQuery.Controls.Add(this.txtPURReNo);
             this.kryptonPanelQuery.Controls.Add(this.kryptonLabel2);
-            this.kryptonPanelQuery.Controls.Add(this.txtSaleOutReNO);
+            this.kryptonPanelQuery.Controls.Add(this.txtPurReEntryNo);
             this.kryptonPanelQuery.Controls.Add(this.lblEntityName);
             this.kryptonPanelQuery.Controls.Add(this.txtSaleOrderNO);
             this.kryptonPanelQuery.Controls.Add(this.lblFieldName);
@@ -277,37 +277,37 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(307, 37);
+            this.kryptonLabel1.Location = new System.Drawing.Point(31, 37);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(88, 20);
             this.kryptonLabel1.TabIndex = 24;
             this.kryptonLabel1.Values.Text = "采购入库单号";
             // 
-            // txtSaleOutNO
+            // txtPURReNo
             // 
-            this.txtSaleOutNO.Location = new System.Drawing.Point(692, 11);
-            this.txtSaleOutNO.Name = "txtSaleOutNO";
-            this.txtSaleOutNO.Size = new System.Drawing.Size(133, 23);
-            this.txtSaleOutNO.TabIndex = 25;
+            this.txtPURReNo.Location = new System.Drawing.Point(692, 11);
+            this.txtPURReNo.Name = "txtPURReNo";
+            this.txtPURReNo.Size = new System.Drawing.Size(133, 23);
+            this.txtPURReNo.TabIndex = 25;
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(598, 37);
+            this.kryptonLabel2.Location = new System.Drawing.Point(572, 37);
             this.kryptonLabel2.Name = "kryptonLabel2";
-            this.kryptonLabel2.Size = new System.Drawing.Size(88, 20);
+            this.kryptonLabel2.Size = new System.Drawing.Size(114, 20);
             this.kryptonLabel2.TabIndex = 26;
-            this.kryptonLabel2.Values.Text = "销售退货单号";
+            this.kryptonLabel2.Values.Text = "采购退回入库单号";
             // 
-            // txtSaleOutReNO
+            // txtPurReEntryNo
             // 
-            this.txtSaleOutReNO.Location = new System.Drawing.Point(692, 37);
-            this.txtSaleOutReNO.Name = "txtSaleOutReNO";
-            this.txtSaleOutReNO.Size = new System.Drawing.Size(133, 23);
-            this.txtSaleOutReNO.TabIndex = 27;
+            this.txtPurReEntryNo.Location = new System.Drawing.Point(692, 37);
+            this.txtPurReEntryNo.Name = "txtPurReEntryNo";
+            this.txtPurReEntryNo.Size = new System.Drawing.Size(133, 23);
+            this.txtPurReEntryNo.TabIndex = 27;
             // 
             // lblEntityName
             // 
-            this.lblEntityName.Location = new System.Drawing.Point(15, 14);
+            this.lblEntityName.Location = new System.Drawing.Point(302, 11);
             this.lblEntityName.Name = "lblEntityName";
             this.lblEntityName.Size = new System.Drawing.Size(75, 20);
             this.lblEntityName.TabIndex = 16;
@@ -315,14 +315,14 @@
             // 
             // txtSaleOrderNO
             // 
-            this.txtSaleOrderNO.Location = new System.Drawing.Point(96, 11);
+            this.txtSaleOrderNO.Location = new System.Drawing.Point(383, 8);
             this.txtSaleOrderNO.Name = "txtSaleOrderNO";
             this.txtSaleOrderNO.Size = new System.Drawing.Size(124, 23);
             this.txtSaleOrderNO.TabIndex = 17;
             // 
             // lblFieldName
             // 
-            this.lblFieldName.Location = new System.Drawing.Point(307, 11);
+            this.lblFieldName.Location = new System.Drawing.Point(31, 11);
             this.lblFieldName.Name = "lblFieldName";
             this.lblFieldName.Size = new System.Drawing.Size(75, 20);
             this.lblFieldName.TabIndex = 18;
@@ -330,14 +330,14 @@
             // 
             // txtBuyRequestNO
             // 
-            this.txtBuyRequestNO.Location = new System.Drawing.Point(96, 37);
+            this.txtBuyRequestNO.Location = new System.Drawing.Point(383, 34);
             this.txtBuyRequestNO.Name = "txtBuyRequestNO";
             this.txtBuyRequestNO.Size = new System.Drawing.Size(124, 23);
             this.txtBuyRequestNO.TabIndex = 19;
             // 
             // lblFieldText
             // 
-            this.lblFieldText.Location = new System.Drawing.Point(23, 37);
+            this.lblFieldText.Location = new System.Drawing.Point(310, 34);
             this.lblFieldText.Name = "lblFieldText";
             this.lblFieldText.Size = new System.Drawing.Size(62, 20);
             this.lblFieldText.TabIndex = 20;
@@ -345,7 +345,7 @@
             // 
             // txtPurOrderNO
             // 
-            this.txtPurOrderNO.Location = new System.Drawing.Point(399, 11);
+            this.txtPurOrderNO.Location = new System.Drawing.Point(123, 11);
             this.txtPurOrderNO.Name = "txtPurOrderNO";
             this.txtPurOrderNO.Size = new System.Drawing.Size(116, 23);
             this.txtPurOrderNO.TabIndex = 21;
@@ -356,12 +356,12 @@
             this.lblClassPath.Name = "lblClassPath";
             this.lblClassPath.Size = new System.Drawing.Size(88, 20);
             this.lblClassPath.TabIndex = 22;
-            this.lblClassPath.Values.Text = "销售出库单号";
+            this.lblClassPath.Values.Text = "采购退回单号";
             // 
-            // txtPurENteryNO
+            // txtPurEntryNO
             // 
-            this.txtPurEntryNO.Location = new System.Drawing.Point(399, 37);
-            this.txtPurEntryNO.Name = "txtPurENteryNO";
+            this.txtPurEntryNO.Location = new System.Drawing.Point(123, 37);
+            this.txtPurEntryNO.Name = "txtPurEntryNO";
             this.txtPurEntryNO.Size = new System.Drawing.Size(116, 23);
             this.txtPurEntryNO.TabIndex = 23;
             // 
@@ -377,13 +377,13 @@
             // 
             this.kryptonDockingManagerQuery.Strings.TextAutoHide = "自动隐藏";
             // 
-            // UCSaleWorkbench
+            // UCPURWorkbench
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonPanelMainBig);
             this.Controls.Add(this.BaseToolStrip);
-            this.Name = "UCSaleWorkbench";
+            this.Name = "UCPURWorkbench";
             this.Size = new System.Drawing.Size(1110, 721);
             this.Load += new System.EventHandler(this.UCProdWorkbench_Load);
             this.BaseToolStrip.ResumeLayout(false);
@@ -437,8 +437,8 @@
         private Krypton.Toolkit.KryptonLabel lblClassPath;
         private Krypton.Toolkit.KryptonTextBox txtPurEntryNO;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
-        private Krypton.Toolkit.KryptonTextBox txtSaleOutNO;
+        private Krypton.Toolkit.KryptonTextBox txtPURReNo;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
-        private Krypton.Toolkit.KryptonTextBox txtSaleOutReNO;
+        private Krypton.Toolkit.KryptonTextBox txtPurReEntryNo;
     }
 }

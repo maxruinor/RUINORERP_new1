@@ -127,7 +127,11 @@ namespace Krypton.Toolkit.Suite.Extended.TreeGridView
                 else if (e.KeyCode == Keys.Enter && !IsCurrentCellInEditMode)
                 {
                     SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-                    CurrentCell.OwningRow.Selected = true;
+                    if (CurrentCell!=null)
+                    {
+                        CurrentCell.OwningRow.Selected = true;
+                    }
+                   
                 }
             }
         }

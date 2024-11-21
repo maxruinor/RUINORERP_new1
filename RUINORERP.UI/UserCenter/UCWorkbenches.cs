@@ -557,10 +557,10 @@ namespace RUINORERP.UI.UserCenter
                     kryptonDockableWorkspaceQuery.ApplyGridPages();
                     break;
                 case "纵向分布":
-                    kryptonDockableWorkspaceQuery.ApplyGridPages(false, Orientation.Vertical, 1);
+                    kryptonDockableWorkspaceQuery.ApplyGridPages(false, Orientation.Horizontal, 1);
                     break;
                 case "横向分布":
-                    kryptonDockableWorkspaceQuery.ApplyGridPages(false, Orientation.Horizontal, 1);
+                    kryptonDockableWorkspaceQuery.ApplyGridPages(false, Orientation.Vertical, 1);
                     break;
                 default:
                     break;

@@ -113,7 +113,7 @@ namespace RUINORERP.Business.CommService
         //public ConcurrentDictionary<string, object> Dict { get => _Dict; set => _Dict = value; }
         public static MyCacheManager Manager { get => _manager; set => _manager = value; }
 
-        public T GetEntity<T>(object IdValue)
+        public  T GetEntity<T>(object IdValue)
         {
             object entity = new object();
             //Lazy<>
@@ -146,10 +146,15 @@ namespace RUINORERP.Business.CommService
                     else if (TypeHelper.IsJArrayList(listType))
                     {
                         JArray varJarray = (JArray)cachelist;
-                        JToken olditem = varJarray.FirstOrDefault(n => n[pair.Key].ToString() == IdValue.ToString()); 
+                        JToken olditem = varJarray.FirstOrDefault(n => n[pair.Key].ToString() == IdValue.ToString());
                         if (olditem != null)
                         {
-                            return olditem.ToObject<T>(); 
+                            return olditem.ToObject<T>();
+                        }
+                        else
+                        {
+                            T prodDetail =  _context.Db.Queryable<T>().Where(p => p.GetPropertyValue(key).ToString().Equals(KeyValue)).Single();
+                            return prodDetail;
                         }
                     }
 
@@ -221,7 +226,7 @@ namespace RUINORERP.Business.CommService
             return entity;
         }
 
- 
+
 
 
 

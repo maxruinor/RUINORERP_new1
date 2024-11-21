@@ -37,15 +37,15 @@ namespace RUINORERP.UI.UserCenter.DataParts
     /// <summary>
     /// 一个生产模块的总体界面，可以做一些列隐藏。详细时再打开
     /// </summary>
-    public partial class UCSale : UserControl
+    public partial class UCPUR : UserControl
     {
-        public UCSale()
+        public UCPUR()
         {
             InitializeComponent();
             GridRelated.SetRelatedInfo<tb_SaleOrder>(c => c.SOrderNo);
-            GridRelated.SetRelatedInfo<tb_SaleOut>(c => c.SaleOutNo);
+            GridRelated.SetRelatedInfo<tb_PurEntry>(c => c.PurEntryNo);
             GridRelated.SetRelatedInfo<tb_PurOrder>(c => c.PurOrderNo);
-            GridRelated.SetRelatedInfo<tb_SaleOutRe>(c => c.ReturnNo);
+            GridRelated.SetRelatedInfo<tb_PurReturnEntry>(c => c.PurReEntryNo);
             GridRelated.SetRelatedInfo<tb_PurEntry>(c => c.PurEntryNo);
             GridRelated.SetRelatedInfo<tb_PurEntryRe>(c => c.PurEntryReNo);
             GridRelated.SetRelatedInfo<tb_BuyingRequisition>(c => c.PuRequisitionNo);
@@ -75,9 +75,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return prodDetail;
         }
 
-        public List<tb_SaleOrder> SaleOrderList = new List<tb_SaleOrder>();
+        public List<tb_PurOrder> OrderList = new List<tb_PurOrder>();
 
-        public async Task<int> QueryData(List<tb_SaleOrder> _PURList = null)
+        public async Task<int> QueryData(List<tb_PurOrder> _PURList = null)
         {
             try
             {
@@ -86,53 +86,56 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 //必须添加这两个列进DataTable,后面会通过这两个列来树型结构
                 //colNames.TryAdd("ID", "ID");
                 //colNames.TryAdd("ParentId", "上级ID");
-                colNames.TryAdd("SOrderNo", "单号");
-                colNames.TryAdd("SaleDate", "单据日期");
-                colNames.TryAdd("TotalQty", "销售数量");
-                colNames.TryAdd("SendQty", "发货数量");
+                colNames.TryAdd("PurOrderNo", "单号");
+                colNames.TryAdd("PurDate", "单据日期");
+                colNames.TryAdd("TotalQty", "采购数量");
+                colNames.TryAdd("SendQty", "交付数量");
                 colNames.TryAdd("MainContent", "主要内容");
                 colNames.TryAdd("Priority", "优先级");
                 colNames.TryAdd("Process", "流程");
                 colNames.TryAdd("ProgressBar", "进度条");
                 colNames.TryAdd("Notes", "备注");
-                colNames.TryAdd("EmpName", "销售员");//9
-                colNames.TryAdd("CustomerVendor", "客户");//10
+                colNames.TryAdd("EmpName", "采购员");//9
+                colNames.TryAdd("CustomerVendor", "供应商");//10
                 colNames.TryAdd("Project", "项目");//11
                 colNames.TryAdd("DataStatus", "状态");//12
                 KeyValuePair<string, string>[] array = colNames.ToArray();
-                Array.Sort(array, new UCSaleCustomComparer());
+                Array.Sort(array, new UCPurCustomComparer());
 
                 //后面加一个生产请购单，用于跟踪采购来料这块。
                 if (_PURList != null)
                 {
-                    SaleOrderList = _PURList;
+                    OrderList = _PURList;
                 }
                 else
                 {
-                    SaleOrderList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                    OrderList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
                   .Includes(c => c.tb_employee)
-                  .Includes(c => c.tb_SaleOrderDetails)
-                  .Includes(c => c.tb_projectgroup)
+                  .Includes(c => c.tb_PurOrderDetails)
+                  .Includes(c => c.tb_department)
                   .Includes(c => c.tb_customervendor)
-                  .Includes(c => c.tb_OrderPackings)
+                  .Includes(c => c.tb_productiondemand)
                   .Includes(c => c.tb_paymentmethod)
-                  .Includes(c => c.tb_PurOrders, d => d.tb_PurOrderDetails)
-                  .Includes(c => c.tb_PurOrders, d => d.tb_PurEntries, f => f.tb_PurEntryDetails)
+                  .Includes(c => c.tb_PurOrderDetails)
+                    .Includes(c => c.tb_saleorder)
+                  .Includes(d => d.tb_PurEntries, f => f.tb_PurEntryDetails)
                   .AsNavQueryable()
-                  .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReDetails)
+                  .Includes(c => c.tb_PurOrderRes, d => d.tb_PurOrderReDetails)
                   .AsNavQueryable()
-                  .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReRefurbishedMaterialsDetails)
-                  .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutDetails)
-                  .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.SaleDate)
+                  .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurEntryReDetails)
+                   .AsNavQueryable()
+                   .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
+
+                  .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.PurDate)
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;
-                if (SaleOrderList.Count > 0)
+                if (OrderList.Count > 0)
                 {
                     kryptonTreeGridView1.DataSource = null;
                     kryptonTreeGridView1.GridNodes.Clear();
-                    kryptonTreeGridView1.SortColumnName = "SaleDate";
-                    kryptonTreeGridView1.DataSource = SaleOrderList.ToDataTable(array, true); // PURList.ToDataTable<Proc_WorkCenterPUR>(expColumns);
+                    kryptonTreeGridView1.SortColumnName = "PurDate";
+                    kryptonTreeGridView1.DataSource = OrderList.ToDataTable(array, true); // PURList.ToDataTable<Proc_WorkCenterPUR>(expColumns);
                     if (kryptonTreeGridView1.ColumnCount > 0)
                     {
                         kryptonTreeGridView1.Columns[0].Width = 220;
@@ -153,66 +156,66 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         //如果他是来自于订单。特殊标记一下
 
                         //找到计划单号：
-                        string SOrderNo = item.Cells[0].Value.ToString();
-                        var SaleOrder = SaleOrderList.FirstOrDefault(p => p.SOrderNo == SOrderNo);
-                        item.Tag = SaleOrder;
-                        item.Cells[0].Tag = "SOrderNo";
+                        string PurOrderNo = item.Cells[0].Value.ToString();
+                        var Order = OrderList.FirstOrDefault(p => p.PurOrderNo == PurOrderNo);
+                        item.Tag = Order;
+                        item.Cells[0].Tag = "PurOrderNo";
                         item.Cells[6].Value = "订单";
-                        item.Cells[9].Value = SaleOrder.tb_employee.Employee_Name;
-                        if (SaleOrder.tb_customervendor != null)
+                        item.Cells[9].Value = Order.tb_employee.Employee_Name;
+                        if (Order.tb_customervendor != null)
                         {
-                            item.Cells[10].Value = SaleOrder.tb_customervendor.CVName;
+                            item.Cells[10].Value = Order.tb_customervendor.CVName;
                         }
-                        if (SaleOrder.tb_projectgroup != null)
+                        if (Order.tb_department != null)
                         {
-                            item.Cells[11].Value = SaleOrder.tb_projectgroup.ProjectGroupName;
+                            item.Cells[11].Value = Order.tb_department.DepartmentName;
                         }
 
                         string project = string.Empty;
                         #region 加载订单单明细
-                        List<tb_SaleOrderDetail> SaleOrderDetails = SaleOrder.tb_SaleOrderDetails;
-                        foreach (tb_SaleOrderDetail SaleOrderDetail in SaleOrderDetails)
+                        List<tb_PurOrderDetail> OrderDetails = Order.tb_PurOrderDetails;
+                        foreach (tb_PurOrderDetail OrderDetail in OrderDetails)
                         {
-                            View_ProdDetail prodDetail = await GetProdDetail<View_ProdDetail>(SaleOrderDetail.ProdDetailID);
+                            View_ProdDetail prodDetail = await GetProdDetail<View_ProdDetail>(OrderDetail.ProdDetailID);
                             tb_ProductType productType = await GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
                             //子级
                             KryptonTreeGridNodeRow PlanDetailsubrow = item.Nodes.Add(prodDetail.SKU);
-                            PlanDetailsubrow.Cells[0].Tag = "SOrderNo";//保存列名 值对象=》tag(如果是明细则指向主表) 的列名。比方值是编号：则是PPNo
-                            PlanDetailsubrow.Tag = SaleOrder;//为了双击的时候能找到值对象。这里还是给主表对象。
+                            PlanDetailsubrow.Cells[0].Tag = "PurOrderNo";//保存列名 值对象=》tag(如果是明细则指向主表) 的列名。比方值是编号：则是PPNo
+                            PlanDetailsubrow.Tag = Order;//为了双击的时候能找到值对象。这里还是给主表对象。
                             PlanDetailsubrow.Cells[1].Value = "";//分析日期
-                            PlanDetailsubrow.Cells[2].Value = SaleOrderDetail.Quantity;
-                            PlanDetailsubrow.Cells[3].Value = SaleOrderDetail.TotalDeliveredQty;
+                            PlanDetailsubrow.Cells[2].Value = OrderDetail.Quantity;
+                            PlanDetailsubrow.Cells[3].Value = OrderDetail.DeliveredQuantity;//还有退回数量
                             PlanDetailsubrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                             PlanDetailsubrow.Cells[6].Value = "订单产品";
-                            PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOrder.DataStatus), SaleOrder.DataStatus).ToString();
+                            PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(Order.DataStatus), Order.DataStatus).ToString();
 
 
-                            #region 在销售订单明细中加载出库单
+                            #region 在采购订单明细中加载入库单
 
-                            List<tb_SaleOut> SaleOutList = SaleOrder.tb_SaleOuts;
-                            if (SaleOutList != null && SaleOutList.Count > 0)
+                            List<tb_PurEntry> PurEntryList = Order.tb_PurEntries;
+                            if (PurEntryList != null && PurEntryList.Count > 0)
                             {
-                                foreach (tb_SaleOut SaleOut in SaleOutList)
+                                foreach (tb_PurEntry PurEntry in PurEntryList)
                                 {
-                                    foreach (tb_SaleOutDetail SaleOutDetail in SaleOut.tb_SaleOutDetails.Where(c => c.ProdDetailID == SaleOrderDetail.ProdDetailID && c.Location_ID == SaleOrderDetail.Location_ID))
+                                    foreach (tb_PurEntryDetail PurEntryDetail in PurEntry.tb_PurEntryDetails.Where(c => c.ProdDetailID == OrderDetail.ProdDetailID && c.Location_ID == OrderDetail.Location_ID))
                                     {
                                         //子级
-                                        KryptonTreeGridNodeRow ProduceDetailrow = PlanDetailsubrow.Nodes.Add(SaleOut.SaleOutNo.ToString());
-                                        ProduceDetailrow.Tag = SaleOut;//为了双击的时候能找到值对象。这里还是给主表对象。
-                                        ProduceDetailrow.Cells[0].Tag = "SaleOutNo";//保存列名 值对象的列名。比方值是编号：则是PDNo
-                                        ProduceDetailrow.Cells[1].Value = SaleOut.OutDate.ToString("yyyy-MM-dd");//出库日期
+                                        KryptonTreeGridNodeRow ProduceDetailrow = PlanDetailsubrow.Nodes.Add(PurEntry.PurEntryNo.ToString());
+                                        ProduceDetailrow.Tag = PurEntry;//为了双击的时候能找到值对象。这里还是给主表对象。
+                                        ProduceDetailrow.Cells[0].Tag = "PurEntryNo";//保存列名 值对象的列名。比方值是编号：则是PDNo
+                                        ProduceDetailrow.Cells[1].Value = PurEntry.EntryDate.ToString("yyyy-MM-dd");//出库日期
                                         //ProduceDetailrow.Cells[2].Value = ProduceDetail.Quantity;
-                                        ProduceDetailrow.Cells[3].Value = SaleOutDetail.Quantity;
+                                        ProduceDetailrow.Cells[3].Value = PurEntryDetail.Quantity;
                                         ProduceDetailrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                                        ProduceDetailrow.Cells[6].Value = "出库";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                                        PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOut.DataStatus), SaleOut.DataStatus).ToString();
-                                        #region 销售退货单
-                                        LoadSaleOutReData(SaleOut, ProduceDetailrow, SaleOrderDetail, prodDetail, productType);
+                                        ProduceDetailrow.Cells[6].Value = "入库";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
+                                        PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(PurEntry.DataStatus), PurEntry.DataStatus).ToString();
+                                        #region 采购退货单
+                                        LoadPurEntryReData(PurEntry, ProduceDetailrow, OrderDetail, prodDetail, productType);
                                         #endregion
                                         #region 采购订单
-                                        //  LoadSelfMadeProducts(SaleOut, ProduceDetail, PlanDetailsubrow, prodDetail);
+                                        //  LoadSelfMadeProducts(PurEntry, ProduceDetail, PlanDetailsubrow, prodDetail);
                                         #endregion
 
                                     }
@@ -222,7 +225,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         }
                         #endregion
                         project = project.TrimEnd(';');
-                        item.Cells[3].Value = SaleOrder.tb_SaleOuts.Sum(c => c.TotalQty);//已发货数量
+                        item.Cells[3].Value = Order.tb_PurEntries.Sum(c => c.TotalQty);//已交付货数量
                         item.Cells[4].Value = project;
                     }
                     #endregion
@@ -238,7 +241,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 //    timer1.Stop();
                 //}
             }
-            if (SaleOrderList.Count > 3)
+            if (OrderList.Count > 3)
             {
                 kryptonTreeGridView1.CollapseAll();
             }
@@ -246,7 +249,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 kryptonTreeGridView1.ExpandAll();
             }
-            return SaleOrderList.Count;
+            return OrderList.Count;
         }
 
         /// <summary>
@@ -274,7 +277,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     SubProduceDetailrow.Cells[2].Value = SubProduceDetail.RequirementQty;
                     SubProduceDetailrow.Cells[4].Value = $"{productType.TypeName}:{SubProdDetail.CNName}{SubProdDetail.Specifications}{SubProdDetail.Model}{SubProdDetail.prop}";//项目
                     SubProduceDetailrow.Cells[6].Value = "次级需求";
-                    // LoadSaleOutReData(SubProduceDetail, SubProduceDetailrow, SubProdDetail, productType);
+                    // LoadPurEntryReData(SubProduceDetail, SubProduceDetailrow, SubProdDetail, productType);
                     LoadSelfMadeProducts(demand, SubProduceDetail, SubProduceDetailrow, SubProdDetail);
                 }
             }
@@ -287,77 +290,47 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <param name="ProduceDetail"></param>
         /// <param name="ProduceDetailrow"></param>
         /// <param name="prodDetail"></param>
-        private void LoadSaleOutReData(tb_SaleOut SaleOut, KryptonTreeGridNodeRow ProduceDetailrow, tb_SaleOrderDetail SaleOrderDetail, View_ProdDetail prodDetail, tb_ProductType productType)
+        private void LoadPurEntryReData(tb_PurEntry PurEntry, KryptonTreeGridNodeRow ProduceDetailrow, tb_PurOrderDetail SaleOrderDetail, View_ProdDetail prodDetail, tb_ProductType productType)
         {
-            if (SaleOut.tb_SaleOutRes == null)
+            if (PurEntry.tb_PurEntryRes == null)
             {
                 return;
             }
-            List<tb_SaleOutRe> SaleOutReList = SaleOut.tb_SaleOutRes.Where(c => c.SaleOut_NO == SaleOut.SaleOutNo).ToList();
+            List<tb_PurEntryRe> PurEntryReList = PurEntry.tb_PurEntryRes.Where(c => c.PurEntryNo == PurEntry.PurEntryNo).ToList();
 
-            foreach (tb_SaleOutRe SaleOutRe in SaleOutReList)
+            foreach (tb_PurEntryRe PurEntryRe in PurEntryReList)
             {
-                KryptonTreeGridNodeRow SaleOutReRow = ProduceDetailrow.Nodes.Add(SaleOutRe.ReturnNo);
-                SaleOutReRow.Tag = SaleOutRe;
-                SaleOutReRow.Cells[0].Tag = "ReturnNo";// 保存列名 值对象的列名。比方值是编号：则是PDNo
-                SaleOutReRow.Cells[1].Value = SaleOutRe.Created_at.Value.ToString("yyyy-MM-dd"); //日期;
-                SaleOutReRow.Cells[2].Value = SaleOutRe.TotalQty;
-                // SaleOutReRow.Cells[3].Value = SaleOutRe.TotalQty;
-                SaleOutReRow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                SaleOutReRow.Cells[6].Value = "销售退回";
-                SaleOutReRow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOutRe.DataStatus), SaleOutRe.DataStatus).ToString();
-                //ProduceDetailrow.Cells[3].Value = SaleOutRe.QuantityDelivered;//制令单的交付数量显示到上级的需求上
-                if (SaleOutRe.tb_SaleOutReDetails != null && SaleOutRe.tb_SaleOutReDetails.Count > 0)
+                KryptonTreeGridNodeRow PurEntryReRow = ProduceDetailrow.Nodes.Add(PurEntryRe.PurEntryReNo);
+                PurEntryReRow.Tag = PurEntryRe;
+                PurEntryReRow.Cells[0].Tag = "PurEntryReNo";// 保存列名 值对象的列名。比方值是编号：则是PDNo
+                PurEntryReRow.Cells[1].Value = PurEntryRe.Created_at.Value.ToString("yyyy-MM-dd"); //日期;
+                PurEntryReRow.Cells[2].Value = PurEntryRe.TotalQty;
+                // PurEntryReRow.Cells[3].Value = PurEntryRe.TotalQty;
+                PurEntryReRow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
+                PurEntryReRow.Cells[6].Value = "采购入库退回";
+                PurEntryReRow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(PurEntryRe.DataStatus), PurEntryRe.DataStatus).ToString();
+                //ProduceDetailrow.Cells[3].Value = PurEntryRe.QuantityDelivered;//制令单的交付数量显示到上级的需求上
+                if (PurEntryRe.tb_PurEntryReDetails != null && PurEntryRe.tb_PurEntryReDetails.Count > 0)
                 {
                     #region 退回明细
-                    foreach (tb_SaleOutReDetail SaleOutReDetail in SaleOutRe.tb_SaleOutReDetails.Where(c => c.ProdDetailID == prodDetail.ProdDetailID && c.Location_ID == SaleOrderDetail.Location_ID))
+                    foreach (tb_PurEntryReDetail PurEntryReDetail in PurEntryRe.tb_PurEntryReDetails.Where(c => c.ProdDetailID == prodDetail.ProdDetailID && c.Location_ID == SaleOrderDetail.Location_ID))
                     {
-                        KryptonTreeGridNodeRow SaleOutReDetailrow = SaleOutReRow.Nodes.Add(SaleOutRe.ReturnNo);
-                        SaleOutReDetailrow.Tag = SaleOutRe;
-                        SaleOutReDetailrow.Cells[0].Tag = "ReturnNo";// 保存列名 值对象的列名。比方值是编号：则是PDNo
-                        SaleOutReDetailrow.Cells[1].Value = SaleOutRe.ReturnDate.Value.ToString("yyyy-MM-dd");//日期
-                        SaleOutReDetailrow.Cells[2].Value = SaleOutReDetail.Quantity;//预计数量
+                        KryptonTreeGridNodeRow PurEntryReDetailrow = PurEntryReRow.Nodes.Add(PurEntryRe.PurEntryReNo);
+                        PurEntryReDetailrow.Tag = PurEntryRe;
+                        PurEntryReDetailrow.Cells[0].Tag = "PurEntryReNo";// 保存列名 值对象的列名。比方值是编号：则是PDNo
+                        PurEntryReDetailrow.Cells[1].Value = PurEntryRe.ReturnDate.ToString("yyyy-MM-dd");//日期
+                        PurEntryReDetailrow.Cells[2].Value = PurEntryReDetail.Quantity;//预计数量
                         //订单明细数量只一行时。可能多次出库，多次退回，所以这里不能直接用SaleOrderDetail.qtY
-                        //if (SaleOutReDetail.Quantity == SaleOrderDetail.qt)
+                        //if (PurEntryReDetail.Quantity == SaleOrderDetail.qt)
                         //{
-                        //    SaleOutReDetailrow.Cells[4].Value = "全部退回";
+                        //    PurEntryReDetailrow.Cells[4].Value = "全部退回";
                         //}
-                        SaleOutReDetailrow.Cells[6].Value = "退回明细";
+                        PurEntryReDetailrow.Cells[6].Value = "退回明细";
                     }
                     #endregion
                 }
 
-                if (SaleOutRe.tb_SaleOutReRefurbishedMaterialsDetails != null && SaleOutRe.tb_SaleOutReRefurbishedMaterialsDetails.Count > 0)
-                {
-                    #region 退回翻新用料明细 
-                    foreach (tb_SaleOutReRefurbishedMaterialsDetail MaterialsDetail in SaleOutRe.tb_SaleOutReRefurbishedMaterialsDetails)
-                    {
-                        KryptonTreeGridNodeRow MaterialsDetailrow = SaleOutReRow.Nodes.Add(SaleOutRe.ReturnNo);
-                        MaterialsDetailrow.Tag = MaterialsDetail;//为了双击的时候能找到值对象。这里还是给主表对象。
-                        MaterialsDetailrow.Cells[0].Tag = "ReturnNo";// 保存列名 值对象的列名。比方值是编号：则是PDNo
-                        MaterialsDetailrow.Cells[1].Value = SaleOutRe.ReturnDate.ToString("yyyy-MM-dd"); //日期
-                        MaterialsDetailrow.Cells[2].Value = MaterialsDetail.Quantity;
-
-
-                        //if (MaterialsDetail.PayableQty == FinishedGoodsInvDetail.Qty)
-                        //{
-                        //    MaterialsDetailrow.Cells[4].Value = "全部缴库";
-                        //}
-                        //else if (MaterialsDetail.PayableQty > FinishedGoodsInvDetail.Qty)
-                        //{
-                        //    MaterialsDetailrow.Cells[4].Value = "部分缴库";
-                        //}
-                        //else if (0 == FinishedGoodsInvDetail.Qty)
-                        //{
-                        //    MaterialsDetailrow.Cells[4].Value = "未缴库";
-                        //}
-
-                        MaterialsDetailrow.Cells[6].Value = "缴库";
-
-
-                    }
-                    #endregion
-                }
+                
             }
         }
 
@@ -375,7 +348,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     if (kryptonTreeGridView1.CurrentCell.Tag != null)
                     {
-                        //特殊情况处理 当前行的业务类型：销售出库  库存盘点 对应一个集合，再用原来的方法来处理
+                        //特殊情况处理 当前行的业务类型：采购出库  库存盘点 对应一个集合，再用原来的方法来处理
                         GridRelated.GuideToForm(kryptonTreeGridView1.CurrentCell.Tag.ToString(), entity);
                     }
                 }
@@ -468,9 +441,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
     }
 
-    class UCSaleCustomComparer : IComparer<KeyValuePair<string, string>>
+    class UCPurCustomComparer : IComparer<KeyValuePair<string, string>>
     {
-        private readonly string[] desiredOrder = { "SOrderNo", "SaleDate", "TotalQty",
+        private readonly string[] desiredOrder = { "PurOrderNo", "PurDate", "TotalQty",
             "SendQty", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","CustomerVendor","Project","" };
         public int Compare(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
         {

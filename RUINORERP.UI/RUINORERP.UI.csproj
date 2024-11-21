@@ -2061,6 +2061,24 @@
     <Compile Include="UserCenter\DataParts\UCDataboard.Designer.cs">
       <DependentUpon>UCDataboard.cs</DependentUpon>
     </Compile>
+    <Compile Include="UserCenter\DataParts\UCPUR.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCPUR.Designer.cs">
+      <DependentUpon>UCPUR.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCPURCell_old.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCPURCell_old.Designer.cs">
+      <DependentUpon>UCPURCell_old.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCPURCell.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCPURCell.Designer.cs">
+      <DependentUpon>UCPURCell.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\DataParts\UCSaleCell.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2084,12 +2102,6 @@
     </Compile>
     <Compile Include="UserCenter\DataParts\UCMRPCell.Designer.cs">
       <DependentUpon>UCMRPCell.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UserCenter\DataParts\UCPURCell.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UserCenter\DataParts\UCPURCell.Designer.cs">
-      <DependentUpon>UCPURCell.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\DataParts\UCSaleCell_old.cs">
       <SubType>UserControl</SubType>
@@ -2990,6 +3002,15 @@
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCPUR.resx">
+      <DependentUpon>UCPUR.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCPURCell_old.resx">
+      <DependentUpon>UCPURCell_old.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCPURCell.resx">
+      <DependentUpon>UCPURCell.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCSaleCell.resx">
       <DependentUpon>UCSaleCell.cs</DependentUpon>
     </EmbeddedResource>
@@ -3001,9 +3022,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCMRPCell.resx">
       <DependentUpon>UCMRPCell.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UserCenter\DataParts\UCPURCell.resx">
-      <DependentUpon>UCPURCell.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCSaleCell_old.resx">
       <DependentUpon>UCSaleCell_old.cs</DependentUpon>

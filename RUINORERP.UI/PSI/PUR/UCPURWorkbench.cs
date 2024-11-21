@@ -8,6 +8,7 @@ using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
+using Mysqlx.Expr;
 using Netron.GraphLib;
 using NPOI.OpenXmlFormats.Spreadsheet;
 using NPOI.SS.Formula.Functions;
@@ -221,14 +222,15 @@ namespace RUINORERP.UI.PUR
 
 
         #region 对查询条件进行个性化设置
-        private async Task<List<tb_SaleOrder>> GetProductionPlan()
+        private async Task<List<tb_PurOrder>> GetProductionPlan()
         {
-            bool hasCondition = txtSaleOrderNO.Text.Trim().Length > 0 ||
-                                txtBuyRequestNO.Text.Trim().Length > 0 ||
+            bool hasCondition = txtPurOrderNO.Text.Trim().Length > 0 ||
                                 txtPurEntryNO.Text.Trim().Length > 0 ||
-                                txtSaleOutNO.Text.Trim().Length > 0 ||
-                                txtSaleOutReNO.Text.Trim().Length > 0 ||
-                                txtPurOrderNO.Text.Trim().Length > 0;
+                                txtSaleOrderNO.Text.Trim().Length > 0 ||
+                                txtBuyRequestNO.Text.Trim().Length > 0 ||
+                                txtPURReNo.Text.Trim().Length > 0 ||
+                                txtPurReEntryNo.Text.Trim().Length > 0;
+
 
             if (!hasCondition)
             {
@@ -240,120 +242,121 @@ namespace RUINORERP.UI.PUR
             {
                 return null;
             }
-            List<tb_SaleOrder> SaleList = null;
-            Expression<Func<tb_SaleOrder, bool>> exp = null;
+            List<tb_PurOrder> SaleList = null;
+            Expression<Func<tb_PurEntry, bool>> expPE = Expressionable.Create<tb_PurEntry>().ToExpression();
             Expression<Func<tb_PurOrder, bool>> expPO = Expressionable.Create<tb_PurOrder>().ToExpression();
+
+            Expression<Func<tb_PurEntryRe, bool>> expPERe = Expressionable.Create<tb_PurEntryRe>().ToExpression();
+
             // 根据索引执行相应的查询逻辑
             switch (index)
             {
+                //采购订单+采购入库单
                 case 1:
                 case 2:
-                    if (exp == null)
+                    if (txtPurOrderNO.Text.Trim().Length > 0)
                     {
-                        exp = Expressionable.Create<tb_SaleOrder>() //创建表达式
-                      .ToExpression();
+                        expPO = expPO.AndAlso(w => w.PurOrderNo.Contains(txtPurOrderNO.Text.Trim()));
                     }
-                    if (txtSaleOrderNO.Text.Trim().Length > 0)
+                    if (txtPurEntryNO.Text.Trim().Length > 0)
                     {
-                        exp = exp.AndAlso(w => w.SOrderNo.Contains(txtSaleOrderNO.Text.Trim()));
+                        expPO = expPO.AndAlso(w => w.tb_PurEntries.Any(d => d.PurEntryNo.Contains(txtPurEntryNO.Text.Trim())));
                     }
-                    if (txtBuyRequestNO.Text.Trim().Length > 0)
-                    {
-                        exp = exp.AndAlso(w => w.tb_SaleOuts.Any(d => d.SaleOutNo.Contains(txtSaleOutNO.Text.Trim())));
-                    }
-                    SaleList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+
+                    SaleList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
                       .Includes(c => c.tb_employee)
                       .Includes(c => c.tb_customervendor)
-                       .Includes(c => c.tb_projectgroup)
-                      .Includes(c => c.tb_SaleOrderDetails, d => d.tb_proddetail, f => f.tb_prod)
-                      .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutDetails)
-
+                       .Includes(c => c.tb_department)
+                      .Includes(c => c.tb_PurOrderDetails, d => d.tb_proddetail, f => f.tb_prod)
+                      .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryDetails)
                        .AsNavQueryable()
-                      .Includes(c => c.tb_PurOrders, d => d.tb_PurOrderDetails)
-                      // .AsNavQueryable()
-                      // .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
-                      //.WhereIF(txtPDNO.Text.Trim().Length > 0, w => w.tb_ProductionDemands.Any(d => d.PDNo.Contains(txtPDNO.Text.Trim())))
-                      .Where(exp)
-                      .OrderBy(c => c.SaleDate)
+                      .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurEntryReDetails)
+                        .AsNavQueryable()
+                        .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
+                      .Where(expPO)
+                      .OrderBy(c => c.PurDate)
                       .ToListAsync();
 
                     break;
                 case 3:
-                    //采购入单
+                    //销售订单
                     if (txtPurEntryNO.Text.Trim().Length > 0)
                     {
-                        List<tb_PurEntry> PurEntryList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
-                             .WhereIF(txtPurEntryNO.Text.Trim().Length > 0, w => w.PurEntryNo.Contains(txtPurEntryNO.Text.Trim()))
+                        List<tb_SaleOrder> SOList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                             .WhereIF(txtSaleOrderNO.Text.Trim().Length > 0, w => w.SOrderNo.Contains(txtSaleOrderNO.Text.Trim()))
                              .ToListAsync();
 
-                        long[] POIds = PurEntryList.Where(s => s.PurOrder_ID.HasValue).Select(c => c.PurOrder_ID.Value).ToArray();
+                        long[] SOIds = SOList.Select(c => c.SOrder_ID).ToArray();
 
-                        Expression<Func<tb_PurOrder, bool>> expPOTemp = Expressionable.Create<tb_PurOrder>() //创建表达式
-                          .AndIF(POIds.Length > 0, c => POIds.ToArray().Contains(c.PurOrder_ID))
-                          .ToExpression();
-                        expPO = expPOTemp;
-                        goto case 6;
+                        expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
+                         .AndIF(SOIds.Length > 0, c => c.SOrder_ID.HasValue && c.RefBizType == (int)BizType.销售订单 && SOIds.ToArray().Contains(c.RefBillID.Value))
+                         .ToExpression();
+
+                        goto case 1;
                     }
                     break;
                 case 4:
-                    //销售出库
-                    if (txtSaleOutNO.Text.Trim().Length > 0)
+                    //请购单
+                    if (txtBuyRequestNO.Text.Trim().Length > 0)
                     {
-                        List<tb_SaleOut> SaleOutList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
-                             .WhereIF(txtSaleOutNO.Text.Trim().Length > 0, w => w.SaleOutNo.Contains(txtSaleOutNO.Text.Trim()))
+                        List<tb_BuyingRequisition> BRList = await MainForm.Instance.AppContext.Db.Queryable<tb_BuyingRequisition>()
+                             .WhereIF(txtBuyRequestNO.Text.Trim().Length > 0, w => w.PuRequisitionNo.Contains(txtBuyRequestNO.Text.Trim()))
                              .ToListAsync();
-
-                        long[] SOIds = SaleOutList.Where(c => c.SOrder_ID.HasValue).Select(c => c.SOrder_ID.Value).ToArray();
-
-                        Expression<Func<tb_SaleOrder, bool>> expSO = Expressionable.Create<tb_SaleOrder>() //创建表达式
-                          .AndIF(SOIds.Length > 0, c => SOIds.ToArray().Contains(c.SOrder_ID))
-                          .ToExpression();
-                        exp = expSO;
-                        goto case 1;
+                        long[] BRIds = BRList.Select(c => c.PuRequisition_ID).ToArray();
+                        if (BRIds.Length>0)
+                        {
+                            expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
+                            .AndIF(BRIds.Length > 0, c => c.RefBillID.HasValue && c.RefBizType == (int)BizType.请购单 && BRIds.ToArray().Contains(c.RefBillID.Value))
+                            .ToExpression();
+                            goto case 1;
+                        }
                     }
                     break;
                 case 5:
-                    //销售退回单
-                    if (txtSaleOutReNO.Text.Trim().Length > 0)
+                    //采购退货
+                    if (txtPURReNo.Text.Trim().Length > 0 || expPERe != null)
                     {
-                        List<tb_SaleOutRe> ReturnList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutRe>()
-                             .WhereIF(txtSaleOutReNO.Text.Trim().Length > 0, w => w.ReturnNo.Contains(txtSaleOutReNO.Text.Trim()))
+                        List<tb_PurEntryRe> ReturnList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryRe>()
+                             .WhereIF(txtPurReEntryNo.Text.Trim().Length > 0, w => w.PurEntryReNo.Contains(txtPURReNo.Text.Trim()))
+                             .Where(expPERe)
                              .ToListAsync();
                         //找到下一级的IDS
-                        long[] OutIds = ReturnList.Where(c => c.SaleOut_MainID.HasValue).Select(c => c.SaleOut_MainID.Value).ToArray();
-                        Expression<Func<tb_SaleOut, bool>> expOut = Expressionable.Create<tb_SaleOut>() //创建表达式
-                          .AndIF(OutIds.Length > 0, c => OutIds.ToArray().Contains(c.SaleOut_MainID))
+                        long[] EntryIds = ReturnList.Where(c => c.PurEntryID.HasValue).Select(c => c.PurEntryID.Value).ToArray();
+
+                        Expression<Func<tb_PurEntry, bool>> expEntry = Expressionable.Create<tb_PurEntry>() //创建表达式
+                          .AndIF(EntryIds.Length > 0, c => EntryIds.ToArray().Contains(c.PurEntryID))
                           .ToExpression();
 
-                        List<tb_SaleOut> OutList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
-                            .Where(expOut)
+                        List<tb_PurEntry> EntryList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
+                            .Where(expEntry)
                              .ToListAsync();
 
-                        long[] SOIDlist = OutList.Where(c => c.SOrder_ID.HasValue).Select(c => c.SOrder_ID.Value).ToArray();
+                        long[] POIDs = EntryList.Where(c => c.PurOrder_ID.HasValue).Select(c => c.PurOrder_ID.Value).ToArray();
 
-                        Expression<Func<tb_SaleOrder, bool>> expSO = Expressionable.Create<tb_SaleOrder>() //创建表达式
-                          .AndIF(SOIDlist.Length > 0, c => SOIDlist.ToArray().Contains(c.SOrder_ID))
-                          .ToExpression();
-                        exp = expSO;
-                        goto case 1;
+                        if (POIDs.Length>0)
+                        {
+                            expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
+                           .AndIF(POIDs.Length > 0, c => POIDs.ToArray().Contains(c.PurOrder_ID))
+                           .ToExpression();
+                            goto case 1;
+                        }
                     }
                     break;
                 case 6:
-                    //采购订单
-                    if (txtPurOrderNO.Text.Trim().Length > 0 || expPO != null)
+                    //采购退货入库
+                    if (txtPurReEntryNo.Text.Trim().Length > 0)
                     {
-                        var PurOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
-                             .WhereIF(txtPurOrderNO.Text.Trim().Length > 0, w => w.PurOrderNo.Contains(txtPurOrderNO.Text.Trim()))
-                             .Where(expPO)
+                        var PurReEntrys = await MainForm.Instance.AppContext.Db.Queryable<tb_PurReturnEntry>()
+                             .WhereIF(txtPurReEntryNo.Text.Trim().Length > 0, w => w.PurReEntryNo.Contains(txtPurReEntryNo.Text.Trim()))
                             .ToListAsync();
 
-                        long[] RefBillIds = PurOrders.Where(s => s.RefBillID.HasValue && s.RefBizType.HasValue && s.RefBizType.Value == (int)BizType.销售订单).Select(c => c.RefBillID.Value).ToArray();
+                        long[] PurEntryRe_IDs = PurReEntrys.Where(s => s.PurEntryRe_ID.HasValue).Select(c => c.PurEntryRe_ID.Value).ToArray();
 
-                        Expression<Func<tb_SaleOrder, bool>> expSO = Expressionable.Create<tb_SaleOrder>() //创建表达式
-                        .AndIF(RefBillIds.Length > 0, c => RefBillIds.ToArray().Contains(c.RefBillID.Value))
+                         expPERe = Expressionable.Create<tb_PurEntryRe>() //创建表达式
+                        .AndIF(PurEntryRe_IDs.Length > 0, c => PurEntryRe_IDs.ToArray().Contains(c.PurEntryRe_ID))
                         .ToExpression();
-                        exp = expSO;
-                        goto case 1;
+                        
+                        goto case 5;
                     }
                     break;
                 default:
@@ -369,8 +372,8 @@ namespace RUINORERP.UI.PUR
             bool hasPPNO = txtSaleOrderNO.Text.Trim().Length > 0;
             bool hasPDNO = txtBuyRequestNO.Text.Trim().Length > 0;
             bool hasFGNO = txtPurEntryNO.Text.Trim().Length > 0;
-            bool hasMRNO = txtSaleOutNO.Text.Trim().Length > 0;
-            bool hasMRRENO = txtSaleOutReNO.Text.Trim().Length > 0;
+            bool hasMRNO = txtPURReNo.Text.Trim().Length > 0;
+            bool hasMRRENO = txtPurReEntryNo.Text.Trim().Length > 0;
             bool hasMONO = txtPurOrderNO.Text.Trim().Length > 0;
             int index = 0;
             // 检查是否恰好有一个条件被输入
@@ -521,22 +524,22 @@ namespace RUINORERP.UI.PUR
         }
 
 
-        public async void Query(List<tb_SaleOrder> _PURList = null)
+        public async void Query(List<tb_PurOrder> _PURList = null)
         {
-            List<tb_SaleOrder> purList = await GetProductionPlan();
+            List<tb_PurOrder> purList = await GetProductionPlan();
             if (purList != null)
             {
                 SubQuery(purList);
             }
         }
-        public async void SubQuery(List<tb_SaleOrder> List = null)
+        public async void SubQuery(List<tb_PurOrder> List = null)
         {
-            await uCSale.QueryData(List);
+            await uCPur.QueryData(List);
         }
 
         internal override void LoadQueryParametersToUI(object LoadItems)
         {
-            if (LoadItems != null && LoadItems is List<tb_SaleOrder> pplist)
+            if (LoadItems != null && LoadItems is List<tb_PurOrder> pplist)
             {
                 SubQuery(pplist);
             }
@@ -571,7 +574,7 @@ namespace RUINORERP.UI.PUR
             }
             return false;
         }
-        UCSale uCSale = new UCSale();
+        UCPUR uCPur = new UCPUR();
         private void UCProdWorkbench_Load(object sender, EventArgs e)
         {
             if (this.DesignMode)
@@ -686,10 +689,10 @@ namespace RUINORERP.UI.PUR
 
         private KryptonPage CreateCell()
         {
-            uCSale.Name = "uCSale";
-            uCSale.Dock = DockStyle.Fill;
-            uCSale.kryptonTreeGridView1.RowHeadersVisible = true;
-            KryptonPage page = UIForKryptonHelper.NewPage("采购", 1, uCSale);
+            uCPur.Name = "uCSale";
+            uCPur.Dock = DockStyle.Fill;
+            uCPur.kryptonTreeGridView1.RowHeadersVisible = true;
+            KryptonPage page = UIForKryptonHelper.NewPage("采购", 1, uCPur);
             page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
             return page;
         }

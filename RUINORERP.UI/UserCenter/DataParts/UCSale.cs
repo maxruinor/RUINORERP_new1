@@ -110,6 +110,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 else
                 {
                     SaleOrderList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                   
                   .Includes(c => c.tb_employee)
                   .Includes(c => c.tb_SaleOrderDetails)
                   .Includes(c => c.tb_projectgroup)
@@ -118,13 +119,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_paymentmethod)
                   .Includes(c => c.tb_PurOrders, d => d.tb_PurOrderDetails)
                   .Includes(c => c.tb_PurOrders, d => d.tb_PurEntries, f => f.tb_PurEntryDetails)
-                  .AsNavQueryable()
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReDetails)
-                  .AsNavQueryable()
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReRefurbishedMaterialsDetails)
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutDetails)
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.SaleDate)
-                  .ToListAsync();
+                  .WithCache(60) // 缓存60秒
+                  .ToListAsync(); //.ToPageAsync(1, 20); // 第一页，每页20条
                 }
                 kryptonTreeGridView1.ReadOnly = true;
                 if (SaleOrderList.Count > 0)
@@ -471,7 +471,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
     class UCSaleCustomComparer : IComparer<KeyValuePair<string, string>>
     {
         private readonly string[] desiredOrder = { "SOrderNo", "SaleDate", "TotalQty",
-            "SendQty", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","CustomerVendor","Project","" };
+            "SendQty", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","CustomerVendor","Project","DataStatus" };
         public int Compare(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
         {
             int indexX = Array.IndexOf(desiredOrder, x.Key);

@@ -117,6 +117,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .AsNavQueryable()
                   .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.RequirementDate)
+                    .WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;

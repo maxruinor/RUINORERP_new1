@@ -43,7 +43,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         UCMRP uCMRP = new UCMRP();
         private async void UCPURCell_Load(object sender, EventArgs e)
         {
-            await Task.Delay(5000); // 等待5秒
+            await Task.Delay(3000); // 等待5秒
             int PURListCount = await uCMRP.QueryMRPDataStatus();
             kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + PURListCount.ToString() + "】计划生产中";
             krypton生产.Controls.Add(uCMRP);

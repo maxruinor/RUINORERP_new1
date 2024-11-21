@@ -119,14 +119,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_PurOrderDetails)
                     .Includes(c => c.tb_saleorder)
                   .Includes(d => d.tb_PurEntries, f => f.tb_PurEntryDetails)
-                  .AsNavQueryable()
                   .Includes(c => c.tb_PurOrderRes, d => d.tb_PurOrderReDetails)
-                  .AsNavQueryable()
                   .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurEntryReDetails)
                    .AsNavQueryable()
                    .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
-
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.PurDate)
+                    .WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;
@@ -444,7 +442,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
     class UCPurCustomComparer : IComparer<KeyValuePair<string, string>>
     {
         private readonly string[] desiredOrder = { "PurOrderNo", "PurDate", "TotalQty",
-            "SendQty", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","CustomerVendor","Project","" };
+            "SendQty", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","CustomerVendor","Project","DataStatus" };
         public int Compare(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
         {
             int indexX = Array.IndexOf(desiredOrder, x.Key);

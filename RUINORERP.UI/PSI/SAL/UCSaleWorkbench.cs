@@ -596,7 +596,7 @@ namespace RUINORERP.UI.SAL
                 try
                 {
                     //Location of XML file
-                    string xmlFilePath = "UCProdWorkbenchPersistence.xml";
+                    string xmlFilePath = "UCSaleWorkbenchPersistence.xml";
                     if (System.IO.File.Exists(xmlFilePath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
                     {
                         #region load
@@ -674,9 +674,9 @@ namespace RUINORERP.UI.SAL
                                 //kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
                                 //kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
                                 break;
-                            case "生产":
+                            case "销售":
                                 // kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Left, Kpages.Where(p => p.UniqueName == "明细信息").ToArray());
-                                kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "生产").ToArray());
+                                kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "销售").ToArray());
                                 break;
                         }
                     }

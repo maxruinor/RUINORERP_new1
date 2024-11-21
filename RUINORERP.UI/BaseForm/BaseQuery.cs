@@ -1,4 +1,5 @@
 ﻿using RUINORERP.Business.Processor;
+using RUINORERP.Model;
 using RUINORERP.UI.UserCenter;
 using System;
 using System.Collections.Generic;
@@ -25,12 +26,20 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public object QueryDtoProxy { get; set; }
 
+        /// <summary>
+        /// 传查询参数对象，对象已经给了查询参数具体值，具体在窗体那边判断
+        /// </summary>
+        /// <param name="QueryParameters"></param>
+        internal virtual void LoadQueryParametersToUI(object loadItems)
+        {
+             
+        }
 
         /// <summary>
         /// 传查询参数对象，对象已经给了查询参数具体值，具体在窗体那边判断
         /// </summary>
         /// <param name="QueryParameters"></param>
-        internal virtual void LoadQueryParametersToUI(object QueryParameters, NodeParameter nodeParameter = null)
+        internal virtual void LoadQueryParametersToUI(object QueryParameters, QueryParameter nodeParameter = null)
         {
             //
         }
@@ -49,7 +58,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public virtual void SetGridViewDisplayConfig()
         {
-          
+
         }
 
     }

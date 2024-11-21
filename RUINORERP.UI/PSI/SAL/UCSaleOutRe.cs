@@ -323,13 +323,14 @@ namespace RUINORERP.UI.PSI.SAL
             List<tb_SaleOutReDetail> lines = new List<tb_SaleOutReDetail>();
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
-            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-         .AndIF(true, w => w.CNName.Length > 0)
-        // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-        .ToExpression();//注意 这一句 不能少
-                        // StringBuilder sb = new StringBuilder();
-            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list = dc.BaseQueryByWhere(exp);
+            //    Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+            // .AndIF(true, w => w.CNName.Length > 0)
+            //// .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
+            //.ToExpression();//注意 这一句 不能少
+            //                // StringBuilder sb = new StringBuilder();
+            //    /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
+            //    list = dc.BaseQueryByWhere(exp);
+            list = MainForm.Instance.list;
             sgd.SetDependencyObject<ProductSharePart, tb_SaleOutReDetail>(list);
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutReDetail));
@@ -394,13 +395,14 @@ namespace RUINORERP.UI.PSI.SAL
             List<tb_SaleOutReRefurbishedMaterialsDetail> lines = new List<tb_SaleOutReRefurbishedMaterialsDetail>();
             bindingSourceOtherSub.DataSource = lines;
             sgd2.BindingSourceLines = bindingSourceOtherSub;
-            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-         .AndIF(true, w => w.CNName.Length > 0)
-        // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-        .ToExpression();//注意 这一句 不能少
-                        // StringBuilder sb = new StringBuilder();
-            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list = dc.BaseQueryByWhere(exp);
+            //    Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+            // .AndIF(true, w => w.CNName.Length > 0)
+            //// .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
+            //.ToExpression();//注意 这一句 不能少
+            //                // StringBuilder sb = new StringBuilder();
+            //    /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
+            //    list = dc.BaseQueryByWhere(exp);
+            list = MainForm.Instance.list;
             sgd2.SetDependencyObject<ProductSharePart, tb_SaleOutReRefurbishedMaterialsDetail>(list);
             sgd2.HasRowHeader = true;
             sgh2.InitGrid(grid2, sgd2, true, nameof(tb_SaleOutReRefurbishedMaterialsDetail));

@@ -272,14 +272,14 @@ namespace RUINORERP.UI.PSI.INV
             List<tb_ProdBorrowingDetail> lines = new List<tb_ProdBorrowingDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
-            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-               .AndIF(true, w => w.CNName.Length > 0)
-              // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-              .ToExpression();//注意 这一句 不能少
-                              // StringBuilder sb = new StringBuilder();
-            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list = await dc.BaseQueryByWhereAsync(exp);
-
+            //Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+            //   .AndIF(true, w => w.CNName.Length > 0)
+            //  // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
+            //  .ToExpression();//注意 这一句 不能少
+            //                  // StringBuilder sb = new StringBuilder();
+            ///// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
+            //list = await dc.BaseQueryByWhereAsync(exp);
+            list = MainForm.Instance.list;
             sgd.SetDependencyObject<ProductSharePart, tb_ProdBorrowingDetail>(list);
 
             sgd.HasRowHeader = true;

@@ -4,8 +4,10 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -18,6 +20,23 @@ namespace RUINORERP.UI.Common
 {
     public static class UIBizSrvice
     {
+
+        /// <summary>
+        /// 获取固定值数据字典
+        /// 目前是指一些枚举值转换为文字
+        /// </summary>
+        /// <returns></returns>
+        public static ConcurrentDictionary<string, List<KeyValuePair<object, string>>> GetFixedDataDict()
+        {
+            //三级 还是两级呢。  反向来 一是 KEY VALUE  然后是列名
+            ConcurrentDictionary<string, List<KeyValuePair<object, string>>> _DataDictionary = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
+            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
+            _DataDictionary.TryAdd(nameof(DataStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+            return _DataDictionary;
+
+        }
+
+
 
         #region 从缓存中取产品显示数据
 

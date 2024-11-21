@@ -285,12 +285,13 @@ namespace RUINORERP.UI.PSI.PUR
             List<tb_PurEntryReDetail> lines = new List<tb_PurEntryReDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
-            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-                   .AndIF(true, w => w.CNName.Length > 0)
-                  // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-                  .ToExpression();//注意 这一句 不能少
+            //Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+            //       .AndIF(true, w => w.CNName.Length > 0)
+            //      // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
+            //      .ToExpression();//注意 这一句 不能少
 
-            list = dc.BaseQueryByWhere(exp);
+            //list = dc.BaseQueryByWhere(exp);
+            list = MainForm.Instance.list;
             sgd.SetDependencyObject<ProductSharePart, tb_PurEntryReDetail>(list);
 
             sgd.HasRowHeader = true;

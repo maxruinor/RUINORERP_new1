@@ -59,13 +59,12 @@ using System.Xml;
 using System.Xml.Linq;
 using XmlDocument = System.Xml.XmlDocument;
 
-namespace RUINORERP.UI.MRP
+namespace RUINORERP.UI.PUR
 {
 
-    [MenuAttrAssemblyInfo("生产工作台", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产)]
-    public partial class UCProdWorkbench : BaseForm.BaseQuery
+    [MenuAttrAssemblyInfo("采购工作台", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.采购管理)]
+    public partial class UCPURWorkbench : BaseForm.BaseQuery
     {
-
 
         public KryptonDockingWorkspace ws;
 
@@ -107,7 +106,7 @@ namespace RUINORERP.UI.MRP
 
 
 
-        public UCProdWorkbench()
+        public UCPURWorkbench()
         {
             InitializeComponent();
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
@@ -222,14 +221,14 @@ namespace RUINORERP.UI.MRP
 
 
         #region 对查询条件进行个性化设置
-        private async Task<List<tb_ProductionPlan>> GetProductionPlan()
+        private async Task<List<tb_SaleOrder>> GetProductionPlan()
         {
-            bool hasCondition = txtPPNO.Text.Trim().Length > 0 ||
-                                txtPDNO.Text.Trim().Length > 0 ||
-                                txtFGNO.Text.Trim().Length > 0 ||
-                                txtMRNO.Text.Trim().Length > 0 ||
-                                txtMRRENO.Text.Trim().Length > 0 ||
-                                txtMONO.Text.Trim().Length > 0;
+            bool hasCondition = txtSaleOrderNO.Text.Trim().Length > 0 ||
+                                txtBuyRequestNO.Text.Trim().Length > 0 ||
+                                txtPurEntryNO.Text.Trim().Length > 0 ||
+                                txtSaleOutNO.Text.Trim().Length > 0 ||
+                                txtSaleOutReNO.Text.Trim().Length > 0 ||
+                                txtPurOrderNO.Text.Trim().Length > 0;
 
             if (!hasCondition)
             {
@@ -241,8 +240,9 @@ namespace RUINORERP.UI.MRP
             {
                 return null;
             }
-            List<tb_ProductionPlan> PURList = null;
-            Expression<Func<tb_ProductionPlan, bool>> exp = null;
+            List<tb_SaleOrder> SaleList = null;
+            Expression<Func<tb_SaleOrder, bool>> exp = null;
+            Expression<Func<tb_PurOrder, bool>> expPO = Expressionable.Create<tb_PurOrder>().ToExpression();
             // 根据索引执行相应的查询逻辑
             switch (index)
             {
@@ -250,160 +250,109 @@ namespace RUINORERP.UI.MRP
                 case 2:
                     if (exp == null)
                     {
-                        exp = Expressionable.Create<tb_ProductionPlan>() //创建表达式
+                        exp = Expressionable.Create<tb_SaleOrder>() //创建表达式
                       .ToExpression();
                     }
-                    if (txtPPNO.Text.Trim().Length > 0)
+                    if (txtSaleOrderNO.Text.Trim().Length > 0)
                     {
-                        exp = exp.AndAlso(w => w.PPNo.Contains(txtPPNO.Text.Trim()));
+                        exp = exp.AndAlso(w => w.SOrderNo.Contains(txtSaleOrderNO.Text.Trim()));
                     }
-                    if (txtPDNO.Text.Trim().Length > 0)
+                    if (txtBuyRequestNO.Text.Trim().Length > 0)
                     {
-                        exp = exp.AndAlso(w => w.tb_ProductionDemands.Any(d => d.PDNo.Contains(txtPDNO.Text.Trim())));
+                        exp = exp.AndAlso(w => w.tb_SaleOuts.Any(d => d.SaleOutNo.Contains(txtSaleOutNO.Text.Trim())));
                     }
-                    PURList = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionPlan>()
+                    SaleList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
                       .Includes(c => c.tb_employee)
-                      .Includes(c => c.tb_department)
+                      .Includes(c => c.tb_customervendor)
                        .Includes(c => c.tb_projectgroup)
-                      .Includes(c => c.tb_ProductionPlanDetails)
-                      .Includes(c => c.tb_ProductionDemands, d => d.tb_ProductionDemandTargetDetails)
-                      .AsNavQueryable()
-                      .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, e => e.tb_FinishedGoodsInvs, f => f.tb_FinishedGoodsInvDetails)
-                      .AsNavQueryable()
-                      .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
+                      .Includes(c => c.tb_SaleOrderDetails, d => d.tb_proddetail, f => f.tb_prod)
+                      .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutDetails)
+
+                       .AsNavQueryable()
+                      .Includes(c => c.tb_PurOrders, d => d.tb_PurOrderDetails)
+                      // .AsNavQueryable()
+                      // .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
                       //.WhereIF(txtPDNO.Text.Trim().Length > 0, w => w.tb_ProductionDemands.Any(d => d.PDNo.Contains(txtPDNO.Text.Trim())))
                       .Where(exp)
-                      .OrderBy(c => c.RequirementDate)
+                      .OrderBy(c => c.SaleDate)
                       .ToListAsync();
 
                     break;
                 case 3:
-                    //缴库单
-                    if (txtFGNO.Text.Trim().Length > 0)
+                    //采购入单
+                    if (txtPurEntryNO.Text.Trim().Length > 0)
                     {
-                        List<tb_FinishedGoodsInv> FinishedGoodsInvList = await MainForm.Instance.AppContext.Db.Queryable<tb_FinishedGoodsInv>()
-                             .WhereIF(txtFGNO.Text.Trim().Length > 0, w => w.DeliveryBillNo.Contains(txtFGNO.Text.Trim()))
+                        List<tb_PurEntry> PurEntryList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
+                             .WhereIF(txtPurEntryNO.Text.Trim().Length > 0, w => w.PurEntryNo.Contains(txtPurEntryNO.Text.Trim()))
                              .ToListAsync();
 
-                        long[] MOIds = FinishedGoodsInvList.Where(s => s.MOID.HasValue).Select(c => c.MOID.Value).ToArray();
+                        long[] POIds = PurEntryList.Where(s => s.PurOrder_ID.HasValue).Select(c => c.PurOrder_ID.Value).ToArray();
 
-                        Expression<Func<tb_ManufacturingOrder, bool>> expMO = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
-                          .AndIF(MOIds.Length > 0, c => MOIds.ToArray().Contains(c.MOID))
+                        Expression<Func<tb_PurOrder, bool>> expPOTemp = Expressionable.Create<tb_PurOrder>() //创建表达式
+                          .AndIF(POIds.Length > 0, c => POIds.ToArray().Contains(c.PurOrder_ID))
                           .ToExpression();
-
-                        var ManufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>().Where(expMO).ToListAsync();
-
-                        long[] PDIds = ManufacturingOrders.Where(s => s.PDID.HasValue).Select(c => c.PDID.Value).ToArray();
-
-                        Expression<Func<tb_ProductionDemand, bool>> expPD = Expressionable.Create<tb_ProductionDemand>() //创建表达式
-                        .AndIF(PDIds.Length > 0, c => PDIds.ToArray().Contains(c.PDID))
-                        .ToExpression();
-
-                        var ProductionDemands = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(expPD).ToListAsync();
-                        long[] ppids = ProductionDemands.Select(c => c.PPID).ToArray();
-
-                        Expression<Func<tb_ProductionPlan, bool>> expPP = Expressionable.Create<tb_ProductionPlan>() //创建表达式
-                       .AndIF(ppids.Length > 0, c => ppids.ToArray().Contains(c.PPID))
-                       .ToExpression();
-                        exp = expPP;
-                        goto case 1;
+                        expPO = expPOTemp;
+                        goto case 6;
                     }
                     break;
                 case 4:
-                    //领料单
-                    if (txtMRNO.Text.Trim().Length > 0)
+                    //销售出库
+                    if (txtSaleOutNO.Text.Trim().Length > 0)
                     {
-                        List<tb_MaterialRequisition> MaterialRequisitionList = await MainForm.Instance.AppContext.Db.Queryable<tb_MaterialRequisition>()
-                             .WhereIF(txtMRNO.Text.Trim().Length > 0, w => w.MaterialRequisitionNO.Contains(txtMRNO.Text.Trim()))
+                        List<tb_SaleOut> SaleOutList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                             .WhereIF(txtSaleOutNO.Text.Trim().Length > 0, w => w.SaleOutNo.Contains(txtSaleOutNO.Text.Trim()))
                              .ToListAsync();
 
-                        long[] MOIds = MaterialRequisitionList.Select(c => c.MOID).ToArray();
+                        long[] SOIds = SaleOutList.Where(c => c.SOrder_ID.HasValue).Select(c => c.SOrder_ID.Value).ToArray();
 
-                        Expression<Func<tb_ManufacturingOrder, bool>> expMO = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
-                          .AndIF(MOIds.Length > 0, c => MOIds.ToArray().Contains(c.MOID))
+                        Expression<Func<tb_SaleOrder, bool>> expSO = Expressionable.Create<tb_SaleOrder>() //创建表达式
+                          .AndIF(SOIds.Length > 0, c => SOIds.ToArray().Contains(c.SOrder_ID))
                           .ToExpression();
-
-                        var ManufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>().Where(expMO).ToListAsync();
-
-                        long[] PDIds = ManufacturingOrders.Where(s => s.PDID.HasValue).Select(c => c.PDID.Value).ToArray();
-
-                        Expression<Func<tb_ProductionDemand, bool>> expPD = Expressionable.Create<tb_ProductionDemand>() //创建表达式
-                        .AndIF(PDIds.Length > 0, c => PDIds.ToArray().Contains(c.PDID))
-                        .ToExpression();
-
-                        var ProductionDemands = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(expPD).ToListAsync();
-                        long[] ppids = ProductionDemands.Select(c => c.PPID).ToArray();
-
-                        Expression<Func<tb_ProductionPlan, bool>> expPP = Expressionable.Create<tb_ProductionPlan>() //创建表达式
-                       .AndIF(ppids.Length > 0, c => ppids.ToArray().Contains(c.PPID))
-                       .ToExpression();
-                        exp = expPP;
+                        exp = expSO;
                         goto case 1;
                     }
                     break;
                 case 5:
-                    //退料单
-                    if (txtMRRENO.Text.Trim().Length > 0)
+                    //销售退回单
+                    if (txtSaleOutReNO.Text.Trim().Length > 0)
                     {
-                        List<tb_MaterialReturn> MaterialReturnList = await MainForm.Instance.AppContext.Db.Queryable<tb_MaterialReturn>()
-                             .WhereIF(txtMRRENO.Text.Trim().Length > 0, w => w.MaterialRequisitionNO.Contains(txtMRRENO.Text.Trim()))
+                        List<tb_SaleOutRe> ReturnList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutRe>()
+                             .WhereIF(txtSaleOutReNO.Text.Trim().Length > 0, w => w.ReturnNo.Contains(txtSaleOutReNO.Text.Trim()))
                              .ToListAsync();
-                        //通过退料单找到领料单IDS
-                        long[] MRIds = MaterialReturnList.Select(c => c.MR_ID).ToArray();
-                        Expression<Func<tb_MaterialRequisition, bool>> expMR = Expressionable.Create<tb_MaterialRequisition>() //创建表达式
-                          .AndIF(MRIds.Length > 0, c => MRIds.ToArray().Contains(c.MOID))
+                        //找到下一级的IDS
+                        long[] OutIds = ReturnList.Where(c => c.SaleOut_MainID.HasValue).Select(c => c.SaleOut_MainID.Value).ToArray();
+                        Expression<Func<tb_SaleOut, bool>> expOut = Expressionable.Create<tb_SaleOut>() //创建表达式
+                          .AndIF(OutIds.Length > 0, c => OutIds.ToArray().Contains(c.SaleOut_MainID))
                           .ToExpression();
 
-                        List<tb_MaterialRequisition> MaterialRequisitionList = await MainForm.Instance.AppContext.Db.Queryable<tb_MaterialRequisition>()
-                            .Where(expMR)
+                        List<tb_SaleOut> OutList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                            .Where(expOut)
                              .ToListAsync();
 
-                        long[] MOIds = MaterialRequisitionList.Select(c => c.MOID).ToArray();
+                        long[] SOIDlist = OutList.Where(c => c.SOrder_ID.HasValue).Select(c => c.SOrder_ID.Value).ToArray();
 
-                        Expression<Func<tb_ManufacturingOrder, bool>> expMO = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
-                          .AndIF(MOIds.Length > 0, c => MOIds.ToArray().Contains(c.MOID))
+                        Expression<Func<tb_SaleOrder, bool>> expSO = Expressionable.Create<tb_SaleOrder>() //创建表达式
+                          .AndIF(SOIDlist.Length > 0, c => SOIDlist.ToArray().Contains(c.SOrder_ID))
                           .ToExpression();
-
-                        var ManufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
-                            .Where(expMO).ToListAsync();
-
-                        long[] PDIds = ManufacturingOrders.Where(s => s.PDID.HasValue).Select(c => c.PDID.Value).ToArray();
-
-                        Expression<Func<tb_ProductionDemand, bool>> expPD = Expressionable.Create<tb_ProductionDemand>() //创建表达式
-                        .AndIF(PDIds.Length > 0, c => PDIds.ToArray().Contains(c.PDID))
-                        .ToExpression();
-
-                        var ProductionDemands = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(expPD).ToListAsync();
-                        long[] ppids = ProductionDemands.Select(c => c.PPID).ToArray();
-
-                        Expression<Func<tb_ProductionPlan, bool>> expPP = Expressionable.Create<tb_ProductionPlan>() //创建表达式
-                       .AndIF(ppids.Length > 0, c => ppids.ToArray().Contains(c.PPID))
-                       .ToExpression();
-                        exp = expPP;
+                        exp = expSO;
                         goto case 1;
                     }
                     break;
                 case 6:
-                    //制令单
-                    if (txtMONO.Text.Trim().Length > 0)
+                    //采购订单
+                    if (txtPurOrderNO.Text.Trim().Length > 0 || expPO != null)
                     {
-                        var ManufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
-                             .WhereIF(txtMONO.Text.Trim().Length > 0, w => w.MONO.Contains(txtMONO.Text.Trim()))
+                        var PurOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
+                             .WhereIF(txtPurOrderNO.Text.Trim().Length > 0, w => w.PurOrderNo.Contains(txtPurOrderNO.Text.Trim()))
+                             .Where(expPO)
                             .ToListAsync();
 
-                        long[] PDIds = ManufacturingOrders.Where(s => s.PDID.HasValue).Select(c => c.PDID.Value).ToArray();
+                        long[] RefBillIds = PurOrders.Where(s => s.RefBillID.HasValue && s.RefBizType.HasValue && s.RefBizType.Value == (int)BizType.销售订单).Select(c => c.RefBillID.Value).ToArray();
 
-                        Expression<Func<tb_ProductionDemand, bool>> expPD = Expressionable.Create<tb_ProductionDemand>() //创建表达式
-                        .AndIF(PDIds.Length > 0, c => PDIds.ToArray().Contains(c.PDID))
+                        Expression<Func<tb_SaleOrder, bool>> expSO = Expressionable.Create<tb_SaleOrder>() //创建表达式
+                        .AndIF(RefBillIds.Length > 0, c => RefBillIds.ToArray().Contains(c.RefBillID.Value))
                         .ToExpression();
-
-                        var ProductionDemands = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(expPD).ToListAsync();
-                        long[] ppids = ProductionDemands.Select(c => c.PPID).ToArray();
-
-                        Expression<Func<tb_ProductionPlan, bool>> expPP = Expressionable.Create<tb_ProductionPlan>() //创建表达式
-                       .AndIF(ppids.Length > 0, c => ppids.ToArray().Contains(c.PPID))
-                       .ToExpression();
-                        exp = expPP;
+                        exp = expSO;
                         goto case 1;
                     }
                     break;
@@ -412,17 +361,17 @@ namespace RUINORERP.UI.MRP
                     break;
             }
 
-            return PURList;
+            return SaleList;
         }
 
         private int CheckQueryPara()
         {
-            bool hasPPNO = txtPPNO.Text.Trim().Length > 0;
-            bool hasPDNO = txtPDNO.Text.Trim().Length > 0;
-            bool hasFGNO = txtFGNO.Text.Trim().Length > 0;
-            bool hasMRNO = txtMRNO.Text.Trim().Length > 0;
-            bool hasMRRENO = txtMRRENO.Text.Trim().Length > 0;
-            bool hasMONO = txtMONO.Text.Trim().Length > 0;
+            bool hasPPNO = txtSaleOrderNO.Text.Trim().Length > 0;
+            bool hasPDNO = txtBuyRequestNO.Text.Trim().Length > 0;
+            bool hasFGNO = txtPurEntryNO.Text.Trim().Length > 0;
+            bool hasMRNO = txtSaleOutNO.Text.Trim().Length > 0;
+            bool hasMRRENO = txtSaleOutReNO.Text.Trim().Length > 0;
+            bool hasMONO = txtPurOrderNO.Text.Trim().Length > 0;
             int index = 0;
             // 检查是否恰好有一个条件被输入
             bool exactlyOneCondition = hasPPNO ^ hasPDNO ^ hasFGNO ^ hasMRNO ^ hasMRRENO ^ hasMONO;
@@ -572,22 +521,22 @@ namespace RUINORERP.UI.MRP
         }
 
 
-        public async void Query(List<tb_ProductionPlan> _PURList = null)
+        public async void Query(List<tb_SaleOrder> _PURList = null)
         {
-            List<tb_ProductionPlan> purList = await GetProductionPlan();
+            List<tb_SaleOrder> purList = await GetProductionPlan();
             if (purList != null)
             {
                 SubQuery(purList);
             }
         }
-        public async void SubQuery(List<tb_ProductionPlan> _PURList = null)
+        public async void SubQuery(List<tb_SaleOrder> List = null)
         {
-            await uCMRP.QueryMRPDataStatus(_PURList);
+            await uCSale.QueryData(List);
         }
 
-        internal override void LoadQueryParametersToUI(object QueryParameters, QueryParameter nodeParameter)
+        internal override void LoadQueryParametersToUI(object LoadItems)
         {
-            if (QueryParameters != null && QueryParameters is List<tb_ProductionPlan> pplist)
+            if (LoadItems != null && LoadItems is List<tb_SaleOrder> pplist)
             {
                 SubQuery(pplist);
             }
@@ -622,7 +571,7 @@ namespace RUINORERP.UI.MRP
             }
             return false;
         }
-        UCMRP uCMRP = new UCMRP();
+        UCSale uCSale = new UCSale();
         private void UCProdWorkbench_Load(object sender, EventArgs e)
         {
             if (this.DesignMode)
@@ -640,7 +589,7 @@ namespace RUINORERP.UI.MRP
                 KryptonPageCollection Kpages = new KryptonPageCollection();
                 if (Kpages.Count == 0)
                 {
-                    Kpages.Add(CreateMRP());
+                    Kpages.Add(CreateCell());
                 }
 
                 //加载布局
@@ -735,33 +684,16 @@ namespace RUINORERP.UI.MRP
             }
         }
 
-        private KryptonPage CreateMRP()
+        private KryptonPage CreateCell()
         {
-            uCMRP.Name = "uCMRP";
-            uCMRP.Dock = DockStyle.Fill;
-            uCMRP.kryptonTreeGridView1.RowHeadersVisible = true;
-            KryptonPage page = NewPage("生产", 1, uCMRP);
+            uCSale.Name = "uCSale";
+            uCSale.Dock = DockStyle.Fill;
+            uCSale.kryptonTreeGridView1.RowHeadersVisible = true;
+            KryptonPage page = UIForKryptonHelper.NewPage("采购", 1, uCSale);
             page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
             return page;
         }
 
-        private KryptonPage NewPage(string name, int image, Control content)
-        {
-            // Create new page with title and image
-            KryptonPage p = new KryptonPage();
-            p.Text = name;
-            p.TextTitle = name;
-            p.TextDescription = name;
-            p.UniqueName = p.Text;
-            // p.ImageSmall = imageListSmall.Images[image];
-
-            // Add the control for display inside the page
-            content.Dock = DockStyle.Fill;
-            p.Controls.Add(content);
-
-            // _count++;
-            return p;
-        }
 
     }
 }

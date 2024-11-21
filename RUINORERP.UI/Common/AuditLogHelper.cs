@@ -78,6 +78,8 @@ namespace RUINORERP.UI.Common
             auditLog.ActionTime = DateTime.Now;
             try
             {
+                // 延迟执行日志插入操作 防止死锁？
+                await Task.Delay(150); // 延迟100毫秒
                 await MainForm.Instance.AppContext.Db.CopyNew().Insertable<tb_AuditLogs>(auditLog).ExecuteReturnEntityAsync();
             }
             catch (Exception ex)

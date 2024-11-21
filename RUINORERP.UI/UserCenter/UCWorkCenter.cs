@@ -260,7 +260,7 @@ namespace RUINORERP.UI.UserCenter
                 DataTable queryList未提交 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未提交).ToDataTable();
                 if (queryList未提交.Rows.Count > 0)
                 {
-                    NodeParameter parameter = new NodeParameter();
+                    QueryParameter parameter = new QueryParameter();
                     parameter.conditionals = conModel未提交;
                     parameter.tableType = tableType;
 
@@ -281,7 +281,7 @@ namespace RUINORERP.UI.UserCenter
                 DataTable queryList未审核 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel未审核).ToDataTable();
                 if (queryList未审核.Rows.Count > 0)
                 {
-                    NodeParameter parameter = new NodeParameter();
+                    QueryParameter parameter = new QueryParameter();
                     parameter.conditionals = conModel未审核;
                     parameter.tableType = tableType;
 
@@ -295,7 +295,7 @@ namespace RUINORERP.UI.UserCenter
 
                 if (item == BizType.销售订单)
                 {
-                    NodeParameter parameter = new NodeParameter();
+                    QueryParameter parameter = new QueryParameter();
                     parameter.conditionals = conModel未出库;
                     parameter.tableType = tableType;
                     //未出库
@@ -313,7 +313,7 @@ namespace RUINORERP.UI.UserCenter
                 }
                 if (item == BizType.销售出库单)
                 {
-                    NodeParameter parameter = new NodeParameter();
+                    QueryParameter parameter = new QueryParameter();
                     parameter.conditionals = conModel待收款;
                     parameter.tableType = tableType;
 
@@ -401,7 +401,7 @@ namespace RUINORERP.UI.UserCenter
                     switch (DataOverview)
                     {
                         case 数据概览.销售单元:
-                            UCSaleCell uCSaleCell = new UCSaleCell();
+                            UCSaleCell_old uCSaleCell = new UCSaleCell_old();
                             flowLayoutPane数据概览.Controls.Add(uCSaleCell);
                             break;
                         case 数据概览.采购单元:
@@ -450,7 +450,7 @@ namespace RUINORERP.UI.UserCenter
             //找到要打开的菜单  订单查询
             if (kryptonTreeViewJobList.SelectedNode != null)
             {
-                if (kryptonTreeViewJobList.SelectedNode.Tag is NodeParameter nodeParameter)
+                if (kryptonTreeViewJobList.SelectedNode.Tag is QueryParameter nodeParameter)
                 {
 
                     var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nodeParameter.tableType.Name && m.ClassPath.Contains("Query")).FirstOrDefault();
@@ -465,7 +465,7 @@ namespace RUINORERP.UI.UserCenter
                         // 创建实例
                         object instance = Activator.CreateInstance(nodeParameter.tableType);
                         menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
-                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance , nodeParameter);
                         //要卸载，不然会多次执行
                         menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
 
@@ -475,7 +475,7 @@ namespace RUINORERP.UI.UserCenter
             }
         }
 
-        private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, NodeParameter nodeParameter)
+        private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, QueryParameter nodeParameter)
         {
             if (QueryDto == null)
             {

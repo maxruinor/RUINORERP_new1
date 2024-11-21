@@ -47,6 +47,10 @@ namespace RUINORERP.UI.Common
                     if (kv.Value != null)
                     {
                         DisplayText = kv.Value;
+                        if (!string.IsNullOrEmpty(DisplayText))
+                        {
+                            return DisplayText;
+                        }
                     }
                 }
             }

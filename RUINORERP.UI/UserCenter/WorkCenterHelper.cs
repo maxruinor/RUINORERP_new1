@@ -16,7 +16,7 @@ namespace RUINORERP.UI.UserCenter
     /// <summary>
     /// 工作台节点事件中传递参数实体
     /// </summary>
-    public class NodeParameter
+    public class QueryParameter
     {
         public List<IConditionalModel> conditionals { get; set; }
 

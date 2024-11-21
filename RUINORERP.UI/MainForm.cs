@@ -400,9 +400,9 @@ namespace RUINORERP.UI
                     Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
                     .AndIF(true, w => w.CNName.Length > 0)
                     .ToExpression();//注意 这一句 不能少
-                    list = dc.BaseQueryByWhere(exp);
-
-
+                    list =await dc.BaseQueryByWhereAsync(exp);
+                    list = MainForm.Instance.list;
+                    //这里做一个事件。缓存中的变化了。这里也变化一下。todo:
                     try
                     {
                         bool rs = mc.CheckMenuInitialized();

@@ -27,7 +27,7 @@ namespace RUINORERP.UI.Common
 
         //sgd 要提供当前操作的行 列 值
 
-        public delegate void SetQueryConditionsDelegate(object QueryDto, NodeParameter nodeParameter);
+        public delegate void SetQueryConditionsDelegate(object QueryDto, QueryParameter nodeParameter);
 
         /// <summary>
         /// 设置查询参数
@@ -398,12 +398,16 @@ namespace RUINORERP.UI.Common
 
         }
 
+
         /// <summary>
-        /// 执行点击事件
+        /// 执行事件  加载一个窗体
         /// </summary>
-        /// <param name="pr"></param>
-        /// <param name="entity">如果是执行打开单据时，则传的是单据信息，如果是查询是，则是查询条件</param>
-        public async void ExecuteEvents(tb_MenuInfo pr, object entity, NodeParameter nodeParameter = null)
+        /// <param name="pr">窗体菜单的信息</param>
+        /// <param name="EntityDto">带查询条件或值的实体可能是查询对象本身或是代理类</param>
+        /// <param name="nodeParameter">工作台待办事项点击过来带的条件</param>
+        /// <param name="LoadItem">加载单实体</param>
+        /// <param name="LoadItems">加载实体集合</param>
+        public async void ExecuteEvents(tb_MenuInfo pr, object LoadItem = null, QueryParameter nodeParameter = null, object LoadItems = null)
         {
             if (pr == null)
             {
@@ -527,8 +531,12 @@ namespace RUINORERP.UI.Common
                         {
                             //billEdit.LoadDataToUI(entity);
                             // 延迟后在 UI 线程上执行 BindData
-                            await Task.Delay(500);
-                            billEdit.Invoke(new Action(() => billEdit.LoadDataToUI(entity)));
+                            if (LoadItem != null)
+                            {
+                                await Task.Delay(400);
+                                billEdit.Invoke(new Action(() => billEdit.LoadDataToUI(LoadItem)));
+                            }
+                           
                             /* LoadDataToUI只能在UI线程中调用，所以需要使用Task.Run来切换到UI线程
                             await Task.Delay(1000); // 2000 表示2秒，单位为毫秒
                             // 延迟完成后执行 BindData 方法
@@ -536,33 +544,23 @@ namespace RUINORERP.UI.Common
                         }
 
                         //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
-                        if (page.Controls[0] is BaseQuery baseQuery)
+                        //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
+                        if (page.Controls[0] is BaseQuery baseQuery && nodeParameter != null)
                         {
                             //set value这里设置属性？
                             if (OnSetQueryConditionsDelegate != null)
                             {
                                 OnSetQueryConditionsDelegate(baseQuery.QueryDtoProxy, nodeParameter);
                             }
-                            if (entity!=null)
-                            {
-                                baseQuery.LoadQueryParametersToUI(entity, nodeParameter);
-                            }
-                            else
-                            {
-                                baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
-                            }
+                            baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
                         }
- 
+
+
                         //生产工作台 区别上面。为了不影响上面。 
-                        //if (page.Controls[0] is BaseQuery ucbaseQuery && entity != null)
-                        //{
-                        //    //set value这里设置属性？
-                        //    if (OnSetQueryConditionsDelegate != null)
-                        //    {
-                        //        OnSetQueryConditionsDelegate(ucbaseQuery.QueryDtoProxy, nodeParameter);
-                        //    }
-                        //    ucbaseQuery.LoadQueryParametersToUI(entity, nodeParameter);
-                        //}
+                        if (page.Controls[0] is BaseQuery ucbaseQuery && LoadItems != null)
+                        {
+                            ucbaseQuery.LoadQueryParametersToUI(LoadItems);
+                        }
 
                         cell.SelectedPage = page;
                     }

@@ -29,6 +29,7 @@ using RUINORERP.Common.Helper;
 using Krypton.Toolkit;
 using Krypton.Toolkit.Suite.Extended.Outlook.Grid;
 using Netron.Neon.TextEditor.Actions;
+using Org.BouncyCastle.Asn1.X509;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -75,7 +76,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         public List<tb_SaleOrder> SaleOrderList = new List<tb_SaleOrder>();
 
-        public async Task<int> QueryMRPDataStatus(List<tb_SaleOrder> _PURList = null)
+        public async Task<int> QueryData(List<tb_SaleOrder> _PURList = null)
         {
             try
             {
@@ -96,6 +97,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 colNames.TryAdd("EmpName", "销售员");//9
                 colNames.TryAdd("CustomerVendor", "客户");//10
                 colNames.TryAdd("Project", "项目");//11
+                colNames.TryAdd("DataStatus", "状态");//12
                 KeyValuePair<string, string>[] array = colNames.ToArray();
                 Array.Sort(array, new UCSaleCustomComparer());
 
@@ -110,25 +112,22 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_employee)
                   .Includes(c => c.tb_SaleOrderDetails)
                   .Includes(c => c.tb_projectgroup)
-
-                    .Includes(c => c.tb_customervendor)
-                    .Includes(c => c.tb_OrderPackings)
-                    .Includes(c => c.tb_paymentmethod)
-                    .Includes(c => c.tb_PurOrders, d => d.tb_PurOrderDetails)
-                     .Includes(c => c.tb_PurOrders, d => d.tb_PurEntries, f => f.tb_PurEntryDetails)
-                .AsNavQueryable()
-                .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReDetails)
-                      .AsNavQueryable()
+                  .Includes(c => c.tb_customervendor)
+                  .Includes(c => c.tb_OrderPackings)
+                  .Includes(c => c.tb_paymentmethod)
+                  .Includes(c => c.tb_PurOrders, d => d.tb_PurOrderDetails)
+                  .Includes(c => c.tb_PurOrders, d => d.tb_PurEntries, f => f.tb_PurEntryDetails)
+                  .AsNavQueryable()
+                  .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReDetails)
+                  .AsNavQueryable()
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReRefurbishedMaterialsDetails)
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutDetails)
-
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.SaleDate)
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;
                 if (SaleOrderList.Count > 0)
                 {
-
                     kryptonTreeGridView1.DataSource = null;
                     kryptonTreeGridView1.GridNodes.Clear();
                     kryptonTreeGridView1.SortColumnName = "SaleDate";
@@ -145,6 +144,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         kryptonTreeGridView1.Columns[7].Width = 60;
                         kryptonTreeGridView1.Columns[8].Width = 150;
                         kryptonTreeGridView1.Columns[9].Width = 60;
+                        kryptonTreeGridView1.Columns[10].Width = 60;
                     }
 
                     foreach (var item in kryptonTreeGridView1.GridNodes)
@@ -185,6 +185,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             PlanDetailsubrow.Cells[3].Value = SaleOrderDetail.TotalDeliveredQty;
                             PlanDetailsubrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                             PlanDetailsubrow.Cells[6].Value = "订单产品";
+                            PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(),nameof(SaleOrder.DataStatus), SaleOrder.DataStatus).ToString();
+
 
                             #region 在销售订单明细中加载出库单
 
@@ -193,7 +195,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             {
                                 foreach (tb_SaleOut SaleOut in SaleOutList)
                                 {
-                                    foreach (tb_SaleOutDetail ProduceDetail in SaleOut.tb_SaleOutDetails.Where(c => c.ProdDetailID == SaleOrderDetail.ProdDetailID && c.Location_ID == SaleOrderDetail.Location_ID))
+                                    foreach (tb_SaleOutDetail SaleOutDetail in SaleOut.tb_SaleOutDetails.Where(c => c.ProdDetailID == SaleOrderDetail.ProdDetailID && c.Location_ID == SaleOrderDetail.Location_ID))
                                     {
                                         //子级
                                         KryptonTreeGridNodeRow ProduceDetailrow = PlanDetailsubrow.Nodes.Add(SaleOut.SaleOutNo.ToString());
@@ -201,9 +203,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                         ProduceDetailrow.Cells[0].Tag = "SaleOutNo";//保存列名 值对象的列名。比方值是编号：则是PDNo
                                         ProduceDetailrow.Cells[1].Value = SaleOut.OutDate.ToString("yyyy-MM-dd");//出库日期
                                         //ProduceDetailrow.Cells[2].Value = ProduceDetail.Quantity;
-                                        ProduceDetailrow.Cells[3].Value = ProduceDetail.Quantity;
+                                        ProduceDetailrow.Cells[3].Value = SaleOutDetail.Quantity;
                                         ProduceDetailrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                                         ProduceDetailrow.Cells[6].Value = "出库";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
+                                        PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOut.DataStatus), SaleOut.DataStatus).ToString();
                                         #region 销售退货单
                                         LoadSaleOutReData(SaleOut, ProduceDetailrow, SaleOrderDetail, prodDetail, productType);
                                         #endregion
@@ -218,6 +221,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         }
                         #endregion
                         project = project.TrimEnd(';');
+                        item.Cells[3].Value = SaleOrder.tb_SaleOuts.Sum(c => c.TotalQty);//已发货数量
                         item.Cells[4].Value = project;
                     }
                     #endregion
@@ -300,7 +304,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 // SaleOutReRow.Cells[3].Value = SaleOutRe.TotalQty;
                 SaleOutReRow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                 SaleOutReRow.Cells[6].Value = "销售退回";
-                //  ProduceDetailrow.Cells[3].Value = SaleOutRe.QuantityDelivered;//制令单的交付数量显示到上级的需求上
+                SaleOutReRow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOutRe.DataStatus), SaleOutRe.DataStatus).ToString();
+                //ProduceDetailrow.Cells[3].Value = SaleOutRe.QuantityDelivered;//制令单的交付数量显示到上级的需求上
                 if (SaleOutRe.tb_SaleOutReDetails != null && SaleOutRe.tb_SaleOutReDetails.Count > 0)
                 {
                     #region 退回明细
@@ -331,7 +336,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         MaterialsDetailrow.Cells[0].Tag = "ReturnNo";// 保存列名 值对象的列名。比方值是编号：则是PDNo
                         MaterialsDetailrow.Cells[1].Value = SaleOutRe.ReturnDate.ToString("yyyy-MM-dd"); //日期
                         MaterialsDetailrow.Cells[2].Value = MaterialsDetail.Quantity;
-           
+
 
                         //if (MaterialsDetail.PayableQty == FinishedGoodsInvDetail.Qty)
                         //{
@@ -465,7 +470,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
     class UCSaleCustomComparer : IComparer<KeyValuePair<string, string>>
     {
         private readonly string[] desiredOrder = { "SOrderNo", "SaleDate", "TotalQty",
-            "SendQty", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","CustomerVendor","Project" };
+            "SendQty", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","CustomerVendor","Project","" };
         public int Compare(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
         {
             int indexX = Array.IndexOf(desiredOrder, x.Key);

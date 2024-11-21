@@ -416,13 +416,15 @@ namespace RUINORERP.UI.ProductEAV
             bindingSourceSub.DataSource = lines;
             sgd1.BindingSourceLines = bindingSourceSub;
 
-            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-               .AndIF(true, w => w.CNName.Length > 0)
-              // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-              .ToExpression();//注意 这一句 不能少
-                              // StringBuilder sb = new StringBuilder();
-            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list = dc.BaseQueryByWhere(exp);
+            //Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+            //   .AndIF(true, w => w.CNName.Length > 0)
+            //  // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
+            //  .ToExpression();//注意 这一句 不能少
+          
+            //list = dc.BaseQueryByWhere(exp);
+
+            list = MainForm.Instance.list;
+
             sgd1.SetDependencyObject<ProductSharePart, tb_PackingDetail>(list);
 
             sgd1.HasRowHeader = true;
@@ -522,13 +524,16 @@ namespace RUINORERP.UI.ProductEAV
             List<tb_BoxRules> lines = new List<tb_BoxRules>();
             bindingSourceOtherSub.DataSource = lines;
             sgd2.BindingSourceLines = bindingSourceOtherSub;
-            Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
-         .AndIF(true, w => w.CNName.Length > 0)
-        // .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
-        .ToExpression();//注意 这一句 不能少
-                        // StringBuilder sb = new StringBuilder();
-            /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
-            list = dc.BaseQueryByWhere(exp);
+            //    Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
+            // .AndIF(true, w => w.CNName.Length > 0)
+            //// .AndIF(txtSpecifications.Text.Trim().Length > 0, w => w.Specifications.Contains(txtSpecifications.Text.Trim()))
+            //.ToExpression();//注意 这一句 不能少
+            //                // StringBuilder sb = new StringBuilder();
+            //    /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
+            //    list = dc.BaseQueryByWhere(exp);
+
+            list = MainForm.Instance.list;
+
             sgd2.SetDependencyObject<ProductSharePart, tb_BoxRules>(list);
             sgd2.HasRowHeader = true;
             sgd2.HasSummaryRow = false;

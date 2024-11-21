@@ -598,8 +598,8 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 传实体进去,具体在窗体那边判断    单据实体数据传入加载用
         /// </summary>
-        /// <param name="Entity"></param>
-        internal virtual void LoadDataToUI(object Entity)
+        /// <param name="LoadItem"></param>
+        internal virtual void LoadDataToUI(object LoadItem)
         {
             
         }

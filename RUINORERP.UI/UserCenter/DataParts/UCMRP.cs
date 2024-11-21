@@ -95,6 +95,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 colNames.TryAdd("EmpName", "计划员");//9
                 colNames.TryAdd("Department", "部门");//10
                 colNames.TryAdd("Project", "项目");//11
+                colNames.TryAdd("DataStatus", "状态");//12
                 KeyValuePair<string, string>[] array = colNames.ToArray();
                 Array.Sort(array, new UCMRPCustomComparer());
 
@@ -457,7 +458,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
     class UCMRPCustomComparer : IComparer<KeyValuePair<string, string>>
     {
         private readonly string[] desiredOrder = { "PPNo", "RequirementDate", "TotalQuantity",
-            "TotalCompletedQuantity", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","Department","Project" };
+            "TotalCompletedQuantity", "MainContent", "Priority", "Process", "ProgressBar", "Notes", "EmpName","Department","Project","DataStatus" };
         public int Compare(KeyValuePair<string, string> x, KeyValuePair<string, string> y)
         {
             int indexX = Array.IndexOf(desiredOrder, x.Key);

@@ -915,7 +915,13 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public Expression<Func<M, bool>> LimitQueryConditions { get; set; }
 
-        internal override void LoadQueryParametersToUI(object QueryParameters, NodeParameter nodeParameter)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="QueryParameters"></param>
+        /// <param name="nodeParameter"></param>
+        internal override void LoadQueryParametersToUI(object QueryParameters, QueryParameter nodeParameter)
         {
             if (QueryParameters != null)
             {
@@ -944,7 +950,6 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
 
-
                 Query(QueryParameters, false);
             }
         }
@@ -952,7 +957,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 与高级查询执行结果公共使用，如果null时，则执行普通查询？
         /// </summary>
-        /// <param name="QueryDto">查询参数实体</param>
+        /// <param name="QueryDto">查询参数实体 ：比方我要查销售订单，结果是一个订单列表。查询条件是 订单日期区间，订单号等直接赋值给订单实体本身。再到方法中提取日期等条件</param>
         /// <param name="UIQuery">如果条件来自UI时要验证UI，否则不验证</param>
         [MustOverride]
         protected async virtual void Query(object QueryDto, bool UIQuery = true)
@@ -966,97 +971,7 @@ namespace RUINORERP.UI.BaseForm
             }
 
             BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
-
-
-            //既然前台指定的查询哪些字段，到时可以配置。这里应该是 除软件删除外的。其他字段不需要
-            /*
-            List<string> queryConditions = new List<string>();
-            foreach (Expression<Func<M, object>> item in QueryConditions)
-            {
-                Expression newexp = item.Body;
-                if (newexp.NodeType == ExpressionType.MemberAccess)
-                {
-                    if (newexp is MemberExpression member)
-                    {
-                        queryConditions.Add(member.Member.Name);
-                    }
-                }
-                else
-                {
-                    if (newexp.NodeType == ExpressionType.Convert)
-                    {
-                        var cexp = (newexp as UnaryExpression).Operand;
-                        if (cexp is MemberExpression member)
-                        {
-                            queryConditions.Add(member.Member.Name);
-                        }
-                    }
-                }
-            }
-            */
-            #region 测试修复用
-            /*
-          string sql = string.Empty;
-          sql = @"SELECT
-    * 
-    FROM
-    tb_PurEntry 
-    WHERE
-    PurEntryNo IN (
-      'PIR0002',
-      'PIR24011742',
-      'PIR0064',
-      'PIR0015',
-      'PIR0017',
-      'PIR0041',
-      'PIR24011866',
-      'PIR0046',
-      'PIR24011532',
-      'PIR24011863',
-      'PIR24011530',
-      'PIR0031',
-      'PIR0011',
-      'PIR0035',
-      'PIR0045',
-      'PIR0051',
-      'PIR0053',
-      'PIR0042',
-      'PIR0004',
-      'PIR0060',
-      'PIR0055',
-      'PIR24011861',
-      'PIR24011883',
-      'PIR0005',
-      'PIR24011508',
-      'PIR24011522',
-      'PIR24011524',
-      'PIR24011517',
-      'PIR24011520',
-      'PIR0008',
-      'PIR24011511',
-      'PIR24011636',
-      'PIR24011750',
-      'PIR24011754',
-      'PIR0020',
-      'PIR0072',
-    'PIR24011876' 
-    )";
-          List<tb_PurEntry> templist = MainForm.Instance.AppContext.Db.Ado.SqlQuery<tb_PurEntry>(sql);
-          List<tb_PurEntry> list = new List<tb_PurEntry>();
-          //手动提取数据
-          foreach (var item in templist)
-          {
-              var listitem = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
-
-              //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-              .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                .Where(w => w.PurEntryID == item.PurEntryID)
-                              .ToList();
-              list.AddRange(listitem);
-          }
-          */
-            //上在修复用 目前批量审核查出来的数据子集合对象为空，要解决才可以修复
-            #endregion
+              
 
 
             int pageNum = 1;

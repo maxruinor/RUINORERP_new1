@@ -1717,6 +1717,18 @@
     <Compile Include="PSI\PUR\UCPurOrderStatistics.Designer.cs">
       <DependentUpon>UCPurOrderStatistics.cs</DependentUpon>
     </Compile>
+    <Compile Include="PSI\PUR\UCPURWorkbench.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\PUR\UCPURWorkbench.Designer.cs">
+      <DependentUpon>UCPURWorkbench.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\SAL\UCSaleWorkbench.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\SAL\UCSaleWorkbench.Designer.cs">
+      <DependentUpon>UCSaleWorkbench.cs</DependentUpon>
+    </Compile>
     <Compile Include="PSI\SAL\UCSaleOrder.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2049,6 +2061,12 @@
     <Compile Include="UserCenter\DataParts\UCDataboard.Designer.cs">
       <DependentUpon>UCDataboard.cs</DependentUpon>
     </Compile>
+    <Compile Include="UserCenter\DataParts\UCSaleCell.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCSaleCell.Designer.cs">
+      <DependentUpon>UCSaleCell.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\DataParts\UCSale.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2073,11 +2091,11 @@
     <Compile Include="UserCenter\DataParts\UCPURCell.Designer.cs">
       <DependentUpon>UCPURCell.cs</DependentUpon>
     </Compile>
-    <Compile Include="UserCenter\DataParts\UCSaleCell.cs">
+    <Compile Include="UserCenter\DataParts\UCSaleCell_old.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UserCenter\DataParts\UCSaleCell.Designer.cs">
-      <DependentUpon>UCSaleCell.cs</DependentUpon>
+    <Compile Include="UserCenter\DataParts\UCSaleCell_old.Designer.cs">
+      <DependentUpon>UCSaleCell_old.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\DataParts\UCStockCell.cs">
       <SubType>UserControl</SubType>
@@ -2846,6 +2864,12 @@
     <EmbeddedResource Include="PSI\PUR\UCPurOrderStatistics.resx">
       <DependentUpon>UCPurOrderStatistics.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PSI\PUR\UCPURWorkbench.resx">
+      <DependentUpon>UCPURWorkbench.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\SAL\UCSaleWorkbench.resx">
+      <DependentUpon>UCSaleWorkbench.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PSI\SAL\UCSaleOrder.resx">
       <DependentUpon>UCSaleOrder.cs</DependentUpon>
     </EmbeddedResource>
@@ -2966,6 +2990,9 @@
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCSaleCell.resx">
+      <DependentUpon>UCSaleCell.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCSale.resx">
       <DependentUpon>UCSale.cs</DependentUpon>
     </EmbeddedResource>
@@ -2978,8 +3005,8 @@
     <EmbeddedResource Include="UserCenter\DataParts\UCPURCell.resx">
       <DependentUpon>UCPURCell.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UserCenter\DataParts\UCSaleCell.resx">
-      <DependentUpon>UCSaleCell.cs</DependentUpon>
+    <EmbeddedResource Include="UserCenter\DataParts\UCSaleCell_old.resx">
+      <DependentUpon>UCSaleCell_old.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCStockCell.resx">
       <DependentUpon>UCStockCell.cs</DependentUpon>

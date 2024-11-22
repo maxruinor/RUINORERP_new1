@@ -468,15 +468,16 @@ namespace RUINORERP.Business
             List<tb_ManufacturingOrder> list = await _appContext.Db.CopyNew().Queryable<tb_ManufacturingOrder>().Where(m => m.MOID == MainID)
                              .Includes(a => a.tb_customervendor)
                              .Includes(a => a.tb_customervendor_out)
-                            .Includes(a => a.tb_employee)
-                               .Includes(a => a.tb_department)
-                                     .Includes(a => a.tb_location)
-                                     .Includes(a => a.tb_producttype)
-                                     .Includes(a => a.tb_unit)
+                             .Includes(a => a.tb_employee)
+                              .Includes(a => a.tb_department)
+                              .Includes(a => a.tb_location)
+                              .Includes(a => a.tb_producttype)
+                              .Includes(a => a.tb_unit)
                               .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                               .Includes(a => a.tb_ManufacturingOrderDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_unit)
-                               .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                                 .ToListAsync();
+                              .Includes(a => a.tb_ManufacturingOrderDetails, b => b.tb_location)
+                              .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                              .ToListAsync();
             return list as List<T>;
         }
 

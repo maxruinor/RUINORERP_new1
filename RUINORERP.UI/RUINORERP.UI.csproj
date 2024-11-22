@@ -1821,6 +1821,12 @@
     <Compile Include="Report\RptPrintConfig.Designer.cs">
       <DependentUpon>RptPrintConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="Report\UCPrintConfigQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Report\UCPrintConfigQuery.Designer.cs">
+      <DependentUpon>UCPrintConfigQuery.cs</DependentUpon>
+    </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="SS\MenuInit.cs">
       <SubType>UserControl</SubType>
@@ -2926,6 +2932,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Report\RptPrintConfig.resx">
       <DependentUpon>RptPrintConfig.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Report\UCPrintConfigQuery.resx">
+      <DependentUpon>UCPrintConfigQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SS\MenuInit.resx">
       <DependentUpon>MenuInit.cs</DependentUpon>

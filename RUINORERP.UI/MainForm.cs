@@ -400,7 +400,7 @@ namespace RUINORERP.UI
                     Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
                     .AndIF(true, w => w.CNName.Length > 0)
                     .ToExpression();//注意 这一句 不能少
-                    list =await dc.BaseQueryByWhereAsync(exp);
+                    list = await dc.BaseQueryByWhereAsync(exp);
                     list = MainForm.Instance.list;
                     //这里做一个事件。缓存中的变化了。这里也变化一下。todo:
                     try
@@ -992,7 +992,7 @@ namespace RUINORERP.UI
 
                 #endregion
                 */
-                
+
                 //var _UCWorkCenter = Startup.GetFromFac<UCWorkCenter>(); //获取服务Service1
 
                 #region 工作台
@@ -1046,14 +1046,14 @@ namespace RUINORERP.UI
             }
             if (kwc.SelectedPage.TextTitle == "控制中心"
                 || kwc.SelectedPage.TextTitle == "工作台"
-             
+
                 )
             {
                 //不显示右键
                 e.Cancel = true;
             }
 
-           
+
 
             /*
              显示并自定义
@@ -1079,9 +1079,9 @@ namespace RUINORERP.UI
             {
                 return;
             }
-            if (kwc.SelectedPage.TextTitle == "控制中心" 
+            if (kwc.SelectedPage.TextTitle == "控制中心"
                 || kwc.SelectedPage.TextTitle == "工作台"
-                
+
                 )
             {
                 kwc.Button.CloseButtonDisplay = ButtonDisplay.Hide;
@@ -2280,9 +2280,8 @@ namespace RUINORERP.UI
             LoginWebServer();
             if (MainForm.Instance.AppContext.IsSuperUser)
             {
-                OriginalData odforCache = ActionForClient.请求发送缓存(string.Empty);
-                byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                ecs.client.Send(buffer1);
+                //请为空时。是请求全部
+                ClientService.请求缓存(string.Empty);
                 SystemOptimizerService.异常信息发送("测试异常信息发送");
             }
         }
@@ -2320,6 +2319,6 @@ namespace RUINORERP.UI
             lblServerInfo.Visible = false;
         }
 
-        
+
     }
 }

@@ -8,7 +8,8 @@ namespace RUINORERP.Model
 {
     /// <summary>
     /// 有关于缓存的实体类
-    /// 包含所有服务器或客户端缓存信息的情况
+    /// 包含所有服务器或客户端缓存信息的情况,客户端以为这些信息为基准做进一步的请求
+    /// 服务器也可以对比这些。做对比更新。刷新缓存等操作。
     /// </summary>
     public class CacheInfo
     {

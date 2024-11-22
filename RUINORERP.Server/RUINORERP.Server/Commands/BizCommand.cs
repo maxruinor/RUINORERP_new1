@@ -159,6 +159,10 @@ namespace RUINORERP.Server.Commands
                             break;
                         case ClientCmdEnum.更新缓存:
                             UserService.接收更新缓存指令(Player, gd);
+                           
+                            break;
+                        case ClientCmdEnum.删除缓存:
+                            UserService.接收删除缓存指令(Player, gd);
                             break;
                         case ClientCmdEnum.请求协助处理:
                             SystemService.process请求协助处理(gd);

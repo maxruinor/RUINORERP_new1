@@ -85,6 +85,95 @@ namespace RUINORERP.Business
                     }
                 }
 
+                //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
+                List<tb_PurEntryDetail> detailList = new List<tb_PurEntryDetail>();
+                foreach (var item in entity.tb_purorder.tb_PurEntries)
+                {
+                    detailList.AddRange(item.tb_PurEntryDetails);
+                }
+
+                //分两种情况处理。
+                for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
+                {
+                    //如果当前订单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
+                    string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
+                              entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
+                    //明细中有相同的产品或物品。
+                    var aa = entity.tb_purorder.tb_PurOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                    if (aa.Count > 0 && entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID > 0)
+                    {
+                        #region //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
+                        if (entity.tb_PurEntryDetails.Any(c => c.PurOrder_ChildID == 0))
+                        {
+                            //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
+                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
+                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _unitOfWorkManage.RollbackTran();
+                            _logger.LogInformation(msg);
+                            return rs;
+                        }
+                        #endregion
+
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID
+                        //行数一致时，判断入库的数量是否大于订单数量。（费赠品）
+                        && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
+                        if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                        {
+                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
+                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _unitOfWorkManage.RollbackTran();
+                            _logger.LogInformation(msg);
+                            return rs;
+                        }
+                        else
+                        {
+                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Sum(c => c.Quantity);
+                            //算出交付的数量
+                            entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
+                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                            if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                            {
+                                throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //一对一时
+                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID).Where(c => c.IsGift.HasValue && !c.IsGift.Value).Sum(c => c.Quantity);
+                        if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                        {
+
+                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"                                    或存在针对当前采购订单重复录入了采购入库单，审核失败！";
+                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _unitOfWorkManage.RollbackTran();
+                            _logger.LogInformation(msg);
+                            return rs;
+                        }
+                        else
+                        {
+                            //当前行累计到交付
+                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
+                            entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
+                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                            if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
+                            {
+                                throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
+                            }
+                        }
+                    }
+                }
+
+                //更新已交数量
+                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrderDetail>(entity.tb_purorder.tb_PurOrderDetails).ExecuteCommandAsync();
+                if (poCounter > 0)
+                {
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
+                    {
+                        _logger.Debug(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
+                    }
+                }
+
                 foreach (tb_PurEntryDetail child in entity.tb_PurEntryDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
@@ -150,29 +239,30 @@ namespace RUINORERP.Business
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
 
-                    #region 更新采购价格
-                    //注意这里的人是指采购订单录入的人。不是采购入库的人。
-                    tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
-                    tb_PriceRecord priceRecord = _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
-                    .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID && c.ProdDetailID == child.ProdDetailID).First();
-                    //如果存在则更新，否则插入
-                    if (priceRecord == null)
+                    if (child.IsGift.HasValue && child.IsGift == false)
                     {
-                        priceRecord = new tb_PriceRecord();
+                        #region 更新采购价格
+                        //注意这里的人是指采购订单录入的人。不是采购入库的人。
+                        tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
+                        tb_PriceRecord priceRecord = _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
+                        .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID && c.ProdDetailID == child.ProdDetailID).First();
+                        //如果存在则更新，否则插入
+                        if (priceRecord == null)
+                        {
+                            priceRecord = new tb_PriceRecord();
+                        }
+                        priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
+                        if (child.TransactionPrice != priceRecord.PurPrice)
+                        {
+                            priceRecord.PurPrice = child.TransactionPrice;
+                            priceRecord.PurDate = System.DateTime.Now;
+                            priceRecord.ProdDetailID = child.ProdDetailID;
+                            ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
+                        }
+
+
+                        #endregion
                     }
-                    priceRecord.Employee_ID = entity.tb_purorder.Employee_ID;
-                    if (child.TransactionPrice != priceRecord.PurPrice)
-                    {
-                        priceRecord.PurPrice = child.TransactionPrice;
-                        priceRecord.PurDate = System.DateTime.Now;
-                        priceRecord.ProdDetailID = child.ProdDetailID;
-                        ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
-                    }
-
-
-                    #endregion
-
-
 
 
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
@@ -202,96 +292,6 @@ namespace RUINORERP.Business
                             await ctrOPinv.AddReEntityAsync(oinv);
                             #endregion
                         }
-                    }
-                }
-
-                //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
-                List<tb_PurEntryDetail> detailList = new List<tb_PurEntryDetail>();
-                foreach (var item in entity.tb_purorder.tb_PurEntries)
-                {
-                    detailList.AddRange(item.tb_PurEntryDetails);
-                }
-
-                //分两种情况处理。
-                for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
-                {
-                    //如果当前订单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
-
-
-                    string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
-                              entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
-                    //明细中有相同的产品或物品。
-                    var aa = entity.tb_purorder.tb_PurOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                    if (aa.Count > 0 && entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID > 0)
-                    {
-                        #region //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
-                        if (entity.tb_PurEntryDetails.Any(c => c.PurOrder_ChildID == 0))
-                        {
-                            //如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
-                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
-                            return rs;
-                        }
-                        #endregion
-
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID 
-                        && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Sum(c => c.Quantity);
-                        if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
-                        {
-                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
-                            return rs;
-                        }
-                        else
-                        {
-                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID && c.PurOrder_ChildID == entity.tb_purorder.tb_PurOrderDetails[i].PurOrder_ChildID).Sum(c => c.Quantity);
-                            //算出交付的数量
-                            entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
-                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
-                            {
-                                throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        //一对一时
-                        var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
-                        if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
-                        {
-
-                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"                                    或存在针对当前采购订单重复录入了采购入库单，审核失败！";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
-                            return rs;
-                        }
-                        else
-                        {
-                            //当前行累计到交付
-                            var RowQty = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == entity.tb_purorder.tb_PurOrderDetails[i].ProdDetailID).Sum(c => c.Quantity);
-                            entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity += RowQty;
-                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (entity.tb_purorder.tb_PurOrderDetails[i].DeliveredQuantity > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
-                            {
-                                throw new Exception($"入库单：{entity.PurEntryNo}审核时，对应的订单：{entity.tb_purorder.PurOrderNo}，入库总数量不能大于订单数量！");
-                            }
-                        }
-                    }
-                }
-
-                //更新已交数量
-                int poCounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrderDetail>(entity.tb_purorder.tb_PurOrderDetails).ExecuteCommandAsync();
-                if (poCounter > 0)
-                {
-                    if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
-                    {
-                        _logger.Debug(entity.PurEntryNo + "==>" + entity.PurOrder_NO + $"对应 的订单更新成功===重点代码 看已交数量是否正确");
                     }
                 }
 

@@ -113,7 +113,7 @@ namespace RUINORERP.Business.CommService
         //public ConcurrentDictionary<string, object> Dict { get => _Dict; set => _Dict = value; }
         public static MyCacheManager Manager { get => _manager; set => _manager = value; }
 
-        public  T GetEntity<T>(object IdValue)
+        public T GetEntity<T>(object IdValue)
         {
             object entity = new object();
             //Lazy<>
@@ -153,7 +153,7 @@ namespace RUINORERP.Business.CommService
                         }
                         else
                         {
-                            T prodDetail =  _context.Db.Queryable<T>().Where(p => p.GetPropertyValue(key).ToString().Equals(KeyValue)).Single();
+                            T prodDetail = _context.Db.Queryable<T>().Where(p => p.GetPropertyValue(key).ToString().Equals(KeyValue)).Single();
                             return prodDetail;
                         }
                     }
@@ -370,7 +370,9 @@ namespace RUINORERP.Business.CommService
         /// <typeparam name="T">键值对的表实体</typeparam>
         /// <param name="expkey">ID</param>
         /// <param name="expvalue">Name</param>
-        public void SetDictDataSource<T>(Expression<Func<T, long>> expkey, Expression<Func<T, string>> expvalue, bool LoadData = true) where T : class
+        public void SetDictDataSource<T>(Expression<Func<T, long>> expkey, Expression<Func<T, string>> expvalue, bool LoadData = true
+            , bool AutoLoad = false
+            ) where T : class
         {
             string tableName = typeof(T).Name;
             Stopwatch stopwatch = Stopwatch.StartNew();
@@ -384,7 +386,8 @@ namespace RUINORERP.Business.CommService
                 {
                     Manager.NewTableList.TryAdd(tableName, new KeyValuePair<string, string>(idColName, nameColName));
                 }
-                if (LoadData)
+                //要么指定加载，要么指定自动加载
+                if (LoadData || AutoLoad)
                 {
                     //第一次先查询一次载入
                     CommonController bdc = _context.GetRequiredService<CommonController>();
@@ -591,8 +594,6 @@ namespace RUINORERP.Business.CommService
                     break;
             }
         }
-
-
 
 
         /// <summary>

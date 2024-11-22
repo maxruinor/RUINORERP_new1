@@ -25,7 +25,7 @@ namespace TransInstruction
             gd.Two = tx.toByte();
             return gd;
         }
-        public static OriginalData 销售出库审批(long billid,string lockName, int BizType, bool ApprovalResults)
+        public static OriginalData 销售出库审批(long billid, string lockName, int BizType, bool ApprovalResults)
         {
             var tx = new ByteBuff(2 + 4);
             tx.PushString(System.DateTime.Now.ToString());
@@ -164,6 +164,25 @@ namespace TransInstruction
         }
 
 
+        /// <summary>
+        /// 表名为空则是所有表
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <returns></returns>
+        public static OriginalData 删除缓存<T>(string PKColName, long PKvalue)
+        {
+            var tx = new ByteBuff(2 + 4);
+
+            tx.PushString(System.DateTime.Now.ToString());
+            tx.PushString(typeof(T).Name);
+            tx.PushString(PKColName);
+            tx.PushInt64(PKvalue);
+            OriginalData gd = new OriginalData();
+            gd.cmd = (byte)ClientCmdEnum.删除缓存;
+            gd.One = null;
+            gd.Two = tx.toByte();
+            return gd;
+        }
 
         /// <summary>
         /// 客户机向服务器发送请求协助处理,协助的内容。相关的单据数据
@@ -180,7 +199,7 @@ namespace TransInstruction
             tx.PushString(RequestContent);
             tx.PushString(EntityType);
             tx.PushString(BillData);
-   
+
             OriginalData gd = new OriginalData();
             gd.cmd = (byte)ClientCmdEnum.请求协助处理;
             gd.One = null;

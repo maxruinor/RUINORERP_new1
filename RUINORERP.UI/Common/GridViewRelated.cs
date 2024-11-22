@@ -625,7 +625,24 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
-
+            if (tableName == typeof(tb_StockOut).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_StockOut>()
+                    .Includes(c => c.tb_StockOutDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.MainID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.BillNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+            if (tableName == typeof(tb_StockIn).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_StockIn>()
+                    .Includes(c => c.tb_StockInDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.MainID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.BillNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
         }
 
 

@@ -17,6 +17,7 @@ using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
 using FastReport;
 using RUINORERP.Business.CommService;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.Report
 {
@@ -100,6 +101,14 @@ namespace RUINORERP.UI.Report
             reportTemplate.PrintConfigID = printConfig.PrintConfigID;
             reportTemplate.Template_Name = "新建";// frmnew.txtTemplateName.Text.Trim();
             reportTemplate.Template_NO = "";//生成?
+            if (reportTemplate.ID > 0)
+            {
+                BusinessHelper.Instance.EditEntity(reportTemplate);
+            }
+            else
+            {
+                BusinessHelper.Instance.InitEntity(printConfig);
+            }
             BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
             if (this.PrintDataSources.Count > 0)
             {
@@ -150,62 +159,6 @@ namespace RUINORERP.UI.Report
         }
 
 
-        //protected void AddByCopy()
-        //{
-        //    object frm = Activator.CreateInstance(EditForm);
-        //    if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
-        //    {
-        //        T selectItem = null;
-        //        #region 复制性新增就是把当前的值复制到新值中
-        //        //先取当前选中的
-        //        if (bindingSourceList.Current != null)
-        //        {
-        //            selectItem = (T)bindingSourceList.Current;
-        //        }
-        //        #endregion
-        //        #region 泛型情况
-
-        //        BaseEditGeneric<T> frmadd = frm as BaseEditGeneric<T>;
-        //        frmadd.bindingSourceEdit = bindingSourceList;
-        //        object NewObj = frmadd.bindingSourceEdit.AddNew();
-        //        frmadd.BindData(NewObj as BaseEntity);
-
-        //        //复制性 的就是把原有值除主键全部复制过去。
-        //        FastCopy<T, T>.Copy(selectItem as T, NewObj as T, true);
-        //        //设置主键为0才会新增，这里代码顺序不能反
-        //        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-        //        ReflectionHelper.SetPropertyValue(NewObj, PKCol, 0);
-
-        //        if (frmadd.ShowDialog() == DialogResult.OK)
-        //        {
-        //            ToolBarEnabledControl(MenuItemEnums.新增);
-        //        }
-        //        else
-        //        {
-        //            frmadd.bindingSourceEdit.CancelEdit();
-        //        }
-        //        #endregion
-        //    }
-        //    else
-        //    {
-        //        #region 普通情况
-        //        BaseEdit frmadd = frm as BaseEdit;
-        //        frmadd.bindingSourceEdit = bindingSourceList;
-        //        object obj = frmadd.bindingSourceEdit.AddNew();
-        //        frmadd.BindData(obj as BaseEntity);
-        //        if (frmadd.ShowDialog() == DialogResult.OK)
-        //        {
-        //            ToolBarEnabledControl(MenuItemEnums.新增);
-        //        }
-        //        else
-        //        {
-        //            frmadd.bindingSourceEdit.CancelEdit();
-        //        }
-        //        #endregion
-        //    }
-
-
-        //}
 
 
         private void btnPrint_Click(object sender, EventArgs e)
@@ -363,14 +316,22 @@ namespace RUINORERP.UI.Report
 
         }
 
-        private void btnPrinter_Click(object sender, EventArgs e)
+        private async void btnPrinter_Click(object sender, EventArgs e)
         {
             if (cmbPrinterList.SelectedItem != null)
             {
                 printConfig.PrinterName = cmbPrinterList.SelectedItem.ToString();
             }
             printConfig.PrinterSelected = chkSelectPrinter.Checked;
-            MainForm.Instance.AppContext.Db.Updateable<tb_PrintConfig>(printConfig).ExecuteCommand();
+            if (printConfig.PrintConfigID > 0)
+            {
+                BusinessHelper.Instance.EditEntity(printConfig);
+            }
+            else
+            {
+                BusinessHelper.Instance.InitEntity(printConfig);
+            }
+            await MainForm.Instance.AppContext.Db.Updateable<tb_PrintConfig>(printConfig).ExecuteCommandAsync();
         }
 
         private void 设为默认ToolStripMenuItem_Click(object sender, EventArgs e)

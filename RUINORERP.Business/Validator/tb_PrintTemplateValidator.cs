@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:03
+// 时间：11/22/2024 16:08:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -35,6 +35,8 @@ namespace RUINORERP.Business
  RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Templatet_Path).MaximumLength(100).WithMessage("模板路径:不能超过最大长度,100.");
  RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Template_DataSource).MaximumLength(100).WithMessage("模板数据源:不能超过最大长度,100.");
  RuleFor(tb_PrintTemplate =>tb_PrintTemplate.TemplateFileData).NotEmpty().WithMessage("模板文件数据:不能为空。");
+ RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+ RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
        	
            	        Initialize();
      }

@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCMRP));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCSale));
             this.kryptonTreeGridView1 = new Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridView1)).BeginInit();
             this.SuspendLayout();
@@ -55,12 +55,13 @@
             this.kryptonTreeGridView1.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.kryptonTreeGridView1_CellContentDoubleClick);
             this.kryptonTreeGridView1.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.treeGridView1_CellPainting);
             // 
-            // UCMRP
+            // UCSale
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.Controls.Add(this.kryptonTreeGridView1);
-            this.Name = "UCMRP";
+            this.Name = "UCSale";
             this.Size = new System.Drawing.Size(1138, 371);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridView1)).EndInit();
             this.ResumeLayout(false);

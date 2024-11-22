@@ -50,6 +50,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             GridRelated.SetRelatedInfo<tb_PurEntry>(c => c.PurEntryNo);
             GridRelated.SetRelatedInfo<tb_PurEntryRe>(c => c.PurEntryReNo);
             GridRelated.SetRelatedInfo<tb_BuyingRequisition>(c => c.PuRequisitionNo);
+            this.Dock = DockStyle.Fill;
         }
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
         private async Task<T> GetProdDetail<T>(long ProdDetailID) where T : class
@@ -180,15 +181,15 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
                             //子级
-                            KryptonTreeGridNodeRow PlanDetailsubrow = item.Nodes.Add(prodDetail.SKU);
-                            PlanDetailsubrow.Cells[0].Tag = "PurOrderNo";//保存列名 值对象=》tag(如果是明细则指向主表) 的列名。比方值是编号：则是PPNo
-                            PlanDetailsubrow.Tag = Order;//为了双击的时候能找到值对象。这里还是给主表对象。
-                            PlanDetailsubrow.Cells[1].Value = "";//分析日期
-                            PlanDetailsubrow.Cells[2].Value = OrderDetail.Quantity;
-                            PlanDetailsubrow.Cells[3].Value = OrderDetail.DeliveredQuantity;//还有退回数量
-                            PlanDetailsubrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                            PlanDetailsubrow.Cells[6].Value = "订单产品";
-                            PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(Order.DataStatus), Order.DataStatus).ToString();
+                            KryptonTreeGridNodeRow PurOrderDetailsubrow = item.Nodes.Add(prodDetail.SKU);
+                            PurOrderDetailsubrow.Cells[0].Tag = "PurOrderNo";//保存列名 值对象=》tag(如果是明细则指向主表) 的列名。比方值是编号：则是PPNo
+                            PurOrderDetailsubrow.Tag = Order;//为了双击的时候能找到值对象。这里还是给主表对象。
+                            PurOrderDetailsubrow.Cells[1].Value = "";//分析日期
+                            PurOrderDetailsubrow.Cells[2].Value = OrderDetail.Quantity;
+                            PurOrderDetailsubrow.Cells[3].Value = OrderDetail.DeliveredQuantity;//还有退回数量
+                            PurOrderDetailsubrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
+                            PurOrderDetailsubrow.Cells[6].Value = "订单产品";
+                            PurOrderDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(Order.DataStatus), Order.DataStatus).ToString();
 
 
                             #region 在采购订单明细中加载入库单
@@ -201,7 +202,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                     foreach (tb_PurEntryDetail PurEntryDetail in PurEntry.tb_PurEntryDetails.Where(c => c.ProdDetailID == OrderDetail.ProdDetailID && c.Location_ID == OrderDetail.Location_ID))
                                     {
                                         //子级
-                                        KryptonTreeGridNodeRow ProduceDetailrow = PlanDetailsubrow.Nodes.Add(PurEntry.PurEntryNo.ToString());
+                                        KryptonTreeGridNodeRow ProduceDetailrow = PurOrderDetailsubrow.Nodes.Add(PurEntry.PurEntryNo.ToString());
                                         ProduceDetailrow.Tag = PurEntry;//为了双击的时候能找到值对象。这里还是给主表对象。
                                         ProduceDetailrow.Cells[0].Tag = "PurEntryNo";//保存列名 值对象的列名。比方值是编号：则是PDNo
                                         ProduceDetailrow.Cells[1].Value = PurEntry.EntryDate.ToString("yyyy-MM-dd");//出库日期

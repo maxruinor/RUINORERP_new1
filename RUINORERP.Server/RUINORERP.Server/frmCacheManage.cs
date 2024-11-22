@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.BizService;
@@ -102,6 +103,8 @@ namespace RUINORERP.Server
                 tableList.Add(tableName);
             }
             tableList.Sort();
+            //frmMain.Instance.CacheInfoList.Clear();
+            MyCacheManager.Instance.Cache.Clear();
             foreach (var tableName in tableList)
             {
                 var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
@@ -109,7 +112,8 @@ namespace RUINORERP.Server
                 {
                     SuperValue kv = new SuperValue(tableName + "[" + 0 + "]", tableName);
                     listBoxTableList.Items.Add(kv);
-                    frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, 0));
+                    //frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, 0));
+                    MyCacheManager.Instance.Cache.Add(tableName, new CacheInfo(tableName, 0));
                 }
                 else
                 {
@@ -118,7 +122,8 @@ namespace RUINORERP.Server
                     {
                         SuperValue kv = new SuperValue(tableName + "[" + lastlist.Count + "]", tableName);
                         listBoxTableList.Items.Add(kv);
-                        frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, lastlist.Count));
+                       // frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, lastlist.Count));
+                        MyCacheManager.Instance.Cache.Add(tableName, new CacheInfo(tableName, 0));
                     }
 
                 }
@@ -137,9 +142,7 @@ namespace RUINORERP.Server
                 if (listBoxTableList.SelectedItem is SuperValue kv)
                 {
                     string tableName = kv.superDataTypeName;
-
                     SuperValue skv = cmbUser.SelectedItem as SuperValue;
-
                     SessionforBiz PlayerSession = frmMain.Instance.sessionListBiz[skv.superDataTypeName];
                     UserService.发送缓存数据列表(PlayerSession, tableName);
                 }
@@ -147,7 +150,18 @@ namespace RUINORERP.Server
             }
             else
             {
-                MessageBox.Show("请选择接收用户");
+                MessageBox.Show("没有选择具体用户时，则向当前所有在线用户推送缓存数据。", "提示信息", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (listBoxTableList.SelectedItem is SuperValue kv)
+                {
+                    string tableName = kv.superDataTypeName;
+                    SuperValue skv = cmbUser.SelectedItem as SuperValue;
+
+                    foreach (var item in frmMain.Instance.sessionListBiz)
+                    {
+                        SessionforBiz sessionforBiz = item.Value as SessionforBiz;
+                        UserService.发送缓存数据列表(sessionforBiz, tableName);
+                    }
+                }
             }
         }
 
@@ -194,7 +208,6 @@ namespace RUINORERP.Server
             }
 
             #endregion
-
 
             //画总行数行号
             if (e.ColumnIndex < 0 && e.RowIndex < 0)

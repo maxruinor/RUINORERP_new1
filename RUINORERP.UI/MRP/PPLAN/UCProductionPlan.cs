@@ -793,7 +793,8 @@ namespace RUINORERP.UI.MRP.MP
 
 
 
-
+        //注意这里从销售订单中引入明细。明细中会存在相同产品分开录入的情况。
+        //比方备品。这里在计划明细中合并处理。目前认为生产采购一次数量大才好。当然应该也可以分开。可能逻辑还有一些小问题
         private async void LoadChildItems(long? saleorderid)
         {
             //ButtonSpecAny bsa = (txtSaleOrder as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
@@ -816,6 +817,13 @@ namespace RUINORERP.UI.MRP.MP
                 entity.PlanDate = System.DateTime.Now;
                 List<tb_ProductionPlanDetail> NewDetails = new List<tb_ProductionPlanDetail>();
                 List<string> tipsMsg = new List<string>();
+
+                var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                if (aa.Count > 1)
+                {
+                    System.Windows.Forms.MessageBox.Show("销售订单明细中，有相同的产品,系统已自动合并!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
                     tb_SaleOrderDetail _SaleOrderDetail = saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
@@ -831,9 +839,19 @@ namespace RUINORERP.UI.MRP.MP
                         tipsMsg.Add($"如是半成品配件，需要外采。请另下采购单。");
                     }
 
-
                     if (details[i].Quantity > 0)
                     {
+                        //合并存在的。
+                        if (aa.Count > 1)
+                        {
+                            var newdetail = NewDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                            if (newdetail!= null)
+                            {
+                                newdetail.Quantity += details[i].Quantity;
+                                continue;
+                            }
+                        }
+
                         NewDetails.Add(details[i]);
                     }
                 }

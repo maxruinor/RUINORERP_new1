@@ -48,6 +48,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             GridRelated.SetRelatedInfo<tb_MaterialReturn>(c => c.BillNo);
             GridRelated.SetRelatedInfo<tb_FinishedGoodsInv>(c => c.DeliveryBillNo);
             GridRelated.SetRelatedInfo<tb_ProductionDemand>(c => c.PDNo);
+            this.Dock = DockStyle.Fill;
         }
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
         private async Task<T> GetProdDetail<T>(long ProdDetailID) where T : class

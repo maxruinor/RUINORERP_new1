@@ -40,7 +40,7 @@ namespace RUINORERP.Business
     /// <typeparam name="T"></typeparam>
     public partial class tb_FinishedGoodsInvController<T>
     {
- 
+
         /// <summary>
         /// 审核，先判断是否结案，再更新状态
         /// </summary>
@@ -275,7 +275,9 @@ namespace RUINORERP.Business
                         {
                             //按理计划这样保存也是总数量。
                             planDetail.CompletedQuantity = planDetail.CompletedQuantity + child.Qty;
-                            if (planDetail.CompletedQuantity > planDetail.Quantity)
+                            //意思是制令单时可以增加数量，大于计划数量。 缴库数量根据制令单来核对即可。但是不能大于1.5倍。不然就重新建计划
+                            //这里是：比方 销售订单中 1000台  另10台是备品。isgift但是计划时要合在一起生产。这时计划目标是分开的。需求是合并算的。
+                            if (planDetail.CompletedQuantity > (planDetail.Quantity * 1.5))
                             {
                                 _unitOfWorkManage.RollbackTran();
                                 rs.Succeeded = false;
@@ -305,18 +307,19 @@ namespace RUINORERP.Business
                     if (totalPlanCompletedQuantity != productionDemand.tb_productionplan.TotalCompletedQuantity)
                     {
                         productionDemand.tb_productionplan.TotalCompletedQuantity = totalPlanCompletedQuantity;
-                        if (productionDemand.tb_productionplan.TotalCompletedQuantity > productionDemand.tb_productionplan.TotalQuantity)
+                        //意思是制令单时可以修改计划数量。缴库根据制令单数量来，但是如果计划完成的数量 大于计划本身的1.5倍。认为不正常。暂时默认这样规则。
+                        if (productionDemand.tb_productionplan.TotalCompletedQuantity > (productionDemand.tb_productionplan.TotalQuantity * 1.5))
                         {
                             _unitOfWorkManage.RollbackTran();
                             rs.Succeeded = false;
-                            rs.ErrorMsg = $"缴库数量大于计划数量!审核失败，请检查数据后重试！";
+                            rs.ErrorMsg = $"缴库数量大于计划数量超过1.5倍!审核失败，请检查数据后重试！";
                             return rs;
                         }
                         PlanHasChanged = true;
                     }
 
-                    //如果计划数量等于已完成数量 结案？
-                    if (productionDemand.tb_productionplan.TotalQuantity == productionDemand.tb_productionplan.TotalCompletedQuantity)
+                    //如果计划数量等于已完成数量 结案？   完成数量大于等于计划算结案。 意思是制令单时可以修改计划数量。缴库根据制令单数量来
+                    if (productionDemand.tb_productionplan.TotalQuantity <= productionDemand.tb_productionplan.TotalCompletedQuantity)
                     {
                         productionDemand.tb_productionplan.DataStatus = (int)DataStatus.完结;
                         PlanHasChanged = true;
@@ -447,7 +450,7 @@ namespace RUINORERP.Business
 
                     //当前缴库行累计到交付
                     var RowQty = entity.tb_FinishedGoodsInvDetails.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
-                    manufacturingOrder.QuantityDelivered = manufacturingOrder.QuantityDelivered- RowQty;
+                    manufacturingOrder.QuantityDelivered = manufacturingOrder.QuantityDelivered - RowQty;
                     //如果已交数据大于制令单数量 给出警告实际操作中 使用其他方式将备品入库
                     if (manufacturingOrder.QuantityDelivered < 0)
                     {
@@ -485,7 +488,7 @@ namespace RUINORERP.Business
                         tb_ProductionPlanDetail planDetail = productionDemand.tb_productionplan.tb_ProductionPlanDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID);
                         if (planDetail != null)
                         {
-                            planDetail.CompletedQuantity = planDetail.CompletedQuantity- child.Qty;
+                            planDetail.CompletedQuantity = planDetail.CompletedQuantity - child.Qty;
                         }
                     }
                     //更新计划单已交数量

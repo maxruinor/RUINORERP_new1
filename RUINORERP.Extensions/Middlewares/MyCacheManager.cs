@@ -13,6 +13,7 @@ using SharpYaml.Tokens;
 using Newtonsoft.Json.Linq;
 using Mapster;
 using System.Linq;
+using System.Web.Caching;
 
 namespace RUINORERP.Extensions.Middlewares
 {
@@ -34,8 +35,8 @@ namespace RUINORERP.Extensions.Middlewares
         private ICacheManager<object> _cache;
 
         /// <summary>
-        /// 缓存的是什么对象呢？
         /// 目前是一个特殊的key对应的一个特殊的值
+        /// 保存了缓存列表的信息概览 by watson 2024-11-22
         /// </summary>
         public ICacheManager<object> Cache { get => _cache; set => _cache = value; }
 
@@ -365,7 +366,7 @@ namespace RUINORERP.Extensions.Middlewares
                         // 合并列表并排除重复项
                         var combinedList = CombineLists(elementType, (List<object>)cachelist, myList, pair.Key);
                         CacheEntityList.Update(tableName, k => combinedList);
-                         
+
                         #endregion
                     }
                     else if (TypeHelper.IsJArrayList(listType))
@@ -796,7 +797,6 @@ namespace RUINORERP.Extensions.Middlewares
             }
         }
 
-
         public void AddCacheEntityList<T>(string tableName, List<T> objList)
         {
             if (objList == null)
@@ -807,6 +807,13 @@ namespace RUINORERP.Extensions.Middlewares
             if (!CacheEntityList.Exists(tableName))
             {
                 CacheEntityList.Add(tableName, objList);
+                //一个小时过期？
+                CacheEntityList.Expire(tableName, TimeSpan.FromMinutes(1));
+
+                //更新缓存表的信息
+                CacheInfo cacheInfo = new CacheInfo(tableName, objList.Count);
+                MyCacheManager.Instance.Cache.Update(tableName, c => cacheInfo);
+
             }
         }
 
@@ -995,6 +1002,67 @@ namespace RUINORERP.Extensions.Middlewares
             }
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expkey"></param>
+        /// <returns></returns>
+        public void DeleteEntityList(string tableName, string PKColName, long ID)
+        {
+            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+            if (NewTableList.TryGetValue(tableName, out pair))
+            {
+                string key = pair.Key;
+                if (key != PKColName)
+                {
+                    return;
+                }
+                if (CacheEntityList.Exists(tableName))
+                {
+                    var cachelist = CacheEntityList.Get(tableName);
+                    // 获取原始 List<T> 的类型参数
+                    Type listType = cachelist.GetType();
+                    if (TypeHelper.IsGenericList(listType))
+                    {
+                        Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                        #region  强类型
+                        // 创建一个新的 List<object>
+                        List<object> oldlist = new List<object>();
+                        // 遍历原始列表并转换元素
+                        foreach (object item in (IEnumerable)cachelist)
+                        {
+                            //或直接在这里取。取到返回也可以
+                            oldlist.Add(item);
+                        }
+                        //如果旧列表中有这个值，则直接删除，把新的添加上
+                        var olditem = oldlist.FirstOrDefault(n => n.GetPropertyValue(pair.Key).ToString() == ID.ToString());
+                        if (olditem != null)
+                        {
+                            oldlist.Remove(olditem);
+                        }
+
+                        CacheEntityList.Update(tableName, v => oldlist);
+                        #endregion
+                    }
+                    else if (TypeHelper.IsJArrayList(listType))
+                    {
+                        #region  非强类型
+                        JArray varJarray = (JArray)cachelist;
+                        //如果旧列表中有这个值，则直接删除，把新的添加上
+                        var olditem = varJarray.FirstOrDefault(n => n[key].ToString() == ID.ToString()); ;
+                        if (olditem != null)
+                        {
+                            varJarray.Remove(olditem);
+                        }
+
+                        CacheEntityList.Update(tableName, v => varJarray);
+                        #endregion
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 

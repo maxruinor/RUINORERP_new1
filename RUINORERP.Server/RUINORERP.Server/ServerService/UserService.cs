@@ -153,6 +153,11 @@ namespace RUINORERP.Server.BizService
 
         }
 
+        /// <summary>
+        /// 同时分发出去了
+        /// </summary>
+        /// <param name="UserSession"></param>
+        /// <param name="gd"></param>
         public static void 接收更新缓存指令(SessionforBiz UserSession, OriginalData gd)
         {
             try
@@ -196,6 +201,62 @@ namespace RUINORERP.Server.BizService
                 {
                     var prod = obj.ToObject<tb_Prod>();
                     BroadcastProdCatchData(UserSession, prod);
+                }
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("接收更新缓存指令:" + ex.Message);
+            }
+
+        }
+
+
+        /// <summary>
+        /// 同时分发出去了。
+        /// </summary>
+        /// <param name="UserSession"></param>
+        /// <param name="gd"></param>
+        public static void 接收删除缓存指令(SessionforBiz UserSession, OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string PKColName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                long PKValue = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+                //删除服务器的缓存中的数据行
+                MyCacheManager.Instance.DeleteEntityList(tableName, PKColName, PKValue);
+                //再转发给其他客户端
+                //发送缓存数据
+
+                ByteBuff tx = new ByteBuff(200);
+                tx.PushString(时间);
+                tx.PushString(tableName);
+                tx.PushString(PKColName);
+                tx.PushInt64(PKValue);
+
+                foreach (var item in frmMain.Instance.sessionListBiz)
+                {
+                    //排除更新者自己
+                    if (item.Key == UserSession.SessionID)
+                    {
+                        continue;
+                    }
+                    SessionforBiz sessionforBiz = item.Value as SessionforBiz;
+                    sessionforBiz.AddSendData((byte)ServerCmdEnum.转发删除缓存, null, tx.toByte());
+
+                    if (frmMain.Instance.IsDebug)
+                    {
+                        frmMain.Instance.PrintMsg($"转发删除缓存{tableName}给：" + item.Value.User.姓名);
+                    }
+                }
+
+                //如果是产品表有变化 还要需要更新产品视图的缓存
+                if (tableName == nameof(tb_Prod))
+                {
+                    // var prod = obj.ToObject<tb_Prod>();
+                    // BroadcastProdCatchData(UserSession, prod);
                 }
             }
             catch (Exception ex)
@@ -379,10 +440,16 @@ namespace RUINORERP.Server.BizService
             {
                 ByteBuff tx = new ByteBuff(100);
                 List<CacheInfo> CacheInfos = new List<CacheInfo>();
-                foreach (var item in frmMain.Instance.CacheInfoList)
+                foreach (var item in BizCacheHelper.Manager.NewTableList)
                 {
-                    CacheInfos.Add(item.Value);
+                    CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(item.Key) as CacheInfo;
+                    CacheInfos.Add(cacheInfo);
                 }
+
+                //    foreach (var item in frmMain.Instance.CacheInfoList)
+                //{
+
+                //}
                 string json = JsonConvert.SerializeObject(CacheInfos,
                       new JsonSerializerSettings
                       {

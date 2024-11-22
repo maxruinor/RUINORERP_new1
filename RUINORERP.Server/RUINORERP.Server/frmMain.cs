@@ -16,8 +16,11 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Common.Helper;
 using RUINORERP.Common.Log4Net;
 using RUINORERP.Extensions;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
+using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Server.BizService;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.Commands;
 using RUINORERP.Server.ServerService;
@@ -39,6 +42,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Numerics;
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -57,9 +61,10 @@ namespace RUINORERP.Server
 
         /// <summary>
         /// 保存服务器的一些缓存信息。让客户端可以根据一些机制来获取。得到最新的信息
-        /// 将来要考虑放到还有其它信息时，key中换为实例。查找时添加类型?
+        /// 将来要考虑放到还有其它信息时，key中换为实例。查找时添加类型? 将这个数据保存到缓存中，不过期。定时更新
         /// </summary>
-        public ConcurrentDictionary<string, CacheInfo> CacheInfoList = new ConcurrentDictionary<string, CacheInfo>();
+        // public ConcurrentDictionary<string, CacheInfo> CacheInfoList = new ConcurrentDictionary<string, CacheInfo>();
+        //MyCacheManager Cache 代替上面的集合
 
 
         /// <summary>
@@ -219,49 +224,86 @@ namespace RUINORERP.Server
             cache.Set("test1", "test123");
             await InitConfig(false);
 
-            //timer = new System.Timers.Timer(500);
-            //timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
-            //{
-            //    try
-            //    {
-            //        bindsourceUserList.DataSource = frmMain.Instance.sessionListBiz.Values;
-            //    }
-            //    catch (Exception)
-            //    {
+            timer = new System.Timers.Timer(3000);
+            timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
+            {
+                try
+                {
+                    #region 根据CacheInfoList检查更新过期的缓存。
+                    try
+                    {
+                        foreach (var item in BizCacheHelper.Manager.NewTableList)
+                        {
+                            CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(item.Key) as CacheInfo;
+                            if (cacheInfo.CacheCount > 0 && !MyCacheManager.Instance.CacheEntityList.Exists(item.Key))
+                            {
+                                BizCacheHelper.Instance.SetDictDataSource(item.Key, true);
+                                if (frmMain.Instance.IsDebug)
+                                {
+                                    frmMain.Instance.PrintInfoLog($"检查更新过期的缓存 ，成功添加{item.Key}。");
+                                }
+                                //只有缓存概率有变化就发到客户端。客户端再根据这个与他本地实际的缓存数据行对比来请求真正的缓存数据
+                                foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+                                {
+                                    BizService.UserService.发送缓存信息列表(PlayerSession);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception exc)
+                    {
+                        frmMain.Instance.PrintInfoLog($"根据CacheInfoList检查更新过期的缓存出错：{exc.Message} ");
+                    }
+                    #endregion
+                }
+                catch (Exception)
+                {
 
-            //    }
+                }
 
-            //});
-            //timer.Enabled = true;
-            //timer.Start();
+            });
+            timer.Enabled = true;
+            timer.Start();
 
             // 每120秒（120000毫秒）执行一次检查
-            System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 120000);
-            //timerStatus.Interval = 30000; // 设置定时器间隔为1000毫秒（1秒）
-            //timerStatus.Tick += (sender, e) => RefreshData();
+            System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1200);
+
         }
 
+        /// <summary>
+        /// 定时器会可能停止 可能是线程退出了
+        /// </summary>
+        /// <param name="state"></param>
         private void CheckAndRemoveExpiredSessions(object state)
         {
-            var currentTime = DateTime.Now;
-            var keysToRemove = new ConcurrentBag<string>();
-
-            // 遍历会话集合，检查每个会话的LastActiveTime
-            foreach (var kvp in sessionListBiz)
+            try
             {
-                if ((currentTime - kvp.Value.LastActiveTime).TotalMinutes > 1)
+                var currentTime = DateTime.Now;
+                var keysToRemove = new ConcurrentBag<string>();
+
+                // 遍历会话集合，检查每个会话的LastActiveTime
+                foreach (var kvp in sessionListBiz)
                 {
-                    keysToRemove.Add(kvp.Key);
+                    if ((currentTime - kvp.Value.LastActiveTime).TotalMinutes > 1)
+                    {
+                        keysToRemove.Add(kvp.Key);
+                    }
                 }
+
+                // 删除过期的会话
+                foreach (var key in keysToRemove)
+                {
+                    if (sessionListBiz.TryRemove(key, out var removedSession))
+                    {
+                        Console.WriteLine($"移除过期会话: {key}");
+                    }
+                }
+
+
             }
-
-            // 删除过期的会话
-            foreach (var key in keysToRemove)
+            catch (Exception ex)
             {
-                if (sessionListBiz.TryRemove(key, out var removedSession))
-                {
-                    Console.WriteLine($"移除过期会话: {key}");
-                }
+                frmMain.Instance.PrintInfoLog($"CheckAndRemoveExpiredSessions{ex.Message}。");
             }
         }
 

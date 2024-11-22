@@ -500,6 +500,10 @@ namespace RUINORERP.UI.SuperSocketClient
                             //单个实例
                             ClientService.接收转发更新缓存(od);
                             break;
+                        case ServerCmdEnum.转发删除缓存:
+                            //单个实例
+                            ClientService.接收转发删除缓存(od);
+                            break;
                         case ServerCmdEnum.发送缓存数据列表:
                             //实例集合
                             ClientService.接收缓存数据列表(od);

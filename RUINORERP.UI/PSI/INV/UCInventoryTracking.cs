@@ -122,7 +122,7 @@ namespace RUINORERP.UI.PSI.INV
             { "借出", "tb_ProdBorrowing" },
             { "归还", "tb_ProdReturning" },
             { "其他出库", "tb_StockOut" },
-            { "其他入库", "tb_StockIN" },
+            { "其他入库", "tb_StockIn" },
             { "库存盘点", "tb_Stocktake" },
             { "领料单", "tb_MaterialRequisition" },
             { "退料单", "tb_MaterialReturn" },

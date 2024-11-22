@@ -60,7 +60,7 @@ namespace RUINORERP.UI.BaseForm
         /// 用来保存外键表名与外键主键列名  通过这个打到对应的名称。
         /// </summary>
         public static ConcurrentDictionary<string, string> FKValueColNameTBList = new ConcurrentDictionary<string, string>();
- 
+
 
         /// <summary>
         /// 要统计的列
@@ -942,7 +942,8 @@ namespace RUINORERP.UI.BaseForm
             if (MessageBox.Show("系统不建议删除基本资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 T loc = (T)this.bindingSourceList.Current;
-                object PKValue = this.bindingSourceList.Current.GetPropertyValue(UIHelper.GetPrimaryKeyColName(typeof(T)));
+                string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
+                object PKValue = this.bindingSourceList.Current.GetPropertyValue(PKColName);
                 this.bindingSourceList.Remove(loc);
                 bool rs = await ctr.BaseDeleteAsync(loc);
                 if (rs)
@@ -955,6 +956,18 @@ namespace RUINORERP.UI.BaseForm
                     //提示服务器开启推送工作流
                     OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                     MainForm.Instance.ecs.AddSendData(beatDataDel);
+
+                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                    //只处理需要缓存的表
+                    if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
+                    {
+                        //如果有更新变动就上传到服务器再分发到所有客户端
+                        OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName,PKValue.ToLong());
+                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                        MainForm.Instance.ecs.client.Send(buffer);
+
+                    }
                 }
             }
         }
@@ -1630,7 +1643,7 @@ namespace RUINORERP.UI.BaseForm
                                 OriginalData odforCache = ActionForClient.更新缓存<T>(rr.ReturnObject);
                                 byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
                                 MainForm.Instance.ecs.client.Send(buffer);
-                                
+
                             }
 
                         }

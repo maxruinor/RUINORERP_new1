@@ -33,16 +33,7 @@ namespace RUINORERP.UI.SysConfig
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (CacheList == null)
-                {
-                    UIBizSrvice.RequestCache(tableName);
-                }
-                else
-                {
-                    //更新式请求？
-                    UIBizSrvice.RequestCache(tableName);
-                }
+                UIBizSrvice.RequestCache(tableName);
             }
         }
 
@@ -65,7 +56,7 @@ namespace RUINORERP.UI.SysConfig
             list.Sort();
             foreach (var tableName in list)
             {
-             
+
                 var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 if (CacheList == null)
                 {

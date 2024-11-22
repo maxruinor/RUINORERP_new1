@@ -1,11 +1,14 @@
-﻿using Netron.GraphLib;
+﻿using FastReport.Table;
+using Netron.GraphLib;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.UI.SuperSocketClient;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,6 +17,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Caching;
 using TransInstruction;
 
 namespace RUINORERP.UI.Common
@@ -175,9 +179,25 @@ namespace RUINORERP.UI.Common
                 var rslist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 if (rslist == null)
                 {
-                    OriginalData odforCache = ActionForClient.请求发送缓存(tableName);
-                    byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
-                    MainForm.Instance.ecs.client.Send(buffer);
+                    ClientService.请求缓存(tableName);
+                }
+                else
+                {
+                    CacheInfo cacheInfo = new CacheInfo();
+                    //对比缓存信息概率。行数变化了也要请求最新的
+                    if (MainForm.Instance.CacheInfoList.TryGetValue(tableName, out cacheInfo))
+                    {
+                        if (rslist != null && rslist.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
+                        {
+                            var jsonlist = rslist as Newtonsoft.Json.Linq.JArray;
+                            if (cacheInfo.CacheCount != jsonlist.Count)
+                            {
+                                ClientService.请求缓存(tableName);
+                            }
+                        }
+
+
+                    }
                 }
             }
 
@@ -204,9 +224,7 @@ namespace RUINORERP.UI.Common
                     var rslist = BizCacheHelper.Manager.CacheEntityList.Get(item.Value);
                     if (rslist == null)
                     {
-                        OriginalData odforCache = ActionForClient.请求发送缓存(item.Value);
-                        byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
-                        MainForm.Instance.ecs.client.Send(buffer);
+                        ClientService.请求缓存(item.Value);
                     }
                 }
             }

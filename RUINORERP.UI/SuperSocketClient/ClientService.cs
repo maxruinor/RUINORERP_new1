@@ -26,6 +26,13 @@ namespace RUINORERP.UI.SuperSocketClient
     public class ClientService
     {
 
+        public static void 请求缓存(string tableName)
+        {
+            OriginalData odforCache = ActionForClient.请求发送缓存(tableName);
+            byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
+            MainForm.Instance.ecs.client.Send(buffer);
+        }
+
         /// <summary>
         /// 解析服务器的回复 意义是？
         /// </summary>
@@ -114,7 +121,6 @@ namespace RUINORERP.UI.SuperSocketClient
                 {
                     if (json != "null")
                     {
-
                         CacheInfo[] CacheInfoList = JsonConvert.DeserializeObject<CacheInfo[]>(json);
                         if (CacheInfoList != null)//(Newtonsoft.Json.Linq.JArray))
                         {
@@ -316,6 +322,28 @@ namespace RUINORERP.UI.SuperSocketClient
             }
         }
 
+        internal static void 接收转发删除缓存(OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string PKColName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                long PKValue = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+
+                MyCacheManager.Instance.DeleteEntityList(tableName, PKColName, PKValue);
+                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                {
+                    MainForm.Instance.PrintInfoLog($"接收转发删除缓存{tableName}成功！");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收转发删除缓存:" + ex.Message);
+            }
+        }
+
         internal static void 接收转发单据审核锁定(OriginalData gd)
         {
             try
@@ -363,7 +391,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
                 BillLockInfo lockInfo = new BillLockInfo();
                 MainForm.Instance.cache.TryGetValue(billid, out lockInfo);
-                if (lockInfo!=null)
+                if (lockInfo != null)
                 {
                     MainForm.Instance.cache.Remove(billid);
                 }

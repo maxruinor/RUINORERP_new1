@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:02
+// 时间：11/22/2024 16:08:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -33,6 +33,8 @@ namespace RUINORERP.Business
  RuleFor(tb_PrintConfig =>tb_PrintConfig.BizName).MaximumLength(15).WithMessage("业务名称:不能超过最大长度,15.");
  RuleFor(tb_PrintConfig =>tb_PrintConfig.BizName).NotEmpty().WithMessage("业务名称:不能为空。");
  RuleFor(tb_PrintConfig =>tb_PrintConfig.PrinterName).MaximumLength(100).WithMessage("打印机名称:不能超过最大长度,100.");
+ RuleFor(tb_PrintConfig =>tb_PrintConfig.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+ RuleFor(tb_PrintConfig =>tb_PrintConfig.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
        	
            	        Initialize();
      }

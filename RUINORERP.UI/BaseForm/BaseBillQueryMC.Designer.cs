@@ -33,8 +33,8 @@
             this.tsbtnBatchConversion = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripbtnSubmit = new System.Windows.Forms.ToolStripButton();
+            this.toolStripbtnApprove = new System.Windows.Forms.ToolStripButton();
             this.tsbtnAntiApproval = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonDelete = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
@@ -76,8 +76,8 @@
             this.tsbtnBatchConversion,
             this.toolStripButton4,
             this.toolStripSeparator2,
-            this.toolStripButton3,
-            this.toolStripButton1,
+            this.toolStripbtnSubmit,
+            this.toolStripbtnApprove,
             this.tsbtnAntiApproval,
             this.toolStripButtonDelete,
             this.toolStripButton结案,
@@ -118,21 +118,21 @@
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
-            // toolStripButton3
+            // toolStripbtnSubmit
             // 
-            this.toolStripButton3.Image = global::RUINORERP.UI.Properties.Resources.apply;
-            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton3.Name = "toolStripButton3";
-            this.toolStripButton3.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton3.Text = "提交";
+            this.toolStripbtnSubmit.Image = global::RUINORERP.UI.Properties.Resources.apply;
+            this.toolStripbtnSubmit.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnSubmit.Name = "toolStripbtnSubmit";
+            this.toolStripbtnSubmit.Size = new System.Drawing.Size(53, 22);
+            this.toolStripbtnSubmit.Text = "提交";
             // 
-            // toolStripButton1
+            // toolStripbtnApprove
             // 
-            this.toolStripButton1.Image = global::RUINORERP.UI.Properties.Resources.审核;
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton1.Text = "审核";
+            this.toolStripbtnApprove.Image = global::RUINORERP.UI.Properties.Resources.审核;
+            this.toolStripbtnApprove.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnApprove.Name = "toolStripbtnApprove";
+            this.toolStripbtnApprove.Size = new System.Drawing.Size(53, 22);
+            this.toolStripbtnApprove.Text = "审核";
             // 
             // tsbtnAntiApproval
             // 
@@ -365,12 +365,9 @@
         public Krypton.Docking.KryptonDockingManager kryptonDockingManagerQuery;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripLabel 最大行数;
-        private System.Windows.Forms.ToolStripButton toolStripButton1;
-        private System.Windows.Forms.ToolStripButton toolStripButton3;
         private System.Windows.Forms.ToolStripSplitButton toolStripSplitButtonPrint;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
-        internal System.Windows.Forms.ToolStripButton tsbtnAntiApproval;
         internal System.Windows.Forms.ToolStripButton tsbtnBatchConversion;
         public System.Windows.Forms.ToolStripButton toolStripButtonDelete;
         public System.Windows.Forms.ToolStripButton toolStripButton结案;
@@ -380,5 +377,8 @@
         private Krypton.Toolkit.ButtonSpecHeaderGroup buttonSpecHeaderGroup1;
         internal Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
         private WinLib.Line.GroupLine groupLine1;
+        public System.Windows.Forms.ToolStripButton toolStripbtnSubmit;
+        public System.Windows.Forms.ToolStripButton toolStripbtnApprove;
+        public System.Windows.Forms.ToolStripButton tsbtnAntiApproval;
     }
 }

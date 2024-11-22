@@ -270,6 +270,8 @@ namespace RUINORERP.UI.PSI.INV
                 }
                 ShowPrintStatus(lblPrintStatus, EditEntity);
             };
+
+            base.BindData(entity);
         }
 
         SourceGridDefine sgd = null;
@@ -287,9 +289,6 @@ namespace RUINORERP.UI.PSI.INV
 
             grid1.BorderStyle = BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
-
-
-
 
             listCols = new List<SourceGridDefineColumnItem>();
             //指定了关键字段ProdDetailID
@@ -339,7 +338,7 @@ namespace RUINORERP.UI.PSI.INV
             //sgd.BindingSourceLines.ListChanged += BindingSourceLines_ListChanged;
             // bindingSourceSub.AddingNew += BindingSourceSub_AddingNew;
             //控件主表的字段显示权限
-            base.ControlMasterColumnsInvisible();
+             base.ControlMasterColumnsInvisible();
         }
 
         private void InitLoadGrid()

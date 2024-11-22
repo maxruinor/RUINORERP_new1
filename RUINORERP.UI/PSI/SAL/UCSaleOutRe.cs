@@ -227,6 +227,7 @@ namespace RUINORERP.UI.PSI.SAL
                     toolStripbtnPrint.Enabled = false;
                 }
             };
+            base.BindData(entity);
         }
 
         public void InitDataTocmbbox()
@@ -260,6 +261,7 @@ namespace RUINORERP.UI.PSI.SAL
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
             LoadGrid1();
             LoadGrid2();
+            base.ControlMasterColumnsInvisible();
         }
 
         private void LoadGrid1()

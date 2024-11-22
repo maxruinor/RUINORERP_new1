@@ -203,10 +203,7 @@ namespace RUINORERP.UI.PSI.PUR
                 #endregion
             }
 
-
-
-
-            ToolBarEnabledControl(entity);
+            base.BindData(entity);
         }
 
 
@@ -292,7 +289,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             //Clear(sgd);
             ShowSelectedColumn();
-
+            base.ControlMasterColumnsInvisible();
         }
 
         private void Sgh_OnLoadMultiRowData(object rows, Position position)

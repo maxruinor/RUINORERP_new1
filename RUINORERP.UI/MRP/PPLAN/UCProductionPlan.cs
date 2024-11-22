@@ -205,7 +205,7 @@ namespace RUINORERP.UI.MRP.MP
                 base.InitRequiredToControl(new tb_ProductionPlanValidator(), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
-            ToolBarEnabledControl(entity);
+            base.BindData(entity);
         }
 
 
@@ -298,6 +298,7 @@ namespace RUINORERP.UI.MRP.MP
             sgh.InitGrid(grid1, sgd, true, nameof(tb_ProductionPlanDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
+            base.ControlMasterColumnsInvisible();
         }
 
 

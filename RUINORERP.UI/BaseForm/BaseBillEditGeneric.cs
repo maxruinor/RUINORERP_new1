@@ -230,6 +230,8 @@ namespace RUINORERP.UI.BaseForm
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             ToolBarEnabledControl(entity);
+
+            //如果单据被锁定，则不能修改
         }
 
         protected override void ToolBarEnabledControl(object entity)
@@ -1193,7 +1195,7 @@ namespace RUINORERP.UI.BaseForm
                     ae.ApprovalResults = false;
                     ToolBarEnabledControl(EditEntity);
 
-                    
+
 
 
                     AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults},{rmr.ErrorMsg}");
@@ -1220,7 +1222,7 @@ namespace RUINORERP.UI.BaseForm
             if (pkid > 0)
             {
                 //判断是否锁定
-                BillLockInfo bli = MainForm.Instance.cache.Get<BillLockInfo>(pkid);
+                BillLockInfo bli = MainForm.Instance.CacheLockTheOrder.Get<BillLockInfo>(pkid);
                 if (bli != null)
                 {
                     MainForm.Instance.uclog.AddLog($"单据已被{bli.LockedName}锁定，请刷新后再试");
@@ -1248,8 +1250,8 @@ namespace RUINORERP.UI.BaseForm
 
             BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
             CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
-          
- 
+
+
             ae.BillID = pkid;
             CommBillData cbd = bcf.GetBillData<T>(EditEntity);
             ae.BillNo = cbd.BillNo;
@@ -1694,9 +1696,9 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                if (MainForm.Instance.cache!=null)
+                if (MainForm.Instance.CacheLockTheOrder != null)
                 {
-                    BillLockInfo bli = MainForm.Instance.cache.Get<BillLockInfo>(pkid);
+                    BillLockInfo bli = MainForm.Instance.CacheLockTheOrder.Get<BillLockInfo>(pkid);
                     if (bli != null)
                     {
                         return new ReturnMainSubResults<T>()

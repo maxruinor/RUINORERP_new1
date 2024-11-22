@@ -317,6 +317,7 @@ namespace RUINORERP.UI.MRP.MP
             };
 
             ControlBtnFuncation(entity);
+            base.BindData(entity);
         }
 
 
@@ -642,6 +643,7 @@ namespace RUINORERP.UI.MRP.MP
             kryptonNavigator1.SelectedPage = KP分析目标;
 
             GridRelated.SetRelatedInfo<tb_ManufacturingOrder>(c => c.MONO);
+            base.ControlMasterColumnsInvisible();
         }
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
 

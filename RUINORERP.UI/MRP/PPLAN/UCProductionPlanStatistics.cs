@@ -55,6 +55,7 @@ namespace RUINORERP.UI.MRP.PPLAN
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_ProductionPlanItems, tb_SaleOrder>(c => c.SaleOrderNo, r => r.SOrderNo);
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_ProductionPlanItems, tb_ProductionPlan>(c => c.PPNo, r => r.PPNo);
+ 
         }
 
         public override void BuildColNameDataDictionary()

@@ -28,6 +28,8 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.UI.Common;
+using Microsoft.Extensions.Caching.Memory;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -43,6 +45,8 @@ namespace RUINORERP.UI.BaseForm
             bwRemoting.DoWork += bwRemoting_DoWork;
             bwRemoting.RunWorkerCompleted += bwRemoting_RunWorkerCompleted;
             bwRemoting.ProgressChanged += bwRemoting_progressChanged;
+            //如果打开单时。被其它人锁定。才显示锁定图标
+            tslLocked.Visible = false;
         }
 
         private void bwRemoting_progressChanged(object sender, ProgressChangedEventArgs e)
@@ -413,6 +417,29 @@ namespace RUINORERP.UI.BaseForm
                         break;
                 }
 
+                //单据被锁定时。显示锁定图标。并且提示无法操作？
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+                if (pkid > 0)
+                {
+                    //判断是否锁定
+                    BillLockInfo bli = MainForm.Instance.CacheLockTheOrder.Get<BillLockInfo>(pkid);
+                    if (bli != null)
+                    {
+                        MainForm.Instance.uclog.AddLog($"单据已被{bli.LockedName}锁定，请刷新后再试");
+                        tslLocked.Visible = true;
+                        toolStripBtnCancel.Visible = true;
+                        toolStripbtnModify.Enabled = false;
+                        toolStripbtnSubmit.Enabled = false;
+                        toolStripBtnReverseReview.Enabled = false;
+                        toolStripbtnReview.Enabled = false;
+                        toolStripButtonSave.Enabled = false;
+                        toolStripbtnDelete.Enabled = false;
+                        toolStripbtnPrint.Enabled = false;
+                        toolStripButton结案.Enabled = false;
+                    }
+                }
+
                 #region 数据状态修改时也会影响到按钮
                 if (entity is BaseEntity baseEntity)
                 {
@@ -493,11 +520,11 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-      protected async virtual Task<bool> Submit()
-      {
-          await Task.Delay(0);
-          return false;
-      }
+        protected async virtual Task<bool> Submit()
+        {
+            await Task.Delay(0);
+            return false;
+        }
 
         protected virtual void Query()
         {
@@ -601,7 +628,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="LoadItem"></param>
         internal virtual void LoadDataToUI(object LoadItem)
         {
-            
+
         }
         #endregion
 
@@ -1002,7 +1029,7 @@ namespace RUINORERP.UI.BaseForm
 
 
                     #endregion
-                  
+
                 }
             }
 

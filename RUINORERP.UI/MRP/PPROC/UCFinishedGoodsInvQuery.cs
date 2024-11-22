@@ -175,6 +175,7 @@ namespace RUINORERP.UI.PSI.PUR
         private void UCFinishedGoodsInvQuery_Load(object sender, EventArgs e)
         {
             _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FinishedGoodsInv, tb_ManufacturingOrder>(a => a.MONo, b => b.MONO);
+ 
         }
     }
 

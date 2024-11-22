@@ -66,6 +66,7 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_FM_ExpenseType));
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_FM_ExpenseClaimItems, tb_FM_ExpenseClaim>(c => c.ClaimNo, r => r.ClaimNo);
+ 
         }
   
 

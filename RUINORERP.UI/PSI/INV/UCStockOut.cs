@@ -176,9 +176,7 @@ namespace RUINORERP.UI.PSI.INV
             {
                 base.InitRequiredToControl(new tb_StockOutValidator(), kryptonPanelMainInfo.Controls);
             }
-            ToolBarEnabledControl(entity);
-
-            ControlMasterColumnsInvisible();
+            base.BindData(entity);
         }
 
 

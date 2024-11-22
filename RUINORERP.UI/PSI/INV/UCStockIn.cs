@@ -256,6 +256,7 @@ namespace RUINORERP.UI.PSI.INV
             sgh.InitGrid(grid1, sgd, true, nameof(tb_StockInDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
+            base.ControlMasterColumnsInvisible();
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
         {

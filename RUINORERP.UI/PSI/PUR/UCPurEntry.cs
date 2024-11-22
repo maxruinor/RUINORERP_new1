@@ -200,7 +200,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             DataBindingHelper.InitFilterForControlByExp<tb_PurOrder>(entity, txtPurOrderNO, c => c.PurOrderNo, queryFilter);
 
-            ToolBarEnabledControl(entity);
+            base.BindData(entity);
         }
 
 
@@ -281,6 +281,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.InitGrid(grid1, sgd, true, nameof(tb_PurEntryDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
+            base.ControlMasterColumnsInvisible();
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
         {

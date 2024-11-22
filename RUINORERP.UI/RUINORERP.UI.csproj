@@ -3193,6 +3193,8 @@
     <None Include="ResourceFile\Save_ok.png" />
     <None Include="ResourceFile\SaveLayout.png" />
     <None Include="ResourceFile\reset.png" />
+    <None Include="ResourceFile\Lock.png" />
+    <None Include="ResourceFile\locked.png" />
     <Content Include="ruinor.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

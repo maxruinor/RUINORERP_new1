@@ -207,7 +207,7 @@ namespace RUINORERP.UI.PSI.INV
             {
                 base.InitRequiredToControl(new tb_ProdBorrowingValidator(), kryptonPanelMainInfo.Controls);
             }
-            ToolBarEnabledControl(entity);
+            base.BindData(entity);
         }
 
 

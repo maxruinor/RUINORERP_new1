@@ -250,11 +250,11 @@ namespace RUINORERP.UI.PSI.SAL
             queryFilter.SetFieldLimitCondition(lambdaOrder);
 
             DataBindingHelper.InitFilterForControlByExp<tb_SaleOrder>(entity, txtSaleOrder, c => c.SOrderNo, queryFilter);
-            ToolBarEnabledControl(entity);
+    
 
             sgd.GridMasterData = entity;
             sgd.GridMasterDataType = entity.GetType();
-
+            base.BindData(entity);
         }
 
         public void InitDataTocmbbox()
@@ -347,6 +347,7 @@ namespace RUINORERP.UI.PSI.SAL
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnGetTransferDataHandler += Sgh_OnGetTransferDataHandler;
+            base.ControlMasterColumnsInvisible();
         }
 
         private tb_ProdConversion Sgh_OnGetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine)

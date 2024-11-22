@@ -48,6 +48,7 @@ namespace RUINORERP.UI.MRP.BOM
             //base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail));
            // base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_BOM_S));
             base._UCBillMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
+           
         }
 
 

@@ -279,7 +279,7 @@ namespace RUINORERP.UI.ProductEAV
                 DataBindingHelper.BindData4Cmb<tb_ProdBundle>(entity, k => k.BundleID, v => v.BundleName, cmbBundleID, true);
             }
 
-            ToolBarEnabledControl(entity);
+            base.BindData(entity);
         }
 
 
@@ -340,7 +340,7 @@ namespace RUINORERP.UI.ProductEAV
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
             LoadGrid1();
             LoadGrid2();
-
+            base.ControlMasterColumnsInvisible();
         }
 
         private void LoadGrid1()

@@ -168,6 +168,7 @@ namespace RUINORERP.UI.FM
                     toolStripbtnPrint.Enabled = false;
                 }
             };
+            base.BindData(entity);
         }
 
 
@@ -232,6 +233,7 @@ namespace RUINORERP.UI.FM
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_OtherExpenseDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
+            base.ControlMasterColumnsInvisible();
         }
 
 

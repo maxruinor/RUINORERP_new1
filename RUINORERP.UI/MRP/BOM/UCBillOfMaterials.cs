@@ -898,7 +898,7 @@ namespace RUINORERP.UI.MRP.BOM
                 ///视图指定成实体表，为了显示关联数据
                 DataBindingHelper.InitFilterForControlByExp<View_ProdDetail>(EditEntity, txtProdDetailID, c => c.SKU, queryFilterC, typeof(tb_Prod));
             }
-
+            base.BindData(entity);
         }
 
         protected override void AddByCopy()

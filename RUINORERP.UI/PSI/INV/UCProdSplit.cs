@@ -311,7 +311,7 @@ namespace RUINORERP.UI.PSI.INV
                 }
             };
 
-
+            base.BindData(entity);
 
         }
 
@@ -393,6 +393,7 @@ namespace RUINORERP.UI.PSI.INV
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             grid1.Enter += Grid1_Enter;
+            base.ControlMasterColumnsInvisible();
         }
 
         private void Grid1_Enter(object sender, EventArgs e)

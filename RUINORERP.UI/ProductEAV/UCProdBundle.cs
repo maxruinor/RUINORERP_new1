@@ -153,7 +153,7 @@ namespace RUINORERP.UI.ProductEAV
             };
 
 
-
+            base.BindData(entity);
         }
 
         SourceGridDefine sgd = null;
@@ -233,6 +233,7 @@ namespace RUINORERP.UI.ProductEAV
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             grid1.Enter += Grid1_Enter;
+            base.ControlMasterColumnsInvisible();
         }
 
         private void Grid1_Enter(object sender, EventArgs e)

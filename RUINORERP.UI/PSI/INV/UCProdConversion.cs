@@ -159,6 +159,7 @@ namespace RUINORERP.UI.PSI.INV
                     toolStripbtnPrint.Enabled = false;
                 }
             };
+            base.BindData(entity);
         }
 
         private void Bsa_Click(object sender, EventArgs e)
@@ -310,6 +311,7 @@ namespace RUINORERP.UI.PSI.INV
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
             grid1.Enter += Grid1_Enter;
+            base.ControlMasterColumnsInvisible();
         }
 
         private void Sgh_OnLoadRelevantFields(object _View_ProdDetail, object rowObj, SourceGridDefine griddefine, Position Position)

@@ -312,7 +312,7 @@ namespace RUINORERP.UI.PSI.SAL
                 base.InitRequiredToControl(new tb_SaleOrderValidator(), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
-            ToolBarEnabledControl(entity);
+            base.BindData(entity);
         }
 
         public void InitDataTocmbbox()
@@ -484,6 +484,8 @@ namespace RUINORERP.UI.PSI.SAL
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
             sw.Stop();
             MainForm.Instance.uclog.AddLog("加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
+
+            base.ControlMasterColumnsInvisible();
         }
 
         /// <summary>

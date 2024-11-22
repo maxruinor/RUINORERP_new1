@@ -216,8 +216,7 @@ namespace RUINORERP.UI.PSI.PUR
             BaseProcessor baseProcessorPUR = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_PurEntry).Name + "Processor");
             QueryFilter queryFilterPUR = baseProcessorPUR.GetQueryFilter();
             DataBindingHelper.InitFilterForControlByExp<tb_PurEntry>(entity, txtPurEntryNo, c => c.PurEntryNo, queryFilterPUR);
-
-            ToolBarEnabledControl(entity);
+            base.BindData(entity);
         }
 
         SourceGridDefine sgd = null;
@@ -297,6 +296,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_PurEntryReDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
+            base.ControlMasterColumnsInvisible();
         }
 
 

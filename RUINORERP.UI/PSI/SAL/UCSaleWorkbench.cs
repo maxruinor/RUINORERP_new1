@@ -273,8 +273,10 @@ namespace RUINORERP.UI.SAL
                       // .AsNavQueryable()
                       // .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
                       //.WhereIF(txtPDNO.Text.Trim().Length > 0, w => w.tb_ProductionDemands.Any(d => d.PDNo.Contains(txtPDNO.Text.Trim())))
+                      .WhereIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                       .Where(exp)
                       .OrderBy(c => c.SaleDate)
+                       .WithCache(60) // 缓存60秒
                       .ToListAsync();
 
                     break;

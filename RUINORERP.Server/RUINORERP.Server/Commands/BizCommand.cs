@@ -159,7 +159,7 @@ namespace RUINORERP.Server.Commands
                             break;
                         case ClientCmdEnum.更新缓存:
                             UserService.接收更新缓存指令(Player, gd);
-                           
+
                             break;
                         case ClientCmdEnum.删除缓存:
                             UserService.接收删除缓存指令(Player, gd);
@@ -172,6 +172,8 @@ namespace RUINORERP.Server.Commands
                             //意思是如:审核了销售出库单时，订单是无法再操作了。转发到所有电脑。保存等各种操作都要判断一下？
                             //这种主要是比方业务订单UI没有关掉。仓库出库了。业务还可以反审等？不在线的不管。会重新打开。这时状态不一样。会判断好。
                             //所有缓存到客户机。服务器不用缓存列表了？
+                            //或者相同的一个单。A在编辑没有完成。B再接着编辑保存。这时B打开时就会看到锁定状态。B保存时就会提示
+                            //退出后 解除锁定
                             SystemService.process单据审核锁定(Player, gd);
                             break;
                         case ClientCmdEnum.单据审核锁定释放:

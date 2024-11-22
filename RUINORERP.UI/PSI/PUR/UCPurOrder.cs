@@ -226,10 +226,7 @@ namespace RUINORERP.UI.PSI.PUR
             QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
             queryFilterC.FilterLimitExpressions.Add(lambda);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-
-
-
-            ToolBarEnabledControl(entity);
+            base.BindData(entity);
         }
 
 
@@ -331,6 +328,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
+            base.ControlMasterColumnsInvisible();
         }
 
         /// <summary>

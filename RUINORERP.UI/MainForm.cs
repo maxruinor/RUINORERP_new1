@@ -325,11 +325,12 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 转发单据审核锁定 https://www.cnblogs.com/fanfan-90/p/12151924.html
+        /// 锁单
         /// </summary>
-        public IMemoryCache cache { get; set; }
+        public IMemoryCache CacheLockTheOrder { get; set; }
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            cache = Startup.GetFromFac<IMemoryCache>();
+            CacheLockTheOrder = Startup.GetFromFac<IMemoryCache>();
 
             //cache.Set("test1", "test123");
 

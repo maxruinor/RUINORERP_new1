@@ -273,8 +273,11 @@ namespace RUINORERP.UI.PUR
                       .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurEntryReDetails)
                         .AsNavQueryable()
                         .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
+                       .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                       .Where(expPO)
+
                       .OrderBy(c => c.PurDate)
+                        .WithCache(60) // 缓存60秒
                       .ToListAsync();
 
                     break;
@@ -303,7 +306,7 @@ namespace RUINORERP.UI.PUR
                              .WhereIF(txtBuyRequestNO.Text.Trim().Length > 0, w => w.PuRequisitionNo.Contains(txtBuyRequestNO.Text.Trim()))
                              .ToListAsync();
                         long[] BRIds = BRList.Select(c => c.PuRequisition_ID).ToArray();
-                        if (BRIds.Length>0)
+                        if (BRIds.Length > 0)
                         {
                             expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
                             .AndIF(BRIds.Length > 0, c => c.RefBillID.HasValue && c.RefBizType == (int)BizType.请购单 && BRIds.ToArray().Contains(c.RefBillID.Value))
@@ -333,7 +336,7 @@ namespace RUINORERP.UI.PUR
 
                         long[] POIDs = EntryList.Where(c => c.PurOrder_ID.HasValue).Select(c => c.PurOrder_ID.Value).ToArray();
 
-                        if (POIDs.Length>0)
+                        if (POIDs.Length > 0)
                         {
                             expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
                            .AndIF(POIDs.Length > 0, c => POIDs.ToArray().Contains(c.PurOrder_ID))
@@ -352,10 +355,10 @@ namespace RUINORERP.UI.PUR
 
                         long[] PurEntryRe_IDs = PurReEntrys.Where(s => s.PurEntryRe_ID.HasValue).Select(c => c.PurEntryRe_ID.Value).ToArray();
 
-                         expPERe = Expressionable.Create<tb_PurEntryRe>() //创建表达式
-                        .AndIF(PurEntryRe_IDs.Length > 0, c => PurEntryRe_IDs.ToArray().Contains(c.PurEntryRe_ID))
-                        .ToExpression();
-                        
+                        expPERe = Expressionable.Create<tb_PurEntryRe>() //创建表达式
+                       .AndIF(PurEntryRe_IDs.Length > 0, c => PurEntryRe_IDs.ToArray().Contains(c.PurEntryRe_ID))
+                       .ToExpression();
+
                         goto case 5;
                     }
                     break;

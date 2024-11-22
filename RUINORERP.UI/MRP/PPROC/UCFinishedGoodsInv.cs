@@ -308,6 +308,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FinishedGoodsInvDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
+            base.ControlMasterColumnsInvisible();
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
         {
@@ -691,6 +692,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(entity, actionStatus);
+                base.BindData(entity);
             }
         }
 

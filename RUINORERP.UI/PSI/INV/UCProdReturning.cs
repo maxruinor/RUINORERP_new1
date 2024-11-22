@@ -199,9 +199,8 @@ namespace RUINORERP.UI.PSI.INV
 
             DataBindingHelper.InitFilterForControlByExp<tb_ProdBorrowing>(entity, txtBorrowNO, c => c.BorrowNo, queryFilter);
 
-            ToolBarEnabledControl(entity);
- 
-  
+            base.BindData(entity);
+
             sw.Stop();
             MainForm.Instance.uclog.AddLog("Binding加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
         }
@@ -285,7 +284,8 @@ namespace RUINORERP.UI.PSI.INV
             sgh.InitGrid(grid1, sgd, true, nameof(tb_ProdReturningDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
- 
+            base.ControlMasterColumnsInvisible();
+
         }
         private void Sgh_OnLoadMultiRowData(object rows, Position position)
         {

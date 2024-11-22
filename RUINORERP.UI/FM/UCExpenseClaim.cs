@@ -266,7 +266,7 @@ namespace RUINORERP.UI.FM
             }
             //显示结案凭证图片
             LoadImageData(entity.CloseCaseImagePath);
-
+            base.BindData(entity);
         }
         private async void LoadImageData(string CloseCaseImagePath)
         {
@@ -373,6 +373,7 @@ namespace RUINORERP.UI.FM
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ExpenseClaimDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
+            base.ControlMasterColumnsInvisible();
         }
 
         private void Sgh_OnAddDataRow(object rowObj)

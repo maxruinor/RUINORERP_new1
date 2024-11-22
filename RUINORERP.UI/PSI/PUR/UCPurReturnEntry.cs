@@ -223,8 +223,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
 
-
-            ToolBarEnabledControl(entity);
+            base.BindData(entity);
         }
 
         SourceGridDefine sgd = null;
@@ -308,6 +307,7 @@ namespace RUINORERP.UI.PSI.PUR
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_PurReturnEntryDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
+            base.ControlMasterColumnsInvisible();
         }
 
 

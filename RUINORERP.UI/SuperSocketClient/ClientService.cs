@@ -354,7 +354,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
                 long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
+             
 
                 using (ICacheEntry cacheEntry = MainForm.Instance.CacheLockTheOrder.CreateEntry(billid))
                 {
@@ -364,8 +364,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     lockInfo.BizType = BizType;
                     cacheEntry.SetValue(lockInfo);
                 }
-
-                MainForm.Instance.CacheLockTheOrder.Set(billid, ApprovalResults, TimeSpan.FromDays(1));
+               // MainForm.Instance.CacheLockTheOrder.Set(billid, billid, TimeSpan.FromDays(1));
 
                 if (MainForm.Instance.authorizeController.GetDebugAuth())
                 {
@@ -387,7 +386,6 @@ namespace RUINORERP.UI.SuperSocketClient
                 string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
                 long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
-                bool ApprovalResults = ByteDataAnalysis.Getbool(gd.Two, ref index);
 
                 BillLockInfo lockInfo = new BillLockInfo();
                 MainForm.Instance.CacheLockTheOrder.TryGetValue(billid, out lockInfo);

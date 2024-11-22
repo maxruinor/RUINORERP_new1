@@ -29,7 +29,6 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.UI.Common;
 using Microsoft.Extensions.Caching.Memory;
-using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -236,269 +235,6 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        /// <summary>
-        /// 更新付款状态
-        /// </summary>
-        protected virtual void UpdatePaymentStatus()
-        {
-            ToolBarEnabledControl(MenuItemEnums.付款调整);
-        }
-
-
-        /// <summary>
-        /// 不同情况，显示不同的可用情况
-        /// </summary>
-        internal void ToolBarEnabledControl(MenuItemEnums menu)
-        {
-            switch (menu)
-            {
-                case MenuItemEnums.反审:
-                    toolStripbtnReview.Enabled = true;
-                    toolStripBtnReverseReview.Enabled = false;//先不支持反审
-                    toolStripButtonRefresh.Enabled = true;
-                    toolStripbtnModify.Enabled = true;
-                    toolStripbtnDelete.Enabled = true;
-                    break;
-
-                case MenuItemEnums.审核:
-                    toolStripbtnReview.Enabled = false;
-                    toolStripBtnReverseReview.Enabled = true;//先不支持反审
-                    toolStripbtnSubmit.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnDelete.Enabled = false;
-                    toolStripbtnModify.Enabled = false;
-                    toolStripButtonRefresh.Enabled = true;
-
-                    break;
-                case MenuItemEnums.新增:
-                    toolStripbtnAdd.Enabled = false;
-                    toolStripButtonSave.Enabled = true;
-                    toolStripbtnReview.Enabled = false;
-                    toolStripBtnCancel.Visible = true;
-                    toolStripbtnModify.Enabled = false;
-                    toolStripBtnCancel.Enabled = true;
-                    toolStripbtnDelete.Enabled = false;
-                    break;
-
-                case MenuItemEnums.取消:
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripBtnCancel.Visible = false;
-                    break;
-                case MenuItemEnums.删除://可新增
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripbtnDelete.Enabled = false;
-                    break;
-
-                case MenuItemEnums.修改:
-                    toolStripbtnModify.Enabled = false;
-                    toolStripButtonSave.Enabled = true;
-                    break;
-                case MenuItemEnums.查询:
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnPrint.Enabled = true;
-                    toolStripbtnModify.Enabled = true;
-                    break;
-                case MenuItemEnums.保存:
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnSubmit.Enabled = true;
-                    toolStripbtnPrint.Enabled = true;
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripbtnDelete.Enabled = true;
-                    toolStripButtonRefresh.Enabled = true;
-                    break;
-                //case MenuItemEnums.高级查询:
-                //    break;
-                case MenuItemEnums.关闭:
-                    break;
-                case MenuItemEnums.刷新:
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripButtonSave.Enabled = false;
-                    break;
-                case MenuItemEnums.打印:
-                    toolStripbtnPrint.Enabled = false;
-                    break;
-                case MenuItemEnums.提交:
-                    toolStripbtnSubmit.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnReview.Enabled = true;
-                    toolStripButtonRefresh.Enabled = true;
-                    break;
-                case MenuItemEnums.结案:
-                    toolStripbtnSubmit.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnReview.Enabled = false;
-                    toolStripbtnAdd.Enabled = true;
-                    toolStripbtnDelete.Enabled = false;
-                    toolStripBtnCancel.Visible = false;
-                    toolStripbtnModify.Enabled = false;
-                    toolStripBtnCancel.Enabled = false;
-                    toolStripbtnPrint.Enabled = true;
-                    toolStripButtonRefresh.Enabled = true;
-                    break;
-                case MenuItemEnums.导出:
-
-                    break;
-                case MenuItemEnums.付款调整:
-                    toolStripButton付款调整.Enabled = false;
-                    break;
-                default:
-                    break;
-            }
-            Edited = toolStripButtonSave.Enabled;
-        }
-
-
-        /// <summary>
-        /// 根据单据实体属性状态来对应显示各种按钮控制
-        /// </summary>
-        /// <param name="entity"></param>
-        protected virtual void ToolBarEnabledControl(object entity)
-        {
-            if (entity == null)
-            {
-                return;
-            }
-            //可以修改
-            if (entity.ContainsProperty(typeof(DataStatus).Name))
-            {
-                DataStatus dataStatus = (DataStatus)int.Parse(entity.GetPropertyValue(typeof(DataStatus).Name).ToString());
-                switch (dataStatus)
-                {
-                    //点新增
-                    case DataStatus.草稿:
-                        toolStripbtnAdd.Enabled = false;
-                        toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = true;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = true;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnPrint.Enabled = false;
-                        toolStripbtnDelete.Enabled = true;
-                        toolStripButton结案.Enabled = false;
-                        break;
-                    case DataStatus.新建:
-                        toolStripbtnAdd.Enabled = false;
-                        toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = true;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnReview.Enabled = true;
-                        toolStripButtonSave.Enabled = true;
-                        toolStripbtnDelete.Enabled = true;
-                        toolStripbtnPrint.Enabled = true;
-                        toolStripButton结案.Enabled = false;
-                        break;
-                    case DataStatus.确认:
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = true;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripbtnPrint.Enabled = true;
-                        toolStripButton结案.Enabled = true;
-                        toolStripbtnDelete.Enabled = false;
-                        break;
-                    case DataStatus.完结:
-                        //
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnPrint.Enabled = true;
-                        toolStripButton结案.Enabled = false;
-                        toolStripBtnCancel.Enabled = false;
-                        toolStripbtnDelete.Enabled = false;
-                        break;
-                    default:
-                        break;
-                }
-
-                //单据被锁定时。显示锁定图标。并且提示无法操作？
-                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
-                if (pkid > 0)
-                {
-                    //判断是否锁定
-                    BillLockInfo bli = MainForm.Instance.CacheLockTheOrder.Get<BillLockInfo>(pkid);
-                    if (bli != null)
-                    {
-                        MainForm.Instance.uclog.AddLog($"单据已被{bli.LockedName}锁定，请刷新后再试");
-                        tslLocked.Visible = true;
-                        toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = false;
-                        toolStripbtnSubmit.Enabled = false;
-                        toolStripBtnReverseReview.Enabled = false;
-                        toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = false;
-                        toolStripbtnDelete.Enabled = false;
-                        toolStripbtnPrint.Enabled = false;
-                        toolStripButton结案.Enabled = false;
-                    }
-                }
-
-                #region 数据状态修改时也会影响到按钮
-                if (entity is BaseEntity baseEntity)
-                {
-                    //如果属性变化 则状态为修改
-                    baseEntity.PropertyChanged += (sender, s2) =>
-                    {
-                        // baseEntity.GetPropertyName<tb_SaleOrder>(c => c.DataStatus))
-
-                        //数据状态变化会影响按钮变化
-                        if (s2.PropertyName == "DataStatus")
-                        {
-                            if (dataStatus == DataStatus.草稿)
-                            {
-                                ToolBarEnabledControl(MenuItemEnums.新增);
-                            }
-                            if (dataStatus == DataStatus.新建)
-                            {
-                                ToolBarEnabledControl(MenuItemEnums.新增);
-                            }
-                            if (dataStatus == DataStatus.确认)
-                            {
-                                ToolBarEnabledControl(MenuItemEnums.审核);
-                            }
-
-                            if (dataStatus == DataStatus.完结)
-                            {
-                                ToolBarEnabledControl(MenuItemEnums.结案);
-                            }
-
-                        }
-
-                        //权限允许
-                        if ((true && dataStatus == DataStatus.草稿) || (true && dataStatus == DataStatus.新建))
-                        {
-                            baseEntity.ActionStatus = ActionStatus.修改;
-                            ToolBarEnabledControl(MenuItemEnums.修改);
-                        }
-
-                        //权限允许
-                        //if (true && dataStatus == DataStatus.确认)
-                        //{
-                        //    baseEntity.actionStatus = ActionStatus.修改;
-                        //    ToolBarEnabledControl(MenuItemEnums.修改);
-                        //}
-
-
-                        //权限允许
-                        if ((true && dataStatus == DataStatus.草稿) || (true && dataStatus == DataStatus.新建))
-                        {
-                            baseEntity.ActionStatus = ActionStatus.修改;
-                            ToolBarEnabledControl(MenuItemEnums.修改);
-                        }
-
-
-                    };
-                }
-                #endregion
-            }
-        }
 
         protected virtual void AddByCopy()
         {
@@ -632,7 +368,7 @@ namespace RUINORERP.UI.BaseForm
         }
         #endregion
 
-        private void CloseTheForm(object thisform)
+        internal virtual void CloseTheForm(object thisform)
         {
             KryptonWorkspaceCell cell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
             if (cell == null)
@@ -646,7 +382,7 @@ namespace RUINORERP.UI.BaseForm
             if (page == null)
             {
                 //浮动
-               
+
             }
             else
             {

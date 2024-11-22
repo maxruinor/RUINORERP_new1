@@ -40,6 +40,7 @@ using NPOI.POIFS.Properties;
 using System.Diagnostics;
 using RUINORERP.Common.Extensions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using MySqlX.XDevAPI.Common;
 
 
 namespace RUINORERP.UI.PSI.SAL
@@ -672,7 +673,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 //订单只是警告。可以继续
-    
+
                 EditEntity.tb_SaleOrderDetails = details;
                 //var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 //if (aa.Count > 1)
@@ -765,7 +766,16 @@ namespace RUINORERP.UI.PSI.SAL
                         else
                         {
                             //更新式  要先删除前面的数据相关的数据
-                            await base.Save(EditEntity);
+                            var SaveResult1 = await base.Save(EditEntity);
+                            if (SaveResult1.Succeeded)
+                            {
+                                MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
+                            }
+                            else
+                            {
+                                MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult1.ErrorMsg}。", Color.Red);
+                            }
+                            return SaveResult1.Succeeded;
                         }
                     }
                     else

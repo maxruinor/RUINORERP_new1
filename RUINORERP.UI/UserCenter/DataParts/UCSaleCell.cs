@@ -28,6 +28,7 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.Common.Helper;
 using Krypton.Toolkit;
 using SuperSocket.ClientEngine;
+using System.Diagnostics;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -44,10 +45,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private async void UCPURCell_Load(object sender, EventArgs e)
         {
             await Task.Delay(4000); // 等待5秒
-           int ListCount = await uCSale.QueryData();
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            int ListCount = await uCSale.QueryData();
             kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + ListCount.ToString() + "】销售出库中";
             kryptonPanelCell.Controls.Add(uCSale);
             timer1.Start();
+            stopwatch.Stop();
+            MainForm.Instance.uclog.AddLog($"初始化UCSale 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
         }
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
         private void timer1_Tick(object sender, EventArgs e)

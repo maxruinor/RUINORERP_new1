@@ -487,6 +487,7 @@ namespace RUINORERP.UI.PSI.SAL
             MainForm.Instance.uclog.AddLog("加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
 
             base.ControlMasterColumnsInvisible();
+            
         }
 
         /// <summary>

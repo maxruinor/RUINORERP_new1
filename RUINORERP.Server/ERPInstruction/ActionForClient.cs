@@ -11,7 +11,7 @@ namespace TransInstruction
     /// </summary>
     public class ActionForClient
     {
-        public static OriginalData 单据审核锁定释放(long billid, string lockName, int BizType)
+        public static OriginalData 单据锁定释放(long billid, string lockName, int BizType)
         {
             var tx = new ByteBuff(2 + 4);
             tx.PushString(System.DateTime.Now.ToString());
@@ -20,13 +20,13 @@ namespace TransInstruction
             tx.PushInt((int)BizType);//加一个其他东西？比方随便时间，或当前时间的到分钟
         
             OriginalData gd = new OriginalData();
-            gd.cmd = (byte)ClientCmdEnum.单据审核锁定释放;
+            gd.cmd = (byte)ClientCmdEnum.单据锁定释放;
             gd.One = new byte[] { (byte)ClientSubCmdEnum.反审 };
             gd.Two = tx.toByte();
 
             return gd;
         }
-        public static OriginalData 单据审核锁定(long billid, string lockName, int BizType)
+        public static OriginalData 单据锁定(long billid, string lockName, int BizType)
         {
             var tx = new ByteBuff(2 + 4);
             tx.PushString(System.DateTime.Now.ToString());
@@ -35,7 +35,7 @@ namespace TransInstruction
             tx.PushInt((int)BizType);//加一个其他东西？比方随便时间，或当前时间的到分钟
          
             OriginalData gd = new OriginalData();
-            gd.cmd = (byte)ClientCmdEnum.单据审核锁定;
+            gd.cmd = (byte)ClientCmdEnum.单据锁定;
             gd.One = new byte[] { (byte)ClientSubCmdEnum.审批 };
             gd.Two = tx.toByte();
             return gd;

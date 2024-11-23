@@ -54,7 +54,10 @@ namespace RUINORERP.Extensions
             if (!_memoryCache.TryGetValue<V>(cacheKey, out V value))
             {
                 value = create();
-                _memoryCache.Set(cacheKey, value, DateTime.Now.AddSeconds(cacheDurationInSeconds));
+                if (value != null)
+                {
+                    _memoryCache.Set(cacheKey, value, DateTime.Now.AddSeconds(cacheDurationInSeconds));
+                }
             }
             return value;
         }

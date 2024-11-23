@@ -41,7 +41,6 @@ namespace RUINORERP.Extensions.Middlewares
         public ICacheManager<object> Cache { get => _cache; set => _cache = value; }
 
 
-
         private ICacheManager<object> _cacheEntityList;
 
         /// <summary>
@@ -49,7 +48,6 @@ namespace RUINORERP.Extensions.Middlewares
         /// 得到实体列表，用于下拉等绑定
         /// </summary>
         public ICacheManager<object> CacheEntityList { get => _cacheEntityList; set => _cacheEntityList = value; }
-
 
 
         //  private ICacheManager<object> _cacheEntity;
@@ -808,7 +806,7 @@ namespace RUINORERP.Extensions.Middlewares
             {
                 CacheEntityList.Add(tableName, objList);
                 //一个小时过期？
-                CacheEntityList.Expire(tableName, TimeSpan.FromMinutes(1));
+                CacheEntityList.Expire(tableName, TimeSpan.FromMinutes(60));
 
                 //更新缓存表的信息
                 CacheInfo cacheInfo = new CacheInfo(tableName, objList.Count);

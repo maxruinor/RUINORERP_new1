@@ -291,7 +291,7 @@ namespace RUINORERP.Model
 
         private bool _IsDebug;
         /// <summary>
-        /// 调试模式
+        /// 调试模式 这时会记录一些日志，并不是显示出来。
         /// </summary>
         [AdvQueryAttribute(ColName = "IsDebug",ColDesc = "调试模式")] 
         [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsDebug" ,IsNullable = false,ColumnDescription = "调试模式" )]

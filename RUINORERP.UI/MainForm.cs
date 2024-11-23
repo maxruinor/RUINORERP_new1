@@ -1132,7 +1132,7 @@ namespace RUINORERP.UI
             MainForm.Instance.uclog.AddLog($"初始化菜单InitMenu 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
         }
 
-
+       
         private List<tb_MenuInfo> LoadTypes()
         {
             tb_MenuInfo menuInfoparent = new tb_MenuInfo();

@@ -224,7 +224,7 @@ namespace RUINORERP.Server
             cache.Set("test1", "test123");
             await InitConfig(false);
 
-            timer = new System.Timers.Timer(3000);
+            timer = new System.Timers.Timer(60000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
             {
                 try
@@ -235,19 +235,23 @@ namespace RUINORERP.Server
                         foreach (var item in BizCacheHelper.Manager.NewTableList)
                         {
                             CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(item.Key) as CacheInfo;
-                            if (cacheInfo.CacheCount > 0 && !MyCacheManager.Instance.CacheEntityList.Exists(item.Key))
+                            if (cacheInfo != null)
                             {
-                                BizCacheHelper.Instance.SetDictDataSource(item.Key, true);
-                                if (frmMain.Instance.IsDebug)
+                                if (cacheInfo.CacheCount > 0 && !MyCacheManager.Instance.CacheEntityList.Exists(item.Key))
                                 {
-                                    frmMain.Instance.PrintInfoLog($"检查更新过期的缓存 ，成功添加{item.Key}。");
-                                }
-                                //只有缓存概率有变化就发到客户端。客户端再根据这个与他本地实际的缓存数据行对比来请求真正的缓存数据
-                                foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
-                                {
-                                    BizService.UserService.发送缓存信息列表(PlayerSession);
+                                    BizCacheHelper.Instance.SetDictDataSource(item.Key, true);
+                                    if (frmMain.Instance.IsDebug)
+                                    {
+                                        frmMain.Instance.PrintInfoLog($"检查更新过期的缓存 ，成功添加{item.Key}。");
+                                    }
+                                    //只有缓存概率有变化就发到客户端。客户端再根据这个与他本地实际的缓存数据行对比来请求真正的缓存数据
+                                    foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+                                    {
+                                        BizService.UserService.发送缓存信息列表(PlayerSession);
+                                    }
                                 }
                             }
+                            
                         }
                     }
                     catch (Exception exc)

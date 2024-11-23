@@ -28,6 +28,7 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.Common.Helper;
 using Krypton.Toolkit;
 using SuperSocket.ClientEngine;
+using System.Diagnostics;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -44,10 +45,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private async void UCPURCell_Load(object sender, EventArgs e)
         {
             await Task.Delay(3000); // 等待5秒
+            Stopwatch stopwatch = Stopwatch.StartNew();
             int PURListCount = await uCMRP.QueryMRPDataStatus();
             kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + PURListCount.ToString() + "】计划生产中";
             krypton生产.Controls.Add(uCMRP);
             timer1.Start();
+            stopwatch.Stop();
+            MainForm.Instance.uclog.AddLog($"初始化UCMRP 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
         }
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
         private void timer1_Tick(object sender, EventArgs e)

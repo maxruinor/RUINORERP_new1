@@ -18,7 +18,7 @@ namespace RUINORERP.Business.Security
         bool GetPurBizLimitedAuth();
         bool GetExclusiveLimitedAuth();
         int GetMoneyDataPrecision();
-        bool GetDebugAuth();
+        bool GetDebugInfoAuth();
         bool GetShowDebugInfoAuthorization();
     }
 
@@ -76,22 +76,48 @@ namespace RUINORERP.Business.Security
             return !_context.IsSuperUser ? (_context.rolePropertyConfig?.MoneyDataPrecision ?? _context.SysConfig.MoneyDataPrecision) : 4;
         }
 
-        public bool GetDebugAuth()
+        /// <summary>
+        /// 系统是不是调试模式，如果是则可能会记录一些调试信息
+        /// loginfo  debug
+        /// </summary>
+        /// <returns></returns>
+        public bool IsDebug()
         {
-            return GetShowDebugInfoAuthorization();
-        }
-
-        public bool GetShowDebugInfoAuthorization()
-        {
-            if (_context.SysConfig.ShowDebugInfo)
+            if (_context.SysConfig != null)
             {
-                return _context.rolePropertyConfig?.ShowDebugInfo ?? _context.SysConfig.ShowDebugInfo;
+                return _context.SysConfig?.IsDebug ?? _context.SysConfig.IsDebug;
             }
             else
             {
                 return _context.IsSuperUser && _context.SysConfig.IsDebug;
             }
         }
+
+        /// <summary>
+        ///  显示调试信息权限
+        /// </summary>
+        /// <returns></returns>
+        public bool GetDebugInfoAuth()
+        {
+            return GetShowDebugInfoAuthorization();
+        }
+
+        /// <summary>
+        /// 先判断角色组权限，再判断系统配置。
+        /// </summary>
+        /// <returns></returns>
+        public bool GetShowDebugInfoAuthorization()
+        {
+
+             if (_context.SysConfig.ShowDebugInfo)
+             {
+                 return _context.rolePropertyConfig?.ShowDebugInfo ?? _context.SysConfig.ShowDebugInfo;
+             }
+             else
+             {
+                 return _context.IsSuperUser && _context.SysConfig.IsDebug;
+             }
+        }    
 
         private bool GetCustomizeOrDefault(bool? roleProperty, bool sysConfigDefault)
         {

@@ -123,9 +123,20 @@ namespace RUINORERP.UI.BaseForm
 
             frm.flowLayoutPanelButtonsArea.Controls.Add(button请求协助处理);
 
+            BizTypeMapper mapper = new BizTypeMapper();
+            CurrentBizType=mapper.GetBizType(typeof(T).Name);
+            CurrentBizTypeName = CurrentBizType.ToString();
+        }
 
+        #region 单据 主表公共信息 如类型：名称
+
+        public BizType CurrentBizType { get; set; }
+        public string CurrentBizTypeName
+        {
+            get; set;
 
         }
+        #endregion
 
 
 
@@ -235,7 +246,7 @@ namespace RUINORERP.UI.BaseForm
             //如果单据被锁定，则不能修改
         }
 
-   
+
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -1120,31 +1131,12 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }*/
             }
+
             //操作前是不是锁定。自己排除
             bool needCheckLock = false;
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = 0;
-            #region 锁定当前单据  后面流程上也要能锁定
-            if (EditEntity != null)
-            {
-                pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                if (pkid > 0)
-                {
-                    BillLockInfo lockInfo = new BillLockInfo();
-                    MainForm.Instance.CacheLockTheOrder.TryGetValue(pkid, out lockInfo);
-                    if (lockInfo != null)
-                    {
-                        if (lockInfo.LockedName != MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name)
-                        {
-                            //锁定提示
-                            MessageBox.Show($"单据已被用户{lockInfo.LockedName}锁定，请稍后再试,或联系他解锁。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
-                        }
-                    }
 
-                }
-            }
-            #endregion
             switch (menuItem)
             {
                 case MenuItemEnums.新增:
@@ -1157,10 +1149,18 @@ namespace RUINORERP.UI.BaseForm
                     AddByCopy();
                     break;
                 case MenuItemEnums.删除:
+                    if (IsLock())
+                    {
+                        return;
+                    }
                     await Delete();
                     needCheckLock = true;
                     break;
                 case MenuItemEnums.修改:
+                    if (IsLock())
+                    {
+                        return;
+                    }
                     Modify();
                     needCheckLock = true;
                     break;
@@ -1168,6 +1168,10 @@ namespace RUINORERP.UI.BaseForm
                     Query();
                     break;
                 case MenuItemEnums.保存:
+                    if (IsLock())
+                    {
+                        return;
+                    }
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
                     if (EditEntity != null)
@@ -1203,6 +1207,10 @@ namespace RUINORERP.UI.BaseForm
 
                     break;
                 case MenuItemEnums.提交:
+                    if (IsLock())
+                    {
+                        return;
+                    }
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
                     await Submit();
@@ -1221,14 +1229,26 @@ namespace RUINORERP.UI.BaseForm
                     Property();
                     break;
                 case MenuItemEnums.审核:
+                    if (IsLock())
+                    {
+                        return;
+                    }
                     await Review();
                     needCheckLock = true;
                     break;
                 case MenuItemEnums.反审:
+                    if (IsLock())
+                    {
+                        return;
+                    }
                     await ReReview();
                     needCheckLock = true;
                     break;
                 case MenuItemEnums.结案:
+                    if (IsLock())
+                    {
+                        return;
+                    }
                     await CloseCaseAsync();
                     needCheckLock = true;
                     break;
@@ -1245,6 +1265,10 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.导出:
                     break;
                 case MenuItemEnums.付款调整:
+                    if (IsLock())
+                    {
+                        return;
+                    }
                     UpdatePaymentStatus();
                     needCheckLock = true;
                     break;
@@ -1257,15 +1281,47 @@ namespace RUINORERP.UI.BaseForm
             {
                 #region 锁定当前单据  后面流程上也要能锁定
 
-                OriginalData od = ActionForClient.单据审核锁定(pkid,
+                OriginalData od = ActionForClient.单据锁定(pkid,
                                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                                 1);
                 MainForm.Instance.ecs.AddSendData(od);
+                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                {
+                    MainForm.Instance.PrintInfoLog($"{CurrentBizTypeName}单据锁定{pkid}成功！");
+                }
             }
             #endregion
         }
 
 
+        private bool IsLock()
+        {
+            bool isLocked = false ;
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long pkid = 0;
+            #region 锁定当前单据  后面流程上也要能锁定
+            if (EditEntity != null)
+            {
+                pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                if (pkid > 0)
+                {
+                    BillLockInfo lockInfo = new BillLockInfo();
+                    MainForm.Instance.CacheLockTheOrder.TryGetValue(pkid, out lockInfo);
+                    if (lockInfo != null)
+                    {
+                        if (lockInfo.LockedName != MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name)
+                        {
+                            //锁定提示
+                            MessageBox.Show($"单据已被用户{lockInfo.LockedName}锁定，请稍后再试,或联系他解锁。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            isLocked= true;
+                        }
+                    }
+
+                }
+            }
+            #endregion
+            return isLocked;
+        }
 
         //泛型名称有一个尾巴，这里处理掉，但是总体要保持不能同时拥有同名的 泛型 和非泛型控制类
         //否则就是调用解析时用加小尾巴
@@ -1460,7 +1516,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (saleOut.tb_saleorder != null)
                             {
-                                OriginalData od = ActionForClient.单据审核锁定(saleOut.tb_saleorder.SOrder_ID,
+                                OriginalData od = ActionForClient.单据锁定(saleOut.tb_saleorder.SOrder_ID,
                                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                                     (int)BizType.销售订单);
                                 MainForm.Instance.ecs.AddSendData(od);
@@ -1528,7 +1584,6 @@ namespace RUINORERP.UI.BaseForm
                     return ae;
                 }
             }
-
 
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
@@ -1599,7 +1654,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (saleOut.tb_saleorder != null)
                             {
-                                OriginalData od = ActionForClient.单据审核锁定释放(saleOut.tb_saleorder.SOrder_ID,
+                                OriginalData od = ActionForClient.单据锁定释放(saleOut.tb_saleorder.SOrder_ID,
                                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                                     (int)BizType.销售订单);
                                 MainForm.Instance.ecs.AddSendData(od);
@@ -2491,7 +2546,7 @@ namespace RUINORERP.UI.BaseForm
                 if (pkid > 0)
                 {
                     BizTypeMapper mapper = new BizTypeMapper();
-                    OriginalData od = ActionForClient.单据审核锁定释放(pkid,
+                    OriginalData od = ActionForClient.单据锁定释放(pkid,
                              MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                              (int)mapper.GetBizType(typeof(T)));
                     MainForm.Instance.ecs.AddSendData(od);

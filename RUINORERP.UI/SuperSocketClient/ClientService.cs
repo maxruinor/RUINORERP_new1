@@ -161,7 +161,7 @@ namespace RUINORERP.UI.SuperSocketClient
                             MyCacheManager.Instance.UpdateEntityList(tablename, jsonlist);
                         }
                     }
-                    if (MainForm.Instance.authorizeController.GetDebugAuth())
+                    if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                     {
                         MainForm.Instance.PrintInfoLog($"接收缓存数据{tablename}成功！");
                     }
@@ -287,7 +287,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 File.WriteAllText(PathwithFileName, BillData);
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
 
-                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                 {
                     MainForm.Instance.PrintInfoLog($"收到服务器转发{userinfo.姓名}的协助处理请求！");
                 }
@@ -311,7 +311,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 // 将item转换为JObject
                 var obj = JObject.Parse(json);
                 MyCacheManager.Instance.UpdateEntityList(tableName, obj);
-                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                 {
                     MainForm.Instance.PrintInfoLog($"接收转发更新缓存{tableName}成功！");
                 }
@@ -333,7 +333,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 long PKValue = ByteDataAnalysis.GetInt64(gd.Two, ref index);
 
                 MyCacheManager.Instance.DeleteEntityList(tableName, PKColName, PKValue);
-                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                 {
                     MainForm.Instance.PrintInfoLog($"接收转发删除缓存{tableName}成功！");
                 }
@@ -344,7 +344,7 @@ namespace RUINORERP.UI.SuperSocketClient
             }
         }
 
-        internal static void 接收转发单据审核锁定(OriginalData gd)
+        internal static void 接收转发单据锁定(OriginalData gd)
         {
             try
             {
@@ -366,18 +366,18 @@ namespace RUINORERP.UI.SuperSocketClient
                 }
                // MainForm.Instance.CacheLockTheOrder.Set(billid, billid, TimeSpan.FromDays(1));
 
-                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                 {
-                    MainForm.Instance.PrintInfoLog($"接收转发单据审核锁定{BizType}成功！");
+                    MainForm.Instance.PrintInfoLog($"接收转发单据锁定{BizType}成功！");
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.PrintInfoLog("接收转发单据审核锁定:" + ex.Message);
+                MainForm.Instance.PrintInfoLog("接收转发单据锁定:" + ex.Message);
             }
         }
 
-        internal static void 接收转发单据审核锁定释放(OriginalData gd)
+        internal static void 接收转发单据锁定释放(OriginalData gd)
         {
             try
             {
@@ -393,14 +393,14 @@ namespace RUINORERP.UI.SuperSocketClient
                 {
                     MainForm.Instance.CacheLockTheOrder.Remove(billid);
                 }
-                if (MainForm.Instance.authorizeController.GetDebugAuth())
+                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                 {
-                    MainForm.Instance.PrintInfoLog($"接收转发单据审核锁定释放{BizType}成功！");
+                    MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{BizType}成功！");
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.PrintInfoLog("接收转发单据审核锁定释放:" + ex.Message);
+                MainForm.Instance.PrintInfoLog("接收转发单据锁定释放:" + ex.Message);
             }
         }
     }

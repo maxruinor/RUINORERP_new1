@@ -324,13 +324,18 @@ namespace RUINORERP.UI
 
 
         /// <summary>
+        /// 保存锁定信息集合
+        /// </summary>
+        public ConcurrentDictionary<long, BillLockInfo> LockInfoList = new ConcurrentDictionary<long, BillLockInfo>();
+
+        /// <summary>
         /// 转发单据审核锁定 https://www.cnblogs.com/fanfan-90/p/12151924.html
         /// 锁单
         /// </summary>
-        public IMemoryCache CacheLockTheOrder { get; set; }
+        public IMemoryCache CacheTemp { get; set; }
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            CacheLockTheOrder = Startup.GetFromFac<IMemoryCache>();
+            CacheTemp = Startup.GetFromFac<IMemoryCache>();
 
             //cache.Set("test1", "test123");
 
@@ -1132,7 +1137,7 @@ namespace RUINORERP.UI
             MainForm.Instance.uclog.AddLog($"初始化菜单InitMenu 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
         }
 
-       
+
         private List<tb_MenuInfo> LoadTypes()
         {
             tb_MenuInfo menuInfoparent = new tb_MenuInfo();

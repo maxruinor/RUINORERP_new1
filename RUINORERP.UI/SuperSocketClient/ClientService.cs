@@ -4,7 +4,9 @@ using Microsoft.Extensions.Caching.Memory;
 using Netron.GraphLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NPOI.SS.Formula;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using System;
@@ -91,8 +93,8 @@ namespace RUINORERP.UI.SuperSocketClient
                         {
                             foreach (var item in userInfoList)
                             {
+                                //上面已经清空了。
                                 MainForm.Instance.UserInfos.Add(item);
-
                             }
                         }
                     }
@@ -351,25 +353,31 @@ namespace RUINORERP.UI.SuperSocketClient
 
                 int index = 0;
                 string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
                 long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
-             
 
-                using (ICacheEntry cacheEntry = MainForm.Instance.CacheLockTheOrder.CreateEntry(billid))
+                if (!MainForm.Instance.LockInfoList.ContainsKey(billid))
                 {
                     BillLockInfo lockInfo = new BillLockInfo();
                     lockInfo.LockedName = lockName;
                     lockInfo.BillID = billid;
+                    lockInfo.LockedUserID = lockUserid;
+                    lockInfo.Available = true;
                     lockInfo.BizType = BizType;
-                    cacheEntry.SetValue(lockInfo);
+                    MainForm.Instance.LockInfoList.AddOrUpdate(billid, lockInfo, (key, oldValue) => lockInfo);
+                    if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                    {
+                        MainForm.Instance.PrintInfoLog($"接收转发单据锁定{BizType}成功！");
+                    }
                 }
-               // MainForm.Instance.CacheLockTheOrder.Set(billid, billid, TimeSpan.FromDays(1));
 
-                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
-                {
-                    MainForm.Instance.PrintInfoLog($"接收转发单据锁定{BizType}成功！");
-                }
+                //using (ICacheEntry cacheEntry = MainForm.Instance.CacheLockTheOrder.CreateEntry(billid))
+                //{
+
+                //}
+
             }
             catch (Exception ex)
             {
@@ -383,25 +391,57 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 int index = 0;
                 string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
                 long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                 int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
 
-                BillLockInfo lockInfo = new BillLockInfo();
-                MainForm.Instance.CacheLockTheOrder.TryGetValue(billid, out lockInfo);
-                if (lockInfo != null)
+                BillLockInfo lockInfo = null;
+                if (MainForm.Instance.LockInfoList.TryGetValue(billid, out lockInfo))
                 {
-                    MainForm.Instance.CacheLockTheOrder.Remove(billid);
+                    MainForm.Instance.LockInfoList.TryRemove(billid, out lockInfo);
+                    if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                    {
+                        MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{BizType}成功！");
+                    }
                 }
-                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
-                {
-                    MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{BizType}成功！");
-                }
+
             }
             catch (Exception ex)
             {
                 MainForm.Instance.PrintInfoLog("接收转发单据锁定释放:" + ex.Message);
             }
         }
+
+        /// <summary>
+        /// 服务器根据掉线的用户释放锁。主动发到客户端
+        /// </summary>
+        /// <param name="gd"></param>
+        internal static void 接收根据锁定用户释放(OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+
+                var tempList = MainForm.Instance.LockInfoList.Where(c => c.Value.LockedUserID == lockUserid).ToList();
+                foreach (var item in tempList)
+                {
+                    BillLockInfo lockInfo = null;
+                    MainForm.Instance.LockInfoList.TryRemove(item.Key, out lockInfo);
+                    if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                    {
+                        MainForm.Instance.PrintInfoLog($"根据锁定用户释放{item.Key}成功！");
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收转发单据锁定释放:" + ex.Message);
+            }
+        }
+
     }
 }

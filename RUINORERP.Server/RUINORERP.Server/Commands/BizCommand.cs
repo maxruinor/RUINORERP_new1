@@ -167,7 +167,7 @@ namespace RUINORERP.Server.Commands
                         case ClientCmdEnum.请求协助处理:
                             SystemService.process请求协助处理(gd);
                             break;
-                        case ClientCmdEnum.单据审核锁定:
+                        case ClientCmdEnum.单据锁定:
 
                             //意思是如:审核了销售出库单时，订单是无法再操作了。转发到所有电脑。保存等各种操作都要判断一下？
                             //这种主要是比方业务订单UI没有关掉。仓库出库了。业务还可以反审等？不在线的不管。会重新打开。这时状态不一样。会判断好。
@@ -176,7 +176,7 @@ namespace RUINORERP.Server.Commands
                             //退出后 解除锁定
                             SystemService.process单据审核锁定(Player, gd);
                             break;
-                        case ClientCmdEnum.单据审核锁定释放:
+                        case ClientCmdEnum.单据锁定释放:
                             SystemService.process单据审核锁定释放(Player, gd);
                             break;
                         case ClientCmdEnum.发送弹窗消息:

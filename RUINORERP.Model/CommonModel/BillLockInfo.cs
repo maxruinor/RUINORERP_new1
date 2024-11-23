@@ -24,10 +24,14 @@ namespace RUINORERP.Model
         // 发送时间
         public string LockedTime { get; set; }
 
-        public long SenderID { get; set; }
+        public long LockedUserID { get; set; }
         // 发送者
         public string SenderName { get; set; }
 
+        /// <summary>
+        /// 可用，生效
+        /// </summary>
+        public bool Available { get; set; } = true;
         // 消息内容
         public string Content { get; set; }
 
@@ -59,6 +63,6 @@ namespace RUINORERP.Model
             Status = MessageStatus.Processed;
         }
     }
-     
+
 }
 

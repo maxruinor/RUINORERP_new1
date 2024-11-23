@@ -250,7 +250,7 @@ namespace RUINORERP.UI.PSI.SAL
             queryFilter.SetFieldLimitCondition(lambdaOrder);
 
             DataBindingHelper.InitFilterForControlByExp<tb_SaleOrder>(entity, txtSaleOrder, c => c.SOrderNo, queryFilter);
-    
+
 
             sgd.GridMasterData = entity;
             sgd.GridMasterDataType = entity.GetType();
@@ -357,7 +357,7 @@ namespace RUINORERP.UI.PSI.SAL
                 return null;
             }
             tb_ProdConversion prodConversion = new tb_ProdConversion();
-            
+
             prodConversion.tb_ProdConversionDetails = new List<tb_ProdConversionDetail>();
             //销售的明细作为转换的明细中的来源
             tb_SaleOutDetail outDetail = rowObj as tb_SaleOutDetail;
@@ -378,7 +378,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             conversionDetail.BarCode_from = ViewDetail.BarCode;
             conversionDetail.SKU_from = ViewDetail.SKU;
-            
+
             prodConversion.tb_ProdConversionDetails.Add(conversionDetail);
             return prodConversion;
         }
@@ -474,9 +474,10 @@ namespace RUINORERP.UI.PSI.SAL
                 //如果所有数据都出库。金额也要一致。否则提醒
                 if (NeedValidated && EditEntity.tb_saleorder != null)
                 {
+                    //如果总数量一致。金额不一致。提示
                     if (EditEntity.TotalQty == EditEntity.tb_saleorder.TotalQty && EditEntity.TotalAmount != EditEntity.tb_saleorder.TotalAmount)
                     {
-                        MessageBox.Show("出库总金额与订单总金额据不一致，请检查数据后再试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show($"出库总金额{EditEntity.TotalAmount}与订单总金额{EditEntity.tb_saleorder.TotalAmount}不一致，请检查数据后再试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;
                     }
                 }

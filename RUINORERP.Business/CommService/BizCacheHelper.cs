@@ -107,7 +107,6 @@ namespace RUINORERP.Business.CommService
             }
         }
 
-
         //private ConcurrentDictionary<string, object> _Dict = new ConcurrentDictionary<string, object>();
 
         //public ConcurrentDictionary<string, object> Dict { get => _Dict; set => _Dict = value; }

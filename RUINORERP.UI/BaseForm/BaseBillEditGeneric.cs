@@ -61,9 +61,6 @@ using Newtonsoft.Json.Linq;
 using System.Web.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using RUINORERP.UI.PSI.SAL;
-
-
-
 namespace RUINORERP.UI.BaseForm
 {
     /// <summary>
@@ -81,7 +78,6 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode)
                 {
                     QueryConditionBuilder();
-
                 }
             }
             this.OnBindDataToUIEvent += BindData;
@@ -124,7 +120,7 @@ namespace RUINORERP.UI.BaseForm
             frm.flowLayoutPanelButtonsArea.Controls.Add(button请求协助处理);
 
             BizTypeMapper mapper = new BizTypeMapper();
-            CurrentBizType=mapper.GetBizType(typeof(T).Name);
+            CurrentBizType = mapper.GetBizType(typeof(T).Name);
             CurrentBizTypeName = CurrentBizType.ToString();
         }
 
@@ -440,8 +436,8 @@ namespace RUINORERP.UI.BaseForm
                 long pkid = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
                 if (pkid > 0)
                 {
-                    BillLockInfo lockInfo = new BillLockInfo();
-                    MainForm.Instance.CacheLockTheOrder.TryGetValue(pkid, out lockInfo);
+                    BillLockInfo lockInfo = null;
+                    MainForm.Instance.LockInfoList.TryGetValue(pkid, out lockInfo);
                     if (lockInfo != null)
                     {
                         MainForm.Instance.uclog.AddLog($"当前单据已被{lockInfo.LockedName}锁定，请刷新后再试，或联系锁定人释放。");
@@ -1282,6 +1278,7 @@ namespace RUINORERP.UI.BaseForm
                 #region 锁定当前单据  后面流程上也要能锁定
 
                 OriginalData od = ActionForClient.单据锁定(pkid,
+                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                                 1);
                 MainForm.Instance.ecs.AddSendData(od);
@@ -1296,7 +1293,7 @@ namespace RUINORERP.UI.BaseForm
 
         private bool IsLock()
         {
-            bool isLocked = false ;
+            bool isLocked = false;
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = 0;
             #region 锁定当前单据  后面流程上也要能锁定
@@ -1305,15 +1302,15 @@ namespace RUINORERP.UI.BaseForm
                 pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid > 0)
                 {
-                    BillLockInfo lockInfo = new BillLockInfo();
-                    MainForm.Instance.CacheLockTheOrder.TryGetValue(pkid, out lockInfo);
+                    BillLockInfo lockInfo = null;
+                    MainForm.Instance.LockInfoList.TryGetValue(pkid, out lockInfo);
                     if (lockInfo != null)
                     {
                         if (lockInfo.LockedName != MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name)
                         {
                             //锁定提示
                             MessageBox.Show($"单据已被用户{lockInfo.LockedName}锁定，请稍后再试,或联系他解锁。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            isLocked= true;
+                            isLocked = true;
                         }
                     }
 
@@ -1517,6 +1514,7 @@ namespace RUINORERP.UI.BaseForm
                             if (saleOut.tb_saleorder != null)
                             {
                                 OriginalData od = ActionForClient.单据锁定(saleOut.tb_saleorder.SOrder_ID,
+                                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                                     (int)BizType.销售订单);
                                 MainForm.Instance.ecs.AddSendData(od);
@@ -1576,9 +1574,9 @@ namespace RUINORERP.UI.BaseForm
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0)
             {
+                BillLockInfo bli = null;
                 //判断是否锁定
-                BillLockInfo bli = MainForm.Instance.CacheLockTheOrder.Get<BillLockInfo>(pkid);
-                if (bli != null)
+                if (MainForm.Instance.LockInfoList.TryGetValue(pkid, out bli))
                 {
                     MainForm.Instance.uclog.AddLog($"单据已被{bli.LockedName}锁定，请刷新后再试");
                     return ae;
@@ -1655,6 +1653,7 @@ namespace RUINORERP.UI.BaseForm
                             if (saleOut.tb_saleorder != null)
                             {
                                 OriginalData od = ActionForClient.单据锁定释放(saleOut.tb_saleorder.SOrder_ID,
+                                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                                     (int)BizType.销售订单);
                                 MainForm.Instance.ecs.AddSendData(od);
@@ -2050,19 +2049,17 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                if (MainForm.Instance.CacheLockTheOrder != null)
+                BillLockInfo bli = null;
+                if (MainForm.Instance.LockInfoList.TryGetValue(pkid, out bli))
                 {
-                    BillLockInfo bli = MainForm.Instance.CacheLockTheOrder.Get<BillLockInfo>(pkid);
-                    if (bli != null)
+                    return new ReturnMainSubResults<T>()
                     {
-                        return new ReturnMainSubResults<T>()
-                        {
-                            Succeeded = false,
-                            ErrorMsg = $"单据已被{bli.LockedName}锁定，请刷新后再试"
-                        };
-                    }
+                        Succeeded = false,
+                        ErrorMsg = $"单据已被{bli.LockedName}锁定，请刷新后再试"
+                    };
                 }
             }
+
 
             ReturnMainSubResults<T> rmr = new ReturnMainSubResults<T>();
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
@@ -2546,7 +2543,7 @@ namespace RUINORERP.UI.BaseForm
                 if (pkid > 0)
                 {
                     BizTypeMapper mapper = new BizTypeMapper();
-                    OriginalData od = ActionForClient.单据锁定释放(pkid,
+                    OriginalData od = ActionForClient.单据锁定释放(pkid, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                              MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                              (int)mapper.GetBizType(typeof(T)));
                     MainForm.Instance.ecs.AddSendData(od);

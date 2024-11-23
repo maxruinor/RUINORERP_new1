@@ -496,6 +496,10 @@ namespace RUINORERP.UI.SuperSocketClient
                             //单个实例
                             ClientService.接收转发单据锁定释放(od);
                             break;
+                        case ServerCmdEnum.根据锁定用户释放:
+                            //单个实例
+                            ClientService.接收根据锁定用户释放(od);
+                            break;
                         case ServerCmdEnum.转发更新缓存:
                             //单个实例
                             ClientService.接收转发更新缓存(od);

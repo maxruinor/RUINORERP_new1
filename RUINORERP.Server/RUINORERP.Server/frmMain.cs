@@ -251,7 +251,7 @@ namespace RUINORERP.Server
                                     }
                                 }
                             }
-                            
+
                         }
                     }
                     catch (Exception exc)
@@ -416,8 +416,6 @@ namespace RUINORERP.Server
                             BizService.UserService.发送在线列表(PlayerSession);
                         }
 
-
-
                         PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session connected: {session.RemoteEndPoint}");
                         await Task.Delay(0);
                     }, async (session, reason) =>
@@ -436,11 +434,16 @@ namespace RUINORERP.Server
                                 PrintMsg(sg.User.用户名 + "断开连接");
                                 frmusermange.userInfos.Remove(sg.User);
                             }
+
+                            //谁突然掉线或退出。服务器主动将他的锁在别人电脑上的单据释放
+                            SystemService.process断开连接锁定释放(sg.User.UserID);
+
                             //广播出去
                             foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
                             {
                                 BizService.UserService.发送在线列表(PlayerSession);
                             }
+
                         }
                         catch (Exception quitex)
                         {

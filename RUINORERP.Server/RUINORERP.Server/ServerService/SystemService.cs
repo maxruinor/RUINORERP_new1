@@ -147,7 +147,7 @@ namespace RUINORERP.Server.ServerService
                     }
                     else
                     {
-                        sessionforBiz.AddSendData((byte)ServerCmdEnum.转发单据审核锁定, null, gd.Two);
+                        sessionforBiz.AddSendData((byte)ServerCmdEnum.转发单据锁定, null, gd.Two);
                     }
                 }
 
@@ -176,8 +176,39 @@ namespace RUINORERP.Server.ServerService
                     }
                     else
                     {
-                        sessionforBiz.AddSendData((byte)ServerCmdEnum.转发单据审核锁定释放, null, gd.Two);
+                        sessionforBiz.AddSendData((byte)ServerCmdEnum.转发单据锁定释放, null, gd.Two);
                     }
+                }
+
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+            }
+        }
+
+
+        public static void process断开连接锁定释放(long LockerUserID)
+        {
+            try
+            {
+
+                var tx = new ByteBuff(2 + 4);
+                tx.PushString(System.DateTime.Now.ToString());
+                tx.PushInt64(LockerUserID);
+                OriginalData gd = new OriginalData();
+                //  gd.cmd = (byte)ClientCmdEnum.单据锁定释放;
+                //gd.One = new byte[] { (byte)ClientSubCmdEnum.反审 };
+                gd.Two = tx.toByte();
+
+                foreach (var item in frmMain.Instance.sessionListBiz)
+                {
+                    SessionforBiz sessionforBiz = item.Value as SessionforBiz;
+                    sessionforBiz.AddSendData((byte)ServerCmdEnum.根据锁定用户释放, null, gd.Two);
                 }
 
 

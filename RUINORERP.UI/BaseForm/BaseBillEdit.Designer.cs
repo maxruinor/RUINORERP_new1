@@ -33,8 +33,6 @@
             this.toolTipBase = new System.Windows.Forms.ToolTip(this.components);
             this.timerForToolTip = new System.Windows.Forms.Timer(this.components);
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.toolStripbtnAdd = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnCancel = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnModify = new System.Windows.Forms.ToolStripButton();
@@ -46,6 +44,7 @@
             this.toolStripbtnPrint = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripbtnReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnReverseReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
@@ -55,6 +54,7 @@
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
             this.tslLocked = new System.Windows.Forms.ToolStripLabel();
+            this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
             this.toolStrip1.SuspendLayout();
@@ -93,16 +93,6 @@
             this.toolStrip1.Size = new System.Drawing.Size(869, 25);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
-            // bwRemoting
-            // 
-            this.bwRemoting.WorkerReportsProgress = true;
-            this.bwRemoting.WorkerSupportsCancellation = true;
             // 
             // toolStripbtnAdd
             // 
@@ -191,6 +181,11 @@
             this.toolStripMenuItem2.Size = new System.Drawing.Size(100, 22);
             this.toolStripMenuItem2.Text = "设计";
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            // 
             // toolStripbtnReview
             // 
             this.toolStripbtnReview.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnReview.Image")));
@@ -257,11 +252,16 @@
             // 
             // tslLocked
             // 
-            this.tslLocked.Image = global::RUINORERP.UI.Properties.Resources.locked;
+            this.tslLocked.Image = global::RUINORERP.UI.Properties.Resources.lock_security_padlock_secure_icon;
             this.tslLocked.Name = "tslLocked";
             this.tslLocked.Size = new System.Drawing.Size(62, 16);
             this.tslLocked.Text = "已锁定";
             this.tslLocked.Visible = false;
+            // 
+            // bwRemoting
+            // 
+            this.bwRemoting.WorkerReportsProgress = true;
+            this.bwRemoting.WorkerSupportsCancellation = true;
             // 
             // errorProviderForAllInput
             // 

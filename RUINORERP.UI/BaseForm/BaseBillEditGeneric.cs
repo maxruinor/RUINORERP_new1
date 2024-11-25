@@ -440,7 +440,10 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.LockInfoList.TryGetValue(pkid, out lockInfo);
                     if (lockInfo != null)
                     {
-                        MainForm.Instance.uclog.AddLog($"当前单据已被{lockInfo.LockedName}锁定，请刷新后再试，或联系锁定人释放。");
+                        string tipMsg = $"单据已被用户{lockInfo.LockedName}锁定，请稍后刷新后再试,或联系锁定人员解锁。";
+                        MainForm.Instance.uclog.AddLog(tipMsg);
+                        tslLocked.AutoToolTip = true;
+                        tslLocked.ToolTipText= tipMsg;
                         tslLocked.Visible = true;
                         toolStripBtnCancel.Visible = true;
                         toolStripbtnModify.Enabled = false;
@@ -451,6 +454,12 @@ namespace RUINORERP.UI.BaseForm
                         toolStripbtnDelete.Enabled = false;
                         toolStripbtnPrint.Enabled = false;
                         toolStripButton结案.Enabled = false;
+                    }
+                    else
+                    {
+                        tslLocked.AutoToolTip = false;
+                        tslLocked.ToolTipText = string.Empty ;
+                        tslLocked.Visible = false;
                     }
                 }
 
@@ -1280,7 +1289,7 @@ namespace RUINORERP.UI.BaseForm
                 OriginalData od = ActionForClient.单据锁定(pkid,
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                                1);
+                                (int)CurrentBizType);
                 MainForm.Instance.ecs.AddSendData(od);
                 if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                 {
@@ -1293,6 +1302,14 @@ namespace RUINORERP.UI.BaseForm
 
         private bool IsLock()
         {
+            //如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
+            if (tslLocked.Visible)
+            {
+                //显示锁定认为锁定。要刷新数据
+                MessageBox.Show($"单据已被锁定，请刷新后重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return true;
+            }
+
             bool isLocked = false;
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = 0;
@@ -2436,8 +2453,6 @@ namespace RUINORERP.UI.BaseForm
             //details = (entity as tb_Stocktake).tb_StocktakeDetails;
             //LoadDataToGrid(details);
         }
-
-
 
 
 

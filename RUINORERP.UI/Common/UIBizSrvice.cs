@@ -8,6 +8,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.SuperSocketClient;
 using System;
 using System.Collections.Concurrent;
@@ -24,6 +25,33 @@ namespace RUINORERP.UI.Common
 {
     public static class UIBizSrvice
     {
+        public static async Task<T> GetProdDetail<T>(long ProdDetailID) where T : class
+        {
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            T prodDetail = null;
+
+            if (BizCacheHelper.Manager.NewTableList.ContainsKey(typeof(T).Name))
+            {
+                var nkv = BizCacheHelper.Manager.NewTableList[typeof(T).Name];
+                if (nkv.Key != null)
+                {
+                    object obj = BizCacheHelper.Instance.GetEntity<T>(ProdDetailID);
+                    if (obj != null && obj.GetType().Name != "Object" && obj is T)
+                    {
+                        prodDetail = obj as T;
+                    }
+                    else
+                    {
+                        //一个缓存 一个查询不科学。暂时没有处理。TODO:
+                        //prodDetail = await MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().Where(p => p.GetPropertyValue(PKCol).ToString().Equals(ProdDetailID.ToString())).SingleAsync();
+                        View_ProdDetail view_Prod = new View_ProdDetail();
+                        prodDetail = view_Prod as T;
+                    }
+                }
+            }
+            return prodDetail;
+        }
+
 
         /// <summary>
         /// 获取固定值数据字典

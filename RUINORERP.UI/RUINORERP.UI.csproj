@@ -3195,6 +3195,7 @@
     <None Include="ResourceFile\reset.png" />
     <None Include="ResourceFile\Lock.png" />
     <None Include="ResourceFile\locked.png" />
+    <Content Include="ResourceFile\lock_security_padlock_secure_icon.png" />
     <Content Include="ruinor.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

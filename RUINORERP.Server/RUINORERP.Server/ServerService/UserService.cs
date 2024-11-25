@@ -403,7 +403,11 @@ namespace RUINORERP.Server.BizService
                 // tx.PushInt(frmMain.Instance.sessionListBiz.Count);
                 foreach (var item in frmMain.Instance.sessionListBiz)
                 {
-                    userInfos.Add(item.Value.User);
+                    if (item.Value != null && item.Value.User != null)
+                    {
+                        userInfos.Add(item.Value.User);
+                    }
+                    
                     //tx.PushString(item.Value.SessionID);
                     //tx.PushString(item.Value.User.用户名);
                     //tx.PushString(item.Value.User.姓名);
@@ -443,7 +447,10 @@ namespace RUINORERP.Server.BizService
                 foreach (var item in BizCacheHelper.Manager.NewTableList)
                 {
                     CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(item.Key) as CacheInfo;
-                    CacheInfos.Add(cacheInfo);
+                    if (cacheInfo != null)
+                    {
+                        CacheInfos.Add(cacheInfo);
+                    }
                 }
 
                 //    foreach (var item in frmMain.Instance.CacheInfoList)

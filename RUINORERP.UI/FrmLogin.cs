@@ -134,8 +134,12 @@ namespace RUINORERP.UI
         static CancellationTokenSource source = new CancellationTokenSource();
         public EasyClientService ecs { get; set; }
         private async void btnok_Click(object sender, EventArgs e)
-
         {
+            if (txtServerIP.Text.Trim().Length == 0 || txtPort.Text.Trim().Length == 0)
+            {
+                MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
             using (StatusBusy busy = new StatusBusy("正在验证凭据..."))
             {
                 //PTPrincipal.LoginAsync(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData);
@@ -158,7 +162,6 @@ namespace RUINORERP.UI
                         UserGlobalConfig.Instance.PassWord = this.txtPassWord.Text;
                         UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
                         UserGlobalConfig.Instance.ServerPort = txtPort.Text;
-
                         if (ecs != null)
                         {
                             if (ecs.client != null && ecs.client.IsConnected == true)

@@ -32,7 +32,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private void UCStockCell_Load(object sender, EventArgs e)
         {
-            QueryStockInfo();
+            //QueryStockInfo();
             QueryStockOtherIn();
             QueryStockOtherOut();
             timer1.Start();

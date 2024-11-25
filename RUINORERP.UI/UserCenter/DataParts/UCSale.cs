@@ -52,30 +52,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             this.Dock = DockStyle.Fill;
         }
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
-        private async Task<T> GetProdDetail<T>(long ProdDetailID) where T : class
-        {
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-            T prodDetail = null;
-
-            if (BizCacheHelper.Manager.NewTableList.ContainsKey(typeof(T).Name))
-            {
-                var nkv = BizCacheHelper.Manager.NewTableList[typeof(T).Name];
-                if (nkv.Key != null)
-                {
-                    object obj = BizCacheHelper.Instance.GetEntity<T>(ProdDetailID);
-                    if (obj != null && obj.GetType().Name != "Object" && obj is T)
-                    {
-                        prodDetail = obj as T;
-                    }
-                    else
-                    {
-                        prodDetail = await MainForm.Instance.AppContext.Db.Queryable<T>().Where(p => p.GetPropertyValue(PKCol).ToString().Equals(ProdDetailID.ToString())).SingleAsync();
-                    }
-                }
-            }
-            return prodDetail;
-        }
-
+        
         public List<tb_SaleOrder> SaleOrderList = new List<tb_SaleOrder>();
 
         public async Task<int> QueryData(List<tb_SaleOrder> _PURList = null)
@@ -174,8 +151,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         List<tb_SaleOrderDetail> SaleOrderDetails = SaleOrder.tb_SaleOrderDetails;
                         foreach (tb_SaleOrderDetail SaleOrderDetail in SaleOrderDetails)
                         {
-                            View_ProdDetail prodDetail = await GetProdDetail<View_ProdDetail>(SaleOrderDetail.ProdDetailID);
-                            tb_ProductType productType = await GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                            View_ProdDetail prodDetail = await UIBizSrvice.GetProdDetail<View_ProdDetail>(SaleOrderDetail.ProdDetailID);
+                            tb_ProductType productType = await UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
                             //子级
@@ -265,8 +242,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 foreach (tb_ProduceGoodsRecommendDetail SubProduceDetail in SubSelfDetails)
                 {
-                    View_ProdDetail SubProdDetail = await GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
-                    tb_ProductType productType = await GetProdDetail<tb_ProductType>(SubProdDetail.Type_ID.Value);
+                    View_ProdDetail SubProdDetail = await UIBizSrvice.GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
+                    tb_ProductType productType = await UIBizSrvice.GetProdDetail<tb_ProductType>(SubProdDetail.Type_ID.Value);
                     //子级
                     KryptonTreeGridNodeRow SubProduceDetailrow = ProduceDetailrow.Nodes.Add(demand.PDNo.ToString());
                     SubProduceDetailrow.Tag = demand;//为了双击的时候能找到值对象。这里还是给主表对象。

@@ -1,4 +1,5 @@
-﻿using FastReport.DevComponents.DotNetBar.Controls;
+﻿using AutoUpdateTools;
+using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using HLH.Lib.Helper;
 using RUINORERP.Business.CommService;
@@ -74,6 +75,13 @@ namespace RUINORERP.UI.SysConfig
 
                 }
             }
+
+            //添加锁定信息
+            if (MainForm.Instance.LockInfoList != null)
+            {
+                SuperValue kv = new SuperValue("锁定信息列表" + "[" + MainForm.Instance.LockInfoList.Count + "]", "锁定信息列表");
+                listBoxTableList.Items.Add(kv);
+            }
         }
 
         private void btnRefreshCache_Click(object sender, EventArgs e)
@@ -90,21 +98,36 @@ namespace RUINORERP.UI.SysConfig
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (CacheList == null)
-                {
-                    dataGridView1.DataSource = null;
-                    return;
-                }
-                // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
 
-                // 使用 GetType 方法获取 PrintHelper<T> 的类型
-                Type type = assembly.GetType("RUINORERP.Model." + tableName);
-                dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(type);
-                dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                dataGridView1.XmlFileName = "UCCacheManage" + tableName;
-                dataGridView1.DataSource = null;
-                dataGridView1.DataSource = CacheList;
+                if (tableName == "锁定信息列表")
+                {
+                    List<BillLockInfo> lockInfoList = new List<BillLockInfo>();
+                    foreach (var item in MainForm.Instance.LockInfoList)
+                    {
+                        lockInfoList.Add(item.Value);
+                    }
+                    this.dataGridView1.SetUseCustomColumnDisplay(false);
+                    dataGridView1.DataSource = lockInfoList;
+                }
+                else
+                {
+                    var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    if (CacheList == null)
+                    {
+                        dataGridView1.DataSource = null;
+                        return;
+                    }
+                    // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
+
+                    // 使用 GetType 方法获取 PrintHelper<T> 的类型
+                    Type type = assembly.GetType("RUINORERP.Model." + tableName);
+                    dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(type);
+                    dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    dataGridView1.XmlFileName = "UCCacheManage" + tableName;
+                    dataGridView1.DataSource = null;
+                    dataGridView1.DataSource = CacheList;
+                }
+
             }
             else
             {

@@ -703,6 +703,16 @@ namespace RUINORERP.UI.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
+        internal static System.Drawing.Bitmap lock_security_padlock_secure_icon {
+            get {
+                object obj = ResourceManager.GetObject("lock_security_padlock_secure_icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
         internal static System.Drawing.Bitmap Lock_transparency {
             get {
                 object obj = ResourceManager.GetObject("Lock transparency", resourceCulture);

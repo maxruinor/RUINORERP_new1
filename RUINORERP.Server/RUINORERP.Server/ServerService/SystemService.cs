@@ -196,7 +196,6 @@ namespace RUINORERP.Server.ServerService
         {
             try
             {
-
                 var tx = new ByteBuff(2 + 4);
                 tx.PushString(System.DateTime.Now.ToString());
                 tx.PushInt64(LockerUserID);

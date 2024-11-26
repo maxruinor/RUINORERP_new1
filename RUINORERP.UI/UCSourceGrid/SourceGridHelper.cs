@@ -1220,6 +1220,10 @@ namespace RUINORERP.UI.UCSourceGrid
                     //Setup the controllers
                     CellClickEvent clickController = new CellClickEvent();
 
+
+                    //Setup the controllers
+                    AdditionalEvent additionalController = new AdditionalEvent();
+
                     BillOperateController billController = new BillOperateController(define);
                     billController.OnValidateDataCell += (rowObj) =>
                     {
@@ -1356,6 +1360,8 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     //添加点击控制器
                     c.AddController(clickController);
+
+                    c.AddController(additionalController);
                     //验证？
                     c.AddController(billController);
 
@@ -2141,8 +2147,8 @@ namespace RUINORERP.UI.UCSourceGrid
                                                             case "ProdDetailID":
                                                                 tlist = Oldlist.Where(m => m.ProdDetailID == limitedValue.ToLong()).ToList();
                                                                 break;
-                                                                case "Unit_ID"://特别写列。反正这里是硬编码 Unit_ID 在换算表中是指向 Source_unit_id
-                                                                  tlist = Oldlist.Where(m => m.Source_unit_id == limitedValue.ToLong()).ToList();
+                                                            case "Unit_ID"://特别写列。反正这里是硬编码 Unit_ID 在换算表中是指向 Source_unit_id
+                                                                tlist = Oldlist.Where(m => m.Source_unit_id == limitedValue.ToLong()).ToList();
                                                                 break;
                                                             default:
                                                                 //throw new Exception("请实现限制时：" + col.Key.ColName + "的动态查询");
@@ -2776,7 +2782,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             ids.Add(id.ToString());//设置一个主键集合 
                             OutNames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());//设置一个显示名称的集合
                         }
-                        
+
                     }
                     if (tlist == null || tlist.Count == 0)
                     {
@@ -3382,9 +3388,15 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 if (item.ColPropertyInfo.PropertyType.FullName == "System.Byte[]")
                 {
-                    System.Drawing.Image temp = RUINORERP.Common.Helper.ImageHelper.ConvertByteToImg(newValue as Byte[]);
-                    processContext.Value = temp;
-                    //processContext.Cell.View = new SourceGrid.Cells.Views.SingleImage(temp);
+                    if (newValue.GetType().Name == "Byte[]" && newValue != null)
+                    {
+                        System.Drawing.Image temp = RUINORERP.Common.Helper.ImageHelper.ConvertByteToImg(newValue as Byte[]);
+                        processContext.Value = temp;
+                        if (temp != null)
+                        {
+                            processContext.Cell.View = new SourceGrid.Cells.Views.SingleImage(temp);
+                        }
+                    }
                     continue;
                 }
                 if ((!object.Equals(processContext.Value, newValue)) || isbatch)

@@ -2003,6 +2003,7 @@
       <DependentUpon>UserControl1.cs</DependentUpon>
     </Compile>
     <Compile Include="UCSourceGrid\BillOperateController.cs" />
+    <Compile Include="UCSourceGrid\AdditionalEvent.cs" />
     <Compile Include="UCSourceGrid\CellClickEvent.cs" />
     <Compile Include="UCSourceGrid\ComputingController.cs" />
     <Compile Include="UCSourceGrid\CustomKeyEvent.cs" />

@@ -120,7 +120,7 @@ namespace RUINORERP.Business
                     rule = "{S:L}{redis:L/000}";
                     break;
                 case BaseInfoType.SKU_No:
-                    rule = "{S:SKU}{Hex:yyMM}{redis:SKU/0000}";
+                    rule = "{S:SK}{Hex:yyMM}{redis:SK/0000}";
                     break;
                 case BaseInfoType.ProCategories:
                     rule = "{S:C}{redis:C/0000}";

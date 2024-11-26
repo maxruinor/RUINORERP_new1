@@ -34,7 +34,7 @@ namespace RUINORERP.UI.BaseForm
         {
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseListGeneric));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseList));
             this.kryptonPanelMain = new Krypton.Toolkit.KryptonPanel();
             this.kryptonGroup中间 = new Krypton.Toolkit.KryptonGroup();
             this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();

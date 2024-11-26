@@ -1280,7 +1280,10 @@ namespace RUINORERP.UI.BaseForm
                 default:
                     break;
             }
-
+            if (EditEntity==null)
+            {
+                return;
+            }
             pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0 && needCheckLock)
             {
@@ -1295,8 +1298,9 @@ namespace RUINORERP.UI.BaseForm
                 {
                     MainForm.Instance.PrintInfoLog($"{CurrentBizTypeName}单据锁定{pkid}成功！");
                 }
+                #endregion
             }
-            #endregion
+
         }
 
 

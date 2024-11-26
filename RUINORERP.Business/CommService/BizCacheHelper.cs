@@ -115,52 +115,59 @@ namespace RUINORERP.Business.CommService
         public T GetEntity<T>(object IdValue)
         {
             object entity = new object();
-            //Lazy<>
-            if (IdValue == null)
+            try
             {
-                return default(T);
-            }
-            string tableName = typeof(T).Name;
-            //只处理需要缓存的表
-            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (Manager.NewTableList.TryGetValue(tableName, out pair))
-            {
-                string key = pair.Key;
-                string KeyValue = IdValue.ToString();
-                //设置属性的值
-                if (Manager.CacheEntityList.Exists(tableName))
+                //Lazy<>
+                if (IdValue == null)
                 {
-                    var cachelist = Manager.CacheEntityList.Get(tableName);
-                    // 获取原始 List<T> 的类型参数
-                    Type listType = cachelist.GetType();
-                    if (TypeHelper.IsGenericList(listType))
-                    {
-                        List<T> list = Manager.CacheEntityList.Get(tableName) as List<T>;
-                        entity = list.Find(t => t.GetPropertyValue(key).ToString() == IdValue.ToString());
-                        if (entity != null)
-                        {
-                            return (T)entity;
-                        }
-                    }
-                    else if (TypeHelper.IsJArrayList(listType))
-                    {
-                        JArray varJarray = (JArray)cachelist;
-                        JToken olditem = varJarray.FirstOrDefault(n => n[pair.Key].ToString() == IdValue.ToString());
-                        if (olditem != null)
-                        {
-                            return olditem.ToObject<T>();
-                        }
-                        else
-                        {
-                            T prodDetail = _context.Db.Queryable<T>().Where(p => p.GetPropertyValue(key).ToString().Equals(KeyValue)).Single();
-                            return prodDetail;
-                        }
-                    }
-
+                    return default(T);
                 }
-            }
-            return (T)entity;
+                string tableName = typeof(T).Name;
+                //只处理需要缓存的表
+                KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                if (Manager.NewTableList.TryGetValue(tableName, out pair))
+                {
+                    string key = pair.Key;
+                    string KeyValue = IdValue.ToString();
+                    //设置属性的值
+                    if (Manager.CacheEntityList.Exists(tableName))
+                    {
+                        var cachelist = Manager.CacheEntityList.Get(tableName);
+                        // 获取原始 List<T> 的类型参数
+                        Type listType = cachelist.GetType();
+                        if (TypeHelper.IsGenericList(listType))
+                        {
+                            List<T> list = Manager.CacheEntityList.Get(tableName) as List<T>;
+                            entity = list.Find(t => t.GetPropertyValue(key).ToString() == IdValue.ToString());
+                            if (entity != null)
+                            {
+                                return (T)entity;
+                            }
+                        }
+                        else if (TypeHelper.IsJArrayList(listType))
+                        {
+                            JArray varJarray = (JArray)cachelist;
+                            JToken olditem = varJarray.FirstOrDefault(n => n[pair.Key].ToString() == IdValue.ToString());
+                            if (olditem != null)
+                            {
+                                return olditem.ToObject<T>();
+                            }
+                            else
+                            {
+                                T prodDetail = _context.Db.Queryable<T>().Where(p => p.GetPropertyValue(key).ToString().Equals(KeyValue)).Single();
+                                return prodDetail;
+                            }
+                        }
 
+                    }
+                }
+                return (T)entity;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("BizCacheHelper->GetEntity:" + ex.Message);
+            }
+            return default(T);
         }
 
         /// <summary>
@@ -308,35 +315,7 @@ namespace RUINORERP.Business.CommService
             return entity;
         }
 
-        /*
-        public object GetValue(string tableName, object IdValue)
-        {
-            object entity = new object();
-            //Lazy<>
-            if (IdValue == null)
-            {
-                return null;
-            }
-            //只处理需要缓存的表
-            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (Manager.NewTableList.TryGetValue(tableName, out pair))
-            {
-                string key = pair.Key;
-                string KeyValue = IdValue.ToString();
-                //设置属性的值
-                if (Manager.CacheEntityList.Exists(tableName))
-                {
-                    List<object> list = Manager.CacheEntityList.Get(tableName) as List<object>;
-                    var obj = list.Find(t => t.GetPropertyValue(key) == IdValue);
-                    if (obj != null)
-                    {
-                        entity = obj.GetPropertyValue(pair.Value);
-                    }
-                }
-            }
-            return entity;
-        }
-        */
+
         /// <summary>
         /// 通过表和主键名去找，int为主键类型
         /// 在UI层修改值，实际会在控制层来总体控制，要么生成。要么注入AOP来判断
@@ -351,14 +330,7 @@ namespace RUINORERP.Business.CommService
             string key = mb.Name;
             string tableName = expkey.Parameters[0].Type.Name;
             key = tableName + ":" + key + ":" + value.ToString();
-            //if (!Dict.ContainsKey(key))
-            //{
-            //    Dict.TryAdd(key, value);
-            //}
-            //else
-            //{
-            //    Dict[key] = value;
-            //}
+
 
         }
 

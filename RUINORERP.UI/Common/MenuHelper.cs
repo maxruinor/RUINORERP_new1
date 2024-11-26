@@ -93,6 +93,10 @@ namespace RUINORERP.UI.Common
             }
             else
             {
+                if (appContext.CurUserInfo==null)
+                {
+                    return new();
+                }
                 foreach (var item in appContext.CurUserInfo.UserModList)
                 {
                     if (item.tb_P4Menus != null)

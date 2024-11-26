@@ -21,6 +21,7 @@ using Microsoft.Extensions.Logging;
 using SuperSocket.Server.Abstractions.Session;
 using System.Diagnostics;
 using System.Windows.Forms;
+using Microsoft.VisualBasic.ApplicationServices;
 
 namespace RUINORERP.Server.Commands
 {
@@ -97,6 +98,11 @@ namespace RUINORERP.Server.Commands
 
                             WorkflowServiceReceiver.接收工作流审批(Player, gd);
                             break;
+                        case ClientCmdEnum.请求强制用户下线:
+                            //T掉指定用户。
+                            //请求强制用户下线
+                            UserService.处理请求强制用户下线(gd);
+                            break;
                         case ClientCmdEnum.准备登陆:
                             byte[] source = gd.Two;
                             try
@@ -106,7 +112,6 @@ namespace RUINORERP.Server.Commands
                             catch (Exception ex)
                             {
                                 rs = ex.Message;
-
                             }
                             break;
 
@@ -114,13 +119,23 @@ namespace RUINORERP.Server.Commands
                             _cache.Set("用户登陆", "用户登陆");
 
                             // var obj = CacheHelper.Instance.GetEntity<tb_CustomerVendor>(1740971599693221888);
-
                             tb_UserInfo user = await UserService.接收用户登陆指令(Player, gd);
                             if (UserService.用户登陆回复(Player, user))
                             {
                                 UserService.发送在线列表(Player);
                                 UserService.发送缓存信息列表(Player);
                             }
+                            //判断 是不是有相同的用户已经登陆了。有的话，则提示新登陆的人是不是T掉旧的用户。不是的话自己退出。
+                            var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(Player.SessionID) && c.User.用户名 == user.UserName);
+                            if (ExistSession != null)
+                            {
+                                UserService.回复用户重复登陆(Player, ExistSession);
+                            }
+                            else
+                            {
+                                UserService.回复用户重复登陆(Player, ExistSession);
+                            }
+
                             break;
 
                         case ClientCmdEnum.实时汇报异常:
@@ -141,7 +156,7 @@ namespace RUINORERP.Server.Commands
                             string RequestTableName = ByteDataAnalysis.GetString(gd.Two, ref index);
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg("请求缓存表：" + RequestTableName);
+                                frmMain.Instance.PrintMsg(Player.User.用户名 + "请求缓存表：" + RequestTableName);
                             }
                             Stopwatch stopwatchSender = Stopwatch.StartNew();
                             stopwatchSender.Start();
@@ -153,7 +168,7 @@ namespace RUINORERP.Server.Commands
                             stopwatchSender.Stop();
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintInfoLog($"发送缓存数据{RequestTableName} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
+                                frmMain.Instance.PrintInfoLog($"发送缓存数据{RequestTableName}给{Player.User.用户名 } 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
                             }
 
                             break;

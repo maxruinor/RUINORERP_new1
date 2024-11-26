@@ -60,7 +60,18 @@ namespace RUINORERP.UI.BaseForm
                 e.Value = "";
                 return;
             }
-
+            //图片特殊处理
+            if (newSumDataGridViewChild.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    e.Value = image;
+                    //这里用缓存
+                    return;
+                }
+            }
 
             //固定字典值显示
             string colDbName = newSumDataGridViewChild.Columns[e.ColumnIndex].Name;
@@ -81,25 +92,11 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-
-
             //动态字典值显示
             string colName = UIHelper.ShowGridColumnsNameValue(entityType, colDbName, e.Value);
             if (!string.IsNullOrEmpty(colName) && colName != "System.Object")
             {
                 e.Value = colName;
-            }
-
-            //图片特殊处理
-            if (newSumDataGridViewChild.Columns[e.ColumnIndex].Name == "Image")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                }
             }
 
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理

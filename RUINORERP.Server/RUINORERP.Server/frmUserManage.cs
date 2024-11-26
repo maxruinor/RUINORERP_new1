@@ -228,13 +228,13 @@ namespace RUINORERP.Server
                                 UserInfo user = userInfos.FirstOrDefault(c => c.SessionId == biz.SessionID);
                                 userInfos.Remove(user);
                             }
-
                         }
                     }
                 }
             }
             if (e.ClickedItem.Text == "强制用户退出")
             {
+                
                 if (dataGridView1.CurrentRow != null)
                 {
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
@@ -242,6 +242,7 @@ namespace RUINORERP.Server
                         SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
                         if (SB.State == SessionState.Connected)
                         {
+                            //这里是强制用户退出，让客户端自动断开服务器。
                             UserService.强制用户退出(SB);
                         }
                     }
@@ -356,6 +357,9 @@ namespace RUINORERP.Server
         {
 
         }
+
+
+       
 
         private void toolStripMenuItem5_Click_1(object sender, EventArgs e)
         {

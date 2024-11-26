@@ -535,6 +535,9 @@ namespace RUINORERP.UI.SuperSocketClient
                             LoginStatus = Successed;
                             Program.AppContextData.IsOnline = Successed;
                             break;
+                        case ServerCmdEnum.回复用户重复登陆:
+                            Program.AppContextData.AlreadyLogged = ClientService.接收回复用户重复登陆(od);
+                            break;
                         case ServerCmdEnum.发送在线列表:
                             ClientService.接收在线用户列表(od);
                             break;
@@ -580,7 +583,17 @@ namespace RUINORERP.UI.SuperSocketClient
 
                                 // 关闭所有资源
                                 //CloseAllResources();
-
+                                int index = 0;
+                                ByteBuff bg = new ByteBuff(od.Two);
+                                string msg1 = ByteDataAnalysis.GetString(od.Two, ref index);
+                                string msg2 = ByteDataAnalysis.GetString(od.Two, ref index);
+                                if (!string.IsNullOrEmpty(msg2))
+                                {
+                                    // MessageBox.Show(msg2, msg1, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                    //提示3秒后退出
+                                    MainForm.Instance.ShowMsg(msg2, "系统5秒后退出");
+                                    Thread.Sleep(5000);
+                                }
                                 // 安全退出
                                 Environment.Exit(0);
                             }

@@ -17,6 +17,7 @@ using RUINORERP.Server.ServerSession;
 using RUINORERP.Services;
 using RUINORERP.WF.BizOperation.Condition;
 using SharpYaml.Tokens;
+using SuperSocket.Server;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,6 +27,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TransInstruction;
 using TransInstruction.DataPortal;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.Server.BizService
 {
@@ -266,6 +268,9 @@ namespace RUINORERP.Server.BizService
 
         }
 
+
+
+
         private async static void BroadcastProdCatchData(SessionforBiz UserSession, tb_Prod prod)
         {
             View_ProdDetail ViewProdDetail = new View_ProdDetail();
@@ -388,6 +393,46 @@ namespace RUINORERP.Server.BizService
             return rs;
         }
 
+
+        public static bool 回复用户重复登陆(SessionforBiz PlayerSession, SessionforBiz ExistSessionforBiz = null)
+        {
+            bool rs = false;
+#pragma warning disable CS0168 // 声明了变量，但从未使用过
+            try
+            {
+                //PacketProcess pp = new PacketProcess(PlayerSession);
+                ByteBuff tx = new ByteBuff(100);
+                if (ExistSessionforBiz== null)
+                {
+                    rs = false;
+                    tx.PushBool(rs);
+                }
+                else
+                {
+                    if (ExistSessionforBiz.User != null)
+                    {
+                        rs = true;
+                        tx.PushBool(rs);
+                        tx.PushString(ExistSessionforBiz.User.SessionId);
+                    }
+                    else
+                    {
+                        rs = false;
+                        tx.PushBool(rs);
+                    }
+                }
+                
+                PlayerSession.AddSendData((byte)ServerCmdEnum.回复用户重复登陆, null, tx.toByte());
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                rs = false;
+            }
+#pragma warning restore CS0168 // 声明了变量，但从未使用过
+            return rs;
+        }
+
         /// <summary>
         /// 有人上线掉线都要通知客户端 可以优化
         /// </summary>
@@ -407,7 +452,7 @@ namespace RUINORERP.Server.BizService
                     {
                         userInfos.Add(item.Value.User);
                     }
-                    
+
                     //tx.PushString(item.Value.SessionID);
                     //tx.PushString(item.Value.User.用户名);
                     //tx.PushString(item.Value.User.姓名);
@@ -605,7 +650,39 @@ namespace RUINORERP.Server.BizService
 #pragma warning restore CS0168 // 声明了变量，但从未使用过
             return rs;
         }
-        public static void 强制用户退出(SessionforBiz PlayerSession)
+
+
+        public static void 处理请求强制用户下线(OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 登陆时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                var UserName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                //要保存的用户。其它下线
+                string SaveSessionId = ByteDataAnalysis.GetString(gd.Two, ref index);
+
+                SessionforBiz UserSession = frmMain.Instance.sessionListBiz
+                    .Values.FirstOrDefault(c => c.User.用户名 == UserName && !c.User.SessionId.Equals(SaveSessionId));
+                if (UserSession != null && UserSession.State == SuperSocket.Server.Abstractions.SessionState.Connected)
+                {
+                    强制用户退出(UserSession, "有相同账号登陆，系统强制下线");
+                }
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("处理请求强制用户下线:" + ex.Message);
+            }
+
+        }
+
+
+        /// <summary>
+        /// 这里是强制用户退出，让客户端自动断开服务器。
+        /// T人也是用这个。因为如何从服务器断开。客户端还会重新连接。并不会关掉软件。
+        /// </summary>
+        /// <param name="PlayerSession"></param>
+        public static void 强制用户退出(SessionforBiz PlayerSession, string Message = "")
         {
 #pragma warning disable CS0168 // 声明了变量，但从未使用过
             try
@@ -613,6 +690,7 @@ namespace RUINORERP.Server.BizService
                 ByteBuff tx = new ByteBuff(50);
                 tx.PushString(System.DateTime.Now.ToString());
                 tx.PushString("强制用户退出");
+                tx.PushString(Message);
                 PlayerSession.AddSendData((byte)ServerCmdEnum.强制用户退出, null, tx.toByte());
             }
             catch (Exception ex)

@@ -1599,6 +1599,20 @@ protected async override Task<ApprovalEntity> ReReview()
                 e.Value = "";
                 return;
             }
+            //图片特殊处理
+            if (kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    e.Value = image;
+                    //这里用缓存
+                    return;
+                }
+            }
+
+
             //固定字典值显示
             string colDbName = kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name;
             if (ColNameDataDicStockLess.ContainsKey(colDbName))
@@ -1625,18 +1639,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 e.Value = colName;
             }
 
-            //图片特殊处理
-            if (kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name == "Image")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                }
-            }
-
+            
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
 
         }
@@ -2098,6 +2101,19 @@ protected async override Task<ApprovalEntity> ReReview()
                 e.Value = "";
                 return;
             }
+
+            //图片特殊处理
+            if (kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    e.Value = image;
+                    return;
+                }
+            }
+
             //固定字典值显示
             string colDbName = kryptonTreeGridViewMaking.Columns[e.ColumnIndex].Name;
             if (ColNameDataDicStockLess.ContainsKey(colDbName))
@@ -2124,17 +2140,6 @@ protected async override Task<ApprovalEntity> ReReview()
                 e.Value = colName;
             }
 
-            //图片特殊处理
-            if (kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name == "Image")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                }
-            }
 
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
         }

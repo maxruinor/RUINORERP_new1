@@ -55,14 +55,13 @@ namespace RUINORERP.UI.SuperSocketClient
                     long userid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
                     string userName = ByteDataAnalysis.GetString(gd.Two, ref index);
                     string empName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    //UserInfo onlineuser = new UserInfo();
-                    //onlineuser.SessionId = SessionID;
-                    //onlineuser.UserID = userid;
-                    //onlineuser.用户名 = userName;
-                    //onlineuser.姓名 = empName;
-                    //onlineuser.IsSuperUser = ApplICATION.CurrentUser.IsSuperUser
-                    //onlineuser.Online = true;
-                    //MainForm.Instance.ecs.CurrentUser = onlineuser;
+                    UserInfo onlineuser = new UserInfo();
+                    onlineuser.SessionId = SessionID;
+                    onlineuser.UserID = userid;
+                    onlineuser.用户名 = userName;
+                    onlineuser.姓名 = empName;
+
+                    MainForm.Instance.AppContext.OnlineUser = onlineuser;
                 }
             }
             catch (Exception ex)
@@ -71,6 +70,67 @@ namespace RUINORERP.UI.SuperSocketClient
             }
             return rs;
 
+        }
+
+
+        /// <summary>
+        /// 接收回复用户已经登陆
+        /// </summary>
+        /// <param name="gd"></param>
+        /// <returns></returns>
+        public static bool 接收回复用户重复登陆(OriginalData gd)
+        {
+            bool rs = false;
+            try
+            {
+                int index = 0;
+                ByteBuff bg = new ByteBuff(gd.Two);
+                bool alreadyLogged = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                if (alreadyLogged)
+                {
+                    rs = alreadyLogged;
+                    string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    //如果正好是自己登陆的。不算已经登陆
+                    if (MainForm.Instance.AppContext.OnlineUser.SessionId == SessionID)
+                    {
+                        return false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收回复用户重复登陆:" + ex.Message);
+            }
+            return rs;
+        }
+
+        /// <summary>
+        /// 告诉服务器，我已登陆，原来用户在线也要强制下线。
+        /// </summary>
+        /// <param name="gd"></param>
+        /// <returns></returns>
+        public static bool 请求强制用户下线(string UserName)
+        {
+            bool rs = false;
+            try
+            {
+                ByteBuff tx = new ByteBuff(100);
+                tx.PushString(System.DateTime.Now.ToString());
+                tx.PushString(UserName);
+                //排除自己当前的SessionId
+                tx.PushString(MainForm.Instance.AppContext.OnlineUser.SessionId);
+                OriginalData gd = new OriginalData();
+                gd.cmd = (byte)ClientCmdEnum.请求强制用户下线;
+                gd.One = null;
+                gd.Two = tx.toByte();
+                byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(gd);
+                MainForm.Instance.ecs.client.Send(buffer);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("请求强制用户下线:" + ex.Message);
+            }
+            return rs;
         }
 
         public static bool 接收在线用户列表(OriginalData gd)

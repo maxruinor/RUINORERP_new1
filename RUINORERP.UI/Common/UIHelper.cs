@@ -572,17 +572,17 @@ namespace RUINORERP.UI.Common
         #region 字段描述对应列表
 
         //这个是开始的思路，实际也可以tb_product 实例的 属性来实现
-        public static ConcurrentDictionary<string, string> GetFieldNameList<T>(bool PrimaryKey=false)
+        public static ConcurrentDictionary<string, string> GetFieldNameList<T>(bool PrimaryKey = false)
         {
             Type type = typeof(T);
-            return GetFieldNameList(PrimaryKey,type);
+            return GetFieldNameList(PrimaryKey, type);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="types"></param>
         /// <returns></returns>
-        public static ConcurrentDictionary<string, string> GetFieldNameList(bool PrimaryKey = false,params Type[] types)
+        public static ConcurrentDictionary<string, string> GetFieldNameList(bool PrimaryKey = false, params Type[] types)
         {
             ConcurrentDictionary<string, string> fieldNameList = new ConcurrentDictionary<string, string>();
             SugarColumn entityAttr;
@@ -624,7 +624,7 @@ namespace RUINORERP.UI.Common
                             {
                                 continue;
                             }
-                            if (!PrimaryKey&&entityAttr.IsPrimaryKey)
+                            if (!PrimaryKey && entityAttr.IsPrimaryKey)
                             {
                                 continue;
                             }

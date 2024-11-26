@@ -135,6 +135,18 @@ namespace RUINORERP.Business
                       .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
                         .Where(c => c.SOrder_ID == entity.SOrder_ID).Single();
 
+                    //如果销售订单不是审核状态。则不能出库审核。
+                    if (entity.tb_saleorder.DataStatus != (int)DataStatus.确认)
+                    {
+                        rrs.Succeeded = false;
+                        _unitOfWorkManage.RollbackTran();
+                        rrs.ErrorMsg = $"出库时，对应销售订单不是审核状态!请检查数据后重试！";
+                        if (_appContext.SysConfig.ShowDebugInfo)
+                        {
+                            _logger.LogInformation(rrs.ErrorMsg);
+                        }
+                        return rrs;
+                    }
 
                     //如果明细中的产品。不存在于订单中。审核失败。
                     foreach (var child in entity.tb_SaleOutDetails)
@@ -148,8 +160,6 @@ namespace RUINORERP.Business
                             {
                                 _logger.LogInformation(rrs.ErrorMsg);
                             }
-
-
                             return rrs;
                         }
                     }
@@ -606,7 +616,6 @@ namespace RUINORERP.Business
 
 
     }
-
 
 }
 

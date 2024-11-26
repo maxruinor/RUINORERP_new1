@@ -55,6 +55,42 @@ namespace RUINORERP.UI.Common
         //    }
         //}
 
+
+        /// <summary>
+        /// 验证是否已经登陆并等待响应，最多等待指定的超时时间。
+        /// </summary>
+        /// <param name="userName">用户名</param>
+        /// <param name="password">密码</param>
+        /// <param name="timeOutSec">超时时间（秒）</param>
+        /// <returns>如果登录成功，返回true；否则返回false。</returns>
+        public async Task<bool> AlreadyloggedinAsync(EasyClientService _ecs,  string userName, int timeOutSec)
+        {
+            using (var tokenSource = new CancellationTokenSource())
+            {
+                var startTime = DateTime.Now;
+
+                // 等待服务器响应，直到超时或收到登录状态
+                while (!_ecs.LoginStatus && Program.AppContextData.AlreadyLogged)
+                {
+                    if ((DateTime.Now - startTime) >= TimeSpan.FromSeconds(timeOutSec))
+                    {
+                        tokenSource.Cancel();
+                    }
+
+                    if (tokenSource.IsCancellationRequested)
+                    {
+                        return false; // 登录超时，返回false
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(2), tokenSource.Token); // 等待2秒再次检查
+                }
+
+                return _ecs.LoginStatus && Program.AppContextData.AlreadyLogged; // 登录状态已更新，返回结果
+            }
+        }
+
+
+
         /// <summary>
         /// 登录服务器并等待响应，最多等待指定的超时时间。
         /// </summary>

@@ -194,9 +194,6 @@ namespace RUINORERP.UI
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData);
                         if (ok)
                         {
-
-
-
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
                             {
                                 ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
@@ -213,6 +210,22 @@ namespace RUINORERP.UI
                                 {
                                     MainForm.Instance.AppContext.OnlineUser.授权状态 = true;
                                     MainForm.Instance.AppContext.OnlineUser.在线状态 = true;
+                                }
+                                
+                                //如果已经登陆 ，则提示要不要T掉原来的。
+                                bool AlreadyLogged = await serverAuthorizer.AlreadyloggedinAsync(ecs, UserGlobalConfig.Instance.UseName, 3);
+                                if (AlreadyLogged)
+                                {
+                                    if (MessageBox.Show("该用户已经登陆，是否强制在线用户下线\r\n否则系统即将退出。", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
+                                    {
+                                        //新的要保留，只传用户名不行。
+                                        ClientService.请求强制用户下线(UserGlobalConfig.Instance.UseName);
+                                    }
+                                    else
+                                    {
+                                        //自己退出
+                                        Application.Exit();
+                                    }
                                 }
                             }
                             else
@@ -275,7 +288,27 @@ namespace RUINORERP.UI
         }
 
 
+        private string IPToIPv4(string strIP,int Port)
+        {
+            IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(strIP), Port);
 
+            // 检查地址是否是 IPv4 映射到 IPv6 的地址
+            if (endpoint.Address.IsIPv4MappedToIPv6)
+            {
+                // 转换为 IPv4 地址
+                IPAddress ipv4Address = endpoint.Address.MapToIPv4();
+                string ipv4PortString = $"{ipv4Address}:{endpoint.Port}";
+                //Console.WriteLine(ipv4PortString); // 输出：192.168.0.99:57276
+                return ipv4PortString;
+            }
+            else
+            {
+                // 地址已经是 IPv4 地址
+                string ipv4PortString = $"{endpoint.Address}:{endpoint.Port}";
+                return ipv4PortString;
+                //Console.WriteLine(ipv4PortString);
+            }
+        }
 
 
 

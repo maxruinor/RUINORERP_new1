@@ -157,7 +157,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
         }
-       
+
 
         private void MainForm_DragEnter(object sender, DragEventArgs e)
         {
@@ -2284,6 +2284,27 @@ namespace RUINORERP.UI.ProductEAV
                 e.Value = "";
                 return;
             }
+
+            //图片特殊处理 在最先处理
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            {
+                if (e.Value != null)
+                {
+                    if (((byte[])e.Value).Length == 0)
+                    {
+                        e.Value = null;
+                        return;
+                    }
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    e.Value = image;
+                    //这里用缓存
+                    return;
+                }
+            }
+
+
+
             //固定字典值显示
             string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
             if (ColNameDataDictionary.ContainsKey(colDbName))
@@ -2309,23 +2330,6 @@ namespace RUINORERP.UI.ProductEAV
             if (!string.IsNullOrEmpty(colName))
             {
                 e.Value = colName;
-            }
-
-            //图片特殊处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image")
-            {
-                if (e.Value != null)
-                {
-                    if (((byte[])e.Value).Length == 0)
-                    {
-                        e.Value = null;
-                        return;
-                    }
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                }
             }
 
 

@@ -836,7 +836,11 @@ namespace RUINORERP.UI
                     AppContext.SysConfig = config[0];
                 }
                 rs = true;
-                this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";
+                if (AppContext.CurUserInfo != null)
+                {
+                    this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";
+                }
+
 
                 //加载角色
                 //toolStripDropDownBtnRoles.DropDownItems.Clear();
@@ -1726,19 +1730,18 @@ namespace RUINORERP.UI
             _byteArray = kryptonDockableWorkspace1.SaveLayoutToArray();
             try
             {
-                if (MessageBox.Show(this, "确定退出本系统吗?", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                {
+                //if (MessageBox.Show(this, "确定退出本系统吗?", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                //{
 
-                    e.Cancel = false;
-                    //QuitMainForm();
-                    System.GC.Collect();
-                    Logout();
-                }
-                else
-                {
-                    e.Cancel = true;
-                    return;
-                }
+                e.Cancel = false;
+                System.GC.Collect();
+                Logout();
+                //}
+                //else
+                //{
+                //    e.Cancel = true;
+                //    return;
+                //}
                 await ecs.client.Close();
             }
             catch (Exception ex)
@@ -2054,7 +2057,7 @@ namespace RUINORERP.UI
             }
         }
 
-        public void ShowMsg(string msg)
+        public void ShowMsg(string msg, string Caption = null)
         {
             if (string.IsNullOrEmpty(msg))
             {
@@ -2066,8 +2069,12 @@ namespace RUINORERP.UI
                 //otificationBox.Instance().ShowForm(msg);//显示窗体
                 this.Invoke(new Action(() =>
                 {
+                    if (Caption == null)
+                    {
+                        Caption = "消息提醒";
+                    }
 
-                    MSNRemind("消息提醒", $"{msg}\r\n  [点击查看]", 2000, 5000, 3000, true, true, false, false, true, true);
+                    MSNRemind(Caption, $"{msg}\r\n  [点击查看]", 2000, 5000, 3000, true, true, false, false, true, true);
 
                 }));
 

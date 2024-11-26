@@ -191,7 +191,18 @@ namespace RUINORERP.UI.BaseForm
                 e.Value = "";
                 return;
             }
-
+            //图片特殊处理
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    System.Drawing.Image image = System.Drawing.Image.FromStream(buf, true);
+                    e.Value = image;
+                    //这里用缓存
+                    return;
+                }
+            }
             string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
             if (ForeignkeyPoints != null && ForeignkeyPoints.Count > 0)
             {
@@ -234,17 +245,7 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-            //图片特殊处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    System.Drawing.Image image = System.Drawing.Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                }
-            }
+            
 
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
 

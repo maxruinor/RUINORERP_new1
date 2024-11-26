@@ -305,10 +305,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
             bindingSourceList.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             dataGridView1.DataSource = bindingSourceList;
-
         }
-
-
 
         #region 定义所有工具栏的方法
 
@@ -539,6 +536,18 @@ namespace RUINORERP.UI.AdvancedUIModule
                 e.Value = "";
                 return;
             }
+            //图片特殊处理
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    e.Value = image;
+                    //这里用缓存
+                    return;
+                }
+            }
 
             //固定字典值显示
             string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
@@ -572,18 +581,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                 e.Value = colName;
             }
 
-            //图片特殊处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                }
-            }
-
+          
 
         }
         private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)

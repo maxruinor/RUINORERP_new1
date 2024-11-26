@@ -965,6 +965,18 @@ namespace RUINORERP.UI.SysConfig
                 e.Value = "";
                 return;
             }
+            //图片特殊处理
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    e.Value = image;
+                    return;
+                }
+            }
+
             //固定字典值显示
             string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
             if (ColNameDataDictionary.ContainsKey(colDbName))
@@ -1008,17 +1020,7 @@ namespace RUINORERP.UI.SysConfig
                 e.Value = colName;
             }
 
-            //图片特殊处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                }
-            }
+            
 
 
         }
@@ -1036,6 +1038,18 @@ namespace RUINORERP.UI.SysConfig
                 e.Value = "";
                 return;
             }
+            //图片特殊处理
+            if (dataGridView2.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    e.Value = image;
+                    return;
+                }
+            }
+
             //固定字典值显示
             string colDbName = dataGridView2.Columns[e.ColumnIndex].Name;
             if (ColNameDataDictionary.ContainsKey(colDbName))
@@ -1076,17 +1090,7 @@ namespace RUINORERP.UI.SysConfig
                 e.Value = colName;
             }
 
-            //图片特殊处理
-            if (dataGridView2.Columns[e.ColumnIndex].Name == "Image")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                }
-            }
+            
 
 
         }

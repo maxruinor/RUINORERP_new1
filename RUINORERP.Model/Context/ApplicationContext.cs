@@ -195,6 +195,11 @@ namespace RUINORERP.Model.Context
         #region Settings
 
         /// <summary>
+        /// 是否相同用户名已经登陆了。默认否
+        /// </summary>
+        public bool AlreadyLogged { get; set; } = false;
+
+        /// <summary>
         /// 是否为连接状态
         /// </summary>
         public bool IsOnline { get; set; } = false;

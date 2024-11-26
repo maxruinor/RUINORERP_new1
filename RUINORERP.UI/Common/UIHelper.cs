@@ -25,12 +25,14 @@ using System.Xml.Serialization;
 using RUINORERP.UI.UControls;
 using Krypton.Navigator;
 using FastReport.Table;
+using System.Drawing.Drawing2D;
+using System.Drawing;
 
 namespace RUINORERP.UI.Common
 {
     public static class UIHelper
     {
-
+       
         public static object GetDisplayText(ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ColNameDataDictionary,
             string colDbName, object Value, List<Type> ColDisplayTypes = null, Type entityType = null)
         {

@@ -123,7 +123,7 @@ namespace RUINORERP.UI.CommonUI
             }
 
             //图片特殊处理
-            if (newSumDataGridViewSelectorLines.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (newSumDataGridViewSelectorLines.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {

@@ -172,7 +172,7 @@ namespace RUINORERP.UI.BaseForm
             }
 
             //图片特殊处理
-            if (newSumDataGridViewMaster.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (newSumDataGridViewMaster.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {

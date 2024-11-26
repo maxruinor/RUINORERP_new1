@@ -1,6 +1,8 @@
 ﻿using Krypton.Navigator;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -12,7 +14,32 @@ namespace RUINORERP.UI.Common
     public class UITools
     {
 
- 
+        /// <summary>
+        /// 缩小图片为缩略图
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <returns></returns>
+        public Image CreateThumbnail(Image image, int width, int height)
+        {
+            // 创建缩略图的新图像
+            Bitmap thumbnail = new Bitmap(width, height);
+
+            // 使用 Graphics 对象绘制缩略图
+            using (Graphics graphics = Graphics.FromImage(thumbnail))
+            {
+                // 设置绘制质量
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+                // 绘制缩略图
+                graphics.DrawImage(image, 0, 0, width, height);
+            }
+
+            return thumbnail;
+        }
+        
+
 
         /// <summary>
         /// 创建或打开一个可等待的计时器对象

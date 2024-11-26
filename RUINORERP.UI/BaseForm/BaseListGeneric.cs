@@ -46,6 +46,8 @@ using SqlSugar;
 using SourceGrid.Cells.Models;
 using RUINORERP.Business.CommService;
 using SixLabors.ImageSharp.Memory;
+using Netron.NetronLight;
+using RUINOR.WinFormsUI.CustomPictureBox;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -178,7 +180,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public List<Type> ColDisplayTypes { get; set; } = new List<Type>();
 
-
+        UITools iTools = new UITools();
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
@@ -192,15 +194,24 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
             //图片特殊处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {
+                    if (!(e.Value is byte[]))
+                    {
+                        return;
+                    }
                     System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
                     System.Drawing.Image image = System.Drawing.Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                    return;
+                    if (image != null)
+                    {
+                        //缩略图 这里用缓存 ?
+                        System.Drawing.Image thumbnailthumbnail = iTools.CreateThumbnail(image, 100, 100);
+                        e.Value = thumbnailthumbnail;
+                        return;
+                    }
+
                 }
             }
             string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
@@ -245,7 +256,7 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-            
+
 
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
 
@@ -964,7 +975,7 @@ namespace RUINORERP.UI.BaseForm
                     if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
                     {
                         //如果有更新变动就上传到服务器再分发到所有客户端
-                        OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName,PKValue.ToLong());
+                        OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
                         byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
                         MainForm.Instance.ecs.client.Send(buffer);
 
@@ -1889,9 +1900,29 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex == -1)
+            {
+                return;
+            }
 
+            //图片特殊处理
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Images" || dataGridView1.CurrentCell.Value.GetType().Name == "Byte[]")
+            {
+                if (dataGridView1.CurrentCell.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])dataGridView1.CurrentCell.Value);
+                    System.Drawing.Image image = System.Drawing.Image.FromStream(buf, true);
+                    if (image != null)
+                    {
+                        frmPictureViewer frmShow = new frmPictureViewer();
+                        frmShow.PictureBoxViewer.Image = image;
+                        frmShow.ShowDialog();
+                    }
+                }
+            }
 
-
-
+        }
     }
 }

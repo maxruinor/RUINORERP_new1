@@ -34,7 +34,7 @@ namespace RUINORERP.UI.BaseForm
         {
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseList));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseListGeneric));
             this.kryptonPanelMain = new Krypton.Toolkit.KryptonPanel();
             this.kryptonGroup中间 = new Krypton.Toolkit.KryptonGroup();
             this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
@@ -129,6 +129,7 @@ namespace RUINORERP.UI.BaseForm
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.CustomRowNo = false;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.FieldNameList = null;
             this.dataGridView1.IsShowSumRow = false;
@@ -145,6 +146,7 @@ namespace RUINORERP.UI.BaseForm
             this.dataGridView1.UseSelectedColumn = false;
             this.dataGridView1.Use是否使用内置右键功能 = true;
             this.dataGridView1.XmlFileName = "";
+            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             this.dataGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellDoubleClick);
             this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView1_CellFormatting);
             this.dataGridView1.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.dataGridView1_CellPainting);

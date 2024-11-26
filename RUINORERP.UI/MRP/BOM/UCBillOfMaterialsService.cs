@@ -37,6 +37,7 @@ using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
 using Image = System.Drawing.Image;
 using RUINOR.WinFormsUI.CustomPictureBox;
+using Netron.NetronLight;
 namespace RUINORERP.UI.MRP.BOM
 {
 
@@ -209,7 +210,7 @@ namespace RUINORERP.UI.MRP.BOM
             }
         }
 
-
+        UITools  uITools = new UITools();
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
@@ -260,7 +261,7 @@ namespace RUINORERP.UI.MRP.BOM
                     if (image != null)
                     {
                         //缩略图 这里用缓存 ?
-                        Image thumbnailthumbnail = this.thumbnail(image, 100, 100);
+                        Image thumbnailthumbnail = uITools.CreateThumbnail(image, 100, 100);
                         e.Value = thumbnailthumbnail;
                     }
 
@@ -272,26 +273,7 @@ namespace RUINORERP.UI.MRP.BOM
         }
 
 
-        // 缩小图片为缩略图
-        private Image thumbnail(Image image, int width, int height)
-        {
-            // 创建缩略图的新图像
-            Bitmap thumbnail = new Bitmap(width, height);
-
-            // 使用 Graphics 对象绘制缩略图
-            using (Graphics graphics = Graphics.FromImage(thumbnail))
-            {
-                // 设置绘制质量
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-
-                // 绘制缩略图
-                graphics.DrawImage(image, 0, 0, width, height);
-            }
-
-            return thumbnail;
-        }
-
-
+      
         private void kryptonDataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == -1)
@@ -915,7 +897,7 @@ namespace RUINORERP.UI.MRP.BOM
                     if (image != null)
                     {
                         //缩略图 这里用缓存 ?
-                        Image thumbnailthumbnail = this.thumbnail(image, 100, 100);
+                        Image thumbnailthumbnail = uITools.CreateThumbnail(image, 100, 100);
                         e.Value = thumbnailthumbnail;
                     }
                 }

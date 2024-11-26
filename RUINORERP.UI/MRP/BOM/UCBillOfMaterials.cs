@@ -1413,7 +1413,7 @@ namespace RUINORERP.UI.MRP.BOM
                 return;
             }
             //图片特殊处理
-            if (kryptonTreeGridViewBOMDetail.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (kryptonTreeGridViewBOMDetail.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {

@@ -61,7 +61,7 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
             //图片特殊处理
-            if (newSumDataGridViewChild.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (newSumDataGridViewChild.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {

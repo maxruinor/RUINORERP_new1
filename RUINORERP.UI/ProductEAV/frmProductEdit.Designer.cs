@@ -36,6 +36,8 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPageMain = new Krypton.Navigator.KryptonPage();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.txtVendorModelCode = new Krypton.Toolkit.KryptonTextBox();
             this.cmbSourceType = new Krypton.Toolkit.KryptonComboBox();
             this.lblRack_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbRack_ID = new Krypton.Toolkit.KryptonComboBox();
@@ -113,8 +115,6 @@ namespace RUINORERP.UI.ProductEAV
             this.openFileDialog4Img = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.txtVendorModelCode = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             this.kryptonNavigator1.SuspendLayout();
@@ -201,7 +201,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage3,
             this.kryptonPageImage,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 0;
+            this.kryptonNavigator1.SelectedIndex = 2;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1024, 614);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -272,6 +272,21 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1022, 583);
             this.kryptonPanel1.TabIndex = 0;
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(41, 155);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel1.TabIndex = 146;
+            this.kryptonLabel1.Values.Text = "厂商型号";
+            // 
+            // txtVendorModelCode
+            // 
+            this.txtVendorModelCode.Location = new System.Drawing.Point(112, 156);
+            this.txtVendorModelCode.Name = "txtVendorModelCode";
+            this.txtVendorModelCode.Size = new System.Drawing.Size(274, 23);
+            this.txtVendorModelCode.TabIndex = 147;
             // 
             // cmbSourceType
             // 
@@ -991,7 +1006,8 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // openFileDialog4Img
             // 
-            this.openFileDialog4Img.FileName = "*.jpg";
+            this.openFileDialog4Img.Filter = "\"JPEG Image|*.jpg|Bitmap Image|*.bmp|PNG Image|*.png|All Image Files|*.jpg;*.jpeg" +
+    ";*.bmp;*.png\"";
             // 
             // contextMenuStrip1
             // 
@@ -999,21 +1015,6 @@ namespace RUINORERP.UI.ProductEAV
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
-            // 
-            // kryptonLabel1
-            // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(41, 155);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel1.TabIndex = 146;
-            this.kryptonLabel1.Values.Text = "厂商型号";
-            // 
-            // txtVendorModelCode
-            // 
-            this.txtVendorModelCode.Location = new System.Drawing.Point(112, 156);
-            this.txtVendorModelCode.Name = "txtVendorModelCode";
-            this.txtVendorModelCode.Size = new System.Drawing.Size(274, 23);
-            this.txtVendorModelCode.TabIndex = 147;
             // 
             // frmProductEdit
             // 

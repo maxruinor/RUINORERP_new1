@@ -1600,7 +1600,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 return;
             }
             //图片特殊处理
-            if (kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {
@@ -2103,7 +2103,7 @@ protected async override Task<ApprovalEntity> ReReview()
             }
 
             //图片特殊处理
-            if (kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (kryptonTreeGridViewStockLess.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {

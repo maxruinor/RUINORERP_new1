@@ -25,7 +25,7 @@ using RUINORERP.Common.Extensions;
 using System.Collections;
 using RUINORERP.Business.Processor;
 using RUINORERP.Global;
- 
+
 
 
 namespace RUINORERP.UI.ProductEAV
@@ -56,8 +56,10 @@ namespace RUINORERP.UI.ProductEAV
 
             dataGridView1.CustomRowNo = true;
             dataGridView1.CellPainting += dataGridView1_CellPainting;
+           
         }
- 
+       
+      
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             // 检查是否是行头
@@ -215,7 +217,7 @@ namespace RUINORERP.UI.ProductEAV
                             //}
 
                             //因为有SKU明细 复杂。要查一下才能接着修改。或缓存下来他们的关系更复杂
-                           // Query();
+                            // Query();
                         }
                         else
                         {

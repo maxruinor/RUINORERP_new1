@@ -537,7 +537,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                 return;
             }
             //图片特殊处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {

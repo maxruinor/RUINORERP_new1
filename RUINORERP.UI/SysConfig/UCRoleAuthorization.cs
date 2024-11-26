@@ -1035,7 +1035,7 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
             //图片特殊处理
-            if (dataGridView2.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (dataGridView2.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {

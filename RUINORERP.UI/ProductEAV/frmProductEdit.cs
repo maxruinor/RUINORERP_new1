@@ -1623,80 +1623,7 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-        /*
-        /// <summary>
-        /// 添加产品特性
-        /// </summary>
-        private void AddProdProperty(tb_ProdProperty ppv, List<tb_ProdPropertyValue> listOptionValue)
-        {
-            #region 新增修改式
-            listView1.Visible = true;
-            listView1.CheckBoxes = true;
-
-            listView1.ShowGroups = true;  //记得要设置ShowGroups属性为true（默认是false），否则显示不出分组
-            listView1.View = View.LargeIcon;
-            ImageList imgList = new ImageList();
-            imgList.ImageSize = new Size(1, 25);
-            listView1.SmallImageList = imgList;
-
-            //create goups
-            ListViewGroup lvg = new ListViewGroup();  //创建男生分组
-            lvg.Header = ppv.PropertyName;  //设置组的标题。
-            lvg.Name = ppv.Property_ID.ToString();
-            lvg.Tag = ppv;
-            lvg.HeaderAlignment = HorizontalAlignment.Left;   //设置组标题文本的对齐方式。（默认为Left）
-
-            if (!contextMenuStrip1.Items.ContainsKey("【" + ppv.PropertyName + "】全选"))
-            {
-                //加入分割线 美观一下
-                if (contextMenuStrip1.Items.Count > 0)
-                {
-                    AddContextMenu("-", contextMenuStrip1.Items, menuClicked);
-                    //属性都多了，之前的值全是不需要的
-                    bindingSourceList.Clear();
-                }
-                //添加菜单   
-                var yes = AddContextMenu("【" + ppv.PropertyName + "】全选", contextMenuStrip1.Items, menuClicked);
-                yes.Tag = ppv;
-                var no = AddContextMenu("【" + ppv.PropertyName + "】全不选", contextMenuStrip1.Items, menuClicked);
-                no.Tag = ppv;
-            }
-
-            if (!listView1.Groups.Cast<ListViewGroup>().Any(i => i.Header == ppv.PropertyName.Trim()))
-            {
-                listView1.Groups.Add(lvg);
-                string keys = string.Empty;
-                string names = string.Empty;
-                foreach (var item in listOptionValue.Where(w => w.Property_ID == ppv.Property_ID).ToList())
-                {
-                    keys += item.PropertyValueID + ",";
-                    names += item.PropertyValueName + ",";
-                    ListViewItem lvi = new ListViewItem();
-                    // lvi.ImageIndex = i;
-                    lvi.Name = item.PropertyValueID.ToString();
-                    lvi.Tag = item;
-                    lvi.Text = item.PropertyValueName;
-                    lvi.Checked = true;
-                    lvi.ForeColor = Color.Blue;  //设置行颜色
-                    lvg.Items.Add(lvi);   //分组添加子项
-                    listView1.Items.Add(lvi);
-                }
-                keys = keys.Trim(',');
-                names = names.Trim(',');
-                if (!string.IsNullOrEmpty(names))
-                {
-                    propertyEavList.TryAdd(ppv.Property_ID.ToString(), names);
-                }
-            }
-            if (dataGridView1.Rows.Count == 0)
-            {
-                BindToSkulistGrid(new List<Eav_ProdDetails>());
-            }
-
-
-            #endregion
-        }
-        */
+   
 
         /// <summary>
         /// 添加产品特性
@@ -1884,51 +1811,7 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-        /*
-        /// <summary>
-        /// 将listview的UI值转为属性组
-        /// </summary>
-        /// <param name="lv"></param>
-        /// <returns></returns>
-        private List<KeyValuePair<long, string[]>> GetAttrGoups(ListView lv)
-        {
-            List<KeyValuePair<long, string[]>> attrGoups = new List<KeyValuePair<long, string[]>>();
-            foreach (ListViewGroup g in lv.Groups)
-            {
-                tb_ProdProperty pp = g.Tag as tb_ProdProperty;
-                long key = pp.Property_ID;
-                string values = string.Empty;
-                foreach (ListViewItem lvitem in g.Items)
-                {
-                    if (lvitem.Checked)
-                    {
-                        values += lvitem.Text + ",";
-                    }
-
-                }
-                values = values.TrimEnd(',');
-                if (values.Trim().Length == 0)
-                {
-                    continue;
-                }
-                KeyValuePair<long, string[]> kvp = new KeyValuePair<long, string[]>(key, values.Split(','));
-                List<KeyValuePair<long, string[]>> exitkvps = attrGoups.Where(t => t.Key == key).ToList();
-                if (exitkvps.Count == 0)
-                {
-                    attrGoups.Add(kvp);
-                }
-                else
-                {
-
-                    KeyValuePair<long, string[]> kvpf = exitkvps.FirstOrDefault();
-                    attrGoups.Remove(kvpf);
-                    attrGoups.Add(kvp);
-
-                }
-            }
-            return attrGoups;
-        }
-        */
+     
 
         /// <summary>
         /// 将listview的UI值转为属性组
@@ -2286,7 +2169,7 @@ namespace RUINORERP.UI.ProductEAV
             }
 
             //图片特殊处理 在最先处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "byte[]")
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
             {
                 if (e.Value != null)
                 {

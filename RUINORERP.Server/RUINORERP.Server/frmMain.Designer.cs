@@ -174,7 +174,7 @@
             // tsmY
             // 
             tsmY.Name = "tsmY";
-            tsmY.Size = new System.Drawing.Size(180, 22);
+            tsmY.Size = new System.Drawing.Size(88, 22);
             tsmY.Text = "是";
             tsmY.Click += tsmY_Click;
             // 
@@ -183,7 +183,7 @@
             tsmNo.Checked = true;
             tsmNo.CheckState = System.Windows.Forms.CheckState.Checked;
             tsmNo.Name = "tsmNo";
-            tsmNo.Size = new System.Drawing.Size(180, 22);
+            tsmNo.Size = new System.Drawing.Size(88, 22);
             tsmNo.Text = "否";
             tsmNo.Click += tsmNo_Click;
             // 
@@ -213,7 +213,7 @@
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
             IsMdiContainer = true;
             Name = "frmMain";
-            Text = "服务管理端";
+            Text = "服务管理端2.0";
             FormClosing += frmMain_FormClosing;
             Load += frmMain_Load;
             menuStrip1.ResumeLayout(false);

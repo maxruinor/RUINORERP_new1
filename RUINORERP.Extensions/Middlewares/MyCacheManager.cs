@@ -71,7 +71,11 @@ namespace RUINORERP.Extensions.Middlewares
                 {
                     var cache = CacheFactory.Build<object>(p => p.WithSystemRuntimeCacheHandle());
                     var cacheEntity = CacheFactory.Build<object>(p => p.WithSystemRuntimeCacheHandle());
-                    var cacheEntityList = CacheFactory.Build<object>(p => p.WithSystemRuntimeCacheHandle());
+                    var cacheEntityList = CacheFactory.Build<object>(p =>
+                    p.WithSystemRuntimeCacheHandle()
+                    //.WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30))
+
+                    );
                     _manager = new MyCacheManager(cache, cacheEntity, cacheEntityList);
                 }
                 return _manager;
@@ -268,7 +272,7 @@ namespace RUINORERP.Extensions.Middlewares
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="newlist">强类型</param>
-        public void UpdateEntityList<T>(List<T> newlist)
+        public void UpdateEntityList<T>(List<T> newlist, bool HasExpire = false)
         {
             //newlist是引用类型不可以对他操作，不然会体现到上现操作。例如查询
             if (newlist == null)
@@ -289,46 +293,39 @@ namespace RUINORERP.Extensions.Middlewares
                     {
                         //不管是强类型的集合还是json的集合，直接替换。（如果知道哪种情况性能列好可以默认哪种。以后再优化吧。TODO:by watson)
                         CacheEntityList.Update(tableName, k => newlist);
+                        //验证过  添加时相同KEY有过期时间。更新后还有效
+                        //if (HasExpire)
+                        //{
+                        //    //设置一个区间的随机数。保证不会同时过期。
+                        //    int rand = new Random().Next(2, 3);
+
+                        //    //一个小时过期？
+                        //    CacheEntityList.Expire(tableName, ExpirationMode.Absolute, TimeSpan.FromMinutes(rand));
+
+                        //    //更新缓存表的信息
+                        //    CacheInfo cacheInfo = new CacheInfo(tableName, newlist.Count);
+                        //    cacheInfo.HasExpire = HasExpire;
+                        //    cacheInfo.ExpirationTime = DateTime.Now.AddMinutes(rand);
+                        //    MyCacheManager.Instance.Cache.AddOrUpdate(tableName, cacheInfo, c => cacheInfo);
+                        //}
                     }
                     else
                     {
-                        CacheEntityList.Add(tableName, newlist);
+                        //CacheEntityList.Add(tableName, newlist);
+                        AddCacheEntityList(tableName, newlist, HasExpire);
                     }
 
 
                 }
                 else
                 {
-                    CacheEntityList.Add(tableName, newlist);
+                    // CacheEntityList.Add(tableName, newlist);
+                    AddCacheEntityList(tableName, newlist, HasExpire);
                 }
                 #endregion
             }
 
-            /*
-            //只处理需要缓存的表
-            if (TableList.ContainsKey(tableName))
-            {
-                //设置属性的值
-                if (CacheEntityList.Exists(tableName))
-                {
-                    //如果缓存中已经包含的这个表的部分行值呢？以新的为标准，把新的叫包含了旧值的去掉，没有的就添加
-                    List<T> oldlist = CacheEntityList.Get(tableName) as List<T>;
 
-                    foreach (var item in oldlist)
-                    {
-                        if (!newlist.Exists(n => n.GetPropertyValue("ID") == item.GetPropertyValue("")))
-                        {
-
-                        }
-                    }
-                    CacheEntityList.Update(tableName, k => newlist);
-                }
-                else
-                {
-                    CacheEntityList.Add(tableName, newlist);
-                }
-            }
-            */
         }
 
         /// <summary>
@@ -755,32 +752,7 @@ namespace RUINORERP.Extensions.Middlewares
         }
 
 
-        //public void AddCacheEntityList<T>(T entity)
-        //{
-        //    if (entity == null)
-        //    {
-        //        return;
-        //    }
-        //    string tableName = typeof(T).Name;
-        //    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-        //    if (NewTableList.TryGetValue(tableName, out pair))
-        //    {
-        //        //只处理需要缓存的表
-        //        if (CacheEntityList.Exists(tableName))
-        //        {
-        //            //设置属性的值
-        //            UpdateEntityList<T>(entity);
-        //        }
-        //        else
-        //        {
-        //            //没有对应的列表 则插入
-        //            List<T> list = new List<T>();
-        //            list.Add(entity);
-        //            CacheEntityList.Add(tableName, list);
-        //        }
-        //    }
 
-        //}
 
         public void AddCacheEntityList(string tableName, object objList)
         {
@@ -795,6 +767,8 @@ namespace RUINORERP.Extensions.Middlewares
             }
         }
 
+
+
         public void AddCacheEntityList<T>(string tableName, List<T> objList)
         {
             if (objList == null)
@@ -805,13 +779,33 @@ namespace RUINORERP.Extensions.Middlewares
             if (!CacheEntityList.Exists(tableName))
             {
                 CacheEntityList.Add(tableName, objList);
-                //一个小时过期？
-                CacheEntityList.Expire(tableName, TimeSpan.FromMinutes(60));
+            }
+        }
 
-                //更新缓存表的信息
-                CacheInfo cacheInfo = new CacheInfo(tableName, objList.Count);
-                MyCacheManager.Instance.Cache.Update(tableName, c => cacheInfo);
+        public void AddCacheEntityList<T>(string tableName, List<T> objList, bool HasExpire = false)
+        {
+            if (objList == null)
+            {
+                return;
+            }
+            //只处理需要缓存的表
+            if (!CacheEntityList.Exists(tableName))
+            {
+                CacheEntityList.Add(tableName, objList);
+                CacheInfo lastCacheInfo = new CacheInfo(tableName, objList.Count);
+                lastCacheInfo.HasExpire = HasExpire;
+                MyCacheManager.Instance.Cache.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
+                if (HasExpire)
+                {
+                    //设置一个区间的随机数。保证不会同时过期。
+                    int rand = new Random().Next(2, 3);
+                    //一个小时过期？
+                    CacheEntityList.Expire(tableName, ExpirationMode.Absolute, TimeSpan.FromMinutes(1));
 
+                    lastCacheInfo.ExpirationTime = DateTime.Now.AddMinutes(1);
+                    //更新缓存表的信息
+                    MyCacheManager.Instance.Cache.Update(tableName, c => lastCacheInfo);
+                }
             }
         }
 

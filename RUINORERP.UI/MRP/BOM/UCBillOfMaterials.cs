@@ -581,8 +581,8 @@ namespace RUINORERP.UI.MRP.BOM
             List<Expression<Func<BaseProductInfo, object>>> expressions = new List<Expression<Func<BaseProductInfo, object>>>();
             expressions.Add(c => c.ProductNo);
 
-            //基本信息的列头
-            ConcurrentDictionary<string, string> BaseProductInfoColNames = UIHelper.GetFieldNameList<BaseProductInfo>()
+            //基本信息的列头  这里要取主产品明细的主键。作为业务主键关联
+            ConcurrentDictionary<string, string> BaseProductInfoColNames = UIHelper.GetFieldNameList<BaseProductInfo>(true)
                 .exclude<BaseProductInfo>(expressions);
 
 
@@ -1034,7 +1034,7 @@ namespace RUINORERP.UI.MRP.BOM
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
-     
+
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             LoadGrid1();
@@ -1122,7 +1122,7 @@ namespace RUINORERP.UI.MRP.BOM
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
 
-        
+
 
             sgd.SetDependencyObject<ProductSharePart, tb_BOM_SDetail>(MainForm.Instance.list);
             sgd.HasRowHeader = true;
@@ -1451,7 +1451,7 @@ namespace RUINORERP.UI.MRP.BOM
                 e.Value = colName;
             }
 
-          
+
 
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
 

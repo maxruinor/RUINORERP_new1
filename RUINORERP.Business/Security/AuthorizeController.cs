@@ -106,9 +106,8 @@ namespace RUINORERP.Business.Security
         /// 先判断角色组权限，再判断系统配置。
         /// </summary>
         /// <returns></returns>
-        public bool GetShowDebugInfoAuthorization()
+        public  bool GetShowDebugInfoAuthorization()
         {
-
              if (_context.SysConfig.ShowDebugInfo)
              {
                  return _context.rolePropertyConfig?.ShowDebugInfo ?? _context.SysConfig.ShowDebugInfo;

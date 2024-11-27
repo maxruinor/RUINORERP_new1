@@ -23,6 +23,19 @@ namespace RUINORERP.Model
         //缓存对象的名称
         public string CacheName { get; set; }
 
+
+        /// <summary>
+        /// 是否有缓存过期的设置
+        /// </summary>
+        public bool HasExpire { get; set;}
+
+        /// <summary>
+        /// 服务器上的过期时间，超过了就再次查询一下。客户端会根据这个时间做对比，
+        /// 行数量不一样。或超过这个时间一分钟以上可以再次请求
+        /// </summary>
+        public DateTime ExpirationTime { get; set; }
+
+
         //缓存对象Key   
         //public string CacheKey { get; set; }
         public CacheInfo(string cacheName, int cacheCount)
@@ -33,7 +46,7 @@ namespace RUINORERP.Model
 
         public CacheInfo()
         {
-                
+
         }
     }
 

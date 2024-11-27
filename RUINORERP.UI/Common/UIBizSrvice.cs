@@ -45,7 +45,9 @@ namespace RUINORERP.UI.Common
                         //一个缓存 一个查询不科学。暂时没有处理。TODO:
                         //prodDetail = await MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().Where(p => p.GetPropertyValue(PKCol).ToString().Equals(ProdDetailID.ToString())).SingleAsync();
                         View_ProdDetail view_Prod = new View_ProdDetail();
+                        view_Prod.ProdDetailID= ProdDetailID;
                         prodDetail = view_Prod as T;
+                         
                     }
                 }
             }

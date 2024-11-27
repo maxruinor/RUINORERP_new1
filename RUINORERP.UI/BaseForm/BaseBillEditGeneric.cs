@@ -2174,7 +2174,8 @@ namespace RUINORERP.UI.BaseForm
 
                         //加载一个空的显示的UI
                         bindingSourceSub.Clear();
-                        OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
+                        //OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
+                        Cancel();
                     }
                 }
                 else

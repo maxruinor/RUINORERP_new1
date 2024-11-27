@@ -68,7 +68,10 @@ namespace RUINORERP.UI.MRP.MP
         DateTime RequirementDate = System.DateTime.Now;
         public override void BindData(tb_ProductionPlan entityPara, ActionStatus actionStatus = ActionStatus.无操作)
         {
-
+            if (actionStatus==ActionStatus.删除)
+            {
+                return;
+            }
             tb_ProductionPlan entity = entityPara;
             if (entity == null)
             {

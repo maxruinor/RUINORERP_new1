@@ -173,6 +173,10 @@ namespace RUINORERP.Server.Commands
 
                             break;
                         case ClientCmdEnum.更新缓存:
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintMsg(Player.User.用户名 + "更新缓存");
+                            }
                             UserService.接收更新缓存指令(Player, gd);
 
                             break;

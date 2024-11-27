@@ -124,25 +124,7 @@ namespace TransInstruction
             return gd;
         }
 
-
-        /// <summary>
-        /// 表名为空则是所有表
-        /// </summary>
-        /// <param name="TableName"></param>
-        /// <returns></returns>
-        public static OriginalData 更新缓存(string TableName)
-        {
-            var tx = new ByteBuff(2 + 4);
-            //tx.PushInt16((Int16)ClientCmdEnum.用户登陆);
-            //tx.PushInt((int)6);//加一个其他东西？比方随便时间，或当前时间的到分钟
-            tx.PushString(System.DateTime.Now.ToString());
-            tx.PushString(TableName);
-            OriginalData gd = new OriginalData();
-            gd.cmd = (byte)ClientCmdEnum.请求缓存;
-            gd.One = null;
-            gd.Two = tx.toByte();
-            return gd;
-        }
+ 
 
         /// <summary>
         /// 表名为空则是所有表

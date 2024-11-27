@@ -493,6 +493,13 @@ namespace RUINORERP.Business
         }
 
 
+        /// <summary>
+        /// 查询基础数据缓存数据，不用导航。 根据ISugarQueryable IN NOT的语法拼接
+        /// </summary>
+        /// <param name="useLike"></param>
+        /// <param name="QueryConditionFilter"></param>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         public ISugarQueryable<T> BaseGetISugarQueryable(bool useLike, QueryFilter QueryConditionFilter, object dto)
         {
             ISugarQueryable<T> querySqlQueryable;
@@ -536,7 +543,7 @@ namespace RUINORERP.Business
                 {
                     querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
                     //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                    .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                   // .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                      .WhereIF(whereLambda != null, whereLambda)
                     .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
                 }
@@ -544,7 +551,9 @@ namespace RUINORERP.Business
                 {
                     querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
                   //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                  .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+
+                  // 查询基础数据缓存数据，不用导航。
+                  //.IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                   .WhereIF(whereLambda != null, whereLambda)
                   ;
                 }
@@ -556,7 +565,7 @@ namespace RUINORERP.Business
                 {
                     querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
                                 //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                               // .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                                 .WhereAdv(useLike, queryConditions, dto)
                                 .WhereIF(whereLambda != null, whereLambda)
                                 .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
@@ -565,7 +574,7 @@ namespace RUINORERP.Business
                 {
                     querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                   .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                   //.IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                    .WhereIF(whereLambda != null, whereLambda)
                    .WhereAdv(useLike, queryConditions, dto);
                     foreach (var SqlItem in sqlList)
@@ -1206,7 +1215,7 @@ namespace RUINORERP.Business
         }
 
 
-    
+
 
 
         /// <summary>

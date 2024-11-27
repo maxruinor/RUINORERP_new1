@@ -2270,6 +2270,10 @@ namespace RUINORERP.UI
                     {
                         UIBizSrvice.RequestCache(nextTableName, elementType);
                         _cacheFetchManager.UpdateLastCacheFetchInfo(nextTableName);
+                        if (authorizeController.GetShowDebugInfoAuthorization())
+                        {
+                            PrintInfoLog($"请求了缓存：{nextTableName}-{elementType.Name}");
+                        }
                     }
                 }
             }

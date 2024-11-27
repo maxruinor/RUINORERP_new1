@@ -224,45 +224,18 @@ namespace RUINORERP.Server
             cache.Set("test1", "test123");
             await InitConfig(false);
 
-            timer = new System.Timers.Timer(60000);
+            MyCacheManager.Instance.CacheEntityList.OnRemove += CacheEntityList_OnRemove;
+
+            timer = new System.Timers.Timer(10000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
             {
-                try
+                if (this.InvokeRequired)
                 {
-                    #region 根据CacheInfoList检查更新过期的缓存。
-                    try
-                    {
-                        foreach (var item in BizCacheHelper.Manager.NewTableList)
-                        {
-                            CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(item.Key) as CacheInfo;
-                            if (cacheInfo != null)
-                            {
-                                if (cacheInfo.CacheCount > 0 && !MyCacheManager.Instance.CacheEntityList.Exists(item.Key))
-                                {
-                                    BizCacheHelper.Instance.SetDictDataSource(item.Key, true);
-                                    if (frmMain.Instance.IsDebug)
-                                    {
-                                        frmMain.Instance.PrintInfoLog($"检查更新过期的缓存 ，成功添加{item.Key}。");
-                                    }
-                                    //只有缓存概率有变化就发到客户端。客户端再根据这个与他本地实际的缓存数据行对比来请求真正的缓存数据
-                                    foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
-                                    {
-                                        BizService.UserService.发送缓存信息列表(PlayerSession);
-                                    }
-                                }
-                            }
-
-                        }
-                    }
-                    catch (Exception exc)
-                    {
-                        frmMain.Instance.PrintInfoLog($"根据CacheInfoList检查更新过期的缓存出错：{exc.Message} ");
-                    }
-                    #endregion
+                    this.Invoke(new MethodInvoker(() => CheckCacheList()));
                 }
-                catch (Exception)
+                else
                 {
-
+                    CheckCacheList();
                 }
 
             });
@@ -271,6 +244,53 @@ namespace RUINORERP.Server
 
             // 每120秒（120000毫秒）执行一次检查
             System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1200);
+
+        }
+
+        private void CacheEntityList_OnRemove(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
+        {
+            
+        }
+
+        private void CheckCacheList()
+        {
+            #region 根据CacheInfoList检查更新过期的缓存。
+            try
+            {
+                frmMain.Instance.PrintInfoLog($"开始检查更新过期。");
+                foreach (var item in BizCacheHelper.Manager.NewTableList)
+                {
+                    CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(item.Key) as CacheInfo;
+                    if (cacheInfo != null)
+                    {
+                        if (!MyCacheManager.Instance.CacheEntityList.Exists(item.Key))
+                        {
+                            BizCacheHelper.Instance.SetDictDataSource(item.Key, true);
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintInfoLog($"检查更新过期的缓存 ，成功添加{item.Key}。");
+                            }
+                            //只有缓存概率有变化就发到客户端。客户端再根据这个与他本地实际的缓存数据行对比来请求真正的缓存数据
+                            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+                            {
+                                BizService.UserService.发送缓存信息列表(PlayerSession);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (frmMain.Instance.IsDebug)
+                        {
+                            frmMain.Instance.PrintInfoLog($"检查更新过期的缓存时没有找到{item.Key}概览信息。");
+                        }
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                frmMain.Instance.PrintInfoLog($"根据CacheInfoList检查更新过期的缓存出错：{exc.Message} ");
+            }
+            #endregion
 
         }
 

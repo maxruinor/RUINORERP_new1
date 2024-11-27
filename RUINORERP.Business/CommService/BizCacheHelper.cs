@@ -370,11 +370,11 @@ namespace RUINORERP.Business.CommService
                         //设置属性的值
                         if (Manager.CacheEntityList.Exists(tableName))
                         {
-                            Manager.UpdateEntityList<T>(list);
+                            Manager.UpdateEntityList<T>(list, true);
                         }
                         else
                         {
-                            Manager.AddCacheEntityList<T>(tableName, list);
+                            Manager.AddCacheEntityList<T>(tableName, list, true);
                         }
                     }
                 }

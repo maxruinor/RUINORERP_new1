@@ -194,7 +194,7 @@ namespace RUINORERP.Server.BizService
 
                     if (frmMain.Instance.IsDebug)
                     {
-                        frmMain.Instance.PrintMsg($"转发更新缓存{tableName}给：" + item.Value.User.姓名);
+                        frmMain.Instance.PrintMsg($"转发更新的缓存{tableName}给：" + item.Value.User.姓名);
                     }
                 }
 

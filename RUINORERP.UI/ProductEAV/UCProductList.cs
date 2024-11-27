@@ -25,6 +25,9 @@ using RUINORERP.Common.Extensions;
 using System.Collections;
 using RUINORERP.Business.Processor;
 using RUINORERP.Global;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Business.CommService;
+using TransInstruction;
 
 
 
@@ -56,10 +59,10 @@ namespace RUINORERP.UI.ProductEAV
 
             dataGridView1.CustomRowNo = true;
             dataGridView1.CellPainting += dataGridView1_CellPainting;
-           
+
         }
-       
-      
+
+
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             // 检查是否是行头
@@ -170,7 +173,11 @@ namespace RUINORERP.UI.ProductEAV
                 else
                 {
                     this.bindingSourceList.Remove(loc);
-                    await pctr.DeleteByNavAsync(loc);
+                    bool rs = await pctr.DeleteByNavAsync(loc);
+                    if (rs)
+                    {
+                         //缓存只是显示用，所以删除后，并不影响。等待服务器的更新机制更新即可。
+                    }
                 }
 
             }
@@ -187,7 +194,7 @@ namespace RUINORERP.UI.ProductEAV
             foreach (var item in bindingSourceList.List)
             {
                 var entity = item as tb_Prod;
-
+               
                 switch (entity.ActionStatus)
                 {
                     case ActionStatus.无操作:
@@ -215,6 +222,16 @@ namespace RUINORERP.UI.ProductEAV
                             //        entity.tb_BoxRuleses[0].HasChanged = false;
                             //    }
                             //}
+                            //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                            //只处理需要缓存的表
+                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
+                            {
+                                //如果有更新变动就上传到服务器再分发到所有客户端
+                                OriginalData odforCache = ActionForClient.更新缓存<T>(rr.ReturnObject);
+                                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                MainForm.Instance.ecs.client.Send(buffer);
+                            }
 
                             //因为有SKU明细 复杂。要查一下才能接着修改。或缓存下来他们的关系更复杂
                             // Query();
@@ -231,6 +248,9 @@ namespace RUINORERP.UI.ProductEAV
                     default:
                         break;
                 }
+                 
+
+
                 entity.HasChanged = false;
             }
 

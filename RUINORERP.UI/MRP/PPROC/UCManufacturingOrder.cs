@@ -207,7 +207,7 @@ namespace RUINORERP.UI.MRP.MP
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PDID.HasValue && entity.PDID > 0)
                 {
                     //修改是否外发时，加工费可能不一样。
-                    if (s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.IsOutSourced))
+                    if (s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.IsOutSourced) && entity.tb_bom_s != null)
                     {
                         if (entity.IsOutSourced)
                         {

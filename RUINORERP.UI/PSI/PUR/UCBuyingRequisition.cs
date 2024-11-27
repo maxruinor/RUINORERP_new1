@@ -86,6 +86,10 @@ namespace RUINORERP.UI.PSI.PUR
 
         public override void BindData(tb_BuyingRequisition entity, ActionStatus actionStatus)
         {
+            if (actionStatus == ActionStatus.删除)
+            {
+                return;
+            }
             if (entity == null)
             {
 
@@ -249,7 +253,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
-
+            listCols.SetCol_ReadOnly<tb_BuyingRequisitionDetail>(c => c.DeliveredQuantity);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;

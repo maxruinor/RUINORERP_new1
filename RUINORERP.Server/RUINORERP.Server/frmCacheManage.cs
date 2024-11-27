@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -104,29 +105,48 @@ namespace RUINORERP.Server
             }
             tableList.Sort();
             //frmMain.Instance.CacheInfoList.Clear();
-            MyCacheManager.Instance.Cache.Clear();
+            //不能清掉。不然无效
+            //MyCacheManager.Instance.Cache.Clear();
             foreach (var tableName in tableList)
             {
+                SuperValue kv = null;
+                string cacheInfoView = string.Empty;
+                CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(tableName) as CacheInfo;
+                if (cacheInfo != null)
+                {
+                    if (cacheInfo.HasExpire)
+                    {
+                        cacheInfoView = $"{cacheInfo.CacheCount}-{cacheInfo.ExpirationTime}";
+                    }
+                    else
+                    {
+                        cacheInfoView = $"{cacheInfo.CacheCount}";
+                    }
+                }
+
                 var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 if (CacheList == null)
                 {
-                    SuperValue kv = new SuperValue(tableName + "[" + 0 + "]", tableName);
-                    listBoxTableList.Items.Add(kv);
+                    kv = new SuperValue(tableName + "[" + 0 + "]" + cacheInfoView, tableName);
+
                     //frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, 0));
-                    MyCacheManager.Instance.Cache.Add(tableName, new CacheInfo(tableName, 0));
+                    //MyCacheManager.Instance.Cache.Add(tableName, new CacheInfo(tableName, 0));
+                    //var lastCacheInfo = new CacheInfo(tableName, 0);
+                    //MyCacheManager.Instance.Cache.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
                 }
                 else
                 {
                     var lastlist = ((IEnumerable<dynamic>)CacheList).ToList();
                     if (lastlist != null)
                     {
-                        SuperValue kv = new SuperValue(tableName + "[" + lastlist.Count + "]", tableName);
-                        listBoxTableList.Items.Add(kv);
-                       // frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, lastlist.Count));
-                        MyCacheManager.Instance.Cache.Add(tableName, new CacheInfo(tableName, 0));
+                        kv = new SuperValue(tableName + "[" + lastlist.Count + "]" + cacheInfoView, tableName);
+                        // frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, lastlist.Count));
+                        //var lastCacheInfo = new CacheInfo(tableName, lastlist.Count);
+                        //MyCacheManager.Instance.Cache.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
                     }
-
                 }
+
+                listBoxTableList.Items.Add(kv);
             }
         }
 
@@ -173,7 +193,14 @@ namespace RUINORERP.Server
                 if (listBoxTableList.SelectedItem is SuperValue kv)
                 {
                     string tableName = kv.superDataTypeName;
+                    Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
                     BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                    stopwatchLoadUI.Stop();
+                    if (frmMain.Instance.IsDebug)
+                    {
+                        frmMain.Instance.PrintInfoLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
+                    }
+
                 }
             }
         }

@@ -225,8 +225,8 @@ namespace RUINORERP.Server
             await InitConfig(false);
 
             MyCacheManager.Instance.CacheEntityList.OnRemove += CacheEntityList_OnRemove;
-
-            timer = new System.Timers.Timer(10000);
+            //10分钟检查一次
+            timer = new System.Timers.Timer(600000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
             {
                 if (this.InvokeRequired)
@@ -249,7 +249,7 @@ namespace RUINORERP.Server
 
         private void CacheEntityList_OnRemove(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
         {
-            
+
         }
 
         private void CheckCacheList()

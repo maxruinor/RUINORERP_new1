@@ -225,6 +225,7 @@ namespace RUINORERP.UI
                                     {
                                         //自己退出
                                         Application.Exit();
+                                        return;
                                     }
                                 }
                             }

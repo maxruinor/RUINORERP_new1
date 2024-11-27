@@ -798,11 +798,10 @@ namespace RUINORERP.Extensions.Middlewares
                 if (HasExpire)
                 {
                     //设置一个区间的随机数。保证不会同时过期。
-                    int rand = new Random().Next(2, 3);
+                    int rand = new Random().Next(60, 120);
                     //一个小时过期？
-                    CacheEntityList.Expire(tableName, ExpirationMode.Absolute, TimeSpan.FromMinutes(1));
-
-                    lastCacheInfo.ExpirationTime = DateTime.Now.AddMinutes(1);
+                    CacheEntityList.Expire(tableName, ExpirationMode.Absolute, TimeSpan.FromMinutes(rand));
+                    lastCacheInfo.ExpirationTime = DateTime.Now.AddMinutes(rand);
                     //更新缓存表的信息
                     MyCacheManager.Instance.Cache.Update(tableName, c => lastCacheInfo);
                 }

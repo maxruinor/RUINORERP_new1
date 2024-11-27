@@ -116,11 +116,11 @@ namespace RUINORERP.Server
                 {
                     if (cacheInfo.HasExpire)
                     {
-                        cacheInfoView = $"{cacheInfo.CacheCount}-{cacheInfo.ExpirationTime}";
+                        cacheInfoView = $"  {cacheInfo.CacheCount}-{cacheInfo.ExpirationTime}";
                     }
                     else
                     {
-                        cacheInfoView = $"{cacheInfo.CacheCount}";
+                        cacheInfoView = $"  {cacheInfo.CacheCount}";
                     }
                 }
 

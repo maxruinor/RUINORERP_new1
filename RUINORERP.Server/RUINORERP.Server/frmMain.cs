@@ -257,7 +257,7 @@ namespace RUINORERP.Server
             #region 根据CacheInfoList检查更新过期的缓存。
             try
             {
-                frmMain.Instance.PrintInfoLog($"开始检查更新过期。");
+                
                 foreach (var item in BizCacheHelper.Manager.NewTableList)
                 {
                     CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(item.Key) as CacheInfo;

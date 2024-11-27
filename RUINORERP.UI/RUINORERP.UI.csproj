@@ -1064,6 +1064,12 @@
     <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
+    <Compile Include="FM\UCOtherExpenseStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCOtherExpenseStatistics.Designer.cs">
+      <DependentUpon>UCOtherExpenseStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\UCExpenseClaimStatistics.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2582,6 +2588,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmInputContent.resx">
       <DependentUpon>frmInputContent.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCOtherExpenseStatistics.resx">
+      <DependentUpon>UCOtherExpenseStatistics.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCExpenseClaimStatistics.resx">
       <DependentUpon>UCExpenseClaimStatistics.cs</DependentUpon>

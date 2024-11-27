@@ -423,6 +423,15 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+            if (tableName == typeof(tb_FM_OtherExpense).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_OtherExpense>()
+                    .Includes(c => c.tb_FM_OtherExpenseDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.ExpenseMainID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.ExpenseNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
 
             if (tableName == typeof(tb_ProductionPlan).Name)
             {

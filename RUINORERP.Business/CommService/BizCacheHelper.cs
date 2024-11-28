@@ -341,10 +341,11 @@ namespace RUINORERP.Business.CommService
         /// <typeparam name="T">键值对的表实体</typeparam>
         /// <param name="expkey">ID</param>
         /// <param name="expvalue">Name</param>
-        public void SetDictDataSource<T>(Expression<Func<T, long>> expkey, Expression<Func<T, string>> expvalue, bool LoadData = true
+        public List<T> SetDictDataSource<T>(Expression<Func<T, long>> expkey, Expression<Func<T, string>> expvalue, bool LoadData = true
             , bool AutoLoad = false
             ) where T : class
         {
+            List<T> lastList = null;
             string tableName = typeof(T).Name;
             Stopwatch stopwatch = Stopwatch.StartNew();
             var mb = expkey.GetMemberInfo();
@@ -377,6 +378,7 @@ namespace RUINORERP.Business.CommService
                             Manager.AddCacheEntityList<T>(tableName, list, true);
                         }
                     }
+                    lastList= list;
                 }
             }
             catch (Exception ex)
@@ -385,6 +387,7 @@ namespace RUINORERP.Business.CommService
             }
             stopwatch.Stop();
             //_logger.LogInformation($"初始化SetDictDataSource: {tableName} 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
+            return lastList;
         }
 
         public void SetDictDataSource(List<string> typeNames, bool LoadData = true)

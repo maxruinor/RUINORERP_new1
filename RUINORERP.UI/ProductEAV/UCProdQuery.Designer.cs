@@ -755,10 +755,11 @@ namespace RUINORERP.UI.ProductEAV
             // kryptonPage产品
             // 
             this.kryptonPage产品.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
+            this.kryptonPage产品.AutoScroll = true;
             this.kryptonPage产品.Controls.Add(this.newSumDataGridView产品);
             this.kryptonPage产品.Flags = 65534;
             this.kryptonPage产品.LastVisibleSet = true;
-            this.kryptonPage产品.MinimumSize = new System.Drawing.Size(50, 50);
+            this.kryptonPage产品.MinimumSize = new System.Drawing.Size(200, 200);
             this.kryptonPage产品.Name = "kryptonPage产品";
             this.kryptonPage产品.Size = new System.Drawing.Size(1116, 421);
             this.kryptonPage产品.Text = "产品";

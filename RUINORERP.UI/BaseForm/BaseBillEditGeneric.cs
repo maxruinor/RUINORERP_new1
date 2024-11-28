@@ -134,8 +134,6 @@ namespace RUINORERP.UI.BaseForm
         }
         #endregion
 
-
-
         private void MenuItem选择要加载的数据_Click(object sender, EventArgs e)
         {
             openFileDialog1.FileName = "";
@@ -2671,6 +2669,7 @@ namespace RUINORERP.UI.BaseForm
                     UIBizSrvice.RequestCache<T>();
                     UIBizSrvice.RequestCache<C>();
                     UIBizSrvice.RequestCache<tb_Prod>();
+                    UIBizSrvice.RequestCache<View_ProdDetail>();
                     #endregion
                 }
             }

@@ -42,7 +42,6 @@ namespace RUINORERP.Business.Processor
         {
             QueryFilter queryFilter = new QueryFilter();
 
-
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.ExpenseName);
             queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.DocumentDate);
@@ -50,7 +49,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.Employee_ID, typeof(tb_Employee));
             queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.Currency_ID, typeof(tb_Currency));
             queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.DepartmentID, typeof(tb_Department));
-            //queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.Subject_id, typeof(tb_FM_Subject));
+            queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.CustomerVendor_ID, typeof(tb_CustomerVendor));
             queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.ExpenseType_id, typeof(tb_FM_ExpenseType));
             queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.ProjectGroup_ID, typeof(tb_ProjectGroup));
             queryFilter.SetQueryField<View_FM_OtherExpenseItems>(c => c.Account_id, typeof(tb_FM_Account));

@@ -46,10 +46,7 @@ namespace RUINORERP.UI.FM
         public UCOtherExpenseOut()
         {
             InitializeComponent();
-             
-
         }
-    
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -69,7 +66,6 @@ namespace RUINORERP.UI.FM
             lblReview.Text = "";
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
         }
-
         public override void BindData(tb_FM_OtherExpense entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)
@@ -170,7 +166,6 @@ namespace RUINORERP.UI.FM
             };
             base.BindData(entity);
         }
-
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();

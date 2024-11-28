@@ -83,11 +83,12 @@ namespace RUINORERP.Server.BizService
                     if (CacheList == null)
                     {
                         //启动时服务器都没有加载缓存，则不发送
-                        return;
+                        BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                        CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                     }
                     if (CacheList is JArray)
                     {
-
+                        //暂时认为服务器的都是泛型形式保存的
                     }
 
                     if (TypeHelper.IsGenericList(CacheList.GetType()))

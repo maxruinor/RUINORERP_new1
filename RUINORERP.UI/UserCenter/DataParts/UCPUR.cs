@@ -97,13 +97,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_productiondemand)
                   .Includes(c => c.tb_paymentmethod)
                   .Includes(c => c.tb_PurOrderDetails)
-                    .Includes(c => c.tb_saleorder)
+                  .Includes(c => c.tb_saleorder)
                   .Includes(d => d.tb_PurEntries, f => f.tb_PurEntryDetails)
                   .Includes(c => c.tb_PurOrderRes, d => d.tb_PurOrderReDetails)
                   .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurEntryReDetails)
                    .AsNavQueryable()
                    .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
-                   .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                  .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了采购只看到自己的
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.PurDate)
                     .WithCache(60) // 缓存60秒
                   .ToListAsync();

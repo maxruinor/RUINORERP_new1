@@ -1,5 +1,6 @@
 ﻿using AutoUpdateTools;
 using FastReport.Table;
+using Krypton.Navigator;
 using Microsoft.Extensions.Caching.Memory;
 using Netron.GraphLib;
 using Newtonsoft.Json;
@@ -9,6 +10,7 @@ using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.UI.BaseForm;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -459,10 +461,37 @@ namespace RUINORERP.UI.SuperSocketClient
                 BillLockInfo lockInfo = null;
                 if (MainForm.Instance.LockInfoList.TryGetValue(billid, out lockInfo))
                 {
-                    MainForm.Instance.LockInfoList.TryRemove(billid, out lockInfo);
+                    bool result = MainForm.Instance.LockInfoList.TryRemove(billid, out lockInfo);
+                    if (result)
+                    {
+                        //应该通知界面解锁
+                        if (MainForm.Instance.kryptonDockableWorkspace1.ActiveCell != null)
+                        {
+                            foreach (KryptonPage kp in MainForm.Instance.kryptonDockableWorkspace1.ActiveCell.Pages)
+                            {
+                                if (kp.Controls.Count > 0)
+                                {
+                                    if (kp.Controls[0].GetType().BaseType == typeof(BaseBillEdit))
+                                    {
+                                        ((BaseBillEdit)kp.Controls[0]).ReleaseLock(lockInfo);
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
                     if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                     {
-                        MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{BizType}成功！");
+                        if (result)
+                        {
+                            MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{billid}{BizType}成功！");
+                        }
+                        else
+                        {
+                            MainForm.Instance.PrintInfoLog($"接收转发单据锁定释放{billid}{BizType}成功！");
+                        }
+
                     }
                 }
 

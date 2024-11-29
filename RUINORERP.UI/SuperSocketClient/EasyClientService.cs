@@ -548,6 +548,8 @@ namespace RUINORERP.UI.SuperSocketClient
                             //别人发消息过来了
                             #region 
                             ClientService.接收服务器弹窗消息(od);
+
+                            
                             #endregion
 
                             break;
@@ -607,6 +609,10 @@ namespace RUINORERP.UI.SuperSocketClient
 
                         case ServerCmdEnum.给客户端发提示消息:
                             ClientService.接收服务器弹窗消息(od);
+
+                            //尝试找到销售订单：
+                            //var ss = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell.Pages.Count;
+                           
                             break;
                         case ServerCmdEnum.心跳回复:
                             break;

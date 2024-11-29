@@ -2068,6 +2068,12 @@
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\DataParts\DataBoardUnit.cs" />
+    <Compile Include="UserCenter\DataParts\UCCellSetting.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCCellSetting.Designer.cs">
+      <DependentUpon>UCCellSetting.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\DataParts\UCDataboard.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2079,12 +2085,6 @@
     </Compile>
     <Compile Include="UserCenter\DataParts\UCPUR.Designer.cs">
       <DependentUpon>UCPUR.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UserCenter\DataParts\UCPURCell_old.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UserCenter\DataParts\UCPURCell_old.Designer.cs">
-      <DependentUpon>UCPURCell_old.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\DataParts\UCPURCell.cs">
       <SubType>UserControl</SubType>
@@ -2166,12 +2166,6 @@
     </Compile>
     <Compile Include="UserCenter\UCWorkbenches.Designer.cs">
       <DependentUpon>UCWorkbenches.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UserCenter\UCWorkCenter.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UserCenter\UCWorkCenter.Designer.cs">
-      <DependentUpon>UCWorkCenter.cs</DependentUpon>
     </Compile>
     <Compile Include="UserCenter\WorkCenterHelper.cs" />
     <Compile Include="UserGlobalConfig.cs" />
@@ -3021,11 +3015,11 @@
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UserCenter\DataParts\UCCellSetting.resx">
+      <DependentUpon>UCCellSetting.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCPUR.resx">
       <DependentUpon>UCPUR.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UserCenter\DataParts\UCPURCell_old.resx">
-      <DependentUpon>UCPURCell_old.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCPURCell.resx">
       <DependentUpon>UCPURCell.cs</DependentUpon>
@@ -3071,9 +3065,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\UCWorkbenches.resx">
       <DependentUpon>UCWorkbenches.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UserCenter\UCWorkCenter.resx">
-      <DependentUpon>UCWorkCenter.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="WorkFlowDesigner\Dialogs\GaugeForm.resx">
       <DependentUpon>GaugeForm.cs</DependentUpon>

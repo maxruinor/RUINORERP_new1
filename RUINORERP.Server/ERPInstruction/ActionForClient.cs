@@ -29,7 +29,8 @@ namespace TransInstruction
 
             return gd;
         }
-        public static OriginalData 单据锁定(long billid, long lockUserID, string lockName, int BizType)
+        public static OriginalData 单据锁定(long billid, long lockUserID, 
+            string lockName, int BizType, long MenuID)
         {
             var tx = new ByteBuff(2 + 4);
             tx.PushString(System.DateTime.Now.ToString());
@@ -37,7 +38,7 @@ namespace TransInstruction
             tx.PushString(lockName);
             tx.PushInt64(billid);
             tx.PushInt((int)BizType);//加一个其他东西？比方随便时间，或当前时间的到分钟
-         
+            tx.PushInt64(MenuID);
             OriginalData gd = new OriginalData();
             gd.cmd = (byte)ClientCmdEnum.单据锁定;
             gd.One = new byte[] { (byte)ClientSubCmdEnum.审批 };

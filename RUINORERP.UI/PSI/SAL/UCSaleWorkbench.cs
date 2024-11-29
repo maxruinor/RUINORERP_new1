@@ -276,7 +276,7 @@ namespace RUINORERP.UI.SAL
                       .WhereIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                       .Where(exp)
                       .OrderBy(c => c.SaleDate)
-                       .WithCache(60) // 缓存60秒
+                       //.WithCache(60) // 缓存60秒
                       .ToListAsync();
 
                     break;

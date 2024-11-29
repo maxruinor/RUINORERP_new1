@@ -34,17 +34,17 @@
             this.kryptonPanelMainBig = new Krypton.Toolkit.KryptonPanel();
             this.kryptonDockableWorkspaceQuery = new Krypton.Docking.KryptonDockableWorkspace();
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.kryptonContextMenu1 = new Krypton.Toolkit.KryptonContextMenu();
-            this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             this.btnReload = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.btnSaveLayout = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.btnLayout = new System.Windows.Forms.ToolStripDropDownButton();
             this.btnGrid = new System.Windows.Forms.ToolStripMenuItem();
             this.btnRow = new System.Windows.Forms.ToolStripMenuItem();
             this.btnCol = new System.Windows.Forms.ToolStripMenuItem();
+            this.kryptonContextMenu1 = new Krypton.Toolkit.KryptonContextMenu();
+            this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).BeginInit();
             this.kryptonPanelMainBig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).BeginInit();
@@ -103,20 +103,6 @@
             this.BaseToolStrip.TabIndex = 4;
             this.BaseToolStrip.Text = "toolStrip1";
             // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
-            // kryptonDockingManager1
-            // 
-            this.kryptonDockingManager1.DefaultCloseRequest = Krypton.Docking.DockingCloseRequest.RemovePageAndDispose;
-            // 
             // btnReload
             // 
             this.btnReload.Image = global::RUINORERP.UI.Properties.Resources.reset;
@@ -126,6 +112,11 @@
             this.btnReload.Text = "重置组件";
             this.btnReload.Click += new System.EventHandler(this.btnReload_Click);
             // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            // 
             // btnSaveLayout
             // 
             this.btnSaveLayout.Image = global::RUINORERP.UI.Properties.Resources.SaveLayout;
@@ -134,6 +125,11 @@
             this.btnSaveLayout.Size = new System.Drawing.Size(79, 22);
             this.btnSaveLayout.Text = "保存布局";
             this.btnSaveLayout.Click += new System.EventHandler(this.btnSaveLayout_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
             // 
             // toolStripbtnProperty
             // 
@@ -161,22 +157,26 @@
             // 
             this.btnGrid.Image = global::RUINORERP.UI.Properties.Resources.grid;
             this.btnGrid.Name = "btnGrid";
-            this.btnGrid.Size = new System.Drawing.Size(180, 22);
+            this.btnGrid.Size = new System.Drawing.Size(126, 22);
             this.btnGrid.Text = "网格分布";
             // 
             // btnRow
             // 
             this.btnRow.Image = global::RUINORERP.UI.Properties.Resources.row;
             this.btnRow.Name = "btnRow";
-            this.btnRow.Size = new System.Drawing.Size(180, 22);
+            this.btnRow.Size = new System.Drawing.Size(126, 22);
             this.btnRow.Text = "横向分布";
             // 
             // btnCol
             // 
             this.btnCol.Image = global::RUINORERP.UI.Properties.Resources.col;
             this.btnCol.Name = "btnCol";
-            this.btnCol.Size = new System.Drawing.Size(180, 22);
+            this.btnCol.Size = new System.Drawing.Size(126, 22);
             this.btnCol.Text = "纵向分布";
+            // 
+            // kryptonDockingManager1
+            // 
+            this.kryptonDockingManager1.DefaultCloseRequest = Krypton.Docking.DockingCloseRequest.RemovePageAndDispose;
             // 
             // UCWorkbenches
             // 

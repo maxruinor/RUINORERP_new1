@@ -273,11 +273,11 @@ namespace RUINORERP.UI.PUR
                       .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurEntryReDetails)
                         .AsNavQueryable()
                         .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
-                       .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                       .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了采购只看到自己的
                       .Where(expPO)
 
                       .OrderBy(c => c.PurDate)
-                        .WithCache(60) // 缓存60秒
+                       // .WithCache(60) // 缓存60秒
                       .ToListAsync();
 
                     break;
@@ -372,12 +372,12 @@ namespace RUINORERP.UI.PUR
 
         private int CheckQueryPara()
         {
-            bool hasPPNO = txtSaleOrderNO.Text.Trim().Length > 0;
-            bool hasPDNO = txtBuyRequestNO.Text.Trim().Length > 0;
-            bool hasFGNO = txtPurEntryNO.Text.Trim().Length > 0;
-            bool hasMRNO = txtPURReNo.Text.Trim().Length > 0;
-            bool hasMRRENO = txtPurReEntryNo.Text.Trim().Length > 0;
-            bool hasMONO = txtPurOrderNO.Text.Trim().Length > 0;
+            bool hasPPNO = txtPurOrderNO.Text.Trim().Length > 0;
+            bool hasPDNO = txtPurEntryNO.Text.Trim().Length > 0;
+            bool hasFGNO = txtSaleOrderNO.Text.Trim().Length > 0;
+            bool hasMRNO = txtBuyRequestNO.Text.Trim().Length > 0;
+            bool hasMRRENO = txtPURReNo.Text.Trim().Length > 0;
+            bool hasMONO = txtPurReEntryNo.Text.Trim().Length > 0;
             int index = 0;
             // 检查是否恰好有一个条件被输入
             bool exactlyOneCondition = hasPPNO ^ hasPDNO ^ hasFGNO ^ hasMRNO ^ hasMRRENO ^ hasMONO;

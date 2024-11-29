@@ -91,9 +91,6 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-
-
-
         public tb_MenuInfo CurMenuInfo { get; set; }
         public void ControlButton(ToolStripMenuItem btnItem)
         {
@@ -366,6 +363,14 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
+
+
+        internal virtual void ReleaseLock(BillLockInfo lockInfo)
+        {
+           
+        }
+
+
         #endregion
 
         internal virtual void CloseTheForm(object thisform)

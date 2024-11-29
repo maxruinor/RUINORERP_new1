@@ -10,6 +10,8 @@ namespace RUINORERP.UI.Common
 {
     public static class UIForKryptonHelper
     {
+        
+
         public static KryptonPage NewPage(string name, Control content)
         {
             // Create new page with title and image

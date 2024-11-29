@@ -441,7 +441,7 @@ namespace RUINORERP.UI.BaseForm
                         string tipMsg = $"单据已被用户{lockInfo.LockedName}锁定，请稍后刷新后再试,或联系锁定人员解锁。";
                         MainForm.Instance.uclog.AddLog(tipMsg);
                         tslLocked.AutoToolTip = true;
-                        tslLocked.ToolTipText= tipMsg;
+                        tslLocked.ToolTipText = tipMsg;
                         tslLocked.Visible = true;
                         toolStripBtnCancel.Visible = true;
                         toolStripbtnModify.Enabled = false;
@@ -456,7 +456,7 @@ namespace RUINORERP.UI.BaseForm
                     else
                     {
                         tslLocked.AutoToolTip = false;
-                        tslLocked.ToolTipText = string.Empty ;
+                        tslLocked.ToolTipText = string.Empty;
                         tslLocked.Visible = false;
                     }
                 }
@@ -1107,6 +1107,26 @@ namespace RUINORERP.UI.BaseForm
         [Browsable(true), Description("绑定数据对象到UI")]
         public event BindDataToUIHander OnBindDataToUIEvent;
 
+
+        /// <summary>
+        /// 释放锁
+        /// </summary>
+        /// <param name="key"></param>
+        internal override void ReleaseLock(BillLockInfo lockInfo)
+        {
+            if (EditEntity != null)
+            {
+                long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                if (pkid == lockInfo.BillID)
+                {
+                    tslLocked.AutoToolTip = false;
+                    tslLocked.ToolTipText = string.Empty;
+                    tslLocked.Visible = false;
+                }
+            }
+
+        }
+        string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
         /// <summary>
         /// 控制功能按钮
         /// </summary>
@@ -1115,7 +1135,6 @@ namespace RUINORERP.UI.BaseForm
         {
             //操作前将数据收集  保存单据时间出错，这个方法开始是 将查询条件生效
             // this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-
 
             MainForm.Instance.AppContext.log.ActionName = menuItem.ToString();
             if (!MainForm.Instance.AppContext.IsSuperUser)
@@ -1137,7 +1156,7 @@ namespace RUINORERP.UI.BaseForm
 
             //操作前是不是锁定。自己排除
             bool needCheckLock = false;
-            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+
             long pkid = 0;
 
             switch (menuItem)
@@ -1278,7 +1297,7 @@ namespace RUINORERP.UI.BaseForm
                 default:
                     break;
             }
-            if (EditEntity==null)
+            if (EditEntity == null)
             {
                 return;
             }
@@ -1290,7 +1309,7 @@ namespace RUINORERP.UI.BaseForm
                 OriginalData od = ActionForClient.单据锁定(pkid,
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                                (int)CurrentBizType);
+                                (int)CurrentBizType, CurMenuInfo.MenuID);
                 MainForm.Instance.ecs.AddSendData(od);
                 if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                 {
@@ -1535,7 +1554,7 @@ namespace RUINORERP.UI.BaseForm
                                 OriginalData od = ActionForClient.单据锁定(saleOut.tb_saleorder.SOrder_ID,
                                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                                    (int)BizType.销售订单);
+                                    (int)BizType.销售订单, 11);
                                 MainForm.Instance.ecs.AddSendData(od);
                             }
                         }

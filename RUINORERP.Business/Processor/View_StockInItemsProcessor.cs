@@ -48,7 +48,6 @@ namespace RUINORERP.Business.Processor
 
             queryFilter.SetQueryField<View_StockInItems>(c => c.BillNo);
             queryFilter.SetQueryField<View_StockInItems>(c => c.Bill_Date);
-            queryFilter.SetQueryField<View_StockInItems>(c => c.Enter_Date);
             var lambdacv = Expressionable.Create<tb_CustomerVendor>()
              .And(t => t.isdeleted == false)
              .And(t => t.Is_available == true)

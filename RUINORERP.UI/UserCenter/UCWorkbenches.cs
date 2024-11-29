@@ -6,6 +6,7 @@ using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using NPOI.SS.Formula.Functions;
 using RUINORERP.Business.Security;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.UserCenter.DataParts;
@@ -32,8 +33,9 @@ namespace RUINORERP.UI.UserCenter
         public KryptonDockingWorkspace ws = null;
         private NavigatorMode _mode = NavigatorMode.HeaderBarCheckButtonHeaderGroup;
         KryptonPage todoPage = null;
+        KryptonPage cellSettingPage = null;
         //创建面板并加入
-        KryptonPageCollection Kpages = new KryptonPageCollection();
+        public KryptonPageCollection Kpages { get; set; } = new KryptonPageCollection();
 
         private void UCWorkbenches_Load(object sender, EventArgs e)
         {
@@ -62,7 +64,6 @@ namespace RUINORERP.UI.UserCenter
             kryptonDockingManager1.DockspaceAdding += KryptonDockingManager1_DockspaceAdding;
             kryptonDockingManager1.DockspaceCellAdding += KryptonDockingManager1_DockspaceCellAdding;
             UCTodoList todoList = Startup.GetFromFac<UCTodoList>();
-
             todoPage = UIForKryptonHelper.NewPage("待办事项", todoList);
             todoPage.AllowDrop = false;
 
@@ -71,7 +72,13 @@ namespace RUINORERP.UI.UserCenter
             kryptonDockingManager1.AddDockspace("Control", DockingEdge.Left, new KryptonPage[] { todoPage });
             //kryptonDockingManager1.AddDockspace("Control", DockingEdge.Bottom, new KryptonPage[] { NewInput(), NewPropertyGrid(), NewInput(), NewPropertyGrid() });
 
-            //UpdateModeButtons();
+            UCCellSetting cellSetting = Startup.GetFromFac<UCCellSetting>();
+            cellSettingPage = UIForKryptonHelper.NewPage(GlobalConstants.UCCellSettingName, cellSetting);
+            cellSettingPage.AllowDrop = false;
+            cellSettingPage.SetFlags(KryptonPageFlags.All);
+            kryptonDockingManager1.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { cellSettingPage });
+            kryptonDockingManager1.MakeAutoHiddenRequest(cellSettingPage.UniqueName);//默认加载时隐藏
+
             if (Kpages.Count == 0)
             {
                 BuilderComponents(Kpages);
@@ -85,6 +92,9 @@ namespace RUINORERP.UI.UserCenter
             }
 
             InitSettingPages();
+
+            cellSetting.Kpages = Kpages;
+            cellSetting.BuilderCellListTreeView();
             // kryptonDockingManager1.ShowPageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowPageContextMenu);
             // kryptonDockingManager1.ShowWorkspacePageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowWorkspacePageContextMenu);
         }

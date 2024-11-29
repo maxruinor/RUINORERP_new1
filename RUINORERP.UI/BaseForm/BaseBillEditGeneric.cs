@@ -495,23 +495,8 @@ namespace RUINORERP.UI.BaseForm
                         {
                             baseEntity.ActionStatus = ActionStatus.修改;
                             ToolBarEnabledControl(MenuItemEnums.修改);
+                            LockBill();
                         }
-
-                        //权限允许
-                        //if (true && dataStatus == DataStatus.确认)
-                        //{
-                        //    baseEntity.actionStatus = ActionStatus.修改;
-                        //    ToolBarEnabledControl(MenuItemEnums.修改);
-                        //}
-
-
-                        //权限允许
-                        if ((true && dataStatus == DataStatus.草稿) || (true && dataStatus == DataStatus.新建))
-                        {
-                            baseEntity.ActionStatus = ActionStatus.修改;
-                            ToolBarEnabledControl(MenuItemEnums.修改);
-                        }
-
 
                     };
                 }
@@ -1155,7 +1140,6 @@ namespace RUINORERP.UI.BaseForm
             }
 
             //操作前是不是锁定。自己排除
-            bool needCheckLock = false;
 
             long pkid = 0;
 
@@ -1176,15 +1160,15 @@ namespace RUINORERP.UI.BaseForm
                         return;
                     }
                     await Delete();
-                    needCheckLock = true;
+              
                     break;
                 case MenuItemEnums.修改:
                     if (IsLock())
                     {
                         return;
                     }
+                    LockBill();
                     Modify();
-                    needCheckLock = true;
                     break;
                 case MenuItemEnums.查询:
                     Query();
@@ -1219,7 +1203,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             await Save(true);
                         }
-                        needCheckLock = true;
+                        RequestReleaseLock();
                     }
                     else
                     {
@@ -1236,7 +1220,6 @@ namespace RUINORERP.UI.BaseForm
                     //操作前将数据收集
                     this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
                     await Submit();
-                    needCheckLock = true;
                     break;
                 //case MenuItemEnums.高级查询:
                 //    AdvQuery();
@@ -1256,7 +1239,6 @@ namespace RUINORERP.UI.BaseForm
                         return;
                     }
                     await Review();
-                    needCheckLock = true;
                     break;
                 case MenuItemEnums.反审:
                     if (IsLock())
@@ -1264,7 +1246,6 @@ namespace RUINORERP.UI.BaseForm
                         return;
                     }
                     await ReReview();
-                    needCheckLock = true;
                     break;
                 case MenuItemEnums.结案:
                     if (IsLock())
@@ -1272,7 +1253,6 @@ namespace RUINORERP.UI.BaseForm
                         return;
                     }
                     await CloseCaseAsync();
-                    needCheckLock = true;
                     break;
                 case MenuItemEnums.打印:
                     Print();
@@ -1292,17 +1272,22 @@ namespace RUINORERP.UI.BaseForm
                         return;
                     }
                     UpdatePaymentStatus();
-                    needCheckLock = true;
                     break;
                 default:
                     break;
             }
+
+
+        }
+
+        private void LockBill()
+        {
             if (EditEntity == null)
             {
                 return;
             }
-            pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-            if (pkid > 0 && needCheckLock)
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            if (pkid > 0)
             {
                 #region 锁定当前单据  后面流程上也要能锁定
 
@@ -1317,9 +1302,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 #endregion
             }
-
         }
-
 
         private bool IsLock()
         {
@@ -2191,8 +2174,8 @@ namespace RUINORERP.UI.BaseForm
 
                         //加载一个空的显示的UI
                         bindingSourceSub.Clear();
-                        //OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
-                        Cancel();
+                        OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
+                        
                     }
                 }
                 else
@@ -2570,8 +2553,7 @@ namespace RUINORERP.UI.BaseForm
             base.Exit(this);
         }
 
-
-        internal override void CloseTheForm(object thisform)
+        public void RequestReleaseLock()
         {
             if (EditEntity != null)
             {
@@ -2586,6 +2568,11 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.ecs.AddSendData(od);
                 }
             }
+        }
+
+        internal override void CloseTheForm(object thisform)
+        {
+            RequestReleaseLock();
 
             base.CloseTheForm(thisform);
         }

@@ -126,7 +126,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private void btnSaveSettings_Click(object sender, EventArgs e)
         {
-
+            //保存到数据库？
         }
 
         /// <summary>

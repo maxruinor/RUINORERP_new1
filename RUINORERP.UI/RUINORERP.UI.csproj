@@ -1933,6 +1933,12 @@
     <Compile Include="SysConfig\UCUserAuthorization.Designer.cs">
       <DependentUpon>UCUserAuthorization.cs</DependentUpon>
     </Compile>
+    <Compile Include="SysConfig\UCProcessConfig.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SysConfig\UCProcessConfig.Designer.cs">
+      <DependentUpon>UCProcessConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="SysConfig\UCWorkCenterConfig.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2978,6 +2984,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCUserAuthorization.resx">
       <DependentUpon>UCUserAuthorization.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SysConfig\UCProcessConfig.resx">
+      <DependentUpon>UCProcessConfig.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCWorkCenterConfig.resx">
       <DependentUpon>UCWorkCenterConfig.cs</DependentUpon>

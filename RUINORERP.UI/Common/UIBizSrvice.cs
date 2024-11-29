@@ -25,7 +25,7 @@ namespace RUINORERP.UI.Common
 {
     public static class UIBizSrvice
     {
-        public static async Task<T> GetProdDetail<T>(long ProdDetailID) where T : class
+        public static   T GetProdDetail<T>(long ProdDetailID) where T : class
         {
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             T prodDetail = null;
@@ -42,12 +42,22 @@ namespace RUINORERP.UI.Common
                     }
                     else
                     {
-                        //一个缓存 一个查询不科学。暂时没有处理。TODO:
-                        //prodDetail = await MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().Where(p => p.GetPropertyValue(PKCol).ToString().Equals(ProdDetailID.ToString())).SingleAsync();
-                        View_ProdDetail view_Prod = new View_ProdDetail();
-                        view_Prod.ProdDetailID= ProdDetailID;
-                        prodDetail = view_Prod as T;
-                         
+                        if (typeof(T).Name == "tb_ProductType")
+                        {
+                            tb_ProductType view_Prod = new tb_ProductType();
+                            view_Prod.Type_ID = ProdDetailID;
+                            prodDetail = view_Prod as T;
+                        }
+                        else
+                        {
+                            //一个缓存 一个查询不科学。暂时没有处理。TODO:
+                            //prodDetail = await MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().Where(p => p.GetPropertyValue(PKCol).ToString().Equals(ProdDetailID.ToString())).SingleAsync();
+                            View_ProdDetail view_Prod = new View_ProdDetail();
+                            view_Prod.ProdDetailID = ProdDetailID;
+                            prodDetail = view_Prod as T;
+                        }
+               
+
                     }
                 }
             }

@@ -50,9 +50,9 @@ namespace RUINORERP.UI.PSI.PUR
         public UCPurEntryRe()
         {
             InitializeComponent();
-            
+
         }
- 
+
         internal override void LoadDataToUI(object Entity)
         {
             BindData(Entity as tb_PurEntryRe);
@@ -115,7 +115,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ActualAmount.ToString(), txtActualAmount, BindDataType4TextBox.Money, false);
- 
+
 
             DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.ReturnDate, dtpReturnDate, false);
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text, false);
@@ -144,7 +144,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
 
 
@@ -273,7 +273,8 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b) => a.UnitPrice * b.Discount, c => c.TransactionPrice);
             listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.UnitPrice * b.Discount * c.Quantity, c => c.SubtotalTrPriceAmount);
             listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.SubtotalTrPriceAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
-            listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.UnitPrice * b.Discount - c.SubtotalTrPriceAmount, d => d.DiscountAmount);
+            //原价*数量-折扣金额后的金额
+            listCols.SetCol_Formula<tb_PurEntryReDetail>((a, b, c) => a.UnitPrice * c.Quantity - c.SubtotalTrPriceAmount, d => d.DiscountAmount);
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
@@ -383,7 +384,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //   表格中的验证提示
                 //   其他输入条码验证
 
-               
+
                 ReturnMainSubResults<tb_PurEntryRe> SaveResult = new ReturnMainSubResults<tb_PurEntryRe>();
                 if (NeedValidated)
                 {
@@ -549,7 +550,7 @@ protected async override void ReReview()
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void LoadRefBillData(long? saleoutid)
+        private async void LoadRefBillData(long? PurEntryID)
         {
             //要加一个判断 值是否有变化
             //新增时才可以
@@ -560,8 +561,15 @@ protected async override void ReReview()
                 return;
             }
             var purEntry = bsa.Tag as tb_PurEntry;
+            if (purEntry == null)
+            {
+                purEntry = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>().Where(c => c.PurEntryID == PurEntryID)
+                .Includes(a => a.tb_PurEntryDetails, b => b.tb_proddetail, c => c.tb_prod)
+                .SingleAsync();
+            }
             if (purEntry != null)
             {
+                purEntryid = purEntry.PurEntryID.ToString();
                 if (!string.IsNullOrEmpty(purEntryid) && purEntryid.Equals(purEntry.PurEntryID.ToString()))
                 {
                     return;
@@ -570,7 +578,6 @@ protected async override void ReReview()
                 IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
                 tb_PurEntryRe entity = mapper.Map<tb_PurEntryRe>(purEntry);
                 List<tb_PurEntryReDetail> details = mapper.Map<List<tb_PurEntryReDetail>>(purEntry.tb_PurEntryDetails);
-
                 List<tb_PurEntryReDetail> NewDetails = new List<tb_PurEntryReDetail>();
                 List<string> tipsMsg = new List<string>();
                 for (global::System.Int32 i = 0; i < details.Count; i++)

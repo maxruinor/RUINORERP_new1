@@ -83,6 +83,17 @@ namespace RUINORERP.Business.CommService
                     inv.Inv_Cost = inv.CostMonthlyWA;
                     break;
                 case 库存成本计算方式.移动加权平均法:
+                    //防止除0错误
+                    if ((inv.Quantity - currentQty) == 0)
+                    {
+                        //如果没有引用入库明细传入成本。则要手工指定。如果为零则是没有手工指定。将默认保留原始成本
+                        if (currentCostPrice>0)
+                        {
+                            inv.Inv_Cost = currentCostPrice;
+                        }
+                        
+                        return;
+                    }
                     inv.CostMovingWA = (inv.CostMovingWA * inv.Quantity - currentCostPrice * currentQty) / (inv.Quantity - currentQty);
                     inv.Inv_Cost = inv.CostMovingWA;
                     break;

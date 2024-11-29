@@ -438,6 +438,12 @@ namespace RUINORERP.UI
             MainForm.Instance.uclog.AddLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
+            //手动初始化 
+            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
+            BizCacheHelper.InitManager();
+            UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
+            UIBizSrvice.RequestCache(typeof(tb_ProductType));
+            UIBizSrvice.RequestCache(typeof(View_ProdDetail));
 
             LoginWebServer();
 
@@ -446,12 +452,7 @@ namespace RUINORERP.UI
             timerStatus.Tick += (sender, e) => RefreshData();
             timerStatus.Start();
 
-            //手动初始化 
-            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
-            BizCacheHelper.InitManager();
-            UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
-            UIBizSrvice.RequestCache(typeof(tb_ProductType));
-            UIBizSrvice.RequestCache(typeof(View_ProdDetail));
+           
 
         }
         public AuthorizeController authorizeController;

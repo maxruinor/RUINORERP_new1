@@ -6,6 +6,7 @@ using Netron.GraphLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.SS.Formula;
+using RUINORERP.Business.Security;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
 using RUINORERP.Model;
@@ -429,6 +430,11 @@ namespace RUINORERP.UI.SuperSocketClient
                     lockInfo.Available = true;
                     lockInfo.BizType = BizType;
                     MainForm.Instance.LockInfoList.AddOrUpdate(billid, lockInfo, (key, oldValue) => lockInfo);
+                    //因为启动系统就会接收数据。还没有等加载初始化对象
+                    if (MainForm.Instance.authorizeController==null)
+                    {
+                        MainForm.Instance.authorizeController = Startup.GetFromFac<AuthorizeController>();
+                    }
                     if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                     {
                         MainForm.Instance.PrintInfoLog($"接收转发单据锁定{BizType}成功！");

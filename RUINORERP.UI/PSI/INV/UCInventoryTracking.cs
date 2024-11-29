@@ -127,8 +127,8 @@ namespace RUINORERP.UI.PSI.INV
             { "领料单", "tb_MaterialRequisition" },
             { "退料单", "tb_MaterialReturn" },
             { "分割单", "tb_ProdSplit" },
-            { "组合单", "tb_ProdMerge" },
-            { "组合单", "tb_ProdMerge" },
+            { "组合单加", "tb_ProdMerge" },
+            { "组合单减", "tb_ProdMerge" },
             { "缴库", "tb_FinishedGoodsInv" }
         };//还要添加调拨单 转换单，采购退回及采购退回入库。后面还要实现的返厂入库，返厂出库，返厂退回，返厂退回入库，返厂领用，返厂领用退回，返
             foreach (KeyValuePair<string, string> item in mappings)

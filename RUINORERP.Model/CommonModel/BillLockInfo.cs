@@ -12,21 +12,11 @@ namespace RUINORERP.Model
     /// </summary>
     public class BillLockInfo
     {
-        public int Id { get; set; }
-
-        // 消息状态
-        public MessageStatus Status { get; set; } = MessageStatus.Unread;
-
-        // 消息优先级
-        public MessagePriority Priority { get; set; }
-
         public string LockedName { get; set; }
         // 发送时间
         public string LockedTime { get; set; }
 
         public long LockedUserID { get; set; }
-        // 发送者
-        public string SenderName { get; set; }
 
         /// <summary>
         /// 可用，生效
@@ -37,12 +27,20 @@ namespace RUINORERP.Model
 
         public int BizType { get; set; }
 
+
+        public int BizTypeText { get; set; }
+
         public long BillID { get; set; }
+
+
+        public string BillNo { get; set; }
         /// <summary>
         /// josn格式
         /// </summary>
         public string BillData { get; set; }
 
+
+        //如果有值，则表示要按照这个值来处理。别人无法处理。即流程处理。
         // 下次处理者
         public string NextProcessor { get; set; }
 
@@ -52,16 +50,7 @@ namespace RUINORERP.Model
             LockedTime = DateTime.Now.ToString();
         }
 
-        // 可以添加其他方法来处理消息，例如标记为已读、已处理等
-        public void MarkAsRead()
-        {
-            Status = MessageStatus.Read;
-        }
-
-        public void MarkAsProcessed()
-        {
-            Status = MessageStatus.Processed;
-        }
+         
     }
 
 }

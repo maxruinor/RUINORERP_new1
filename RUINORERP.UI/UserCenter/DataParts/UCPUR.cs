@@ -105,7 +105,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                    .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
                   .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了采购只看到自己的
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.PurDate)
-                    .WithCache(60) // 缓存60秒
+                    //.WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;
@@ -155,8 +155,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         List<tb_PurOrderDetail> OrderDetails = Order.tb_PurOrderDetails;
                         foreach (tb_PurOrderDetail OrderDetail in OrderDetails)
                         {
-                            View_ProdDetail prodDetail = await UIBizSrvice.GetProdDetail<View_ProdDetail>(OrderDetail.ProdDetailID);
-                            tb_ProductType productType = await UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                            View_ProdDetail prodDetail =  UIBizSrvice.GetProdDetail<View_ProdDetail>(OrderDetail.ProdDetailID);
+                            tb_ProductType productType =  UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
                             //子级
@@ -231,6 +231,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return OrderList.Count;
         }
 
+        /*
         /// <summary>
         /// 循环加载子件
         /// </summary>
@@ -246,8 +247,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 foreach (tb_ProduceGoodsRecommendDetail SubProduceDetail in SubSelfDetails)
                 {
-                    View_ProdDetail SubProdDetail = await UIBizSrvice.GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
-                    tb_ProductType productType = await UIBizSrvice.GetProdDetail<tb_ProductType>(SubProdDetail.Type_ID.Value);
+                    View_ProdDetail SubProdDetail =  UIBizSrvice.GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
+                    tb_ProductType productType =  UIBizSrvice.GetProdDetail<tb_ProductType>(SubProdDetail.Type_ID.Value);
                     //子级
                     KryptonTreeGridNodeRow SubProduceDetailrow = ProduceDetailrow.Nodes.Add(demand.PDNo.ToString());
                     SubProduceDetailrow.Tag = demand;//为了双击的时候能找到值对象。这里还是给主表对象。
@@ -261,7 +262,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
         }
-
+        */
 
         /// <summary>
         /// 加载子件的MO（成品 也一样）

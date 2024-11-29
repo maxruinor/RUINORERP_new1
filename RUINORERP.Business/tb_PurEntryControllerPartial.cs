@@ -144,7 +144,7 @@ namespace RUINORERP.Business
                         if (inQty > entity.tb_purorder.tb_PurOrderDetails[i].Quantity)
                         {
 
-                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"                                    或存在针对当前采购订单重复录入了采购入库单，审核失败！";
+                            string msg = $"采购订单:{entity.tb_purorder.PurOrderNo}的【{prodName}】的入库数量不能大于订单中对应行的数量\r\n" + $"或存在针对当前采购订单重复录入了采购入库单，审核失败！";
                             MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             _unitOfWorkManage.RollbackTran();
                             _logger.LogInformation(msg);
@@ -495,8 +495,6 @@ namespace RUINORERP.Business
                     for (int i = 0; i < entity.tb_purorder.tb_PurOrderDetails.Count; i++)
                     {
                         //如果当前订单明细行，不存在于入库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
-
-
                         string prodName = entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.CNName +
                                   entity.tb_purorder.tb_PurOrderDetails[i].tb_proddetail.tb_prod.Specifications;
                         //明细中有相同的产品或物品。

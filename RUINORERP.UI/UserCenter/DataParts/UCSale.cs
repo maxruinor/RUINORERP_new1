@@ -101,7 +101,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutDetails)
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.SaleDate)
                   .WhereIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-                  .WithCache(60) // 缓存60秒
+                  //.WithCache(60) // 缓存60秒
                   .ToListAsync(); //.ToPageAsync(1, 20); // 第一页，每页20条
                 }
                 kryptonTreeGridView1.ReadOnly = true;
@@ -151,8 +151,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         List<tb_SaleOrderDetail> SaleOrderDetails = SaleOrder.tb_SaleOrderDetails;
                         foreach (tb_SaleOrderDetail SaleOrderDetail in SaleOrderDetails)
                         {
-                            View_ProdDetail prodDetail = await UIBizSrvice.GetProdDetail<View_ProdDetail>(SaleOrderDetail.ProdDetailID);
-                            tb_ProductType productType = await UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                            View_ProdDetail prodDetail =  UIBizSrvice.GetProdDetail<View_ProdDetail>(SaleOrderDetail.ProdDetailID);
+                            tb_ProductType productType =  UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
                             //子级
@@ -226,38 +226,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             return SaleOrderList.Count;
         }
-
-        /// <summary>
-        /// 循环加载子件
-        /// </summary>
-        /// <param name="demand"></param>
-        /// <param name="ProduceDetail"></param>
-        /// <param name="ProduceDetailrow"></param>
-        /// <param name="prodDetail"></param>
-        private async void LoadSelfMadeProducts(tb_ProductionDemand demand, tb_ProduceGoodsRecommendDetail ProduceDetail, KryptonTreeGridNodeRow ProduceDetailrow, View_ProdDetail prodDetail)
-        {
-            List<tb_ProduceGoodsRecommendDetail> SubSelfDetails = new List<tb_ProduceGoodsRecommendDetail>();
-            SubSelfDetails = demand.tb_ProduceGoodsRecommendDetails.Where(c => c.ParentId == ProduceDetail.ID).ToList();
-            if (SubSelfDetails.Count > 0)
-            {
-                foreach (tb_ProduceGoodsRecommendDetail SubProduceDetail in SubSelfDetails)
-                {
-                    View_ProdDetail SubProdDetail = await UIBizSrvice.GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
-                    tb_ProductType productType = await UIBizSrvice.GetProdDetail<tb_ProductType>(SubProdDetail.Type_ID.Value);
-                    //子级
-                    KryptonTreeGridNodeRow SubProduceDetailrow = ProduceDetailrow.Nodes.Add(demand.PDNo.ToString());
-                    SubProduceDetailrow.Tag = demand;//为了双击的时候能找到值对象。这里还是给主表对象。
-                    SubProduceDetailrow.Cells[0].Tag = "PDNo";// 保存列名 值对象的列名。比方值是编号：则是PDNo
-                    SubProduceDetailrow.Cells[1].Value = demand.AnalysisDate.ToString("yyyy-MM-dd");//分析日期
-                    SubProduceDetailrow.Cells[2].Value = SubProduceDetail.RequirementQty;
-                    SubProduceDetailrow.Cells[4].Value = $"{productType.TypeName}:{SubProdDetail.CNName}{SubProdDetail.Specifications}{SubProdDetail.Model}{SubProdDetail.prop}";//项目
-                    SubProduceDetailrow.Cells[6].Value = "次级需求";
-                    // LoadSaleOutReData(SubProduceDetail, SubProduceDetailrow, SubProdDetail, productType);
-                    LoadSelfMadeProducts(demand, SubProduceDetail, SubProduceDetailrow, SubProdDetail);
-                }
-            }
-        }
-
+ 
 
         /// <summary>
         /// 加载子件的MO（成品 也一样）

@@ -51,7 +51,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             this.Dock = DockStyle.Fill;
         }
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
-        
+
 
         public List<tb_ProductionPlan> PURList = new List<tb_ProductionPlan>();
 
@@ -98,7 +98,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .AsNavQueryable()
                   .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.RequirementDate)
-                    .WithCache(60) // 缓存60秒
+                   // .WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;
@@ -148,8 +148,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         List<tb_ProductionPlanDetail> PlanDetails = ProductionPlan.tb_ProductionPlanDetails;
                         foreach (tb_ProductionPlanDetail PlanDetail in PlanDetails)
                         {
-                            View_ProdDetail prodDetail = await UIBizSrvice.GetProdDetail<View_ProdDetail>(PlanDetail.ProdDetailID);
-                            tb_ProductType productType = await UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                            View_ProdDetail prodDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(PlanDetail.ProdDetailID);
+                            tb_ProductType productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
                             //子级
@@ -235,8 +235,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 foreach (tb_ProduceGoodsRecommendDetail SubProduceDetail in SubSelfDetails)
                 {
-                    View_ProdDetail SubProdDetail = await UIBizSrvice.GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
-                    tb_ProductType productType = await UIBizSrvice.GetProdDetail<tb_ProductType>(SubProdDetail.Type_ID.Value);
+                    View_ProdDetail SubProdDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
+                    tb_ProductType productType = UIBizSrvice.GetProdDetail<tb_ProductType>(SubProdDetail.Type_ID.Value);
                     //子级
                     KryptonTreeGridNodeRow SubProduceDetailrow = ProduceDetailrow.Nodes.Add(demand.PDNo.ToString());
                     SubProduceDetailrow.Tag = demand;//为了双击的时候能找到值对象。这里还是给主表对象。

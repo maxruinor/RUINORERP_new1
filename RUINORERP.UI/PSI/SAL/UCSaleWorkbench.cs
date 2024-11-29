@@ -242,7 +242,7 @@ namespace RUINORERP.UI.SAL
             }
             List<tb_SaleOrder> SaleList = null;
             Expression<Func<tb_SaleOrder, bool>> exp = null;
-            Expression<Func<tb_PurOrder, bool>> expPO = Expressionable.Create<tb_PurOrder>().ToExpression();
+            Expression<Func<tb_PurOrder, bool>> expPO = null;// Expressionable.Create<tb_PurOrder>().ToExpression();
             // 根据索引执行相应的查询逻辑
             switch (index)
             {
@@ -342,10 +342,17 @@ namespace RUINORERP.UI.SAL
                     break;
                 case 6:
                     //采购订单
-                    if (txtPurOrderNO.Text.Trim().Length > 0 || expPO != null)
+                    if (expPO==null)
+                    {
+                        expPO = Expressionable.Create<tb_PurOrder>().ToExpression();
+                    }
+                    if (txtPurOrderNO.Text.Trim().Length > 0)
+                    {
+                        expPO = expPO.AndAlso(w => w.PurOrderNo.Contains(txtPurOrderNO.Text.Trim()));
+                    }
+                    if (txtPurOrderNO.Text.Trim().Length > 0)
                     {
                         var PurOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
-                             .WhereIF(txtPurOrderNO.Text.Trim().Length > 0, w => w.PurOrderNo.Contains(txtPurOrderNO.Text.Trim()))
                              .Where(expPO)
                             .ToListAsync();
 

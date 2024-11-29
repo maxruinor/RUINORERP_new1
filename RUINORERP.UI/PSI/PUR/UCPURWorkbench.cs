@@ -243,10 +243,9 @@ namespace RUINORERP.UI.PUR
                 return null;
             }
             List<tb_PurOrder> SaleList = null;
-            Expression<Func<tb_PurEntry, bool>> expPE = Expressionable.Create<tb_PurEntry>().ToExpression();
-            Expression<Func<tb_PurOrder, bool>> expPO = Expressionable.Create<tb_PurOrder>().ToExpression();
-
-            Expression<Func<tb_PurEntryRe, bool>> expPERe = Expressionable.Create<tb_PurEntryRe>().ToExpression();
+            //Expression<Func<tb_PurEntry, bool>> expPE = null;// Expressionable.Create<tb_PurEntry>().ToExpression();
+            Expression<Func<tb_PurOrder, bool>> expPO = null;// Expressionable.Create<tb_PurOrder>().ToExpression();
+            Expression<Func<tb_PurEntryRe, bool>> expPERe = null;// Expressionable.Create<tb_PurEntryRe>().ToExpression();
 
             // 根据索引执行相应的查询逻辑
             switch (index)
@@ -254,6 +253,11 @@ namespace RUINORERP.UI.PUR
                 //采购订单+采购入库单
                 case 1:
                 case 2:
+                    if (expPO == null)
+                    {
+                        expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
+                      .ToExpression();
+                    }
                     if (txtPurOrderNO.Text.Trim().Length > 0)
                     {
                         expPO = expPO.AndAlso(w => w.PurOrderNo.Contains(txtPurOrderNO.Text.Trim()));
@@ -262,7 +266,6 @@ namespace RUINORERP.UI.PUR
                     {
                         expPO = expPO.AndAlso(w => w.tb_PurEntries.Any(d => d.PurEntryNo.Contains(txtPurEntryNO.Text.Trim())));
                     }
-
                     SaleList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
                       .Includes(c => c.tb_employee)
                       .Includes(c => c.tb_customervendor)
@@ -275,9 +278,8 @@ namespace RUINORERP.UI.PUR
                         .Includes(c => c.tb_PurEntries, d => d.tb_PurEntryRes, f => f.tb_PurReturnEntries, g => g.tb_PurReturnEntryDetails)
                        .WhereIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了采购只看到自己的
                       .Where(expPO)
-
                       .OrderBy(c => c.PurDate)
-                       // .WithCache(60) // 缓存60秒
+                      // .WithCache(60) // 缓存60秒
                       .ToListAsync();
 
                     break;
@@ -319,8 +321,13 @@ namespace RUINORERP.UI.PUR
                     //采购退货
                     if (txtPURReNo.Text.Trim().Length > 0 || expPERe != null)
                     {
+                        if (txtPURReNo.Text.Trim().Length > 0)
+                        {
+                            expPERe = Expressionable.Create<tb_PurEntryRe>().ToExpression();
+                            expPERe = expPERe.AndAlso(w => w.PurEntryReNo.Contains(txtPURReNo.Text.Trim()));
+                        }
+
                         List<tb_PurEntryRe> ReturnList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryRe>()
-                             .WhereIF(txtPurReEntryNo.Text.Trim().Length > 0, w => w.PurEntryReNo.Contains(txtPURReNo.Text.Trim()))
                              .Where(expPERe)
                              .ToListAsync();
                         //找到下一级的IDS

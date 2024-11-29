@@ -103,9 +103,9 @@ namespace RUINORERP.Business
                         }
                         child.ReturnedQty += entryDetail.Quantity;
                         //如果已退数量大于订单数量 给出警告实际操作中 使用其他方式出库
-                        if (child.ReturnedQty > entity.tb_purentry.tb_purorder.TotalQty)
+                        if (child.ReturnedQty > entity.tb_purentry.TotalQty)
                         {
-                            throw new Exception("退回数量不能大于订单数量！");
+                            throw new Exception("退回数量不能大于对应入库数量！");
                         }
                     }
                     //更新已退回数量
@@ -282,7 +282,7 @@ namespace RUINORERP.Business
                     it.ApprovalResults,
                     it.ApprovalStatus
                 }).ExecuteCommandAsync();
-               // await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).ExecuteCommandAsync();
+                // await _unitOfWorkManage.GetDbClient().Updateable<tb_PurEntryRe>(entity).ExecuteCommandAsync();
 
                 _unitOfWorkManage.CommitTran();
                 rs.ReturnObject = entity as T;

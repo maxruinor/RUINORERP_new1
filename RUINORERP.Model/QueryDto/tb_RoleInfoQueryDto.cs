@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:26
+// 时间：11/29/2024 23:20:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,7 +65,6 @@ namespace RUINORERP.Model.QueryDto
         /// </summary>
         [AdvQueryAttribute(ColName = "RolePropertyID",ColDesc = "")]
         [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "RolePropertyID",IsNullable = true,ColumnDescription = "" )]
-        [FKRelationAttribute("tb_RolePropertyConfig","RolePropertyID")]
         public long? RolePropertyID 
         { 
             get{return _RolePropertyID;}

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 18:12:40
+// 时间：11/29/2024 23:20:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,14 +39,13 @@ namespace RUINORERP.Business
  RuleFor(tb_Employee =>tb_Employee.LanguageSkills).MaximumLength(25).WithMessage("外语能力:不能超过最大长度,25.");
  RuleFor(tb_Employee =>tb_Employee.University).MaximumLength(50).WithMessage("毕业院校:不能超过最大长度,50.");
  RuleFor(tb_Employee =>tb_Employee.IDNumber).MaximumLength(15).WithMessage("身份证号:不能超过最大长度,15.");
- RuleFor(x => x.salary).PrecisionScale(19,4,true).WithMessage("工资:小数位不能超过4。");
+ RuleFor(x => x.salary).PrecisionScale(19,6,true).WithMessage("工资:小数位不能超过6。");
  RuleFor(tb_Employee =>tb_Employee.Notes).MaximumLength(100).WithMessage("备注说明:不能超过最大长度,100.");
 //有默认值
 //有默认值
  RuleFor(tb_Employee =>tb_Employee.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_Employee =>tb_Employee.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_Employee =>tb_Employee.PhoneNumber).MaximumLength(25).WithMessage("手机号:不能超过最大长度,25.");
- RuleFor(tb_Employee =>tb_Employee.BankAccount_id).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
  RuleFor(tb_Employee =>tb_Employee.BankAccount_id).NotEmpty().When(x => x.BankAccount_id.HasValue);
        	
            	        Initialize();
@@ -54,28 +53,6 @@ namespace RUINORERP.Business
 
 
 
-
-        private bool DetailedRecordsNotEmpty(List<tb_FM_OtherExpenseDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
-        private bool DetailedRecordsNotEmpty(List<tb_FM_ExpenseClaimDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
 
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:34
+// 时间：11/29/2024 23:20:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 部门表是否分层
     /// </summary>
     [Serializable()]
-    [Description("tb_Department")]
+    [Description("部门表是否分层")]
     [SugarTable("tb_Department")]
     public partial class tb_Department: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Department" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("部门表是否分层tb_Department" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -127,154 +127,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInv.DepartmentID))]
-        public virtual List<tb_FinishedGoodsInv> tb_FinishedGoodsInvs { get; set; }
-        //tb_FinishedGoodsInv.DepartmentID)
-        //DepartmentID.FK_TB_FINISINV_REF_TB_DEPAR)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurOrder.DepartmentID))]
-        public virtual List<tb_PurOrder> tb_PurOrders { get; set; }
-        //tb_PurOrder.DepartmentID)
-        //DepartmentID.FK_TB_PUROR_REFERENCE_TB_DEPAR)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.DepartmentID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.DepartmentID)
-        //DepartmentID.FK_MANUFACTURINGORDER_REF_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.DepartmentID))]
-        public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
-        //tb_FM_OtherExpenseDetail.DepartmentID)
-        //DepartmentID.FK_FM_OTHEREXPENSES_R_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlan.DepartmentID))]
-        public virtual List<tb_ProductionPlan> tb_ProductionPlans { get; set; }
-        //tb_ProductionPlan.DepartmentID)
-        //DepartmentID.FK_TB_PRODU_REFERENCE_TB_DEPAR)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.DepartmentID))]
-        public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
-        //tb_PurEntryRe.DepartmentID)
-        //DepartmentID.FK_TB_PURENTRYRE__DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntry.DepartmentID))]
-        public virtual List<tb_PurEntry> tb_PurEntries { get; set; }
-        //tb_PurEntry.DepartmentID)
-        //DepartmentID.FK_TB_PUREN_REFERENCE_TB_DEPAR)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ProjectGroup.DepartmentID))]
-        public virtual List<tb_ProjectGroup> tb_ProjectGroups { get; set; }
-        //tb_ProjectGroup.DepartmentID)
-        //DepartmentID.FK_PROJECTGROUP_REF_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Prod.DepartmentID))]
-        public virtual List<tb_Prod> tb_Prods { get; set; }
-        //tb_Prod.DepartmentID)
-        //DepartmentID.FK_TB_PROD_REFERENCE_TB_DEPAR)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturn.DepartmentID))]
-        public virtual List<tb_MaterialReturn> tb_MaterialReturns { get; set; }
-        //tb_MaterialReturn.DepartmentID)
-        //DepartmentID.FK_MATERIALRETURN_REF_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Employee.DepartmentID))]
         public virtual List<tb_Employee> tb_Employees { get; set; }
         //tb_Employee.DepartmentID)
         //DepartmentID.FKTB_EMPLOTB_DEPAR_aB)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_BuyingRequisition.DepartmentID))]
-        public virtual List<tb_BuyingRequisition> tb_BuyingRequisitions { get; set; }
-        //tb_BuyingRequisition.DepartmentID)
-        //DepartmentID.FK_BUYINGREQUISITION_REF_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.DepartmentID))]
-        public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
-        //tb_FM_Account.DepartmentID)
-        //DepartmentID.FK_ACCOUNTS_RE_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.DepartmentID))]
-        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
-        //tb_FM_Initial_PayAndReceivable.DepartmentID)
-        //DepartmentID.FK_FM_INITPR_RE_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.DepartmentID))]
-        public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
-        //tb_FM_PaymentBill.DepartmentID)
-        //DepartmentID.FK_FM_PAYMENTBILL_RE_DEPARMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_BOM_S.DepartmentID))]
-        public virtual List<tb_BOM_S> tb_BOM_Ss { get; set; }
-        //tb_BOM_S.DepartmentID)
-        //DepartmentID.FK_TB_BILLO_REF_TB_DEPAR1)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBill.DepartmentID))]
-        public virtual List<tb_FM_PrePaymentBill> tb_FM_PrePaymentBills { get; set; }
-        //tb_FM_PrePaymentBill.DepartmentID)
-        //DepartmentID.FK_FM_PREPAYMENTBILL_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.DepartmentID))]
-        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
-        //tb_MaterialRequisition.DepartmentID)
-        //DepartmentID.FK_MATERREQUI_REF_DEPAR)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.DepartmentID))]
-        public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
-        //tb_FM_ExpenseClaimDetail.DepartmentID)
-        //DepartmentID.FK_FMEXCLAIMDETAIL_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
 

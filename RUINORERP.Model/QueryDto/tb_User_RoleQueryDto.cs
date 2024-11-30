@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:40
+// 时间：11/30/2024 00:18:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -33,28 +33,28 @@ namespace RUINORERP.Model.QueryDto
     
      
 
-        private long? _User_ID;
+        private long _User_ID;
         /// <summary>
         /// 用户
         /// </summary>
         [AdvQueryAttribute(ColName = "User_ID",ColDesc = "用户")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "User_ID",IsNullable = true,ColumnDescription = "用户" )]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "User_ID",IsNullable = false,ColumnDescription = "用户" )]
         [FKRelationAttribute("tb_UserInfo","User_ID")]
-        public long? User_ID 
+        public long User_ID 
         { 
             get{return _User_ID;}
             set{SetProperty(ref _User_ID, value);}
         }
      
 
-        private long? _RoleID;
+        private long _RoleID;
         /// <summary>
         /// 角色
         /// </summary>
         [AdvQueryAttribute(ColName = "RoleID",ColDesc = "角色")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "RoleID",IsNullable = true,ColumnDescription = "角色" )]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "RoleID",IsNullable = false,ColumnDescription = "角色" )]
         [FKRelationAttribute("tb_RoleInfo","RoleID")]
-        public long? RoleID 
+        public long RoleID 
         { 
             get{return _RoleID;}
             set{SetProperty(ref _RoleID, value);}
@@ -63,10 +63,10 @@ namespace RUINORERP.Model.QueryDto
 
         private bool _Authorized= false;
         /// <summary>
-        /// 默认角色
+        /// 已授权
         /// </summary>
-        [AdvQueryAttribute(ColName = "Authorized",ColDesc = "默认角色")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Authorized",IsNullable = false,ColumnDescription = "默认角色" )]
+        [AdvQueryAttribute(ColName = "Authorized",ColDesc = "已授权")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Authorized",IsNullable = false,ColumnDescription = "已授权" )]
         public bool Authorized 
         { 
             get{return _Authorized;}
@@ -76,14 +76,28 @@ namespace RUINORERP.Model.QueryDto
 
         private bool _DefaultRole= false;
         /// <summary>
-        /// 已授权
+        /// 默认角色
         /// </summary>
-        [AdvQueryAttribute(ColName = "DefaultRole",ColDesc = "已授权")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "DefaultRole",IsNullable = false,ColumnDescription = "已授权" )]
+        [AdvQueryAttribute(ColName = "DefaultRole",ColDesc = "默认角色")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "DefaultRole",IsNullable = false,ColumnDescription = "默认角色" )]
         public bool DefaultRole 
         { 
             get{return _DefaultRole;}
             set{SetProperty(ref _DefaultRole, value);}
+        }
+     
+
+        private long? _PSID;
+        /// <summary>
+        /// 角色
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PSID",ColDesc = "角色")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PSID",IsNullable = true,ColumnDescription = "角色" )]
+        [FKRelationAttribute("tb_UserPersonalized","PSID")]
+        public long? PSID 
+        { 
+            get{return _PSID;}
+            set{SetProperty(ref _PSID, value);}
         }
 
 

@@ -32,11 +32,11 @@ namespace RUINORERP.Business
  RuleFor(tb_StockTransferDetail =>tb_StockTransferDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
 //***** 
  RuleFor(tb_StockTransferDetail =>tb_StockTransferDetail.Qty).NotNull().WithMessage("数量:不能为空。");
- RuleFor(x => x.TransPrice).PrecisionScale(19,4,true).WithMessage("调拨价:小数位不能超过4。");
- RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
+ RuleFor(x => x.TransPrice).PrecisionScale(19,6,true).WithMessage("调拨价:小数位不能超过6。");
+ RuleFor(x => x.Cost).PrecisionScale(19,6,true).WithMessage("成本:小数位不能超过6。");
  RuleFor(tb_StockTransferDetail =>tb_StockTransferDetail.Summary).MaximumLength(250).WithMessage("摘要:不能超过最大长度,250.");
- RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
- RuleFor(x => x.SubtotalTransferPirceAmount).PrecisionScale(19,4,true).WithMessage("调拨小计:小数位不能超过4。");
+ RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
+ RuleFor(x => x.SubtotalTransferPirceAmount).PrecisionScale(19,6,true).WithMessage("调拨小计:小数位不能超过6。");
        	
            	        Initialize();
      }

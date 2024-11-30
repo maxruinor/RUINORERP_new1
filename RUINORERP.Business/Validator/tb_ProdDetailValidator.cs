@@ -33,11 +33,11 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdDetail =>tb_ProdDetail.BarCode).MaximumLength(25).WithMessage("条码:不能超过最大长度,25.");
  RuleFor(tb_ProdDetail =>tb_ProdDetail.ImagesPath).MaximumLength(1000).WithMessage("产品图片:不能超过最大长度,1000.");
  RuleFor(x => x.Weight).PrecisionScale(10,3,true).WithMessage("重量（千克）:小数位不能超过3。");
- RuleFor(x => x.Standard_Price).PrecisionScale(19,4,true).WithMessage("标准价:小数位不能超过4。");
- RuleFor(x => x.Transfer_Price).PrecisionScale(19,4,true).WithMessage("调拨价格:小数位不能超过4。");
- RuleFor(x => x.Wholesale_Price).PrecisionScale(19,4,true).WithMessage("批发价格:小数位不能超过4。");
- RuleFor(x => x.Market_Price).PrecisionScale(19,4,true).WithMessage("市场零售价:小数位不能超过4。");
- RuleFor(x => x.Discount_Price).PrecisionScale(19,4,true).WithMessage("折扣价格:小数位不能超过4。");
+ RuleFor(x => x.Standard_Price).PrecisionScale(19,6,true).WithMessage("标准价:小数位不能超过6。");
+ RuleFor(x => x.Transfer_Price).PrecisionScale(19,6,true).WithMessage("调拨价格:小数位不能超过6。");
+ RuleFor(x => x.Wholesale_Price).PrecisionScale(19,6,true).WithMessage("批发价格:小数位不能超过6。");
+ RuleFor(x => x.Market_Price).PrecisionScale(19,6,true).WithMessage("市场零售价:小数位不能超过6。");
+ RuleFor(x => x.Discount_Price).PrecisionScale(19,6,true).WithMessage("折扣价格:小数位不能超过6。");
  RuleFor(tb_ProdDetail =>tb_ProdDetail.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
 //有默认值
 //有默认值

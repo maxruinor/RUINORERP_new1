@@ -1,0 +1,178 @@
+﻿
+// **************************************
+// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+// 项目：信息系统
+// 版权：Copyright RUINOR
+// 作者：Watson
+// 时间：11/30/2024 00:18:29
+// **************************************
+using System;
+﻿using SqlSugar;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using System.Collections.Concurrent;
+using RUINORERP.Global.CustomAttribute;
+
+namespace RUINORERP.Model
+{
+    /// <summary>
+    /// UI表格设置
+    /// </summary>
+    [Serializable()]
+    [Description("UI表格设置")]
+    [SugarTable("tb_UIGridSetting")]
+    public partial class tb_UIGridSetting: BaseEntity, ICloneable
+    {
+        public tb_UIGridSetting()
+        {
+            base.FieldNameList = fieldNameList;
+            if (!PK_FK_ID_Check())
+            {
+                throw new Exception("UI表格设置tb_UIGridSetting" + "外键ID与对应主主键名称不一致。请修改数据库");
+            }
+        }
+
+
+        #region 属性
+        private long _UIGID;
+        /// <summary>
+        /// 
+        /// </summary>
+ 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIGID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
+        public long UIGID
+        { 
+            get{return _UIGID;}
+            set{
+            base.PrimaryKeyID = _UIGID;
+            SetProperty(ref _UIGID, value);
+            }
+        }
+
+        private string _GridKeyName;
+        /// <summary>
+        /// 表格名称
+        /// </summary>
+        [AdvQueryAttribute(ColName = "GridKeyName",ColDesc = "表格名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "GridKeyName" ,Length=255,IsNullable = true,ColumnDescription = "表格名称" )]
+        public string GridKeyName
+        { 
+            get{return _GridKeyName;}
+            set{
+            SetProperty(ref _GridKeyName, value);
+            }
+        }
+
+        private string _ColsSetting;
+        /// <summary>
+        /// 列设置信息
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ColsSetting",ColDesc = "列设置信息")] 
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "ColsSetting" ,Length=2147483647,IsNullable = true,ColumnDescription = "列设置信息" )]
+        public string ColsSetting
+        { 
+            get{return _ColsSetting;}
+            set{
+            SetProperty(ref _ColsSetting, value);
+            }
+        }
+
+        #endregion
+
+        #region 扩展属性
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_UIMenuPersonalization.UIGID))]
+        public virtual List<tb_UIMenuPersonalization> tb_UIMenuPersonalizations { get; set; }
+        //tb_UIMenuPersonalization.UIGID)
+        //UIGID.FK_UIMENPERSONALI_REF_UIGRIDSETTING)
+        //tb_UIGridSetting.UIGID)
+
+
+        #endregion
+
+
+
+
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
+{
+  bool rs=true;
+return rs;
+}
+
+
+
+
+
+
+        #region 字段描述对应列表
+        private ConcurrentDictionary<string, string> fieldNameList;
+
+
+        /// <summary>
+        /// 表列名的中文描述集合
+        /// </summary>
+        [Description("列名中文描述"), Category("自定属性")]
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public override ConcurrentDictionary<string, string> FieldNameList
+        {
+            get
+            {
+                if (fieldNameList == null)
+                {
+                    fieldNameList = new ConcurrentDictionary<string, string>();
+                    SugarColumn entityAttr;
+                    Type type = typeof(tb_UIGridSetting);
+                    
+                       foreach (PropertyInfo field in type.GetProperties())
+                            {
+                                foreach (Attribute attr in field.GetCustomAttributes(true))
+                                {
+                                    entityAttr = attr as SugarColumn;
+                                    if (null != entityAttr)
+                                    {
+                                        if (entityAttr.ColumnDescription == null)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsIdentity)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsPrimaryKey)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.ColumnDescription.Trim().Length > 0)
+                                        {
+                                            fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
+                                        }
+                                    }
+                                }
+                            }
+                }
+                
+                return fieldNameList;
+            }
+            set
+            {
+                fieldNameList = value;
+            }
+
+        }
+        #endregion
+        
+
+        public override object Clone()
+        {
+            tb_UIGridSetting loctype = (tb_UIGridSetting)this.MemberwiseClone(); //创建当前对象的浅拷贝。
+            return loctype;
+        }
+    }
+}
+

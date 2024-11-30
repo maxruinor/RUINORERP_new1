@@ -37,16 +37,16 @@ namespace RUINORERP.Business
  RuleFor(tb_Stocktake =>tb_Stocktake.CheckResult).NotEmpty().When(x => x.CheckResult.HasValue);
 //***** 
  RuleFor(tb_Stocktake =>tb_Stocktake.CarryingTotalQty).NotNull().WithMessage("载账总数量:不能为空。");
- RuleFor(x => x.CarryingTotalAmount).PrecisionScale(19,4,true).WithMessage("载账总成本:小数位不能超过4。");
+ RuleFor(x => x.CarryingTotalAmount).PrecisionScale(19,6,true).WithMessage("载账总成本:小数位不能超过6。");
  RuleFor(tb_Stocktake =>tb_Stocktake.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_Stocktake =>tb_Stocktake.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_Stocktake =>tb_Stocktake.Notes).MaximumLength(500).WithMessage("备注:不能超过最大长度,500.");
 //***** 
  RuleFor(tb_Stocktake =>tb_Stocktake.DiffTotalQty).NotNull().WithMessage("差异总数量:不能为空。");
- RuleFor(x => x.DiffTotalAmount).PrecisionScale(19,4,true).WithMessage("差异总金额:小数位不能超过4。");
+ RuleFor(x => x.DiffTotalAmount).PrecisionScale(19,6,true).WithMessage("差异总金额:小数位不能超过6。");
 //***** 
  RuleFor(tb_Stocktake =>tb_Stocktake.CheckTotalQty).NotNull().WithMessage("盘点总数量:不能为空。");
- RuleFor(x => x.CheckTotalAmount).PrecisionScale(19,4,true).WithMessage("盘点总成本:小数位不能超过4。");
+ RuleFor(x => x.CheckTotalAmount).PrecisionScale(19,6,true).WithMessage("盘点总成本:小数位不能超过6。");
 //***** 
  RuleFor(tb_Stocktake =>tb_Stocktake.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
  RuleFor(tb_Stocktake =>tb_Stocktake.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");

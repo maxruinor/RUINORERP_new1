@@ -373,7 +373,7 @@ namespace RUINORERP.UI.UserCenter
                     string xmlStr = xmldoc.InnerXml;
                     //字符串转XML
                     //xmldoc.LoadXml(xmlStr);
-                    MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout = xmlStr;
+                    MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.WorkCellLayout = xmlStr;
                     int affcet = await MainForm.Instance.AppContext.Db.Storageable<tb_User_Role>(MainForm.Instance.AppContext.CurrentUser_Role).ExecuteCommandAsync();
                     if (affcet > 0)
                     {
@@ -391,7 +391,7 @@ namespace RUINORERP.UI.UserCenter
         private void LoadDefaultLayoutFromDb(KryptonPageCollection Kpages)
         {
             //没有个性化文件时用默认的
-            if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout))
+            if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.WorkCellLayout))
             {
                 #region load
                 //加载XML文件
@@ -399,7 +399,7 @@ namespace RUINORERP.UI.UserCenter
                 //获取XML字符串
                 string xmlStr = xmldoc.InnerXml;
                 //字符串转XML
-                xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout);
+                xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.WorkCellLayout);
 
                 XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
                 XmlReaderSettings settings = new XmlReaderSettings();

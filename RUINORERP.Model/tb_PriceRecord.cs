@@ -114,7 +114,7 @@ namespace RUINORERP.Model
         /// 采购价
         /// </summary>
         [AdvQueryAttribute(ColName = "PurPrice",ColDesc = "采购价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PurPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "采购价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PurPrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "采购价" )]
         public decimal PurPrice
         { 
             get{return _PurPrice;}
@@ -128,7 +128,7 @@ namespace RUINORERP.Model
         /// 销售价
         /// </summary>
         [AdvQueryAttribute(ColName = "SalePrice",ColDesc = "销售价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SalePrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "销售价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SalePrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "销售价" )]
         public decimal SalePrice
         { 
             get{return _SalePrice;}

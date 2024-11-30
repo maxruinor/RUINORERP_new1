@@ -32,7 +32,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdBundle =>tb_ProdBundle.Unit_ID).Must(CheckForeignKeyValue).WithMessage("套装单位:下拉选择值不正确。");
  RuleFor(tb_ProdBundle =>tb_ProdBundle.ImagesPath).MaximumLength(1000).WithMessage("产品图片:不能超过最大长度,1000.");
  RuleFor(x => x.Weight).PrecisionScale(10,3,true).WithMessage("重量（千克）:小数位不能超过3。");
- RuleFor(x => x.Market_Price).PrecisionScale(19,4,true).WithMessage("市场零售价:小数位不能超过4。");
+ RuleFor(x => x.Market_Price).PrecisionScale(19,6,true).WithMessage("市场零售价:小数位不能超过6。");
  RuleFor(tb_ProdBundle =>tb_ProdBundle.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
 //有默认值
 //有默认值

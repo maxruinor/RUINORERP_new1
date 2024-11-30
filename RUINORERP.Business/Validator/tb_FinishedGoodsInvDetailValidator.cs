@@ -37,16 +37,16 @@ namespace RUINORERP.Business
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.PayableQty).NotNull().WithMessage("应缴数量:不能为空。");
 //***** 
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Qty).NotNull().WithMessage("实缴数量:不能为空。");
- RuleFor(x => x.UnitCost).PrecisionScale(19,4,true).WithMessage("单位成本:小数位不能超过4。");
+ RuleFor(x => x.UnitCost).PrecisionScale(19,6,true).WithMessage("单位成本:小数位不能超过6。");
 //***** 
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.UnpaidQty).NotNull().WithMessage("未缴数量:不能为空。");
  RuleFor(x => x.NetMachineHours).PrecisionScale(15,5,true).WithMessage("实际工时:小数位不能超过5。");
  RuleFor(x => x.NetWorkingHours).PrecisionScale(15,5,true).WithMessage("实际工时:小数位不能超过5。");
- RuleFor(x => x.ApportionedCost).PrecisionScale(19,4,true).WithMessage("分摊成本:小数位不能超过4。");
- RuleFor(x => x.ManuFee).PrecisionScale(19,4,true).WithMessage("制造费用:小数位不能超过4。");
- RuleFor(x => x.MaterialCost).PrecisionScale(19,4,true).WithMessage("材料成本:小数位不能超过4。");
- RuleFor(x => x.SubtotalMaterialCost).PrecisionScale(19,4,true).WithMessage("材料小计:小数位不能超过4。");
- RuleFor(x => x.ProductionAllCost).PrecisionScale(19,4,true).WithMessage("生产总成本:小数位不能超过4。");
+ RuleFor(x => x.ApportionedCost).PrecisionScale(19,6,true).WithMessage("分摊成本:小数位不能超过6。");
+ RuleFor(x => x.ManuFee).PrecisionScale(19,6,true).WithMessage("制造费用:小数位不能超过6。");
+ RuleFor(x => x.MaterialCost).PrecisionScale(19,6,true).WithMessage("材料成本:小数位不能超过6。");
+ RuleFor(x => x.SubtotalMaterialCost).PrecisionScale(19,6,true).WithMessage("材料小计:小数位不能超过6。");
+ RuleFor(x => x.ProductionAllCost).PrecisionScale(19,6,true).WithMessage("生产总成本:小数位不能超过6。");
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
        	

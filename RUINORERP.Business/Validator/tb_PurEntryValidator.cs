@@ -37,11 +37,11 @@ namespace RUINORERP.Business
  RuleFor(tb_PurEntry =>tb_PurEntry.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
  RuleFor(tb_PurEntry =>tb_PurEntry.PurOrder_ID).Must(CheckForeignKeyValueCanNull).WithMessage("采购订单:下拉选择值不正确。");
  RuleFor(tb_PurEntry =>tb_PurEntry.PurOrder_ID).NotEmpty().When(x => x.PurOrder_ID.HasValue);
- RuleFor(x => x.TotalQty).PrecisionScale(19,4,true).WithMessage("合计数量:小数位不能超过4。");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("合计金额:小数位不能超过4。");
- RuleFor(x => x.ActualAmount).PrecisionScale(19,4,true).WithMessage("实付金额:小数位不能超过4。");
- RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,4,true).WithMessage("合计税额:小数位不能超过4。");
- RuleFor(x => x.DiscountAmount).PrecisionScale(19,4,true).WithMessage("折扣金额总计:小数位不能超过4。");
+ RuleFor(x => x.TotalQty).PrecisionScale(19,6,true).WithMessage("合计数量:小数位不能超过6。");
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("合计金额:小数位不能超过6。");
+ RuleFor(x => x.ActualAmount).PrecisionScale(19,6,true).WithMessage("实付金额:小数位不能超过6。");
+ RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,6,true).WithMessage("合计税额:小数位不能超过6。");
+ RuleFor(x => x.DiscountAmount).PrecisionScale(19,6,true).WithMessage("折扣金额总计:小数位不能超过6。");
  RuleFor(tb_PurEntry =>tb_PurEntry.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
  RuleFor(tb_PurEntry =>tb_PurEntry.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_PurEntry =>tb_PurEntry.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
@@ -52,11 +52,11 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_PurEntry =>tb_PurEntry.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
  RuleFor(tb_PurEntry =>tb_PurEntry.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
- RuleFor(x => x.Deposit).PrecisionScale(19,4,true).WithMessage("订金:小数位不能超过4。");
+ RuleFor(x => x.Deposit).PrecisionScale(19,6,true).WithMessage("订金:小数位不能超过6。");
  RuleFor(tb_PurEntry =>tb_PurEntry.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);
  RuleFor(tb_PurEntry =>tb_PurEntry.VoucherNO).MaximumLength(25).WithMessage("凭证号码:不能超过最大长度,25.");
  RuleFor(tb_PurEntry =>tb_PurEntry.PurOrder_NO).MaximumLength(25).WithMessage("采购订单号:不能超过最大长度,25.");
- RuleFor(x => x.ShippingCost).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
+ RuleFor(x => x.ShippingCost).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
        	
            	                //long
                 //PurEntryID

@@ -33,8 +33,8 @@ namespace RUINORERP.Business
  RuleFor(tb_ReturnDetail =>tb_ReturnDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
  RuleFor(x => x.Cost).PrecisionScale(18,0,true).WithMessage("成本:小数位不能超过0。");
  RuleFor(x => x.Price).PrecisionScale(18,0,true).WithMessage("单价:小数位不能超过0。");
- RuleFor(x => x.SubtotalAmount).PrecisionScale(19,4,true).WithMessage("金额小计:小数位不能超过4。");
- RuleFor(x => x.SubtotalCost).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
+ RuleFor(x => x.SubtotalAmount).PrecisionScale(19,6,true).WithMessage("金额小计:小数位不能超过6。");
+ RuleFor(x => x.SubtotalCost).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
  RuleFor(tb_ReturnDetail =>tb_ReturnDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
  RuleFor(tb_ReturnDetail =>tb_ReturnDetail.CustomerPartNo).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
        	

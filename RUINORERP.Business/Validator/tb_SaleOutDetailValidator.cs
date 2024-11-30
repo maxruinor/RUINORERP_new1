@@ -35,20 +35,20 @@ namespace RUINORERP.Business
  RuleFor(tb_SaleOutDetail =>tb_SaleOutDetail.SaleOut_MainID).NotNull().WithMessage(":不能为空。");
 //***** 
  RuleFor(tb_SaleOutDetail =>tb_SaleOutDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
- RuleFor(x => x.TransactionPrice).PrecisionScale(19,4,true).WithMessage("成交单价:小数位不能超过4。");
- RuleFor(x => x.SubtotalTransAmount).PrecisionScale(19,4,true).WithMessage("成交小计:小数位不能超过4。");
+ RuleFor(x => x.TransactionPrice).PrecisionScale(19,6,true).WithMessage("成交单价:小数位不能超过6。");
+ RuleFor(x => x.SubtotalTransAmount).PrecisionScale(19,6,true).WithMessage("成交小计:小数位不能超过6。");
  RuleFor(tb_SaleOutDetail =>tb_SaleOutDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
  RuleFor(tb_SaleOutDetail =>tb_SaleOutDetail.CustomerPartNo).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
- RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
- RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
+ RuleFor(x => x.Cost).PrecisionScale(19,6,true).WithMessage("成本:小数位不能超过6。");
+ RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
  RuleFor(x => x.TaxRate).PrecisionScale(8,3,true).WithMessage("税率:小数位不能超过3。");
 //***** 
  RuleFor(tb_SaleOutDetail =>tb_SaleOutDetail.TotalReturnedQty).NotNull().WithMessage("订单退回数:不能为空。");
- RuleFor(x => x.UnitPrice).PrecisionScale(19,4,true).WithMessage("单价:小数位不能超过4。");
+ RuleFor(x => x.UnitPrice).PrecisionScale(19,6,true).WithMessage("单价:小数位不能超过6。");
  RuleFor(x => x.Discount).PrecisionScale(5,3,true).WithMessage("折扣:小数位不能超过3。");
- RuleFor(x => x.SubtotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
- RuleFor(x => x.CommissionAmount).PrecisionScale(19,4,true).WithMessage("抽成返点:小数位不能超过4。");
- RuleFor(x => x.SubtotalTaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
+ RuleFor(x => x.SubtotalUntaxedAmount).PrecisionScale(19,6,true).WithMessage("未税本位币:小数位不能超过6。");
+ RuleFor(x => x.CommissionAmount).PrecisionScale(19,6,true).WithMessage("抽成返点:小数位不能超过6。");
+ RuleFor(x => x.SubtotalTaxAmount).PrecisionScale(19,6,true).WithMessage("税额:小数位不能超过6。");
  RuleFor(tb_SaleOutDetail =>tb_SaleOutDetail.SaleOrderDetail_ID).NotEmpty().When(x => x.SaleOrderDetail_ID.HasValue);
        	
            	        Initialize();

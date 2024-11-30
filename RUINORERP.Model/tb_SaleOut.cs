@@ -182,7 +182,7 @@ namespace RUINORERP.Model
         /// 运费
         /// </summary>
         [AdvQueryAttribute(ColName = "ShipCost", ColDesc = "运费")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ShipCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ShipCost", DecimalDigits = 6, IsNullable = false, ColumnDescription = "运费")]
         public decimal ShipCost
         {
             get { return _ShipCost; }
@@ -212,7 +212,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount", ColDesc = "总金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "总金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalAmount", DecimalDigits = 6, IsNullable = false, ColumnDescription = "总金额")]
         public decimal TotalAmount
         {
             get { return _TotalAmount; }
@@ -332,7 +332,7 @@ namespace RUINORERP.Model
         /// 实收金额
         /// </summary>
         [AdvQueryAttribute(ColName = "CollectedMoney", ColDesc = "实收金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "CollectedMoney", DecimalDigits = 4, IsNullable = true, ColumnDescription = "实收金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "CollectedMoney", DecimalDigits = 6, IsNullable = true, ColumnDescription = "实收金额")]
         public decimal? CollectedMoney
         {
             get { return _CollectedMoney; }
@@ -528,7 +528,7 @@ namespace RUINORERP.Model
         /// 订金
         /// </summary>
         [AdvQueryAttribute(ColName = "Deposit", ColDesc = "订金")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "Deposit", DecimalDigits = 4, IsNullable = true, ColumnDescription = "订金")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "Deposit", DecimalDigits = 6, IsNullable = true, ColumnDescription = "订金")]
         public decimal? Deposit
         {
             get { return _Deposit; }
@@ -588,7 +588,7 @@ namespace RUINORERP.Model
         /// 总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost", ColDesc = "总成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "总成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalCost", DecimalDigits = 6, IsNullable = false, ColumnDescription = "总成本")]
         public decimal TotalCost
         {
             get { return _TotalCost; }
@@ -618,7 +618,7 @@ namespace RUINORERP.Model
         /// 总税额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalTaxAmount", ColDesc = "总税额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalTaxAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "总税额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalTaxAmount", DecimalDigits = 6, IsNullable = false, ColumnDescription = "总税额")]
         public decimal TotalTaxAmount
         {
             get { return _TotalTaxAmount; }
@@ -633,7 +633,7 @@ namespace RUINORERP.Model
         /// 未税本位币
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalUntaxedAmount", ColDesc = "未税本位币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalUntaxedAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税本位币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalUntaxedAmount", DecimalDigits = 6, IsNullable = false, ColumnDescription = "未税本位币")]
         public decimal TotalUntaxedAmount
         {
             get { return _TotalUntaxedAmount; }
@@ -663,7 +663,7 @@ namespace RUINORERP.Model
         /// 优惠金额
         /// </summary>
         [AdvQueryAttribute(ColName = "DiscountAmount", ColDesc = "优惠金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "DiscountAmount", DecimalDigits = 4, IsNullable = true, ColumnDescription = "优惠金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "DiscountAmount", DecimalDigits = 6, IsNullable = true, ColumnDescription = "优惠金额")]
         public decimal? DiscountAmount
         {
             get { return _DiscountAmount; }
@@ -678,7 +678,7 @@ namespace RUINORERP.Model
         /// 预收款
         /// </summary>
         [AdvQueryAttribute(ColName = "PrePayMoney", ColDesc = "预收款")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "PrePayMoney", DecimalDigits = 4, IsNullable = false, ColumnDescription = "预收款")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "PrePayMoney", DecimalDigits = 6, IsNullable = false, ColumnDescription = "预收款")]
         public decimal PrePayMoney
         {
             get { return _PrePayMoney; }

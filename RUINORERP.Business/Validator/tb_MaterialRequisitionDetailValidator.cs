@@ -39,10 +39,10 @@ namespace RUINORERP.Business
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.CanQuantity).NotNull().WithMessage("可发数:不能为空。");
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.CustomerPartNo).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
- RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
- RuleFor(x => x.Price).PrecisionScale(19,4,true).WithMessage("价格:小数位不能超过4。");
- RuleFor(x => x.SubtotalPrice).PrecisionScale(19,4,true).WithMessage("金额小计:小数位不能超过4。");
- RuleFor(x => x.SubtotalCost).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
+ RuleFor(x => x.Cost).PrecisionScale(19,6,true).WithMessage("成本:小数位不能超过6。");
+ RuleFor(x => x.Price).PrecisionScale(19,6,true).WithMessage("价格:小数位不能超过6。");
+ RuleFor(x => x.SubtotalPrice).PrecisionScale(19,6,true).WithMessage("金额小计:小数位不能超过6。");
+ RuleFor(x => x.SubtotalCost).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
 //***** 
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.ReturnQty).NotNull().WithMessage("退回数量:不能为空。");
 //***** 

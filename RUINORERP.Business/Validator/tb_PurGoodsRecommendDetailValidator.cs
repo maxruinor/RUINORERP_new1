@@ -33,7 +33,7 @@ namespace RUINORERP.Business
             RuleFor(tb_PurGoodsRecommendDetail => tb_PurGoodsRecommendDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
             RuleFor(tb_PurGoodsRecommendDetail => tb_PurGoodsRecommendDetail.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("供应商:下拉选择值不正确。");
             RuleFor(tb_PurGoodsRecommendDetail => tb_PurGoodsRecommendDetail.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
-            RuleFor(x => x.RecommendPurPrice).PrecisionScale(19, 4, true).WithMessage("建议采购价:小数位不能超过4。");
+            RuleFor(x => x.RecommendPurPrice).PrecisionScale(19, 6, true).WithMessage("建议采购价:小数位不能超过6。");
             //***** 
             RuleFor(tb_PurGoodsRecommendDetail => tb_PurGoodsRecommendDetail.ActualRequiredQty).NotNull().WithMessage("需求数量:不能为空。");
             //***** 

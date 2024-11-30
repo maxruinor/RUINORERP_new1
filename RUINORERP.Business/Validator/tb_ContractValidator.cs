@@ -32,8 +32,8 @@ namespace RUINORERP.Business
  RuleFor(tb_Contract =>tb_Contract.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
  RuleFor(tb_Contract =>tb_Contract.ContractNo).MaximumLength(25).WithMessage("合同编号:不能超过最大长度,25.");
  RuleFor(tb_Contract =>tb_Contract.TotalQty).NotEmpty().When(x => x.TotalQty.HasValue);
- RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
+ RuleFor(x => x.TotalCost).PrecisionScale(19,6,true).WithMessage("总金额:小数位不能超过6。");
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("总金额:小数位不能超过6。");
  RuleFor(tb_Contract =>tb_Contract.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_Contract =>tb_Contract.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_Contract =>tb_Contract.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");

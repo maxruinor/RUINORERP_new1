@@ -39,8 +39,8 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.Reason).MaximumLength(25).WithMessage("原因:不能超过最大长度,25.");
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.OffsetMethod).MaximumLength(25).WithMessage("冲销方式:不能超过最大长度,25.");
- RuleFor(x => x.Amount).PrecisionScale(19,4,true).WithMessage("金额:小数位不能超过4。");
- RuleFor(x => x.PrepaidAmount).PrecisionScale(19,4,true).WithMessage("已转金额:小数位不能超过4。");
+ RuleFor(x => x.Amount).PrecisionScale(19,6,true).WithMessage("金额:小数位不能超过6。");
+ RuleFor(x => x.PrepaidAmount).PrecisionScale(19,6,true).WithMessage("已转金额:小数位不能超过6。");
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.Notes).MaximumLength(15).WithMessage("备注:不能超过最大长度,15.");
        	
            	        Initialize();

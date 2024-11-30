@@ -40,14 +40,14 @@ namespace RUINORERP.Business
  RuleFor(tb_PurOrder =>tb_PurOrder.PDID).NotEmpty().When(x => x.PDID.HasValue);
 //***** 
  RuleFor(tb_PurOrder =>tb_PurOrder.TotalQty).NotNull().WithMessage("总数量:不能为空。");
- RuleFor(x => x.ShippingCost).PrecisionScale(19,4,true).WithMessage("运费:小数位不能超过4。");
- RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,4,true).WithMessage("总税额:小数位不能超过4。");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("货款金额:小数位不能超过4。");
- RuleFor(x => x.ActualAmount).PrecisionScale(19,4,true).WithMessage("实付金额:小数位不能超过4。");
+ RuleFor(x => x.ShippingCost).PrecisionScale(19,6,true).WithMessage("运费:小数位不能超过6。");
+ RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,6,true).WithMessage("总税额:小数位不能超过6。");
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("货款金额:小数位不能超过6。");
+ RuleFor(x => x.ActualAmount).PrecisionScale(19,6,true).WithMessage("实付金额:小数位不能超过6。");
  RuleFor(tb_PurOrder =>tb_PurOrder.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
  RuleFor(tb_PurOrder =>tb_PurOrder.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
- RuleFor(x => x.PrePayMoney).PrecisionScale(19,4,true).WithMessage("预付款:小数位不能超过4。");
- RuleFor(x => x.Deposit).PrecisionScale(19,4,true).WithMessage("订金:小数位不能超过4。");
+ RuleFor(x => x.PrePayMoney).PrecisionScale(19,6,true).WithMessage("预付款:小数位不能超过6。");
+ RuleFor(x => x.Deposit).PrecisionScale(19,6,true).WithMessage("订金:小数位不能超过6。");
  RuleFor(tb_PurOrder =>tb_PurOrder.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);
 //***** 
  RuleFor(tb_PurOrder =>tb_PurOrder.DataStatus).NotNull().WithMessage("数据状态:不能为空。");

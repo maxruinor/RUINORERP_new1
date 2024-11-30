@@ -41,13 +41,13 @@ namespace RUINORERP.Business
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ShippingAddress).MaximumLength(127).WithMessage("发货地址:不能超过最大长度,127.");
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.shippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
- RuleFor(x => x.TotalPrice).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
- RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("总成本:小数位不能超过4。");
+ RuleFor(x => x.TotalPrice).PrecisionScale(19,6,true).WithMessage("总金额:小数位不能超过6。");
+ RuleFor(x => x.TotalCost).PrecisionScale(19,6,true).WithMessage("总成本:小数位不能超过6。");
 //***** 
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.TotalSendQty).NotNull().WithMessage("实发总数:不能为空。");
 //***** 
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.TotalReQty).NotNull().WithMessage("退回总数:不能为空。");
- RuleFor(x => x.ShipCost).PrecisionScale(19,4,true).WithMessage("运费:小数位不能超过4。");
+ RuleFor(x => x.ShipCost).PrecisionScale(19,6,true).WithMessage("运费:小数位不能超过6。");
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");

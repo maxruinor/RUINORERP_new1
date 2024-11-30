@@ -48,12 +48,12 @@ namespace RUINORERP.Business
  RuleFor(tb_Inventory =>tb_Inventory.BatchNumber).NotNull().WithMessage("批次管理:不能为空。");
 //***** 
  RuleFor(tb_Inventory =>tb_Inventory.Alert_Quantity).NotNull().WithMessage("预警值:不能为空。");
- RuleFor(x => x.CostFIFO).PrecisionScale(19,4,true).WithMessage("先进先出成本:小数位不能超过4。");
- RuleFor(x => x.CostMonthlyWA).PrecisionScale(19,4,true).WithMessage("月加权平均成本:小数位不能超过4。");
- RuleFor(x => x.CostMovingWA).PrecisionScale(19,4,true).WithMessage("移动加权平均成本:小数位不能超过4。");
- RuleFor(x => x.Inv_AdvCost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
- RuleFor(x => x.Inv_Cost).PrecisionScale(19,4,true).WithMessage("货品成本:小数位不能超过4。");
- RuleFor(x => x.Inv_SubtotalCostMoney).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
+ RuleFor(x => x.CostFIFO).PrecisionScale(19,6,true).WithMessage("先进先出成本:小数位不能超过6。");
+ RuleFor(x => x.CostMonthlyWA).PrecisionScale(19,6,true).WithMessage("月加权平均成本:小数位不能超过6。");
+ RuleFor(x => x.CostMovingWA).PrecisionScale(19,6,true).WithMessage("移动加权平均成本:小数位不能超过6。");
+ RuleFor(x => x.Inv_AdvCost).PrecisionScale(19,6,true).WithMessage("成本:小数位不能超过6。");
+ RuleFor(x => x.Inv_Cost).PrecisionScale(19,6,true).WithMessage("货品成本:小数位不能超过6。");
+ RuleFor(x => x.Inv_SubtotalCostMoney).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
  RuleFor(tb_Inventory =>tb_Inventory.Notes).MaximumLength(125).WithMessage("备注说明:不能超过最大长度,125.");
  RuleFor(tb_Inventory =>tb_Inventory.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_Inventory =>tb_Inventory.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);

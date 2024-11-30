@@ -55,12 +55,12 @@ namespace RUINORERP.Business
  RuleFor(View_ProdDetail =>View_ProdDetail.ShortCode).MaximumLength(25).WithMessage(":不能超过最大长度,25.");
  RuleFor(View_ProdDetail =>View_ProdDetail.SourceType).NotEmpty().When(x => x.SourceType.HasValue);
  RuleFor(View_ProdDetail =>View_ProdDetail.BarCode).MaximumLength(25).WithMessage(":不能超过最大长度,25.");
- RuleFor(x => x.Inv_Cost).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
- RuleFor(x => x.Standard_Price).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
- RuleFor(x => x.Discount_price).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
- RuleFor(x => x.Market_price).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
- RuleFor(x => x.Wholesale_Price).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
- RuleFor(x => x.Transfer_price).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
+ RuleFor(x => x.Inv_Cost).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
+ RuleFor(x => x.Standard_Price).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
+ RuleFor(x => x.Discount_price).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
+ RuleFor(x => x.Market_price).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
+ RuleFor(x => x.Wholesale_Price).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
+ RuleFor(x => x.Transfer_price).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
  RuleFor(x => x.Weight).PrecisionScale(10,3,true).WithMessage(":小数位不能超过3。");
  RuleFor(View_ProdDetail =>View_ProdDetail.BOM_ID).NotEmpty().When(x => x.BOM_ID.HasValue);
        	

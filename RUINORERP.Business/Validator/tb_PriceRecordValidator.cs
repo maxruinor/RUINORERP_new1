@@ -28,8 +28,8 @@ namespace RUINORERP.Business
      {
       RuleFor(tb_PriceRecord =>tb_PriceRecord.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
  RuleFor(tb_PriceRecord =>tb_PriceRecord.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
- RuleFor(x => x.PurPrice).PrecisionScale(19,4,true).WithMessage("采购价:小数位不能超过4。");
- RuleFor(x => x.SalePrice).PrecisionScale(19,4,true).WithMessage("销售价:小数位不能超过4。");
+ RuleFor(x => x.PurPrice).PrecisionScale(19,6,true).WithMessage("采购价:小数位不能超过6。");
+ RuleFor(x => x.SalePrice).PrecisionScale(19,6,true).WithMessage("销售价:小数位不能超过6。");
        	
            	        Initialize();
      }

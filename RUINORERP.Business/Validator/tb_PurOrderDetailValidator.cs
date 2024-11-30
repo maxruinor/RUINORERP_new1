@@ -33,12 +33,12 @@ namespace RUINORERP.Business
  RuleFor(tb_PurOrderDetail =>tb_PurOrderDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
 //***** 
  RuleFor(tb_PurOrderDetail =>tb_PurOrderDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
- RuleFor(x => x.UnitPrice).PrecisionScale(19,4,true).WithMessage("单价:小数位不能超过4。");
+ RuleFor(x => x.UnitPrice).PrecisionScale(19,6,true).WithMessage("单价:小数位不能超过6。");
  RuleFor(x => x.Discount).PrecisionScale(5,3,true).WithMessage("折扣:小数位不能超过3。");
- RuleFor(x => x.TransactionPrice).PrecisionScale(19,4,true).WithMessage("成交单价:小数位不能超过4。");
+ RuleFor(x => x.TransactionPrice).PrecisionScale(19,6,true).WithMessage("成交单价:小数位不能超过6。");
  RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
- RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
- RuleFor(x => x.SubtotalAmount).PrecisionScale(19,4,true).WithMessage("成交金额:小数位不能超过4。");
+ RuleFor(x => x.TaxAmount).PrecisionScale(19,6,true).WithMessage("税额:小数位不能超过6。");
+ RuleFor(x => x.SubtotalAmount).PrecisionScale(19,6,true).WithMessage("成交金额:小数位不能超过6。");
  RuleFor(tb_PurOrderDetail =>tb_PurOrderDetail.CustomertModel).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
 //***** 
  RuleFor(tb_PurOrderDetail =>tb_PurOrderDetail.DeliveredQuantity).NotNull().WithMessage("已交数:不能为空。");

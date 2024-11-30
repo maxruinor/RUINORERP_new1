@@ -35,11 +35,11 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdBorrowingDetail =>tb_ProdBorrowingDetail.Qty).NotNull().WithMessage("借出数量:不能为空。");
 //***** 
  RuleFor(tb_ProdBorrowingDetail =>tb_ProdBorrowingDetail.ReQty).NotNull().WithMessage("归还数量:不能为空。");
- RuleFor(x => x.Price).PrecisionScale(19,4,true).WithMessage("售价:小数位不能超过4。");
- RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
+ RuleFor(x => x.Price).PrecisionScale(19,6,true).WithMessage("售价:小数位不能超过6。");
+ RuleFor(x => x.Cost).PrecisionScale(19,6,true).WithMessage("成本:小数位不能超过6。");
  RuleFor(tb_ProdBorrowingDetail =>tb_ProdBorrowingDetail.Summary).MaximumLength(250).WithMessage("摘要:不能超过最大长度,250.");
- RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
- RuleFor(x => x.SubtotalPirceAmount).PrecisionScale(19,4,true).WithMessage("金额小计:小数位不能超过4。");
+ RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
+ RuleFor(x => x.SubtotalPirceAmount).PrecisionScale(19,6,true).WithMessage("金额小计:小数位不能超过6。");
        	
            	        Initialize();
      }

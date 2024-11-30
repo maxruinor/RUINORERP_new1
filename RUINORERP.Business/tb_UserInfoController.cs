@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:40
+// 时间：11/29/2024 23:20:21
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -246,8 +246,6 @@ namespace RUINORERP.Business
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UserInfo>(entity as tb_UserInfo)
                         .Include(m => m.tb_User_Roles)
-                    .Include(m => m.tb_UserPersonalizations)
-                    .Include(m => m.Logses)
                             .ExecuteCommandAsync();
          
         }
@@ -255,8 +253,6 @@ namespace RUINORERP.Business
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UserInfo>(entity as tb_UserInfo)
                 .Include(m => m.tb_User_Roles)
-                .Include(m => m.tb_UserPersonalizations)
-                .Include(m => m.Logses)
                                 .ExecuteCommandAsync();
         }
         
@@ -288,8 +284,6 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>()
                                 .Includes(m => m.tb_User_Roles)
-                        .Includes(m => m.tb_UserPersonalizations)
-                        .Includes(m => m.Logses)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -300,8 +294,6 @@ namespace RUINORERP.Business
             tb_UserInfo entity = model as tb_UserInfo;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_UserInfo>(m => m.User_ID== entity.User_ID)
                                 .Include(m => m.tb_User_Roles)
-                        .Include(m => m.tb_UserPersonalizations)
-                        .Include(m => m.Logses)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -466,8 +458,6 @@ namespace RUINORERP.Business
             List<tb_UserInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>()
                                .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_User_Roles )
-                                .Includes(t => t.tb_UserPersonalizations )
-                                .Includes(t => t.Logses )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -489,8 +479,6 @@ namespace RUINORERP.Business
             List<tb_UserInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
                                .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_User_Roles )
-                                .Includes(t => t.tb_UserPersonalizations )
-                                .Includes(t => t.Logses )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -512,8 +500,6 @@ namespace RUINORERP.Business
             List<tb_UserInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
                             .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_User_Roles )
-                            .Includes(t => t.tb_UserPersonalizations )
-                            .Includes(t => t.Logses )
                         .ToList();
             
             foreach (var item in list)
@@ -552,8 +538,6 @@ namespace RUINORERP.Business
             tb_UserInfo entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(w => w.User_ID == (long)id)
                              .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_User_Roles )
-                            .Includes(t => t.tb_UserPersonalizations )
-                            .Includes(t => t.Logses )
                         .FirstAsync();
             if(entity!=null)
             {

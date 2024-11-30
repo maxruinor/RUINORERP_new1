@@ -34,11 +34,11 @@ namespace RUINORERP.Business
  RuleFor(tb_StockInDetail =>tb_StockInDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 //***** 
  RuleFor(tb_StockInDetail =>tb_StockInDetail.Qty).NotNull().WithMessage("数量:不能为空。");
- RuleFor(x => x.Price).PrecisionScale(19,4,true).WithMessage("售价:小数位不能超过4。");
- RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
+ RuleFor(x => x.Price).PrecisionScale(19,6,true).WithMessage("售价:小数位不能超过6。");
+ RuleFor(x => x.Cost).PrecisionScale(19,6,true).WithMessage("成本:小数位不能超过6。");
  RuleFor(tb_StockInDetail =>tb_StockInDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
- RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
- RuleFor(x => x.SubtotalPirceAmount).PrecisionScale(19,4,true).WithMessage("金额小计:小数位不能超过4。");
+ RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
+ RuleFor(x => x.SubtotalPirceAmount).PrecisionScale(19,6,true).WithMessage("金额小计:小数位不能超过6。");
  RuleFor(tb_StockInDetail =>tb_StockInDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
        	
            	        Initialize();

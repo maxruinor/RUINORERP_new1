@@ -414,10 +414,10 @@ namespace RUINORERP.UI.SysConfig
                 workCenterConfig = new tb_WorkCenterConfig();
                 long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
                 workCenterConfig.ConfigID = sid;
-                workCenterConfig.RoleID = CurrentRole.RoleID.Value;
+                workCenterConfig.RoleID = CurrentRole.RoleID;
                 if (IsUserSetting)
                 {
-                    workCenterConfig.User_ID = CurrentRole.User_ID.Value;
+                    workCenterConfig.User_ID = CurrentRole.User_ID;
                 }
             }
             string todolist = string.Empty;

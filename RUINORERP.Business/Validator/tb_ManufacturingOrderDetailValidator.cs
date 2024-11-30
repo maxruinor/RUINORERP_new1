@@ -41,8 +41,8 @@ namespace RUINORERP.Business
  RuleFor(x => x.OverSentQty).PrecisionScale(10,3,true).WithMessage("超发数:小数位不能超过3。");
  RuleFor(x => x.WastageQty).PrecisionScale(10,3,true).WithMessage("损耗量:小数位不能超过3。");
  RuleFor(x => x.CurrentIinventory).PrecisionScale(10,3,true).WithMessage("现有库存:小数位不能超过3。");
- RuleFor(x => x.UnitCost).PrecisionScale(10,4,true).WithMessage("单位成本:小数位不能超过4。");
- RuleFor(x => x.SubtotalUnitCost).PrecisionScale(10,4,true).WithMessage("成本小计:小数位不能超过4。");
+ RuleFor(x => x.UnitCost).PrecisionScale(10,4,true).WithMessage("单位成本:小数位不能超过6。");
+ RuleFor(x => x.SubtotalUnitCost).PrecisionScale(10,4,true).WithMessage("成本小计:小数位不能超过6。");
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.BOM_ID).NotEmpty().When(x => x.BOM_ID.HasValue);
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.AssemblyPosition).MaximumLength(250).WithMessage("组装位置:不能超过最大长度,250.");

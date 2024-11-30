@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:40
+// 时间：11/30/2024 00:18:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -26,10 +26,10 @@ namespace RUINORERP.Business
     {
      public tb_User_RoleValidator() 
      {
-      RuleFor(tb_User_Role =>tb_User_Role.User_ID).Must(CheckForeignKeyValueCanNull).WithMessage("用户:下拉选择值不正确。");
- RuleFor(tb_User_Role =>tb_User_Role.User_ID).NotEmpty().When(x => x.User_ID.HasValue);
- RuleFor(tb_User_Role =>tb_User_Role.RoleID).Must(CheckForeignKeyValueCanNull).WithMessage("角色:下拉选择值不正确。");
- RuleFor(tb_User_Role =>tb_User_Role.RoleID).NotEmpty().When(x => x.RoleID.HasValue);
+      RuleFor(tb_User_Role =>tb_User_Role.User_ID).Must(CheckForeignKeyValue).WithMessage("用户:下拉选择值不正确。");
+ RuleFor(tb_User_Role =>tb_User_Role.RoleID).Must(CheckForeignKeyValue).WithMessage("角色:下拉选择值不正确。");
+ RuleFor(tb_User_Role =>tb_User_Role.PSID).Must(CheckForeignKeyValueCanNull).WithMessage("角色:下拉选择值不正确。");
+ RuleFor(tb_User_Role =>tb_User_Role.PSID).NotEmpty().When(x => x.PSID.HasValue);
        	
            	        Initialize();
      }

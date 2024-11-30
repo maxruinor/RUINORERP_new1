@@ -33,7 +33,7 @@ namespace RUINORERP.Business
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.ActualRequiredQty).NotNull().WithMessage("需求数量:不能为空。");
 //***** 
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Quantity).NotNull().WithMessage("请购数量:不能为空。");
- RuleFor(x => x.EstimatedPrice).PrecisionScale(19,4,true).WithMessage("预估价格:小数位不能超过4。");
+ RuleFor(x => x.EstimatedPrice).PrecisionScale(19,6,true).WithMessage("预估价格:小数位不能超过6。");
 //***** 
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.DeliveredQuantity).NotNull().WithMessage("已交数量:不能为空。");
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Purpose).MaximumLength(250).WithMessage("用途:不能超过最大长度,250.");

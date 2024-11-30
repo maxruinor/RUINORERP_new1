@@ -38,9 +38,9 @@ namespace RUINORERP.Business
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.PurEntryNo).MaximumLength(25).WithMessage("入库单号:不能超过最大长度,25.");
             //***** 
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.TotalQty).NotNull().WithMessage("合计数量:不能为空。");
-            RuleFor(x => x.TotalTaxAmount).PrecisionScale(19, 4, true).WithMessage("合计税额:小数位不能超过4。");
-            RuleFor(x => x.TotalAmount).PrecisionScale(19, 4, true).WithMessage("合计金额:小数位不能超过4。");
-            RuleFor(x => x.ActualAmount).PrecisionScale(19, 4, true).WithMessage("实退金额:小数位不能超过4。");
+            RuleFor(x => x.TotalTaxAmount).PrecisionScale(19, 6, true).WithMessage("合计税额:小数位不能超过6。");
+            RuleFor(x => x.TotalAmount).PrecisionScale(19, 6, true).WithMessage("合计金额:小数位不能超过6。");
+            RuleFor(x => x.ActualAmount).PrecisionScale(19, 6, true).WithMessage("实退金额:小数位不能超过6。");
             //***** 
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.ProcessWay).NotNull().WithMessage("处理方式:不能为空。");
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.ShippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
@@ -49,9 +49,9 @@ namespace RUINORERP.Business
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
-            RuleFor(x => x.Deposit).PrecisionScale(19, 4, true).WithMessage("订金:小数位不能超过4。");
+            RuleFor(x => x.Deposit).PrecisionScale(19, 6, true).WithMessage("订金:小数位不能超过6。");
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);
-            RuleFor(x => x.TotalDiscountAmount).PrecisionScale(19, 4, true).WithMessage("折扣金额总计:小数位不能超过4。");
+            RuleFor(x => x.TotalDiscountAmount).PrecisionScale(19, 6, true).WithMessage("折扣金额总计:小数位不能超过6。");
             //***** 
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
             RuleFor(tb_PurEntryRe => tb_PurEntryRe.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);

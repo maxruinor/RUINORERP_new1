@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:40
+// 时间：11/29/2024 23:20:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 用户表
     /// </summary>
     [Serializable()]
-    [Description("tb_UserInfo")]
+    [Description("用户表")]
     [SugarTable("tb_UserInfo")]
     public partial class tb_UserInfo: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_UserInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("用户表tb_UserInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -249,22 +249,6 @@ namespace RUINORERP.Model
         public virtual List<tb_User_Role> tb_User_Roles { get; set; }
         //tb_User_Role.User_ID)
         //User_ID.FK_TB_USER_REFERENCE_TB_USERI)
-        //tb_UserInfo.User_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_UserPersonalization.User_ID))]
-        public virtual List<tb_UserPersonalization> tb_UserPersonalizations { get; set; }
-        //tb_UserPersonalization.User_ID)
-        //User_ID.FK_TB_USERP_REFERENCE_TB_USERI)
-        //tb_UserInfo.User_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(Logs.User_ID))]
-        public virtual List<Logs> Logses { get; set; }
-        //Logs.User_ID)
-        //User_ID.FK_LOGS_REFERENCE_TB_USERI)
         //tb_UserInfo.User_ID)
 
 

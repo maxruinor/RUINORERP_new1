@@ -35,16 +35,16 @@ namespace RUINORERP.Business
  RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
 //***** 
  RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.Quantity).NotNull().WithMessage("退回数量:不能为空。");
- RuleFor(x => x.TransactionPrice).PrecisionScale(19,4,true).WithMessage("成交单价:小数位不能超过4。");
- RuleFor(x => x.SubtotalTransAmount).PrecisionScale(19,4,true).WithMessage("小计:小数位不能超过4。");
+ RuleFor(x => x.TransactionPrice).PrecisionScale(19,6,true).WithMessage("成交单价:小数位不能超过6。");
+ RuleFor(x => x.SubtotalTransAmount).PrecisionScale(19,6,true).WithMessage("小计:小数位不能超过6。");
  RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
  RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.CustomerPartNo).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
- RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
- RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
- RuleFor(x => x.SubtotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
+ RuleFor(x => x.Cost).PrecisionScale(19,6,true).WithMessage("成本:小数位不能超过6。");
+ RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
+ RuleFor(x => x.SubtotalUntaxedAmount).PrecisionScale(19,6,true).WithMessage("未税本位币:小数位不能超过6。");
  RuleFor(x => x.TaxRate).PrecisionScale(5,2,true).WithMessage(":小数位不能超过2。");
- RuleFor(x => x.SubtotalTaxAmount).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
- RuleFor(x => x.CommissionAmount).PrecisionScale(19,4,true).WithMessage("抽成返还:小数位不能超过4。");
+ RuleFor(x => x.SubtotalTaxAmount).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
+ RuleFor(x => x.CommissionAmount).PrecisionScale(19,6,true).WithMessage("抽成返还:小数位不能超过6。");
        	
            	        Initialize();
      }

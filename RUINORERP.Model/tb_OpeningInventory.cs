@@ -85,7 +85,7 @@ namespace RUINORERP.Model
         /// 成本价格
         /// </summary>
         [AdvQueryAttribute(ColName = "Cost_price",ColDesc = "成本价格")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost_price" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本价格" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost_price" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本价格" )]
         public decimal Cost_price
         { 
             get{return _Cost_price;}
@@ -99,7 +99,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "Subtotal_Cost_Price",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Subtotal_Cost_Price" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Subtotal_Cost_Price" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal Subtotal_Cost_Price
         { 
             get{return _Subtotal_Cost_Price;}

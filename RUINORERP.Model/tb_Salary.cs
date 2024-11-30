@@ -70,7 +70,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "BaseSalary",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "BaseSalary" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "BaseSalary" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "" )]
         public decimal? BaseSalary
         { 
             get{return _BaseSalary;}
@@ -84,7 +84,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "Bonus",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Bonus" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Bonus" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "" )]
         public decimal? Bonus
         { 
             get{return _Bonus;}
@@ -98,7 +98,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "Deduction",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deduction" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deduction" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "" )]
         public decimal? Deduction
         { 
             get{return _Deduction;}
@@ -112,7 +112,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "ActualSalary",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualSalary" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualSalary" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "" )]
         public decimal? ActualSalary
         { 
             get{return _ActualSalary;}

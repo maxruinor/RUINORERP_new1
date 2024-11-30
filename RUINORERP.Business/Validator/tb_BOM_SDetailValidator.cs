@@ -34,14 +34,14 @@ namespace RUINORERP.Business
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Unit_ID).Must(CheckForeignKeyValue).WithMessage("单位:下拉选择值不正确。");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.UnitConversion_ID).Must(CheckForeignKeyValueCanNull).WithMessage("单位换算:下拉选择值不正确。");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.UnitConversion_ID).NotEmpty().When(x => x.UnitConversion_ID.HasValue);
- RuleFor(x => x.UsedQty).PrecisionScale(8,4,true).WithMessage("用量:小数位不能超过4。");
+ RuleFor(x => x.UsedQty).PrecisionScale(8,4,true).WithMessage("用量:小数位不能超过6。");
 //***** 
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Radix).NotNull().WithMessage("基数:不能为空。");
- RuleFor(x => x.LossRate).PrecisionScale(15,4,true).WithMessage("损耗率:小数位不能超过4。");
+ RuleFor(x => x.LossRate).PrecisionScale(15,4,true).WithMessage("损耗率:小数位不能超过6。");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.InstallPosition).MaximumLength(25).WithMessage("组装位置:不能超过最大长度,25.");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.PositionNo).MaximumLength(25).WithMessage("位号:不能超过最大长度,25.");
- RuleFor(x => x.UnitCost).PrecisionScale(19,4,true).WithMessage("单位成本:小数位不能超过4。");
- RuleFor(x => x.SubtotalUnitCost).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
+ RuleFor(x => x.UnitCost).PrecisionScale(19,6,true).WithMessage("单位成本:小数位不能超过6。");
+ RuleFor(x => x.SubtotalUnitCost).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.PositionDesc).MaximumLength(50).WithMessage("位号描述:不能超过最大长度,50.");
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.ManufacturingProcessID).NotEmpty().When(x => x.ManufacturingProcessID.HasValue);
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Child_BOM_Node_ID).NotEmpty().When(x => x.Child_BOM_Node_ID.HasValue);

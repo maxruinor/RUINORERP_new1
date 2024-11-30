@@ -41,19 +41,19 @@ namespace RUINORERP.Business
  RuleFor(tb_BOM_S =>tb_BOM_S.BOM_S_VERID).NotEmpty().When(x => x.BOM_S_VERID.HasValue);
 //有默认值
 //有默认值
- RuleFor(x => x.OutApportionedCost).PrecisionScale(19,4,true).WithMessage("处发分摊费用:小数位不能超过4。");
- RuleFor(x => x.SelfApportionedCost).PrecisionScale(19,4,true).WithMessage("自制分摊费用:小数位不能超过4。");
- RuleFor(x => x.TotalSelfManuCost).PrecisionScale(19,4,true).WithMessage("自产制造费用:小数位不能超过4。");
- RuleFor(x => x.TotalOutManuCost).PrecisionScale(19,4,true).WithMessage("外发费用:小数位不能超过4。");
- RuleFor(x => x.TotalMaterialCost).PrecisionScale(19,4,true).WithMessage("总物料费用:小数位不能超过4。");
- RuleFor(x => x.TotalMaterialQty).PrecisionScale(15,4,true).WithMessage("用料总量:小数位不能超过4。");
- RuleFor(x => x.OutputQty).PrecisionScale(15,4,true).WithMessage("产出量:小数位不能超过4。");
+ RuleFor(x => x.OutApportionedCost).PrecisionScale(19,6,true).WithMessage("处发分摊费用:小数位不能超过6。");
+ RuleFor(x => x.SelfApportionedCost).PrecisionScale(19,6,true).WithMessage("自制分摊费用:小数位不能超过6。");
+ RuleFor(x => x.TotalSelfManuCost).PrecisionScale(19,6,true).WithMessage("自产制造费用:小数位不能超过6。");
+ RuleFor(x => x.TotalOutManuCost).PrecisionScale(19,6,true).WithMessage("外发费用:小数位不能超过6。");
+ RuleFor(x => x.TotalMaterialCost).PrecisionScale(19,6,true).WithMessage("总物料费用:小数位不能超过6。");
+ RuleFor(x => x.TotalMaterialQty).PrecisionScale(15,6,true).WithMessage("用料总量:小数位不能超过6。");
+ RuleFor(x => x.OutputQty).PrecisionScale(15,6,true).WithMessage("产出量:小数位不能超过6。");
  RuleFor(x => x.PeopleQty).PrecisionScale(15,5,true).WithMessage("人数:小数位不能超过5。");
  RuleFor(x => x.WorkingHour).PrecisionScale(15,5,true).WithMessage("工时:小数位不能超过5。");
  RuleFor(x => x.MachineHour).PrecisionScale(15,5,true).WithMessage("机时:小数位不能超过5。");
  RuleFor(x => x.DailyQty).PrecisionScale(18,0,true).WithMessage("日产量:小数位不能超过0。");
- RuleFor(x => x.SelfProductionAllCosts).PrecisionScale(19,4,true).WithMessage("自产总成本:小数位不能超过4。");
- RuleFor(x => x.OutProductionAllCosts).PrecisionScale(19,4,true).WithMessage("外发总成本:小数位不能超过4。");
+ RuleFor(x => x.SelfProductionAllCosts).PrecisionScale(19,6,true).WithMessage("自产总成本:小数位不能超过6。");
+ RuleFor(x => x.OutProductionAllCosts).PrecisionScale(19,6,true).WithMessage("外发总成本:小数位不能超过6。");
  RuleFor(tb_BOM_S =>tb_BOM_S.Notes).MaximumLength(250).WithMessage("备注说明:不能超过最大长度,250.");
  RuleFor(tb_BOM_S =>tb_BOM_S.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_BOM_S =>tb_BOM_S.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);

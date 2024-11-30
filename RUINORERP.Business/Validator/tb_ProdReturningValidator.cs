@@ -33,8 +33,8 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdReturning =>tb_ProdReturning.ReturnNo).MaximumLength(25).WithMessage("归还单号:不能超过最大长度,25.");
 //***** 
  RuleFor(tb_ProdReturning =>tb_ProdReturning.TotalQty).NotNull().WithMessage("总数量:不能为空。");
- RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("总成本:小数位不能超过4。");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
+ RuleFor(x => x.TotalCost).PrecisionScale(19,6,true).WithMessage("总成本:小数位不能超过6。");
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("总金额:小数位不能超过6。");
  RuleFor(tb_ProdReturning =>tb_ProdReturning.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
  RuleFor(tb_ProdReturning =>tb_ProdReturning.BorrowID).Must(CheckForeignKeyValue).WithMessage("借出单:下拉选择值不正确。");
  RuleFor(tb_ProdReturning =>tb_ProdReturning.BorrowNO).MaximumLength(25).WithMessage("借出单号:不能超过最大长度,25.");

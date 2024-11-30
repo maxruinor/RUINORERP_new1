@@ -141,7 +141,7 @@ namespace RUINORERP.Model
         /// 市场零售价
         /// </summary>
         [AdvQueryAttribute(ColName = "Market_Price",ColDesc = "市场零售价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Market_Price" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "市场零售价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Market_Price" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "市场零售价" )]
         public decimal? Market_Price
         { 
             get{return _Market_Price;}

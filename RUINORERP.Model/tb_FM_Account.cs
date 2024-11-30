@@ -157,7 +157,7 @@ namespace RUINORERP.Model
         /// 初始余额
         /// </summary>
         [AdvQueryAttribute(ColName = "OpeningBalance",ColDesc = "初始余额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OpeningBalance" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "初始余额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OpeningBalance" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "初始余额" )]
         public decimal? OpeningBalance
         { 
             get{return _OpeningBalance;}
@@ -171,7 +171,7 @@ namespace RUINORERP.Model
         /// 当前余额
         /// </summary>
         [AdvQueryAttribute(ColName = "CurrentBalance",ColDesc = "当前余额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CurrentBalance" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "当前余额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CurrentBalance" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "当前余额" )]
         public decimal? CurrentBalance
         { 
             get{return _CurrentBalance;}

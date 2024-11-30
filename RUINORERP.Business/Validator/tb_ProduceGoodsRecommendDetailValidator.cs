@@ -36,8 +36,8 @@ namespace RUINORERP.Business
             RuleFor(tb_ProduceGoodsRecommendDetail => tb_ProduceGoodsRecommendDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
             RuleFor(tb_ProduceGoodsRecommendDetail => tb_ProduceGoodsRecommendDetail.BOM_ID).Must(CheckForeignKeyValueCanNull).WithMessage("标准配方:下拉选择值不正确。");
             RuleFor(tb_ProduceGoodsRecommendDetail => tb_ProduceGoodsRecommendDetail.BOM_ID).NotEmpty().When(x => x.BOM_ID.HasValue);
-            RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19, 4, true).WithMessage("成本小计:小数位不能超过4。");
-            RuleFor(x => x.UnitCost).PrecisionScale(19, 4, true).WithMessage("单位成本:小数位不能超过4。");
+            RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19, 6, true).WithMessage("成本小计:小数位不能超过6。");
+            RuleFor(x => x.UnitCost).PrecisionScale(19, 6, true).WithMessage("单位成本:小数位不能超过6。");
             //***** 
             RuleFor(tb_ProduceGoodsRecommendDetail => tb_ProduceGoodsRecommendDetail.RequirementQty).NotNull().WithMessage("请制量:不能为空。");
             //***** 

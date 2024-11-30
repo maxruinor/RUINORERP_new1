@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:40
+// 时间：11/30/2024 00:18:30
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -461,6 +461,7 @@ namespace RUINORERP.Business
         {
             List<tb_User_Role> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>()
                                .Includes(t => t.tb_userinfo )
+                               .Includes(t => t.tb_userpersonalized )
                                .Includes(t => t.tb_roleinfo )
                                     .ToListAsync();
             
@@ -482,6 +483,7 @@ namespace RUINORERP.Business
         {
             List<tb_User_Role> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>().Where(exp)
                                .Includes(t => t.tb_userinfo )
+                               .Includes(t => t.tb_userpersonalized )
                                .Includes(t => t.tb_roleinfo )
                                     .ToListAsync();
             
@@ -503,6 +505,7 @@ namespace RUINORERP.Business
         {
             List<tb_User_Role> list = _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>().Where(exp)
                             .Includes(t => t.tb_userinfo )
+                            .Includes(t => t.tb_userpersonalized )
                             .Includes(t => t.tb_roleinfo )
                                     .ToList();
             
@@ -541,6 +544,7 @@ namespace RUINORERP.Business
         {
             tb_User_Role entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>().Where(w => w.ID == (long)id)
                              .Includes(t => t.tb_userinfo )
+                            .Includes(t => t.tb_userpersonalized )
                             .Includes(t => t.tb_roleinfo )
                                     .FirstAsync();
             if(entity!=null)

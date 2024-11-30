@@ -30,8 +30,8 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("业务员:下拉选择值不正确。");
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
- RuleFor(x => x.PreTotalAmount).PrecisionScale(19,4,true).WithMessage("预交易总金额:小数位不能超过4。");
- RuleFor(x => x.PrePaidTotalAmount).PrecisionScale(19,4,true).WithMessage("已预交易总金额:小数位不能超过4。");
+ RuleFor(x => x.PreTotalAmount).PrecisionScale(19,6,true).WithMessage("预交易总金额:小数位不能超过6。");
+ RuleFor(x => x.PrePaidTotalAmount).PrecisionScale(19,6,true).WithMessage("已预交易总金额:小数位不能超过6。");
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_FM_PrePaymentBill =>tb_FM_PrePaymentBill.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);

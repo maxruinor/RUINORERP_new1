@@ -33,8 +33,6 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_User_RoleController<T> : BaseController<T> where T : class
     {
-
-
         public  async Task<List<tb_User_Role>> QueryRoleByNavWithMoreInfo()
         {
             List<tb_User_Role> list = new List<tb_User_Role>();
@@ -42,7 +40,7 @@ namespace RUINORERP.Business
             {
                 list = await _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>()
                .Includes(t => t.tb_roleinfo)
-               .Includes(t => t.tb_roleinfo)
+               .Includes(t => t.tb_userpersonalized)
                .Includes(t => t.tb_userinfo)
                .ToListAsync();
                 foreach (var item in list)

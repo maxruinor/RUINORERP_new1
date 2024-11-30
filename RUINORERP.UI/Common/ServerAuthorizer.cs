@@ -175,6 +175,7 @@ namespace RUINORERP.UI.Common
                 _ecs.client.Send(buffer1);
 
                 rs = _ecs.client.IsConnected;
+                UserGlobalConfig.Instance.Serialize();
             }
             catch (Exception ex)
             {

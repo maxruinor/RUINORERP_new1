@@ -33,8 +33,8 @@ namespace RUINORERP.Business
  RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 //***** 
  RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
- RuleFor(x => x.Cost).PrecisionScale(10,4,true).WithMessage("成本:小数位不能超过4。");
- RuleFor(x => x.Price).PrecisionScale(10,4,true).WithMessage("单价:小数位不能超过4。");
+ RuleFor(x => x.Cost).PrecisionScale(10,4,true).WithMessage("成本:小数位不能超过6。");
+ RuleFor(x => x.Price).PrecisionScale(10,4,true).WithMessage("单价:小数位不能超过6。");
  RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
        	
            	        Initialize();

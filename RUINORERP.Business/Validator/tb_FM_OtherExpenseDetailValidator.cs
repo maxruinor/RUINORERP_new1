@@ -40,11 +40,11 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("交易对象:下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Subject_id).NotEmpty().When(x => x.Subject_id.HasValue);
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("总金额:小数位不能超过6。");
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Summary).MaximumLength(50).WithMessage("摘要:不能超过最大长度,50.");
- RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
+ RuleFor(x => x.TaxAmount).PrecisionScale(19,6,true).WithMessage("税额:小数位不能超过6。");
  RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
- RuleFor(x => x.UntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
+ RuleFor(x => x.UntaxedAmount).PrecisionScale(19,6,true).WithMessage("未税本位币:小数位不能超过6。");
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("所属项目:下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.EvidenceImagePath).MaximumLength(300).WithMessage("凭证图:不能超过最大长度,300.");

@@ -38,9 +38,9 @@ namespace RUINORERP.Business
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.SaleOut_NO).MaximumLength(25).WithMessage("销售出库单号:不能超过最大长度,25.");
 //***** 
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.TotalQty).NotNull().WithMessage("退回总数量:不能为空。");
- RuleFor(x => x.ActualRefundAmount).PrecisionScale(19,4,true).WithMessage("实际退款金额:小数位不能超过4。");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("退款金额合计:小数位不能超过4。");
- RuleFor(x => x.ShipCost).PrecisionScale(19,4,true).WithMessage("需退运费:小数位不能超过4。");
+ RuleFor(x => x.ActualRefundAmount).PrecisionScale(19,6,true).WithMessage("实际退款金额:小数位不能超过6。");
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("退款金额合计:小数位不能超过6。");
+ RuleFor(x => x.ShipCost).PrecisionScale(19,6,true).WithMessage("需退运费:小数位不能超过6。");
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.ReturnReason).MaximumLength(500).WithMessage("退货原因:不能超过最大长度,500.");

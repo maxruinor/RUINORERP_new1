@@ -44,10 +44,10 @@ namespace RUINORERP.Business
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
  RuleFor(x => x.TotalNetMachineHours).PrecisionScale(15,5,true).WithMessage("总机时:小数位不能超过5。");
  RuleFor(x => x.TotalNetWorkingHours).PrecisionScale(15,5,true).WithMessage("总工时:小数位不能超过5。");
- RuleFor(x => x.TotalApportionedCost).PrecisionScale(19,4,true).WithMessage("总分摊成本:小数位不能超过4。");
- RuleFor(x => x.TotalManuFee).PrecisionScale(19,4,true).WithMessage("总制造费用:小数位不能超过4。");
- RuleFor(x => x.TotalProductionCost).PrecisionScale(19,4,true).WithMessage("生产总成本:小数位不能超过4。");
- RuleFor(x => x.TotalMaterialCost).PrecisionScale(19,4,true).WithMessage("总材料成本:小数位不能超过4。");
+ RuleFor(x => x.TotalApportionedCost).PrecisionScale(19,6,true).WithMessage("总分摊成本:小数位不能超过6。");
+ RuleFor(x => x.TotalManuFee).PrecisionScale(19,6,true).WithMessage("总制造费用:小数位不能超过6。");
+ RuleFor(x => x.TotalProductionCost).PrecisionScale(19,6,true).WithMessage("生产总成本:小数位不能超过6。");
+ RuleFor(x => x.TotalMaterialCost).PrecisionScale(19,6,true).WithMessage("总材料成本:小数位不能超过6。");
 //***** 
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
        	

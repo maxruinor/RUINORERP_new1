@@ -130,7 +130,7 @@ namespace RUINORERP.Model
         /// 建议采购价
         /// </summary>
         [AdvQueryAttribute(ColName = "RecommendPurPrice",ColDesc = "建议采购价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "RecommendPurPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "建议采购价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "RecommendPurPrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "建议采购价" )]
         public decimal RecommendPurPrice
         { 
             get{return _RecommendPurPrice;}

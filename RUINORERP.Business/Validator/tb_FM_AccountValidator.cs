@@ -35,8 +35,8 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_Account =>tb_FM_Account.Account_No).MaximumLength(50).WithMessage("账号:不能超过最大长度,50.");
  RuleFor(tb_FM_Account =>tb_FM_Account.Account_type).NotEmpty().When(x => x.Account_type.HasValue);
  RuleFor(tb_FM_Account =>tb_FM_Account.Bank).MaximumLength(15).WithMessage("所属银行:不能超过最大长度,15.");
- RuleFor(x => x.OpeningBalance).PrecisionScale(19,4,true).WithMessage("初始余额:小数位不能超过4。");
- RuleFor(x => x.CurrentBalance).PrecisionScale(19,4,true).WithMessage("当前余额:小数位不能超过4。");
+ RuleFor(x => x.OpeningBalance).PrecisionScale(19,6,true).WithMessage("初始余额:小数位不能超过6。");
+ RuleFor(x => x.CurrentBalance).PrecisionScale(19,6,true).WithMessage("当前余额:小数位不能超过6。");
        	
            	        Initialize();
      }

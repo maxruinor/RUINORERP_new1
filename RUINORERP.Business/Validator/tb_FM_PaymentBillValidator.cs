@@ -42,11 +42,11 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentBill =>tb_FM_PaymentBill.Notes).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
  RuleFor(tb_FM_PaymentBill =>tb_FM_PaymentBill.VoucherNumber).MaximumLength(25).WithMessage("凭证号码:不能超过最大长度,25.");
  RuleFor(tb_FM_PaymentBill =>tb_FM_PaymentBill.Reason).MaximumLength(100).WithMessage("付款原因:不能超过最大长度,100.");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("付款总金额:小数位不能超过4。");
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("付款总金额:小数位不能超过6。");
  RuleFor(tb_FM_PaymentBill =>tb_FM_PaymentBill.SourceBill_BizType).NotEmpty().When(x => x.SourceBill_BizType.HasValue);
  RuleFor(tb_FM_PaymentBill =>tb_FM_PaymentBill.SourceBill_ID).NotEmpty().When(x => x.SourceBill_ID.HasValue);
  RuleFor(tb_FM_PaymentBill =>tb_FM_PaymentBill.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
- RuleFor(x => x.OverpaymentAmount).PrecisionScale(19,4,true).WithMessage("超付金额:小数位不能超过4。");
+ RuleFor(x => x.OverpaymentAmount).PrecisionScale(19,6,true).WithMessage("超付金额:小数位不能超过6。");
  RuleFor(tb_FM_PaymentBill =>tb_FM_PaymentBill.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_FM_PaymentBill =>tb_FM_PaymentBill.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_FM_PaymentBill =>tb_FM_PaymentBill.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");

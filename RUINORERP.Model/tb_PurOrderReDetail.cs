@@ -157,7 +157,7 @@ namespace RUINORERP.Model
         /// 小计
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "小计" )]
         public decimal? TotalAmount
         { 
             get{return _TotalAmount;}
@@ -199,7 +199,7 @@ namespace RUINORERP.Model
         /// 抽成金额
         /// </summary>
         [AdvQueryAttribute(ColName = "commission",ColDesc = "抽成金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "commission" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "抽成金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "commission" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "抽成金额" )]
         public decimal? commission
         { 
             get{return _commission;}

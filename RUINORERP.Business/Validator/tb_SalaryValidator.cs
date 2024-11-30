@@ -26,10 +26,10 @@ namespace RUINORERP.Business
     {
      public tb_SalaryValidator() 
      {
-      RuleFor(x => x.BaseSalary).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
- RuleFor(x => x.Bonus).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
- RuleFor(x => x.Deduction).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
- RuleFor(x => x.ActualSalary).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
+      RuleFor(x => x.BaseSalary).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
+ RuleFor(x => x.Bonus).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
+ RuleFor(x => x.Deduction).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
+ RuleFor(x => x.ActualSalary).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
        	
            	        Initialize();
      }

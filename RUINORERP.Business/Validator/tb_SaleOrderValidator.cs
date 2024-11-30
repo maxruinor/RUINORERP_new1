@@ -37,19 +37,19 @@ namespace RUINORERP.Business
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
- RuleFor(x => x.ShipCost).PrecisionScale(19,4,true).WithMessage("运费:小数位不能超过4。");
+ RuleFor(x => x.ShipCost).PrecisionScale(19,6,true).WithMessage("运费:小数位不能超过6。");
 //***** 
  RuleFor(tb_SaleOrder =>tb_SaleOrder.TotalQty).NotNull().WithMessage("总数量:不能为空。");
- RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("总成本:小数位不能超过4。");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
- RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,4,true).WithMessage("总税额:小数位不能超过4。");
+ RuleFor(x => x.TotalCost).PrecisionScale(19,6,true).WithMessage("总成本:小数位不能超过6。");
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("总金额:小数位不能超过6。");
+ RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,6,true).WithMessage("总税额:小数位不能超过6。");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ShippingAddress).MaximumLength(250).WithMessage("发货地址:不能超过最大长度,250.");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.ShippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
- RuleFor(x => x.CollectedMoney).PrecisionScale(19,4,true).WithMessage("实收金额:小数位不能超过4。");
- RuleFor(x => x.PrePayMoney).PrecisionScale(19,4,true).WithMessage("预收款:小数位不能超过4。");
- RuleFor(x => x.Deposit).PrecisionScale(19,4,true).WithMessage("订金:小数位不能超过4。");
+ RuleFor(x => x.CollectedMoney).PrecisionScale(19,6,true).WithMessage("实收金额:小数位不能超过6。");
+ RuleFor(x => x.PrePayMoney).PrecisionScale(19,6,true).WithMessage("预收款:小数位不能超过6。");
+ RuleFor(x => x.Deposit).PrecisionScale(19,6,true).WithMessage("订金:小数位不能超过6。");
  RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
- RuleFor(x => x.TotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
+ RuleFor(x => x.TotalUntaxedAmount).PrecisionScale(19,6,true).WithMessage("未税本位币:小数位不能超过6。");
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_SaleOrder =>tb_SaleOrder.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_SaleOrder =>tb_SaleOrder.CloseCaseOpinions).MaximumLength(100).WithMessage("结案意见:不能超过最大长度,100.");

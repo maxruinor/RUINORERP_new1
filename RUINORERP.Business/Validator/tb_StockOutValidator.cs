@@ -33,8 +33,8 @@ namespace RUINORERP.Business
  RuleFor(tb_StockOut =>tb_StockOut.BillNo).MaximumLength(25).WithMessage("其他出库单号:不能超过最大长度,25.");
 //***** 
  RuleFor(tb_StockOut =>tb_StockOut.TotalQty).NotNull().WithMessage("总数量:不能为空。");
- RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("总成本:小数位不能超过4。");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
+ RuleFor(x => x.TotalCost).PrecisionScale(19,6,true).WithMessage("总成本:小数位不能超过6。");
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("总金额:小数位不能超过6。");
  RuleFor(tb_StockOut =>tb_StockOut.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_StockOut =>tb_StockOut.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
  RuleFor(tb_StockOut =>tb_StockOut.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");

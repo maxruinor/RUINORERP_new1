@@ -142,7 +142,7 @@ namespace RUINORERP.Model
         /// 预估价格
         /// </summary>
         [AdvQueryAttribute(ColName = "EstimatedPrice",ColDesc = "预估价格")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "EstimatedPrice" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "预估价格" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "EstimatedPrice" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "预估价格" )]
         public decimal? EstimatedPrice
         { 
             get{return _EstimatedPrice;}

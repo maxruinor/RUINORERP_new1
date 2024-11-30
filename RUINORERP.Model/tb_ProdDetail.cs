@@ -156,7 +156,7 @@ namespace RUINORERP.Model
         /// 标准价
         /// </summary>
         [AdvQueryAttribute(ColName = "Standard_Price",ColDesc = "标准价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Standard_Price" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "标准价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Standard_Price" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "标准价" )]
         public decimal? Standard_Price
         { 
             get{return _Standard_Price;}
@@ -170,7 +170,7 @@ namespace RUINORERP.Model
         /// 调拨价格
         /// </summary>
         [AdvQueryAttribute(ColName = "Transfer_Price",ColDesc = "调拨价格")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Transfer_Price" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "调拨价格" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Transfer_Price" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "调拨价格" )]
         public decimal? Transfer_Price
         { 
             get{return _Transfer_Price;}
@@ -184,7 +184,7 @@ namespace RUINORERP.Model
         /// 批发价格
         /// </summary>
         [AdvQueryAttribute(ColName = "Wholesale_Price",ColDesc = "批发价格")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Wholesale_Price" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "批发价格" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Wholesale_Price" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "批发价格" )]
         public decimal? Wholesale_Price
         { 
             get{return _Wholesale_Price;}
@@ -198,7 +198,7 @@ namespace RUINORERP.Model
         /// 市场零售价
         /// </summary>
         [AdvQueryAttribute(ColName = "Market_Price",ColDesc = "市场零售价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Market_Price" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "市场零售价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Market_Price" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "市场零售价" )]
         public decimal? Market_Price
         { 
             get{return _Market_Price;}
@@ -212,7 +212,7 @@ namespace RUINORERP.Model
         /// 折扣价格
         /// </summary>
         [AdvQueryAttribute(ColName = "Discount_Price",ColDesc = "折扣价格")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Discount_Price" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "折扣价格" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Discount_Price" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "折扣价格" )]
         public decimal? Discount_Price
         { 
             get{return _Discount_Price;}

@@ -40,10 +40,13 @@ namespace RUINORERP.Business.Processor
         {
             QueryFilter queryFilter = new QueryFilter();
 
-            var lambda = Expressionable.Create<View_PurEntryItems>()
-                          .AndIF(AuthorizeController.GetPurBizLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)
-                          .ToExpression();//注意 这一句 不能少
-            queryFilter.FilterLimitExpressions.Add(lambda);
+            //这里经办人是仓库了。不是采购。限制不对。暂时去掉。除非关联一下采购订单。
+            //视图关联订单把采购员带出。多关联一个字段采购员。后面再优化。TODO:
+
+            //var lambda = Expressionable.Create<View_PurEntryItems>()
+            //              .AndIF(AuthorizeController.GetPurBizLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)
+            //              .ToExpression();//注意 这一句 不能少
+            //queryFilter.FilterLimitExpressions.Add(lambda);
 
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.PurEntryNo);
             queryFilter.SetQueryField<View_PurEntryItems>(c => c.EntryDate);

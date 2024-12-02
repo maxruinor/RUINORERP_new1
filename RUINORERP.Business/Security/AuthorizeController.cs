@@ -26,6 +26,7 @@ namespace RUINORERP.Business.Security
     /// <summary>
     /// 特殊授权管理器
     /// 系统配置管理器
+    /// 所有设置都是从个性化角色配置再到最终系统配置。按这个顺序来检查或生效。
     /// </summary>
     public class AuthorizeController : IAuthorizeController
     {
@@ -106,17 +107,17 @@ namespace RUINORERP.Business.Security
         /// 先判断角色组权限，再判断系统配置。
         /// </summary>
         /// <returns></returns>
-        public  bool GetShowDebugInfoAuthorization()
+        public bool GetShowDebugInfoAuthorization()
         {
-             if (_context.SysConfig.ShowDebugInfo)
-             {
-                 return _context.rolePropertyConfig?.ShowDebugInfo ?? _context.SysConfig.ShowDebugInfo;
-             }
-             else
-             {
-                 return _context.IsSuperUser && _context.SysConfig.IsDebug;
-             }
-        }    
+            if (_context.SysConfig.ShowDebugInfo)
+            {
+                return _context.rolePropertyConfig?.ShowDebugInfo ?? _context.SysConfig.ShowDebugInfo;
+            }
+            else
+            {
+                return _context.IsSuperUser && _context.SysConfig.IsDebug;
+            }
+        }
 
         private bool GetCustomizeOrDefault(bool? roleProperty, bool sysConfigDefault)
         {
@@ -124,6 +125,7 @@ namespace RUINORERP.Business.Security
         }
         /// <summary>
         /// 查询页布局自定义
+        ///  这个意思是？待定
         /// </summary>
         /// <param name="context"></param>
         /// <returns>不限制返回false</returns>
@@ -144,6 +146,7 @@ namespace RUINORERP.Business.Security
 
         /// <summary>
         /// 查询表格列自定义
+        ///  这个意思是？待定
         /// </summary>
         /// <param name="context"></param>
         /// <returns>不限制返回false</returns>
@@ -163,6 +166,7 @@ namespace RUINORERP.Business.Security
 
         /// <summary>
         /// 单据表格列自定义
+        /// 这个意思是？待定
         /// </summary>
         /// <param name="context"></param>
         /// <returns>不限制返回false</returns>
@@ -240,7 +244,6 @@ namespace RUINORERP.Business.Security
             {
                 return false;
             }
-
             if (context.rolePropertyConfig == null)
             {
                 return context.SysConfig.PurchsaeBizLimited;
@@ -276,24 +279,19 @@ namespace RUINORERP.Business.Security
 
 
         /// <summary>
-        /// 获取角色的金额精度
+        /// 获取角色的金额精度，先看角色级的配置，再看系统级的配置。
         /// </summary>
         /// <param name="context"></param>
         /// <returns>不限制返回false</returns>
         public static int GetMoneyDataPrecision(ApplicationContext context)
         {
-            if (context.IsSuperUser)
+            if (context.rolePropertyConfig != null)
             {
-                return 4;
-            }
-
-            if (context.rolePropertyConfig == null)
-            {
-                return context.SysConfig.MoneyDataPrecision;
+                return context.rolePropertyConfig.MoneyDataPrecision;
             }
             else
             {
-                return context.rolePropertyConfig.MoneyDataPrecision;
+                return context.SysConfig.MoneyDataPrecision;
             }
         }
 
@@ -305,30 +303,14 @@ namespace RUINORERP.Business.Security
         /// <returns>true才显示</returns>
         public static bool GetShowDebugInfoAuthorization(ApplicationContext context)
         {
-            //先看系统级的配置
-            if (context.SysConfig.ShowDebugInfo)
+            //角色中没有配置，则按系统级取值
+            if (context.rolePropertyConfig == null)
             {
-                //角色中没有配置，则按系统级取值
-                if (context.rolePropertyConfig == null)
-                {
-                    return context.SysConfig.ShowDebugInfo;
-                }
-                else
-                {
-                    return context.rolePropertyConfig.ShowDebugInfo;
-                }
+                return context.SysConfig.ShowDebugInfo;
             }
             else
             {
-                //关掉系统的。如果是超级用户 就看是不是调试状态
-                if (context.rolePropertyConfig.ShowDebugInfo)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return context.rolePropertyConfig.ShowDebugInfo;
             }
         }
 

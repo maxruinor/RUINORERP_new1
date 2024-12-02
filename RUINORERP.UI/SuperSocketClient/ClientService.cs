@@ -330,17 +330,19 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 int index = 0;
                 ByteBuff bg = new ByteBuff(gd.Two);
+
                 string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
                 long RequestUserID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+                string RequestEmpName = ByteDataAnalysis.GetString(gd.Two, ref index);
                 string RequestContent = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string BillData = ByteDataAnalysis.GetString(gd.Two, ref index);
                 string BillType = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string BillData = ByteDataAnalysis.GetString(gd.Two, ref index);
                 var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == RequestUserID);
                 TranMessage MessageInfo = new TranMessage();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;
                 MessageInfo.SenderName = userinfo.姓名;
-                MessageInfo.Content = RequestContent;
+                MessageInfo.Content = RequestContent + "-" + BillType;
                 //保存最新的协助处理请求信息 单据信息
                 string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + $"\\FormProperty\\Data\\{userinfo.姓名}", BillType + System.DateTime.Now.ToString("yyyyMMddHHmmss") + ".cache");
                 System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
@@ -351,7 +353,6 @@ namespace RUINORERP.UI.SuperSocketClient
                 }
                 File.WriteAllText(PathwithFileName, BillData);
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
-
                 if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
                 {
                     MainForm.Instance.PrintInfoLog($"收到服务器转发{userinfo.姓名}的协助处理请求！");
@@ -431,7 +432,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     lockInfo.BizType = BizType;
                     MainForm.Instance.LockInfoList.AddOrUpdate(billid, lockInfo, (key, oldValue) => lockInfo);
                     //因为启动系统就会接收数据。还没有等加载初始化对象
-                    if (MainForm.Instance.authorizeController==null)
+                    if (MainForm.Instance.authorizeController == null)
                     {
                         MainForm.Instance.authorizeController = Startup.GetFromFac<AuthorizeController>();
                     }

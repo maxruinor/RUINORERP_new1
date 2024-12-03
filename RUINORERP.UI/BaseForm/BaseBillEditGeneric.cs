@@ -1160,7 +1160,7 @@ namespace RUINORERP.UI.BaseForm
                         return;
                     }
                     await Delete();
-              
+
                     break;
                 case MenuItemEnums.修改:
                     if (IsLock())
@@ -2175,7 +2175,7 @@ namespace RUINORERP.UI.BaseForm
                         //加载一个空的显示的UI
                         bindingSourceSub.Clear();
                         OnBindDataToUIEvent(Activator.CreateInstance(typeof(T)) as T, ActionStatus.删除);
-                        
+
                     }
                 }
                 else
@@ -2674,8 +2674,10 @@ namespace RUINORERP.UI.BaseForm
                     //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
                     UIBizSrvice.RequestCache<T>();
                     UIBizSrvice.RequestCache<C>();
-                    UIBizSrvice.RequestCache<tb_Prod>();
-                    UIBizSrvice.RequestCache<View_ProdDetail>();
+                    // UIBizSrvice.RequestCache<tb_Prod>();
+                    // UIBizSrvice.RequestCache<View_ProdDetail>();
+                    //去检测产品视图的缓存并且转换为强类型
+                    MainForm.Instance.TryRequestCache(nameof(View_ProdDetail), typeof(View_ProdDetail));
                     #endregion
                 }
             }

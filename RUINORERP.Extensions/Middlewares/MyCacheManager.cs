@@ -38,7 +38,7 @@ namespace RUINORERP.Extensions.Middlewares
         /// 目前是一个特殊的key对应的一个特殊的值
         /// 保存了缓存列表的信息概览 by watson 2024-11-22
         /// </summary>
-        public ICacheManager<object> Cache { get => _cache; set => _cache = value; }
+        public ICacheManager<object> CacheInfoList { get => _cache; set => _cache = value; }
 
 
         private ICacheManager<object> _cacheEntityList;
@@ -794,7 +794,7 @@ namespace RUINORERP.Extensions.Middlewares
                 CacheEntityList.Add(tableName, objList);
                 CacheInfo lastCacheInfo = new CacheInfo(tableName, objList.Count);
                 lastCacheInfo.HasExpire = HasExpire;
-                MyCacheManager.Instance.Cache.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
+                MyCacheManager.Instance.CacheInfoList.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
                 if (HasExpire)
                 {
                     //设置一个区间的随机数。保证不会同时过期。
@@ -803,7 +803,7 @@ namespace RUINORERP.Extensions.Middlewares
                     CacheEntityList.Expire(tableName, ExpirationMode.Absolute, TimeSpan.FromMinutes(rand));
                     lastCacheInfo.ExpirationTime = DateTime.Now.AddMinutes(rand);
                     //更新缓存表的信息
-                    MyCacheManager.Instance.Cache.Update(tableName, c => lastCacheInfo);
+                    MyCacheManager.Instance.CacheInfoList.Update(tableName, c => lastCacheInfo);
                 }
             }
         }
@@ -1063,7 +1063,7 @@ namespace RUINORERP.Extensions.Middlewares
         /// <param name="cacheEntitylist">列表缓存</param>
         public MyCacheManager(ICacheManager<object> cache, ICacheManager<object> cacheEntity, ICacheManager<object> cacheEntitylist)
         {
-            Cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            CacheInfoList = cache ?? throw new ArgumentNullException(nameof(cache));
             // _cacheEntity = cacheEntity ?? throw new ArgumentNullException(nameof(cacheEntity));
             _cacheEntityList = cacheEntitylist ?? throw new ArgumentNullException(nameof(cacheEntitylist));
 

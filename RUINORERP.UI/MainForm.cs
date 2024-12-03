@@ -336,18 +336,23 @@ namespace RUINORERP.UI
         private async void MainForm_Load(object sender, EventArgs e)
         {
             CacheTemp = Startup.GetFromFac<IMemoryCache>();
+            authorizeController = Startup.GetFromFac<AuthorizeController>();
 
             //cache.Set("test1", "test123");
 
-            InitRemind();
-            //手动初始化 
+            //手动初始化  打开就加载。省得登陆后还没有加载完
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
             BizCacheHelper.InitManager();
-
-
-
             await InitConfig(false);
-            timer1.Start();
+
+            //先加载一遍缓存
+            var tableNames = CacheInfoList.Keys.ToList();
+            foreach (var nextTableName in tableNames)
+            {
+                TryRequestCache(nextTableName);
+            }
+
+
             tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
             List<tb_Company> company = await companyController.QueryAsync();
             if (company != null)
@@ -385,7 +390,13 @@ namespace RUINORERP.UI
             }
             else
             {
-                authorizeController = Startup.GetFromFac<AuthorizeController>();
+
+                InitRemind();
+
+                UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
+                UIBizSrvice.RequestCache(typeof(tb_ProductType));
+                UIBizSrvice.RequestCache(typeof(View_ProdDetail));
+
                 using (StatusBusy busy = new StatusBusy("系统正在【初始化】 请稍候"))
                 {
                     tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
@@ -406,8 +417,10 @@ namespace RUINORERP.UI
                     Expression<Func<View_ProdDetail, bool>> exp = Expressionable.Create<View_ProdDetail>() //创建表达式
                     .AndIF(true, w => w.CNName.Length > 0)
                     .ToExpression();//注意 这一句 不能少
-                    list = await dc.BaseQueryByWhereAsync(exp);
-                    list = MainForm.Instance.list;
+                                    //list = await dc.BaseQueryByWhereAsync(exp);
+                                    //list = MainForm.Instance.list;
+                    TryRequestCache(nameof(View_ProdDetail), typeof(View_ProdDetail));
+
                     //这里做一个事件。缓存中的变化了。这里也变化一下。todo:
                     try
                     {
@@ -431,6 +444,7 @@ namespace RUINORERP.UI
             }
 
 
+            timer1.Start();
             Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
             LoadUIMenus();
             LoadUIForIM_LogPages();
@@ -438,12 +452,7 @@ namespace RUINORERP.UI
             MainForm.Instance.uclog.AddLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
-            //手动初始化 
-            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
-            BizCacheHelper.InitManager();
-            UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
-            UIBizSrvice.RequestCache(typeof(tb_ProductType));
-            UIBizSrvice.RequestCache(typeof(View_ProdDetail));
+
 
             LoginWebServer();
 
@@ -452,7 +461,7 @@ namespace RUINORERP.UI
             timerStatus.Tick += (sender, e) => RefreshData();
             timerStatus.Start();
 
-           
+
 
         }
         public AuthorizeController authorizeController;
@@ -1961,7 +1970,6 @@ namespace RUINORERP.UI
             await UpdateSys(true);
         }
 
-
         //public async Task Create(CreateUpdateRoleDto createUpdateRoleDto)
         //{
         //    IRoleService _roleService = new RoleService(new );
@@ -2219,66 +2227,110 @@ namespace RUINORERP.UI
             }
 
             //超过60 就去抓一下缓存  如果不好用。则用线程定时器
-            if (GetLastInputTime() > 30 && MainForm.Instance.AppContext.IsOnline)
+            if (GetLastInputTime() > 5 && MainForm.Instance.AppContext.IsOnline)
             {
                 var tableNames = CacheInfoList.Keys.ToList();
                 string nextTableName = _cacheFetchManager.GetNextTableName(tableNames);
-                if (nextTableName != null)
+                TryRequestCache(nextTableName);
+            }
+
+
+        }
+
+
+        public void TryRequestCache(string nextTableName, Type elementType = null)
+        {
+            if (nextTableName != null)
+            {
+                //对比缓存信息概率。行数变化了也要请求最新的
+                bool IsView_ProdDetail = false;
+                CacheInfo info = new CacheInfo();
+                //先从缓存中取出缓存概览数据中的基本信息。再对比行数。
+                if (MainForm.Instance.CacheInfoList.TryGetValue(nextTableName, out info))
                 {
-                    // 您的抓取缓存逻辑FetchCacheForTable
-                    //UIBizSrvice.RequestCache(nextTableName);
-                    bool needRequestCache = false;
-                    Type elementType = null;
-                    #region
-                    var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(nextTableName);
-                    if (cachelist != null)
+                    if (nextTableName.Equals(nameof(View_ProdDetail)))
                     {
-                        Type listType = cachelist.GetType();
-                        if (TypeHelper.IsGenericList(listType))
-                        {
-                            #region  强类型
-                            List<object> oldlist = new List<object>();
-                            foreach (object ca in (IEnumerable)cachelist)
-                            {
-                                oldlist.Add(ca);
-                            }
-                            if (oldlist.Count == 0)
-                            {
-
-                            }
-                            #endregion
-                        }
-                        else if (TypeHelper.IsJArrayList(listType))
-                        {
-                            elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + nextTableName);
-                            List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
-
-                            #region  jsonlist
-                            if (myList.Count == 0)
-                            {
-                                needRequestCache = true;
-                            }
-                            #endregion
-                        }
+                        IsView_ProdDetail = true;
                     }
-                    else
+                }
+
+
+                // 您的抓取缓存逻辑FetchCacheForTable
+                //UIBizSrvice.RequestCache(nextTableName);
+                bool needRequestCache = false;
+                //Type elementType = null;
+                #region
+                var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(nextTableName);
+                if (cachelist != null)
+                {
+                    Type listType = cachelist.GetType();
+                    if (TypeHelper.IsGenericList(listType))
                     {
-                        //请求发送缓存
-                        needRequestCache = true;
-                    }
-                    #endregion
-                    if (needRequestCache)
-                    {
-                        UIBizSrvice.RequestCache(nextTableName, elementType);
-                        _cacheFetchManager.UpdateLastCacheFetchInfo(nextTableName);
-                        if (authorizeController.GetShowDebugInfoAuthorization())
+                        #region  强类型
+                        List<object> oldlist = new List<object>();
+                        foreach (object ca in (IEnumerable)cachelist)
                         {
-                            PrintInfoLog($"请求了缓存：{nextTableName}-{elementType.Name}");
+                            oldlist.Add(ca);
                         }
+
+                        //提取产品视图缓存转为强类型
+                        if (info != null && IsView_ProdDetail && !list.Count.Equals(oldlist.Count))
+                        {
+                            list.Clear();
+                            foreach (var item in oldlist)
+                            {
+                                list.Add(item as View_ProdDetail);
+                            }
+                        }
+
+                        if (oldlist.Count == 0 || oldlist.Count != info.CacheCount)
+                        {
+                            needRequestCache = true;
+                        }
+
+                        #endregion
+                    }
+                    else if (TypeHelper.IsJArrayList(listType))
+                    {
+                        elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + nextTableName);
+                        List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
+
+                        //提取产品视图缓存转为强类型
+                        if (info != null && IsView_ProdDetail && !list.Count.Equals(myList.Count))
+                        {
+                            list.Clear();
+                            foreach (var item in myList)
+                            {
+                                list.Add(item as View_ProdDetail);
+                            }
+                        }
+
+                        #region  jsonlist
+                        if (myList.Count == 0 || myList.Count != info.CacheCount)
+                        {
+                            needRequestCache = true;
+                        }
+                        #endregion
+                    }
+                }
+                else
+                {
+                    //请求发送缓存
+                    needRequestCache = true;
+                }
+                #endregion
+                if (needRequestCache)
+                {
+                    UIBizSrvice.RequestCache(nextTableName, elementType);
+                    _cacheFetchManager.UpdateLastCacheFetchInfo(nextTableName);
+                    if (authorizeController.GetShowDebugInfoAuthorization())
+                    {
+                        PrintInfoLog($"请求了缓存：{nextTableName}-{elementType.Name}");
                     }
                 }
             }
         }
+
 
         public void ShowStatusText(string text)
         {

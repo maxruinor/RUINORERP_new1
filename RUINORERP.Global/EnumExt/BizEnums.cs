@@ -30,7 +30,13 @@ namespace RUINORERP.Global
         /// <summary>
         /// 会修改采购订单数量，会修改库存数量
         /// </summary>
-        需要返回 = 1
+        需要返回 = 1,
+
+        /// <summary>
+        /// 会修改采购订单数量，会修改库存数量？？
+        /// </summary>
+        换货 = 2,
+
     }
 
 

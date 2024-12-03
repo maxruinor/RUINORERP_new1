@@ -58,8 +58,6 @@ namespace RUINORERP.Business.CommService
 
         public static void InitManager()
         {
-
-
             if (_manager == null)
             {
                 //因为是静态，系统启动就调用这里。所以这里的才是最会执行的代码
@@ -578,7 +576,7 @@ namespace RUINORERP.Business.CommService
             //typeNames.ToList<string>()
             try
             {
-                Manager.Cache.Clear();
+                Manager.CacheInfoList.Clear();
                 Manager.CacheEntityList.Clear();
                 Manager.NewTableList.Clear();
                 SetDictDataSource(tableName, true);
@@ -597,7 +595,7 @@ namespace RUINORERP.Business.CommService
         {
             try
             {
-                Manager.Cache.Clear();
+                Manager.CacheInfoList.Clear();
                 Manager.CacheEntityList.Clear();
                 Manager.NewTableList.Clear();
                 SetDictDataSource(typeNames.ToList<string>(), LoadData);

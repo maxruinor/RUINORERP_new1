@@ -206,6 +206,11 @@ namespace RUINORERP.UI.SuperSocketClient
 
         }
 
+        /// <summary>
+        /// 是真正的缓存数据。按表名取的
+        /// </summary>
+        /// <param name="gd"></param>
+        /// <returns></returns>
         public static bool 接收缓存数据列表(OriginalData gd)
         {
             bool rs = false;

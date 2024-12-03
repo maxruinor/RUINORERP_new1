@@ -207,10 +207,15 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         item.Cells[3].Value = Order.tb_PurEntries.Sum(c => c.TotalQty);//已交付货数量
                         item.Cells[4].Value = project;
                     }
+                   
                     #endregion
 
                 }
-
+                else
+                {
+                    kryptonTreeGridView1.DataSource = null;
+                    kryptonTreeGridView1.GridNodes.Clear();
+                }
             }
             catch (Exception ex)
             {

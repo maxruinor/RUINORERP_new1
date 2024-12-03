@@ -102,7 +102,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.SaleDate)
                   .WhereIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                   //.WithCache(60) // 缓存60秒
-                  .ToListAsync(); //.ToPageAsync(1, 20); // 第一页，每页20条
+                  .ToPageListAsync(1, 1000); // 第一页，每页最多显示2000条
                 }
                 kryptonTreeGridView1.ReadOnly = true;
                 if (SaleOrderList.Count > 0)
@@ -204,7 +204,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         item.Cells[4].Value = project;
                     }
                     #endregion
-
+                }
+                else
+                {
+                    kryptonTreeGridView1.DataSource = null;
+                    kryptonTreeGridView1.GridNodes.Clear();
                 }
 
             }

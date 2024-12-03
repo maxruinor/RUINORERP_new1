@@ -253,7 +253,7 @@ namespace RUINORERP.UI.PUR
                 //采购订单+采购入库单
                 case 1:
                 case 2:
-                    if (expPO == null)
+                    if (expPO == null && (txtPurOrderNO.Text.Trim().Length > 0 || txtPurEntryNO.Text.Trim().Length > 0))
                     {
                         expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
                       .ToExpression();
@@ -280,24 +280,25 @@ namespace RUINORERP.UI.PUR
                       .Where(expPO)
                       .OrderBy(c => c.PurDate)
                       // .WithCache(60) // 缓存60秒
-                      .ToListAsync();
+                      .ToPageListAsync(1, 1000);
 
                     break;
                 case 3:
-                    //销售订单
-                    if (txtPurEntryNO.Text.Trim().Length > 0)
+                    if (txtSaleOrderNO.Text.Trim().Length > 0)
                     {
                         List<tb_SaleOrder> SOList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
                              .WhereIF(txtSaleOrderNO.Text.Trim().Length > 0, w => w.SOrderNo.Contains(txtSaleOrderNO.Text.Trim()))
                              .ToListAsync();
 
                         long[] SOIds = SOList.Select(c => c.SOrder_ID).ToArray();
-
-                        expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
+                        if (SOIds.Length > 0)
+                        {
+                            expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
                          .AndIF(SOIds.Length > 0, c => c.SOrder_ID.HasValue && c.RefBizType == (int)BizType.销售订单 && SOIds.ToArray().Contains(c.RefBillID.Value))
                          .ToExpression();
 
-                        goto case 1;
+                            goto case 1;
+                        }
                     }
                     break;
                 case 4:
@@ -321,35 +322,37 @@ namespace RUINORERP.UI.PUR
                     //采购退货
                     if (txtPURReNo.Text.Trim().Length > 0 || expPERe != null)
                     {
-                        if (txtPURReNo.Text.Trim().Length > 0)
+                        if (txtPURReNo.Text.Trim().Length > 0 && expPERe == null)
                         {
                             expPERe = Expressionable.Create<tb_PurEntryRe>().ToExpression();
-                            expPERe = expPERe.AndAlso(w => w.PurEntryReNo.Contains(txtPURReNo.Text.Trim()));
                         }
 
                         List<tb_PurEntryRe> ReturnList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryRe>()
-                             .Where(expPERe)
+                            .WhereIF(txtPURReNo.Text.Trim().Length > 0, w => w.PurEntryReNo.Contains(txtPURReNo.Text.Trim()))
+                            .Where(expPERe)
                              .ToListAsync();
                         //找到下一级的IDS
                         long[] EntryIds = ReturnList.Where(c => c.PurEntryID.HasValue).Select(c => c.PurEntryID.Value).ToArray();
-
-                        Expression<Func<tb_PurEntry, bool>> expEntry = Expressionable.Create<tb_PurEntry>() //创建表达式
-                          .AndIF(EntryIds.Length > 0, c => EntryIds.ToArray().Contains(c.PurEntryID))
-                          .ToExpression();
-
-                        List<tb_PurEntry> EntryList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
-                            .Where(expEntry)
-                             .ToListAsync();
-
-                        long[] POIDs = EntryList.Where(c => c.PurOrder_ID.HasValue).Select(c => c.PurOrder_ID.Value).ToArray();
-
-                        if (POIDs.Length > 0)
+                        if (EntryIds.Length > 0)
                         {
-                            expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
-                           .AndIF(POIDs.Length > 0, c => POIDs.ToArray().Contains(c.PurOrder_ID))
-                           .ToExpression();
-                            goto case 1;
+                            Expression<Func<tb_PurEntry, bool>> expEntry = Expressionable.Create<tb_PurEntry>() //创建表达式
+                         .AndIF(EntryIds.Length > 0, c => EntryIds.ToArray().Contains(c.PurEntryID))
+                         .ToExpression();
+
+                            List<tb_PurEntry> EntryList = await MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
+                                .Where(expEntry)
+                                 .ToListAsync();
+
+                            long[] POIDs = EntryList.Where(c => c.PurOrder_ID.HasValue).Select(c => c.PurOrder_ID.Value).ToArray();
+                            if (POIDs.Length > 0)
+                            {
+                                expPO = Expressionable.Create<tb_PurOrder>() //创建表达式
+                               .AndIF(POIDs.Length > 0, c => POIDs.ToArray().Contains(c.PurOrder_ID))
+                               .ToExpression();
+                                goto case 1;
+                            }
                         }
+
                     }
                     break;
                 case 6:
@@ -361,12 +364,15 @@ namespace RUINORERP.UI.PUR
                             .ToListAsync();
 
                         long[] PurEntryRe_IDs = PurReEntrys.Where(s => s.PurEntryRe_ID.HasValue).Select(c => c.PurEntryRe_ID.Value).ToArray();
+                        if (PurEntryRe_IDs.Length > 0)
+                        {
+                            expPERe = Expressionable.Create<tb_PurEntryRe>() //创建表达式
+                      .AndIF(PurEntryRe_IDs.Length > 0, c => PurEntryRe_IDs.ToArray().Contains(c.PurEntryRe_ID))
+                      .ToExpression();
 
-                        expPERe = Expressionable.Create<tb_PurEntryRe>() //创建表达式
-                       .AndIF(PurEntryRe_IDs.Length > 0, c => PurEntryRe_IDs.ToArray().Contains(c.PurEntryRe_ID))
-                       .ToExpression();
+                            goto case 5;
+                        }
 
-                        goto case 5;
                     }
                     break;
                 default:

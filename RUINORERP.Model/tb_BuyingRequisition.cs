@@ -19,7 +19,6 @@ namespace RUINORERP.Model
 {
     /// <summary>
     /// 请购单，可能来自销售订单,也可以来自其他日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表
-   
     /// </summary>
     [Serializable()]
     [Description("tb_BuyingRequisition")]

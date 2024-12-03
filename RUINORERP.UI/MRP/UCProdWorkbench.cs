@@ -243,12 +243,13 @@ namespace RUINORERP.UI.MRP
             }
             List<tb_ProductionPlan> PURList = null;
             Expression<Func<tb_ProductionPlan, bool>> exp = null;
+            Expression<Func<tb_ManufacturingOrder, bool>> expMO = null;
             // 根据索引执行相应的查询逻辑
             switch (index)
             {
                 case 1:
                 case 2:
-                    if (exp == null)
+                    if (exp == null && (txtPPNO.Text.Trim().Length > 0 || txtPDNO.Text.Trim().Length > 0))
                     {
                         exp = Expressionable.Create<tb_ProductionPlan>() //创建表达式
                       .ToExpression();
@@ -274,7 +275,7 @@ namespace RUINORERP.UI.MRP
                       //.WhereIF(txtPDNO.Text.Trim().Length > 0, w => w.tb_ProductionDemands.Any(d => d.PDNo.Contains(txtPDNO.Text.Trim())))
                       .Where(exp)
                       .OrderBy(c => c.RequirementDate)
-                      .ToListAsync();
+                      .ToPageListAsync(1, 1000);
 
                     break;
                 case 3:
@@ -286,27 +287,15 @@ namespace RUINORERP.UI.MRP
                              .ToListAsync();
 
                         long[] MOIds = FinishedGoodsInvList.Where(s => s.MOID.HasValue).Select(c => c.MOID.Value).ToArray();
+                        if (MOIds.Length > 0)
+                        {
+                            Expression<Func<tb_ManufacturingOrder, bool>> expMOTemp = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
+                                                      .AndIF(MOIds.Length > 0, c => MOIds.ToArray().Contains(c.MOID))
+                                                      .ToExpression();
+                            expMO = expMOTemp;
+                            goto case 6;
+                        }
 
-                        Expression<Func<tb_ManufacturingOrder, bool>> expMO = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
-                          .AndIF(MOIds.Length > 0, c => MOIds.ToArray().Contains(c.MOID))
-                          .ToExpression();
-
-                        var ManufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>().Where(expMO).ToListAsync();
-
-                        long[] PDIds = ManufacturingOrders.Where(s => s.PDID.HasValue).Select(c => c.PDID.Value).ToArray();
-
-                        Expression<Func<tb_ProductionDemand, bool>> expPD = Expressionable.Create<tb_ProductionDemand>() //创建表达式
-                        .AndIF(PDIds.Length > 0, c => PDIds.ToArray().Contains(c.PDID))
-                        .ToExpression();
-
-                        var ProductionDemands = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(expPD).ToListAsync();
-                        long[] ppids = ProductionDemands.Select(c => c.PPID).ToArray();
-
-                        Expression<Func<tb_ProductionPlan, bool>> expPP = Expressionable.Create<tb_ProductionPlan>() //创建表达式
-                       .AndIF(ppids.Length > 0, c => ppids.ToArray().Contains(c.PPID))
-                       .ToExpression();
-                        exp = expPP;
-                        goto case 1;
                     }
                     break;
                 case 4:
@@ -318,27 +307,14 @@ namespace RUINORERP.UI.MRP
                              .ToListAsync();
 
                         long[] MOIds = MaterialRequisitionList.Select(c => c.MOID).ToArray();
-
-                        Expression<Func<tb_ManufacturingOrder, bool>> expMO = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
+                        if (MOIds.Length > 0)
+                        {
+                            Expression<Func<tb_ManufacturingOrder, bool>> expMOTemp = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
                           .AndIF(MOIds.Length > 0, c => MOIds.ToArray().Contains(c.MOID))
                           .ToExpression();
-
-                        var ManufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>().Where(expMO).ToListAsync();
-
-                        long[] PDIds = ManufacturingOrders.Where(s => s.PDID.HasValue).Select(c => c.PDID.Value).ToArray();
-
-                        Expression<Func<tb_ProductionDemand, bool>> expPD = Expressionable.Create<tb_ProductionDemand>() //创建表达式
-                        .AndIF(PDIds.Length > 0, c => PDIds.ToArray().Contains(c.PDID))
-                        .ToExpression();
-
-                        var ProductionDemands = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(expPD).ToListAsync();
-                        long[] ppids = ProductionDemands.Select(c => c.PPID).ToArray();
-
-                        Expression<Func<tb_ProductionPlan, bool>> expPP = Expressionable.Create<tb_ProductionPlan>() //创建表达式
-                       .AndIF(ppids.Length > 0, c => ppids.ToArray().Contains(c.PPID))
-                       .ToExpression();
-                        exp = expPP;
-                        goto case 1;
+                            expMO = expMOTemp;
+                            goto case 6;
+                        }
                     }
                     break;
                 case 5:
@@ -350,61 +326,66 @@ namespace RUINORERP.UI.MRP
                              .ToListAsync();
                         //通过退料单找到领料单IDS
                         long[] MRIds = MaterialReturnList.Select(c => c.MR_ID).ToArray();
-                        Expression<Func<tb_MaterialRequisition, bool>> expMR = Expressionable.Create<tb_MaterialRequisition>() //创建表达式
-                          .AndIF(MRIds.Length > 0, c => MRIds.ToArray().Contains(c.MOID))
-                          .ToExpression();
+                        if (MRIds.Length > 0)
+                        {
+                            Expression<Func<tb_MaterialRequisition, bool>> expMR = Expressionable.Create<tb_MaterialRequisition>() //创建表达式
+                                                      .AndIF(MRIds.Length > 0, c => MRIds.ToArray().Contains(c.MOID))
+                                                      .ToExpression();
 
-                        List<tb_MaterialRequisition> MaterialRequisitionList = await MainForm.Instance.AppContext.Db.Queryable<tb_MaterialRequisition>()
-                            .Where(expMR)
-                             .ToListAsync();
+                            List<tb_MaterialRequisition> MaterialRequisitionList = await MainForm.Instance.AppContext.Db.Queryable<tb_MaterialRequisition>()
+                                .Where(expMR)
+                                 .ToListAsync();
 
-                        long[] MOIds = MaterialRequisitionList.Select(c => c.MOID).ToArray();
+                            long[] MOIds = MaterialRequisitionList.Select(c => c.MOID).ToArray();
+                            if (MOIds.Length > 0)
+                            {
+                                Expression<Func<tb_ManufacturingOrder, bool>> expMOTemp = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
+                                .AndIF(MOIds.Length > 0, c => MOIds.ToArray().Contains(c.MOID))
+                                .ToExpression();
+                                expMO = expMOTemp;
+                                goto case 6;
+                            }
+                        }
 
-                        Expression<Func<tb_ManufacturingOrder, bool>> expMO = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
-                          .AndIF(MOIds.Length > 0, c => MOIds.ToArray().Contains(c.MOID))
-                          .ToExpression();
-
-                        var ManufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
-                            .Where(expMO).ToListAsync();
-
-                        long[] PDIds = ManufacturingOrders.Where(s => s.PDID.HasValue).Select(c => c.PDID.Value).ToArray();
-
-                        Expression<Func<tb_ProductionDemand, bool>> expPD = Expressionable.Create<tb_ProductionDemand>() //创建表达式
-                        .AndIF(PDIds.Length > 0, c => PDIds.ToArray().Contains(c.PDID))
-                        .ToExpression();
-
-                        var ProductionDemands = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(expPD).ToListAsync();
-                        long[] ppids = ProductionDemands.Select(c => c.PPID).ToArray();
-
-                        Expression<Func<tb_ProductionPlan, bool>> expPP = Expressionable.Create<tb_ProductionPlan>() //创建表达式
-                       .AndIF(ppids.Length > 0, c => ppids.ToArray().Contains(c.PPID))
-                       .ToExpression();
-                        exp = expPP;
-                        goto case 1;
                     }
                     break;
                 case 6:
                     //制令单
-                    if (txtMONO.Text.Trim().Length > 0)
+                    if (txtMONO.Text.Trim().Length > 0 || expMO != null)
                     {
+                        if (txtMONO.Text.Trim().Length > 0 && expMO == null)
+                        {
+                            expMO = Expressionable.Create<tb_ManufacturingOrder>() //创建表达式
+                            .ToExpression();
+                            expMO = expMO.AndAlso(w => w.MONO.Contains(txtMONO.Text.Trim()));
+                        }
+
                         var ManufacturingOrders = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
                              .WhereIF(txtMONO.Text.Trim().Length > 0, w => w.MONO.Contains(txtMONO.Text.Trim()))
+                             .Where(expMO)
                             .ToListAsync();
 
                         long[] PDIds = ManufacturingOrders.Where(s => s.PDID.HasValue).Select(c => c.PDID.Value).ToArray();
-
-                        Expression<Func<tb_ProductionDemand, bool>> expPD = Expressionable.Create<tb_ProductionDemand>() //创建表达式
+                        if (PDIds.Length > 0)
+                        {
+                            Expression<Func<tb_ProductionDemand, bool>> expPD = Expressionable.Create<tb_ProductionDemand>() //创建表达式
                         .AndIF(PDIds.Length > 0, c => PDIds.ToArray().Contains(c.PDID))
                         .ToExpression();
 
-                        var ProductionDemands = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(expPD).ToListAsync();
-                        long[] ppids = ProductionDemands.Select(c => c.PPID).ToArray();
+                            var ProductionDemands = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(expPD).ToListAsync();
+                            long[] ppids = ProductionDemands.Select(c => c.PPID).ToArray();
+                            if (ppids.Length > 0)
+                            {
+                                Expression<Func<tb_ProductionPlan, bool>> expPP = Expressionable.Create<tb_ProductionPlan>() //创建表达式
+                           .AndIF(ppids.Length > 0, c => ppids.ToArray().Contains(c.PPID))
+                           .ToExpression();
+                                exp = expPP;
+                                goto case 1;
+                            }
 
-                        Expression<Func<tb_ProductionPlan, bool>> expPP = Expressionable.Create<tb_ProductionPlan>() //创建表达式
-                       .AndIF(ppids.Length > 0, c => ppids.ToArray().Contains(c.PPID))
-                       .ToExpression();
-                        exp = expPP;
-                        goto case 1;
+                        }
+
+
                     }
                     break;
                 default:

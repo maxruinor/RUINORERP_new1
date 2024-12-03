@@ -199,7 +199,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     #endregion
 
                 }
-
+                else
+                {
+                    kryptonTreeGridView1.DataSource = null;
+                    kryptonTreeGridView1.GridNodes.Clear();
+                }
             }
             catch (Exception ex)
             {

@@ -308,6 +308,7 @@ namespace RUINORERP.Extensions.Middlewares
                         //    cacheInfo.ExpirationTime = DateTime.Now.AddMinutes(rand);
                         //    MyCacheManager.Instance.Cache.AddOrUpdate(tableName, cacheInfo, c => cacheInfo);
                         //}
+                    
                     }
                     else
                     {

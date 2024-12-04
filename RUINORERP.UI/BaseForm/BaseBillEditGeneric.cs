@@ -2678,6 +2678,13 @@ namespace RUINORERP.UI.BaseForm
                     // UIBizSrvice.RequestCache<View_ProdDetail>();
                     //去检测产品视图的缓存并且转换为强类型
                     MainForm.Instance.TryRequestCache(nameof(View_ProdDetail), typeof(View_ProdDetail));
+
+                    //先加载一遍缓存
+                    var tableNames = MainForm.Instance.CacheInfoList.Keys.ToList();
+                    foreach (var nextTableName in tableNames)
+                    {
+                        MainForm.Instance.TryRequestCache(nextTableName);
+                    }
                     #endregion
                 }
             }

@@ -62,9 +62,9 @@ namespace RUINORERP.Business
                         inv = new tb_Inventory();
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Location_ID = child.Location_ID;
-                        
+
                         inv.Quantity = 0;
-                        
+
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
                                        //inv.LatestStorageTime = System.DateTime.Now;
@@ -484,6 +484,11 @@ namespace RUINORERP.Business
                     _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     return rmrs;
+                }
+
+                if (entity.tb_SaleOuts == null)
+                {
+                    entity.tb_SaleOuts = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>().Where(m => m.SOrder_ID == entity.SOrder_ID).ToListAsync();
                 }
 
                 entity.tb_SaleOuts.ForEach(c => c.PayStatus = entity.PayStatus);

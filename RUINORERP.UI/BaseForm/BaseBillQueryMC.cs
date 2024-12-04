@@ -1194,6 +1194,13 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
+                //先加载一遍缓存
+                var tableNames = MainForm.Instance.CacheInfoList.Keys.ToList();
+                foreach (var nextTableName in tableNames)
+                {
+                    MainForm.Instance.TryRequestCache(nextTableName);
+                }
+
                 Builder();
                 this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
                 if (this.CurMenuInfo == null)

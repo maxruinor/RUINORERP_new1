@@ -1106,6 +1106,13 @@ namespace RUINORERP.UI.BaseForm
 
         private KryptonPage UCOutlookGridGroupAnalysisLoad()
         {
+            //先加载一遍缓存
+            var tableNames =MainForm.Instance. CacheInfoList.Keys.ToList();
+            foreach (var nextTableName in tableNames)
+            {
+                MainForm.Instance.TryRequestCache(nextTableName);
+            }
+
             _UCOutlookGridGroupAnalysis = new UCBillOutlookGridAnalysis();
             _UCOutlookGridGroupAnalysis.entityType = typeof(M);
             _UCOutlookGridGroupAnalysis.ColDisplayTypes = _UCMasterQuery.ColDisplayTypes;

@@ -2325,7 +2325,14 @@ namespace RUINORERP.UI
                     _cacheFetchManager.UpdateLastCacheFetchInfo(nextTableName);
                     if (authorizeController.GetShowDebugInfoAuthorization())
                     {
-                        PrintInfoLog($"请求了缓存：{nextTableName}-{elementType.Name}");
+                        if (elementType==null)
+                        {
+                            PrintInfoLog($"请求了缓存：{nextTableName}");
+                        }
+                        else
+                        {
+                            PrintInfoLog($"请求了缓存：{nextTableName}-{elementType.Name}");
+                        }
                     }
                 }
             }

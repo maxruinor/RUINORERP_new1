@@ -45,26 +45,7 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
 
-        public override void BuildColNameDataDictionary()
-        {
-            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
-            System.Linq.Expressions.Expression<Func<tb_FinishedGoodsInv, int?>> exprDataStatus;
-            exprDataStatus = (p) => p.DataStatus;
-            MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
-
-            System.Linq.Expressions.Expression<Func<tb_FinishedGoodsInv, int?>> exprApprovalStatus;
-            exprApprovalStatus = (p) => p.ApprovalStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
-
-            List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
-            foreach (var item in MainForm.Instance.list)
-            {
-                proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
-            }
-            System.Linq.Expressions.Expression<Func<tb_FinishedGoodsInvDetail, long>> expProdDetailID;
-            expProdDetailID = (p) => p.ProdDetailID;// == name;
-            base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
-        }
+ 
 
 
         public override void BuildLimitQueryConditions()

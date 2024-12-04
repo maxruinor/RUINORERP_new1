@@ -33,10 +33,6 @@ namespace RUINORERP.UI.PSI.INV
 
         public override void BuildColNameDataDictionary()
         {
-            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
-            System.Linq.Expressions.Expression<Func<tb_Stocktake, int?>> exprApprovalStatus;
-            exprApprovalStatus = (p) => p.ApprovalStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
 
             System.Linq.Expressions.Expression<Func<tb_Stocktake, int?>> exprAdjust_Type;
             exprAdjust_Type = (p) => p.Adjust_Type;
@@ -46,31 +42,7 @@ namespace RUINORERP.UI.PSI.INV
             exprCheckMode = (p) => p.CheckMode;
             base.MasterColNameDataDictionary.TryAdd(exprCheckMode.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CheckMode)));
 
-            System.Linq.Expressions.Expression<Func<tb_Stocktake, int?>> exprDataStatus;
-            exprDataStatus = (p) => p.DataStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
-
-
-            //System.Linq.Expressions.Expression<Func<tb_StockIn, int?>> exprPayStatus;
-            //exprPayStatus = (p) => p.;
-            //base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, GetKeyValuePairs(typeof(PayStatus)));
-
-            //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-            //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-            //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            //System.Linq.Expressions.Expression<Func<tb_StockInDetail, bool?>> expr2;
-            //expr2 = (p) => p.Gift;// == name;
-            //base.ChildColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
-
-          
-            List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
-            foreach (var item in MainForm.Instance.list)
-            {
-                proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
-            }
-            System.Linq.Expressions.Expression<Func<tb_StocktakeDetail, long>> expProdDetailID;
-            expProdDetailID = (p) => p.ProdDetailID;// == name;
-            base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
+            base.BuildColNameDataDictionary();
         }
 
 
@@ -81,7 +53,7 @@ namespace RUINORERP.UI.PSI.INV
                              //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
                              // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                              .And(t => t.isdeleted == false)
-                               // .And(t => t.Is_enabled == true)
+                            // .And(t => t.Is_enabled == true)
                             .ToExpression();//注意 这一句 不能少
             base.LimitQueryConditions = lambda;
         }
@@ -101,11 +73,11 @@ namespace RUINORERP.UI.PSI.INV
             base.MasterSummaryCols.Add(c => c.CheckTotalQty);
             base.MasterSummaryCols.Add(c => c.DiffTotalQty);
 
- 
+
 
 
         }
-      
+
 
     }
 }

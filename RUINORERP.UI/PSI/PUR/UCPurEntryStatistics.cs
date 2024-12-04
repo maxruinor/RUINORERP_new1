@@ -70,9 +70,7 @@ namespace RUINORERP.UI.PSI.PUR
             MasterColDisplayTypes.Add(typeof(View_ProdDetail));
         }
 
-        public override void BuildColNameDataDictionary()
-        {
-        }
+    
 
         public override void BuildLimitQueryConditions()
         {

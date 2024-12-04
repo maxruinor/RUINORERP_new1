@@ -58,10 +58,7 @@ namespace RUINORERP.UI.MRP.PPLAN
  
         }
 
-        public override void BuildColNameDataDictionary()
-        {
-            
-        }
+       
 
 
         public override void BuildLimitQueryConditions()

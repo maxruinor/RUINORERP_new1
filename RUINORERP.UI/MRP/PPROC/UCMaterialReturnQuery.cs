@@ -48,34 +48,12 @@ namespace RUINORERP.UI.MRP.MP
         {
             //引用的订单号ID不需要显示。因为有一个单号冗余显示了。
             base.MasterInvisibleCols.Add(c => c.MR_ID);
-           // base.ChildInvisibleCols.Add(c => c.ProdDetailID);
+            // base.ChildInvisibleCols.Add(c => c.ProdDetailID);
         }
- 
+
 
         public override void BuildColNameDataDictionary()
         {
-            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
-            System.Linq.Expressions.Expression<Func<tb_MaterialReturn, int?>> exprDataStatus;
-            exprDataStatus = (p) => p.DataStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
-
-            System.Linq.Expressions.Expression<Func<tb_MaterialReturn, int?>> exprApprovalStatus;
-            exprApprovalStatus = (p) => p.ApprovalStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
-
-            //System.Linq.Expressions.Expression<Func<tb_MaterialReturn, int?>> exprPriority;
-            // exprPriority = (p) => p.Priority;
-            // base.MasterColNameDataDictionary.TryAdd(exprPriority.GetMemberInfo().Name, GetKeyValuePairs(typeof(Priority)));
-
-            //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-            //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-            //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            //System.Linq.Expressions.Expression<Func<tb_MaterialReturnDetail, bool?>> expr2;
-            //expr2 = (p) => p.Gift;// == name;
-            //base.ChildColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
-
-            //View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
-           
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
             foreach (var item in MainForm.Instance.list)
             {
@@ -84,6 +62,7 @@ namespace RUINORERP.UI.MRP.MP
             System.Linq.Expressions.Expression<Func<tb_MaterialReturnDetail, long>> expProdDetailID;
             expProdDetailID = (p) => p.ProdDetailID;// == name;
             base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
+            base.BuildColNameDataDictionary();
         }
 
 

@@ -32,7 +32,46 @@ namespace RUINORERP.UI.Common
 {
     public static class UIHelper
     {
-       
+
+        public static void ControlColumnsInvisible(tb_MenuInfo CurMenuInfo,
+            List<string> InvisibleCols, List<string> DefaultHideCols = null)
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if (CurMenuInfo.tb_P4Fields != null)
+                {
+                    foreach (var item in CurMenuInfo.tb_P4Fields)
+                    {
+                        if (item != null)
+                        {
+                            if (item.tb_fieldinfo != null)
+                            {
+                                //设置不可见
+                                //if (!item.IsVisble && item.tb_fieldinfo.IsChild)
+                                //{
+                                //    if (!InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                //    {
+                                //        InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+                                //    }
+                                //}
+                                if (!item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                {
+                                    InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+                                }
+                                if (DefaultHideCols!=null)
+                                {
+                                    if (item.HideValue && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                    {
+                                        DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
+                                    }
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+            }
+        }
         public static object GetDisplayText(ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ColNameDataDictionary,
             string colDbName, object Value, List<Type> ColDisplayTypes = null, Type entityType = null)
         {

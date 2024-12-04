@@ -11,6 +11,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
 using RUINORERP.Model.Models;
@@ -33,6 +34,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
+using CommonHelper = RUINORERP.UI.Common.CommonHelper;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -89,7 +91,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public List<Type> ChildColDisplayTypes { get; set; } = new List<Type>();
 
-       
+
 
         /// <summary>
         /// 设置列显示相关的类型
@@ -282,18 +284,19 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-            
+
         }
 
         private void button设置查询条件_Click(object sender, EventArgs e)
         {
             MenuPersonalizedSettings();
         }
-       
+
 
         /// <summary>
         /// 固定的值显示，入库ture 出库false
         /// 每个列表对应的值 ，单独设置
+        /// 这里是用于分析。查询来的结果和要分析的是一样的数据。所有可以共用
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<object, string>>> MasterColNameDataDictionary { set; get; } = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
 
@@ -315,9 +318,23 @@ namespace RUINORERP.UI.BaseForm
             return kvlistPayStatus;
         }
 
+        /// <summary>
+        /// 这里提借枚举型的共用的名称值显示字典
+        /// </summary>
         public virtual void BuildColNameDataDictionary()
         {
+            MasterColNameDataDictionary.TryAdd(nameof(DataStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+            MasterColNameDataDictionary.TryAdd(nameof(ApprovalStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
+            MasterColNameDataDictionary.TryAdd(nameof(PayStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));
+            MasterColNameDataDictionary.TryAdd(nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
+            MasterColNameDataDictionary.TryAdd(nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay)));
 
+            //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
+            //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
+            //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
+            //System.Linq.Expressions.Expression<Func<tb_SaleOrderDetail, bool?>> expr2;
+            //expr2 = (p) => p.Gift;
+            //MasterColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
         }
 
 
@@ -856,7 +873,7 @@ namespace RUINORERP.UI.BaseForm
             List<M> list = new List<M>();
             _UCMasterQuery.bindingSourceMaster.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             _UCMasterQuery.ShowSummaryCols();
-    
+
         }
 
         private KryptonWorkspaceCell CreateCell(KryptonPage[] kryptonPages)
@@ -918,8 +935,8 @@ namespace RUINORERP.UI.BaseForm
             Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = kryptonPanelQuery;
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
-           // UIQueryHelper<M> uIQueryHelper = new UIQueryHelper<M>();
-           // uIQueryHelper.ReladtedEntityType = ReladtedEntityType;
+            // UIQueryHelper<M> uIQueryHelper = new UIQueryHelper<M>();
+            // uIQueryHelper.ReladtedEntityType = ReladtedEntityType;
             kryptonPanel条件生成容器.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(kryptonPanel条件生成容器, true, null);
             kryptonPanel条件生成容器.Visible = false;
             kryptonPanel条件生成容器.Controls.Clear();
@@ -987,6 +1004,7 @@ namespace RUINORERP.UI.BaseForm
         {
             _UCMasterQuery = new UCBillMasterQuery();
             _UCMasterQuery.entityType = typeof(M);
+            _UCMasterQuery.Name = "BaseNavGen_UCMasterQuery";
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
             _UCMasterQuery.SummaryCols = masterlist;
             _UCMasterQuery.InvisibleCols = ExpressionHelper.ExpressionListToStringList(MasterInvisibleCols);
@@ -997,6 +1015,10 @@ namespace RUINORERP.UI.BaseForm
             {
                 _UCMasterQuery.InvisibleCols.Add(PKColName);
             }
+            _UCMasterQuery.DefaultHideCols = new List<string>();
+
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCMasterQuery.InvisibleCols, _UCMasterQuery.DefaultHideCols);
+
 
             _UCMasterQuery.ColNameDataDictionary = MasterColNameDataDictionary;
             _UCMasterQuery.ColDisplayTypes = MasterColDisplayTypes;
@@ -1107,7 +1129,7 @@ namespace RUINORERP.UI.BaseForm
         private KryptonPage UCOutlookGridGroupAnalysisLoad()
         {
             //先加载一遍缓存
-            var tableNames =MainForm.Instance. CacheInfoList.Keys.ToList();
+            var tableNames = MainForm.Instance.CacheInfoList.Keys.ToList();
             foreach (var nextTableName in tableNames)
             {
                 MainForm.Instance.TryRequestCache(nextTableName);
@@ -1122,7 +1144,7 @@ namespace RUINORERP.UI.BaseForm
             _UCOutlookGridGroupAnalysis.SummaryCols = masterlist;
             _UCOutlookGridGroupAnalysis.InvisibleCols = ExpressionHelper.ExpressionListToStringList(MasterInvisibleCols);
             _UCOutlookGridGroupAnalysis.ColNameDataDictionary = MasterColNameDataDictionary;
-
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCOutlookGridGroupAnalysis.InvisibleCols);
             KryptonPage page = NewPage(NavParts.分组显示.ToString(), 1, _UCOutlookGridGroupAnalysis);
             //page.ClearFlags(KryptonPageFlags.All);
             // Document pages cannot be docked or auto hidden

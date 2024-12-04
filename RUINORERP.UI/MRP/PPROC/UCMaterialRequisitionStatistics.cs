@@ -57,10 +57,7 @@ namespace RUINORERP.UI.MRP.PPROC
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_MaterialRequisitionItems, tb_MaterialRequisition>(c => c.MaterialRequisitionNO, r => r.MaterialRequisitionNO);
         }
 
-        public override void BuildColNameDataDictionary()
-        {
-            
-        }
+       
 
 
         public override void BuildLimitQueryConditions()

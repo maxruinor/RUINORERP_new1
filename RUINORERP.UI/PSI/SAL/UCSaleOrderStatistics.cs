@@ -52,11 +52,7 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_SaleOrderItems, tb_SaleOrder>(c => c.SOrderNo, r => r.SOrderNo);
         }
-        public override void BuildColNameDataDictionary()
-        {
-
-        }
-
+        
         public override void BuildLimitQueryConditions()
         {
             //创建表达式

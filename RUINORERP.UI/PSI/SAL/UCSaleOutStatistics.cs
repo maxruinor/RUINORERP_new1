@@ -32,7 +32,7 @@ namespace RUINORERP.UI.PSI.SAL
             ReladtedEntityType = typeof(View_SaleOutItems);
             base.WithOutlook = true;
 
-          
+
         }
 
         private void UCSaleOutStatistics_Load(object sender, EventArgs e)
@@ -58,10 +58,13 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_SaleOutItems, tb_SaleOut>(c => c.SaleOutNo, r => r.SaleOutNo);
         }
 
-        public override void BuildColNameDataDictionary()
-        {
-            
-        }
+        //public override void BuildColNameDataDictionary()
+        //{
+        //    System.Linq.Expressions.Expression<Func<tb_SaleOut, int?>> exprPayStatus;
+        //    exprPayStatus = (p) => p.PayStatus;
+        //    base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));
+        //    base.BuildColNameDataDictionary();
+        //}
 
 
         public override void BuildLimitQueryConditions()
@@ -85,7 +88,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(View_SaleOutItems).Name + "Processor");
             QueryFilter = baseProcessor.GetQueryFilter();
-          
+
         }
 
         public override void BuildSummaryCols()

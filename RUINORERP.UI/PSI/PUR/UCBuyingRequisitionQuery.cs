@@ -43,31 +43,10 @@ namespace RUINORERP.UI.PSI.PUR
 
         public override void BuildColNameDataDictionary()
         {
-            //固定值也包括枚举值
-            System.Linq.Expressions.Expression<Func<tb_BuyingRequisition, int?>> exprDataStatus;
-            exprDataStatus = (p) => p.DataStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
-
-            System.Linq.Expressions.Expression<Func<tb_BuyingRequisition, int?>> exprApprovalStatus;
-            exprApprovalStatus = (p) => p.ApprovalStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
-
-            
-            List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
-            foreach (var item in MainForm.Instance.list)
-            {
-                proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
-            }
-            System.Linq.Expressions.Expression<Func<tb_BuyingRequisition, long>> expProdDetailID;
-            expProdDetailID = (p) => p.PuRequisition_ID;// == name;
-            base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
-
             System.Linq.Expressions.Expression<Func<tb_BuyingRequisition, int?>> exprPayStatus;
             exprPayStatus = (p) => p.RefBizType;
             base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(BizType)));
-
-
-
+            base.BuildColNameDataDictionary();
         }
 
         public override void BuildLimitQueryConditions()

@@ -66,7 +66,7 @@ namespace RUINORERP.UI.FormProperty
             dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             dataGridView1.XmlFileName = this.Name + typeof(C).Name + "quicklyinput";
             dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(C));
-            ControlChildColumnsInvisible(InvisibleCols);
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, InvisibleCols);
             //这里设置了指定列不可见
             foreach (var item in InvisibleCols)
             {
@@ -118,32 +118,7 @@ namespace RUINORERP.UI.FormProperty
             }
         }
 
-        public void ControlChildColumnsInvisible(List<string> InvisibleCols)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Fields != null)
-                {
-                    foreach (var item in CurMenuInfo.tb_P4Fields)
-                    {
-                        if (item != null)
-                        {
-                            if (item.tb_fieldinfo != null)
-                            {
-                                //设置不可见
-                                if (!item.IsVisble && item.tb_fieldinfo.IsChild)
-                                {
-                                    if (!InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-                                    {
-                                        InvisibleCols.Add(item.tb_fieldinfo.FieldName);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+
 
         private void btnOk_Click(object sender, EventArgs e)
         {
@@ -182,7 +157,7 @@ namespace RUINORERP.UI.FormProperty
         }
 
 
-        
+
         //设置数据源中的行数
         public void SetDataSourceRows(int maxRows)
         {

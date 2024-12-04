@@ -52,6 +52,7 @@ using System.Threading.Tasks;
 using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using System.Xml;
+using CommonHelper = RUINORERP.UI.Common.CommonHelper;
 using XmlDocument = System.Xml.XmlDocument;
 
 namespace RUINORERP.UI.BaseForm
@@ -216,10 +217,18 @@ namespace RUINORERP.UI.BaseForm
 
         public virtual void BuildColNameDataDictionary()
         {
+            MasterColNameDataDictionary.TryAdd(nameof(DataStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
+            MasterColNameDataDictionary.TryAdd(nameof(ApprovalStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
+            MasterColNameDataDictionary.TryAdd(nameof(PayStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));
+            MasterColNameDataDictionary.TryAdd(nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
             
+            List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
+            foreach (var item in MainForm.Instance.list)
+            {
+                proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
+            }
+            ChildColNameDataDictionary.TryAdd("ProdDetailID", proDetailList);
         }
-
-
 
         public delegate void QueryHandler();
 
@@ -971,7 +980,7 @@ namespace RUINORERP.UI.BaseForm
             }
 
             BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
-              
+
 
 
             int pageNum = 1;
@@ -1598,7 +1607,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
             _UCBillChildQuery.DefaultHideCols = new List<string>();
-            ControlColumnsInvisible(_UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
             _UCBillChildQuery.SummaryCols = childlist;
             _UCBillChildQuery.ColNameDataDictionary = ChildColNameDataDictionary;
             KryptonPage page = NewPage("明细信息", 1, _UCBillChildQuery);
@@ -1623,7 +1632,7 @@ namespace RUINORERP.UI.BaseForm
             }
             _UCBillChildQuery_Related.InvisibleCols.AddRange(ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleCols));
             _UCBillChildQuery_Related.DefaultHideCols = new List<string>();
-            ControlColumnsInvisible(_UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
 
             _UCBillChildQuery_Related.ColNameDataDictionary = ChildColNameDataDictionary;
             KryptonPage page = NewPage("关联信息", 1, _UCBillChildQuery_Related);
@@ -1642,7 +1651,6 @@ namespace RUINORERP.UI.BaseForm
             _UCBillMasterQuery.Name = "_UCBillMasterQuery";
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
             _UCBillMasterQuery.SummaryCols = masterlist;
-
             _UCBillMasterQuery.InvisibleCols = ExpressionHelper.ExpressionListToStringList(MasterInvisibleCols);
 
             //一般主单的主键不用显示 这里统一处理？
@@ -1655,7 +1663,7 @@ namespace RUINORERP.UI.BaseForm
 
             _UCBillMasterQuery.DefaultHideCols = new List<string>();
 
-            ControlColumnsInvisible(_UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols);
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols);
 
             _UCBillMasterQuery.ColNameDataDictionary = MasterColNameDataDictionary;
 
@@ -1680,36 +1688,36 @@ namespace RUINORERP.UI.BaseForm
         /// 控制字段是否显示，添加到里面的是不显示的
         /// </summary>
         /// <param name="InvisibleCols"></param>
-        public void ControlColumnsInvisible(List<string> InvisibleCols, List<string> DefaultHideCols)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Fields != null)
-                {
-                    foreach (var item in CurMenuInfo.tb_P4Fields)
-                    {
-                        if (item != null)
-                        {
-                            if (item.tb_fieldinfo != null)
-                            {
-                                if (!item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-                                {
-                                    InvisibleCols.Add(item.tb_fieldinfo.FieldName);
-                                }
+        //public void ControlColumnsInvisible(List<string> InvisibleCols, List<string> DefaultHideCols)
+        //{
+        //    if (!MainForm.Instance.AppContext.IsSuperUser)
+        //    {
+        //        if (CurMenuInfo.tb_P4Fields != null)
+        //        {
+        //            foreach (var item in CurMenuInfo.tb_P4Fields)
+        //            {
+        //                if (item != null)
+        //                {
+        //                    if (item.tb_fieldinfo != null)
+        //                    {
+        //                        if (!item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+        //                        {
+        //                            InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+        //                        }
 
-                                if (item.HideValue && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-                                {
-                                    DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
-                                }
+        //                        if (item.HideValue && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+        //                        {
+        //                            DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
+        //                        }
 
-                            }
-                        }
+        //                    }
+        //                }
 
-                    }
+        //            }
 
-                }
-            }
-        }
+        //        }
+        //    }
+        //}
 
 
 

@@ -57,12 +57,7 @@ namespace RUINORERP.UI.PSI.SAL
             base._UCOutlookGridGroupAnalysis.GridRelated.SetRelatedInfo<View_SaleOutReItems, tb_SaleOut>(c => c.SaleOut_NO, r => r.SaleOutNo);
         }
 
-        public override void BuildColNameDataDictionary()
-        {
-
-        }
-
-
+      
         public override void BuildLimitQueryConditions()
         {
             //创建表达式

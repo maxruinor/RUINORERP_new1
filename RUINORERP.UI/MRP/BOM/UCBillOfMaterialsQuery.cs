@@ -159,49 +159,6 @@ namespace RUINORERP.UI.MRP.BOM
             */
             base.AddByCopy(EditEntitys);
         }
-
-
-        public override void BuildColNameDataDictionary()
-        {
-            System.Linq.Expressions.Expression<Func<View_BOM, int?>> exprDataStatus;
-            exprDataStatus = (p) => p.DataStatus;
-            MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
-
-
-            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
-             System.Linq.Expressions.Expression<Func<View_BOM, int?>> exprApprovalStatus;
-             exprApprovalStatus = (p) => p.ApprovalStatus;
-             base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
-
-
-            //System.Linq.Expressions.Expression<Func<tb_SaleOrder, int?>> exprPayStatus;
-            //exprPayStatus = (p) => p.PayStatus;
-            //base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, GetKeyValuePairs(typeof(PayStatus)));
-
-            //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-            //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-            //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            //System.Linq.Expressions.Expression<Func<tb_SaleOrderDetail, bool?>> expr2;
-            //expr2 = (p) => p.Gift;// == name;
-            //base.ChildColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
-
-            /*
-            //View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
-  
-            
-            List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
-            foreach (var item in list)
-            {
-                proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
-            }
-            System.Linq.Expressions.Expression<Func<tb_SaleOrderDetail, long>> expProdDetailID;
-            expProdDetailID = (p) => p.ProdDetailID;// == name;
-            base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
-
-            */
-        }
-
-
         public override void BuildLimitQueryConditions()
         {
             //创建表达式

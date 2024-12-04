@@ -53,43 +53,6 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-
-        public override void BuildColNameDataDictionary()
-        {
-            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
-            System.Linq.Expressions.Expression<Func<tb_SaleOut, int?>> exprDataStatus;
-            exprDataStatus = (p) => p.DataStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
-
-
-            System.Linq.Expressions.Expression<Func<tb_SaleOut, int?>> exprApprovalStatus;
-            exprApprovalStatus = (p) => p.ApprovalStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
-
-
-            System.Linq.Expressions.Expression<Func<tb_SaleOut, int?>> exprPayStatus;
-            exprPayStatus = (p) => p.PayStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprPayStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));
-
-            //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-            //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-            //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            //System.Linq.Expressions.Expression<Func<tb_SaleOutDetail, bool?>> expr2;
-            //expr2 = (p) => p.Gift;// == name;
-            //base.ChildColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
-
-            
-            List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
-            foreach (var item in MainForm.Instance.list)
-            {
-                proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
-            }
-            System.Linq.Expressions.Expression<Func<tb_SaleOutDetail, long>> expProdDetailID;
-            expProdDetailID = (p) => p.ProdDetailID;// == name;
-            base.ChildColNameDataDictionary.TryAdd(expProdDetailID.GetMemberInfo().Name, proDetailList);
-        }
-
-
         public override void BuildInvisibleCols()
         {
             //在销售出库单中，引用的订单号ID不需要显示。因为有一个单号冗余显示了。

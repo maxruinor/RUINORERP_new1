@@ -37,17 +37,7 @@ namespace RUINORERP.UI.FM
 
 
 
-        public override void BuildColNameDataDictionary()
-        {
-            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
-
-            System.Linq.Expressions.Expression<Func<tb_FM_OtherExpense, int?>> exprApprovalStatus;
-            exprApprovalStatus = (p) => p.ApprovalStatus;
-            base.MasterColNameDataDictionary.TryAdd(exprApprovalStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
-
-
-
-        }
+        
 
 
         public override void BuildLimitQueryConditions()

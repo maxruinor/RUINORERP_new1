@@ -747,41 +747,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /*
-        /// <summary>
-        /// 控制字段是否为默认隐藏
-        /// </summary>
-        /// <param name="InvisibleCols"></param>
-        public void ControlColumnsDefaultHide(List<SourceGridDefineColumnItem> listCols)
-        {
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                if (CurMenuInfo.tb_P4Fields != null)
-                {
-                    foreach (var item in CurMenuInfo.tb_P4Fields)
-                    {
-                        if (item != null)
-                        {
-                            if (item.tb_fieldinfo != null)
-                            {
-                                if (item.HideValue && item.tb_fieldinfo.IsChild)
-                                {
-                                    SourceGridDefineColumnItem defineColumnItem = listCols.Where(w => w.ColName == item.tb_fieldinfo.FieldName).FirstOrDefault();
-                                    if (defineColumnItem != null)
-                                    {
-                                        defineColumnItem.SetCol_DefaultHide(item.tb_fieldinfo.FieldName);
-                                    }
-
-                                }
-                            }
-                        }
-
-                    }
-
-                }
-            }
-        }
-        */
+   
 
         #region 帮助信息提示
 

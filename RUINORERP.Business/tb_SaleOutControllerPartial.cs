@@ -354,6 +354,15 @@ namespace RUINORERP.Business
 
                     #endregion
 
+
+                    //运费检测  如果一个订单有运费。多次出库时。运费也默认加到了每次的出库单。
+                    //这里审核时检测之前的是不是已加过（多次出库第一次加上运费。后面财务如何处理？再说） 第二次起都是为0.
+                    if (entity.tb_saleorder.tb_SaleOuts.Count > 1)
+                    {
+                        entity.ShipCost = 0;
+                    }
+
+
                     entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                     BusinessHelper.Instance.ApproverEntity(entity);
                     //只更新指定列

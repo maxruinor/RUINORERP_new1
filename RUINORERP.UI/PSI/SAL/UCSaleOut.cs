@@ -781,10 +781,8 @@ namespace RUINORERP.UI.PSI.SAL
             .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
             .SingleAsync();
 
-
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
             tb_SaleOut entity = mapper.Map<tb_SaleOut>(saleorder);
-
 
             entity.DataStatus = (int)DataStatus.草稿;
             entity.ApprovalStatus = (int)ApprovalStatus.未审核;

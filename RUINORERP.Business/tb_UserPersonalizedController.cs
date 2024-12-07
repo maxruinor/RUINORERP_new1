@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:30
+// 时间：12/05/2024 23:44:22
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -84,7 +84,7 @@ namespace RUINORERP.Business
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.PSID > 0)
+                if (entity.UserPersonalizedID > 0)
                 {
                     bool rs = await _tb_UserPersonalizedServices.Update(entity);
                     if (rs)
@@ -125,7 +125,7 @@ namespace RUINORERP.Business
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.PSID > 0)
+                if (entity.UserPersonalizedID > 0)
                 {
                     bool rs = await _tb_UserPersonalizedServices.Update(entity);
                     if (rs)
@@ -204,7 +204,7 @@ namespace RUINORERP.Business
             {
                 rs=true;
                 ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.PSID).ToArray();
+                 long[] result = entitys.Select(e => e.UserPersonalizedID).ToArray();
                 MyCacheManager.Instance.DeleteEntityList<tb_UserPersonalized>(result);
             }
             return rs;
@@ -242,24 +242,24 @@ namespace RUINORERP.Business
                        // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 
-            if (entity.PSID > 0)
+            if (entity.UserPersonalizedID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UserPersonalized>(entity as tb_UserPersonalized)
-                        .Include(m => m.tb_User_Roles)
+                        .Include(m => m.tb_UIMenuPersonalizations)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UserPersonalized>(entity as tb_UserPersonalized)
-                .Include(m => m.tb_User_Roles)
+                .Include(m => m.tb_UIMenuPersonalizations)
                                 .ExecuteCommandAsync();
         }
         
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rsms.ReturnObject = entity as T ;
-                entity.PrimaryKeyID = entity.PSID;
+                entity.PrimaryKeyID = entity.UserPersonalizedID;
                 rsms.Succeeded = rs;
             }
             catch (Exception ex)
@@ -283,7 +283,7 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_UserPersonalized>()
-                                .Includes(m => m.tb_User_Roles)
+                                .Includes(m => m.tb_UIMenuPersonalizations)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -292,8 +292,8 @@ namespace RUINORERP.Business
         public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
             tb_UserPersonalized entity = model as tb_UserPersonalized;
-             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_UserPersonalized>(m => m.PSID== entity.PSID)
-                                .Include(m => m.tb_User_Roles)
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_UserPersonalized>(m => m.UserPersonalizedID== entity.UserPersonalizedID)
+                                .Include(m => m.tb_UIMenuPersonalizations)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -456,8 +456,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_UserPersonalized>> QueryByNavAsync()
         {
             List<tb_UserPersonalized> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserPersonalized>()
-                               .Includes(t => t.tb_uimenupersonalization )
-                                            .Includes(t => t.tb_User_Roles )
+                               .Includes(t => t.tb_user_role )
+                                            .Includes(t => t.tb_UIMenuPersonalizations )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -477,8 +477,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_UserPersonalized>> QueryByNavAsync(Expression<Func<tb_UserPersonalized, bool>> exp)
         {
             List<tb_UserPersonalized> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserPersonalized>().Where(exp)
-                               .Includes(t => t.tb_uimenupersonalization )
-                                            .Includes(t => t.tb_User_Roles )
+                               .Includes(t => t.tb_user_role )
+                                            .Includes(t => t.tb_UIMenuPersonalizations )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -498,8 +498,8 @@ namespace RUINORERP.Business
          public virtual List<tb_UserPersonalized> QueryByNav(Expression<Func<tb_UserPersonalized, bool>> exp)
         {
             List<tb_UserPersonalized> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UserPersonalized>().Where(exp)
-                            .Includes(t => t.tb_uimenupersonalization )
-                                        .Includes(t => t.tb_User_Roles )
+                            .Includes(t => t.tb_user_role )
+                                        .Includes(t => t.tb_UIMenuPersonalizations )
                         .ToList();
             
             foreach (var item in list)
@@ -535,9 +535,9 @@ namespace RUINORERP.Business
         
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
-            tb_UserPersonalized entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserPersonalized>().Where(w => w.PSID == (long)id)
-                             .Includes(t => t.tb_uimenupersonalization )
-                                        .Includes(t => t.tb_User_Roles )
+            tb_UserPersonalized entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserPersonalized>().Where(w => w.UserPersonalizedID == (long)id)
+                             .Includes(t => t.tb_user_role )
+                                        .Includes(t => t.tb_UIMenuPersonalizations )
                         .FirstAsync();
             if(entity!=null)
             {

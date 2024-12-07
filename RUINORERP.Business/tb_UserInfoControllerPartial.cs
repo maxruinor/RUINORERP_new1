@@ -37,10 +37,10 @@ namespace RUINORERP.Business
             List<tb_UserInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
                             .Includes(t => t.tb_employee, e => e.tb_department)
                             .AsNavQueryable()
-                            .Includes(t => t.tb_User_Roles, ur => ur.tb_userpersonalized,
-                            r => r.tb_uimenupersonalization,m => m.tb_uiquerycondition)
-                            .Includes(t => t.tb_User_Roles, ur => ur.tb_userpersonalized,
-                            r => r.tb_uimenupersonalization, m => m.tb_uigridsetting)
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_UserPersonalizeds,
+                            r => r.tb_UIMenuPersonalizations, m => m.tb_UIQueryConditions)
+                            .Includes(t => t.tb_User_Roles, ur => ur.tb_UserPersonalizeds,
+                            r => r.tb_UIMenuPersonalizations, m => m.tb_UIGridSettings)
                             .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Modules)
                             .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Menus)
                             .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Fields)

@@ -361,8 +361,6 @@ namespace RUINORERP.Business
                     {
                         entity.ShipCost = 0;
                     }
-
-
                     entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                     BusinessHelper.Instance.ApproverEntity(entity);
                     //只更新指定列

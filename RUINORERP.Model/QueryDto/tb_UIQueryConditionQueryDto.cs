@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:30
+// 时间：12/05/2024 23:44:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -31,6 +31,20 @@ namespace RUINORERP.Model.QueryDto
         }
 
     
+     
+
+        private long? _UIMenuPID;
+        /// <summary>
+        /// 菜单设置
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UIMenuPID",ColDesc = "菜单设置")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "UIMenuPID",IsNullable = true,ColumnDescription = "菜单设置" )]
+        [FKRelationAttribute("tb_UIMenuPersonalization","UIMenuPID")]
+        public long? UIMenuPID 
+        { 
+            get{return _UIMenuPID;}
+            set{SetProperty(ref _UIMenuPID, value);}
+        }
      
 
         private int? _Sort;
@@ -121,6 +135,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _EnableDefault2;}
             set{SetProperty(ref _EnableDefault2, value);}
+        }
+     
+
+        private bool? _Focused= false;
+        /// <summary>
+        /// 默认焦点
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Focused",ColDesc = "默认焦点")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Focused",IsNullable = true,ColumnDescription = "默认焦点" )]
+        public bool? Focused 
+        { 
+            get{return _Focused;}
+            set{SetProperty(ref _Focused, value);}
         }
 
 

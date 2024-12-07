@@ -109,9 +109,16 @@ namespace RUINORERP.Model.Context
         public tb_RoleInfo CurrentRole { get; set; }
 
         /// <summary>
-        /// 当前用户角色（一个人可以我个角色。配置不一样。）
+        /// 当前用户角色（一个人可以对应多个角色。配置不一样。）
         /// </summary>
         public tb_User_Role CurrentUser_Role { get; set; }
+
+
+        /// <summary>
+        /// 当前用户角色下的个性化配置
+        /// </summary>
+        public tb_UserPersonalized CurrentUser_Role_Personalized { get; set; }
+
 
         /// <summary>
         /// 当前角色

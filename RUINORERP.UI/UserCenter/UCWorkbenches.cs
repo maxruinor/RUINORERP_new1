@@ -242,7 +242,8 @@ namespace RUINORERP.UI.UserCenter
 
         private void btnSaveLayout_Click(object sender, EventArgs e)
         {
-            SaveLayoutToXml();
+            //SaveLayoutToXml();
+            SaveAsDefaultLayoutToDb();
         }
 
 
@@ -363,8 +364,8 @@ namespace RUINORERP.UI.UserCenter
                     }
                 }
 
-                //保存超级用户的布局为默认布局
-                if (MainForm.Instance.AppContext.IsSuperUser && System.IO.File.Exists(xmlfilepath))
+                //保存用户的布局
+                if (System.IO.File.Exists(xmlfilepath))
                 {
                     //加载XML文件
                     XmlDocument xmldoc = new XmlDocument();
@@ -373,8 +374,8 @@ namespace RUINORERP.UI.UserCenter
                     string xmlStr = xmldoc.InnerXml;
                     //字符串转XML
                     //xmldoc.LoadXml(xmlStr);
-                    MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.WorkCellLayout = xmlStr;
-                    int affcet = await MainForm.Instance.AppContext.Db.Storageable<tb_User_Role>(MainForm.Instance.AppContext.CurrentUser_Role).ExecuteCommandAsync();
+                    MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout = xmlStr;
+                    int affcet = await MainForm.Instance.AppContext.Db.Storageable<tb_UserPersonalized>(MainForm.Instance.AppContext.CurrentUser_Role_Personalized).ExecuteCommandAsync();
                     if (affcet > 0)
                     {
                         MainForm.Instance.PrintInfoLog("工作台布局保存成功");
@@ -391,7 +392,7 @@ namespace RUINORERP.UI.UserCenter
         private void LoadDefaultLayoutFromDb(KryptonPageCollection Kpages)
         {
             //没有个性化文件时用默认的
-            if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.WorkCellLayout))
+            if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout))
             {
                 #region load
                 //加载XML文件
@@ -399,7 +400,7 @@ namespace RUINORERP.UI.UserCenter
                 //获取XML字符串
                 string xmlStr = xmldoc.InnerXml;
                 //字符串转XML
-                xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.WorkCellLayout);
+                xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout);
 
                 XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
                 XmlReaderSettings settings = new XmlReaderSettings();
@@ -425,23 +426,19 @@ namespace RUINORERP.UI.UserCenter
             //加载布局
             try
             {
-                string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, xmlFileNameWithExtension);
-                //Location of XML file
-                if (System.IO.File.Exists(xmlfilepath))
+                //没有个性化文件时用默认的
+                if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout))
                 {
-                    #region load
-                    // Create the XmlNodeReader object.
-                    XmlDocument doc = new XmlDocument();
-                    doc.Load(xmlfilepath);
-                    XmlNodeReader nodeReader = new XmlNodeReader(doc);
-                    // Set the validation settings.
-                    XmlReaderSettings settings = new XmlReaderSettings();
-                    //settings.ValidationType = ValidationType.Schema;
-                    //settings.Schemas.Add("urn:bookstore-schema", "books.xsd");
-                    //settings.ValidationEventHandler += new ValidationEventHandler(ValidationCallBack);
-                    //settings.NewLineChars = Environment.NewLine;
-                    //settings.Indent = true;
+                    #region 优化从数据库取
+                    //加载XML文件
+                    XmlDocument xmldoc = new XmlDocument();
+                    //获取XML字符串
+                    string xmlStr = xmldoc.InnerXml;
+                    //字符串转XML
+                    xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout);
 
+                    XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
+                    XmlReaderSettings settings = new XmlReaderSettings();
                     using (XmlReader reader = XmlReader.Create(nodeReader, settings))
                     {
                         while (reader.Read())
@@ -456,22 +453,25 @@ namespace RUINORERP.UI.UserCenter
                     }
                     #endregion
                 }
-                /*
                 else
                 {
-                    //没有个性化文件时用默认的
-                    if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout))
+                    string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, xmlFileNameWithExtension);
+                    //Location of XML file
+                    if (System.IO.File.Exists(xmlfilepath))
                     {
                         #region load
-                        //加载XML文件
-                        XmlDocument xmldoc = new XmlDocument();
-                        //获取XML字符串
-                        string xmlStr = xmldoc.InnerXml;
-                        //字符串转XML
-                        xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout);
-
-                        XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
+                        // Create the XmlNodeReader object.
+                        XmlDocument doc = new XmlDocument();
+                        doc.Load(xmlfilepath);
+                        XmlNodeReader nodeReader = new XmlNodeReader(doc);
+                        // Set the validation settings.
                         XmlReaderSettings settings = new XmlReaderSettings();
+                        //settings.ValidationType = ValidationType.Schema;
+                        //settings.Schemas.Add("urn:bookstore-schema", "books.xsd");
+                        //settings.ValidationEventHandler += new ValidationEventHandler(ValidationCallBack);
+                        //settings.NewLineChars = Environment.NewLine;
+                        //settings.Indent = true;
+
                         using (XmlReader reader = XmlReader.Create(nodeReader, settings))
                         {
                             while (reader.Read())
@@ -487,7 +487,7 @@ namespace RUINORERP.UI.UserCenter
                         #endregion
                     }
                 }
-                */
+
             }
             catch (Exception ex)
             {

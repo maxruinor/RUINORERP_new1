@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:30
+// 时间：12/05/2024 23:44:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -36,33 +36,18 @@ namespace RUINORERP.Model
 
 
         #region 属性
-        private long _PSID;
+        private long _UserPersonalizedID;
         /// <summary>
         /// 
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PSID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
-        public long PSID
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UserPersonalizedID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
+        public long UserPersonalizedID
         { 
-            get{return _PSID;}
+            get{return _UserPersonalizedID;}
             set{
-            base.PrimaryKeyID = _PSID;
-            SetProperty(ref _PSID, value);
-            }
-        }
-
-        private long? _UIPID;
-        /// <summary>
-        /// 个性化
-        /// </summary>
-        [AdvQueryAttribute(ColName = "UIPID",ColDesc = "个性化")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIPID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "个性化" )]
-        [FKRelationAttribute("tb_UIMenuPersonalization","UIPID")]
-        public long? UIPID
-        { 
-            get{return _UIPID;}
-            set{
-            SetProperty(ref _UIPID, value);
+            base.PrimaryKeyID = _UserPersonalizedID;
+            SetProperty(ref _UserPersonalizedID, value);
             }
         }
 
@@ -94,22 +79,37 @@ namespace RUINORERP.Model
             }
         }
 
+        private long _ID;
+        /// <summary>
+        /// 用户角色
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ID",ColDesc = "用户角色")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "用户角色" )]
+        [FKRelationAttribute("tb_User_Role","ID")]
+        public long ID
+        { 
+            get{return _ID;}
+            set{
+            SetProperty(ref _ID, value);
+            }
+        }
+
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(UIPID))]
-        public virtual tb_UIMenuPersonalization tb_uimenupersonalization { get; set; }
+        [Navigate(NavigateType.OneToOne, nameof(ID))]
+        public virtual tb_User_Role tb_user_role { get; set; }
 
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_User_Role.PSID))]
-        public virtual List<tb_User_Role> tb_User_Roles { get; set; }
-        //tb_User_Role.PSID)
-        //PSID.FK_USERPersonalized_REF_USER_Role)
-        //tb_UserPersonalized.PSID)
+        [Navigate(NavigateType.OneToMany, nameof(tb_UIMenuPersonalization.UserPersonalizedID))]
+        public virtual List<tb_UIMenuPersonalization> tb_UIMenuPersonalizations { get; set; }
+        //tb_UIMenuPersonalization.UserPersonalizedID)
+        //UserPersonalizedID.FK_UIMENUPERSONALIZATION_REF_USERPERSONALIZED)
+        //tb_UserPersonalized.UserPersonalizedID)
 
 
         #endregion

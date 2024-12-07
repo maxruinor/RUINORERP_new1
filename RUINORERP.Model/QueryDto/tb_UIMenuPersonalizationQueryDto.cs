@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:29
+// 时间：12/05/2024 23:44:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,31 +47,17 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _UIQCID;
+        private long? _UserPersonalizedID;
         /// <summary>
-        /// 查询条件
+        /// 用户角色设置
         /// </summary>
-        [AdvQueryAttribute(ColName = "UIQCID",ColDesc = "查询条件")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "UIQCID",IsNullable = true,ColumnDescription = "查询条件" )]
-        [FKRelationAttribute("tb_UIQueryCondition","UIQCID")]
-        public long? UIQCID 
+        [AdvQueryAttribute(ColName = "UserPersonalizedID",ColDesc = "用户角色设置")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "UserPersonalizedID",IsNullable = true,ColumnDescription = "用户角色设置" )]
+        [FKRelationAttribute("tb_UserPersonalized","UserPersonalizedID")]
+        public long? UserPersonalizedID 
         { 
-            get{return _UIQCID;}
-            set{SetProperty(ref _UIQCID, value);}
-        }
-     
-
-        private long? _UIGID;
-        /// <summary>
-        /// 表格设置
-        /// </summary>
-        [AdvQueryAttribute(ColName = "UIGID",ColDesc = "表格设置")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "UIGID",IsNullable = true,ColumnDescription = "表格设置" )]
-        [FKRelationAttribute("tb_UIGridSetting","UIGID")]
-        public long? UIGID 
-        { 
-            get{return _UIGID;}
-            set{SetProperty(ref _UIGID, value);}
+            get{return _UserPersonalizedID;}
+            set{SetProperty(ref _UserPersonalizedID, value);}
         }
      
 

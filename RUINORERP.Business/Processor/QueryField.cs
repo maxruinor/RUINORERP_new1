@@ -20,6 +20,10 @@ namespace RUINORERP.Business.Processor
     /// </summary>
     public class QueryField
     {
+        /// <summary>
+        /// 显示顺序
+        /// </summary>
+        public int DisplayIndex { get; set; }
 
         Type colDataType;
         /// <summary>

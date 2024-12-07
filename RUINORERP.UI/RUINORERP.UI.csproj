@@ -2175,6 +2175,12 @@
     </Compile>
     <Compile Include="UserCenter\WorkCenterHelper.cs" />
     <Compile Include="UserGlobalConfig.cs" />
+    <Compile Include="UserPersonalized\frmQueryConditionSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserPersonalized\frmQueryConditionSetting.Designer.cs">
+      <DependentUpon>frmQueryConditionSetting.cs</DependentUpon>
+    </Compile>
     <Compile Include="WorkFlowDesigner\CodonBase.cs" />
     <Compile Include="WorkFlowDesigner\Dialogs\GaugeForm.cs">
       <SubType>Form</SubType>
@@ -3075,6 +3081,9 @@
     <EmbeddedResource Include="UserCenter\UCWorkbenches.resx">
       <DependentUpon>UCWorkbenches.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UserPersonalized\frmQueryConditionSetting.resx">
+      <DependentUpon>frmQueryConditionSetting.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="WorkFlowDesigner\Dialogs\GaugeForm.resx">
       <DependentUpon>GaugeForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -3465,6 +3474,7 @@
     <Content Include="SqlScript\工作台.sql" />
     <Content Include="SqlScript\库存跟综纵向.sql" />
     <Content Include="SqlScript\库存跟踪横向.sql" />
+    <Content Include="SqlScript\日常SQL积累.sql" />
     <Content Include="SqlScript\死锁维护.sql" />
     <Content Include="SqlScript\维护.sql" />
     <Content Include="SqlScript\销售报表.sql" />

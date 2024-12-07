@@ -267,6 +267,7 @@ namespace RUINORERP.Global
         调拨明细统计 = 75,
         其他费用统计 = 76,
 
+        营销活动 = 300,
     }
 
 

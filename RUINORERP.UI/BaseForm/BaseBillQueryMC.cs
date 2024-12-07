@@ -33,6 +33,7 @@ using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
 using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.UI.UserCenter;
+using RUINORERP.UI.UserPersonalized;
 using SqlSugar;
 using System;
 using System.Collections;
@@ -177,10 +178,71 @@ namespace RUINORERP.UI.BaseForm
             }
 
         }
-        private void button设置查询条件_Click(object sender, EventArgs e)
+        private async void button设置查询条件_Click(object sender, EventArgs e)
         {
-            MenuPersonalizedSettings();
+            tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
+            tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
+            tb_UIMenuPersonalization menuPersonalization = null;
+            if (userPersonalized.tb_UIMenuPersonalizations == null)
+            {
+                userPersonalized.tb_UIMenuPersonalizations = new();
+
+            }
+
+            menuPersonalization = userPersonalized.tb_UIMenuPersonalizations.FirstOrDefault(t => t.MenuID == CurMenuInfo.MenuID && t.UserPersonalizedID == userPersonalized.UserPersonalizedID);
+            if (menuPersonalization == null)
+            {
+                menuPersonalization = new tb_UIMenuPersonalization();
+                menuPersonalization.MenuID = CurMenuInfo.MenuID;
+                menuPersonalization.UserPersonalizedID = userPersonalized.UserPersonalizedID;
+                userPersonalized.tb_UIMenuPersonalizations.Add(menuPersonalization);
+
+                //QueryConditionCols UI上设置
+                //MainForm.Instance.AppContext.Db.Insertable(MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.tb_uimenupersonalization).ExecuteReturnSnowflakeIdAsync();
+            }
+
+            ReturnResults<tb_UIMenuPersonalization> rs = await ctr.SaveOrUpdate(menuPersonalization);
+            if (!rs.Succeeded)
+            {
+                return;
+            }
+
+            //MenuPersonalizedSettings();
+            frmQueryConditionSetting set = new frmQueryConditionSetting();
+            //为了显示传入带中文的集合
+            if (menuPersonalization.QueryConditionCols.HasValue)
+            {
+                set.QueryShowColQty.Value = menuPersonalization.QueryConditionCols.Value;
+            }
+
+            List<ColumnDisplayController> ColumnDisplays = new List<ColumnDisplayController>();
+
+            if (QueryConditionFilter != null)
+            {
+                foreach (var item in QueryConditionFilter.QueryFields)
+                {
+                    ColumnDisplayController col = new ColumnDisplayController();
+                    col.ColName = item.FieldName;
+                    col.ColDisplayText = item.Caption;
+                    col.ColDisplayIndex = item.DisplayIndex;
+                    ColumnDisplays.Add(col);
+                }
+            }
+
+            var cols = from ColumnDisplayController col in ColumnDisplays
+                       orderby col.ColDisplayIndex
+                       select col;
+
+            set.ColumnDisplays = cols.ToList();
+            if (set.ShowDialog() == DialogResult.OK)
+            {
+                // targetDataGridView.BindColumnStyle();
+                // SaveColumnsList(ColumnDisplays);
+            }
         }
+
+
+
         protected virtual void MenuPersonalizedSettings()
         {
             UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
@@ -221,7 +283,7 @@ namespace RUINORERP.UI.BaseForm
             MasterColNameDataDictionary.TryAdd(nameof(ApprovalStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus)));
             MasterColNameDataDictionary.TryAdd(nameof(PayStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));
             MasterColNameDataDictionary.TryAdd(nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
-            
+
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
             foreach (var item in MainForm.Instance.list)
             {

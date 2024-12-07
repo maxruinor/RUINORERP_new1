@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:29
+// 时间：12/05/2024 23:44:20
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -245,14 +245,16 @@ namespace RUINORERP.Business
             if (entity.UIGID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_UIGridSetting>(entity as tb_UIGridSetting)
-                        .Include(m => m.tb_UIMenuPersonalizations)
+                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_UIGridSetting>(entity as tb_UIGridSetting)
-                .Include(m => m.tb_UIMenuPersonalizations)
+                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                                 .ExecuteCommandAsync();
         }
         
@@ -283,8 +285,9 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_UIGridSetting>()
-                                .Includes(m => m.tb_UIMenuPersonalizations)
-                                        .Where(useLike, dto);
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                                .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -293,8 +296,9 @@ namespace RUINORERP.Business
         {
             tb_UIGridSetting entity = model as tb_UIGridSetting;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_UIGridSetting>(m => m.UIGID== entity.UIGID)
-                                .Include(m => m.tb_UIMenuPersonalizations)
-                                        .ExecuteCommandAsync();
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                                .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -456,8 +460,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_UIGridSetting>> QueryByNavAsync()
         {
             List<tb_UIGridSetting> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UIGridSetting>()
-                                            .Includes(t => t.tb_UIMenuPersonalizations )
-                        .ToListAsync();
+                               .Includes(t => t.tb_uimenupersonalization )
+                                    .ToListAsync();
             
             foreach (var item in list)
             {
@@ -476,8 +480,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_UIGridSetting>> QueryByNavAsync(Expression<Func<tb_UIGridSetting, bool>> exp)
         {
             List<tb_UIGridSetting> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UIGridSetting>().Where(exp)
-                                            .Includes(t => t.tb_UIMenuPersonalizations )
-                        .ToListAsync();
+                               .Includes(t => t.tb_uimenupersonalization )
+                                    .ToListAsync();
             
             foreach (var item in list)
             {
@@ -496,8 +500,8 @@ namespace RUINORERP.Business
          public virtual List<tb_UIGridSetting> QueryByNav(Expression<Func<tb_UIGridSetting, bool>> exp)
         {
             List<tb_UIGridSetting> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UIGridSetting>().Where(exp)
-                                        .Includes(t => t.tb_UIMenuPersonalizations )
-                        .ToList();
+                            .Includes(t => t.tb_uimenupersonalization )
+                                    .ToList();
             
             foreach (var item in list)
             {
@@ -533,8 +537,8 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_UIGridSetting entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_UIGridSetting>().Where(w => w.UIGID == (long)id)
-                                         .Includes(t => t.tb_UIMenuPersonalizations )
-                        .FirstAsync();
+                             .Includes(t => t.tb_uimenupersonalization )
+                                    .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

@@ -1,6 +1,6 @@
-﻿namespace RUINORERP.UI.UserCenter
+﻿namespace RUINORERP.UI.UserPersonalized
 {
-    partial class frmMenuPersonalization
+    partial class frmQueryConditionSetting
     {
         /// <summary>
         /// Required designer variable.
@@ -33,11 +33,11 @@
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.flowLayoutPanelButtonsArea = new System.Windows.Forms.FlowLayoutPanel();
-            this.kryptonPanelbtusArea = new Krypton.Toolkit.KryptonPanel();
+            this.listView1 = new System.Windows.Forms.ListView();
+            this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkAll = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelbtusArea)).BeginInit();
             this.SuspendLayout();
             // 
             // QueryShowColQty
@@ -47,7 +47,7 @@
             0,
             0,
             0});
-            this.QueryShowColQty.Location = new System.Drawing.Point(161, 12);
+            this.QueryShowColQty.Location = new System.Drawing.Point(161, 14);
             this.QueryShowColQty.Maximum = new decimal(new int[] {
             10,
             0,
@@ -64,14 +64,14 @@
             this.QueryShowColQty.ToolTipValues.Description = "查询条件过多时，显示不完整，可以将数字调大。";
             this.QueryShowColQty.ToolTipValues.EnableToolTips = true;
             this.QueryShowColQty.Value = new decimal(new int[] {
-            3,
+            4,
             0,
             0,
             0});
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(25, 13);
+            this.kryptonLabel1.Location = new System.Drawing.Point(25, 14);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(130, 20);
             this.kryptonLabel1.TabIndex = 1;
@@ -80,26 +80,27 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(349, 560);
+            this.btnCancel.Location = new System.Drawing.Point(348, 578);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 13;
-            this.btnCancel.Values.Text = "取消";
+            this.btnCancel.Values.Text = "取消(&C)";
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(182, 560);
+            this.btnOk.Location = new System.Drawing.Point(181, 578);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 12;
-            this.btnOk.Values.Text = "确定";
+            this.btnOk.Values.Text = "确定(&O)";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // kryptonPanel1
             // 
-            this.kryptonPanel1.Controls.Add(this.flowLayoutPanelButtonsArea);
-            this.kryptonPanel1.Controls.Add(this.kryptonPanelbtusArea);
+            this.kryptonPanel1.Controls.Add(this.chkReverseSelection);
+            this.kryptonPanel1.Controls.Add(this.chkAll);
+            this.kryptonPanel1.Controls.Add(this.listView1);
             this.kryptonPanel1.Controls.Add(this.QueryShowColQty);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
@@ -110,21 +111,37 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(632, 635);
             this.kryptonPanel1.TabIndex = 14;
             // 
-            // flowLayoutPanelButtonsArea
+            // listView1
             // 
-            this.flowLayoutPanelButtonsArea.Location = new System.Drawing.Point(396, 229);
-            this.flowLayoutPanelButtonsArea.Name = "flowLayoutPanelButtonsArea";
-            this.flowLayoutPanelButtonsArea.Size = new System.Drawing.Size(200, 325);
-            this.flowLayoutPanelButtonsArea.TabIndex = 15;
+            this.listView1.CheckBoxes = true;
+            this.listView1.HideSelection = false;
+            this.listView1.Location = new System.Drawing.Point(25, 60);
+            this.listView1.MultiSelect = false;
+            this.listView1.Name = "listView1";
+            this.listView1.Size = new System.Drawing.Size(509, 435);
+            this.listView1.TabIndex = 16;
+            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.View = System.Windows.Forms.View.Details;
             // 
-            // kryptonPanelbtusArea
+            // chkReverseSelection
             // 
-            this.kryptonPanelbtusArea.Location = new System.Drawing.Point(349, 21);
-            this.kryptonPanelbtusArea.Name = "kryptonPanelbtusArea";
-            this.kryptonPanelbtusArea.Size = new System.Drawing.Size(247, 191);
-            this.kryptonPanelbtusArea.TabIndex = 14;
+            this.chkReverseSelection.Location = new System.Drawing.Point(89, 515);
+            this.chkReverseSelection.Name = "chkReverseSelection";
+            this.chkReverseSelection.Size = new System.Drawing.Size(49, 20);
+            this.chkReverseSelection.TabIndex = 20;
+            this.chkReverseSelection.Values.Text = "反选";
+            this.chkReverseSelection.CheckedChanged += new System.EventHandler(this.chkReverseSelection_CheckedChanged);
             // 
-            // frmMenuPersonalization
+            // chkAll
+            // 
+            this.chkAll.Location = new System.Drawing.Point(38, 515);
+            this.chkAll.Name = "chkAll";
+            this.chkAll.Size = new System.Drawing.Size(49, 20);
+            this.chkAll.TabIndex = 19;
+            this.chkAll.Values.Text = "全选";
+            this.chkAll.CheckedChanged += new System.EventHandler(this.chkAll_CheckedChanged);
+            // 
+            // frmQueryConditionSetting
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -132,13 +149,12 @@
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(632, 635);
             this.Controls.Add(this.kryptonPanel1);
-            this.Name = "frmMenuPersonalization";
+            this.Name = "frmQueryConditionSetting";
             this.Text = "查询条件设置";
             this.Load += new System.EventHandler(this.frmMenuPersonalization_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelbtusArea)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -149,7 +165,8 @@
         private Krypton.Toolkit.KryptonButton btnOk;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
         public Krypton.Toolkit.KryptonNumericUpDown QueryShowColQty;
-        internal Krypton.Toolkit.KryptonPanel kryptonPanelbtusArea;
-        public System.Windows.Forms.FlowLayoutPanel flowLayoutPanelButtonsArea;
+        private System.Windows.Forms.ListView listView1;
+        private Krypton.Toolkit.KryptonCheckBox chkReverseSelection;
+        private Krypton.Toolkit.KryptonCheckBox chkAll;
     }
 }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:30
+// 时间：12/05/2024 23:44:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -33,20 +33,6 @@ namespace RUINORERP.Model.QueryDto
     
      
 
-        private long? _UIPID;
-        /// <summary>
-        /// 个性化
-        /// </summary>
-        [AdvQueryAttribute(ColName = "UIPID",ColDesc = "个性化")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "UIPID",IsNullable = true,ColumnDescription = "个性化" )]
-        [FKRelationAttribute("tb_UIMenuPersonalization","UIPID")]
-        public long? UIPID 
-        { 
-            get{return _UIPID;}
-            set{SetProperty(ref _UIPID, value);}
-        }
-     
-
         private string _WorkCellSettings;
         /// <summary>
         /// 工作单元设置
@@ -70,6 +56,20 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _WorkCellLayout;}
             set{SetProperty(ref _WorkCellLayout, value);}
+        }
+     
+
+        private long _ID;
+        /// <summary>
+        /// 用户角色
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ID",ColDesc = "用户角色")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ID",IsNullable = false,ColumnDescription = "用户角色" )]
+        [FKRelationAttribute("tb_User_Role","ID")]
+        public long ID 
+        { 
+            get{return _ID;}
+            set{SetProperty(ref _ID, value);}
         }
 
 

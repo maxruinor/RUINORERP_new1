@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:30
+// 时间：12/05/2024 23:44:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -27,13 +27,11 @@ namespace RUINORERP.Business
      public tb_UIMenuPersonalizationValidator() 
      {
       RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.MenuID).Must(CheckForeignKeyValue).WithMessage("关联菜单:下拉选择值不正确。");
- RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.UIQCID).Must(CheckForeignKeyValueCanNull).WithMessage("查询条件:下拉选择值不正确。");
- RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.UIQCID).NotEmpty().When(x => x.UIQCID.HasValue);
- RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.UIGID).Must(CheckForeignKeyValueCanNull).WithMessage("表格设置:下拉选择值不正确。");
- RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.UIGID).NotEmpty().When(x => x.UIGID.HasValue);
+ RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.UserPersonalizedID).Must(CheckForeignKeyValueCanNull).WithMessage("用户角色设置:下拉选择值不正确。");
+ RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.UserPersonalizedID).NotEmpty().When(x => x.UserPersonalizedID.HasValue);
  RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.QueryConditionCols).NotEmpty().When(x => x.QueryConditionCols.HasValue);
- RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.MenuType).MaximumLength(10).WithMessage("菜单类型:不能超过最大长度,10.");
- RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.MenuType).NotEmpty().WithMessage("菜单类型:不能为空。");
+
+
  RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.Sort).NotEmpty().When(x => x.Sort.HasValue);
        	
            	        Initialize();

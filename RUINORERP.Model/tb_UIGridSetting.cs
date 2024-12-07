@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:29
+// 时间：12/05/2024 23:44:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,6 +51,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private long? _UIMenuPID;
+        /// <summary>
+        /// 菜单设置
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UIMenuPID",ColDesc = "菜单设置")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIMenuPID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "菜单设置" )]
+        [FKRelationAttribute("tb_UIMenuPersonalization","UIMenuPID")]
+        public long? UIMenuPID
+        { 
+            get{return _UIMenuPID;}
+            set{
+            SetProperty(ref _UIMenuPID, value);
+            }
+        }
+
         private string _GridKeyName;
         /// <summary>
         /// 表格名称
@@ -82,14 +97,11 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
-
-        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_UIMenuPersonalization.UIGID))]
-        public virtual List<tb_UIMenuPersonalization> tb_UIMenuPersonalizations { get; set; }
-        //tb_UIMenuPersonalization.UIGID)
-        //UIGID.FK_UIMENPERSONALI_REF_UIGRIDSETTING)
-        //tb_UIGridSetting.UIGID)
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(UIMenuPID))]
+        public virtual tb_UIMenuPersonalization tb_uimenupersonalization { get; set; }
+
 
 
         #endregion

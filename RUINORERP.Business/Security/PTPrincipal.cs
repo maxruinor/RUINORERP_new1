@@ -231,6 +231,21 @@ namespace RUINORERP.Business.Security
                 appcontext.CurrentUser_Role = CheckRoles.FirstOrDefault(c => c.RoleID == roleInfo.RoleID);
             }
 
+            //每个用户和角色对应一个用户配置
+            if (appcontext.CurrentUser_Role.tb_UserPersonalizeds == null)
+            {
+                appcontext.CurrentUser_Role.tb_UserPersonalizeds = new();
+
+            }
+            appcontext.CurrentUser_Role_Personalized = appcontext.CurrentUser_Role.tb_UserPersonalizeds.FirstOrDefault(c => c.ID == appcontext.CurrentUser_Role.ID);
+            if (appcontext.CurrentUser_Role_Personalized == null)
+            {
+                appcontext.CurrentUser_Role_Personalized = new tb_UserPersonalized();
+                appcontext.CurrentUser_Role_Personalized.ID = appcontext.CurrentUser_Role.ID;
+                appcontext.CurrentUser_Role.tb_UserPersonalizeds.Add(appcontext.CurrentUser_Role_Personalized);
+                appcontext.Db.Insertable(appcontext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
+            }
+
             //设置角色的属性配置，默认只取第一个角色组的配置,，并且设置提前了一级
             if (appcontext.CurrentRole.tb_rolepropertyconfig != null)
             {

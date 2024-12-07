@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:30
+// 时间：12/05/2024 23:44:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -87,17 +87,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _PSID;
+        private string _WorkDefaultLayout;
         /// <summary>
-        /// 角色
+        /// 工作台布局
         /// </summary>
-        [AdvQueryAttribute(ColName = "PSID",ColDesc = "角色")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PSID",IsNullable = true,ColumnDescription = "角色" )]
-        [FKRelationAttribute("tb_UserPersonalized","PSID")]
-        public long? PSID 
+        [AdvQueryAttribute(ColName = "WorkDefaultLayout",ColDesc = "工作台布局")]
+        [SugarColumn(ColumnDataType = "text",SqlParameterDbType ="String",ColumnName = "WorkDefaultLayout",Length=2147483647,IsNullable = true,ColumnDescription = "工作台布局" )]
+        public string WorkDefaultLayout 
         { 
-            get{return _PSID;}
-            set{SetProperty(ref _PSID, value);}
+            get{return _WorkDefaultLayout;}
+            set{SetProperty(ref _WorkDefaultLayout, value);}
         }
 
 

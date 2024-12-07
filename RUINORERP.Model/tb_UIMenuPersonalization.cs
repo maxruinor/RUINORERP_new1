@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:29
+// 时间：12/05/2024 23:44:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -36,18 +36,18 @@ namespace RUINORERP.Model
 
 
         #region 属性
-        private long _UIPID;
+        private long _UIMenuPID;
         /// <summary>
-        /// 个性化
+        /// 菜单设置
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIPID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "个性化" , IsPrimaryKey = true)]
-        public long UIPID
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIMenuPID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "菜单设置" , IsPrimaryKey = true)]
+        public long UIMenuPID
         { 
-            get{return _UIPID;}
+            get{return _UIMenuPID;}
             set{
-            base.PrimaryKeyID = _UIPID;
-            SetProperty(ref _UIPID, value);
+            base.PrimaryKeyID = _UIMenuPID;
+            SetProperty(ref _UIMenuPID, value);
             }
         }
 
@@ -66,33 +66,18 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _UIQCID;
+        private long? _UserPersonalizedID;
         /// <summary>
-        /// 查询条件
+        /// 用户角色设置
         /// </summary>
-        [AdvQueryAttribute(ColName = "UIQCID",ColDesc = "查询条件")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIQCID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "查询条件" )]
-        [FKRelationAttribute("tb_UIQueryCondition","UIQCID")]
-        public long? UIQCID
+        [AdvQueryAttribute(ColName = "UserPersonalizedID",ColDesc = "用户角色设置")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UserPersonalizedID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "用户角色设置" )]
+        [FKRelationAttribute("tb_UserPersonalized","UserPersonalizedID")]
+        public long? UserPersonalizedID
         { 
-            get{return _UIQCID;}
+            get{return _UserPersonalizedID;}
             set{
-            SetProperty(ref _UIQCID, value);
-            }
-        }
-
-        private long? _UIGID;
-        /// <summary>
-        /// 表格设置
-        /// </summary>
-        [AdvQueryAttribute(ColName = "UIGID",ColDesc = "表格设置")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIGID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "表格设置" )]
-        [FKRelationAttribute("tb_UIGridSetting","UIGID")]
-        public long? UIGID
-        { 
-            get{return _UIGID;}
-            set{
-            SetProperty(ref _UIGID, value);
+            SetProperty(ref _UserPersonalizedID, value);
             }
         }
 
@@ -138,19 +123,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _MenuType;
-        /// <summary>
-        /// 菜单类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "MenuType",ColDesc = "菜单类型")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "MenuType" ,Length=20,IsNullable = false,ColumnDescription = "菜单类型" )]
-        public string MenuType
-        { 
-            get{return _MenuType;}
-            set{
-            SetProperty(ref _MenuType, value);
-            }
-        }
+       
 
         private int? _Sort;
         /// <summary>
@@ -204,22 +177,25 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(UIQCID))]
-        public virtual tb_UIQueryCondition tb_uiquerycondition { get; set; }
-
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(UIGID))]
-        public virtual tb_UIGridSetting tb_uigridsetting { get; set; }
+        [Navigate(NavigateType.OneToOne, nameof(UserPersonalizedID))]
+        public virtual tb_UserPersonalized tb_userpersonalized { get; set; }
 
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_UserPersonalized.UIPID))]
-        public virtual List<tb_UserPersonalized> tb_UserPersonalizeds { get; set; }
-        //tb_UserPersonalized.UIPID)
-        //UIPID.FK_TB_USERPERSONALIX_REF_UIMENPERSONALIZ)
-        //tb_UIMenuPersonalization.UIPID)
+        [Navigate(NavigateType.OneToMany, nameof(tb_UIQueryCondition.UIMenuPID))]
+        public virtual List<tb_UIQueryCondition> tb_UIQueryConditions { get; set; }
+        //tb_UIQueryCondition.UIMenuPID)
+        //UIMenuPID.FK_UIQUERYCONDITION_REF_UIMENUPERSONALIZATION)
+        //tb_UIMenuPersonalization.UIMenuPID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_UIGridSetting.UIMenuPID))]
+        public virtual List<tb_UIGridSetting> tb_UIGridSettings { get; set; }
+        //tb_UIGridSetting.UIMenuPID)
+        //UIMenuPID.FK_UIGRIDSETTING_REF_UIMENUPERSONALIZATION)
+        //tb_UIMenuPersonalization.UIMenuPID)
 
 
         #endregion

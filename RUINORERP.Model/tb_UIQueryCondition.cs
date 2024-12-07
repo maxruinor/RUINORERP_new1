@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:30
+// 时间：12/05/2024 23:44:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,16 +38,31 @@ namespace RUINORERP.Model
         #region 属性
         private long _UIQCID;
         /// <summary>
-        /// 
+        /// 查询字段设置
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIQCID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIQCID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "查询字段设置" , IsPrimaryKey = true)]
         public long UIQCID
         { 
             get{return _UIQCID;}
             set{
             base.PrimaryKeyID = _UIQCID;
             SetProperty(ref _UIQCID, value);
+            }
+        }
+
+        private long? _UIMenuPID;
+        /// <summary>
+        /// 菜单设置
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UIMenuPID",ColDesc = "菜单设置")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "UIMenuPID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "菜单设置" )]
+        [FKRelationAttribute("tb_UIMenuPersonalization","UIMenuPID")]
+        public long? UIMenuPID
+        { 
+            get{return _UIMenuPID;}
+            set{
+            SetProperty(ref _UIMenuPID, value);
             }
         }
 
@@ -149,17 +164,28 @@ namespace RUINORERP.Model
             }
         }
 
+        private bool? _Focused= false;
+        /// <summary>
+        /// 默认焦点
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Focused",ColDesc = "默认焦点")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Focused" ,IsNullable = true,ColumnDescription = "默认焦点" )]
+        public bool? Focused
+        { 
+            get{return _Focused;}
+            set{
+            SetProperty(ref _Focused, value);
+            }
+        }
+
         #endregion
 
         #region 扩展属性
-
-        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_UIMenuPersonalization.UIQCID))]
-        public virtual List<tb_UIMenuPersonalization> tb_UIMenuPersonalizations { get; set; }
-        //tb_UIMenuPersonalization.UIQCID)
-        //UIQCID.FK_TB_UIMENUPERSONALIZATION_REF_UIQUEYCOND)
-        //tb_UIQueryCondition.UIQCID)
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(UIMenuPID))]
+        public virtual tb_UIMenuPersonalization tb_uimenupersonalization { get; set; }
+
 
 
         #endregion

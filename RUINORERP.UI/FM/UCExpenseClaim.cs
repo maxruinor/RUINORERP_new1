@@ -45,6 +45,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.FM
 {
@@ -152,10 +153,10 @@ namespace RUINORERP.UI.FM
 
 
                 #region 报销人
- 
+
                 var lambdaEmp = Expressionable.Create<tb_Employee>()
                                 .And(t => t.Is_enabled == true)
-                                .ToExpression(); 
+                                .ToExpression();
                 BaseProcessor baseProcessorEmp = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_Employee).Name + "Processor");
                 QueryFilter queryFilterEmp = baseProcessor.GetQueryFilter();
                 queryFilterEmp.FilterLimitExpressions.Add(lambdaEmp);
@@ -179,6 +180,40 @@ namespace RUINORERP.UI.FM
                       */
                 }
 
+            }
+            else
+            {
+                //加载收款信息
+                if (entity.PayeeInfoID > 0)
+                {
+                    //cmbPayeeInfoID.SelectedIndex = cmbPayeeInfoID.FindStringExact(emp.Account_name);
+                    var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                    if (obj != null && obj.ToString() != "System.Object")
+                    {
+                        if (obj is tb_FM_PayeeInfo cv)
+                        {
+                            DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(cv, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
+                            //添加收款信息。展示给财务看
+
+                            txtAccount_No.Text = cv.Account_No;
+                            if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
+                            {
+                                btnInfo.Tag = cv;
+                                btnInfo.Visible = true;
+                            }
+                            else
+                            {
+                                btnInfo.Tag = string.Empty;
+                                btnInfo.Visible = false;
+                            }
+                        }
+                        else
+                        {
+                            //cmbAccount_type
+                            txtAccount_No.Text = "";
+                        }
+                    }
+                }
             }
             if (entity.tb_FM_ExpenseClaimDetails != null && entity.tb_FM_ExpenseClaimDetails.Count > 0)
             {
@@ -582,7 +617,7 @@ namespace RUINORERP.UI.FM
                                         }
                                         else
                                         {
-                                            MainForm.Instance.PrintInfoLog("请重试！ "+uploadRsult);
+                                            MainForm.Instance.PrintInfoLog("请重试！ " + uploadRsult);
                                             MainForm.Instance.LoginWebServer();
                                         }
 
@@ -681,7 +716,7 @@ namespace RUINORERP.UI.FM
             return result;
         }
 
-        private  void btnInfo_Click(object sender, EventArgs e)
+        private void btnInfo_Click(object sender, EventArgs e)
         {
             if (sender is KryptonButton btninfo)
             {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/30/2024 00:18:30
+// 时间：12/05/2024 23:44:22
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -245,16 +245,14 @@ namespace RUINORERP.Business
             if (entity.ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_User_Role>(entity as tb_User_Role)
-                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                        .Include(m => m.tb_UserPersonalizeds)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_User_Role>(entity as tb_User_Role)
-                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                .Include(m => m.tb_UserPersonalizeds)
                                 .ExecuteCommandAsync();
         }
         
@@ -285,9 +283,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .Includes(m => m.tb_UserPersonalizeds)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -296,9 +293,8 @@ namespace RUINORERP.Business
         {
             tb_User_Role entity = model as tb_User_Role;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_User_Role>(m => m.ID== entity.ID)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                .Include(m => m.tb_UserPersonalizeds)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -461,9 +457,9 @@ namespace RUINORERP.Business
         {
             List<tb_User_Role> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>()
                                .Includes(t => t.tb_userinfo )
-                               .Includes(t => t.tb_userpersonalized )
                                .Includes(t => t.tb_roleinfo )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_UserPersonalizeds )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -483,9 +479,9 @@ namespace RUINORERP.Business
         {
             List<tb_User_Role> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>().Where(exp)
                                .Includes(t => t.tb_userinfo )
-                               .Includes(t => t.tb_userpersonalized )
                                .Includes(t => t.tb_roleinfo )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_UserPersonalizeds )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -505,9 +501,9 @@ namespace RUINORERP.Business
         {
             List<tb_User_Role> list = _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>().Where(exp)
                             .Includes(t => t.tb_userinfo )
-                            .Includes(t => t.tb_userpersonalized )
                             .Includes(t => t.tb_roleinfo )
-                                    .ToList();
+                                        .Includes(t => t.tb_UserPersonalizeds )
+                        .ToList();
             
             foreach (var item in list)
             {
@@ -544,9 +540,9 @@ namespace RUINORERP.Business
         {
             tb_User_Role entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>().Where(w => w.ID == (long)id)
                              .Includes(t => t.tb_userinfo )
-                            .Includes(t => t.tb_userpersonalized )
                             .Includes(t => t.tb_roleinfo )
-                                    .FirstAsync();
+                                        .Includes(t => t.tb_UserPersonalizeds )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

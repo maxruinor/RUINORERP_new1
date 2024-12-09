@@ -1,0 +1,85 @@
+﻿
+// **************************************
+// 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
+// 项目：信息系统
+// 版权：Copyright RUINOR
+// 作者：Watson
+// 时间：12/09/2024 12:02:45
+// **************************************
+using System;
+﻿using SqlSugar;
+using System.Collections.Generic;
+using FluentValidation;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using RUINORERP.Common;
+using RUINORERP.Model;
+using RUINORERP.UI.Common;
+
+namespace RUINORERP.UI
+{
+    /// <summary>
+    /// 销售分区表-大中华区数据编辑
+    /// </summary>
+     [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
+    public partial class tb_CRM_RegionEdit:UserControl
+    {
+     public tb_CRM_RegionEdit() {
+     
+                         InitializeComponent();
+      
+        
+        
+        
+        
+
+         }
+/*
+        
+        tb_CRM_Region UIToEntity()
+        {
+        tb_CRM_Region entity = new tb_CRM_Region();
+                     entity.Region_Name = txtRegion_Name.Text ;
+                       entity.Region_code = txtRegion_code.Text ;
+                       entity.Parent_region_id = Int64.Parse(txtParent_region_id.Text);
+                                return entity;
+}
+        */
+
+        
+        private tb_CRM_Region _EditEntity;
+        public tb_CRM_Region EditEntity { get => _EditEntity; set => _EditEntity = value; }
+        public void BindData(tb_CRM_Region entity)
+        {
+        _EditEntity = entity;
+                        DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Region_Name, txtRegion_Name, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Region_code, txtRegion_code, BindDataType4TextBox.Text,false);
+          Parent_region_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Parent_region_id, txtParent_region_id, BindDataType4TextBox.Qty,false);
+}
+
+
+
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+        
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+        
+        }
+
+
+
+
+    }
+}
+
+
+

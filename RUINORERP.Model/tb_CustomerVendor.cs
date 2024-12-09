@@ -418,7 +418,7 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Customer_id))]
-        public virtual tb_Customer tb_customer { get; set; }
+        public virtual tb_CRM_Customer tb_crm_customer { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]

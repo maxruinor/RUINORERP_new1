@@ -1064,6 +1064,18 @@
     <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
+    <Compile Include="CRM\UCLeadsEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CRM\UCLeadsEdit.Designer.cs">
+      <DependentUpon>UCLeadsEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\UCLeadsList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\UCLeadsList.Designer.cs">
+      <DependentUpon>UCLeadsList.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\UCOtherExpenseStatistics.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2595,6 +2607,12 @@
     <EmbeddedResource Include="CommonUI\frmInputContent.resx">
       <DependentUpon>frmInputContent.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCLeadsEdit.resx">
+      <DependentUpon>UCLeadsEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCLeadsList.resx">
+      <DependentUpon>UCLeadsList.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\UCOtherExpenseStatistics.resx">
       <DependentUpon>UCOtherExpenseStatistics.cs</DependentUpon>
     </EmbeddedResource>
@@ -3641,7 +3659,6 @@
     <Folder Include="AM\" />
     <Folder Include="AutoMapper\" />
     <Folder Include="BaseUControls\" />
-    <Folder Include="CRM\" />
     <Folder Include="IMResources\Icons\" />
     <Folder Include="IMResources\Images\" />
     <Folder Include="MRP\RR\" />

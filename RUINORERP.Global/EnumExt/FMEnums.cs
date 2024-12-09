@@ -6,36 +6,7 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global.EnumExt
 {
-    public enum CustomerStatus
-    {
-        潜在客户 = 0,
-        成交客户 = 1,
-        战略合作 = 2,
-        无效客户 = 3
-    }
-    public enum 关系型客户类型
-    {
-        忠实客户,
-        新客户,
-        潜在客户
-    }
-    public enum 交易型客户类型
-    {
-        批发客户 = 1,
-        零售客户 = 2,
-        自用客户 = 3,
-        分销商 = 4,
-        企业客户 = 5,
-        合作伙伴 = 6
-    }
-
-    public enum LeadsStatus
-    {
-        新建 = 0,
-        跟进中 = 1,
-        已转化 = 2,
-        已丢失 = 3
-    }
+  
 
     /// <summary>
     /// 账户类型

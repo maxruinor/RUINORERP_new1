@@ -561,7 +561,7 @@ namespace RUINORERP.Business
         {
             List<tb_CustomerVendor> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CustomerVendor>()
                                .Includes(t => t.tb_bankaccount )
-                               .Includes(t => t.tb_customer )
+                               .Includes(t => t.tb_crm_customer)
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_customervendortype )
                                .Includes(t => t.tb_paymentmethod )
@@ -612,7 +612,7 @@ namespace RUINORERP.Business
         {
             List<tb_CustomerVendor> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CustomerVendor>().Where(exp)
                                .Includes(t => t.tb_bankaccount )
-                               .Includes(t => t.tb_customer )
+                               .Includes(t => t.tb_crm_customer)
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_customervendortype )
                                .Includes(t => t.tb_paymentmethod )
@@ -663,7 +663,7 @@ namespace RUINORERP.Business
         {
             List<tb_CustomerVendor> list = _unitOfWorkManage.GetDbClient().Queryable<tb_CustomerVendor>().Where(exp)
                             .Includes(t => t.tb_bankaccount )
-                            .Includes(t => t.tb_customer )
+                            .Includes(t => t.tb_crm_customer)
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_customervendortype )
                             .Includes(t => t.tb_paymentmethod )
@@ -731,7 +731,7 @@ namespace RUINORERP.Business
         {
             tb_CustomerVendor entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_CustomerVendor>().Where(w => w.CustomerVendor_ID == (long)id)
                              .Includes(t => t.tb_bankaccount )
-                            .Includes(t => t.tb_customer )
+                            .Includes(t => t.tb_crm_customer)
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_customervendortype )
                             .Includes(t => t.tb_paymentmethod )

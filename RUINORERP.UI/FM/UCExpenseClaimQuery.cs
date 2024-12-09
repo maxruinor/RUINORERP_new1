@@ -38,10 +38,6 @@ namespace RUINORERP.UI.FM
             toolStripButtonDelete.Visible = false;
         }
 
-
-
-
-
         public override void BuildLimitQueryConditions()
         {
             //创建表达式

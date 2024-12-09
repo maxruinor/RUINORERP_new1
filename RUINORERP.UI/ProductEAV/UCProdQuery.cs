@@ -406,7 +406,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-        public override void Query()
+        public override void Query(bool UseAutoNavQuery = false)
         {
             if (kryptonNavigator1.SelectedPage != null)
             {

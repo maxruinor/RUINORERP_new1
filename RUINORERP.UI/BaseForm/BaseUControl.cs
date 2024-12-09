@@ -27,7 +27,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        public virtual void Query()
+        public virtual void Query(bool UseNavQuery = false)
         {
 
         }

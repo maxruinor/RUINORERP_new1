@@ -94,7 +94,7 @@ namespace RUINORERP.UI.BI
             return list;
         }
 
-        public async override void Query()
+        public async override void Query(bool UseAutoNavQuery = false)
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;

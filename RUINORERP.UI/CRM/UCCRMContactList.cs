@@ -33,9 +33,16 @@ namespace RUINORERP.UI.CRM
         {
             InitializeComponent();
             base.EditForm = typeof(UCCRMContactEdit);
-
         }
- 
+        public override void LimitQueryConditionsBuilder()
+        {
+            var lambda = Expressionable.Create<tb_CRM_Contact>()
+                               .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
+                t => t.tb_crm_customer.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)   //限制了只看到自己的
+            .ToExpression();    //拥有权控制
+
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+        }
 
 
     }

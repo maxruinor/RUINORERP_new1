@@ -31,6 +31,7 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.btnFastFollowUp = new Krypton.Toolkit.KryptonButton();
             this.lblPlanSubject = new Krypton.Toolkit.KryptonLabel();
             this.txtPlanSubject = new Krypton.Toolkit.KryptonTextBox();
             this.kPanelPlanSubject = new Krypton.Toolkit.KryptonPanel();
@@ -48,6 +49,7 @@
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -59,7 +61,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(170, 479);
+            this.btnOk.Location = new System.Drawing.Point(169, 556);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -68,7 +70,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(288, 479);
+            this.btnCancel.Location = new System.Drawing.Point(287, 556);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -77,6 +79,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.flowLayoutPanel1);
+            this.kryptonPanel1.Controls.Add(this.btnFastFollowUp);
             this.kryptonPanel1.Controls.Add(this.lblPlanSubject);
             this.kryptonPanel1.Controls.Add(this.txtPlanSubject);
             this.kryptonPanel1.Controls.Add(this.kPanelPlanSubject);
@@ -99,8 +103,17 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(716, 514);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1110, 592);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // btnFastFollowUp
+            // 
+            this.btnFastFollowUp.Location = new System.Drawing.Point(595, 556);
+            this.btnFastFollowUp.Name = "btnFastFollowUp";
+            this.btnFastFollowUp.Size = new System.Drawing.Size(90, 25);
+            this.btnFastFollowUp.TabIndex = 174;
+            this.btnFastFollowUp.Values.Text = "快速跟进";
+            this.btnFastFollowUp.Click += new System.EventHandler(this.btnFastFollowUp_Click);
             // 
             // lblPlanSubject
             // 
@@ -121,7 +134,7 @@
             // 
             this.kPanelPlanSubject.Location = new System.Drawing.Point(102, 130);
             this.kPanelPlanSubject.Name = "kPanelPlanSubject";
-            this.kPanelPlanSubject.Size = new System.Drawing.Size(583, 71);
+            this.kPanelPlanSubject.Size = new System.Drawing.Size(583, 143);
             this.kPanelPlanSubject.TabIndex = 171;
             // 
             // cmbPlanStatus
@@ -198,7 +211,7 @@
             // 
             // lblPlanContent
             // 
-            this.lblPlanContent.Location = new System.Drawing.Point(37, 219);
+            this.lblPlanContent.Location = new System.Drawing.Point(36, 296);
             this.lblPlanContent.Name = "lblPlanContent";
             this.lblPlanContent.Size = new System.Drawing.Size(62, 20);
             this.lblPlanContent.TabIndex = 159;
@@ -206,7 +219,7 @@
             // 
             // txtPlanContent
             // 
-            this.txtPlanContent.Location = new System.Drawing.Point(103, 217);
+            this.txtPlanContent.Location = new System.Drawing.Point(102, 294);
             this.txtPlanContent.Multiline = true;
             this.txtPlanContent.Name = "txtPlanContent";
             this.txtPlanContent.Size = new System.Drawing.Size(396, 117);
@@ -223,7 +236,7 @@
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(64, 350);
+            this.lblNotes.Location = new System.Drawing.Point(63, 427);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 51;
@@ -231,17 +244,25 @@
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(103, 349);
+            this.txtNotes.Location = new System.Drawing.Point(102, 426);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(397, 124);
             this.txtNotes.TabIndex = 52;
             // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(697, 0);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(413, 592);
+            this.flowLayoutPanel1.TabIndex = 175;
+            // 
             // UCCRMFollowUpPlansEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(716, 514);
+            this.ClientSize = new System.Drawing.Size(1110, 592);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCCRMFollowUpPlansEdit";
             this.Load += new System.EventHandler(this.UCLeadsEdit_Load);
@@ -279,5 +300,7 @@
         private Krypton.Toolkit.KryptonPanel kPanelPlanSubject;
         private Krypton.Toolkit.KryptonLabel lblPlanSubject;
         private Krypton.Toolkit.KryptonTextBox txtPlanSubject;
+        private Krypton.Toolkit.KryptonButton btnFastFollowUp;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
     }
 }

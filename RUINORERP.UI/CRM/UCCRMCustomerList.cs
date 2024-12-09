@@ -37,11 +37,11 @@ namespace RUINORERP.UI.CRM
             expLeadsStatus = (p) => p.CustomerStatus;
             base.ColNameDataDictionary.TryAdd(expLeadsStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CustomerStatus)));
         }
-        public override void QueryConditionBuilder()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Customer).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-        }
+        //public override void QueryConditionBuilder()
+        //{
+        //    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Customer).Name + "Processor");
+        //    QueryConditionFilter = baseProcessor.GetQueryFilter();
+        //}
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法，供应商和客户共用所有特殊处理

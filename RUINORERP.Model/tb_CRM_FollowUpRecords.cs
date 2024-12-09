@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private long? _Customer_id;
         /// <summary>
-        /// 机会客户
+        /// 目标客户
         /// </summary>
-        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "机会客户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "机会客户" )]
+        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "目标客户")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标客户")]
         [FKRelationAttribute("tb_CRM_Customer","Customer_id")]
         public long? Customer_id
         { 
@@ -96,27 +96,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _NextPlanID;
-        /// <summary>
-        /// 下次跟进计划
-        /// </summary>
-        [AdvQueryAttribute(ColName = "NextPlanID",ColDesc = "下次跟进计划")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "NextPlanID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "下次跟进计划" )]
-        [FKRelationAttribute("tb_CRM_FollowUpPlans","NextPlanID")]
-        public long? NextPlanID
-        { 
-            get{return _NextPlanID;}
-            set{
-            SetProperty(ref _NextPlanID, value);
-            }
-        }
+
 
         private long? _Employee_ID;
         /// <summary>
-        /// 执行人
+        /// 跟进人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "执行人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "执行人" )]
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "跟进人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "跟进人")]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID
         { 
@@ -275,12 +262,7 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(PlanID))]
         public virtual tb_CRM_FollowUpPlans tb_crm_followupplans { get; set; }
 
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(NextPlanID))]
-        public virtual tb_CRM_FollowUpPlans tb_crm_followupplans_next { get; set; }
-
-        [SugarColumn(IsIgnore = true)]
+           [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }

@@ -80,7 +80,7 @@ namespace RUINORERP.UI.MRP.BOM
         /// </summary>
         /// <param name="dto"></param>
         //[MustOverride]
-        public async override void Query()
+        public async override void Query(bool UseAutoNavQuery = false)
         {
             if (Edited)
             {
@@ -121,7 +121,7 @@ namespace RUINORERP.UI.MRP.BOM
         /// <summary>
         /// 扩展带条件查询
         /// </summary>
-        protected async override void ExtendedQuery()
+        protected async override void ExtendedQuery(bool UseAutoNavQuery = false)
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;

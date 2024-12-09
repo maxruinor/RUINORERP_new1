@@ -21,6 +21,7 @@ using System.Diagnostics;
 using RUINORERP.Common.Extensions;
 using RUINORERP.UI.BI;
 using Castle.Core.Resource;
+using System.Web.WebSockets;
 
 namespace RUINORERP.UI.CRM
 {
@@ -40,22 +41,24 @@ namespace RUINORERP.UI.CRM
         public override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
 
-            tb_CRM_FollowUpPlans customer = entity as tb_CRM_FollowUpPlans;
-            if (customer.PlanID == 0)
+            tb_CRM_FollowUpPlans plan = entity as tb_CRM_FollowUpPlans;
+            _EditEntity = plan;
+            if (plan.PlanID == 0)
             {
                 //第一次建的时候 应该是业务建的。分配给本人
-                customer.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                customer.PlanStatus = (int)FollowUpPlanStatus.未开始;
-                customer.PlanStartDate = DateTime.Now.AddDays(1);
-                customer.PlanEndDate= DateTime.Now.AddDays(2);
+                plan.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                plan.PlanStatus = (int)FollowUpPlanStatus.未开始;
+                plan.PlanStartDate = DateTime.Now.AddDays(1);
+                plan.PlanEndDate = DateTime.Now.AddDays(2);
             }
 
             cmbPlanStatus.Enabled = false;
-            _EditEntity = customer;
 
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-              DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v=>v.CustomerName, cmbCustomer_id);
-         
+
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
+
+            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id);
+
             DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.PlanStartDate, dtpPlanStartDate, false);
             DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.PlanEndDate, dtpPlanEndDate, false);
 
@@ -65,7 +68,7 @@ namespace RUINORERP.UI.CRM
 
             DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
 
-           
+
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
@@ -73,6 +76,33 @@ namespace RUINORERP.UI.CRM
                 base.InitRequiredToControl(new tb_CRM_FollowUpPlansValidator(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
+            if (plan.PlanID > 0)
+            {
+                btnFastFollowUp.Visible = true;
+            }
+            else
+            {
+                btnFastFollowUp.Visible = false;
+            }
+            if (plan.tb_CRM_FollowUpRecordses==null)
+            {
+                plan.tb_CRM_FollowUpRecordses = new List<tb_CRM_FollowUpRecords>();
+            }
+            if (plan.tb_CRM_FollowUpRecordses.Count > 0)
+            {
+                flowLayoutPanel1.Visible = true;
+                foreach (var item in plan.tb_CRM_FollowUpRecordses)
+                {
+                    UCFollowUpRecord ucrecord = new UCFollowUpRecord();
+                    ucrecord.BindData(item);
+                    flowLayoutPanel1.Controls.Add(ucrecord);
+                }
+            }
+            else
+            {
+                flowLayoutPanel1.Visible = false;
+            }
+
 
         }
 
@@ -86,7 +116,7 @@ namespace RUINORERP.UI.CRM
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            
+
             if (base.Validator())
             {
                 bindingSourceEdit.EndEdit();
@@ -97,10 +127,10 @@ namespace RUINORERP.UI.CRM
 
         private void UCLeadsEdit_Load(object sender, EventArgs e)
         {
-           // ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+            // ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
             //“|”号隔开
             //string GetCustomerSource = configManager.GetValue("GetCustomerSource");
-      
+
             string[] enumStrings = Enum.GetNames(typeof(FollowUpSubject)).Select(x => x).ToArray();
             string combinedString = string.Join("|", enumStrings);
             //设置主题
@@ -181,6 +211,30 @@ namespace RUINORERP.UI.CRM
         }
 
         #endregion
- 
+
+        private async void btnFastFollowUp_Click(object sender, EventArgs e)
+        {
+            object frm = Activator.CreateInstance(typeof(UCCRMFollowUpRecordsEdit));
+            if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+            {
+                BaseEditGeneric<tb_CRM_FollowUpRecords> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpRecords>;
+                frmaddg.Text = "跟进记录编辑";
+                frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpRecords>();
+                object obj = frmaddg.bindingSourceEdit.AddNew();
+                tb_CRM_FollowUpRecords NewInfo = obj as tb_CRM_FollowUpRecords;
+                NewInfo.Customer_id = _EditEntity.Customer_id;
+                NewInfo.PlanID = _EditEntity.PlanID;
+                NewInfo.Employee_ID = _EditEntity.Employee_ID;
+                BaseEntity bty = NewInfo as BaseEntity;
+                bty.ActionStatus = ActionStatus.加载;
+                BusinessHelper.Instance.EditEntity(bty);
+                frmaddg.BindData(bty, ActionStatus.新增);
+                if (frmaddg.ShowDialog() == DialogResult.OK)
+                {
+                    BaseController<tb_CRM_FollowUpRecords> ctr = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpRecords>>(typeof(tb_CRM_FollowUpRecords).Name + "Controller");
+                    ReturnResults<tb_CRM_FollowUpRecords> result = await ctr.BaseSaveOrUpdate(NewInfo);
+                }
+            }
+        }
     }
 }

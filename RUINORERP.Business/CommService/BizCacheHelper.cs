@@ -376,7 +376,7 @@ namespace RUINORERP.Business.CommService
                             Manager.AddCacheEntityList<T>(tableName, list, true);
                         }
                     }
-                    lastList= list;
+                    lastList = list;
                 }
             }
             catch (Exception ex)
@@ -439,6 +439,14 @@ namespace RUINORERP.Business.CommService
             "tb_CartoonBox",
             "tb_FM_PayeeInfo",
             "tb_Files",
+            "tb_CRM_Customer",
+            "tb_CRM_FollowUpPlans",
+             "tb_CRM_Leads",
+             "tb_CRM_Region",
+             "tb_CRM_Contact",
+                "tb_Provinces",
+                "tb_Cities",
+
             "tb_BOMConfigHistory",
             "tb_RolePropertyConfig",
             "tb_Unit_Conversion"
@@ -449,6 +457,27 @@ namespace RUINORERP.Business.CommService
             // 遍历类型名称数组
             switch (typeName)
             {
+                case "tb_CRM_Customer":
+                    SetDictDataSource<tb_CRM_Customer>(k => k.Customer_id, v => v.CustomerName, LoadData);
+                    break;
+                case "tb_CRM_FollowUpPlans":
+                    SetDictDataSource<tb_CRM_FollowUpPlans>(k => k.PlanID, v => v.PlanSubject, LoadData);
+                    break;
+                case "tb_CRM_Leads":
+                    SetDictDataSource<tb_CRM_Leads>(k => k.LeadID, v => v.CustomerName, LoadData);
+                    break;
+                case "tb_CRM_Region":
+                    SetDictDataSource<tb_CRM_Region>(k => k.Region_ID, v => v.Region_Name, LoadData);
+                    break;
+                case "tb_CRM_Contact":
+                    SetDictDataSource<tb_CRM_Contact>(k => k.Contact_id, v => v.Contact_Name, LoadData);
+                    break;
+                case "tb_Provinces":
+                    SetDictDataSource<tb_Provinces>(k => k.ProvinceID, v => v.ProvinceCNName, LoadData);
+                    break;
+                case "tb_Cities":
+                    SetDictDataSource<tb_Cities>(k => k.CityID, v => v.CityCNName, LoadData);
+                    break;
                 case "tb_Company":
                     SetDictDataSource<tb_Company>(k => k.ID, v => v.CNName, LoadData);
                     break;

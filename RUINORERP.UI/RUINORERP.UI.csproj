@@ -1113,6 +1113,12 @@
     <Compile Include="CRM\UCCRMCustomerEdit.Designer.cs">
       <DependentUpon>UCCRMCustomerEdit.cs</DependentUpon>
     </Compile>
+    <Compile Include="CRM\UCFollowUpRecord.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\UCFollowUpRecord.Designer.cs">
+      <DependentUpon>UCFollowUpRecord.cs</DependentUpon>
+    </Compile>
     <Compile Include="CRM\UCLeadsEdit.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2697,6 +2703,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCCRMCustomerEdit.resx">
       <DependentUpon>UCCRMCustomerEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCFollowUpRecord.resx">
+      <DependentUpon>UCFollowUpRecord.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCLeadsEdit.resx">
       <DependentUpon>UCLeadsEdit.cs</DependentUpon>

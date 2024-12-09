@@ -24,8 +24,8 @@ namespace RUINORERP.Business
             // return Where(sugarQueryable, useLike, new List<Expression<Func<T, object>>>(), whereObj);
         }
 
-
-        public static ISugarQueryable<T> WhereAdv<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, object whereObj)
+        [Obsolete("Use WhereAdv instead")]
+        public static ISugarQueryable<T> WhereAdv_old<T>(this ISugarQueryable<T> sugarQueryable, bool useLike, object whereObj)
         {
             return QueryConditionHelper<T>.Where(sugarQueryable, useLike, null, whereObj);
         }

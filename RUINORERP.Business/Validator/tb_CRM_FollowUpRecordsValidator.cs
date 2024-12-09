@@ -26,14 +26,13 @@ namespace RUINORERP.Business
     {
      public tb_CRM_FollowUpRecordsValidator() 
      {
-      RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage("机会客户:下拉选择值不正确。");
+      RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage("目标客户:下拉选择值不正确。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Customer_id).NotEmpty().When(x => x.Customer_id.HasValue);
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.LeadID).Must(CheckForeignKeyValueCanNull).WithMessage("线索:下拉选择值不正确。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.LeadID).NotEmpty().When(x => x.LeadID.HasValue);
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.PlanID).Must(CheckForeignKeyValueCanNull).WithMessage("跟进计划:下拉选择值不正确。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.PlanID).NotEmpty().When(x => x.PlanID.HasValue);
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.NextPlanID).NotEmpty().When(x => x.NextPlanID.HasValue);
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("执行人:下拉选择值不正确。");
+            RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("跟进人:下拉选择值不正确。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpMethod).NotEmpty().When(x => x.FollowUpMethod.HasValue);
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpSubject).MaximumLength(100).WithMessage("跟进主题:不能超过最大长度,100.");

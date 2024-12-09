@@ -31,6 +31,7 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.btnAddPayeeInfo = new Krypton.Toolkit.KryptonButton();
             this.chkOther = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
@@ -67,7 +68,8 @@
             this.lblIsVendor = new Krypton.Toolkit.KryptonLabel();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.btnAddPayeeInfo = new Krypton.Toolkit.KryptonButton();
+            this.lblCustomer_id = new Krypton.Toolkit.KryptonLabel();
+            this.cmbCustomer_id = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -81,11 +83,12 @@
             this.kryptonGroupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.txtType_ID)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCustomer_id)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(203, 492);
+            this.btnOk.Location = new System.Drawing.Point(203, 527);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -94,7 +97,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(321, 492);
+            this.btnCancel.Location = new System.Drawing.Point(321, 527);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -103,6 +106,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblCustomer_id);
+            this.kryptonPanel1.Controls.Add(this.cmbCustomer_id);
             this.kryptonPanel1.Controls.Add(this.btnAddPayeeInfo);
             this.kryptonPanel1.Controls.Add(this.chkOther);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel3);
@@ -142,12 +147,21 @@
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
-            this.kryptonPanel1.Size = new System.Drawing.Size(644, 543);
+            this.kryptonPanel1.Size = new System.Drawing.Size(709, 620);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // btnAddPayeeInfo
+            // 
+            this.btnAddPayeeInfo.Location = new System.Drawing.Point(524, 527);
+            this.btnAddPayeeInfo.Name = "btnAddPayeeInfo";
+            this.btnAddPayeeInfo.Size = new System.Drawing.Size(90, 25);
+            this.btnAddPayeeInfo.TabIndex = 79;
+            this.btnAddPayeeInfo.Values.Text = "添加收款信息";
+            this.btnAddPayeeInfo.Click += new System.EventHandler(this.btnAddPayeeInfo_Click);
             // 
             // chkOther
             // 
-            this.chkOther.Location = new System.Drawing.Point(453, 175);
+            this.chkOther.Location = new System.Drawing.Point(453, 210);
             this.chkOther.Name = "chkOther";
             this.chkOther.Size = new System.Drawing.Size(19, 13);
             this.chkOther.TabIndex = 70;
@@ -155,7 +169,7 @@
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(375, 171);
+            this.kryptonLabel3.Location = new System.Drawing.Point(375, 206);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(75, 20);
             this.kryptonLabel3.TabIndex = 69;
@@ -164,7 +178,7 @@
             // kryptonGroupBox2
             // 
             this.kryptonGroupBox2.CaptionVisible = false;
-            this.kryptonGroupBox2.Location = new System.Drawing.Point(373, 400);
+            this.kryptonGroupBox2.Location = new System.Drawing.Point(373, 435);
             this.kryptonGroupBox2.Name = "kryptonGroupBox2";
             // 
             // kryptonGroupBox2.Panel
@@ -193,7 +207,7 @@
             // kryptonGroupBox1
             // 
             this.kryptonGroupBox1.CaptionVisible = false;
-            this.kryptonGroupBox1.Location = new System.Drawing.Point(177, 400);
+            this.kryptonGroupBox1.Location = new System.Drawing.Point(177, 435);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
             // 
             // kryptonGroupBox1.Panel
@@ -222,7 +236,7 @@
             // 
             // lblIs_enabled
             // 
-            this.lblIs_enabled.Location = new System.Drawing.Point(111, 409);
+            this.lblIs_enabled.Location = new System.Drawing.Point(111, 444);
             this.lblIs_enabled.Name = "lblIs_enabled";
             this.lblIs_enabled.Size = new System.Drawing.Size(62, 20);
             this.lblIs_enabled.TabIndex = 65;
@@ -230,7 +244,7 @@
             // 
             // lblIs_available
             // 
-            this.lblIs_available.Location = new System.Drawing.Point(312, 409);
+            this.lblIs_available.Location = new System.Drawing.Point(312, 444);
             this.lblIs_available.Name = "lblIs_available";
             this.lblIs_available.Size = new System.Drawing.Size(62, 20);
             this.lblIs_available.TabIndex = 66;
@@ -238,7 +252,7 @@
             // 
             // chk责任人专属
             // 
-            this.chk责任人专属.Location = new System.Drawing.Point(454, 139);
+            this.chk责任人专属.Location = new System.Drawing.Point(454, 174);
             this.chk责任人专属.Name = "chk责任人专属";
             this.chk责任人专属.Size = new System.Drawing.Size(19, 13);
             this.chk责任人专属.TabIndex = 43;
@@ -246,7 +260,7 @@
             // 
             // lbl责任人专属
             // 
-            this.lbl责任人专属.Location = new System.Drawing.Point(377, 135);
+            this.lbl责任人专属.Location = new System.Drawing.Point(377, 170);
             this.lbl责任人专属.Name = "lbl责任人专属";
             this.lbl责任人专属.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lbl责任人专属.Size = new System.Drawing.Size(75, 20);
@@ -255,7 +269,7 @@
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(135, 105);
+            this.kryptonLabel2.Location = new System.Drawing.Point(135, 140);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.kryptonLabel2.Size = new System.Drawing.Size(36, 20);
@@ -264,7 +278,7 @@
             // 
             // txtShortName
             // 
-            this.txtShortName.Location = new System.Drawing.Point(177, 105);
+            this.txtShortName.Location = new System.Drawing.Point(177, 140);
             this.txtShortName.Name = "txtShortName";
             this.txtShortName.Size = new System.Drawing.Size(296, 23);
             this.txtShortName.TabIndex = 41;
@@ -287,7 +301,7 @@
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(122, 135);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(122, 170);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
@@ -298,14 +312,14 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(177, 135);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(177, 170);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
             this.cmbEmployee_ID.Size = new System.Drawing.Size(158, 21);
             this.cmbEmployee_ID.TabIndex = 37;
             // 
             // txtIsVendor
             // 
-            this.txtIsVendor.Location = new System.Drawing.Point(316, 175);
+            this.txtIsVendor.Location = new System.Drawing.Point(316, 210);
             this.txtIsVendor.Name = "txtIsVendor";
             this.txtIsVendor.Size = new System.Drawing.Size(19, 13);
             this.txtIsVendor.TabIndex = 35;
@@ -313,7 +327,7 @@
             // 
             // txtIsCustomer
             // 
-            this.txtIsCustomer.Location = new System.Drawing.Point(184, 175);
+            this.txtIsCustomer.Location = new System.Drawing.Point(184, 210);
             this.txtIsCustomer.Name = "txtIsCustomer";
             this.txtIsCustomer.Size = new System.Drawing.Size(19, 13);
             this.txtIsCustomer.TabIndex = 34;
@@ -323,14 +337,14 @@
             // 
             this.txtType_ID.DropDownWidth = 296;
             this.txtType_ID.IntegralHeight = false;
-            this.txtType_ID.Location = new System.Drawing.Point(177, 43);
+            this.txtType_ID.Location = new System.Drawing.Point(177, 78);
             this.txtType_ID.Name = "txtType_ID";
             this.txtType_ID.Size = new System.Drawing.Size(296, 21);
             this.txtType_ID.TabIndex = 33;
             // 
             // lblType_ID
             // 
-            this.lblType_ID.Location = new System.Drawing.Point(109, 43);
+            this.lblType_ID.Location = new System.Drawing.Point(109, 78);
             this.lblType_ID.Name = "lblType_ID";
             this.lblType_ID.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblType_ID.Size = new System.Drawing.Size(62, 20);
@@ -339,7 +353,7 @@
             // 
             // lblCVName
             // 
-            this.lblCVName.Location = new System.Drawing.Point(135, 74);
+            this.lblCVName.Location = new System.Drawing.Point(135, 109);
             this.lblCVName.Name = "lblCVName";
             this.lblCVName.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblCVName.Size = new System.Drawing.Size(36, 20);
@@ -348,14 +362,14 @@
             // 
             // txtCVName
             // 
-            this.txtCVName.Location = new System.Drawing.Point(177, 74);
+            this.txtCVName.Location = new System.Drawing.Point(177, 109);
             this.txtCVName.Name = "txtCVName";
             this.txtCVName.Size = new System.Drawing.Size(296, 23);
             this.txtCVName.TabIndex = 18;
             // 
             // lblContact
             // 
-            this.lblContact.Location = new System.Drawing.Point(122, 203);
+            this.lblContact.Location = new System.Drawing.Point(122, 238);
             this.lblContact.Name = "lblContact";
             this.lblContact.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblContact.Size = new System.Drawing.Size(49, 20);
@@ -364,14 +378,14 @@
             // 
             // txtContact
             // 
-            this.txtContact.Location = new System.Drawing.Point(177, 199);
+            this.txtContact.Location = new System.Drawing.Point(177, 234);
             this.txtContact.Name = "txtContact";
             this.txtContact.Size = new System.Drawing.Size(296, 23);
             this.txtContact.TabIndex = 20;
             // 
             // lblPhone
             // 
-            this.lblPhone.Location = new System.Drawing.Point(135, 228);
+            this.lblPhone.Location = new System.Drawing.Point(135, 263);
             this.lblPhone.Name = "lblPhone";
             this.lblPhone.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblPhone.Size = new System.Drawing.Size(36, 20);
@@ -380,14 +394,14 @@
             // 
             // txtPhone
             // 
-            this.txtPhone.Location = new System.Drawing.Point(177, 224);
+            this.txtPhone.Location = new System.Drawing.Point(177, 259);
             this.txtPhone.Name = "txtPhone";
             this.txtPhone.Size = new System.Drawing.Size(296, 23);
             this.txtPhone.TabIndex = 22;
             // 
             // lblAddress
             // 
-            this.lblAddress.Location = new System.Drawing.Point(135, 253);
+            this.lblAddress.Location = new System.Drawing.Point(135, 288);
             this.lblAddress.Name = "lblAddress";
             this.lblAddress.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblAddress.Size = new System.Drawing.Size(36, 20);
@@ -396,14 +410,14 @@
             // 
             // txtAddress
             // 
-            this.txtAddress.Location = new System.Drawing.Point(177, 249);
+            this.txtAddress.Location = new System.Drawing.Point(177, 284);
             this.txtAddress.Name = "txtAddress";
             this.txtAddress.Size = new System.Drawing.Size(296, 23);
             this.txtAddress.TabIndex = 24;
             // 
             // lblWebsite
             // 
-            this.lblWebsite.Location = new System.Drawing.Point(135, 278);
+            this.lblWebsite.Location = new System.Drawing.Point(135, 313);
             this.lblWebsite.Name = "lblWebsite";
             this.lblWebsite.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblWebsite.Size = new System.Drawing.Size(36, 20);
@@ -412,14 +426,14 @@
             // 
             // txtWebsite
             // 
-            this.txtWebsite.Location = new System.Drawing.Point(177, 274);
+            this.txtWebsite.Location = new System.Drawing.Point(177, 309);
             this.txtWebsite.Name = "txtWebsite";
             this.txtWebsite.Size = new System.Drawing.Size(296, 23);
             this.txtWebsite.TabIndex = 26;
             // 
             // lblIsCustomer
             // 
-            this.lblIsCustomer.Location = new System.Drawing.Point(96, 171);
+            this.lblIsCustomer.Location = new System.Drawing.Point(96, 206);
             this.lblIsCustomer.Name = "lblIsCustomer";
             this.lblIsCustomer.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblIsCustomer.Size = new System.Drawing.Size(75, 20);
@@ -428,7 +442,7 @@
             // 
             // lblIsVendor
             // 
-            this.lblIsVendor.Location = new System.Drawing.Point(227, 171);
+            this.lblIsVendor.Location = new System.Drawing.Point(227, 206);
             this.lblIsVendor.Name = "lblIsVendor";
             this.lblIsVendor.Size = new System.Drawing.Size(88, 20);
             this.lblIsVendor.TabIndex = 29;
@@ -436,7 +450,7 @@
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(135, 303);
+            this.lblNotes.Location = new System.Drawing.Point(135, 338);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
@@ -445,28 +459,37 @@
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(177, 303);
+            this.txtNotes.Location = new System.Drawing.Point(177, 338);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(296, 72);
             this.txtNotes.TabIndex = 32;
             // 
-            // btnAddPayeeInfo
+            // lblCustomer_id
             // 
-            this.btnAddPayeeInfo.Location = new System.Drawing.Point(524, 492);
-            this.btnAddPayeeInfo.Name = "btnAddPayeeInfo";
-            this.btnAddPayeeInfo.Size = new System.Drawing.Size(90, 25);
-            this.btnAddPayeeInfo.TabIndex = 79;
-            this.btnAddPayeeInfo.Values.Text = "添加收款信息";
-            this.btnAddPayeeInfo.Click += new System.EventHandler(this.btnAddPayeeInfo_Click);
+            this.lblCustomer_id.Location = new System.Drawing.Point(106, 45);
+            this.lblCustomer_id.Name = "lblCustomer_id";
+            this.lblCustomer_id.Size = new System.Drawing.Size(62, 20);
+            this.lblCustomer_id.TabIndex = 80;
+            this.lblCustomer_id.Values.Text = "客户来源";
+            // 
+            // cmbCustomer_id
+            // 
+            this.cmbCustomer_id.DropDownWidth = 100;
+            this.cmbCustomer_id.IntegralHeight = false;
+            this.cmbCustomer_id.Location = new System.Drawing.Point(177, 45);
+            this.cmbCustomer_id.Name = "cmbCustomer_id";
+            this.cmbCustomer_id.Size = new System.Drawing.Size(295, 21);
+            this.cmbCustomer_id.TabIndex = 81;
             // 
             // UCCustomerVendorEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(644, 543);
+            this.ClientSize = new System.Drawing.Size(709, 620);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCCustomerVendorEdit";
+            this.Load += new System.EventHandler(this.UCCustomerVendorEdit_Load);
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
@@ -483,6 +506,7 @@
             this.kryptonGroupBox1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.txtType_ID)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCustomer_id)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -529,5 +553,7 @@
         private Krypton.Toolkit.KryptonCheckBox chkOther;
         private Krypton.Toolkit.KryptonLabel kryptonLabel3;
         private Krypton.Toolkit.KryptonButton btnAddPayeeInfo;
+        private Krypton.Toolkit.KryptonLabel lblCustomer_id;
+        private Krypton.Toolkit.KryptonComboBox cmbCustomer_id;
     }
 }

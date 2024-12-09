@@ -39,16 +39,15 @@ namespace RUINORERP.UI.CRM
         public override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
 
-            tb_CRM_FollowUpRecords customer = entity as tb_CRM_FollowUpRecords;
-            if (customer.Customer_id == 0)
+            tb_CRM_FollowUpRecords record = entity as tb_CRM_FollowUpRecords;
+            if (record.RecordID == 0)
             {
                 //第一次建的时候 应该是业务建的。分配给本人
-                customer.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                customer.FollowUpDate = DateTime.Now.AddDays(1);
+                record.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                record.FollowUpDate = DateTime.Now.AddDays(1);
             }
 
-            cmbPlanStatus.Enabled = false;
-            _EditEntity = customer;
+            _EditEntity = record;
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id);
@@ -56,14 +55,13 @@ namespace RUINORERP.UI.CRM
 
             DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpDate, dtpFollowUpDate, false);
 
+            //来源计划
             DataBindingHelper.BindData4Cmb<tb_CRM_FollowUpPlans>(entity, t => t.PlanID, v => v.PlanContent, cmbPlanID);
-            //下一个计划
-            //DataBindingHelper.BindData4Cmb<tb_CRM_FollowUpPlans>(entity, t => t.PlanID, v => v.PlanContent, cmbPlanID);
-
-
-            DataBindingHelper.BindData4CmbByEnum<tb_CRM_FollowUpRecords>(entity, k => k.FollowUpMethod, typeof(FollowUpMethod), cmbPlanStatus, false);
+      
 
             DataBindingHelper.BindData4CmbByEnum<tb_CRM_FollowUpRecords>(entity, k => k.FollowUpMethod, typeof(FollowUpMethod), cmbFollowUpMethod, false);
+
+
 
             DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpSubject, txtFollowUpSubject, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpContent, txtFollowUpContent, BindDataType4TextBox.Text, false);
@@ -116,7 +114,7 @@ namespace RUINORERP.UI.CRM
         }
 
 
-        #region 添加客户来源
+        #region 添加跟进主题
         private void AddCustomerSourceLabelsToPanel(string[] GetCustomerSourceArr)
         {
             //在Panel容器内0为起点
@@ -155,6 +153,14 @@ namespace RUINORERP.UI.CRM
         private void Klinklbl_LinkClicked(object sender, EventArgs e)
         {
             KryptonLinkLabel klinklbl = sender as KryptonLinkLabel;
+            //一次跟进主题不能超过三个
+            if (txtFollowUpSubject.Text.Split(',').Length > 3)
+            {
+                MessageBox.Show("一次跟进过程，主题不能超过三个", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+
             //如果lblGetCustomerSource这个控件值中包含了标签值，则清除，如果没有包含再添加到值的集合里，用逗号隔开
             if (txtFollowUpSubject.Text.Contains(klinklbl.Text))
             {

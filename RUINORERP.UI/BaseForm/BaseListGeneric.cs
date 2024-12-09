@@ -919,7 +919,7 @@ namespace RUINORERP.UI.BaseForm
                 //ctr.InitEntity(obj);
                 BusinessHelper.Instance.InitEntity(obj);
                 //如果obj转基类为空 ，原因是 载入时没有查询出一个默认的框架出来
-    
+
                 if (frmadd.usedActionStatus)
                 {
                     frmadd.BindData(obj as BaseEntity, ActionStatus.新增);
@@ -1261,7 +1261,7 @@ namespace RUINORERP.UI.BaseForm
 
         KryptonPage AdvPage = null;
 
- 
+
 
         /// <summary>
         /// 执行高级查询的结果
@@ -1293,7 +1293,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 扩展带条件查询
         /// </summary>
-        protected async virtual void ExtendedQuery()
+        protected async virtual void ExtendedQuery(bool UseAutoNavQuery = false)
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;
@@ -1314,7 +1314,7 @@ namespace RUINORERP.UI.BaseForm
                 QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
             }
 
-            List<T> list = await ctr.BaseQuerySimpleByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<T>;
+            List<T> list = await ctr.BaseQuerySimpleByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize, UseAutoNavQuery) as List<T>;
 
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)
@@ -1393,9 +1393,9 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 与高级查询执行结果公共使用，如果null时，则执行普通查询？
         /// </summary>
-        /// <param name="dto"></param>
+        /// <param name="UseNavQuery">是否使用自动导航</param>
             //[MustOverride]
-        public async override void Query()
+        public async override void Query(bool UseAutoNavQuery = false)
         {
             if (Edited)
             {
@@ -1412,7 +1412,18 @@ namespace RUINORERP.UI.BaseForm
 
                 //两种条件组合为一起，一种是process中要处理器中设置好的，另一个是UI中 灵活设置的
                 Expression<Func<T, bool>> expression = QueryConditionFilter.GetFilterExpression<T>();
-                List<T> list = await MainForm.Instance.AppContext.Db.Queryable<T>().WhereIF(expression != null, expression).ToListAsync();
+                List<T> list = new List<T>();
+                if (UseAutoNavQuery)
+                {
+                    list = await MainForm.Instance.AppContext.Db.Queryable<T>().WhereIF(expression != null, expression)
+                   .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                   .ToListAsync();
+                }
+                else
+                {
+                    list = await MainForm.Instance.AppContext.Db.Queryable<T>().WhereIF(expression != null, expression)
+                  .ToListAsync();
+                }
 
                 List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
                 if (masterlist.Count > 0)
@@ -1427,7 +1438,7 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                ExtendedQuery();
+                ExtendedQuery(UseAutoNavQuery);
             }
             ToolBarEnabledControl(MenuItemEnums.查询);
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 21:09:57
+// 时间：12/09/2024 21:24:00
 // **************************************
 using System;
 using SqlSugar;
@@ -19,22 +19,20 @@ using FluentValidation;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 跟进计划表验证类
+    /// 跟进记录表验证类
     /// </summary>
-    /*public partial class tb_CRM_FollowUpPlansValidator:AbstractValidator<tb_CRM_FollowUpPlans>*/
-    public partial class tb_CRM_FollowUpPlansValidator : BaseValidatorGeneric<tb_CRM_FollowUpPlans>
+    /*public partial class tb_CRM_FollowUpRecordsValidator:AbstractValidator<tb_CRM_FollowUpRecords>*/
+    public partial class tb_CRM_FollowUpRecordsValidator : BaseValidatorGeneric<tb_CRM_FollowUpRecords>
     {
         public override void Initialize()
         {
             RuleFor(x => x.Customer_id).NotNull().WithMessage("目标客户不能为空。");
-            RuleFor(x => x.PlanEndDate).GreaterThan(t => t.PlanStartDate).WithMessage("结束日期要大于开始日期。");
-
-            RuleFor(x => x.PlanContent).NotNull().WithMessage("计划内容:不能为空。");
-            RuleFor(x => x.PlanContent).MinimumLength(10).WithMessage("计划内容:长度要大于10。");
-
+            RuleFor(x => x.FollowUpDate).LessThan(System.DateTime.Now).WithMessage("跟进日期要小于当前日期。");
+            RuleFor(x => x.FollowUpContent).NotNull().WithMessage("跟进内容:不能为空。");
+            RuleFor(x => x.FollowUpContent).MinimumLength(10).WithMessage("跟进内容:长度要大于10。");
         }
 
-    }
 
+    }
 }
 

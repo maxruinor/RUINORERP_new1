@@ -81,7 +81,7 @@ namespace RUINORERP.UI.PSI.INV
         /// </summary>
         /// <param name="dto"></param>
         //[MustOverride]
-        public async override void Query()
+        public async override void Query(bool UseNavQuery = false)
         {
             if (Edited)
             {
@@ -122,7 +122,7 @@ namespace RUINORERP.UI.PSI.INV
         /// <summary>
         /// 扩展带条件查询
         /// </summary>
-        protected async override void ExtendedQuery()
+        protected async override void ExtendedQuery(bool UseAutoNavQuery = false)
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;

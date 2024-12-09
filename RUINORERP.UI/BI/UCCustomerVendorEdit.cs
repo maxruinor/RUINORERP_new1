@@ -38,7 +38,7 @@ namespace RUINORERP.UI.BI
 
             if (_EditEntity.CustomerVendor_ID == 0)
             {
-               
+
                 if (Text.Contains("其他"))
                 {
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.CVOther);
@@ -57,8 +57,11 @@ namespace RUINORERP.UI.BI
                     _EditEntity.IsVendor = true;
                 }
             }
-            
+
             DataBindingHelper.BindData4Cmb<tb_CustomerVendorType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);
+
+            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id);
+
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CVName, txtCVName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Contact, txtContact, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Phone, txtPhone, BindDataType4TextBox.Text, false);
@@ -116,7 +119,7 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private  void btnAddPayeeInfo_Click(object sender, EventArgs e)
+        private void btnAddPayeeInfo_Click(object sender, EventArgs e)
         {
             object frm = Activator.CreateInstance(typeof(UCFMPayeeInfoEdit));
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
@@ -135,6 +138,20 @@ namespace RUINORERP.UI.BI
                 {
                     UIBizSrvice.SavePayeeInfo(payeeInfo);
                 }
+            }
+        }
+
+        private void UCCustomerVendorEdit_Load(object sender, EventArgs e)
+        {
+            if (Text.Contains("客户"))
+            {
+                lblCustomer_id.Visible = true;
+                cmbCustomer_id.Visible = true;
+            }
+            else
+            {
+                lblCustomer_id.Visible = false;
+                cmbCustomer_id.Visible = false;
             }
         }
     }

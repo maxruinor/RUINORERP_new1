@@ -50,9 +50,8 @@ namespace RUINORERP.UI.CRM
         public override void LimitQueryConditionsBuilder()
         {
             var lambda = Expressionable.Create<tb_CRM_FollowUpRecords>()
-                               .AndIF(CurMenuInfo.CaptionCN.Contains("公海客户"), t => t.Employee_ID.Value == 0)
-                               .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && CurMenuInfo.CaptionCN.Contains("目标客户"),
-                t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)   //限制了销售只看到自己的客户,采 
+                               .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
+                t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)   //限制了只看到自己的
             .ToExpression();    //拥有权控制
 
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);

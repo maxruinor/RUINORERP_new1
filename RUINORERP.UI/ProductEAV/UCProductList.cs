@@ -115,8 +115,8 @@ namespace RUINORERP.UI.ProductEAV
         /// <summary>
         /// 扩展带条件查询
         /// 因为产品相关性多，重写这个方法用高级导航查询
-        /// </summary>
-        protected async override void ExtendedQuery()
+        /// </summary>     
+        protected async override void ExtendedQuery(bool UseAutoNavQuery = false)
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:44
+// 时间：12/09/2024 21:09:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private long? _Customer_id;
         /// <summary>
-        /// 客户
+        /// 目标客户
         /// </summary>
-        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "客户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "客户" )]
+        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "目标客户")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标客户" )]
         [FKRelationAttribute("tb_CRM_Customer","Customer_id")]
         public long? Customer_id
         { 
@@ -81,13 +81,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _PlanStartDate;
+        private DateTime _PlanStartDate;
         /// <summary>
         /// 开始日期
         /// </summary>
         [AdvQueryAttribute(ColName = "PlanStartDate",ColDesc = "开始日期")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PlanStartDate" ,Length=50,IsNullable = true,ColumnDescription = "开始日期" )]
-        public string PlanStartDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PlanStartDate" ,IsNullable = false,ColumnDescription = "开始日期" )]
+        public DateTime PlanStartDate
         { 
             get{return _PlanStartDate;}
             set{
@@ -95,13 +95,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _PlanEndDate;
+        private DateTime _PlanEndDate;
         /// <summary>
         /// 结束日期
         /// </summary>
         [AdvQueryAttribute(ColName = "PlanEndDate",ColDesc = "结束日期")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PlanEndDate" ,Length=50,IsNullable = true,ColumnDescription = "结束日期" )]
-        public string PlanEndDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PlanEndDate" ,IsNullable = false,ColumnDescription = "结束日期" )]
+        public DateTime PlanEndDate
         { 
             get{return _PlanEndDate;}
             set{
@@ -120,6 +120,20 @@ namespace RUINORERP.Model
             get{return _PlanStatus;}
             set{
             SetProperty(ref _PlanStatus, value);
+            }
+        }
+
+        private string _PlanSubject;
+        /// <summary>
+        /// 计划主题
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PlanSubject",ColDesc = "计划主题")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PlanSubject" ,Length=200,IsNullable = true,ColumnDescription = "计划主题" )]
+        public string PlanSubject
+        { 
+            get{return _PlanSubject;}
+            set{
+            SetProperty(ref _PlanSubject, value);
             }
         }
 

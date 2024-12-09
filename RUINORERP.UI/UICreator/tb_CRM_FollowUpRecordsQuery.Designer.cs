@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:44
+// 时间：12/09/2024 21:23:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,9 +68,7 @@ this.cmbEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 this.lblFollowUpDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpFollowUpDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
 
-this.lblFollowUpMethod = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.dtpFollowUpMethod = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
-
+NextPlanID主外字段不一致。
 this.lblFollowUpSubject = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtFollowUpSubject = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
@@ -184,7 +182,7 @@ this.lblFollowUpDate.Location = new System.Drawing.Point(100,150);
 this.lblFollowUpDate.Name = "lblFollowUpDate";
 this.lblFollowUpDate.Size = new System.Drawing.Size(41, 12);
 this.lblFollowUpDate.TabIndex = 6;
-this.lblFollowUpDate.Text = "开始日期";
+this.lblFollowUpDate.Text = "跟进日期";
 //111======150
 this.dtpFollowUpDate.Location = new System.Drawing.Point(173,146);
 this.dtpFollowUpDate.Name ="dtpFollowUpDate";
@@ -194,21 +192,12 @@ this.dtpFollowUpDate.TabIndex = 6;
 this.Controls.Add(this.lblFollowUpDate);
 this.Controls.Add(this.dtpFollowUpDate);
 
-           //#####FollowUpMethod###DateTime
-this.lblFollowUpMethod.AutoSize = true;
-this.lblFollowUpMethod.Location = new System.Drawing.Point(100,175);
-this.lblFollowUpMethod.Name = "lblFollowUpMethod";
-this.lblFollowUpMethod.Size = new System.Drawing.Size(41, 12);
-this.lblFollowUpMethod.TabIndex = 7;
-this.lblFollowUpMethod.Text = "结束日期";
-//111======175
-this.dtpFollowUpMethod.Location = new System.Drawing.Point(173,171);
-this.dtpFollowUpMethod.Name ="dtpFollowUpMethod";
-this.dtpFollowUpMethod.ShowCheckBox =true;
-this.dtpFollowUpMethod.Size = new System.Drawing.Size(100, 21);
-this.dtpFollowUpMethod.TabIndex = 7;
-this.Controls.Add(this.lblFollowUpMethod);
-this.Controls.Add(this.dtpFollowUpMethod);
+           //#####FollowUpMethod###Int32
+//属性测试175FollowUpMethod
+//属性测试175FollowUpMethod
+NextPlanID主外字段不一致。//属性测试175FollowUpMethod
+//属性测试175FollowUpMethod
+//属性测试175FollowUpMethod
 
            //#####200FollowUpSubject###String
 this.lblFollowUpSubject.AutoSize = true;
@@ -336,9 +325,7 @@ this.Controls.Add(this.cmbEmployee_ID );
                 this.Controls.Add(this.lblFollowUpDate );
 this.Controls.Add(this.dtpFollowUpDate );
 
-                this.Controls.Add(this.lblFollowUpMethod );
-this.Controls.Add(this.dtpFollowUpMethod );
-
+                NextPlanID主外字段不一致。
                 this.Controls.Add(this.lblFollowUpSubject );
 this.Controls.Add(this.txtFollowUpSubject );
 
@@ -401,9 +388,7 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpFollowUpDate;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblFollowUpMethod;
-private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpFollowUpMethod;
-
+              NextPlanID主外字段不一致。
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblFollowUpSubject;

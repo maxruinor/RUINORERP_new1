@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:43
+// 时间：12/09/2024 21:09:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,6 +46,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -55,10 +56,11 @@ namespace RUINORERP.UI
         tb_CRM_FollowUpPlans entity = new tb_CRM_FollowUpPlans();
                      entity.Customer_id = Int64.Parse(txtCustomer_id.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
-                        entity.PlanStartDate = txtPlanStartDate.Text ;
-                       entity.PlanEndDate = txtPlanEndDate.Text ;
-                       entity.PlanStatus = Int32.Parse(txtPlanStatus.Text);
-                        entity.PlanContent = txtPlanContent.Text ;
+                        entity.PlanStartDate = DateTime.Parse(txtPlanStartDate.Text);
+                        entity.PlanEndDate = DateTime.Parse(txtPlanEndDate.Text);
+                        entity.PlanStatus = Int32.Parse(txtPlanStatus.Text);
+                        entity.PlanSubject = txtPlanSubject.Text ;
+                       entity.PlanContent = txtPlanContent.Text ;
                        entity.Notes = txtNotes.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
@@ -77,16 +79,14 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v=>v.XXNAME, cmbCustomer_id);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
-           DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.PlanStartDate, txtPlanStartDate, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.PlanEndDate, txtPlanEndDate, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.PlanStartDate, dtpPlanStartDate,false);
+           DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.PlanEndDate, dtpPlanEndDate,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.PlanStatus, txtPlanStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.PlanSubject, txtPlanSubject, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.PlanContent, txtPlanContent, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.Created_at, dtpCreated_at,false);
-           DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.Modified_at, dtpModified_at,false);
-           DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_CRM_FollowUpPlans>(entity, t => t.isdeleted, chkisdeleted, false);
+          
+           
 }
 
 

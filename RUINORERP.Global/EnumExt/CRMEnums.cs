@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.EnumExt.CRM
 {
     /// <summary>
-    /// 跟踪记录主题
+    /// 跟进主题
     /// </summary>
     public enum FollowUpSubject
     {

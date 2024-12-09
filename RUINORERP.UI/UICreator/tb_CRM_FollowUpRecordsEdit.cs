@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:44
+// 时间：12/09/2024 21:23:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -62,7 +62,7 @@ namespace RUINORERP.UI
                         entity.NextPlanID = Int64.Parse(txtNextPlanID.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.FollowUpDate = DateTime.Parse(txtFollowUpDate.Text);
-                        entity.FollowUpMethod = DateTime.Parse(txtFollowUpMethod.Text);
+                        entity.FollowUpMethod = Int32.Parse(txtFollowUpMethod.Text);
                         entity.FollowUpSubject = txtFollowUpSubject.Text ;
                        entity.FollowUpContent = txtFollowUpContent.Text ;
                        entity.Notes = txtNotes.Text ;
@@ -88,7 +88,7 @@ NextPlanID主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_CRM_Follo
           NextPlanID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.NextPlanID, txtNextPlanID, BindDataType4TextBox.Qty,false);
           NextPlanID主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
            DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpDate, dtpFollowUpDate,false);
-           DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpMethod, dtpFollowUpMethod,false);
+          NextPlanID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpMethod, txtFollowUpMethod, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpSubject, txtFollowUpSubject, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpContent, txtFollowUpContent, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);

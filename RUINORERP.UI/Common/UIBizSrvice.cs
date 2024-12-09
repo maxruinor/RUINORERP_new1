@@ -25,7 +25,7 @@ namespace RUINORERP.UI.Common
 {
     public static class UIBizSrvice
     {
-        public static   T GetProdDetail<T>(long ProdDetailID) where T : class
+        public static T GetProdDetail<T>(long ProdDetailID) where T : class
         {
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             T prodDetail = null;
@@ -56,7 +56,7 @@ namespace RUINORERP.UI.Common
                             view_Prod.ProdDetailID = ProdDetailID;
                             prodDetail = view_Prod as T;
                         }
-               
+
 
                     }
                 }
@@ -136,6 +136,17 @@ namespace RUINORERP.UI.Common
         }
 
         #endregion
+
+        /// <summary>
+        /// 保存联系人信息
+        /// </summary>
+        /// <param name="ContactInfo"></param>
+        public static async void SaveCRMContact(tb_CRM_Contact ContactInfo)
+        {
+            BaseController<tb_CRM_Contact> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Contact>>(typeof(tb_CRM_Contact).Name + "Controller");
+            ReturnResults<tb_CRM_Contact> result = await ctrContactInfo.BaseSaveOrUpdate(ContactInfo);
+        }
+
 
         /// <summary>
         /// 保存收款人信息

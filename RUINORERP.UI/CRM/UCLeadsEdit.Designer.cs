@@ -211,7 +211,7 @@
             this.lblCustomerName.Name = "lblCustomerName";
             this.lblCustomerName.Size = new System.Drawing.Size(93, 20);
             this.lblCustomerName.TabIndex = 82;
-            this.lblCustomerName.Values.Text = "客户名/公司名";
+            this.lblCustomerName.Values.Text = "客户名/线索名";
             // 
             // txtCustomerName
             // 

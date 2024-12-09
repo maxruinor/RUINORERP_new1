@@ -51,14 +51,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Customer_id;
+        private long _Customer_id;
         /// <summary>
-        /// 机会客户
+        /// 目标客户
         /// </summary>
-        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "机会客户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "机会客户" )]
+        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "目标客户")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标客户" )]
         [FKRelationAttribute("tb_CRM_Customer","Customer_id")]
-        public long? Customer_id
+        public long Customer_id
         { 
             get{return _Customer_id;}
             set{

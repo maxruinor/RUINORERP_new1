@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:45
+// 时间：12/09/2024 15:51:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -57,6 +57,16 @@ this.lblRegion_code = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtRegion_code = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 Parent_region_id主外字段不一致。
+Parent_region_id主外字段不一致。
+this.lblIs_enabled = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkIs_enabled = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkIs_enabled.Values.Text ="";
+this.chkIs_enabled.Checked = true;
+this.chkIs_enabled.CheckState = System.Windows.Forms.CheckState.Checked;
+
+this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
     //for end
     this.SuspendLayout();
     
@@ -92,6 +102,37 @@ this.Controls.Add(this.txtRegion_code);
            //#####Parent_region_id###Int64
 //属性测试75Parent_region_id
 Parent_region_id主外字段不一致。
+           //#####Sort###Int32
+//属性测试100Sort
+Parent_region_id主外字段不一致。
+           //#####Is_enabled###Boolean
+this.lblIs_enabled.AutoSize = true;
+this.lblIs_enabled.Location = new System.Drawing.Point(100,125);
+this.lblIs_enabled.Name = "lblIs_enabled";
+this.lblIs_enabled.Size = new System.Drawing.Size(41, 12);
+this.lblIs_enabled.TabIndex = 5;
+this.lblIs_enabled.Text = "是否启用";
+this.chkIs_enabled.Location = new System.Drawing.Point(173,121);
+this.chkIs_enabled.Name = "chkIs_enabled";
+this.chkIs_enabled.Size = new System.Drawing.Size(100, 21);
+this.chkIs_enabled.TabIndex = 5;
+this.Controls.Add(this.lblIs_enabled);
+this.Controls.Add(this.chkIs_enabled);
+
+           //#####200Notes###String
+this.lblNotes.AutoSize = true;
+this.lblNotes.Location = new System.Drawing.Point(100,150);
+this.lblNotes.Name = "lblNotes";
+this.lblNotes.Size = new System.Drawing.Size(41, 12);
+this.lblNotes.TabIndex = 6;
+this.lblNotes.Text = "备注";
+this.txtNotes.Location = new System.Drawing.Point(173,146);
+this.txtNotes.Name = "txtNotes";
+this.txtNotes.Size = new System.Drawing.Size(100, 21);
+this.txtNotes.TabIndex = 6;
+this.Controls.Add(this.lblNotes);
+this.Controls.Add(this.txtNotes);
+
           
     //for end
 
@@ -107,6 +148,13 @@ this.Controls.Add(this.txtRegion_Name );
 this.Controls.Add(this.txtRegion_code );
 
                 Parent_region_id主外字段不一致。
+                Parent_region_id主外字段不一致。
+                this.Controls.Add(this.lblIs_enabled );
+this.Controls.Add(this.chkIs_enabled );
+
+                this.Controls.Add(this.lblNotes );
+this.Controls.Add(this.txtNotes );
+
                     
             this.Name = "tb_CRM_RegionQuery";
             this.Size = new System.Drawing.Size(911, 490);
@@ -130,6 +178,19 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtRegion_code;
     
         
               Parent_region_id主外字段不一致。
+    
+        
+              Parent_region_id主外字段不一致。
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblIs_enabled;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkIs_enabled;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
+
     
     
    

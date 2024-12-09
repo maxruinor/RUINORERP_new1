@@ -59,6 +59,7 @@
             this.PaletteMode = Krypton.Toolkit.PaletteMode.ProfessionalOffice2003;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Load += new System.EventHandler(this.BaseEdit_Load);
+            this.Shown += new System.EventHandler(this.BaseEditGeneric_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             this.ResumeLayout(false);

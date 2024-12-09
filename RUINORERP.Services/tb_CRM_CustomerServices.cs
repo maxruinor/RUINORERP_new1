@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Services
 {
     /// <summary>
-    /// 机会客户，公海客户 CRM系统中使用，给成交客户作外键引用
+    /// 目标客户，公海客户 CRM系统中使用，给成交客户作外键引用
     /// </summary>
     public partial class tb_CRM_CustomerServices : BaseServices<tb_CRM_Customer>, Itb_CRM_CustomerServices
     {

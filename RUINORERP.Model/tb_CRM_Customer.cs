@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 机会客户，公海客户 CRM系统中使用，给成交客户作外键引用
+    /// 目标客户，公海客户 CRM系统中使用，给成交客户作外键引用
     /// </summary>
     [Serializable()]
-    [Description("机会客户，公海客户 CRM系统中使用，给成交客户作外键引用")]
+    [Description("目标客户，公海客户 CRM系统中使用，给成交客户作外键引用")]
     [SugarTable("tb_CRM_Customer")]
     public partial class tb_CRM_Customer: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("机会客户，公海客户 CRM系统中使用，给成交客户作外键引用tb_CRM_Customer" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("目标客户，公海客户 CRM系统中使用，给成交客户作外键引用tb_CRM_Customer" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -38,10 +38,10 @@ namespace RUINORERP.Model
         #region 属性
         private long _Customer_id;
         /// <summary>
-        /// 机会客户
+        /// 目标客户
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "机会客户" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标客户" , IsPrimaryKey = true)]
         public long Customer_id
         { 
             get{return _Customer_id;}
@@ -197,13 +197,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private int? _CustomerStatus;
+        private int _CustomerStatus;
         /// <summary>
         /// 客户状态
         /// </summary>
         [AdvQueryAttribute(ColName = "CustomerStatus",ColDesc = "客户状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "CustomerStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "客户状态" )]
-        public int? CustomerStatus
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "CustomerStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "客户状态" )]
+        public int CustomerStatus
         { 
             get{return _CustomerStatus;}
             set{

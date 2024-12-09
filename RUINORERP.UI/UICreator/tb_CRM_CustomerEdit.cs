@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 机会客户，公海客户 CRM系统中使用，给成交客户作外键引用数据编辑
+    /// 目标客户，公海客户 CRM系统中使用，给成交客户作外键引用数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_CRM_CustomerEdit:UserControl

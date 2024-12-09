@@ -169,7 +169,12 @@ namespace RUINORERP.Global
         /// <summary>
         /// 项目代码
         /// </summary>
-        ProjectGroupCode
+        ProjectGroupCode,
+
+        /// <summary>
+        /// 区域代码
+        /// </summary>
+        CRM_RegionCode,
     }
 
     //上面只是测试，b

@@ -46,12 +46,24 @@ namespace RUINORERP.UI.BaseForm
         public event CancelHandler CancelEvent;
 
 
-        [MustOverride]
+        //为了区别是不是重写了这个方法来标记在基类中如何调用。只是为了不想改46个引用BindData(BaseEntity entity)
+        public bool usedActionStatus = false;
+
+
+        //[MustOverride]
+        public virtual void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
+        {
+
+        }
         public virtual void BindData(BaseEntity entity)
         {
 
         }
 
+        //public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
+        //{
+
+        //}
         //public virtual void BindData(T entity)
         //{
 
@@ -561,5 +573,18 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
+
+        /// <summary>
+        /// 有些功能会在UI加载完后才生效
+        /// </summary>
+        public virtual void UIShown()
+        {
+
+        }
+
+        private void BaseEditGeneric_Shown(object sender, EventArgs e)
+        {
+            UIShown();
+        }
     }
 }

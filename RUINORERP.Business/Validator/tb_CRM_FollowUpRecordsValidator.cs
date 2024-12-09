@@ -26,7 +26,7 @@ namespace RUINORERP.Business
     {
      public tb_CRM_FollowUpRecordsValidator() 
      {
-      RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage("机会客户:下拉选择值不正确。");
+      RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage("目标客户:下拉选择值不正确。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Customer_id).NotEmpty().When(x => x.Customer_id.HasValue);
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.LeadID).Must(CheckForeignKeyValueCanNull).WithMessage("线索:下拉选择值不正确。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.LeadID).NotEmpty().When(x => x.LeadID.HasValue);

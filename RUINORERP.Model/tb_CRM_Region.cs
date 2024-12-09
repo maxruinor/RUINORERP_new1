@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:45
+// 时间：12/09/2024 15:51:27
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -91,6 +91,48 @@ namespace RUINORERP.Model
             get{return _Parent_region_id;}
             set{
             SetProperty(ref _Parent_region_id, value);
+            }
+        }
+
+        private int? _Sort;
+        /// <summary>
+        /// 排序
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Sort",ColDesc = "排序")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Sort" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "排序" )]
+        public int? Sort
+        { 
+            get{return _Sort;}
+            set{
+            SetProperty(ref _Sort, value);
+            }
+        }
+
+        private bool? _Is_enabled= true;
+        /// <summary>
+        /// 是否启用
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Is_enabled",ColDesc = "是否启用")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_enabled" ,IsNullable = true,ColumnDescription = "是否启用" )]
+        public bool? Is_enabled
+        { 
+            get{return _Is_enabled;}
+            set{
+            SetProperty(ref _Is_enabled, value);
+            }
+        }
+
+        private string _Notes;
+        /// <summary>
+        /// 备注
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=200,IsNullable = true,ColumnDescription = "备注" )]
+        public string Notes
+        { 
+            get{return _Notes;}
+            set{
+            SetProperty(ref _Notes, value);
             }
         }
 

@@ -33,6 +33,7 @@ namespace RUINORERP.UI.BI
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.cmbSubject_Type = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonGroupBox4 = new Krypton.Toolkit.KryptonGroupBox();
             this.rdb贷 = new RUINORERP.UI.UControls.RadioButtonBind();
             this.rdb借 = new RUINORERP.UI.UControls.RadioButtonBind();
@@ -54,15 +55,14 @@ namespace RUINORERP.UI.BI
             this.lblSort = new Krypton.Toolkit.KryptonLabel();
             this.lblIsLock = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.cmbSubject_Type = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbSubject_Type)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox4)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox4.Panel)).BeginInit();
             this.kryptonGroupBox4.Panel.SuspendLayout();
             this.kryptonGroupBox4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbSubject_Type)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
@@ -113,6 +113,15 @@ namespace RUINORERP.UI.BI
             this.kryptonPanel1.Size = new System.Drawing.Size(609, 500);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // cmbSubject_Type
+            // 
+            this.cmbSubject_Type.DropDownWidth = 100;
+            this.cmbSubject_Type.IntegralHeight = false;
+            this.cmbSubject_Type.Location = new System.Drawing.Point(211, 114);
+            this.cmbSubject_Type.Name = "cmbSubject_Type";
+            this.cmbSubject_Type.Size = new System.Drawing.Size(208, 21);
+            this.cmbSubject_Type.TabIndex = 153;
+            // 
             // kryptonGroupBox4
             // 
             this.kryptonGroupBox4.CaptionVisible = false;
@@ -148,7 +157,7 @@ namespace RUINORERP.UI.BI
             // 
             this.lblparent_subject_id.Location = new System.Drawing.Point(145, 12);
             this.lblparent_subject_id.Name = "lblparent_subject_id";
-            this.lblparent_subject_id.Size = new System.Drawing.Size(60, 20);
+            this.lblparent_subject_id.Size = new System.Drawing.Size(62, 20);
             this.lblparent_subject_id.TabIndex = 25;
             this.lblparent_subject_id.Values.Text = "上级科目";
             // 
@@ -156,7 +165,7 @@ namespace RUINORERP.UI.BI
             // 
             this.lblsubject_code.Location = new System.Drawing.Point(145, 42);
             this.lblsubject_code.Name = "lblsubject_code";
-            this.lblsubject_code.Size = new System.Drawing.Size(60, 20);
+            this.lblsubject_code.Size = new System.Drawing.Size(62, 20);
             this.lblsubject_code.TabIndex = 27;
             this.lblsubject_code.Values.Text = "科目代码";
             // 
@@ -164,14 +173,14 @@ namespace RUINORERP.UI.BI
             // 
             this.txtsubject_code.Location = new System.Drawing.Point(211, 38);
             this.txtsubject_code.Name = "txtsubject_code";
-            this.txtsubject_code.Size = new System.Drawing.Size(208, 20);
+            this.txtsubject_code.Size = new System.Drawing.Size(208, 23);
             this.txtsubject_code.TabIndex = 28;
             // 
             // lblsubject_name
             // 
             this.lblsubject_name.Location = new System.Drawing.Point(145, 67);
             this.lblsubject_name.Name = "lblsubject_name";
-            this.lblsubject_name.Size = new System.Drawing.Size(60, 20);
+            this.lblsubject_name.Size = new System.Drawing.Size(62, 20);
             this.lblsubject_name.TabIndex = 29;
             this.lblsubject_name.Values.Text = "科目名称";
             // 
@@ -179,29 +188,29 @@ namespace RUINORERP.UI.BI
             // 
             this.txtsubject_name.Location = new System.Drawing.Point(211, 63);
             this.txtsubject_name.Name = "txtsubject_name";
-            this.txtsubject_name.Size = new System.Drawing.Size(208, 20);
+            this.txtsubject_name.Size = new System.Drawing.Size(208, 23);
             this.txtsubject_name.TabIndex = 30;
             // 
             // lblsubject_en_name
             // 
-            this.lblsubject_en_name.Location = new System.Drawing.Point(145, 92);
+            this.lblsubject_en_name.Location = new System.Drawing.Point(111, 91);
             this.lblsubject_en_name.Name = "lblsubject_en_name";
-            this.lblsubject_en_name.Size = new System.Drawing.Size(60, 20);
+            this.lblsubject_en_name.Size = new System.Drawing.Size(94, 20);
             this.lblsubject_en_name.TabIndex = 31;
-            this.lblsubject_en_name.Values.Text = "科目名称";
+            this.lblsubject_en_name.Values.Text = "科目名称（EN)";
             // 
             // txtsubject_en_name
             // 
             this.txtsubject_en_name.Location = new System.Drawing.Point(211, 88);
             this.txtsubject_en_name.Name = "txtsubject_en_name";
-            this.txtsubject_en_name.Size = new System.Drawing.Size(208, 20);
+            this.txtsubject_en_name.Size = new System.Drawing.Size(208, 23);
             this.txtsubject_en_name.TabIndex = 32;
             // 
             // lblSubject_Type
             // 
             this.lblSubject_Type.Location = new System.Drawing.Point(145, 117);
             this.lblSubject_Type.Name = "lblSubject_Type";
-            this.lblSubject_Type.Size = new System.Drawing.Size(60, 20);
+            this.lblSubject_Type.Size = new System.Drawing.Size(62, 20);
             this.lblSubject_Type.TabIndex = 33;
             this.lblSubject_Type.Values.Text = "科目类型";
             // 
@@ -209,7 +218,7 @@ namespace RUINORERP.UI.BI
             // 
             this.lblBalance_direction.Location = new System.Drawing.Point(87, 165);
             this.lblBalance_direction.Name = "lblBalance_direction";
-            this.lblBalance_direction.Size = new System.Drawing.Size(118, 20);
+            this.lblBalance_direction.Size = new System.Drawing.Size(122, 20);
             this.lblBalance_direction.TabIndex = 35;
             this.lblBalance_direction.Values.Text = "(科目性质)余额方向";
             // 
@@ -223,10 +232,30 @@ namespace RUINORERP.UI.BI
             // 
             // txtSort
             // 
+            this.txtSort.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.txtSort.Location = new System.Drawing.Point(211, 229);
+            this.txtSort.Maximum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            this.txtSort.Minimum = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             this.txtSort.Name = "txtSort";
             this.txtSort.Size = new System.Drawing.Size(208, 22);
             this.txtSort.TabIndex = 21;
+            this.txtSort.Value = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
             // 
             // chkIs_enabled
             // 
@@ -240,7 +269,7 @@ namespace RUINORERP.UI.BI
             // 
             this.lblNotes.Location = new System.Drawing.Point(170, 309);
             this.lblNotes.Name = "lblNotes";
-            this.lblNotes.Size = new System.Drawing.Size(35, 20);
+            this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 12;
             this.lblNotes.Values.Text = "备注";
             // 
@@ -248,7 +277,7 @@ namespace RUINORERP.UI.BI
             // 
             this.lblImages.Location = new System.Drawing.Point(145, 200);
             this.lblImages.Name = "lblImages";
-            this.lblImages.Size = new System.Drawing.Size(60, 20);
+            this.lblImages.Size = new System.Drawing.Size(62, 20);
             this.lblImages.TabIndex = 14;
             this.lblImages.Values.Text = "类目图片";
             // 
@@ -256,14 +285,14 @@ namespace RUINORERP.UI.BI
             // 
             this.txtImages.Location = new System.Drawing.Point(211, 198);
             this.txtImages.Name = "txtImages";
-            this.txtImages.Size = new System.Drawing.Size(208, 20);
+            this.txtImages.Size = new System.Drawing.Size(208, 23);
             this.txtImages.TabIndex = 15;
             // 
             // lblSort
             // 
             this.lblSort.Location = new System.Drawing.Point(170, 232);
             this.lblSort.Name = "lblSort";
-            this.lblSort.Size = new System.Drawing.Size(35, 20);
+            this.lblSort.Size = new System.Drawing.Size(36, 20);
             this.lblSort.TabIndex = 16;
             this.lblSort.Values.Text = "排序";
             // 
@@ -271,7 +300,7 @@ namespace RUINORERP.UI.BI
             // 
             this.lblIsLock.Location = new System.Drawing.Point(145, 267);
             this.lblIsLock.Name = "lblIsLock";
-            this.lblIsLock.Size = new System.Drawing.Size(60, 20);
+            this.lblIsLock.Size = new System.Drawing.Size(62, 20);
             this.lblIsLock.TabIndex = 18;
             this.lblIsLock.Values.Text = "是否启用";
             // 
@@ -282,14 +311,6 @@ namespace RUINORERP.UI.BI
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(208, 90);
             this.txtNotes.TabIndex = 5;
-            // 
-            // cmbSubject_Type
-            // 
-            this.cmbSubject_Type.DropDownWidth = 100;
-            this.cmbSubject_Type.Location = new System.Drawing.Point(211, 114);
-            this.cmbSubject_Type.Name = "cmbSubject_Type";
-            this.cmbSubject_Type.Size = new System.Drawing.Size(208, 21);
-            this.cmbSubject_Type.TabIndex = 153;
             // 
             // UCFMSubjectEdit
             // 
@@ -303,12 +324,12 @@ namespace RUINORERP.UI.BI
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbSubject_Type)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox4.Panel)).EndInit();
             this.kryptonGroupBox4.Panel.ResumeLayout(false);
             this.kryptonGroupBox4.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox4)).EndInit();
             this.kryptonGroupBox4.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbSubject_Type)).EndInit();
             this.ResumeLayout(false);
 
         }

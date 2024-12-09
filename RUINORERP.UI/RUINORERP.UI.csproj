@@ -1061,14 +1061,51 @@
     <Compile Include="CommonUI\frmInputContent.Designer.cs">
       <DependentUpon>frmInputContent.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\UICRM_RegionHelper.cs" />
     <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
+    <Compile Include="CRM\UCCRMContactEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMContactEdit.Designer.cs">
+      <DependentUpon>UCCRMContactEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\UCCRMRegionEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMRegionEdit.designer.cs">
+      <DependentUpon>UCCRMRegionEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\UCCRMRegionList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMRegionList.designer.cs">
+      <DependentUpon>UCCRMRegionList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\UCCRMCustomerEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMCustomerEdit.Designer.cs">
+      <DependentUpon>UCCRMCustomerEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="CRM\UCLeadsEdit.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="CRM\UCLeadsEdit.Designer.cs">
       <DependentUpon>UCLeadsEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\UCCRMContactList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMContactList.Designer.cs">
+      <DependentUpon>UCCRMContactList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\UCCRMCustomerList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMCustomerList.Designer.cs">
+      <DependentUpon>UCCRMCustomerList.cs</DependentUpon>
     </Compile>
     <Compile Include="CRM\UCLeadsList.cs">
       <SubType>UserControl</SubType>
@@ -2607,8 +2644,26 @@
     <EmbeddedResource Include="CommonUI\frmInputContent.resx">
       <DependentUpon>frmInputContent.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMContactEdit.resx">
+      <DependentUpon>UCCRMContactEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMRegionEdit.resx">
+      <DependentUpon>UCCRMRegionEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMRegionList.resx">
+      <DependentUpon>UCCRMRegionList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMCustomerEdit.resx">
+      <DependentUpon>UCCRMCustomerEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCLeadsEdit.resx">
       <DependentUpon>UCLeadsEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMContactList.resx">
+      <DependentUpon>UCCRMContactList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMCustomerList.resx">
+      <DependentUpon>UCCRMCustomerList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>

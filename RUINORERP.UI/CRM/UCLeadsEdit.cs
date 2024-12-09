@@ -18,6 +18,8 @@ using RUINORERP.UI.Common;
 using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.UI.SysConfig;
 using System.Diagnostics;
+using RUINORERP.Business.CommService;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.CRM
 {
@@ -29,23 +31,31 @@ namespace RUINORERP.UI.CRM
         public UCLeadsEdit()
         {
             InitializeComponent();
+            usedActionStatus = true;
         }
 
         private tb_CRM_Leads _EditEntity;
         public tb_CRM_Leads EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public override void BindData(BaseEntity entity)
+        public override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
+          
             tb_CRM_Leads leads = entity as tb_CRM_Leads;
-            if (leads.LeadID == 0)
-            {
-                leads.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                leads.LeadsStatus = (int)LeadsStatus.新建;
-            }
-
             cmbtxtLeadsStatus.Enabled = false;
             _EditEntity = leads;
+            
+            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
 
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            if (_EditEntity.LeadID == 0)
+            {
+                _EditEntity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                //var obj = BizCacheHelper.Instance.GetEntity(nameof(tb_Employee), _EditEntity.Employee_ID);
+                //if (obj != null)
+                //{
+                //    var emp = obj as tb_Employee;
+                //    cmbEmployee_ID.SelectedIndex = cmbEmployee_ID.FindStringExact(emp.Employee_Name);
+                //}
+                _EditEntity.LeadsStatus = (int)LeadsStatus.新建;
+            }
 
             DataBindingHelper.BindData4CmbByEnum<tb_CRM_Leads>(entity, k => k.LeadsStatus, typeof(LeadsStatus), cmbtxtLeadsStatus, false);
 
@@ -61,8 +71,20 @@ namespace RUINORERP.UI.CRM
             DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.Address, txtAddress, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.Website, txtWebsite, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
+            //如果属性变化 则状态为修改
+            entity.PropertyChanged += (sender, s2) =>
+            {
+                if (EditEntity == null)
+                {
+                    return;
+                }
 
+            };
         }
+
+
+
+
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
@@ -159,7 +181,7 @@ namespace RUINORERP.UI.CRM
             txtGetCustomerSource.Text = txtGetCustomerSource.Text.Trim(',');
             txtGetCustomerSource.Text = txtGetCustomerSource.Text.Trim('，');
             //操作前将数据收集  保存单据时间出错，这个方法开始是 将查询条件生效
-             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+            this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
         }
     }
 }

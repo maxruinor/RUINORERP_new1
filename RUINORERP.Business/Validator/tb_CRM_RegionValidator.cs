@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:46
+// 时间：12/09/2024 15:51:27
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -29,6 +29,9 @@ namespace RUINORERP.Business
       RuleFor(tb_CRM_Region =>tb_CRM_Region.Region_Name).MaximumLength(25).WithMessage("地区名称:不能超过最大长度,25.");
  RuleFor(tb_CRM_Region =>tb_CRM_Region.Region_code).MaximumLength(10).WithMessage("地区代码:不能超过最大长度,10.");
  RuleFor(tb_CRM_Region =>tb_CRM_Region.Parent_region_id).NotEmpty().When(x => x.Parent_region_id.HasValue);
+ RuleFor(tb_CRM_Region =>tb_CRM_Region.Sort).NotEmpty().When(x => x.Sort.HasValue);
+//有默认值
+ RuleFor(tb_CRM_Region =>tb_CRM_Region.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
        	
            	        Initialize();
      }

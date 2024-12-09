@@ -96,10 +96,10 @@ namespace RUINORERP.Model
 
         private string _CustomerName;
         /// <summary>
-        /// 客户名称
+        /// 客户名/线索名
         /// </summary>
-        [AdvQueryAttribute(ColName = "CustomerName",ColDesc = "客户名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomerName" ,Length=100,IsNullable = true,ColumnDescription = "客户名称" )]
+        [AdvQueryAttribute(ColName = "CustomerName",ColDesc = "客户名/线索名")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomerName" ,Length=100,IsNullable = true,ColumnDescription = "客户名/线索名")]
         public string CustomerName
         { 
             get{return _CustomerName;}

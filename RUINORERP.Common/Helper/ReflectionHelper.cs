@@ -682,7 +682,7 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception ex)
             {
-                throw new Exception($"SetPropertyValue，{nameof(obj)}设置出错:" + as_propertyname + "|" + aobj_propertyvalue + "|" + ex.Message);
+                throw new Exception($"设置属性值时出错：{obj.GetType().Name}:属性名:{as_propertyname},值:{aobj_propertyvalue},{ex.Message}");
             }
 
         }

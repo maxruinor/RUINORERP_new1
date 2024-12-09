@@ -38,7 +38,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         [MustOverride]
-        public virtual void BindData(BaseEntity entity)
+        public virtual void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
 
         }

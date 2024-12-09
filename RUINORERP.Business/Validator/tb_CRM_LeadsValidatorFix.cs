@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 17:24:06
+// 时间：12/09/2024 12:15:49
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
@@ -19,17 +19,18 @@ using FluentValidation;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 箱规表验证类
+    /// 线索机会-询盘验证类
     /// </summary>
-    public partial class tb_BoxRulesValidator : BaseValidatorGeneric<tb_BoxRules>
+    /*public partial class tb_CRM_LeadsValidator:AbstractValidator<tb_CRM_Leads>*/
+    public partial class tb_CRM_LeadsValidator:BaseValidatorGeneric<tb_CRM_Leads>
     {
         public override void Initialize()
         {
-            //RuleFor(tb_BoxRules => tb_BoxRules.Pack_ID).Must(CheckForeignKeyValue).WithMessage("包装信息:下拉选择值不正确。");
-
-            // 这里添加额外的初始化代码
-            RuleFor(x => x.NetWeight).GreaterThan(0).WithMessage("净重N.Wt.(kg):要大于零。");
+            RuleFor(x => x.CustomerName).NotNull().WithMessage("客户名/线索名:不能为空。");
+            RuleFor(x => x.CustomerName).MinimumLength(3).WithMessage("客户名/线索名:长度要大于2。");
         }
     }
+ 
+
 }
 

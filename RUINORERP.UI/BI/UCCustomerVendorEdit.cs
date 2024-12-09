@@ -27,11 +27,12 @@ namespace RUINORERP.UI.BI
         public UCCustomerVendorEdit()
         {
             InitializeComponent();
+            usedActionStatus = true;
             chkOther.ToolTipValues.Description = "其他类型，如物流公司，第三方仓库，加工厂等合作伙伴等。";
         }
 
         private tb_CustomerVendor _EditEntity;
-        public override void BindData(BaseEntity entity)
+        public override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             _EditEntity = entity as tb_CustomerVendor;
 

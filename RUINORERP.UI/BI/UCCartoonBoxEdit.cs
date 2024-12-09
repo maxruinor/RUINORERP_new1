@@ -28,8 +28,6 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
         }
 
-
-
         public override void BindData(BaseEntity baseEntity)
         {
             tb_CartoonBox entity = baseEntity as tb_CartoonBox;
@@ -83,8 +81,6 @@ namespace RUINORERP.UI.BI
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
-
-
 
         private void btnOk_Click(object sender, EventArgs e)
         {

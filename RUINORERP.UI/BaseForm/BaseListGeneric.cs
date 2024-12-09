@@ -860,7 +860,14 @@ namespace RUINORERP.UI.BaseForm
                 BaseEditGeneric<T> frmadd = frm as BaseEditGeneric<T>;
                 frmadd.bindingSourceEdit = bindingSourceList;
                 object NewObj = frmadd.bindingSourceEdit.AddNew();
-                frmadd.BindData(NewObj as BaseEntity);
+                if (frmadd.usedActionStatus)
+                {
+                    frmadd.BindData(NewObj as BaseEntity, ActionStatus.新增);
+                }
+                else
+                {
+                    frmadd.BindData(NewObj as BaseEntity);
+                }
 
                 //复制性 的就是把原有值除主键全部复制过去。
                 FastCopy<T, T>.Copy(selectItem as T, NewObj as T, true);
@@ -884,7 +891,7 @@ namespace RUINORERP.UI.BaseForm
                 BaseEdit frmadd = frm as BaseEdit;
                 frmadd.bindingSourceEdit = bindingSourceList;
                 object obj = frmadd.bindingSourceEdit.AddNew();
-                frmadd.BindData(obj as BaseEntity);
+                frmadd.BindData(obj as BaseEntity, ActionStatus.新增);
                 if (frmadd.ShowDialog() == DialogResult.OK)
                 {
                     ToolBarEnabledControl(MenuItemEnums.新增);
@@ -912,7 +919,16 @@ namespace RUINORERP.UI.BaseForm
                 //ctr.InitEntity(obj);
                 BusinessHelper.Instance.InitEntity(obj);
                 //如果obj转基类为空 ，原因是 载入时没有查询出一个默认的框架出来
-                frmadd.BindData(obj as BaseEntity);
+    
+                if (frmadd.usedActionStatus)
+                {
+                    frmadd.BindData(obj as BaseEntity, ActionStatus.新增);
+                }
+                else
+                {
+                    frmadd.BindData(obj as BaseEntity);
+                }
+
                 if (frmadd.ShowDialog() == DialogResult.OK)
                 {
                     ToolBarEnabledControl(MenuItemEnums.新增);
@@ -930,7 +946,7 @@ namespace RUINORERP.UI.BaseForm
                 frmadd.Text = this.CurMenuInfo.CaptionCN + "新增";
                 frmadd.bindingSourceEdit = bindingSourceList;
                 object obj = frmadd.bindingSourceEdit.AddNew();
-                frmadd.BindData(obj as BaseEntity);
+                frmadd.BindData(obj as BaseEntity, ActionStatus.新增);
                 if (frmadd.ShowDialog() == DialogResult.OK)
                 {
                     ToolBarEnabledControl(MenuItemEnums.新增);
@@ -1051,7 +1067,7 @@ namespace RUINORERP.UI.BaseForm
                 bty.ActionStatus = ActionStatus.加载;
                 //ctr.EditEntity(bty);
                 BusinessHelper.Instance.EditEntity(bty);
-                frmadd.BindData(bty);
+                frmadd.BindData(bty, ActionStatus.修改);
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>((T)bindingSourceList.Current);
                 int UpdateIndex = bindingSourceList.Position;
@@ -1145,7 +1161,15 @@ namespace RUINORERP.UI.BaseForm
                 frmadd.bindingSourceEdit = bindingSourceList;
                 T CurrencyObj = (T)bindingSourceList.Current;
                 BaseEntity bty = CurrencyObj as BaseEntity;
-                frmadd.BindData(bty);
+                if (frmadd.usedActionStatus)
+                {
+                    frmadd.BindData(bty as BaseEntity, ActionStatus.修改);
+                }
+                else
+                {
+                    frmadd.BindData(bty as BaseEntity);
+                }
+
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObjectAdv<T>((T)bindingSourceList.Current);
                 int UpdateIndex = bindingSourceList.Position;
@@ -1233,128 +1257,11 @@ namespace RUINORERP.UI.BaseForm
             dataGridView1.Refresh();
         }
 
-        /*
-        protected void Modify_backup<T>(BaseEdit frmadd)
-        {
-            if (bindingSourceList.Current != null)
-            {
-                Command command = new Command();
-                //UCLocationTypeEdit frmadd = new UCLocationTypeEdit();
-                frmadd.bindingSourceEdit = bindingSourceList;
-                BaseEntity CurrencyObj = bindingSourceList.Current as BaseEntity;
-                CurrencyObj.actionStatus = ActionStatus.修改;
-                frmadd.BindData(CurrencyObj);
-                //缓存当前编辑的对象。如果撤销就回原来的值
-                // object obj = (base.bindingSourceList.Current as tb_LocationType).Clone();
-                //tb_LocationType oldobj = CloneHelper.DeepCloneObject<tb_LocationType>(bindingSourceList.Current as tb_LocationType);
-                BaseEntity oldobj = CloneHelper.DeepCloneObject<BaseEntity>(bindingSourceList.Current as BaseEntity);
-                int UpdateIndex = bindingSourceList.Position;
-                command.UndoOperation = delegate ()
-                {
-                    //Undo操作会执行到的代码
-                    //                    CloneHelper.SetValues<tb_LocationType>(base.bindingSourceList[UpdateIndex], oldobj);
-                    CloneHelper.SetValues<T>(CurrencyObj, oldobj);
-                };
-                if (frmadd.ShowDialog() == DialogResult.Cancel)
-                {
-                    //修改时取消了
-                    command.Undo();
-                }
-                else
-                {
-                    //if (CurrencyObj.HasChanged)
-                    //{
-                    //    CurrencyObj.actionStatus = ActionStatus.修改;
-                    //    ToolBarEnabledControl(MenuItemEnums.修改);
-                    //}
-
-                    //确定了
-                    ComPareResult result = UITools.ComPare(oldobj, CurrencyObj);
-                    if (!result.IsEqual)
-                    {
-                        if (CurrencyObj.actionStatus == ActionStatus.无操作)
-                        {
-                            CurrencyObj.actionStatus = ActionStatus.修改;
-                            ToolBarEnabledControl(MenuItemEnums.修改);
-                        }
-                    }
-
-                }
-                dataGridView1.Refresh();
-            }
-        }
-        */
-
 
 
         KryptonPage AdvPage = null;
 
-
-        /*
-        /// <summary>
-        /// 显示查询页过时 作废了
-        /// 初步判断 没有使用了。
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="dto"></param>
-        protected virtual void AdvStartQueryPage<T>(BaseEntityDto dto) where T : class
-        {
-            if (Edited)
-            {
-                if (MessageBox.Show("你有数据没有保存，当前操作会丢失数据\r\n你确定不保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
-                {
-                    return;
-                }
-            }
-
-            AdvancedUIModule.UCAdvQuery<T> ucAdv = new AdvancedUIModule.UCAdvQuery<T>();
-            ucAdv.AdvQueryEvent += UcAdv_QueryEvent;
-
-            int pageW = 750;
-            int pageH = 600;
-
-            int left = 0;
-            int right = 0;
-            if (AdvPage != null)
-            {            //计算位于父窗体的中心位置 
-                left = this.Location.X + (this.Width / 2) - (AdvPage.Width / 2);
-                right = this.Location.Y + (this.Height / 2) - (AdvPage.Height / 2);
-
-                if (MainForm.Instance.kryptonDockingManager1.Pages.Contains(AdvPage))
-                {
-                    AdvPage.Location = new Point(left, right);
-                    AdvPage.Show();
-                    return;
-                }
-            }
-            string PageTitle = "高级查询";
-            if ((this as Control).Parent is KryptonPage)
-            {
-                KryptonPage page = (this as Control).Parent as KryptonPage;
-                PageTitle = page.Text + "-" + PageTitle;
-            }
-            AdvPage = MainForm.Instance.NewPage(PageTitle, 1, ucAdv);
-            AdvPage.AllowDrop = false;
-            left = this.Location.X + (this.Width / 2) - (pageW / 2);
-            right = this.Location.Y + (this.Height / 2) - (pageH / 2);
-            right += 100;//往下来一点
-            //  kp.ClearFlags(KryptonPageFlags.All);
-            AdvPage.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowClose);
-
-            MainForm.Instance.kryptonDockingManager1.AddFloatingWindow("Floating", new KryptonPage[] { AdvPage },
-             new Point(left, right), new Size(pageW, pageH));
-        }
-
-        */
-        ///// <summary>
-        ///// 执行高级查询的结果
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="dto"></param>
-        //private void UcAdv_QueryEvent<T>(BaseEntityDto dto)
-        //{
-        //    AdvQueryShowResult(dto);
-        //}
+ 
 
         /// <summary>
         /// 执行高级查询的结果

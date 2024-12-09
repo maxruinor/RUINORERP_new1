@@ -138,7 +138,7 @@ namespace RUINORERP.Business
             }
             //rule + "{D:yy}{N:{D:yyyMMdd}/0000}{S:RJ}{N:ORDER/00000}";
 
-            
+
 
             string BaseInfoNo = BNRFactory.Default.Create(rule);
             return BaseInfoNo;
@@ -159,6 +159,9 @@ namespace RUINORERP.Business
                     break;
                 case BaseInfoType.FMSubject:
                     rule = "{redis:BST/000}";//bst001
+                    break;
+                case BaseInfoType.CRM_RegionCode:
+                    rule = "{redis:CRC/00}";//bst001
                     break;
                 case BaseInfoType.ShortCode:
                     rule = "{redis:{S:" + ParaConst + "}/000}";//            "{redis:" + ParaConst + "/000}";

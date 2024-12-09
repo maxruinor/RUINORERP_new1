@@ -537,8 +537,6 @@ namespace RUINORERP.UI
         /// <param name="services"></param>
         public static void ConfigureServices(IServiceCollection services)
         {
-
-
             services.AddSingleton(typeof(ConfigManager));
             //services.AddSingleton(typeof(MainForm_test));//MDI最大。才开一次才能单例
             services.AddSingleton(typeof(MainForm));//MDI最大。才开一次才能单例
@@ -570,7 +568,7 @@ namespace RUINORERP.UI
             //为了修改为DB添加字段，覆盖这前面的
 
 
-
+            //默认就是内存模式？
             services.AddWorkflow();
 
             //services.AddWorkflow(x => x.UseMySQL(@"Server=127.0.0.1;Database=workflow;User=root;Password=password;", true, true));

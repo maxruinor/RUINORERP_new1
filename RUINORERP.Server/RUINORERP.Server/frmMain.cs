@@ -259,7 +259,7 @@ namespace RUINORERP.Server
                 
                 foreach (var item in BizCacheHelper.Manager.NewTableList)
                 {
-                    CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(item.Key) as CacheInfo;
+                    CacheInfo cacheInfo = MyCacheManager.Instance.CacheInfoList.Get(item.Key) as CacheInfo;
                     if (cacheInfo != null)
                     {
                         if (!MyCacheManager.Instance.CacheEntityList.Exists(item.Key))

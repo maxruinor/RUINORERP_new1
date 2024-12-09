@@ -230,7 +230,7 @@ namespace RUINORERP.UI
             //});
             //services.AddSingleton<ISqlSugarClient>(sqlSugarScope); // SqlSugar 官网推荐用单例模式注入
             //  services.AddSqlsugarSetup();
-           // services.AddSingleton(typeof(MainForm_test));
+            // services.AddSingleton(typeof(MainForm_test));
             // services.AddTransient(typeof(Form2));
 
             // 注入窗体
@@ -498,12 +498,13 @@ namespace RUINORERP.UI
 
                         AppContextData.workflowHost = host;
 
+
                         #endregion
 
 
-                         var form1 = Startup.ServiceProvider.GetService<MainForm>();
-                         Application.Run(form1);
-                        
+                        var form1 = Startup.ServiceProvider.GetService<MainForm>();
+                        Application.Run(form1);
+
                         //ILogger<MainForm> logger = null;
                         //MainForm form1 = new MainForm(logger);
                         //Application.Run(form1);

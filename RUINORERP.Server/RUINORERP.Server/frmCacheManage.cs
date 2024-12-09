@@ -111,7 +111,7 @@ namespace RUINORERP.Server
             {
                 SuperValue kv = null;
                 string cacheInfoView = string.Empty;
-                CacheInfo cacheInfo = MyCacheManager.Instance.Cache.Get(tableName) as CacheInfo;
+                CacheInfo cacheInfo = MyCacheManager.Instance.CacheInfoList.Get(tableName) as CacheInfo;
                 if (cacheInfo != null)
                 {
                     if (cacheInfo.HasExpire)

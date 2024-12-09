@@ -36,7 +36,14 @@ namespace RUINORERP.UI.CRM
             System.Linq.Expressions.Expression<Func<tb_CRM_Customer, int?>> expLeadsStatus;
             expLeadsStatus = (p) => p.CustomerStatus;
             base.ColNameDataDictionary.TryAdd(expLeadsStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CustomerStatus)));
+
+            if (CurMenuInfo.CaptionCN.Contains("公海客户"))
+            {
+                toolStripButtonAdd.Visible = false;
+                toolStripButtonDelete.Visible = false;
+            }
         }
+
         //public override void QueryConditionBuilder()
         //{
         //    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Customer).Name + "Processor");

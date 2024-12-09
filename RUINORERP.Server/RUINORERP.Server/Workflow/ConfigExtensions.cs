@@ -66,7 +66,7 @@ namespace RUINORERP.Server.Workflow
             services.AddTransient<PrintMessage>();
             services.AddTransient<HelloWorld>();
             //services.AddTransient<GetBaseInfo>();
-            // services.AddWorkflow();
+       
             services.AddWorkflow(x => x.UseSqlServer(@"Server=192.168.0.254;Database=Workflowdb;UID=sa;Password=SA!@#123sa;", true, true));
             
             //Json格式

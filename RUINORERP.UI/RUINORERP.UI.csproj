@@ -1065,6 +1065,12 @@
     <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
+    <Compile Include="CRM\UCCRMConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMConfig.Designer.cs">
+      <DependentUpon>UCCRMConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="CRM\UCCRMContactEdit.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2145,12 +2151,6 @@
     <Compile Include="UCToolBar\DataEdit.Designer.cs">
       <DependentUpon>DataEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="UICreator\tb_CRM_FollowUpPlansEdit.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UICreator\tb_CRM_FollowUpPlansEdit.Designer.cs">
-      <DependentUpon>tb_CRM_FollowUpPlansEdit.cs</DependentUpon>
-    </Compile>
     <Compile Include="UserCenter\CentralConsole.cs" />
     <Compile Include="UserCenter\ControlCenterConfig.cs">
       <SubType>UserControl</SubType>
@@ -2680,6 +2680,9 @@
     <EmbeddedResource Include="CommonUI\frmInputContent.resx">
       <DependentUpon>frmInputContent.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMConfig.resx">
+      <DependentUpon>UCCRMConfig.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCCRMContactEdit.resx">
       <DependentUpon>UCCRMContactEdit.cs</DependentUpon>
     </EmbeddedResource>
@@ -3150,9 +3153,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UCToolBar\DataEdit.resx">
       <DependentUpon>DataEdit.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UICreator\tb_CRM_FollowUpPlansEdit.resx">
-      <DependentUpon>tb_CRM_FollowUpPlansEdit.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
@@ -3776,6 +3776,7 @@
     <Folder Include="RM\" />
     <Folder Include="UCForm\" />
     <Folder Include="UControls\TreeGridView\" />
+    <Folder Include="UICreator\" />
     <Folder Include="WorkFlowDesigner\Nodes\editor\" />
     <Folder Include="WorkFlowDesigner\UI\" />
   </ItemGroup>

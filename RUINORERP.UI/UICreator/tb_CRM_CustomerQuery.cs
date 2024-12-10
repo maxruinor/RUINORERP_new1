@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:42
+// 时间：12/10/2024 13:12:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,9 +24,9 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 机会客户，公海客户 CRM系统中使用，给成交客户作外键引用数据查询
+    /// 目标客户-公海客户CRM系统中使用，给成交客户作外键引用数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_CRM_CustomerQuery), "机会客户，公海客户 CRM系统中使用，给成交客户作外键引用数据查询", true)]
+     [MenuAttribute(typeof(tb_CRM_CustomerQuery), "目标客户-公海客户CRM系统中使用，给成交客户作外键引用数据查询", true)]
     public partial class tb_CRM_CustomerQuery:UserControl
     {
      public tb_CRM_CustomerQuery() {
@@ -43,6 +43,14 @@ namespace RUINORERP.UI
        //===============
        
           
+    
+        
+    
+        
+    
+        
+    
+        
     
         
     

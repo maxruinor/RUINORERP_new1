@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:42
+// 时间：12/10/2024 13:12:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,10 +38,10 @@ namespace RUINORERP.Model
         #region 属性
         private long _CollaboratorID;
         /// <summary>
-        /// 协作人
+        /// 协作
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CollaboratorID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "协作人" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CollaboratorID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "协作" , IsPrimaryKey = true)]
         public long CollaboratorID
         { 
             get{return _CollaboratorID;}
@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private long? _Employee_ID;
         /// <summary>
-        /// 
+        /// 协作人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "协作人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "协作人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID
         { 
@@ -68,10 +68,10 @@ namespace RUINORERP.Model
 
         private long? _Customer_id;
         /// <summary>
-        /// 
+        /// 目标客户
         /// </summary>
-        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "目标客户")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标客户" )]
         [FKRelationAttribute("tb_CRM_Customer","Customer_id")]
         public long? Customer_id
         { 

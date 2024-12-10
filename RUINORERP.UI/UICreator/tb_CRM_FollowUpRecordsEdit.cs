@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 21:23:57
+// 时间：12/10/2024 13:12:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,7 +48,6 @@ namespace RUINORERP.UI
         
         
         
-        
 
          }
 /*
@@ -59,7 +58,6 @@ namespace RUINORERP.UI
                      entity.Customer_id = Int64.Parse(txtCustomer_id.Text);
                         entity.LeadID = Int64.Parse(txtLeadID.Text);
                         entity.PlanID = Int64.Parse(txtPlanID.Text);
-                        entity.NextPlanID = Int64.Parse(txtNextPlanID.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.FollowUpDate = DateTime.Parse(txtFollowUpDate.Text);
                         entity.FollowUpMethod = Int32.Parse(txtFollowUpMethod.Text);
@@ -81,21 +79,19 @@ namespace RUINORERP.UI
         public void BindData(tb_CRM_FollowUpRecords entity)
         {
         _EditEntity = entity;
-                       NextPlanID主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v=>v.XXNAME, cmbCustomer_id);
-          NextPlanID主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v=>v.XXNAME, cmbLeadID);
+                       // DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v=>v.XXNAME, cmbCustomer_id);
+          // DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v=>v.XXNAME, cmbLeadID);
           // DataBindingHelper.BindData4Cmb<tb_CRM_FollowUpPlans>(entity, k => k.PlanID, v=>v.XXNAME, cmbPlanID);
-NextPlanID主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_CRM_FollowUpPlans>(entity, k => k.PlanID, v=>v.XXNAME, cmbPlanID);
-          NextPlanID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.NextPlanID, txtNextPlanID, BindDataType4TextBox.Qty,false);
-          NextPlanID主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+          // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
            DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpDate, dtpFollowUpDate,false);
-          NextPlanID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpMethod, txtFollowUpMethod, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpMethod, txtFollowUpMethod, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpSubject, txtFollowUpSubject, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpContent, txtFollowUpContent, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.Created_at, dtpCreated_at,false);
-          NextPlanID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.Modified_at, dtpModified_at,false);
-          NextPlanID主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CehckBox<tb_CRM_FollowUpRecords>(entity, t => t.isdeleted, chkisdeleted, false);
 }
 

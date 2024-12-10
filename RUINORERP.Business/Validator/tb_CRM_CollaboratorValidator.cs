@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:42
+// 时间：12/10/2024 13:12:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -26,9 +26,9 @@ namespace RUINORERP.Business
     {
      public tb_CRM_CollaboratorValidator() 
      {
-      RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
+      RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("协作人:下拉选择值不正确。");
  RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
- RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
+ RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage("目标客户:下拉选择值不正确。");
  RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Customer_id).NotEmpty().When(x => x.Customer_id.HasValue);
        	
            	        Initialize();

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 21:23:59
+// 时间：12/10/2024 13:12:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -56,7 +56,7 @@ namespace RUINORERP.Model
         /// 目标客户
         /// </summary>
         [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "目标客户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标客户")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标客户" )]
         [FKRelationAttribute("tb_CRM_Customer","Customer_id")]
         public long? Customer_id
         { 
@@ -96,14 +96,12 @@ namespace RUINORERP.Model
             }
         }
 
-
-
         private long? _Employee_ID;
         /// <summary>
         /// 跟进人
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "跟进人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "跟进人")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "跟进人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID
         { 
@@ -262,7 +260,7 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(PlanID))]
         public virtual tb_CRM_FollowUpPlans tb_crm_followupplans { get; set; }
 
-           [SugarColumn(IsIgnore = true)]
+        [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
@@ -288,10 +286,6 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
-         if("PlanID"!="NextPlanID")
-        {
-        // rs=false;
-        }
 return rs;
 }
 

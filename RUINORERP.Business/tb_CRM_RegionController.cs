@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 15:51:26
+// 时间：12/10/2024 13:12:15
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -245,16 +245,16 @@ namespace RUINORERP.Business
             if (entity.Region_ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_CRM_Region>(entity as tb_CRM_Region)
-                        .Include(m => m.tb_CRM_Regions)
-                    .Include(m => m.tb_CRM_Customers)
+                        .Include(m => m.tb_CRM_Customers)
+                    .Include(m => m.tb_CRM_Regions)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_CRM_Region>(entity as tb_CRM_Region)
-                .Include(m => m.tb_CRM_Regions)
                 .Include(m => m.tb_CRM_Customers)
+                .Include(m => m.tb_CRM_Regions)
                                 .ExecuteCommandAsync();
         }
         
@@ -285,8 +285,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>()
-                                .Includes(m => m.tb_CRM_Regions)
-                        .Includes(m => m.tb_CRM_Customers)
+                                .Includes(m => m.tb_CRM_Customers)
+                        .Includes(m => m.tb_CRM_Regions)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -296,8 +296,8 @@ namespace RUINORERP.Business
         {
             tb_CRM_Region entity = model as tb_CRM_Region;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_CRM_Region>(m => m.Region_ID== entity.Region_ID)
-                                .Include(m => m.tb_CRM_Regions)
-                        .Include(m => m.tb_CRM_Customers)
+                                .Include(m => m.tb_CRM_Customers)
+                        .Include(m => m.tb_CRM_Regions)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -461,8 +461,8 @@ namespace RUINORERP.Business
         {
             List<tb_CRM_Region> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>()
                                .Includes(t => t.tb_crm_region )
-                                            .Includes(t => t.tb_CRM_Regions )
-                                .Includes(t => t.tb_CRM_Customers )
+                                            .Includes(t => t.tb_CRM_Customers )
+                                .Includes(t => t.tb_CRM_Regions )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -483,8 +483,8 @@ namespace RUINORERP.Business
         {
             List<tb_CRM_Region> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>().Where(exp)
                                .Includes(t => t.tb_crm_region )
-                                            .Includes(t => t.tb_CRM_Regions )
-                                .Includes(t => t.tb_CRM_Customers )
+                                            .Includes(t => t.tb_CRM_Customers )
+                                .Includes(t => t.tb_CRM_Regions )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -505,8 +505,8 @@ namespace RUINORERP.Business
         {
             List<tb_CRM_Region> list = _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>().Where(exp)
                             .Includes(t => t.tb_crm_region )
-                                        .Includes(t => t.tb_CRM_Regions )
-                            .Includes(t => t.tb_CRM_Customers )
+                                        .Includes(t => t.tb_CRM_Customers )
+                            .Includes(t => t.tb_CRM_Regions )
                         .ToList();
             
             foreach (var item in list)
@@ -544,8 +544,8 @@ namespace RUINORERP.Business
         {
             tb_CRM_Region entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Region>().Where(w => w.Region_ID == (long)id)
                              .Includes(t => t.tb_crm_region )
-                                        .Includes(t => t.tb_CRM_Regions )
-                            .Includes(t => t.tb_CRM_Customers )
+                                        .Includes(t => t.tb_CRM_Customers )
+                            .Includes(t => t.tb_CRM_Regions )
                         .FirstAsync();
             if(entity!=null)
             {

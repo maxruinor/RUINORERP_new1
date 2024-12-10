@@ -112,12 +112,22 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 if (entity == null)
                 {
                     return rrs;
                 }
+                //采购入库总数量和明细求和检查
+                if (entity.TotalQty.Equals(entity.tb_SaleOutDetails.Sum(c => c.Quantity)) == false)
+                {
+                    rrs.ErrorMsg = $"销售出库数量与明细之和不相等!请检查数据后重试！";
+                    _unitOfWorkManage.RollbackTran();
+                    rrs.Succeeded = false;
+                    return rrs;
+                }
 
+                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+            
+             
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 // entity.ApprovalOpinions = approvalEntity.ApprovalComments;

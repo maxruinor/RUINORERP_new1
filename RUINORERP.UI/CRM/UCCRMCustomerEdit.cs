@@ -38,7 +38,7 @@ namespace RUINORERP.UI.CRM
         public tb_CRM_Customer EditEntity { get => _EditEntity; set => _EditEntity = value; }
         public override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
-           
+
             tb_CRM_Customer customer = entity as tb_CRM_Customer;
             if (customer.Customer_id == 0)
             {
@@ -50,7 +50,7 @@ namespace RUINORERP.UI.CRM
 
             cmbCustomerStatus.Enabled = false;
             _EditEntity = customer;
-    
+
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v => v.CustomerName, cmbLeadID);
@@ -111,9 +111,28 @@ namespace RUINORERP.UI.CRM
             }
         }
 
-        private void UCLeadsEdit_Load(object sender, EventArgs e)
+        private async void UCLeadsEdit_Load(object sender, EventArgs e)
         {
+           // tb_CRMConfigController<tb_CRMConfig> ctr = Startup.GetFromFac<tb_CRMConfigController<tb_CRMConfig>>();
+            tb_CRMConfig CRMConfig = await MainForm.Instance.AppContext.Db.Queryable<tb_CRMConfig>().FirstAsync();
+            if (CRMConfig != null)
+            {
+                if (CRMConfig.CS_UseLeadsFunction)
+                {
+                    lblLeadID.Visible = true;
+                    cmbLeadID.Visible = true;
+                }
+                else
+                {
+                    lblLeadID.Visible = false;
+                    cmbLeadID.Visible = false;
+                }
+            }
+
+            //通过动态配置得到。
             ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+
+
             //“|”号隔开
             string GetCustomerSource = configManager.GetValue("GetCustomerSource");
             //设置常用获客来源

@@ -31,6 +31,15 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblSocialTools = new Krypton.Toolkit.KryptonLabel();
+            this.txtSocialTools = new Krypton.Toolkit.KryptonTextBox();
+            this.lblContact_Name = new Krypton.Toolkit.KryptonLabel();
+            this.txtContact_Name = new Krypton.Toolkit.KryptonTextBox();
+            this.lblContact_Email = new Krypton.Toolkit.KryptonLabel();
+            this.txtContact_Email = new Krypton.Toolkit.KryptonTextBox();
+            this.lblContact_Phone = new Krypton.Toolkit.KryptonLabel();
+            this.txtContact_Phone = new Krypton.Toolkit.KryptonTextBox();
+            this.btnAddContactInfo = new Krypton.Toolkit.KryptonButton();
             this.kPanelGetCustomerSource = new Krypton.Toolkit.KryptonPanel();
             this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
             this.cmbCustomerStatus = new Krypton.Toolkit.KryptonComboBox();
@@ -76,7 +85,6 @@
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.btnAddContactInfo = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -97,7 +105,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(219, 606);
+            this.btnOk.Location = new System.Drawing.Point(196, 606);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -106,7 +114,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(337, 606);
+            this.btnCancel.Location = new System.Drawing.Point(338, 606);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -115,6 +123,14 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblSocialTools);
+            this.kryptonPanel1.Controls.Add(this.txtSocialTools);
+            this.kryptonPanel1.Controls.Add(this.lblContact_Name);
+            this.kryptonPanel1.Controls.Add(this.txtContact_Name);
+            this.kryptonPanel1.Controls.Add(this.lblContact_Email);
+            this.kryptonPanel1.Controls.Add(this.txtContact_Email);
+            this.kryptonPanel1.Controls.Add(this.lblContact_Phone);
+            this.kryptonPanel1.Controls.Add(this.txtContact_Phone);
             this.kryptonPanel1.Controls.Add(this.btnAddContactInfo);
             this.kryptonPanel1.Controls.Add(this.kPanelGetCustomerSource);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox1);
@@ -157,16 +173,85 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(848, 643);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // lblSocialTools
+            // 
+            this.lblSocialTools.Location = new System.Drawing.Point(68, 68);
+            this.lblSocialTools.Name = "lblSocialTools";
+            this.lblSocialTools.Size = new System.Drawing.Size(62, 20);
+            this.lblSocialTools.TabIndex = 153;
+            this.lblSocialTools.Values.Text = "社交账号";
+            // 
+            // txtSocialTools
+            // 
+            this.txtSocialTools.Location = new System.Drawing.Point(136, 65);
+            this.txtSocialTools.Name = "txtSocialTools";
+            this.txtSocialTools.Size = new System.Drawing.Size(173, 23);
+            this.txtSocialTools.TabIndex = 154;
+            // 
+            // lblContact_Name
+            // 
+            this.lblContact_Name.Location = new System.Drawing.Point(533, 39);
+            this.lblContact_Name.Name = "lblContact_Name";
+            this.lblContact_Name.Size = new System.Drawing.Size(75, 20);
+            this.lblContact_Name.TabIndex = 155;
+            this.lblContact_Name.Values.Text = "联系人姓名";
+            // 
+            // txtContact_Name
+            // 
+            this.txtContact_Name.Location = new System.Drawing.Point(614, 40);
+            this.txtContact_Name.Name = "txtContact_Name";
+            this.txtContact_Name.Size = new System.Drawing.Size(173, 23);
+            this.txtContact_Name.TabIndex = 156;
+            // 
+            // lblContact_Email
+            // 
+            this.lblContact_Email.Location = new System.Drawing.Point(572, 70);
+            this.lblContact_Email.Name = "lblContact_Email";
+            this.lblContact_Email.Size = new System.Drawing.Size(36, 20);
+            this.lblContact_Email.TabIndex = 157;
+            this.lblContact_Email.Values.Text = "邮箱";
+            // 
+            // txtContact_Email
+            // 
+            this.txtContact_Email.Location = new System.Drawing.Point(614, 69);
+            this.txtContact_Email.Name = "txtContact_Email";
+            this.txtContact_Email.Size = new System.Drawing.Size(173, 23);
+            this.txtContact_Email.TabIndex = 158;
+            // 
+            // lblContact_Phone
+            // 
+            this.lblContact_Phone.Location = new System.Drawing.Point(325, 68);
+            this.lblContact_Phone.Name = "lblContact_Phone";
+            this.lblContact_Phone.Size = new System.Drawing.Size(36, 20);
+            this.lblContact_Phone.TabIndex = 159;
+            this.lblContact_Phone.Values.Text = "电话";
+            // 
+            // txtContact_Phone
+            // 
+            this.txtContact_Phone.Location = new System.Drawing.Point(367, 66);
+            this.txtContact_Phone.Name = "txtContact_Phone";
+            this.txtContact_Phone.Size = new System.Drawing.Size(156, 23);
+            this.txtContact_Phone.TabIndex = 160;
+            // 
+            // btnAddContactInfo
+            // 
+            this.btnAddContactInfo.Location = new System.Drawing.Point(512, 606);
+            this.btnAddContactInfo.Name = "btnAddContactInfo";
+            this.btnAddContactInfo.Size = new System.Drawing.Size(104, 25);
+            this.btnAddContactInfo.TabIndex = 152;
+            this.btnAddContactInfo.Values.Text = "添加联系人信息";
+            this.btnAddContactInfo.Click += new System.EventHandler(this.btnAddContactInfo_Click);
+            // 
             // kPanelGetCustomerSource
             // 
             this.kPanelGetCustomerSource.Location = new System.Drawing.Point(137, 293);
             this.kPanelGetCustomerSource.Name = "kPanelGetCustomerSource";
-            this.kPanelGetCustomerSource.Size = new System.Drawing.Size(642, 56);
+            this.kPanelGetCustomerSource.Size = new System.Drawing.Size(650, 56);
             this.kPanelGetCustomerSource.TabIndex = 151;
             // 
             // kryptonGroupBox1
             // 
-            this.kryptonGroupBox1.Location = new System.Drawing.Point(554, 388);
+            this.kryptonGroupBox1.Location = new System.Drawing.Point(554, 359);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
             // 
             // kryptonGroupBox1.Panel
@@ -295,7 +380,7 @@
             0,
             0,
             0});
-            this.txtCustomerLevel.Location = new System.Drawing.Point(136, 422);
+            this.txtCustomerLevel.Location = new System.Drawing.Point(137, 382);
             this.txtCustomerLevel.Maximum = new decimal(new int[] {
             10,
             0,
@@ -330,7 +415,7 @@
             this.txtCustomerTags.Location = new System.Drawing.Point(136, 173);
             this.txtCustomerTags.Multiline = true;
             this.txtCustomerTags.Name = "txtCustomerTags";
-            this.txtCustomerTags.Size = new System.Drawing.Size(387, 21);
+            this.txtCustomerTags.Size = new System.Drawing.Size(651, 21);
             this.txtCustomerTags.TabIndex = 128;
             // 
             // lblGetCustomerSource
@@ -351,7 +436,7 @@
             // 
             // lblSalePlatform
             // 
-            this.lblSalePlatform.Location = new System.Drawing.Point(67, 370);
+            this.lblSalePlatform.Location = new System.Drawing.Point(554, 263);
             this.lblSalePlatform.Name = "lblSalePlatform";
             this.lblSalePlatform.Size = new System.Drawing.Size(62, 20);
             this.lblSalePlatform.TabIndex = 133;
@@ -359,14 +444,14 @@
             // 
             // txtSalePlatform
             // 
-            this.txtSalePlatform.Location = new System.Drawing.Point(136, 366);
+            this.txtSalePlatform.Location = new System.Drawing.Point(614, 261);
             this.txtSalePlatform.Name = "txtSalePlatform";
-            this.txtSalePlatform.Size = new System.Drawing.Size(387, 23);
+            this.txtSalePlatform.Size = new System.Drawing.Size(173, 23);
             this.txtSalePlatform.TabIndex = 134;
             // 
             // lblWebsite
             // 
-            this.lblWebsite.Location = new System.Drawing.Point(93, 397);
+            this.lblWebsite.Location = new System.Drawing.Point(94, 359);
             this.lblWebsite.Name = "lblWebsite";
             this.lblWebsite.Size = new System.Drawing.Size(36, 20);
             this.lblWebsite.TabIndex = 135;
@@ -374,7 +459,7 @@
             // 
             // txtWebsite
             // 
-            this.txtWebsite.Location = new System.Drawing.Point(136, 393);
+            this.txtWebsite.Location = new System.Drawing.Point(137, 355);
             this.txtWebsite.Multiline = true;
             this.txtWebsite.Name = "txtWebsite";
             this.txtWebsite.Size = new System.Drawing.Size(387, 21);
@@ -382,7 +467,7 @@
             // 
             // lblCustomerLevel
             // 
-            this.lblCustomerLevel.Location = new System.Drawing.Point(67, 422);
+            this.lblCustomerLevel.Location = new System.Drawing.Point(68, 382);
             this.lblCustomerLevel.Name = "lblCustomerLevel";
             this.lblCustomerLevel.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerLevel.TabIndex = 138;
@@ -398,7 +483,7 @@
             // 
             // lblDepartmentID
             // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(319, 12);
+            this.lblDepartmentID.Location = new System.Drawing.Point(325, 14);
             this.lblDepartmentID.Name = "lblDepartmentID";
             this.lblDepartmentID.Size = new System.Drawing.Size(36, 20);
             this.lblDepartmentID.TabIndex = 111;
@@ -408,14 +493,14 @@
             // 
             this.cmbDepartmentID.DropDownWidth = 100;
             this.cmbDepartmentID.IntegralHeight = false;
-            this.cmbDepartmentID.Location = new System.Drawing.Point(356, 12);
+            this.cmbDepartmentID.Location = new System.Drawing.Point(367, 13);
             this.cmbDepartmentID.Name = "cmbDepartmentID";
-            this.cmbDepartmentID.Size = new System.Drawing.Size(167, 21);
+            this.cmbDepartmentID.Size = new System.Drawing.Size(156, 21);
             this.cmbDepartmentID.TabIndex = 112;
             // 
             // lblLeadID
             // 
-            this.lblLeadID.Location = new System.Drawing.Point(93, 39);
+            this.lblLeadID.Location = new System.Drawing.Point(572, 13);
             this.lblLeadID.Name = "lblLeadID";
             this.lblLeadID.Size = new System.Drawing.Size(36, 20);
             this.lblLeadID.TabIndex = 113;
@@ -425,14 +510,14 @@
             // 
             this.cmbLeadID.DropDownWidth = 100;
             this.cmbLeadID.IntegralHeight = false;
-            this.cmbLeadID.Location = new System.Drawing.Point(136, 39);
+            this.cmbLeadID.Location = new System.Drawing.Point(614, 12);
             this.cmbLeadID.Name = "cmbLeadID";
-            this.cmbLeadID.Size = new System.Drawing.Size(387, 21);
+            this.cmbLeadID.Size = new System.Drawing.Size(173, 21);
             this.cmbLeadID.TabIndex = 114;
             // 
             // lblRegion_ID
             // 
-            this.lblRegion_ID.Location = new System.Drawing.Point(93, 94);
+            this.lblRegion_ID.Location = new System.Drawing.Point(94, 107);
             this.lblRegion_ID.Name = "lblRegion_ID";
             this.lblRegion_ID.Size = new System.Drawing.Size(36, 20);
             this.lblRegion_ID.TabIndex = 115;
@@ -442,14 +527,14 @@
             // 
             this.cmbRegion_ID.DropDownWidth = 100;
             this.cmbRegion_ID.IntegralHeight = false;
-            this.cmbRegion_ID.Location = new System.Drawing.Point(136, 94);
+            this.cmbRegion_ID.Location = new System.Drawing.Point(136, 105);
             this.cmbRegion_ID.Name = "cmbRegion_ID";
             this.cmbRegion_ID.Size = new System.Drawing.Size(173, 21);
             this.cmbRegion_ID.TabIndex = 116;
             // 
             // lblProvinceID
             // 
-            this.lblProvinceID.Location = new System.Drawing.Point(106, 119);
+            this.lblProvinceID.Location = new System.Drawing.Point(338, 107);
             this.lblProvinceID.Name = "lblProvinceID";
             this.lblProvinceID.Size = new System.Drawing.Size(23, 20);
             this.lblProvinceID.TabIndex = 118;
@@ -459,14 +544,14 @@
             // 
             this.cmbProvinceID.DropDownWidth = 100;
             this.cmbProvinceID.IntegralHeight = false;
-            this.cmbProvinceID.Location = new System.Drawing.Point(136, 119);
+            this.cmbProvinceID.Location = new System.Drawing.Point(367, 105);
             this.cmbProvinceID.Name = "cmbProvinceID";
-            this.cmbProvinceID.Size = new System.Drawing.Size(173, 21);
+            this.cmbProvinceID.Size = new System.Drawing.Size(156, 21);
             this.cmbProvinceID.TabIndex = 117;
             // 
             // lblCityID
             // 
-            this.lblCityID.Location = new System.Drawing.Point(319, 118);
+            this.lblCityID.Location = new System.Drawing.Point(572, 106);
             this.lblCityID.Name = "lblCityID";
             this.lblCityID.Size = new System.Drawing.Size(36, 20);
             this.lblCityID.TabIndex = 119;
@@ -476,14 +561,14 @@
             // 
             this.cmbCityID.DropDownWidth = 100;
             this.cmbCityID.IntegralHeight = false;
-            this.cmbCityID.Location = new System.Drawing.Point(356, 118);
+            this.cmbCityID.Location = new System.Drawing.Point(614, 105);
             this.cmbCityID.Name = "cmbCityID";
-            this.cmbCityID.Size = new System.Drawing.Size(167, 21);
+            this.cmbCityID.Size = new System.Drawing.Size(173, 21);
             this.cmbCityID.TabIndex = 120;
             // 
             // lblCustomerName
             // 
-            this.lblCustomerName.Location = new System.Drawing.Point(67, 65);
+            this.lblCustomerName.Location = new System.Drawing.Point(67, 39);
             this.lblCustomerName.Name = "lblCustomerName";
             this.lblCustomerName.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerName.TabIndex = 121;
@@ -491,7 +576,7 @@
             // 
             // txtCustomerName
             // 
-            this.txtCustomerName.Location = new System.Drawing.Point(136, 65);
+            this.txtCustomerName.Location = new System.Drawing.Point(136, 39);
             this.txtCustomerName.Name = "txtCustomerName";
             this.txtCustomerName.Size = new System.Drawing.Size(387, 23);
             this.txtCustomerName.TabIndex = 122;
@@ -509,12 +594,12 @@
             this.txtCustomerAddress.Location = new System.Drawing.Point(136, 146);
             this.txtCustomerAddress.Multiline = true;
             this.txtCustomerAddress.Name = "txtCustomerAddress";
-            this.txtCustomerAddress.Size = new System.Drawing.Size(387, 21);
+            this.txtCustomerAddress.Size = new System.Drawing.Size(651, 21);
             this.txtCustomerAddress.TabIndex = 124;
             // 
             // lblRepeatCustomer
             // 
-            this.lblRepeatCustomer.Location = new System.Drawing.Point(431, 425);
+            this.lblRepeatCustomer.Location = new System.Drawing.Point(431, 387);
             this.lblRepeatCustomer.Name = "lblRepeatCustomer";
             this.lblRepeatCustomer.Size = new System.Drawing.Size(62, 20);
             this.lblRepeatCustomer.TabIndex = 125;
@@ -522,7 +607,7 @@
             // 
             // chkRepeatCustomer
             // 
-            this.chkRepeatCustomer.Location = new System.Drawing.Point(504, 429);
+            this.chkRepeatCustomer.Location = new System.Drawing.Point(504, 391);
             this.chkRepeatCustomer.Name = "chkRepeatCustomer";
             this.chkRepeatCustomer.Size = new System.Drawing.Size(19, 13);
             this.chkRepeatCustomer.TabIndex = 126;
@@ -532,7 +617,7 @@
             // 
             this.kPanelCustomerTags.Location = new System.Drawing.Point(136, 201);
             this.kPanelCustomerTags.Name = "kPanelCustomerTags";
-            this.kPanelCustomerTags.Size = new System.Drawing.Size(643, 56);
+            this.kPanelCustomerTags.Size = new System.Drawing.Size(651, 56);
             this.kPanelCustomerTags.TabIndex = 108;
             // 
             // cmbEmployee_ID
@@ -541,12 +626,12 @@
             this.cmbEmployee_ID.IntegralHeight = false;
             this.cmbEmployee_ID.Location = new System.Drawing.Point(136, 12);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
-            this.cmbEmployee_ID.Size = new System.Drawing.Size(150, 21);
+            this.cmbEmployee_ID.Size = new System.Drawing.Size(173, 21);
             this.cmbEmployee_ID.TabIndex = 77;
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(93, 463);
+            this.lblNotes.Location = new System.Drawing.Point(93, 411);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 51;
@@ -554,20 +639,11 @@
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(137, 462);
+            this.txtNotes.Location = new System.Drawing.Point(137, 410);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(397, 124);
             this.txtNotes.TabIndex = 52;
-            // 
-            // btnAddContactInfo
-            // 
-            this.btnAddContactInfo.Location = new System.Drawing.Point(486, 606);
-            this.btnAddContactInfo.Name = "btnAddContactInfo";
-            this.btnAddContactInfo.Size = new System.Drawing.Size(104, 25);
-            this.btnAddContactInfo.TabIndex = 152;
-            this.btnAddContactInfo.Values.Text = "添加联系人信息";
-            this.btnAddContactInfo.Click += new System.EventHandler(this.btnAddContactInfo_Click);
             // 
             // UCCRMCustomerEdit
             // 
@@ -650,5 +726,13 @@
         private Krypton.Toolkit.KryptonPanel kPanelGetCustomerSource;
         private Krypton.Toolkit.KryptonComboBox cmbCustomerStatus;
         private Krypton.Toolkit.KryptonButton btnAddContactInfo;
+        private Krypton.Toolkit.KryptonLabel lblSocialTools;
+        private Krypton.Toolkit.KryptonTextBox txtSocialTools;
+        private Krypton.Toolkit.KryptonLabel lblContact_Name;
+        private Krypton.Toolkit.KryptonTextBox txtContact_Name;
+        private Krypton.Toolkit.KryptonLabel lblContact_Email;
+        private Krypton.Toolkit.KryptonTextBox txtContact_Email;
+        private Krypton.Toolkit.KryptonLabel lblContact_Phone;
+        private Krypton.Toolkit.KryptonTextBox txtContact_Phone;
     }
 }

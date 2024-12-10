@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 21:23:58
+// 时间：12/10/2024 13:12:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,25 +50,22 @@ namespace RUINORERP.UI
         
      //for start
      
-     NextPlanID主外字段不一致。this.lblCustomer_id = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+     this.lblCustomer_id = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbCustomer_id = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
-NextPlanID主外字段不一致。this.lblLeadID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.lblLeadID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbLeadID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
 this.lblPlanID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbPlanID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
-NextPlanID主外字段不一致。this.lblPlanID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.cmbPlanID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
-NextPlanID主外字段不一致。
-NextPlanID主外字段不一致。this.lblEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.lblEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
 this.lblFollowUpDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpFollowUpDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
 
-NextPlanID主外字段不一致。
+
 this.lblFollowUpSubject = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtFollowUpSubject = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
@@ -83,11 +80,11 @@ this.txtNotes.Multiline = true;
 this.lblCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
 
-NextPlanID主外字段不一致。
+
 this.lblModified_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
 
-NextPlanID主外字段不一致。
+
 this.lblisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.chkisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
 this.chkisdeleted.Values.Text ="";
@@ -99,14 +96,13 @@ this.chkisdeleted.Values.Text ="";
                  //#####Customer_id###Int64
 //属性测试25Customer_id
 //属性测试25Customer_id
-NextPlanID主外字段不一致。//属性测试25Customer_id
 //属性测试25Customer_id
 this.lblCustomer_id.AutoSize = true;
 this.lblCustomer_id.Location = new System.Drawing.Point(100,25);
 this.lblCustomer_id.Name = "lblCustomer_id";
 this.lblCustomer_id.Size = new System.Drawing.Size(41, 12);
 this.lblCustomer_id.TabIndex = 1;
-this.lblCustomer_id.Text = "机会客户";
+this.lblCustomer_id.Text = "目标客户";
 //111======25
 this.cmbCustomer_id.Location = new System.Drawing.Point(173,21);
 this.cmbCustomer_id.Name ="cmbCustomer_id";
@@ -118,7 +114,6 @@ this.Controls.Add(this.cmbCustomer_id);
            //#####LeadID###Int64
 //属性测试50LeadID
 //属性测试50LeadID
-NextPlanID主外字段不一致。//属性测试50LeadID
 //属性测试50LeadID
 //属性测试50LeadID
 this.lblLeadID.AutoSize = true;
@@ -151,153 +146,142 @@ this.cmbPlanID.TabIndex = 3;
 this.Controls.Add(this.lblPlanID);
 this.Controls.Add(this.cmbPlanID);
 
-           //#####NextPlanID###Int64
-//属性测试100NextPlanID
-//属性测试100NextPlanID
-NextPlanID主外字段不一致。//属性测试100NextPlanID
-//属性测试100NextPlanID
-//属性测试100NextPlanID
-
            //#####Employee_ID###Int64
-//属性测试125Employee_ID
-//属性测试125Employee_ID
-NextPlanID主外字段不一致。//属性测试125Employee_ID
+//属性测试100Employee_ID
+//属性测试100Employee_ID
 this.lblEmployee_ID.AutoSize = true;
-this.lblEmployee_ID.Location = new System.Drawing.Point(100,125);
+this.lblEmployee_ID.Location = new System.Drawing.Point(100,100);
 this.lblEmployee_ID.Name = "lblEmployee_ID";
 this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
-this.lblEmployee_ID.TabIndex = 5;
-this.lblEmployee_ID.Text = "执行人";
-//111======125
-this.cmbEmployee_ID.Location = new System.Drawing.Point(173,121);
+this.lblEmployee_ID.TabIndex = 4;
+this.lblEmployee_ID.Text = "跟进人";
+//111======100
+this.cmbEmployee_ID.Location = new System.Drawing.Point(173,96);
 this.cmbEmployee_ID.Name ="cmbEmployee_ID";
 this.cmbEmployee_ID.Size = new System.Drawing.Size(100, 21);
-this.cmbEmployee_ID.TabIndex = 5;
+this.cmbEmployee_ID.TabIndex = 4;
 this.Controls.Add(this.lblEmployee_ID);
 this.Controls.Add(this.cmbEmployee_ID);
 
            //#####FollowUpDate###DateTime
 this.lblFollowUpDate.AutoSize = true;
-this.lblFollowUpDate.Location = new System.Drawing.Point(100,150);
+this.lblFollowUpDate.Location = new System.Drawing.Point(100,125);
 this.lblFollowUpDate.Name = "lblFollowUpDate";
 this.lblFollowUpDate.Size = new System.Drawing.Size(41, 12);
-this.lblFollowUpDate.TabIndex = 6;
+this.lblFollowUpDate.TabIndex = 5;
 this.lblFollowUpDate.Text = "跟进日期";
-//111======150
-this.dtpFollowUpDate.Location = new System.Drawing.Point(173,146);
+//111======125
+this.dtpFollowUpDate.Location = new System.Drawing.Point(173,121);
 this.dtpFollowUpDate.Name ="dtpFollowUpDate";
 this.dtpFollowUpDate.ShowCheckBox =true;
 this.dtpFollowUpDate.Size = new System.Drawing.Size(100, 21);
-this.dtpFollowUpDate.TabIndex = 6;
+this.dtpFollowUpDate.TabIndex = 5;
 this.Controls.Add(this.lblFollowUpDate);
 this.Controls.Add(this.dtpFollowUpDate);
 
            //#####FollowUpMethod###Int32
-//属性测试175FollowUpMethod
-//属性测试175FollowUpMethod
-NextPlanID主外字段不一致。//属性测试175FollowUpMethod
-//属性测试175FollowUpMethod
-//属性测试175FollowUpMethod
+//属性测试150FollowUpMethod
+//属性测试150FollowUpMethod
+//属性测试150FollowUpMethod
+//属性测试150FollowUpMethod
 
            //#####200FollowUpSubject###String
 this.lblFollowUpSubject.AutoSize = true;
-this.lblFollowUpSubject.Location = new System.Drawing.Point(100,200);
+this.lblFollowUpSubject.Location = new System.Drawing.Point(100,175);
 this.lblFollowUpSubject.Name = "lblFollowUpSubject";
 this.lblFollowUpSubject.Size = new System.Drawing.Size(41, 12);
-this.lblFollowUpSubject.TabIndex = 8;
+this.lblFollowUpSubject.TabIndex = 7;
 this.lblFollowUpSubject.Text = "跟进主题";
-this.txtFollowUpSubject.Location = new System.Drawing.Point(173,196);
+this.txtFollowUpSubject.Location = new System.Drawing.Point(173,171);
 this.txtFollowUpSubject.Name = "txtFollowUpSubject";
 this.txtFollowUpSubject.Size = new System.Drawing.Size(100, 21);
-this.txtFollowUpSubject.TabIndex = 8;
+this.txtFollowUpSubject.TabIndex = 7;
 this.Controls.Add(this.lblFollowUpSubject);
 this.Controls.Add(this.txtFollowUpSubject);
 
            //#####1000FollowUpContent###String
 this.lblFollowUpContent.AutoSize = true;
-this.lblFollowUpContent.Location = new System.Drawing.Point(100,225);
+this.lblFollowUpContent.Location = new System.Drawing.Point(100,200);
 this.lblFollowUpContent.Name = "lblFollowUpContent";
 this.lblFollowUpContent.Size = new System.Drawing.Size(41, 12);
-this.lblFollowUpContent.TabIndex = 9;
+this.lblFollowUpContent.TabIndex = 8;
 this.lblFollowUpContent.Text = "跟进内容";
-this.txtFollowUpContent.Location = new System.Drawing.Point(173,221);
+this.txtFollowUpContent.Location = new System.Drawing.Point(173,196);
 this.txtFollowUpContent.Name = "txtFollowUpContent";
 this.txtFollowUpContent.Size = new System.Drawing.Size(100, 21);
-this.txtFollowUpContent.TabIndex = 9;
+this.txtFollowUpContent.TabIndex = 8;
 this.Controls.Add(this.lblFollowUpContent);
 this.Controls.Add(this.txtFollowUpContent);
 
            //#####255Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,250);
+this.lblNotes.Location = new System.Drawing.Point(100,225);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 10;
+this.lblNotes.TabIndex = 9;
 this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,246);
+this.txtNotes.Location = new System.Drawing.Point(173,221);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 10;
+this.txtNotes.TabIndex = 9;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
 
            //#####Created_at###DateTime
 this.lblCreated_at.AutoSize = true;
-this.lblCreated_at.Location = new System.Drawing.Point(100,275);
+this.lblCreated_at.Location = new System.Drawing.Point(100,250);
 this.lblCreated_at.Name = "lblCreated_at";
 this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_at.TabIndex = 11;
+this.lblCreated_at.TabIndex = 10;
 this.lblCreated_at.Text = "创建时间";
-//111======275
-this.dtpCreated_at.Location = new System.Drawing.Point(173,271);
+//111======250
+this.dtpCreated_at.Location = new System.Drawing.Point(173,246);
 this.dtpCreated_at.Name ="dtpCreated_at";
 this.dtpCreated_at.ShowCheckBox =true;
 this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-this.dtpCreated_at.TabIndex = 11;
+this.dtpCreated_at.TabIndex = 10;
 this.Controls.Add(this.lblCreated_at);
 this.Controls.Add(this.dtpCreated_at);
 
            //#####Created_by###Int64
-//属性测试300Created_by
-//属性测试300Created_by
-NextPlanID主外字段不一致。//属性测试300Created_by
-//属性测试300Created_by
-//属性测试300Created_by
+//属性测试275Created_by
+//属性测试275Created_by
+//属性测试275Created_by
+//属性测试275Created_by
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
-this.lblModified_at.Location = new System.Drawing.Point(100,325);
+this.lblModified_at.Location = new System.Drawing.Point(100,300);
 this.lblModified_at.Name = "lblModified_at";
 this.lblModified_at.Size = new System.Drawing.Size(41, 12);
-this.lblModified_at.TabIndex = 13;
+this.lblModified_at.TabIndex = 12;
 this.lblModified_at.Text = "修改时间";
-//111======325
-this.dtpModified_at.Location = new System.Drawing.Point(173,321);
+//111======300
+this.dtpModified_at.Location = new System.Drawing.Point(173,296);
 this.dtpModified_at.Name ="dtpModified_at";
 this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-this.dtpModified_at.TabIndex = 13;
+this.dtpModified_at.TabIndex = 12;
 this.Controls.Add(this.lblModified_at);
 this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
-//属性测试350Modified_by
-//属性测试350Modified_by
-NextPlanID主外字段不一致。//属性测试350Modified_by
-//属性测试350Modified_by
-//属性测试350Modified_by
+//属性测试325Modified_by
+//属性测试325Modified_by
+//属性测试325Modified_by
+//属性测试325Modified_by
 
            //#####isdeleted###Boolean
 this.lblisdeleted.AutoSize = true;
-this.lblisdeleted.Location = new System.Drawing.Point(100,375);
+this.lblisdeleted.Location = new System.Drawing.Point(100,350);
 this.lblisdeleted.Name = "lblisdeleted";
 this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
-this.lblisdeleted.TabIndex = 15;
+this.lblisdeleted.TabIndex = 14;
 this.lblisdeleted.Text = "逻辑删除";
-this.chkisdeleted.Location = new System.Drawing.Point(173,371);
+this.chkisdeleted.Location = new System.Drawing.Point(173,346);
 this.chkisdeleted.Name = "chkisdeleted";
 this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
-this.chkisdeleted.TabIndex = 15;
+this.chkisdeleted.TabIndex = 14;
 this.Controls.Add(this.lblisdeleted);
 this.Controls.Add(this.chkisdeleted);
 
@@ -309,23 +293,22 @@ this.Controls.Add(this.chkisdeleted);
             
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-                NextPlanID主外字段不一致。this.Controls.Add(this.lblCustomer_id );
+                this.Controls.Add(this.lblCustomer_id );
 this.Controls.Add(this.cmbCustomer_id );
 
-                NextPlanID主外字段不一致。this.Controls.Add(this.lblLeadID );
+                this.Controls.Add(this.lblLeadID );
 this.Controls.Add(this.cmbLeadID );
 
                 this.Controls.Add(this.lblPlanID );
 this.Controls.Add(this.cmbPlanID );
 
-                NextPlanID主外字段不一致。
-                NextPlanID主外字段不一致。this.Controls.Add(this.lblEmployee_ID );
+                this.Controls.Add(this.lblEmployee_ID );
 this.Controls.Add(this.cmbEmployee_ID );
 
                 this.Controls.Add(this.lblFollowUpDate );
 this.Controls.Add(this.dtpFollowUpDate );
 
-                NextPlanID主外字段不一致。
+                
                 this.Controls.Add(this.lblFollowUpSubject );
 this.Controls.Add(this.txtFollowUpSubject );
 
@@ -338,11 +321,11 @@ this.Controls.Add(this.txtNotes );
                 this.Controls.Add(this.lblCreated_at );
 this.Controls.Add(this.dtpCreated_at );
 
-                NextPlanID主外字段不一致。
+                
                 this.Controls.Add(this.lblModified_at );
 this.Controls.Add(this.dtpModified_at );
 
-                NextPlanID主外字段不一致。
+                
                 this.Controls.Add(this.lblisdeleted );
 this.Controls.Add(this.chkisdeleted );
 
@@ -358,27 +341,22 @@ this.Controls.Add(this.chkisdeleted );
      //for start
      
          
-              NextPlanID主外字段不一致。private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCustomer_id;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCustomer_id;
 private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbCustomer_id;
 
     
         
-              NextPlanID主外字段不一致。private ComponentFactory.Krypton.Toolkit.KryptonLabel lblLeadID;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblLeadID;
 private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbLeadID;
 
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblPlanID;
 private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbPlanID;
-NextPlanID主外字段不一致。private ComponentFactory.Krypton.Toolkit.KryptonLabel lblPlanID;
-private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbPlanID;
 
     
         
-              NextPlanID主外字段不一致。
-    
-        
-              NextPlanID主外字段不一致。private ComponentFactory.Krypton.Toolkit.KryptonLabel lblEmployee_ID;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblEmployee_ID;
 private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
 
     
@@ -388,7 +366,7 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpFollowUpDate;
 
     
         
-              NextPlanID主外字段不一致。
+              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblFollowUpSubject;
@@ -411,7 +389,7 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
 
     
         
-              NextPlanID主外字段不一致。
+              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblModified_at;
@@ -419,7 +397,7 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
 
     
         
-              NextPlanID主外字段不一致。
+              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblisdeleted;

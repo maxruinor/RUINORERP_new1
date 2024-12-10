@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 21:23:58
+// 时间：12/10/2024 13:12:14
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -461,7 +461,6 @@ namespace RUINORERP.Business
         {
             List<tb_CRM_FollowUpRecords> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_FollowUpRecords>()
                                .Includes(t => t.tb_crm_followupplans )
-                               .Includes(t => t.tb_crm_followupplans )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_crm_customer )
                                .Includes(t => t.tb_crm_leads )
@@ -485,7 +484,6 @@ namespace RUINORERP.Business
         {
             List<tb_CRM_FollowUpRecords> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_FollowUpRecords>().Where(exp)
                                .Includes(t => t.tb_crm_followupplans )
-                               .Includes(t => t.tb_crm_followupplans )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_crm_customer )
                                .Includes(t => t.tb_crm_leads )
@@ -508,7 +506,6 @@ namespace RUINORERP.Business
          public virtual List<tb_CRM_FollowUpRecords> QueryByNav(Expression<Func<tb_CRM_FollowUpRecords, bool>> exp)
         {
             List<tb_CRM_FollowUpRecords> list = _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_FollowUpRecords>().Where(exp)
-                            .Includes(t => t.tb_crm_followupplans )
                             .Includes(t => t.tb_crm_followupplans )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_crm_customer )
@@ -550,7 +547,6 @@ namespace RUINORERP.Business
         {
             tb_CRM_FollowUpRecords entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_FollowUpRecords>().Where(w => w.RecordID == (long)id)
                              .Includes(t => t.tb_crm_followupplans )
-                            .Includes(t => t.tb_crm_followupplans )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_crm_customer )
                             .Includes(t => t.tb_crm_leads )

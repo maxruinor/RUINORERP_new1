@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 21:23:58
+// 时间：12/10/2024 13:12:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,8 +71,6 @@ namespace RUINORERP.UI
         
     
         
-    
-        
 
   
    
@@ -85,12 +83,9 @@ namespace RUINORERP.UI
         public void LoadDroplistData()
         {
           // DataBindingHelper.InitDataToCmb<tb_CRM_FollowUpPlans>(k => k.PlanID, v=>v.XXNAME, cmbPlanID);
-NextPlanID主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_CRM_FollowUpPlans>(k => k.PlanID, v=>v.XXNAME, cmbPlanID);
-          // DataBindingHelper.InitDataToCmb<tb_CRM_FollowUpPlans>(k => k.PlanID, v=>v.XXNAME, cmbPlanID);
-NextPlanID主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_CRM_FollowUpPlans>(k => k.PlanID, v=>v.XXNAME, cmbPlanID);
-          NextPlanID主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
-          NextPlanID主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_CRM_Customer>(k => k.Customer_id, v=>v.XXNAME, cmbCustomer_id);
-          NextPlanID主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_CRM_Leads>(k => k.LeadID, v=>v.XXNAME, cmbLeadID);
+          // DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+          // DataBindingHelper.InitDataToCmb<tb_CRM_Customer>(k => k.Customer_id, v=>v.XXNAME, cmbCustomer_id);
+          // DataBindingHelper.InitDataToCmb<tb_CRM_Leads>(k => k.LeadID, v=>v.XXNAME, cmbLeadID);
         }
         
 

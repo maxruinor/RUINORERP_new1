@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:43
+// 时间：12/10/2024 13:12:13
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 目标客户，公海客户 CRM系统中使用，给成交客户作外键引用
+    /// 目标客户-公海客户CRM系统中使用，给成交客户作外键引用
     /// </summary>
     public partial class tb_CRM_CustomerController<T>:BaseController<T> where T : class
     {
@@ -245,9 +245,9 @@ namespace RUINORERP.Business
             if (entity.Customer_id > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_CRM_Customer>(entity as tb_CRM_Customer)
-                        .Include(m => m.tb_CRM_FollowUpPlanses)
+                        .Include(m => m.tb_CRM_Contacts)
+                    .Include(m => m.tb_CRM_FollowUpPlanses)
                     .Include(m => m.tb_CRM_FollowUpRecordses)
-                    .Include(m => m.tb_CRM_Contacts)
                     .Include(m => m.tb_CRM_Collaborators)
                             .ExecuteCommandAsync();
          
@@ -255,9 +255,9 @@ namespace RUINORERP.Business
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_CRM_Customer>(entity as tb_CRM_Customer)
+                .Include(m => m.tb_CRM_Contacts)
                 .Include(m => m.tb_CRM_FollowUpPlanses)
                 .Include(m => m.tb_CRM_FollowUpRecordses)
-                .Include(m => m.tb_CRM_Contacts)
                 .Include(m => m.tb_CRM_Collaborators)
                                 .ExecuteCommandAsync();
         }
@@ -289,9 +289,9 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Customer>()
-                                .Includes(m => m.tb_CRM_FollowUpPlanses)
+                                .Includes(m => m.tb_CRM_Contacts)
+                        .Includes(m => m.tb_CRM_FollowUpPlanses)
                         .Includes(m => m.tb_CRM_FollowUpRecordses)
-                        .Includes(m => m.tb_CRM_Contacts)
                         .Includes(m => m.tb_CRM_Collaborators)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -302,9 +302,9 @@ namespace RUINORERP.Business
         {
             tb_CRM_Customer entity = model as tb_CRM_Customer;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_CRM_Customer>(m => m.Customer_id== entity.Customer_id)
-                                .Include(m => m.tb_CRM_FollowUpPlanses)
+                                .Include(m => m.tb_CRM_Contacts)
+                        .Include(m => m.tb_CRM_FollowUpPlanses)
                         .Include(m => m.tb_CRM_FollowUpRecordses)
-                        .Include(m => m.tb_CRM_Contacts)
                         .Include(m => m.tb_CRM_Collaborators)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -474,9 +474,9 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_crm_leads )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_provinces )
-                                            .Includes(t => t.tb_CRM_FollowUpPlanses )
+                                            .Includes(t => t.tb_CRM_Contacts )
+                                .Includes(t => t.tb_CRM_FollowUpPlanses )
                                 .Includes(t => t.tb_CRM_FollowUpRecordses )
-                                .Includes(t => t.tb_CRM_Contacts )
                                 .Includes(t => t.tb_CRM_Collaborators )
                         .ToListAsync();
             
@@ -503,9 +503,9 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_crm_leads )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_provinces )
-                                            .Includes(t => t.tb_CRM_FollowUpPlanses )
+                                            .Includes(t => t.tb_CRM_Contacts )
+                                .Includes(t => t.tb_CRM_FollowUpPlanses )
                                 .Includes(t => t.tb_CRM_FollowUpRecordses )
-                                .Includes(t => t.tb_CRM_Contacts )
                                 .Includes(t => t.tb_CRM_Collaborators )
                         .ToListAsync();
             
@@ -532,9 +532,9 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_crm_leads )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_provinces )
-                                        .Includes(t => t.tb_CRM_FollowUpPlanses )
+                                        .Includes(t => t.tb_CRM_Contacts )
+                            .Includes(t => t.tb_CRM_FollowUpPlanses )
                             .Includes(t => t.tb_CRM_FollowUpRecordses )
-                            .Includes(t => t.tb_CRM_Contacts )
                             .Includes(t => t.tb_CRM_Collaborators )
                         .ToList();
             
@@ -578,9 +578,9 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_crm_leads )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_provinces )
-                                        .Includes(t => t.tb_CRM_FollowUpPlanses )
+                                        .Includes(t => t.tb_CRM_Contacts )
+                            .Includes(t => t.tb_CRM_FollowUpPlanses )
                             .Includes(t => t.tb_CRM_FollowUpRecordses )
-                            .Includes(t => t.tb_CRM_Contacts )
                             .Includes(t => t.tb_CRM_Collaborators )
                         .FirstAsync();
             if(entity!=null)

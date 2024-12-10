@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:42
+// 时间：12/10/2024 13:12:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 目标客户，公海客户 CRM系统中使用，给成交客户作外键引用数据编辑
+    /// 目标客户-公海客户CRM系统中使用，给成交客户作外键引用数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_CRM_CustomerEdit:UserControl
@@ -60,6 +60,10 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
 
          }
 /*
@@ -67,18 +71,22 @@ namespace RUINORERP.UI
         tb_CRM_Customer UIToEntity()
         {
         tb_CRM_Customer entity = new tb_CRM_Customer();
-                     entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
+                     entity.CustomerName = txtCustomerName.Text ;
+                       entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.LeadID = Int64.Parse(txtLeadID.Text);
                         entity.Region_ID = Int64.Parse(txtRegion_ID.Text);
                         entity.ProvinceID = Int64.Parse(txtProvinceID.Text);
                         entity.CityID = Int64.Parse(txtCityID.Text);
-                        entity.CustomerName = txtCustomerName.Text ;
+                        entity.SocialTools = txtSocialTools.Text ;
+                       entity.Contact_Name = txtContact_Name.Text ;
+                       entity.Contact_Email = txtContact_Email.Text ;
+                       entity.Contact_Phone = txtContact_Phone.Text ;
                        entity.CustomerAddress = txtCustomerAddress.Text ;
                        entity.RepeatCustomer = Boolean.Parse(txtRepeatCustomer.Text);
+                        entity.CustomerStatus = Int32.Parse(txtCustomerStatus.Text);
                         entity.CustomerTags = txtCustomerTags.Text ;
-                       entity.CustomerStatus = Int32.Parse(txtCustomerStatus.Text);
-                        entity.GetCustomerSource = txtGetCustomerSource.Text ;
+                       entity.GetCustomerSource = txtGetCustomerSource.Text ;
                        entity.SalePlatform = txtSalePlatform.Text ;
                        entity.Website = txtWebsite.Text ;
                        entity.CustomerLevel = Int32.Parse(txtCustomerLevel.Text);
@@ -103,17 +111,21 @@ namespace RUINORERP.UI
         public void BindData(tb_CRM_Customer entity)
         {
         _EditEntity = entity;
-                       // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+                        DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerName, txtCustomerName, BindDataType4TextBox.Text,false);
+          // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v=>v.XXNAME, cmbLeadID);
           // DataBindingHelper.BindData4Cmb<tb_CRM_Region>(entity, k => k.Region_ID, v=>v.XXNAME, cmbRegion_ID);
           // DataBindingHelper.BindData4Cmb<tb_Provinces>(entity, k => k.ProvinceID, v=>v.XXNAME, cmbProvinceID);
           // DataBindingHelper.BindData4Cmb<tb_Cities>(entity, k => k.CityID, v=>v.XXNAME, cmbCityID);
-           DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerName, txtCustomerName, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.SocialTools, txtSocialTools, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Contact_Name, txtContact_Name, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Contact_Email, txtContact_Email, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Contact_Phone, txtContact_Phone, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerAddress, txtCustomerAddress, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4CehckBox<tb_CRM_Customer>(entity, t => t.RepeatCustomer, chkRepeatCustomer, false);
-           DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerTags, txtCustomerTags, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerStatus, txtCustomerStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerTags, txtCustomerTags, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.GetCustomerSource, txtGetCustomerSource, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.SalePlatform, txtSalePlatform, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Website, txtWebsite, BindDataType4TextBox.Text,false);

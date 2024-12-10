@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 15:51:27
+// 时间：12/10/2024 13:12:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -147,19 +147,19 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Region.Parent_region_id))]
-        public virtual List<tb_CRM_Region> tb_CRM_Regions { get; set; }
-        //tb_CRM_Region.Region_ID)
-        //Region_ID.FK_REGION_REF_REGION)
-        //tb_CRM_Region.Parent_region_id)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Customer.Region_ID))]
         public virtual List<tb_CRM_Customer> tb_CRM_Customers { get; set; }
         //tb_CRM_Customer.Region_ID)
         //Region_ID.FK_CRM_Customer_REF_CRM_Region)
         //tb_CRM_Region.Region_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Region.Parent_region_id))]
+        public virtual List<tb_CRM_Region> tb_CRM_Regions { get; set; }
+        //tb_CRM_Region.Region_ID)
+        //Region_ID.FK_REGION_REF_REGION)
+        //tb_CRM_Region.Parent_region_id)
 
 
         #endregion

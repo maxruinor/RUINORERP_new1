@@ -247,7 +247,6 @@ namespace RUINORERP.Global.EnumExt.CRM
         /// </summary>
         流失客户 = 6,
 
-
     }
 
 

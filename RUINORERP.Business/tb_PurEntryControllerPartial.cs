@@ -51,9 +51,19 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
+                //采购入库总数量和明细求和检查
+                if (entity.TotalQty.Equals(entity.tb_PurEntryDetails.Sum(c => c.Quantity)) == false)
+                {
+                    rs.ErrorMsg = $"采入入库数量与明细之和不相等!请检查数据后重试！";
+                    _unitOfWorkManage.RollbackTran();
+                    rs.Succeeded = false;
+                    return rs;
+                }
+
                 tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+
 
 
                 //处理采购订单

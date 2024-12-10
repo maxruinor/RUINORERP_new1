@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 15:51:25
+// 时间：12/10/2024 13:12:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,7 +58,11 @@ this.txtRegion_Name = new Krypton.Toolkit.KryptonTextBox();
 this.lblRegion_code = new Krypton.Toolkit.KryptonLabel();
 this.txtRegion_code = new Krypton.Toolkit.KryptonTextBox();
 
- 
+Parent_region_id主外字段不一致。this.lblParent_region_id = new Krypton.Toolkit.KryptonLabel();
+this.txtParent_region_id = new Krypton.Toolkit.KryptonTextBox();
+
+Parent_region_id主外字段不一致。this.lblSort = new Krypton.Toolkit.KryptonLabel();
+this.txtSort = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblIs_enabled = new Krypton.Toolkit.KryptonLabel();
 this.chkIs_enabled = new Krypton.Toolkit.KryptonCheckBox();
@@ -124,7 +128,9 @@ this.txtRegion_code.TabIndex = 2;
 this.Controls.Add(this.lblRegion_code);
 this.Controls.Add(this.txtRegion_code);
 
-this.lblParent_region_id.AutoSize = true;
+           //#####Parent_region_id###Int64
+//属性测试75Parent_region_id
+Parent_region_id主外字段不一致。this.lblParent_region_id.AutoSize = true;
 this.lblParent_region_id.Location = new System.Drawing.Point(100,75);
 this.lblParent_region_id.Name = "lblParent_region_id";
 this.lblParent_region_id.Size = new System.Drawing.Size(41, 12);
@@ -137,7 +143,9 @@ this.txtParent_region_id.TabIndex = 3;
 this.Controls.Add(this.lblParent_region_id);
 this.Controls.Add(this.txtParent_region_id);
 
-this.lblSort.AutoSize = true;
+           //#####Sort###Int32
+//属性测试100Sort
+Parent_region_id主外字段不一致。this.lblSort.AutoSize = true;
 this.lblSort.Location = new System.Drawing.Point(100,100);
 this.lblSort.Name = "lblSort";
 this.lblSort.Size = new System.Drawing.Size(41, 12);
@@ -202,10 +210,10 @@ this.Controls.Add(this.txtRegion_Name );
                 this.Controls.Add(this.lblRegion_code );
 this.Controls.Add(this.txtRegion_code );
 
-               this.Controls.Add(this.lblParent_region_id );
+                Parent_region_id主外字段不一致。this.Controls.Add(this.lblParent_region_id );
 this.Controls.Add(this.txtParent_region_id );
 
-               this.Controls.Add(this.lblSort );
+                Parent_region_id主外字段不一致。this.Controls.Add(this.lblSort );
 this.Controls.Add(this.txtSort );
 
                 this.Controls.Add(this.lblIs_enabled );
@@ -248,12 +256,12 @@ private Krypton.Toolkit.KryptonTextBox txtRegion_code;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblParent_region_id;
+              Parent_region_id主外字段不一致。private Krypton.Toolkit.KryptonLabel lblParent_region_id;
 private Krypton.Toolkit.KryptonTextBox txtParent_region_id;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblSort;
+              Parent_region_id主外字段不一致。private Krypton.Toolkit.KryptonLabel lblSort;
 private Krypton.Toolkit.KryptonTextBox txtSort;
 
     

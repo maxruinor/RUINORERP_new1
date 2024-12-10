@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:43
+// 时间：12/10/2024 13:12:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 目标客户，公海客户 CRM系统中使用，给成交客户作外键引用
+    /// 目标客户-公海客户CRM系统中使用，给成交客户作外键引用
     /// </summary>
     [Serializable()]
-    [Description("目标客户，公海客户 CRM系统中使用，给成交客户作外键引用")]
+    [Description("目标客户-公海客户CRM系统中使用，给成交客户作外键引用")]
     [SugarTable("tb_CRM_Customer")]
     public partial class tb_CRM_Customer: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("目标客户，公海客户 CRM系统中使用，给成交客户作外键引用tb_CRM_Customer" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("目标客户-公海客户CRM系统中使用，给成交客户作外键引用tb_CRM_Customer" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -48,6 +48,20 @@ namespace RUINORERP.Model
             set{
             base.PrimaryKeyID = _Customer_id;
             SetProperty(ref _Customer_id, value);
+            }
+        }
+
+        private string _CustomerName;
+        /// <summary>
+        /// 客户名称
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CustomerName",ColDesc = "客户名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomerName" ,Length=50,IsNullable = true,ColumnDescription = "客户名称" )]
+        public string CustomerName
+        { 
+            get{return _CustomerName;}
+            set{
+            SetProperty(ref _CustomerName, value);
             }
         }
 
@@ -141,17 +155,59 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _CustomerName;
+        private string _SocialTools;
         /// <summary>
-        /// 客户名称
+        /// 社交工具
         /// </summary>
-        [AdvQueryAttribute(ColName = "CustomerName",ColDesc = "客户名称")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomerName" ,Length=50,IsNullable = true,ColumnDescription = "客户名称" )]
-        public string CustomerName
+        [AdvQueryAttribute(ColName = "SocialTools",ColDesc = "社交工具")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SocialTools" ,Length=200,IsNullable = true,ColumnDescription = "社交工具" )]
+        public string SocialTools
         { 
-            get{return _CustomerName;}
+            get{return _SocialTools;}
             set{
-            SetProperty(ref _CustomerName, value);
+            SetProperty(ref _SocialTools, value);
+            }
+        }
+
+        private string _Contact_Name;
+        /// <summary>
+        /// 姓名
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Contact_Name",ColDesc = "姓名")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Contact_Name" ,Length=50,IsNullable = true,ColumnDescription = "姓名" )]
+        public string Contact_Name
+        { 
+            get{return _Contact_Name;}
+            set{
+            SetProperty(ref _Contact_Name, value);
+            }
+        }
+
+        private string _Contact_Email;
+        /// <summary>
+        /// 邮箱
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Contact_Email",ColDesc = "邮箱")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Contact_Email" ,Length=100,IsNullable = true,ColumnDescription = "邮箱" )]
+        public string Contact_Email
+        { 
+            get{return _Contact_Email;}
+            set{
+            SetProperty(ref _Contact_Email, value);
+            }
+        }
+
+        private string _Contact_Phone;
+        /// <summary>
+        /// 电话
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Contact_Phone",ColDesc = "电话")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Contact_Phone" ,Length=30,IsNullable = true,ColumnDescription = "电话" )]
+        public string Contact_Phone
+        { 
+            get{return _Contact_Phone;}
+            set{
+            SetProperty(ref _Contact_Phone, value);
             }
         }
 
@@ -183,20 +239,6 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _CustomerTags;
-        /// <summary>
-        /// 客户标签
-        /// </summary>
-        [AdvQueryAttribute(ColName = "CustomerTags",ColDesc = "客户标签")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomerTags" ,Length=500,IsNullable = true,ColumnDescription = "客户标签" )]
-        public string CustomerTags
-        { 
-            get{return _CustomerTags;}
-            set{
-            SetProperty(ref _CustomerTags, value);
-            }
-        }
-
         private int _CustomerStatus;
         /// <summary>
         /// 客户状态
@@ -208,6 +250,20 @@ namespace RUINORERP.Model
             get{return _CustomerStatus;}
             set{
             SetProperty(ref _CustomerStatus, value);
+            }
+        }
+
+        private string _CustomerTags;
+        /// <summary>
+        /// 客户标签
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CustomerTags",ColDesc = "客户标签")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomerTags" ,Length=500,IsNullable = true,ColumnDescription = "客户标签" )]
+        public string CustomerTags
+        { 
+            get{return _CustomerTags;}
+            set{
+            SetProperty(ref _CustomerTags, value);
             }
         }
 
@@ -458,6 +514,14 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Contact.Customer_id))]
+        public virtual List<tb_CRM_Contact> tb_CRM_Contacts { get; set; }
+        //tb_CRM_Contact.Customer_id)
+        //Customer_id.FK_CONTACT_REF_CUSTOMER)
+        //tb_CRM_Customer.Customer_id)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_FollowUpPlans.Customer_id))]
         public virtual List<tb_CRM_FollowUpPlans> tb_CRM_FollowUpPlanses { get; set; }
         //tb_CRM_FollowUpPlans.Customer_id)
@@ -470,14 +534,6 @@ namespace RUINORERP.Model
         public virtual List<tb_CRM_FollowUpRecords> tb_CRM_FollowUpRecordses { get; set; }
         //tb_CRM_FollowUpRecords.Customer_id)
         //Customer_id.FK_Followuprecoreds_REF_CRM_Customer)
-        //tb_CRM_Customer.Customer_id)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Contact.Customer_id))]
-        public virtual List<tb_CRM_Contact> tb_CRM_Contacts { get; set; }
-        //tb_CRM_Contact.Customer_id)
-        //Customer_id.FK_CONTACT_REF_CUSTOMER)
         //tb_CRM_Customer.Customer_id)
 
         //[Browsable(false)]

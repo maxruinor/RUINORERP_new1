@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:15:49
+// 时间：12/10/2024 13:12:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -30,7 +30,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.LeadsStatus).NotNull().WithMessage("线索状态:不能为空。");
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.SocialTools).MaximumLength(100).WithMessage("社交工具:不能超过最大长度,100.");
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.CustomerName).MaximumLength(50).WithMessage("客户名称:不能超过最大长度,50.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.CustomerName).MaximumLength(50).WithMessage("客户名/线索名:不能超过最大长度,50.");
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.GetCustomerSource).MaximumLength(125).WithMessage("获客来源:不能超过最大长度,125.");
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.InterestedProducts).MaximumLength(25).WithMessage("兴趣产品:不能超过最大长度,25.");
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Contact_Name).MaximumLength(25).WithMessage("联系人姓名:不能超过最大长度,25.");

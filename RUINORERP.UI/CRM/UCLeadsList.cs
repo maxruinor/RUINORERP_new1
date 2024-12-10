@@ -36,6 +36,16 @@ namespace RUINORERP.UI.CRM
             System.Linq.Expressions.Expression<Func<tb_CRM_Leads, int>> expLeadsStatus;
             expLeadsStatus = (p) => p.LeadsStatus;
             base.ColNameDataDictionary.TryAdd(expLeadsStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(LeadsStatus)));
+
+            tb_CRMConfig CRMConfig = MainForm.Instance.AppContext.Db.Queryable<tb_CRMConfig>().First();
+            if (CRMConfig != null)
+            {
+                if (!CRMConfig.CS_UseLeadsFunction)
+                {
+                    MessageBox.Show("请联系管理员开通线索功能.");
+                    this.Exit(this);
+                }
+            }
         }
         public override void QueryConditionBuilder()
         {

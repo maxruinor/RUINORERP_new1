@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
@@ -55,14 +56,17 @@
             this.txtCustomerNoFollowUpDays = new Krypton.Toolkit.KryptonTextBox();
             this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
             this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
-            ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
+            this.bindingSourceEdit = new System.Windows.Forms.BindingSource(this.components);
+            this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(192, 337);
+            this.btnOk.Location = new System.Drawing.Point(166, 340);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -71,7 +75,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(311, 337);
+            this.btnCancel.Location = new System.Drawing.Point(285, 340);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -111,10 +115,11 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(481, 394);
             this.kryptonPanel1.TabIndex = 2;
+            
             // 
             // lblCS_UseLeadsFunction
             // 
-            this.lblCS_UseLeadsFunction.Location = new System.Drawing.Point(109, 12);
+            this.lblCS_UseLeadsFunction.Location = new System.Drawing.Point(83, 13);
             this.lblCS_UseLeadsFunction.Name = "lblCS_UseLeadsFunction";
             this.lblCS_UseLeadsFunction.Size = new System.Drawing.Size(114, 20);
             this.lblCS_UseLeadsFunction.TabIndex = 16;
@@ -122,7 +127,7 @@
             // 
             // chkCS_UseLeadsFunction
             // 
-            this.chkCS_UseLeadsFunction.Location = new System.Drawing.Point(229, 12);
+            this.chkCS_UseLeadsFunction.Location = new System.Drawing.Point(203, 15);
             this.chkCS_UseLeadsFunction.Name = "chkCS_UseLeadsFunction";
             this.chkCS_UseLeadsFunction.Size = new System.Drawing.Size(19, 13);
             this.chkCS_UseLeadsFunction.TabIndex = 17;
@@ -130,7 +135,7 @@
             // 
             // lblCS_NewCustToLeadsCustDays
             // 
-            this.lblCS_NewCustToLeadsCustDays.Location = new System.Drawing.Point(122, 37);
+            this.lblCS_NewCustToLeadsCustDays.Location = new System.Drawing.Point(96, 40);
             this.lblCS_NewCustToLeadsCustDays.Name = "lblCS_NewCustToLeadsCustDays";
             this.lblCS_NewCustToLeadsCustDays.Size = new System.Drawing.Size(101, 20);
             this.lblCS_NewCustToLeadsCustDays.TabIndex = 18;
@@ -138,14 +143,14 @@
             // 
             // txtCS_NewCustToLeadsCustDays
             // 
-            this.txtCS_NewCustToLeadsCustDays.Location = new System.Drawing.Point(229, 31);
+            this.txtCS_NewCustToLeadsCustDays.Location = new System.Drawing.Point(203, 34);
             this.txtCS_NewCustToLeadsCustDays.Name = "txtCS_NewCustToLeadsCustDays";
             this.txtCS_NewCustToLeadsCustDays.Size = new System.Drawing.Size(172, 23);
             this.txtCS_NewCustToLeadsCustDays.TabIndex = 19;
             // 
             // lblCS_SleepingCustomerDays
             // 
-            this.lblCS_SleepingCustomerDays.Location = new System.Drawing.Point(109, 62);
+            this.lblCS_SleepingCustomerDays.Location = new System.Drawing.Point(83, 65);
             this.lblCS_SleepingCustomerDays.Name = "lblCS_SleepingCustomerDays";
             this.lblCS_SleepingCustomerDays.Size = new System.Drawing.Size(114, 20);
             this.lblCS_SleepingCustomerDays.TabIndex = 20;
@@ -153,14 +158,14 @@
             // 
             // txtCS_SleepingCustomerDays
             // 
-            this.txtCS_SleepingCustomerDays.Location = new System.Drawing.Point(229, 56);
+            this.txtCS_SleepingCustomerDays.Location = new System.Drawing.Point(203, 59);
             this.txtCS_SleepingCustomerDays.Name = "txtCS_SleepingCustomerDays";
             this.txtCS_SleepingCustomerDays.Size = new System.Drawing.Size(172, 23);
             this.txtCS_SleepingCustomerDays.TabIndex = 21;
             // 
             // lblCS_LostCustomersDays
             // 
-            this.lblCS_LostCustomersDays.Location = new System.Drawing.Point(109, 87);
+            this.lblCS_LostCustomersDays.Location = new System.Drawing.Point(83, 90);
             this.lblCS_LostCustomersDays.Name = "lblCS_LostCustomersDays";
             this.lblCS_LostCustomersDays.Size = new System.Drawing.Size(114, 20);
             this.lblCS_LostCustomersDays.TabIndex = 22;
@@ -168,14 +173,14 @@
             // 
             // txtCS_LostCustomersDays
             // 
-            this.txtCS_LostCustomersDays.Location = new System.Drawing.Point(229, 81);
+            this.txtCS_LostCustomersDays.Location = new System.Drawing.Point(203, 84);
             this.txtCS_LostCustomersDays.Name = "txtCS_LostCustomersDays";
             this.txtCS_LostCustomersDays.Size = new System.Drawing.Size(172, 23);
             this.txtCS_LostCustomersDays.TabIndex = 23;
             // 
             // lblCS_ActiveCustomers
             // 
-            this.lblCS_ActiveCustomers.Location = new System.Drawing.Point(109, 112);
+            this.lblCS_ActiveCustomers.Location = new System.Drawing.Point(83, 115);
             this.lblCS_ActiveCustomers.Name = "lblCS_ActiveCustomers";
             this.lblCS_ActiveCustomers.Size = new System.Drawing.Size(114, 20);
             this.lblCS_ActiveCustomers.TabIndex = 24;
@@ -183,14 +188,14 @@
             // 
             // txtCS_ActiveCustomers
             // 
-            this.txtCS_ActiveCustomers.Location = new System.Drawing.Point(229, 106);
+            this.txtCS_ActiveCustomers.Location = new System.Drawing.Point(203, 109);
             this.txtCS_ActiveCustomers.Name = "txtCS_ActiveCustomers";
             this.txtCS_ActiveCustomers.Size = new System.Drawing.Size(172, 23);
             this.txtCS_ActiveCustomers.TabIndex = 25;
             // 
             // lblLS_ConvCustHasFollowUpDays
             // 
-            this.lblLS_ConvCustHasFollowUpDays.Location = new System.Drawing.Point(70, 137);
+            this.lblLS_ConvCustHasFollowUpDays.Location = new System.Drawing.Point(44, 140);
             this.lblLS_ConvCustHasFollowUpDays.Name = "lblLS_ConvCustHasFollowUpDays";
             this.lblLS_ConvCustHasFollowUpDays.Size = new System.Drawing.Size(153, 20);
             this.lblLS_ConvCustHasFollowUpDays.TabIndex = 26;
@@ -198,14 +203,14 @@
             // 
             // txtLS_ConvCustHasFollowUpDays
             // 
-            this.txtLS_ConvCustHasFollowUpDays.Location = new System.Drawing.Point(229, 131);
+            this.txtLS_ConvCustHasFollowUpDays.Location = new System.Drawing.Point(203, 134);
             this.txtLS_ConvCustHasFollowUpDays.Name = "txtLS_ConvCustHasFollowUpDays";
             this.txtLS_ConvCustHasFollowUpDays.Size = new System.Drawing.Size(172, 23);
             this.txtLS_ConvCustHasFollowUpDays.TabIndex = 27;
             // 
             // lblLS_ConvCustNoTransDays
             // 
-            this.lblLS_ConvCustNoTransDays.Location = new System.Drawing.Point(70, 162);
+            this.lblLS_ConvCustNoTransDays.Location = new System.Drawing.Point(44, 165);
             this.lblLS_ConvCustNoTransDays.Name = "lblLS_ConvCustNoTransDays";
             this.lblLS_ConvCustNoTransDays.Size = new System.Drawing.Size(153, 20);
             this.lblLS_ConvCustNoTransDays.TabIndex = 28;
@@ -213,14 +218,14 @@
             // 
             // txtLS_ConvCustNoTransDays
             // 
-            this.txtLS_ConvCustNoTransDays.Location = new System.Drawing.Point(229, 156);
+            this.txtLS_ConvCustNoTransDays.Location = new System.Drawing.Point(203, 159);
             this.txtLS_ConvCustNoTransDays.Name = "txtLS_ConvCustNoTransDays";
             this.txtLS_ConvCustNoTransDays.Size = new System.Drawing.Size(172, 23);
             this.txtLS_ConvCustNoTransDays.TabIndex = 29;
             // 
             // lblLS_ConvCustLostDays
             // 
-            this.lblLS_ConvCustLostDays.Location = new System.Drawing.Point(70, 187);
+            this.lblLS_ConvCustLostDays.Location = new System.Drawing.Point(44, 190);
             this.lblLS_ConvCustLostDays.Name = "lblLS_ConvCustLostDays";
             this.lblLS_ConvCustLostDays.Size = new System.Drawing.Size(153, 20);
             this.lblLS_ConvCustLostDays.TabIndex = 31;
@@ -228,14 +233,14 @@
             // 
             // txtLS_ConvCustLostDays
             // 
-            this.txtLS_ConvCustLostDays.Location = new System.Drawing.Point(229, 181);
+            this.txtLS_ConvCustLostDays.Location = new System.Drawing.Point(203, 184);
             this.txtLS_ConvCustLostDays.Name = "txtLS_ConvCustLostDays";
             this.txtLS_ConvCustLostDays.Size = new System.Drawing.Size(172, 23);
             this.txtLS_ConvCustLostDays.TabIndex = 30;
             // 
             // lblNoFollToPublicPoolDays
             // 
-            this.lblNoFollToPublicPoolDays.Location = new System.Drawing.Point(70, 212);
+            this.lblNoFollToPublicPoolDays.Location = new System.Drawing.Point(44, 215);
             this.lblNoFollToPublicPoolDays.Name = "lblNoFollToPublicPoolDays";
             this.lblNoFollToPublicPoolDays.Size = new System.Drawing.Size(153, 20);
             this.lblNoFollToPublicPoolDays.TabIndex = 32;
@@ -243,14 +248,14 @@
             // 
             // txtNoFollToPublicPoolDays
             // 
-            this.txtNoFollToPublicPoolDays.Location = new System.Drawing.Point(229, 206);
+            this.txtNoFollToPublicPoolDays.Location = new System.Drawing.Point(203, 209);
             this.txtNoFollToPublicPoolDays.Name = "txtNoFollToPublicPoolDays";
             this.txtNoFollToPublicPoolDays.Size = new System.Drawing.Size(172, 23);
             this.txtNoFollToPublicPoolDays.TabIndex = 33;
             // 
             // lblCustomerNoOrderDays
             // 
-            this.lblCustomerNoOrderDays.Location = new System.Drawing.Point(70, 237);
+            this.lblCustomerNoOrderDays.Location = new System.Drawing.Point(44, 240);
             this.lblCustomerNoOrderDays.Name = "lblCustomerNoOrderDays";
             this.lblCustomerNoOrderDays.Size = new System.Drawing.Size(153, 20);
             this.lblCustomerNoOrderDays.TabIndex = 34;
@@ -258,14 +263,14 @@
             // 
             // txtCustomerNoOrderDays
             // 
-            this.txtCustomerNoOrderDays.Location = new System.Drawing.Point(229, 231);
+            this.txtCustomerNoOrderDays.Location = new System.Drawing.Point(203, 234);
             this.txtCustomerNoOrderDays.Name = "txtCustomerNoOrderDays";
             this.txtCustomerNoOrderDays.Size = new System.Drawing.Size(172, 23);
             this.txtCustomerNoOrderDays.TabIndex = 35;
             // 
             // lblCustomerNoFollowUpDays
             // 
-            this.lblCustomerNoFollowUpDays.Location = new System.Drawing.Point(70, 262);
+            this.lblCustomerNoFollowUpDays.Location = new System.Drawing.Point(44, 265);
             this.lblCustomerNoFollowUpDays.Name = "lblCustomerNoFollowUpDays";
             this.lblCustomerNoFollowUpDays.Size = new System.Drawing.Size(153, 20);
             this.lblCustomerNoFollowUpDays.TabIndex = 36;
@@ -273,14 +278,14 @@
             // 
             // txtCustomerNoFollowUpDays
             // 
-            this.txtCustomerNoFollowUpDays.Location = new System.Drawing.Point(229, 256);
+            this.txtCustomerNoFollowUpDays.Location = new System.Drawing.Point(203, 259);
             this.txtCustomerNoFollowUpDays.Name = "txtCustomerNoFollowUpDays";
             this.txtCustomerNoFollowUpDays.Size = new System.Drawing.Size(172, 23);
             this.txtCustomerNoFollowUpDays.TabIndex = 37;
             // 
             // lblCreated_at
             // 
-            this.lblCreated_at.Location = new System.Drawing.Point(161, 283);
+            this.lblCreated_at.Location = new System.Drawing.Point(135, 286);
             this.lblCreated_at.Name = "lblCreated_at";
             this.lblCreated_at.Size = new System.Drawing.Size(62, 20);
             this.lblCreated_at.TabIndex = 38;
@@ -288,23 +293,28 @@
             // 
             // dtpCreated_at
             // 
-            this.dtpCreated_at.Location = new System.Drawing.Point(229, 283);
+            this.dtpCreated_at.Location = new System.Drawing.Point(203, 286);
             this.dtpCreated_at.Name = "dtpCreated_at";
             this.dtpCreated_at.Size = new System.Drawing.Size(172, 21);
             this.dtpCreated_at.TabIndex = 39;
+            // 
+            // errorProviderForAllInput
+            // 
+            this.errorProviderForAllInput.ContainerControl = this;
             // 
             // UCCRMConfig
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(481, 394);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCCRMConfig";
+            this.Size = new System.Drawing.Size(481, 394);
             this.Load += new System.EventHandler(this.UCLeadsEdit_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -338,5 +348,7 @@
         private Krypton.Toolkit.KryptonTextBox txtCustomerNoFollowUpDays;
         private Krypton.Toolkit.KryptonLabel lblCreated_at;
         private Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
+        internal System.Windows.Forms.BindingSource bindingSourceEdit;
+        public System.Windows.Forms.ErrorProvider errorProviderForAllInput;
     }
 }

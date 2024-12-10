@@ -97,8 +97,23 @@ namespace RUINORERP.UI.CRM
             }
         }
 
-        private void UCLeadsEdit_Load(object sender, EventArgs e)
+        private async void UCLeadsEdit_Load(object sender, EventArgs e)
         {
+            tb_CRMConfig CRMConfig = await MainForm.Instance.AppContext.Db.Queryable<tb_CRMConfig>().FirstAsync();
+            if (CRMConfig != null)
+            {
+                if (CRMConfig.CS_UseLeadsFunction)
+                {
+                    lblLeads.Visible = true;
+                    cmbLeads.Visible = true;
+                }
+                else
+                {
+                    lblLeads.Visible = false;
+                    cmbLeads.Visible = false;
+                }
+            }
+
             // ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
             //“|”号隔开
             //string GetCustomerSource = configManager.GetValue("GetCustomerSource");

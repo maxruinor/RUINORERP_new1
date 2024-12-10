@@ -43,7 +43,7 @@ namespace RUINORERP.UI.UserCenter
             {
                 return;
             }
-
+          
 
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
@@ -83,7 +83,7 @@ namespace RUINORERP.UI.UserCenter
             {
                 BuilderComponents(Kpages);
             }
-            LoadLayoutFromXml(Kpages);
+            LoadDefaultLayoutFromDb(Kpages);
             LoadInitPages();
 
             for (int i = 0; i < kryptonDockingManager1.Pages.Count(); i++)

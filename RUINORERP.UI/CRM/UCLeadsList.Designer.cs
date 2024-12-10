@@ -28,14 +28,32 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCLeadsList));
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
+            this.kryptonHeaderGroupTop.SuspendLayout();
             this.SuspendLayout();
             // 
-            // UCLocationTypeList
+            // frm
+            // 
+            this.frm.Location = new System.Drawing.Point(26, 26);
+            // 
+            // kryptonHeaderGroupTop
+            // 
+            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(467, 85);
+            this.kryptonHeaderGroupTop.ValuesPrimary.Heading = "";
+            this.kryptonHeaderGroupTop.ValuesPrimary.Image = ((System.Drawing.Image)(resources.GetObject("kryptonHeaderGroupTop.ValuesPrimary.Image")));
+            // 
+            // UCLeadsList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UCLocationTypeList";
+            this.Name = "UCLeadsList";
             this.Size = new System.Drawing.Size(467, 445);
+            this.Load += new System.EventHandler(this.UCLeadsList_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).EndInit();
+            this.kryptonHeaderGroupTop.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }

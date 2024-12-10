@@ -22,6 +22,7 @@ using SqlSugar;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.EnumExt.CRM;
+using RUINORERP.UI.BaseForm;
 
 namespace RUINORERP.UI.CRM
 {
@@ -64,5 +65,87 @@ namespace RUINORERP.UI.CRM
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
+        private void UCCRMCustomerList_Load(object sender, EventArgs e)
+        {
+            //base.dataGridView1.Use是否使用内置右键功能 = false;
+            base.dataGridView1.ContextMenuStrip = contextMenuStrip1;
+        }
+
+        private async void 添加跟进计划ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (base.bindingSourceList.Current != null)
+            {
+                if (bindingSourceList.Current is tb_CRM_Customer customer)
+                {
+                    object frm = Activator.CreateInstance(typeof(UCCRMFollowUpPlansEdit));
+                    if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+                    {
+                        BaseEditGeneric<tb_CRM_FollowUpPlans> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpPlans>;
+                        frmaddg.Text = "跟进计划编辑";
+                        frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpPlans>();
+                        object obj = frmaddg.bindingSourceEdit.AddNew();
+                        tb_CRM_FollowUpPlans EntityInfo = obj as tb_CRM_FollowUpPlans;
+                        EntityInfo.Customer_id = customer.Customer_id;
+                        BaseEntity bty = EntityInfo as BaseEntity;
+                        bty.ActionStatus = ActionStatus.加载;
+                        BusinessHelper.Instance.EditEntity(bty);
+                        frmaddg.BindData(bty, ActionStatus.新增);
+                        if (frmaddg.ShowDialog() == DialogResult.OK)
+                        {
+                            BaseController<tb_CRM_FollowUpPlans> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpPlans>>(typeof(tb_CRM_FollowUpPlans).Name + "Controller");
+                            ReturnResults<tb_CRM_FollowUpPlans> result = await ctrContactInfo.BaseSaveOrUpdate(EntityInfo);
+                            if (result.Succeeded)
+                            {
+                                MainForm.Instance.ShowStatusText("添加成功!");
+                            }
+                            else
+                            {
+                                MainForm.Instance.ShowStatusText("添加失败!");
+                            }
+                        }
+                    }
+                }
+
+            }
+
+        }
+
+        private async void 添加跟进记录ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (base.bindingSourceList.Current != null)
+            {
+                if (bindingSourceList.Current is tb_CRM_Customer customer)
+                {
+                    object frm = Activator.CreateInstance(typeof(UCCRMFollowUpRecordsEdit));
+                    if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+                    {
+                        BaseEditGeneric<tb_CRM_FollowUpRecords> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpRecords>;
+                        frmaddg.Text = "跟进记录编辑";
+                        frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpRecords>();
+                        object obj = frmaddg.bindingSourceEdit.AddNew();
+                        tb_CRM_FollowUpRecords EntityInfo = obj as tb_CRM_FollowUpRecords;
+                        EntityInfo.Customer_id = customer.Customer_id;
+                        BaseEntity bty = EntityInfo as BaseEntity;
+                        bty.ActionStatus = ActionStatus.加载;
+                        BusinessHelper.Instance.EditEntity(bty);
+                        frmaddg.BindData(bty, ActionStatus.新增);
+                        if (frmaddg.ShowDialog() == DialogResult.OK)
+                        {
+                            BaseController<tb_CRM_FollowUpRecords> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpRecords>>(typeof(tb_CRM_FollowUpRecords).Name + "Controller");
+                            ReturnResults<tb_CRM_FollowUpRecords> result = await ctrContactInfo.BaseSaveOrUpdate(EntityInfo);
+                            if (result.Succeeded)
+                            {
+                                MainForm.Instance.ShowStatusText("添加成功!");
+                            }
+                            else
+                            {
+                                MainForm.Instance.ShowStatusText("添加失败!");
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
     }
 }

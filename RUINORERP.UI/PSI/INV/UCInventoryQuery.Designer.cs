@@ -28,15 +28,26 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCInventoryQuery));
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
+            this.kryptonHeaderGroupTop.SuspendLayout();
             this.SuspendLayout();
             // 
-            // UCStocktakeQuery
+            // kryptonHeaderGroupTop
+            // 
+            this.kryptonHeaderGroupTop.ValuesPrimary.Heading = "";
+            this.kryptonHeaderGroupTop.ValuesPrimary.Image = ((System.Drawing.Image)(resources.GetObject("kryptonHeaderGroupTop.ValuesPrimary.Image")));
+            // 
+            // UCInventoryQuery
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UCStocktakeQuery";
+            this.Name = "UCInventoryQuery";
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).EndInit();
+            this.kryptonHeaderGroupTop.ResumeLayout(false);
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 

@@ -149,8 +149,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         foreach (tb_ProductionPlanDetail PlanDetail in PlanDetails)
                         {
                             View_ProdDetail prodDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(PlanDetail.ProdDetailID);
-                            tb_ProductType productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
-
+                            tb_ProductType productType = new tb_ProductType();
+                            if (prodDetail.Type_ID.HasValue)
+                            {
+                                productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                            }
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
                             //子级
                             KryptonTreeGridNodeRow PlanDetailsubrow = item.Nodes.Add(prodDetail.SKU);
@@ -240,7 +243,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 foreach (tb_ProduceGoodsRecommendDetail SubProduceDetail in SubSelfDetails)
                 {
                     View_ProdDetail SubProdDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
-                    tb_ProductType productType = UIBizSrvice.GetProdDetail<tb_ProductType>(SubProdDetail.Type_ID.Value);
+                    tb_ProductType productType = new tb_ProductType();
+                    if (prodDetail.Type_ID.HasValue)
+                    {
+                        productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                    }
                     //子级
                     KryptonTreeGridNodeRow SubProduceDetailrow = ProduceDetailrow.Nodes.Add(demand.PDNo.ToString());
                     SubProduceDetailrow.Tag = demand;//为了双击的时候能找到值对象。这里还是给主表对象。

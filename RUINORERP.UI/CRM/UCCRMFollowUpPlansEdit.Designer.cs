@@ -31,6 +31,7 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.btnFastFollowUp = new Krypton.Toolkit.KryptonButton();
             this.lblPlanSubject = new Krypton.Toolkit.KryptonLabel();
             this.txtPlanSubject = new Krypton.Toolkit.KryptonTextBox();
@@ -49,7 +50,6 @@
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -61,7 +61,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(169, 556);
+            this.btnOk.Location = new System.Drawing.Point(148, 556);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -70,7 +70,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(287, 556);
+            this.btnCancel.Location = new System.Drawing.Point(266, 556);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -106,9 +106,17 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(1110, 592);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(654, 0);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(456, 592);
+            this.flowLayoutPanel1.TabIndex = 175;
+            // 
             // btnFastFollowUp
             // 
-            this.btnFastFollowUp.Location = new System.Drawing.Point(595, 556);
+            this.btnFastFollowUp.Location = new System.Drawing.Point(557, 556);
             this.btnFastFollowUp.Name = "btnFastFollowUp";
             this.btnFastFollowUp.Size = new System.Drawing.Size(90, 25);
             this.btnFastFollowUp.TabIndex = 174;
@@ -117,7 +125,7 @@
             // 
             // lblPlanSubject
             // 
-            this.lblPlanSubject.Location = new System.Drawing.Point(30, 105);
+            this.lblPlanSubject.Location = new System.Drawing.Point(9, 105);
             this.lblPlanSubject.Name = "lblPlanSubject";
             this.lblPlanSubject.Size = new System.Drawing.Size(62, 20);
             this.lblPlanSubject.TabIndex = 172;
@@ -125,30 +133,30 @@
             // 
             // txtPlanSubject
             // 
-            this.txtPlanSubject.Location = new System.Drawing.Point(103, 101);
+            this.txtPlanSubject.Location = new System.Drawing.Point(82, 101);
             this.txtPlanSubject.Name = "txtPlanSubject";
-            this.txtPlanSubject.Size = new System.Drawing.Size(227, 23);
+            this.txtPlanSubject.Size = new System.Drawing.Size(566, 23);
             this.txtPlanSubject.TabIndex = 173;
             // 
             // kPanelPlanSubject
             // 
-            this.kPanelPlanSubject.Location = new System.Drawing.Point(102, 130);
+            this.kPanelPlanSubject.Location = new System.Drawing.Point(81, 130);
             this.kPanelPlanSubject.Name = "kPanelPlanSubject";
-            this.kPanelPlanSubject.Size = new System.Drawing.Size(583, 143);
+            this.kPanelPlanSubject.Size = new System.Drawing.Size(567, 143);
             this.kPanelPlanSubject.TabIndex = 171;
             // 
             // cmbPlanStatus
             // 
             this.cmbPlanStatus.DropDownWidth = 100;
             this.cmbPlanStatus.IntegralHeight = false;
-            this.cmbPlanStatus.Location = new System.Drawing.Point(441, 12);
+            this.cmbPlanStatus.Location = new System.Drawing.Point(420, 12);
             this.cmbPlanStatus.Name = "cmbPlanStatus";
             this.cmbPlanStatus.Size = new System.Drawing.Size(228, 21);
             this.cmbPlanStatus.TabIndex = 168;
             // 
             // lblPlanStartDate
             // 
-            this.lblPlanStartDate.Location = new System.Drawing.Point(37, 69);
+            this.lblPlanStartDate.Location = new System.Drawing.Point(16, 69);
             this.lblPlanStartDate.Name = "lblPlanStartDate";
             this.lblPlanStartDate.Size = new System.Drawing.Size(62, 20);
             this.lblPlanStartDate.TabIndex = 164;
@@ -156,14 +164,14 @@
             // 
             // dtpPlanStartDate
             // 
-            this.dtpPlanStartDate.Location = new System.Drawing.Point(103, 65);
+            this.dtpPlanStartDate.Location = new System.Drawing.Point(82, 65);
             this.dtpPlanStartDate.Name = "dtpPlanStartDate";
             this.dtpPlanStartDate.Size = new System.Drawing.Size(227, 21);
             this.dtpPlanStartDate.TabIndex = 165;
             // 
             // lblPlanEndDate
             // 
-            this.lblPlanEndDate.Location = new System.Drawing.Point(373, 66);
+            this.lblPlanEndDate.Location = new System.Drawing.Point(352, 66);
             this.lblPlanEndDate.Name = "lblPlanEndDate";
             this.lblPlanEndDate.Size = new System.Drawing.Size(62, 20);
             this.lblPlanEndDate.TabIndex = 166;
@@ -171,14 +179,14 @@
             // 
             // dtpPlanEndDate
             // 
-            this.dtpPlanEndDate.Location = new System.Drawing.Point(441, 65);
+            this.dtpPlanEndDate.Location = new System.Drawing.Point(420, 65);
             this.dtpPlanEndDate.Name = "dtpPlanEndDate";
             this.dtpPlanEndDate.Size = new System.Drawing.Size(227, 21);
             this.dtpPlanEndDate.TabIndex = 167;
             // 
             // lblCustomer_id
             // 
-            this.lblCustomer_id.Location = new System.Drawing.Point(37, 38);
+            this.lblCustomer_id.Location = new System.Drawing.Point(16, 38);
             this.lblCustomer_id.Name = "lblCustomer_id";
             this.lblCustomer_id.Size = new System.Drawing.Size(62, 20);
             this.lblCustomer_id.TabIndex = 163;
@@ -188,14 +196,14 @@
             // 
             this.cmbCustomer_id.DropDownWidth = 100;
             this.cmbCustomer_id.IntegralHeight = false;
-            this.cmbCustomer_id.Location = new System.Drawing.Point(102, 38);
+            this.cmbCustomer_id.Location = new System.Drawing.Point(81, 38);
             this.cmbCustomer_id.Name = "cmbCustomer_id";
             this.cmbCustomer_id.Size = new System.Drawing.Size(228, 21);
             this.cmbCustomer_id.TabIndex = 162;
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(50, 12);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(29, 12);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
             this.lblEmployee_ID.TabIndex = 161;
@@ -203,7 +211,7 @@
             // 
             // lblPlanStatus
             // 
-            this.lblPlanStatus.Location = new System.Drawing.Point(376, 12);
+            this.lblPlanStatus.Location = new System.Drawing.Point(355, 12);
             this.lblPlanStatus.Name = "lblPlanStatus";
             this.lblPlanStatus.Size = new System.Drawing.Size(62, 20);
             this.lblPlanStatus.TabIndex = 157;
@@ -211,7 +219,7 @@
             // 
             // lblPlanContent
             // 
-            this.lblPlanContent.Location = new System.Drawing.Point(36, 296);
+            this.lblPlanContent.Location = new System.Drawing.Point(15, 296);
             this.lblPlanContent.Name = "lblPlanContent";
             this.lblPlanContent.Size = new System.Drawing.Size(62, 20);
             this.lblPlanContent.TabIndex = 159;
@@ -219,7 +227,7 @@
             // 
             // txtPlanContent
             // 
-            this.txtPlanContent.Location = new System.Drawing.Point(102, 294);
+            this.txtPlanContent.Location = new System.Drawing.Point(81, 294);
             this.txtPlanContent.Multiline = true;
             this.txtPlanContent.Name = "txtPlanContent";
             this.txtPlanContent.Size = new System.Drawing.Size(396, 117);
@@ -229,14 +237,14 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(102, 12);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(81, 12);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
             this.cmbEmployee_ID.Size = new System.Drawing.Size(228, 21);
             this.cmbEmployee_ID.TabIndex = 77;
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(63, 427);
+            this.lblNotes.Location = new System.Drawing.Point(42, 427);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 51;
@@ -244,19 +252,11 @@
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(102, 426);
+            this.txtNotes.Location = new System.Drawing.Point(81, 426);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(397, 124);
             this.txtNotes.TabIndex = 52;
-            // 
-            // flowLayoutPanel1
-            // 
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(697, 0);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(413, 592);
-            this.flowLayoutPanel1.TabIndex = 175;
             // 
             // UCCRMFollowUpPlansEdit
             // 

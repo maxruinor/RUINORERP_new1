@@ -140,9 +140,6 @@ namespace RUINORERP.UI.PSI.INV
 
         }
 
-
-
-
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.Quantity);

@@ -764,7 +764,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        protected frmFormProperty frm = new frmFormProperty();
+        public frmFormProperty frm = new frmFormProperty();
         protected virtual void Property()
         {
             if (frm.ShowDialog() == DialogResult.OK)

@@ -1066,7 +1066,7 @@
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
     <Compile Include="CRM\UCCRMConfig.cs">
-      <SubType>Form</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="CRM\UCCRMConfig.Designer.cs">
       <DependentUpon>UCCRMConfig.cs</DependentUpon>

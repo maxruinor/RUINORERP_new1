@@ -35,7 +35,7 @@
             this.cmbFollowUpMethod = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.cmbPlanID = new Krypton.Toolkit.KryptonComboBox();
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.lblLeads = new Krypton.Toolkit.KryptonLabel();
             this.cmbLeads = new Krypton.Toolkit.KryptonComboBox();
             this.lblFollowUpSubject = new Krypton.Toolkit.KryptonLabel();
             this.txtFollowUpSubject = new Krypton.Toolkit.KryptonTextBox();
@@ -85,7 +85,7 @@
             this.kryptonPanel1.Controls.Add(this.cmbFollowUpMethod);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
             this.kryptonPanel1.Controls.Add(this.cmbPlanID);
-            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.lblLeads);
             this.kryptonPanel1.Controls.Add(this.cmbLeads);
             this.kryptonPanel1.Controls.Add(this.lblFollowUpSubject);
             this.kryptonPanel1.Controls.Add(this.txtFollowUpSubject);
@@ -142,13 +142,13 @@
             this.cmbPlanID.Size = new System.Drawing.Size(228, 21);
             this.cmbPlanID.TabIndex = 176;
             // 
-            // kryptonLabel1
+            // lblLeads
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(376, 38);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel1.TabIndex = 175;
-            this.kryptonLabel1.Values.Text = "来源线索";
+            this.lblLeads.Location = new System.Drawing.Point(376, 38);
+            this.lblLeads.Name = "lblLeads";
+            this.lblLeads.Size = new System.Drawing.Size(62, 20);
+            this.lblLeads.TabIndex = 175;
+            this.lblLeads.Values.Text = "来源线索";
             // 
             // cmbLeads
             // 
@@ -302,7 +302,7 @@
         private Krypton.Toolkit.KryptonPanel kPanelPlanSubject;
         private Krypton.Toolkit.KryptonLabel lblFollowUpSubject;
         private Krypton.Toolkit.KryptonTextBox txtFollowUpSubject;
-        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonLabel lblLeads;
         private Krypton.Toolkit.KryptonComboBox cmbLeads;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonComboBox cmbPlanID;

@@ -28,18 +28,59 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCCRMFollowUpPlansList));
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.添加跟进记录ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
+            this.kryptonHeaderGroupTop.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // UCLocationTypeList
+            // frm
+            // 
+            this.frm.Location = new System.Drawing.Point(26, 26);
+            // 
+            // kryptonHeaderGroupTop
+            // 
+            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(467, 85);
+            this.kryptonHeaderGroupTop.ValuesPrimary.Heading = "";
+            this.kryptonHeaderGroupTop.ValuesPrimary.Image = ((System.Drawing.Image)(resources.GetObject("kryptonHeaderGroupTop.ValuesPrimary.Image")));
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.添加跟进记录ToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 48);
+            // 
+            // 添加跟进记录ToolStripMenuItem
+            // 
+            this.添加跟进记录ToolStripMenuItem.Name = "添加跟进记录ToolStripMenuItem";
+            this.添加跟进记录ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.添加跟进记录ToolStripMenuItem.Text = "添加跟进记录";
+            this.添加跟进记录ToolStripMenuItem.Click += new System.EventHandler(this.添加跟进记录ToolStripMenuItem_Click);
+            // 
+            // UCCRMFollowUpPlansList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UCLocationTypeList";
+            this.Name = "UCCRMFollowUpPlansList";
             this.Size = new System.Drawing.Size(467, 445);
+            this.Load += new System.EventHandler(this.UCCRMFollowUpPlansList_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).EndInit();
+            this.kryptonHeaderGroupTop.ResumeLayout(false);
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
+
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem 添加跟进记录ToolStripMenuItem;
     }
 }

@@ -32,10 +32,6 @@ namespace RUINORERP.UI.CRM
         public UCLeadsList()
         {
             InitializeComponent();
-            base.EditForm = typeof(UCLeadsEdit);
-            System.Linq.Expressions.Expression<Func<tb_CRM_Leads, int>> expLeadsStatus;
-            expLeadsStatus = (p) => p.LeadsStatus;
-            base.ColNameDataDictionary.TryAdd(expLeadsStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(LeadsStatus)));
 
             tb_CRMConfig CRMConfig = MainForm.Instance.AppContext.Db.Queryable<tb_CRMConfig>().First();
             if (CRMConfig != null)
@@ -43,9 +39,17 @@ namespace RUINORERP.UI.CRM
                 if (!CRMConfig.CS_UseLeadsFunction)
                 {
                     MessageBox.Show("请联系管理员开通线索功能.");
-                    this.Exit(this);
+                    this.Controls.Clear();
+                    return;
                 }
             }
+
+            base.EditForm = typeof(UCLeadsEdit);
+            System.Linq.Expressions.Expression<Func<tb_CRM_Leads, int>> expLeadsStatus;
+            expLeadsStatus = (p) => p.LeadsStatus;
+            base.ColNameDataDictionary.TryAdd(expLeadsStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(LeadsStatus)));
+
+            
         }
         public override void QueryConditionBuilder()
         {
@@ -65,5 +69,9 @@ namespace RUINORERP.UI.CRM
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
+        private void UCLeadsList_Load(object sender, EventArgs e)
+        {
+           
+        }
     }
 }

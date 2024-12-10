@@ -156,7 +156,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         foreach (tb_PurOrderDetail OrderDetail in OrderDetails)
                         {
                             View_ProdDetail prodDetail =  UIBizSrvice.GetProdDetail<View_ProdDetail>(OrderDetail.ProdDetailID);
-                            tb_ProductType productType =  UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                            tb_ProductType productType = new tb_ProductType();
+                            if (prodDetail.Type_ID.HasValue)
+                            {
+                                productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                            }
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
                             //子级

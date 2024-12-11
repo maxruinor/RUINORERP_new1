@@ -272,6 +272,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (!this.DesignMode)
                 {
+                    frm = new frmFormProperty();
                     GridRelated = new GridViewRelated();
                     ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     //权限菜单
@@ -764,7 +765,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        public frmFormProperty frm = new frmFormProperty();
+        public frmFormProperty frm = null;
         protected virtual void Property()
         {
             if (frm.ShowDialog() == DialogResult.OK)

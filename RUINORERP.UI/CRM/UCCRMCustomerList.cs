@@ -71,7 +71,8 @@ namespace RUINORERP.UI.CRM
         private void UCCRMCustomerList_Load(object sender, EventArgs e)
         {
             //base.dataGridView1.Use是否使用内置右键功能 = false;
-            base.dataGridView1.ContextMenuStrip = contextMenuStrip1;
+            ContextMenuStrip newContextMenuStrip = base.dataGridView1.GetContextMenu(contextMenuStrip1);
+            base.dataGridView1.ContextMenuStrip = newContextMenuStrip;
         }
 
         private async void 添加跟进计划ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -161,7 +162,7 @@ namespace RUINORERP.UI.CRM
                     if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                     {
                         BaseEditGeneric<tb_CustomerVendor> frmaddg = frm as BaseEditGeneric<tb_CustomerVendor>;
-                        frmaddg.Text = "目标客户编辑";
+                        frmaddg.Text = "销售客户编辑";
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_CustomerVendor>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();
                         tb_CustomerVendor EntityInfo = obj as tb_CustomerVendor;
@@ -169,7 +170,7 @@ namespace RUINORERP.UI.CRM
                         EntityInfo = mapper.Map<tb_CustomerVendor>(sourceEntity);
                         EntityInfo.Customer_id = sourceEntity.Customer_id;
                         BaseEntity bty = EntityInfo as BaseEntity;
-                        bty.ActionStatus = ActionStatus.加载;
+                        bty.ActionStatus = ActionStatus.新增;
                         BusinessHelper.Instance.EditEntity(bty);
                         frmaddg.BindData(bty, ActionStatus.新增);
                         if (frmaddg.ShowDialog() == DialogResult.OK)

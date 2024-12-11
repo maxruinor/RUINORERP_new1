@@ -21,6 +21,7 @@ using log4net.Repository.Hierarchy;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Common.Helper;
+using Fireasy.Common.Extensions;
 namespace RUINORERP.Business.CommService
 {
     /// <summary>
@@ -152,7 +153,7 @@ namespace RUINORERP.Business.CommService
                             }
                             else
                             {
-                                T prodDetail = _context.Db.Queryable<T>().Where(p => p.GetPropertyValue(key).ToString().Equals(KeyValue)).Single();
+                                T prodDetail = default(T);// _context.Db.Queryable<T>().Where(p => p.GetPropertyValue(key).ToString().Equals(KeyValue)).Single();
                                 return prodDetail;
                             }
                         }
@@ -216,7 +217,8 @@ namespace RUINORERP.Business.CommService
                         JArray varJarray = (JArray)cachelist;
                         //如果旧列表中有这个值，则直接删除，把新的添加上
                         var olditem = varJarray.FirstOrDefault(n => n[pair.Key].ToString() == PrimaryKeyValue.ToString());
-                        Type type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                        //Type type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                        Type type = Manager.NewTableTypeList.GetValue(tableName);
                         if (olditem != null)
                         {
                             return olditem.ToObject(type);
@@ -628,6 +630,7 @@ namespace RUINORERP.Business.CommService
                 Manager.CacheInfoList.Clear();
                 Manager.CacheEntityList.Clear();
                 Manager.NewTableList.Clear();
+
                 SetDictDataSource(typeNames.ToList<string>(), LoadData);
             }
             catch (Exception ex)

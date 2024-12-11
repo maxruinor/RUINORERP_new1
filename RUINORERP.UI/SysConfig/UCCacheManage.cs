@@ -1,8 +1,11 @@
 ﻿using AutoUpdateTools;
+using CacheManager.Core;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using HLH.Lib.Helper;
+using NPOI.SS.Formula.Functions;
 using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
@@ -135,6 +138,21 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
 
+        }
+
+        private void 清空选中缓存ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listBoxTableList.SelectedItem is SuperValue kv)
+            {
+                string tableName = kv.superDataTypeName;
+                BizCacheHelper.Manager.CacheEntityList.Remove(tableName);
+                CacheInfo lastCacheInfo = new CacheInfo(tableName, 0);
+                lastCacheInfo.HasExpire = false;
+                //看是更新好。还是移除好。主要看后面的更新机制。
+                MyCacheManager.Instance.CacheInfoList.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
+          
+
+            }
         }
     }
 }

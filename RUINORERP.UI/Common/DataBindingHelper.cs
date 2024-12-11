@@ -276,7 +276,11 @@ namespace RUINORERP.UI.Common
                                                 }
                                                 else if (TypeHelper.IsJArrayList(listType))
                                                 {
-                                                    Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + targetEntity.Name);
+                                                   // Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + targetEntity.Name);
+
+                                                    Type elementType = null;
+                                                    BizCacheHelper.Manager.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
+
                                                     List<object> myList = TypeHelper.ConvertJArrayToList(elementType, rslist as JArray);
 
                                                     #region  jsonlist

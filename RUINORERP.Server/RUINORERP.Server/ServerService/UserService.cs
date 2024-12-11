@@ -498,11 +498,7 @@ namespace RUINORERP.Server.BizService
                         CacheInfos.Add(cacheInfo);
                     }
                 }
-
-                //    foreach (var item in frmMain.Instance.CacheInfoList)
-                //{
-
-                //}
+ 
                 string json = JsonConvert.SerializeObject(CacheInfos,
                       new JsonSerializerSettings
                       {

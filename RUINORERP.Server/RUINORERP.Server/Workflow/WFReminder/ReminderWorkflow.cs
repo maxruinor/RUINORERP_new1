@@ -61,7 +61,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                   context =>
                   {
                       Console.WriteLine("执行提醒");
-                      // MessageBox.Show("执行提醒" + System.DateTime.Now);
+                       MessageBox.Show("执行提醒" + System.DateTime.Now);
 
                   }
                   ).Input(step => step.RecipientName, data => data.Receiver)

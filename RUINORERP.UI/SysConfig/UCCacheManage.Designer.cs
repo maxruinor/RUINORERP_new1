@@ -29,23 +29,25 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.listBoxTableList = new System.Windows.Forms.ListBox();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.请求缓存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.btnRefreshCache = new Krypton.Toolkit.KryptonButton();
             this.chkALL = new Krypton.Toolkit.KryptonCheckBox();
             this.btnSave = new Krypton.Toolkit.KryptonButton();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
-            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.请求缓存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.清空选中缓存ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).BeginInit();
             this.kryptonSplitContainer2.Panel1.SuspendLayout();
@@ -54,7 +56,6 @@
             this.kryptonSplitContainer2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).BeginInit();
-            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -87,6 +88,22 @@
             this.listBoxTableList.TabIndex = 0;
             this.listBoxTableList.SelectedIndexChanged += new System.EventHandler(this.listBoxTableList_SelectedIndexChanged);
             // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.请求缓存ToolStripMenuItem,
+            this.清空选中缓存ToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 70);
+            // 
+            // 请求缓存ToolStripMenuItem
+            // 
+            this.请求缓存ToolStripMenuItem.Name = "请求缓存ToolStripMenuItem";
+            this.请求缓存ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.请求缓存ToolStripMenuItem.Text = "请求缓存";
+            this.请求缓存ToolStripMenuItem.Click += new System.EventHandler(this.请求缓存ToolStripMenuItem_Click);
+            // 
             // kryptonSplitContainer2
             // 
             this.kryptonSplitContainer2.Cursor = System.Windows.Forms.Cursors.Default;
@@ -114,8 +131,8 @@
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -164,20 +181,12 @@
             this.btnSave.TabIndex = 0;
             this.btnSave.Values.Text = "保存";
             // 
-            // contextMenuStrip1
+            // 清空选中缓存ToolStripMenuItem
             // 
-            this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.请求缓存ToolStripMenuItem});
-            this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(127, 26);
-            // 
-            // 请求缓存ToolStripMenuItem
-            // 
-            this.请求缓存ToolStripMenuItem.Name = "请求缓存ToolStripMenuItem";
-            this.请求缓存ToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
-            this.请求缓存ToolStripMenuItem.Text = "请求缓存";
-            this.请求缓存ToolStripMenuItem.Click += new System.EventHandler(this.请求缓存ToolStripMenuItem_Click);
+            this.清空选中缓存ToolStripMenuItem.Name = "清空选中缓存ToolStripMenuItem";
+            this.清空选中缓存ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.清空选中缓存ToolStripMenuItem.Text = "清空选中缓存";
+            this.清空选中缓存ToolStripMenuItem.Click += new System.EventHandler(this.清空选中缓存ToolStripMenuItem_Click);
             // 
             // UCCacheManage
             // 
@@ -193,6 +202,7 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            this.contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).EndInit();
             this.kryptonSplitContainer2.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).EndInit();
@@ -202,7 +212,6 @@
             this.kryptonSplitContainer2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).EndInit();
-            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -218,5 +227,6 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem 请求缓存ToolStripMenuItem;
         private Krypton.Toolkit.KryptonButton btnRefreshCache;
+        private System.Windows.Forms.ToolStripMenuItem 清空选中缓存ToolStripMenuItem;
     }
 }

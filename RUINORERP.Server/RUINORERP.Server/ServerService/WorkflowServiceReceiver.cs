@@ -214,8 +214,8 @@ namespace RUINORERP.Server.ServerService
                         string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
                         PushData data = new PushData();
                         data.InputData = tableName;
-                        var workflowId = Program.WorkflowHost.StartWorkflow<PushData>("PushBaseInfoWorkflow", data);
-                        Comm.CommService.ShowExceptionMsg("启动了工作流:" + workflowId);
+                        //var workflowId = Program.WorkflowHost.StartWorkflow<PushData>("PushBaseInfoWorkflow", data);
+                        //Comm.CommService.ShowExceptionMsg("启动了工作流:" + workflowId);
 
 
 

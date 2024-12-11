@@ -236,6 +236,11 @@ namespace RUINORERP.Server
             cache.Set("test1", "test123");
             await InitConfig(false);
 
+            MyCacheManager.Instance.CacheInfoList.OnAdd += CacheInfoList_OnAdd;
+            MyCacheManager.Instance.CacheInfoList.OnClear += CacheInfoList_OnClear;
+            MyCacheManager.Instance.CacheInfoList.OnUpdate += CacheInfoList_OnUpdate;
+
+
             MyCacheManager.Instance.CacheEntityList.OnRemove += CacheEntityList_OnRemove;
             //1分钟检查一次
             timer = new System.Timers.Timer(60000);
@@ -276,9 +281,36 @@ namespace RUINORERP.Server
             System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1200);
         }
 
+        private void CacheInfoList_OnUpdate(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
+        {
+            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+            {
+                BizService.UserService.发送缓存信息列表(PlayerSession);
+            }
+        }
+
+        private void CacheInfoList_OnClear(object sender, CacheManager.Core.Internal.CacheClearEventArgs e)
+        {
+            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+            {
+                BizService.UserService.发送缓存信息列表(PlayerSession);
+            }
+        }
+
+        private void CacheInfoList_OnAdd(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
+        {
+            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+            {
+                BizService.UserService.发送缓存信息列表(PlayerSession);
+            }
+        }
+
         private void CacheEntityList_OnRemove(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
         {
-
+            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+            {
+                BizService.UserService.发送缓存信息列表(PlayerSession);
+            }
         }
 
 

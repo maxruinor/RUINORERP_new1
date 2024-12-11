@@ -2292,7 +2292,9 @@ namespace RUINORERP.UI
                     }
                     else if (TypeHelper.IsJArrayList(listType))
                     {
-                        elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + nextTableName);
+                        //elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + nextTableName);
+                        BizCacheHelper.Manager.NewTableTypeList.TryGetValue(nextTableName, out elementType);
+
                         List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 
                         //提取产品视图缓存转为强类型

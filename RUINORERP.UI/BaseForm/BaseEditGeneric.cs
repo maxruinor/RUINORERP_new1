@@ -141,8 +141,12 @@ namespace RUINORERP.UI.BaseForm
             return false;
         }
 
-        #region 帮助信息提示
 
+        private T _BaseEditEntity;
+        public T BaseEditEntity { get => _BaseEditEntity; set => _BaseEditEntity = value; }
+
+
+        #region 帮助信息提示
 
 
         public void InitHelpInfoToControl(System.Windows.Forms.Control.ControlCollection Controls)
@@ -250,7 +254,9 @@ namespace RUINORERP.UI.BaseForm
                             }
                             else if (TypeHelper.IsJArrayList(listType))
                             {
-                                Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
+                                //Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
+                                Type elementType = null;
+                                BizCacheHelper.Manager.NewTableTypeList.TryGetValue(fktableName, out elementType);
                                 List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 
                                 #region  jsonlist

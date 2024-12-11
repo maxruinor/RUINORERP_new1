@@ -178,7 +178,7 @@ namespace RUINORERP.Business.Processor
                 if (unary.Operand is ConstantExpression constExp)
                 {
                     var value = constExp.Value;
-                    if (value is bool boolValue && boolValue)
+                    if (value is bool boolValue)
                     {
                         expressionValue = value.ToString();
                     }

@@ -70,7 +70,8 @@ namespace RUINORERP.UI.CRM
 
         private void UCCRMFollowUpPlansList_Load(object sender, EventArgs e)
         {
-            base.dataGridView1.ContextMenuStrip = contextMenuStrip1;
+            ContextMenuStrip newContextMenuStrip = base.dataGridView1.GetContextMenu(contextMenuStrip1);
+            base.dataGridView1.ContextMenuStrip = newContextMenuStrip;
         }
 
         public override async Task<List<tb_CRM_FollowUpPlans>> Save()

@@ -29,8 +29,6 @@ using RUINORERP.Business.AutoMapper;
 
 namespace RUINORERP.UI.CRM
 {
-
-
     [MenuAttrAssemblyInfo("目标客户编辑", true, UIType.单表数据)]
     public partial class UCCRMCustomerEdit : BaseEditGeneric<tb_CRM_Customer>
     {
@@ -159,8 +157,8 @@ namespace RUINORERP.UI.CRM
             .SingleAsync();
 
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-            entity = mapper.Map<tb_CRM_Customer>(crmLeads);
-
+            mapper.Map(crmLeads, entity);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
+           // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
             entity.ActionStatus = ActionStatus.新增;
 
             List<string> tipsMsg = new List<string>();
@@ -175,8 +173,6 @@ namespace RUINORERP.UI.CRM
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             BusinessHelper.Instance.InitEntity(entity);
-             ActionStatus actionStatus = ActionStatus.无操作;
-             BindData(entity, actionStatus);
             return entity;
         }
         private void btnCancel_Click(object sender, EventArgs e)
@@ -189,7 +185,7 @@ namespace RUINORERP.UI.CRM
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            if (base.Validator())
+            if (base.Validator(EditEntity))
             {
                 bindingSourceEdit.EndEdit();
                 this.DialogResult = DialogResult.OK;

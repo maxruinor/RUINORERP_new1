@@ -1670,7 +1670,6 @@ namespace RUINORERP.UI.BaseForm
         private T editEntity;
         public T EditEntity { get => editEntity; set => editEntity = value; }
 
-
         public List<T> PrintData { get; set; }
 
         /// <summary>

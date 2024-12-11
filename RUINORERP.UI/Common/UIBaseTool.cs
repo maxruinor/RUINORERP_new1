@@ -126,7 +126,10 @@ namespace RUINORERP.UI.Common
                                                     }
                                                     else if (TypeHelper.IsJArrayList(listType))
                                                     {
-                                                        Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
+                                                       // Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
+                                                        Type elementType = null;
+                                                        BizCacheHelper.Manager.NewTableTypeList.TryGetValue(fktableName, out elementType);
+
                                                         List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 
                                                         #region  jsonlist
@@ -264,7 +267,11 @@ namespace RUINORERP.UI.Common
                                                     }
                                                     else if (TypeHelper.IsJArrayList(listType))
                                                     {
-                                                        Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
+                                                       // Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
+
+                                                        Type elementType = null;
+                                                        BizCacheHelper.Manager.NewTableTypeList.TryGetValue(fktableName, out elementType);
+
                                                         List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 
                                                         #region  jsonlist

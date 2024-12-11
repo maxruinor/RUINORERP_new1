@@ -74,7 +74,8 @@ namespace RUINORERP.UI.CRM
 
         private void UCLeadsList_Load(object sender, EventArgs e)
         {
-            base.dataGridView1.ContextMenuStrip = contextMenuStrip1;
+            ContextMenuStrip newContextMenuStrip = base.dataGridView1.GetContextMenu(contextMenuStrip1);
+            base.dataGridView1.ContextMenuStrip = newContextMenuStrip;
         }
 
         private async void 转为目标客户ToolStripMenuItem_Click(object sender, EventArgs e)

@@ -355,6 +355,7 @@ namespace RUINORERP.Business.CommService
                 if (!Manager.NewTableList.ContainsKey(tableName))
                 {
                     Manager.NewTableList.TryAdd(tableName, new KeyValuePair<string, string>(idColName, nameColName));
+                    Manager.NewTableTypeList.TryAdd(tableName, typeof(T));
                 }
                 //要么指定加载，要么指定自动加载
                 if (LoadData || AutoLoad)

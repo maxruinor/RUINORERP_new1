@@ -58,7 +58,6 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.PlanStatus, QueryFieldType.CmbEnum, typeof(FollowUpPlanStatus));
             queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.PlanContent);
             queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.PlanSubject);
-            queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.PlanEndDate);
             return queryFilter;
         }
 

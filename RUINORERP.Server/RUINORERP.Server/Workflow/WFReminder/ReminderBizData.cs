@@ -10,9 +10,14 @@ namespace RUINORERP.Server.Workflow.WFReminder
     public class ReminderBizData
     {
         /// <summary>
-        /// 接收人ID
+        /// 单号
         /// </summary>
-        public long RecipientID { get; set; }
+        public long BizID { get; set; }
+
+        /// <summary>
+        /// 接收人-用户名
+        /// </summary>
+        public string Receiver { get; set; }
 
         public string BizKey { get; set; }
         public int BizType { get; set; }
@@ -22,7 +27,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
         /// <summary>
         /// 直到停止（可能延期,后面根据规则来）
         /// </summary>
-        public bool StopRemind { get; set; }=false;
+        public bool StopRemind { get; set; } = false;
 
         /// <summary>
         /// 提醒间隔
@@ -38,7 +43,8 @@ namespace RUINORERP.Server.Workflow.WFReminder
         /// 是一个枚举，应对如何处理提醒
         /// </summary>
         public int ProcessRemind { get; set; }
-        public int RemindCount { get; set; }
+
+        public string ReminderContent { get; set; }
         public string WorkflowId { get; set; }
         public string WorkflowName { get; set; }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:13
+// 时间：12/11/2024 20:44:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,8 +39,9 @@ namespace RUINORERP.Business
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.ProvinceID).NotEmpty().When(x => x.ProvinceID.HasValue);
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CityID).Must(CheckForeignKeyValueCanNull).WithMessage("城市:下拉选择值不正确。");
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CityID).NotEmpty().When(x => x.CityID.HasValue);
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.SocialTools).MaximumLength(100).WithMessage("社交工具:不能超过最大长度,100.");
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Name).MaximumLength(25).WithMessage("姓名:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.wwSocialTools).MaximumLength(100).WithMessage("其他/IM工具:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.SocialTools).MaximumLength(100).WithMessage("旺旺/IM工具:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Name).MaximumLength(25).WithMessage("联系人姓名:不能超过最大长度,25.");
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Email).MaximumLength(50).WithMessage("邮箱:不能超过最大长度,50.");
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Phone).MaximumLength(15).WithMessage("电话:不能超过最大长度,15.");
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CustomerAddress).MaximumLength(150).WithMessage("客户地址:不能超过最大长度,150.");

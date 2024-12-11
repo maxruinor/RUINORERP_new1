@@ -224,6 +224,16 @@ namespace RUINORERP.Business.AutoMapper
 
             //意思是转换时为空则给默认值?
             //CreateMap<tb_Unit, tb_UnitDto>().ForMember(destination => destination.UnitName, opt => opt.NullSubstitute("缺少值名字")); ;
+            
+            //线索转目标客户
+            CreateMap<tb_CRM_Leads, tb_CRM_Customer>()
+            .ForMember(a => a.CustomerName, o => o.MapFrom(d => d.CustomerName))
+            ;
+            //目标客户转销售客户
+            CreateMap<tb_CRM_Customer, tb_CustomerVendor>();
+
+            //计划转为记录
+            CreateMap<tb_CRM_FollowUpPlans, tb_CRM_FollowUpRecords>();
 
         }
     }

@@ -58,7 +58,7 @@ namespace RUINORERP.UI.CRM
             }
 
             DataBindingHelper.BindData4CmbByEnum<tb_CRM_Leads>(entity, k => k.LeadsStatus, typeof(LeadsStatus), cmbtxtLeadsStatus, false);
-
+            DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.wwSocialTools, txtwwSocialTools, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.SocialTools, txtSocialTools, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.CustomerName, txtCustomerName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.GetCustomerSource, txtGetCustomerSource, BindDataType4TextBox.Text, false);

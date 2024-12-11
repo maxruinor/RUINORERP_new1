@@ -14,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using Mapster;
 using System.Linq;
 using System.Web.Caching;
+using Fireasy.Common.Extensions;
 
 namespace RUINORERP.Extensions.Middlewares
 {
@@ -45,7 +46,7 @@ namespace RUINORERP.Extensions.Middlewares
 
         /// <summary>
         /// 缓存所有的基础数据的实体列表，通过表名寻找
-        /// 得到实体列表，用于下拉等绑定
+        /// 得到实体列表，用于下拉等绑定 实际保存的是强类型，如果jobject则要转换一下
         /// </summary>
         public ICacheManager<object> CacheEntityList { get => _cacheEntityList; set => _cacheEntityList = value; }
 
@@ -95,12 +96,12 @@ namespace RUINORERP.Extensions.Middlewares
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<string, string>>> FkPairTableList { get => _fkPairTableList; set => _fkPairTableList = value; }
 
+
+
         public ConcurrentDictionary<string, KeyValuePair<string, string>> NewTableList { get => _newTableList; set => _newTableList = value; }
 
-
-
-
-        // private ConcurrentDictionary<string, Type> _TableTypeList = new ConcurrentDictionary<string, Type>();
+        //结合上面的表集合一起用。不然应该是在开始设计时NewTableList的key用Type.
+        public ConcurrentDictionary<string, Type> NewTableTypeList = new ConcurrentDictionary<string, Type>();
 
         /// <summary>
         /// 为了把所有基础数据的表名 实际 和类型关联起来 在列表datagridview的cellFormating中显示名称时 通过关联的外键找到的基础数据的表名和值。从而得到名称
@@ -308,7 +309,7 @@ namespace RUINORERP.Extensions.Middlewares
                         //    cacheInfo.ExpirationTime = DateTime.Now.AddMinutes(rand);
                         //    MyCacheManager.Instance.Cache.AddOrUpdate(tableName, cacheInfo, c => cacheInfo);
                         //}
-                    
+
                     }
                     else
                     {
@@ -558,7 +559,9 @@ namespace RUINORERP.Extensions.Middlewares
                     Type listType = cachelist.GetType();
                     if (TypeHelper.IsGenericList(listType))
                     {
-                        Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                        //Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                        Type elementType = NewTableTypeList.GetValue(tableName);
+
                         #region  强类型
                         // 创建一个新的 List<object>
                         List<object> oldlist = new List<object>();
@@ -570,7 +573,8 @@ namespace RUINORERP.Extensions.Middlewares
                         }
                         var newTObj = newJObj.ToObject(elementType);
                         // 获取DepartmentID属性的值
-                        var Newid = newTObj.GetPropertyValue(pair.Key).ToString();
+                        //                        var Newid = newTObj.GetPropertyValue(pair.Key).ToString();
+                        var Newid = newJObj[pair.Key]?.ToString();
                         var itemToUpdate = oldlist.FirstOrDefault(n => n.GetPropertyValue(pair.Key).ToString() == Newid);
                         if (itemToUpdate != null)
                         {

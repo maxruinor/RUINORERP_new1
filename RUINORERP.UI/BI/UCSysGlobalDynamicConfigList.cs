@@ -21,6 +21,9 @@ using SqlSugar;
 using RUINORERP.Global;
 using RUINORERP.Common.Extensions;
 using RUINORERP.UI.SysConfig;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.UI.SuperSocketClient;
+using TransInstruction;
 
 
 namespace RUINORERP.UI.BI
@@ -73,7 +76,7 @@ namespace RUINORERP.UI.BI
             }
 
         }
-
+      
         public override async Task<List<tb_SysGlobalDynamicConfig>> Save()
         {
             List<tb_SysGlobalDynamicConfig> list = await base.Save();

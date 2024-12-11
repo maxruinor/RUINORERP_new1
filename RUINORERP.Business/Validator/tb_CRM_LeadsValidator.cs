@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:15
+// 时间：12/11/2024 20:44:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -29,7 +29,8 @@ namespace RUINORERP.Business
       RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Employee_ID).Must(CheckForeignKeyValue).WithMessage("收集人:下拉选择值不正确。");
 //***** 
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.LeadsStatus).NotNull().WithMessage("线索状态:不能为空。");
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.SocialTools).MaximumLength(100).WithMessage("社交工具:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.wwSocialTools).MaximumLength(100).WithMessage("其他/IM工具:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.SocialTools).MaximumLength(100).WithMessage("旺旺/IM工具:不能超过最大长度,100.");
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.CustomerName).MaximumLength(50).WithMessage("客户名/线索名:不能超过最大长度,50.");
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.GetCustomerSource).MaximumLength(125).WithMessage("获客来源:不能超过最大长度,125.");
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.InterestedProducts).MaximumLength(25).WithMessage("兴趣产品:不能超过最大长度,25.");

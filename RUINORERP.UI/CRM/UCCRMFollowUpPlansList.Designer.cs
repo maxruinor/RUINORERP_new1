@@ -38,10 +38,6 @@
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // frm
-            // 
-            this.frm.Location = new System.Drawing.Point(26, 26);
-            // 
             // kryptonHeaderGroupTop
             // 
             this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(467, 85);

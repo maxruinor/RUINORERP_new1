@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:13
+// 时间：12/11/2024 20:44:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -155,12 +155,26 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _wwSocialTools;
+        /// <summary>
+        /// 其他/IM工具
+        /// </summary>
+        [AdvQueryAttribute(ColName = "wwSocialTools",ColDesc = "其他/IM工具")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "wwSocialTools" ,Length=200,IsNullable = true,ColumnDescription = "其他/IM工具" )]
+        public string wwSocialTools
+        { 
+            get{return _wwSocialTools;}
+            set{
+            SetProperty(ref _wwSocialTools, value);
+            }
+        }
+
         private string _SocialTools;
         /// <summary>
-        /// 社交工具
+        /// 旺旺/IM工具
         /// </summary>
-        [AdvQueryAttribute(ColName = "SocialTools",ColDesc = "社交工具")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SocialTools" ,Length=200,IsNullable = true,ColumnDescription = "社交工具" )]
+        [AdvQueryAttribute(ColName = "SocialTools",ColDesc = "旺旺/IM工具")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SocialTools" ,Length=200,IsNullable = true,ColumnDescription = "旺旺/IM工具" )]
         public string SocialTools
         { 
             get{return _SocialTools;}
@@ -171,10 +185,10 @@ namespace RUINORERP.Model
 
         private string _Contact_Name;
         /// <summary>
-        /// 姓名
+        /// 联系人姓名
         /// </summary>
-        [AdvQueryAttribute(ColName = "Contact_Name",ColDesc = "姓名")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Contact_Name" ,Length=50,IsNullable = true,ColumnDescription = "姓名" )]
+        [AdvQueryAttribute(ColName = "Contact_Name",ColDesc = "联系人姓名")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Contact_Name" ,Length=50,IsNullable = true,ColumnDescription = "联系人姓名" )]
         public string Contact_Name
         { 
             get{return _Contact_Name;}
@@ -390,6 +404,20 @@ namespace RUINORERP.Model
             get{return _FirstPurchaseDate;}
             set{
             SetProperty(ref _FirstPurchaseDate, value);
+            }
+        }
+
+        private bool? _Converted= false;
+        /// <summary>
+        /// 已转化
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Converted",ColDesc = "已转化")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Converted" ,IsNullable = true,ColumnDescription = "已转化" )]
+        public bool? Converted
+        { 
+            get{return _Converted;}
+            set{
+            SetProperty(ref _Converted, value);
             }
         }
 

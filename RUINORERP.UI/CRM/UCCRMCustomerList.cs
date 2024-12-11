@@ -23,6 +23,9 @@ using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.UI.BaseForm;
+using AutoMapper;
+using RUINORERP.UI.BI;
+using RUINORERP.Business.AutoMapper;
 
 namespace RUINORERP.UI.CRM
 {
@@ -145,6 +148,45 @@ namespace RUINORERP.UI.CRM
                     }
                 }
 
+            }
+        }
+
+        private async void 转为销售客户ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (base.bindingSourceList.Current != null)
+            {
+                if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                {
+                    object frm = Activator.CreateInstance(typeof(UCCustomerVendorEdit));
+                    if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+                    {
+                        BaseEditGeneric<tb_CustomerVendor> frmaddg = frm as BaseEditGeneric<tb_CustomerVendor>;
+                        frmaddg.Text = "目标客户编辑";
+                        frmaddg.bindingSourceEdit.DataSource = new List<tb_CustomerVendor>();
+                        object obj = frmaddg.bindingSourceEdit.AddNew();
+                        tb_CustomerVendor EntityInfo = obj as tb_CustomerVendor;
+                        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                        EntityInfo = mapper.Map<tb_CustomerVendor>(sourceEntity);
+                        EntityInfo.Customer_id = sourceEntity.Customer_id;
+                        BaseEntity bty = EntityInfo as BaseEntity;
+                        bty.ActionStatus = ActionStatus.加载;
+                        BusinessHelper.Instance.EditEntity(bty);
+                        frmaddg.BindData(bty, ActionStatus.新增);
+                        if (frmaddg.ShowDialog() == DialogResult.OK)
+                        {
+                            BaseController<tb_CustomerVendor> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CustomerVendor>>(typeof(tb_CustomerVendor).Name + "Controller");
+                            ReturnResults<tb_CustomerVendor> result = await ctrContactInfo.BaseSaveOrUpdate(EntityInfo);
+                            if (result.Succeeded)
+                            {
+                                MainForm.Instance.ShowStatusText("添加成功!");
+                            }
+                            else
+                            {
+                                MainForm.Instance.ShowStatusText("添加失败!");
+                            }
+                        }
+                    }
+                }
             }
         }
     }

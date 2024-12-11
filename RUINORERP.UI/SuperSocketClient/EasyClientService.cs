@@ -488,6 +488,10 @@ namespace RUINORERP.UI.SuperSocketClient
                     OriginalData od = e.Package.od;
                     switch (msg)
                     {
+                        case ServerCmdEnum.工作流提醒推送:
+                            ClientService.接收服务器工作流的提醒消息(od);
+                            break;
+
                         case ServerCmdEnum.转发单据锁定:
                             //单个实例
                             ClientService.接收转发单据锁定(od);
@@ -549,7 +553,7 @@ namespace RUINORERP.UI.SuperSocketClient
                             #region 
                             ClientService.接收服务器弹窗消息(od);
 
-                            
+
                             #endregion
 
                             break;
@@ -612,7 +616,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
                             //尝试找到销售订单：
                             //var ss = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell.Pages.Count;
-                           
+
                             break;
                         case ServerCmdEnum.心跳回复:
                             break;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:12
+// 时间：12/11/2024 20:44:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -64,6 +64,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -78,7 +80,8 @@ namespace RUINORERP.UI
                         entity.Region_ID = Int64.Parse(txtRegion_ID.Text);
                         entity.ProvinceID = Int64.Parse(txtProvinceID.Text);
                         entity.CityID = Int64.Parse(txtCityID.Text);
-                        entity.SocialTools = txtSocialTools.Text ;
+                        entity.wwSocialTools = txtwwSocialTools.Text ;
+                       entity.SocialTools = txtSocialTools.Text ;
                        entity.Contact_Name = txtContact_Name.Text ;
                        entity.Contact_Email = txtContact_Email.Text ;
                        entity.Contact_Phone = txtContact_Phone.Text ;
@@ -95,6 +98,7 @@ namespace RUINORERP.UI
                         entity.DaysSinceLastPurchase = Int32.Parse(txtDaysSinceLastPurchase.Text);
                         entity.LastPurchaseDate = DateTime.Parse(txtLastPurchaseDate.Text);
                         entity.FirstPurchaseDate = DateTime.Parse(txtFirstPurchaseDate.Text);
+                        entity.Converted = Boolean.Parse(txtConverted.Text);
                         entity.Notes = txtNotes.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
@@ -118,12 +122,13 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_CRM_Region>(entity, k => k.Region_ID, v=>v.XXNAME, cmbRegion_ID);
           // DataBindingHelper.BindData4Cmb<tb_Provinces>(entity, k => k.ProvinceID, v=>v.XXNAME, cmbProvinceID);
           // DataBindingHelper.BindData4Cmb<tb_Cities>(entity, k => k.CityID, v=>v.XXNAME, cmbCityID);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.wwSocialTools, txtwwSocialTools, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.SocialTools, txtSocialTools, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Contact_Name, txtContact_Name, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Contact_Email, txtContact_Email, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Contact_Phone, txtContact_Phone, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerAddress, txtCustomerAddress, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_CRM_Customer>(entity, t => t.RepeatCustomer, chkRepeatCustomer, false);
+           DataBindingHelper.BindData4CheckBox<tb_CRM_Customer>(entity, t => t.RepeatCustomer, chkRepeatCustomer, false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerStatus, txtCustomerStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerTags, txtCustomerTags, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.GetCustomerSource, txtGetCustomerSource, BindDataType4TextBox.Text,false);
@@ -135,12 +140,13 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.DaysSinceLastPurchase, txtDaysSinceLastPurchase, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_CRM_Customer>(entity, t => t.LastPurchaseDate, dtpLastPurchaseDate,false);
            DataBindingHelper.BindData4DataTime<tb_CRM_Customer>(entity, t => t.FirstPurchaseDate, dtpFirstPurchaseDate,false);
+           DataBindingHelper.BindData4CheckBox<tb_CRM_Customer>(entity, t => t.Converted, chkConverted, false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_CRM_Customer>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_CRM_Customer>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_CRM_Customer>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_CRM_Customer>(entity, t => t.isdeleted, chkisdeleted, false);
 }
 
 

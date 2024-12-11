@@ -544,5 +544,39 @@ namespace RUINORERP.UI.SuperSocketClient
             }
         }
 
+
+
+        public static string 接收服务器工作流的提醒消息(OriginalData gd)
+        {
+            string Message = "";
+            try
+            {
+                int index = 0;
+                ByteBuff bg = new ByteBuff(gd.Two);
+                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
+                Message = ByteDataAnalysis.GetString(gd.Two, ref index);
+                bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                if (!MustDisplay)
+                {
+                    MainForm.Instance.PrintInfoLog(Message);
+                }
+                else
+                {
+                    TranMessage MessageInfo = new TranMessage();
+                    MessageInfo.SendTime = sendtime;
+                    //  MessageInfo.SenderID = SessionID;
+                    MessageInfo.Content = Message;
+                    MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收服务器工作流的提醒消息:" + ex.Message);
+            }
+            return Message;
+
+        }
+
     }
 }

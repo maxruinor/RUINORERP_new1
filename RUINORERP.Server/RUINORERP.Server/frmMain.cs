@@ -256,7 +256,7 @@ namespace RUINORERP.Server
 
 
             //1分钟检查一次
-            ReminderTimer = new System.Timers.Timer(60000);
+            ReminderTimer = new System.Timers.Timer(20000);
             ReminderTimer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
             {
                 if (this.InvokeRequired)
@@ -294,7 +294,7 @@ namespace RUINORERP.Server
                     {
                         //这里要判断规则，目前暂时todo 写死,提前一天启动提醒
                         //如果启动时间
-                        if (BizData.StartTime > DateTime.Now.AddDays(-1) && string.IsNullOrEmpty(BizData.WorkflowId))
+                        if (BizData.StartTime > BizData.StartTime.AddMinutes(-1) && string.IsNullOrEmpty(BizData.WorkflowId))
                         {
                             //启动
                             var workflowId = await host.StartWorkflow("ReminderWorkflow", 1, BizData);

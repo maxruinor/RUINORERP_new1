@@ -44,7 +44,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                     context =>
                     {
                         Console.WriteLine("Hello");
-                       // MessageBox.Show("开始提示前先提示一下");
+                        // MessageBox.Show("开始提示前先提示一下");
                     }
                 )
             .Input(step => step.Description, data => data.BizKey)
@@ -52,7 +52,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                 //   .Input(step => step.Password, data => data.Password)
                 //   .Output(data => data.UserId, step => step.UserId)
 
-                .Recur(data => TimeSpan.FromSeconds(5), data => data.StopRemind==false)
+                .Recur(data => TimeSpan.FromSeconds(5), data => data.StopRemind == false)
 
                   .Do(recur => recur
 
@@ -61,16 +61,16 @@ namespace RUINORERP.Server.Workflow.WFReminder
                   context =>
                   {
                       Console.WriteLine("执行提醒");
-                     // MessageBox.Show("执行提醒" + System.DateTime.Now);
+                      // MessageBox.Show("执行提醒" + System.DateTime.Now);
 
                   }
-                  ).Input(step => step.RecipientID, data => data.RecipientID)
+                  ).Input(step => step.RecipientName, data => data.Receiver)
                   .Output(step => step.StopRemind, data => data.StopRemind)
-                  .WaitFor("提醒结果", (data, context) => context.Workflow.Id, data => DateTime.Now)
+                  // .WaitFor("提醒结果", (data, context) => context.Workflow.Id, data => DateTime.Now)
                   //如果取消提醒停止
-                  .If(t => t.StopRemind == true).Do(d => d.Then<ApprovedStep>().Name("同意"))
-                  .If(t => t.StopRemind == false).Do(d => d.Then<CancelStep>().Name("驳回"))
-                  //.If(data => data.StopRemind == "完成").Do(context => _logger.LogInformation("!!完成!!!"))
+                  //.If(t => t.StopRemind == true).Do(d => d.Then<ApprovedStep>().Name("同意"))
+                  //.If(t => t.StopRemind == false).Do(d => d.Then<CancelStep>().Name("驳回"))
+                  .If(data => data.StopRemind == true).Do(context => _logger.LogInformation("提醒!!完成!!!"))
               )
               .Then(
                 context =>

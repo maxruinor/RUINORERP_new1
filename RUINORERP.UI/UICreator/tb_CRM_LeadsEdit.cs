@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:14
+// 时间：12/11/2024 20:44:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,6 +53,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -62,7 +64,8 @@ namespace RUINORERP.UI
         tb_CRM_Leads entity = new tb_CRM_Leads();
                      entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.LeadsStatus = Int32.Parse(txtLeadsStatus.Text);
-                        entity.SocialTools = txtSocialTools.Text ;
+                        entity.wwSocialTools = txtwwSocialTools.Text ;
+                       entity.SocialTools = txtSocialTools.Text ;
                        entity.CustomerName = txtCustomerName.Text ;
                        entity.GetCustomerSource = txtGetCustomerSource.Text ;
                        entity.InterestedProducts = txtInterestedProducts.Text ;
@@ -79,6 +82,7 @@ namespace RUINORERP.UI
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
                         entity.Modified_by = Int64.Parse(txtModified_by.Text);
                         entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
+                        entity.Converted = Boolean.Parse(txtConverted.Text);
                                 return entity;
 }
         */
@@ -91,6 +95,7 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
            DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.LeadsStatus, txtLeadsStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.wwSocialTools, txtwwSocialTools, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.SocialTools, txtSocialTools, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.CustomerName, txtCustomerName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.GetCustomerSource, txtGetCustomerSource, BindDataType4TextBox.Text,false);
@@ -107,7 +112,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_CRM_Leads>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Leads>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_CRM_Leads>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_CRM_Leads>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_CRM_Leads>(entity, t => t.Converted, chkConverted, false);
 }
 
 

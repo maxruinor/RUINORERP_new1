@@ -33,11 +33,16 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.添加跟进计划ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.添加跟进记录ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.转为销售客户ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
             this.kryptonHeaderGroupTop.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // frm
+            // 
+            this.frm.Location = new System.Drawing.Point(52, 52);
             // 
             // kryptonHeaderGroupTop
             // 
@@ -50,23 +55,31 @@
             this.contextMenuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.添加跟进计划ToolStripMenuItem,
-            this.添加跟进记录ToolStripMenuItem});
+            this.添加跟进记录ToolStripMenuItem,
+            this.转为销售客户ToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 70);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 92);
             // 
             // 添加跟进计划ToolStripMenuItem
             // 
             this.添加跟进计划ToolStripMenuItem.Name = "添加跟进计划ToolStripMenuItem";
-            this.添加跟进计划ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.添加跟进计划ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.添加跟进计划ToolStripMenuItem.Text = "添加跟进计划";
             this.添加跟进计划ToolStripMenuItem.Click += new System.EventHandler(this.添加跟进计划ToolStripMenuItem_Click);
             // 
             // 添加跟进记录ToolStripMenuItem
             // 
             this.添加跟进记录ToolStripMenuItem.Name = "添加跟进记录ToolStripMenuItem";
-            this.添加跟进记录ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.添加跟进记录ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.添加跟进记录ToolStripMenuItem.Text = "添加跟进记录";
             this.添加跟进记录ToolStripMenuItem.Click += new System.EventHandler(this.添加跟进记录ToolStripMenuItem_Click);
+            // 
+            // 转为销售客户ToolStripMenuItem
+            // 
+            this.转为销售客户ToolStripMenuItem.Name = "转为销售客户ToolStripMenuItem";
+            this.转为销售客户ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.转为销售客户ToolStripMenuItem.Text = "转为销售客户";
+            this.转为销售客户ToolStripMenuItem.Click += new System.EventHandler(this.转为销售客户ToolStripMenuItem_Click);
             // 
             // UCCRMCustomerList
             // 
@@ -88,5 +101,6 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem 添加跟进计划ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 添加跟进记录ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 转为销售客户ToolStripMenuItem;
     }
 }

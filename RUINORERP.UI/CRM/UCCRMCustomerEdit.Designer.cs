@@ -32,7 +32,9 @@
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.btnFastFollowUp = new Krypton.Toolkit.KryptonButton();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.lblSocialTools = new Krypton.Toolkit.KryptonLabel();
+            this.txtwwSocialTools = new Krypton.Toolkit.KryptonTextBox();
             this.txtSocialTools = new Krypton.Toolkit.KryptonTextBox();
             this.lblContact_Name = new Krypton.Toolkit.KryptonLabel();
             this.txtContact_Name = new Krypton.Toolkit.KryptonTextBox();
@@ -106,7 +108,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(140, 605);
+            this.btnOk.Location = new System.Drawing.Point(147, 605);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -115,7 +117,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(282, 605);
+            this.btnCancel.Location = new System.Drawing.Point(289, 605);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -125,7 +127,9 @@
             // kryptonPanel1
             // 
             this.kryptonPanel1.Controls.Add(this.btnFastFollowUp);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
             this.kryptonPanel1.Controls.Add(this.lblSocialTools);
+            this.kryptonPanel1.Controls.Add(this.txtwwSocialTools);
             this.kryptonPanel1.Controls.Add(this.txtSocialTools);
             this.kryptonPanel1.Controls.Add(this.lblContact_Name);
             this.kryptonPanel1.Controls.Add(this.txtContact_Name);
@@ -177,31 +181,46 @@
             // 
             // btnFastFollowUp
             // 
-            this.btnFastFollowUp.Location = new System.Drawing.Point(614, 605);
+            this.btnFastFollowUp.Location = new System.Drawing.Point(621, 605);
             this.btnFastFollowUp.Name = "btnFastFollowUp";
             this.btnFastFollowUp.Size = new System.Drawing.Size(90, 25);
             this.btnFastFollowUp.TabIndex = 175;
             this.btnFastFollowUp.Values.Text = "快速跟进";
             this.btnFastFollowUp.Click += new System.EventHandler(this.btnFastFollowUp_Click);
             // 
+            // kryptonLabel2
+            // 
+            this.kryptonLabel2.Location = new System.Drawing.Point(3, 68);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(81, 20);
+            this.kryptonLabel2.TabIndex = 153;
+            this.kryptonLabel2.Values.Text = "旺旺/IM工具";
+            // 
             // lblSocialTools
             // 
-            this.lblSocialTools.Location = new System.Drawing.Point(12, 67);
+            this.lblSocialTools.Location = new System.Drawing.Point(168, 383);
             this.lblSocialTools.Name = "lblSocialTools";
-            this.lblSocialTools.Size = new System.Drawing.Size(62, 20);
+            this.lblSocialTools.Size = new System.Drawing.Size(77, 20);
             this.lblSocialTools.TabIndex = 153;
-            this.lblSocialTools.Values.Text = "社交账号";
+            this.lblSocialTools.Values.Text = "其他IM工具";
+            // 
+            // txtwwSocialTools
+            // 
+            this.txtwwSocialTools.Location = new System.Drawing.Point(88, 65);
+            this.txtwwSocialTools.Name = "txtwwSocialTools";
+            this.txtwwSocialTools.Size = new System.Drawing.Size(172, 23);
+            this.txtwwSocialTools.TabIndex = 154;
             // 
             // txtSocialTools
             // 
-            this.txtSocialTools.Location = new System.Drawing.Point(80, 64);
+            this.txtSocialTools.Location = new System.Drawing.Point(246, 382);
             this.txtSocialTools.Name = "txtSocialTools";
-            this.txtSocialTools.Size = new System.Drawing.Size(173, 23);
+            this.txtSocialTools.Size = new System.Drawing.Size(128, 23);
             this.txtSocialTools.TabIndex = 154;
             // 
             // lblContact_Name
             // 
-            this.lblContact_Name.Location = new System.Drawing.Point(477, 38);
+            this.lblContact_Name.Location = new System.Drawing.Point(484, 38);
             this.lblContact_Name.Name = "lblContact_Name";
             this.lblContact_Name.Size = new System.Drawing.Size(75, 20);
             this.lblContact_Name.TabIndex = 155;
@@ -209,14 +228,14 @@
             // 
             // txtContact_Name
             // 
-            this.txtContact_Name.Location = new System.Drawing.Point(558, 39);
+            this.txtContact_Name.Location = new System.Drawing.Point(565, 39);
             this.txtContact_Name.Name = "txtContact_Name";
             this.txtContact_Name.Size = new System.Drawing.Size(173, 23);
             this.txtContact_Name.TabIndex = 156;
             // 
             // lblContact_Email
             // 
-            this.lblContact_Email.Location = new System.Drawing.Point(516, 69);
+            this.lblContact_Email.Location = new System.Drawing.Point(523, 69);
             this.lblContact_Email.Name = "lblContact_Email";
             this.lblContact_Email.Size = new System.Drawing.Size(36, 20);
             this.lblContact_Email.TabIndex = 157;
@@ -224,14 +243,14 @@
             // 
             // txtContact_Email
             // 
-            this.txtContact_Email.Location = new System.Drawing.Point(558, 68);
+            this.txtContact_Email.Location = new System.Drawing.Point(565, 68);
             this.txtContact_Email.Name = "txtContact_Email";
             this.txtContact_Email.Size = new System.Drawing.Size(173, 23);
             this.txtContact_Email.TabIndex = 158;
             // 
             // lblContact_Phone
             // 
-            this.lblContact_Phone.Location = new System.Drawing.Point(269, 67);
+            this.lblContact_Phone.Location = new System.Drawing.Point(276, 67);
             this.lblContact_Phone.Name = "lblContact_Phone";
             this.lblContact_Phone.Size = new System.Drawing.Size(36, 20);
             this.lblContact_Phone.TabIndex = 159;
@@ -239,14 +258,14 @@
             // 
             // txtContact_Phone
             // 
-            this.txtContact_Phone.Location = new System.Drawing.Point(311, 65);
+            this.txtContact_Phone.Location = new System.Drawing.Point(318, 65);
             this.txtContact_Phone.Name = "txtContact_Phone";
             this.txtContact_Phone.Size = new System.Drawing.Size(156, 23);
             this.txtContact_Phone.TabIndex = 160;
             // 
             // btnAddContactInfo
             // 
-            this.btnAddContactInfo.Location = new System.Drawing.Point(456, 605);
+            this.btnAddContactInfo.Location = new System.Drawing.Point(463, 605);
             this.btnAddContactInfo.Name = "btnAddContactInfo";
             this.btnAddContactInfo.Size = new System.Drawing.Size(104, 25);
             this.btnAddContactInfo.TabIndex = 152;
@@ -255,14 +274,14 @@
             // 
             // kPanelGetCustomerSource
             // 
-            this.kPanelGetCustomerSource.Location = new System.Drawing.Point(81, 292);
+            this.kPanelGetCustomerSource.Location = new System.Drawing.Point(88, 292);
             this.kPanelGetCustomerSource.Name = "kPanelGetCustomerSource";
             this.kPanelGetCustomerSource.Size = new System.Drawing.Size(650, 56);
             this.kPanelGetCustomerSource.TabIndex = 151;
             // 
             // kryptonGroupBox1
             // 
-            this.kryptonGroupBox1.Location = new System.Drawing.Point(498, 358);
+            this.kryptonGroupBox1.Location = new System.Drawing.Point(484, 358);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
             // 
             // kryptonGroupBox1.Panel
@@ -279,7 +298,7 @@
             this.kryptonGroupBox1.Panel.Controls.Add(this.txtTotalPurchaseAmount);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblTotalPurchaseAmount);
             this.kryptonGroupBox1.Panel.Controls.Add(this.txtPurchaseCount);
-            this.kryptonGroupBox1.Size = new System.Drawing.Size(282, 207);
+            this.kryptonGroupBox1.Size = new System.Drawing.Size(282, 216);
             this.kryptonGroupBox1.TabIndex = 150;
             this.kryptonGroupBox1.Values.Heading = "附加信息";
             // 
@@ -288,14 +307,14 @@
             this.cmbCustomerStatus.DropDownWidth = 100;
             this.cmbCustomerStatus.Enabled = false;
             this.cmbCustomerStatus.IntegralHeight = false;
-            this.cmbCustomerStatus.Location = new System.Drawing.Point(114, 141);
+            this.cmbCustomerStatus.Location = new System.Drawing.Point(118, 141);
             this.cmbCustomerStatus.Name = "cmbCustomerStatus";
             this.cmbCustomerStatus.Size = new System.Drawing.Size(140, 21);
             this.cmbCustomerStatus.TabIndex = 152;
             // 
             // lblPurchaseCount
             // 
-            this.lblPurchaseCount.Location = new System.Drawing.Point(50, 17);
+            this.lblPurchaseCount.Location = new System.Drawing.Point(54, 17);
             this.lblPurchaseCount.Name = "lblPurchaseCount";
             this.lblPurchaseCount.Size = new System.Drawing.Size(62, 20);
             this.lblPurchaseCount.TabIndex = 139;
@@ -304,7 +323,7 @@
             // dtpFirstPurchaseDate
             // 
             this.dtpFirstPurchaseDate.Enabled = false;
-            this.dtpFirstPurchaseDate.Location = new System.Drawing.Point(114, 114);
+            this.dtpFirstPurchaseDate.Location = new System.Drawing.Point(118, 114);
             this.dtpFirstPurchaseDate.Name = "dtpFirstPurchaseDate";
             this.dtpFirstPurchaseDate.ShowCheckBox = true;
             this.dtpFirstPurchaseDate.Size = new System.Drawing.Size(140, 21);
@@ -312,7 +331,7 @@
             // 
             // lblFirstPurchaseDate
             // 
-            this.lblFirstPurchaseDate.Location = new System.Drawing.Point(24, 117);
+            this.lblFirstPurchaseDate.Location = new System.Drawing.Point(28, 117);
             this.lblFirstPurchaseDate.Name = "lblFirstPurchaseDate";
             this.lblFirstPurchaseDate.Size = new System.Drawing.Size(88, 20);
             this.lblFirstPurchaseDate.TabIndex = 147;
@@ -321,7 +340,7 @@
             // dtpLastPurchaseDate
             // 
             this.dtpLastPurchaseDate.Enabled = false;
-            this.dtpLastPurchaseDate.Location = new System.Drawing.Point(114, 89);
+            this.dtpLastPurchaseDate.Location = new System.Drawing.Point(118, 89);
             this.dtpLastPurchaseDate.Name = "dtpLastPurchaseDate";
             this.dtpLastPurchaseDate.ShowCheckBox = true;
             this.dtpLastPurchaseDate.ShowUpDown = true;
@@ -330,7 +349,7 @@
             // 
             // lblCustomerStatus
             // 
-            this.lblCustomerStatus.Location = new System.Drawing.Point(50, 142);
+            this.lblCustomerStatus.Location = new System.Drawing.Point(54, 142);
             this.lblCustomerStatus.Name = "lblCustomerStatus";
             this.lblCustomerStatus.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerStatus.TabIndex = 129;
@@ -338,7 +357,7 @@
             // 
             // lblLastPurchaseDate
             // 
-            this.lblLastPurchaseDate.Location = new System.Drawing.Point(24, 92);
+            this.lblLastPurchaseDate.Location = new System.Drawing.Point(28, 92);
             this.lblLastPurchaseDate.Name = "lblLastPurchaseDate";
             this.lblLastPurchaseDate.Size = new System.Drawing.Size(88, 20);
             this.lblLastPurchaseDate.TabIndex = 145;
@@ -346,7 +365,7 @@
             // 
             // txtDaysSinceLastPurchase
             // 
-            this.txtDaysSinceLastPurchase.Location = new System.Drawing.Point(114, 64);
+            this.txtDaysSinceLastPurchase.Location = new System.Drawing.Point(118, 64);
             this.txtDaysSinceLastPurchase.Name = "txtDaysSinceLastPurchase";
             this.txtDaysSinceLastPurchase.ReadOnly = true;
             this.txtDaysSinceLastPurchase.Size = new System.Drawing.Size(140, 23);
@@ -354,7 +373,7 @@
             // 
             // lblDaysSinceLastPurchase
             // 
-            this.lblDaysSinceLastPurchase.Location = new System.Drawing.Point(-2, 67);
+            this.lblDaysSinceLastPurchase.Location = new System.Drawing.Point(2, 67);
             this.lblDaysSinceLastPurchase.Name = "lblDaysSinceLastPurchase";
             this.lblDaysSinceLastPurchase.Size = new System.Drawing.Size(114, 20);
             this.lblDaysSinceLastPurchase.TabIndex = 143;
@@ -362,7 +381,7 @@
             // 
             // txtTotalPurchaseAmount
             // 
-            this.txtTotalPurchaseAmount.Location = new System.Drawing.Point(114, 39);
+            this.txtTotalPurchaseAmount.Location = new System.Drawing.Point(118, 39);
             this.txtTotalPurchaseAmount.Name = "txtTotalPurchaseAmount";
             this.txtTotalPurchaseAmount.ReadOnly = true;
             this.txtTotalPurchaseAmount.Size = new System.Drawing.Size(140, 23);
@@ -370,7 +389,7 @@
             // 
             // lblTotalPurchaseAmount
             // 
-            this.lblTotalPurchaseAmount.Location = new System.Drawing.Point(50, 42);
+            this.lblTotalPurchaseAmount.Location = new System.Drawing.Point(54, 42);
             this.lblTotalPurchaseAmount.Name = "lblTotalPurchaseAmount";
             this.lblTotalPurchaseAmount.Size = new System.Drawing.Size(62, 20);
             this.lblTotalPurchaseAmount.TabIndex = 141;
@@ -378,7 +397,7 @@
             // 
             // txtPurchaseCount
             // 
-            this.txtPurchaseCount.Location = new System.Drawing.Point(114, 14);
+            this.txtPurchaseCount.Location = new System.Drawing.Point(118, 14);
             this.txtPurchaseCount.Name = "txtPurchaseCount";
             this.txtPurchaseCount.ReadOnly = true;
             this.txtPurchaseCount.Size = new System.Drawing.Size(140, 23);
@@ -391,7 +410,7 @@
             0,
             0,
             0});
-            this.txtCustomerLevel.Location = new System.Drawing.Point(81, 381);
+            this.txtCustomerLevel.Location = new System.Drawing.Point(88, 381);
             this.txtCustomerLevel.Maximum = new decimal(new int[] {
             10,
             0,
@@ -403,7 +422,7 @@
             0,
             0});
             this.txtCustomerLevel.Name = "txtCustomerLevel";
-            this.txtCustomerLevel.Size = new System.Drawing.Size(208, 22);
+            this.txtCustomerLevel.Size = new System.Drawing.Size(69, 22);
             this.txtCustomerLevel.TabIndex = 149;
             this.txtCustomerLevel.ToolTipValues.Description = "1到10，越大越高级";
             this.txtCustomerLevel.ToolTipValues.EnableToolTips = true;
@@ -415,7 +434,7 @@
             // 
             // lblCustomerTags
             // 
-            this.lblCustomerTags.Location = new System.Drawing.Point(11, 177);
+            this.lblCustomerTags.Location = new System.Drawing.Point(18, 177);
             this.lblCustomerTags.Name = "lblCustomerTags";
             this.lblCustomerTags.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerTags.TabIndex = 127;
@@ -423,7 +442,7 @@
             // 
             // txtCustomerTags
             // 
-            this.txtCustomerTags.Location = new System.Drawing.Point(80, 172);
+            this.txtCustomerTags.Location = new System.Drawing.Point(87, 172);
             this.txtCustomerTags.Multiline = true;
             this.txtCustomerTags.Name = "txtCustomerTags";
             this.txtCustomerTags.Size = new System.Drawing.Size(651, 21);
@@ -431,7 +450,7 @@
             // 
             // lblGetCustomerSource
             // 
-            this.lblGetCustomerSource.Location = new System.Drawing.Point(11, 266);
+            this.lblGetCustomerSource.Location = new System.Drawing.Point(18, 266);
             this.lblGetCustomerSource.Name = "lblGetCustomerSource";
             this.lblGetCustomerSource.Size = new System.Drawing.Size(62, 20);
             this.lblGetCustomerSource.TabIndex = 131;
@@ -439,7 +458,7 @@
             // 
             // txtGetCustomerSource
             // 
-            this.txtGetCustomerSource.Location = new System.Drawing.Point(80, 262);
+            this.txtGetCustomerSource.Location = new System.Drawing.Point(87, 262);
             this.txtGetCustomerSource.Multiline = true;
             this.txtGetCustomerSource.Name = "txtGetCustomerSource";
             this.txtGetCustomerSource.Size = new System.Drawing.Size(387, 21);
@@ -447,7 +466,7 @@
             // 
             // lblSalePlatform
             // 
-            this.lblSalePlatform.Location = new System.Drawing.Point(498, 262);
+            this.lblSalePlatform.Location = new System.Drawing.Point(503, 262);
             this.lblSalePlatform.Name = "lblSalePlatform";
             this.lblSalePlatform.Size = new System.Drawing.Size(62, 20);
             this.lblSalePlatform.TabIndex = 133;
@@ -455,14 +474,14 @@
             // 
             // txtSalePlatform
             // 
-            this.txtSalePlatform.Location = new System.Drawing.Point(558, 260);
+            this.txtSalePlatform.Location = new System.Drawing.Point(567, 260);
             this.txtSalePlatform.Name = "txtSalePlatform";
             this.txtSalePlatform.Size = new System.Drawing.Size(173, 23);
             this.txtSalePlatform.TabIndex = 134;
             // 
             // lblWebsite
             // 
-            this.lblWebsite.Location = new System.Drawing.Point(38, 358);
+            this.lblWebsite.Location = new System.Drawing.Point(45, 358);
             this.lblWebsite.Name = "lblWebsite";
             this.lblWebsite.Size = new System.Drawing.Size(36, 20);
             this.lblWebsite.TabIndex = 135;
@@ -470,7 +489,7 @@
             // 
             // txtWebsite
             // 
-            this.txtWebsite.Location = new System.Drawing.Point(81, 354);
+            this.txtWebsite.Location = new System.Drawing.Point(88, 354);
             this.txtWebsite.Multiline = true;
             this.txtWebsite.Name = "txtWebsite";
             this.txtWebsite.Size = new System.Drawing.Size(387, 21);
@@ -478,7 +497,7 @@
             // 
             // lblCustomerLevel
             // 
-            this.lblCustomerLevel.Location = new System.Drawing.Point(12, 381);
+            this.lblCustomerLevel.Location = new System.Drawing.Point(19, 381);
             this.lblCustomerLevel.Name = "lblCustomerLevel";
             this.lblCustomerLevel.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerLevel.TabIndex = 138;
@@ -486,7 +505,7 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(24, 12);
+            this.kryptonLabel1.Location = new System.Drawing.Point(31, 12);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(49, 20);
             this.kryptonLabel1.TabIndex = 109;
@@ -494,7 +513,7 @@
             // 
             // lblDepartmentID
             // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(269, 13);
+            this.lblDepartmentID.Location = new System.Drawing.Point(276, 13);
             this.lblDepartmentID.Name = "lblDepartmentID";
             this.lblDepartmentID.Size = new System.Drawing.Size(36, 20);
             this.lblDepartmentID.TabIndex = 111;
@@ -504,14 +523,14 @@
             // 
             this.cmbDepartmentID.DropDownWidth = 100;
             this.cmbDepartmentID.IntegralHeight = false;
-            this.cmbDepartmentID.Location = new System.Drawing.Point(311, 12);
+            this.cmbDepartmentID.Location = new System.Drawing.Point(318, 12);
             this.cmbDepartmentID.Name = "cmbDepartmentID";
             this.cmbDepartmentID.Size = new System.Drawing.Size(156, 21);
             this.cmbDepartmentID.TabIndex = 112;
             // 
             // lblLeadID
             // 
-            this.lblLeadID.Location = new System.Drawing.Point(516, 12);
+            this.lblLeadID.Location = new System.Drawing.Point(523, 12);
             this.lblLeadID.Name = "lblLeadID";
             this.lblLeadID.Size = new System.Drawing.Size(36, 20);
             this.lblLeadID.TabIndex = 113;
@@ -521,14 +540,15 @@
             // 
             this.cmbLeadID.DropDownWidth = 100;
             this.cmbLeadID.IntegralHeight = false;
-            this.cmbLeadID.Location = new System.Drawing.Point(558, 11);
+            this.cmbLeadID.Location = new System.Drawing.Point(565, 11);
             this.cmbLeadID.Name = "cmbLeadID";
             this.cmbLeadID.Size = new System.Drawing.Size(173, 21);
             this.cmbLeadID.TabIndex = 114;
+            this.cmbLeadID.SelectedIndexChanged += new System.EventHandler(this.cmbLeadID_SelectedIndexChanged);
             // 
             // lblRegion_ID
             // 
-            this.lblRegion_ID.Location = new System.Drawing.Point(38, 106);
+            this.lblRegion_ID.Location = new System.Drawing.Point(45, 106);
             this.lblRegion_ID.Name = "lblRegion_ID";
             this.lblRegion_ID.Size = new System.Drawing.Size(36, 20);
             this.lblRegion_ID.TabIndex = 115;
@@ -538,14 +558,14 @@
             // 
             this.cmbRegion_ID.DropDownWidth = 100;
             this.cmbRegion_ID.IntegralHeight = false;
-            this.cmbRegion_ID.Location = new System.Drawing.Point(80, 104);
+            this.cmbRegion_ID.Location = new System.Drawing.Point(87, 104);
             this.cmbRegion_ID.Name = "cmbRegion_ID";
             this.cmbRegion_ID.Size = new System.Drawing.Size(173, 21);
             this.cmbRegion_ID.TabIndex = 116;
             // 
             // lblProvinceID
             // 
-            this.lblProvinceID.Location = new System.Drawing.Point(282, 106);
+            this.lblProvinceID.Location = new System.Drawing.Point(289, 106);
             this.lblProvinceID.Name = "lblProvinceID";
             this.lblProvinceID.Size = new System.Drawing.Size(23, 20);
             this.lblProvinceID.TabIndex = 118;
@@ -555,14 +575,14 @@
             // 
             this.cmbProvinceID.DropDownWidth = 100;
             this.cmbProvinceID.IntegralHeight = false;
-            this.cmbProvinceID.Location = new System.Drawing.Point(311, 104);
+            this.cmbProvinceID.Location = new System.Drawing.Point(318, 104);
             this.cmbProvinceID.Name = "cmbProvinceID";
             this.cmbProvinceID.Size = new System.Drawing.Size(156, 21);
             this.cmbProvinceID.TabIndex = 117;
             // 
             // lblCityID
             // 
-            this.lblCityID.Location = new System.Drawing.Point(516, 105);
+            this.lblCityID.Location = new System.Drawing.Point(523, 105);
             this.lblCityID.Name = "lblCityID";
             this.lblCityID.Size = new System.Drawing.Size(36, 20);
             this.lblCityID.TabIndex = 119;
@@ -572,14 +592,14 @@
             // 
             this.cmbCityID.DropDownWidth = 100;
             this.cmbCityID.IntegralHeight = false;
-            this.cmbCityID.Location = new System.Drawing.Point(558, 104);
+            this.cmbCityID.Location = new System.Drawing.Point(565, 104);
             this.cmbCityID.Name = "cmbCityID";
             this.cmbCityID.Size = new System.Drawing.Size(173, 21);
             this.cmbCityID.TabIndex = 120;
             // 
             // lblCustomerName
             // 
-            this.lblCustomerName.Location = new System.Drawing.Point(11, 38);
+            this.lblCustomerName.Location = new System.Drawing.Point(18, 38);
             this.lblCustomerName.Name = "lblCustomerName";
             this.lblCustomerName.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerName.TabIndex = 121;
@@ -587,14 +607,14 @@
             // 
             // txtCustomerName
             // 
-            this.txtCustomerName.Location = new System.Drawing.Point(80, 38);
+            this.txtCustomerName.Location = new System.Drawing.Point(87, 38);
             this.txtCustomerName.Name = "txtCustomerName";
             this.txtCustomerName.Size = new System.Drawing.Size(387, 23);
             this.txtCustomerName.TabIndex = 122;
             // 
             // lblCustomerAddress
             // 
-            this.lblCustomerAddress.Location = new System.Drawing.Point(11, 145);
+            this.lblCustomerAddress.Location = new System.Drawing.Point(18, 145);
             this.lblCustomerAddress.Name = "lblCustomerAddress";
             this.lblCustomerAddress.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerAddress.TabIndex = 123;
@@ -602,7 +622,7 @@
             // 
             // txtCustomerAddress
             // 
-            this.txtCustomerAddress.Location = new System.Drawing.Point(80, 145);
+            this.txtCustomerAddress.Location = new System.Drawing.Point(87, 145);
             this.txtCustomerAddress.Multiline = true;
             this.txtCustomerAddress.Name = "txtCustomerAddress";
             this.txtCustomerAddress.Size = new System.Drawing.Size(651, 21);
@@ -610,7 +630,7 @@
             // 
             // lblRepeatCustomer
             // 
-            this.lblRepeatCustomer.Location = new System.Drawing.Point(375, 386);
+            this.lblRepeatCustomer.Location = new System.Drawing.Point(382, 386);
             this.lblRepeatCustomer.Name = "lblRepeatCustomer";
             this.lblRepeatCustomer.Size = new System.Drawing.Size(62, 20);
             this.lblRepeatCustomer.TabIndex = 125;
@@ -618,7 +638,7 @@
             // 
             // chkRepeatCustomer
             // 
-            this.chkRepeatCustomer.Location = new System.Drawing.Point(448, 390);
+            this.chkRepeatCustomer.Location = new System.Drawing.Point(455, 390);
             this.chkRepeatCustomer.Name = "chkRepeatCustomer";
             this.chkRepeatCustomer.Size = new System.Drawing.Size(19, 13);
             this.chkRepeatCustomer.TabIndex = 126;
@@ -626,7 +646,7 @@
             // 
             // kPanelCustomerTags
             // 
-            this.kPanelCustomerTags.Location = new System.Drawing.Point(80, 200);
+            this.kPanelCustomerTags.Location = new System.Drawing.Point(87, 200);
             this.kPanelCustomerTags.Name = "kPanelCustomerTags";
             this.kPanelCustomerTags.Size = new System.Drawing.Size(651, 56);
             this.kPanelCustomerTags.TabIndex = 108;
@@ -635,14 +655,14 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(80, 11);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(87, 11);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
             this.cmbEmployee_ID.Size = new System.Drawing.Size(173, 21);
             this.cmbEmployee_ID.TabIndex = 77;
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(37, 410);
+            this.lblNotes.Location = new System.Drawing.Point(44, 410);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 51;
@@ -650,10 +670,10 @@
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(81, 409);
+            this.txtNotes.Location = new System.Drawing.Point(88, 409);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(397, 124);
+            this.txtNotes.Size = new System.Drawing.Size(386, 165);
             this.txtNotes.TabIndex = 52;
             // 
             // UCCRMCustomerEdit
@@ -746,5 +766,7 @@
         private Krypton.Toolkit.KryptonLabel lblContact_Phone;
         private Krypton.Toolkit.KryptonTextBox txtContact_Phone;
         private Krypton.Toolkit.KryptonButton btnFastFollowUp;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel2;
+        private Krypton.Toolkit.KryptonTextBox txtwwSocialTools;
     }
 }

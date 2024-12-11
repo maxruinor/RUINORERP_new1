@@ -15,10 +15,12 @@ namespace RUINORERP.Server.Workflow.WFReminder
     /// </summary>
     public class ReminderTask : StepBody
     {
+
+        public ReminderBizData BizData { get; set; }
         /// <summary>
         /// 接收人ID
         /// </summary>
-        public long RecipientID { get; set; }
+        public string RecipientName { get; set; }
 
         public int RemindCount { get; set; } = 1;
 
@@ -37,28 +39,48 @@ namespace RUINORERP.Server.Workflow.WFReminder
             //服务器收到客户端基础信息变更分布
             //回推
             //WorkflowServiceSender.通知工作流启动成功(UserSession, workflowid);
-            foreach (var item in frmMain.Instance.sessionListBiz)
+            ReminderBizData exData = null;
+            //检测收到的信息
+            frmMain.Instance.ReminderBizDataList.TryGetValue(BizData.BizID, out exData);
+            if (exData.StopRemind == true)
             {
-                try
-                {
-                    OriginalData exMsg = new OriginalData();
-                    exMsg.cmd = (byte)ServerCmdEnum.工作流数据推送;
-                    exMsg.One = null;
-                    //这种可以写一个扩展方法
-                    ByteBuff tx = new ByteBuff(100);
-                    tx.PushString(System.DateTime.Now.ToString());
-                    tx.PushString(TagetTableName);
-                    tx.PushString("给客户端发提示消息测试！分发测试" + TagetTableName.ToString());
-                    exMsg.Two = tx.toByte();
-                    item.Value.AddSendData(exMsg);
-                    frmMain.Instance.PrintInfoLog("工作流数据推送");
-                }
-                catch (Exception ex)
-                {
-                    frmMain.Instance.PrintInfoLog("服务器收到客户端基础信息变更分布失败:" + item.Value.User.用户名 + ex.Message);
-                }
-
+                StopRemind = true;
             }
+            else
+            {
+                foreach (var item in frmMain.Instance.sessionListBiz)
+                {
+                    if (exData.Receiver == item.Value.User.用户名)
+                    {
+                        try
+                        {
+                            OriginalData exMsg = new OriginalData();
+                            exMsg.cmd = (byte)ServerCmdEnum.工作流提醒推送;
+                            exMsg.One = null;
+                            //这种可以写一个扩展方法
+                            ByteBuff tx = new ByteBuff(100);
+                            tx.PushString(System.DateTime.Now.ToString());
+                            tx.PushString(item.Value.SessionID);
+                            tx.PushString(exData.ReminderContent);
+                            tx.PushBool(true);//是否强制弹窗
+                            exMsg.Two = tx.toByte();
+                            item.Value.AddSendData(exMsg);
+                            frmMain.Instance.PrintInfoLog("工作流数据推送");
+                        }
+                        catch (Exception ex)
+                        {
+                            frmMain.Instance.PrintInfoLog("服务器收到客户端基础信息变更分布失败:" + item.Value.User.用户名 + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+
+                }
+            }
+
             return ExecutionResult.Next();
         }
     }

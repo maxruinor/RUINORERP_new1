@@ -3793,8 +3793,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="AM\" />
-    <Folder Include="AutoMapper\" />
-    <Folder Include="BaseUControls\" />
     <Folder Include="IMResources\Icons\" />
     <Folder Include="IMResources\Images\" />
     <Folder Include="MRP\RR\" />

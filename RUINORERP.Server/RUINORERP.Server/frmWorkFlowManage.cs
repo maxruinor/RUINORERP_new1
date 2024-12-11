@@ -166,10 +166,8 @@ namespace RUINORERP.Server
         {
             //启动提醒工作流
             ReminderBizData data = new ReminderBizData();
-            data.RemindCount = 1;
             data.StartTime = System.DateTime.Now;
             data.BizKey = "华哥";
-            data.RecipientID = 1688;
             //var workflowId = Program.WorkflowHost.StartWorkflow("PushBaseInfoWorkflow", data);
             //MessageBox.Show("start push：" + workflowId);
 

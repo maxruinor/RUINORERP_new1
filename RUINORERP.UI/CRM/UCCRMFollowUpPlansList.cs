@@ -25,6 +25,10 @@ using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.Global;
 using NPOI.SS.Formula.Functions;
 using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.SuperSocketClient;
+using RUINORERP.UI.SysConfig;
+using TransInstruction;
+using AutoUpdateTools;
 
 namespace RUINORERP.UI.CRM
 {
@@ -69,6 +73,21 @@ namespace RUINORERP.UI.CRM
             base.dataGridView1.ContextMenuStrip = contextMenuStrip1;
         }
 
+        public override async Task<List<tb_CRM_FollowUpPlans>> Save()
+        {
+            List<tb_CRM_FollowUpPlans> list = await base.Save();
+            if (list.Count > 0)
+            {
+                foreach (var item in list)
+                {
+                    //向服务器推送工作流提醒的列表 typeof(T).Name
+                    OriginalData beatDataDel = ClientDataBuilder.WFReminderBizDataBuilder(item.PlanID, MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName, item.PlanStartDate, typeof(T).Name);
+                    MainForm.Instance.ecs.AddSendData(beatDataDel);
+                }
+
+            }
+            return list;
+        }
         private async void 添加跟进记录ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (base.bindingSourceList.Current != null)

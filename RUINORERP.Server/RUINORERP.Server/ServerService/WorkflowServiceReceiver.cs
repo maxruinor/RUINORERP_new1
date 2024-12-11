@@ -12,6 +12,8 @@ using TransInstruction.DataPortal;
 using RUINORERP.Global;
 using RUINORERP.Server.Workflow.WFPush;
 using RUINORERP.Server.BizService;
+using RUINORERP.Server.Workflow.WFReminder;
+using System.Collections;
 
 namespace RUINORERP.Server.ServerService
 {
@@ -157,6 +159,39 @@ namespace RUINORERP.Server.ServerService
         }
 
 
+        public static bool 接收工作流提醒添加(SessionforBiz UserSession, OriginalData gd)
+        {
+            bool rs = false;
+            try
+            {
+                int index = 0;
+                //当前
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                long billID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+                int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
+                string Receiver = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string ReminderContent = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string StartTime = ByteDataAnalysis.GetString(gd.Two, ref index);
+                ReminderBizData reminderBizData = new ReminderBizData();
+                reminderBizData.BizID = billID;
+                reminderBizData.BizType = BizType;
+                reminderBizData.Receiver = Receiver;
+                reminderBizData.ReminderContent = ReminderContent;
+                reminderBizData.StartTime = Convert.ToDateTime(StartTime);
+                //将来的才提醒。过去了就不管一
+                if (reminderBizData.StartTime > System.DateTime.Now)
+                {
+                    frmMain.Instance.ReminderBizDataList.AddOrUpdate(billID, reminderBizData, (key, value) => value);
+                }
+                
+
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("接收工作流提醒添加:" + ex.Message);
+            }
+            return rs;
+        }
         /// <summary>
         /// 根据客户端传过来的数据来启动哪种类型的工作流，再回推
         /// </summary>

@@ -21,6 +21,8 @@ namespace RUINORERP.Server.Workflow.WFReminder
         public long RecipientID { get; set; }
 
         public int RemindCount { get; set; } = 1;
+
+        public bool StopRemind { get; set; } = false;
         /// <summary>
         /// 提醒的消息
         /// </summary>

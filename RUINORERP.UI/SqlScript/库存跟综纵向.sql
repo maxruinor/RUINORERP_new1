@@ -28,6 +28,9 @@ union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'采购退回' as 业务类型,PurEntryNo as 单据编号 , pc.Location_ID as 库位,  -pc.Quantity as 数量 ,ReturnDate as 日期 from  tb_PurEntryRe pm LEFT JOIN tb_PurEntryReDetail pc on pm.PurEntryRe_ID=pc.PurEntryRe_ID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=pc.ProdDetailID and vp.Location_ID=pc.Location_ID 
 WHERE (pm.DataStatus=4 or pm.DataStatus=8)  and pc.Location_ID=@Location_ID  and pc.ProdDetailID=@ProdDetailID
 union ALL
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'采购退回入库' as 业务类型,PurReEntryNo as 单据编号 , pc.Location_ID as 库位,  -pc.Quantity as 数量 ,BillDate as 日期 from  tb_PurReturnEntry pm LEFT JOIN tb_PurReturnEntryDetail pc on pm.PurReEntry_ID=pc.PurReEntry_ID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=pc.ProdDetailID and vp.Location_ID=pc.Location_ID 
+WHERE (pm.DataStatus=4 or pm.DataStatus=8)  and pc.Location_ID=@Location_ID  and pc.ProdDetailID=@ProdDetailID
+union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'销售出库' as 业务类型 ,SaleOutNo as 单据编号, sc.Location_ID as 库位,  -sc.Quantity as 数量 ,OutDate as 日期 from  tb_SaleOut sm LEFT JOIN tb_SaleOutDetail sc on sm.SaleOut_MainID=sc.SaleOut_MainID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID
  WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
 union ALL
@@ -64,11 +67,23 @@ UNION ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'组合单加' as 业务类型,MergeNo as 单据编号 , sm.Location_ID as 库位,  MergeTargetQty as 数量 ,MergeDate as 日期 from tb_ProdMerge sm INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sm.ProdDetailID and vp.Location_ID=sm.Location_ID 
 WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sm.Location_ID=@Location_ID  and sm.ProdDetailID=@ProdDetailID
 union ALL
-SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'分割单' as 业务类型,SplitNo as 单据编号 , sc.Location_ID as 库位,  sc.Qty as 数量 ,SplitDate as 日期 from tb_ProdSplit sm LEFT JOIN tb_ProdSplitDetail sc on sm.SplitID=sc.SplitID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'分割单加' as 业务类型,SplitNo as 单据编号 , sc.Location_ID as 库位,  sc.Qty as 数量 ,SplitDate as 日期 from tb_ProdSplit sm LEFT JOIN tb_ProdSplitDetail sc on sm.SplitID=sc.SplitID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
 WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
 union ALL
-SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'分割单' as 业务类型,SplitNo as 单据编号 , sm.Location_ID as 库位,  -SplitParentQty as 数量 ,SplitDate as 日期 from tb_ProdSplit sm INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sm.ProdDetailID and vp.Location_ID=sm.Location_ID 
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'分割单减' as 业务类型,SplitNo as 单据编号 , sm.Location_ID as 库位,  -SplitParentQty as 数量 ,SplitDate as 日期 from tb_ProdSplit sm INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sm.ProdDetailID and vp.Location_ID=sm.Location_ID 
 WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sm.Location_ID=@Location_ID  and sm.ProdDetailID=@ProdDetailID
+union ALL
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'调拨出库' as 业务类型,StockTransferNo as 单据编号 , sm.Location_ID_from as 库位,  -Qty as 数量 ,Transfer_date as 日期 from tb_StockTransfer sm LEFT JOIN tb_StockTransferDetail sc on sm.StockTransferID=sc.StockTransferID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sm.Location_ID_from 
+WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sm.Location_ID_from=@Location_ID  and sc.ProdDetailID=@ProdDetailID
+UNION ALL
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'调拨入库' as 业务类型,StockTransferNo as 单据编号 , sm.Location_ID_to as 库位,  Qty as 数量 ,Transfer_date as 日期 from tb_StockTransfer sm LEFT JOIN tb_StockTransferDetail sc on sm.StockTransferID=sc.StockTransferID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sm.Location_ID_to 
+WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sm.Location_ID_to=@Location_ID  and sc.ProdDetailID=@ProdDetailID
+union ALL
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'转换单减' as 业务类型,ConversionNo as 单据编号 , sm.Location_ID as 库位,  -ConversionQty as 数量 ,ConversionDate as 日期 from tb_ProdConversion sm LEFT JOIN tb_ProdConversionDetail sc on sm.ConversionID=sc.ConversionID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID_from and vp.Location_ID=sm.Location_ID
+WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sm.Location_ID=@Location_ID  and sc.ProdDetailID_from=@ProdDetailID
+UNION ALL
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'转换单加' as 业务类型,ConversionNo as 单据编号 , sm.Location_ID as 库位,  ConversionQty as 数量 ,ConversionDate as 日期 from tb_ProdConversion sm LEFT JOIN tb_ProdConversionDetail sc on sm.ConversionID=sc.ConversionID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID_to and vp.Location_ID=sm.Location_ID 
+WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sm.Location_ID=@Location_ID  and sc.ProdDetailID_to=@ProdDetailID
 union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'缴库' as 业务类型,DeliveryBillNo as 单据编号 , sc.Location_ID as 库位,  Qty as 数量 ,DeliveryDate as 日期 from tb_FinishedGoodsInv sm LEFT JOIN tb_FinishedGoodsInvDetail sc on sm.FG_ID=sc.FG_ID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
 WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID

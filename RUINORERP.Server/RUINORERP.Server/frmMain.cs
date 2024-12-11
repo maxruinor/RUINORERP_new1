@@ -25,6 +25,7 @@ using RUINORERP.Server.Comm;
 using RUINORERP.Server.Commands;
 using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
+using RUINORERP.Server.Workflow.WFReminder;
 using SuperSocket;
 using SuperSocket.Command;
 using SuperSocket.ProtoBase;
@@ -50,7 +51,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TransInstruction;
+using WorkflowCore.Interface;
 using WorkflowCore.Primitives;
+using WorkflowCore.Services;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace RUINORERP.Server
@@ -66,6 +70,9 @@ namespace RUINORERP.Server
         // public ConcurrentDictionary<string, CacheInfo> CacheInfoList = new ConcurrentDictionary<string, CacheInfo>();
         //MyCacheManager Cache 代替上面的集合
 
+
+        //保存系统所有提醒的业务数据配置,系统每分钟检测。
+        public ConcurrentDictionary<long, ReminderBizData> ReminderBizDataList = new ConcurrentDictionary<long, ReminderBizData>();
 
         /// <summary>
         /// 保存启动的工作流队列 2023-11-18
@@ -88,12 +95,15 @@ namespace RUINORERP.Server
         {
             get { return _main; }
         }
-        public frmMain(ILogger<frmMain> logger)
+
+        IWorkflowHost host;
+        public frmMain(ILogger<frmMain> logger, IWorkflowHost workflowHost)
         {
             InitializeComponent();
             _main = this;
             _logger = logger;
             _services = Startup.Services;
+            host = workflowHost;
 
             //ILoggerFactory loggerFactory = LoggerFactory.Create(logbuilder => logbuilder
             // .AddFilter("Microsoft", LogLevel.Debug)
@@ -200,6 +210,8 @@ namespace RUINORERP.Server
         bool ServerStart = false;
         static System.Timers.Timer timer = null;
 
+        static System.Timers.Timer ReminderTimer = null;
+
         frmUserManage frmusermange = Startup.GetFromFac<frmUserManage>();
 
         private async void frmMain_Load(object sender, EventArgs e)
@@ -225,7 +237,7 @@ namespace RUINORERP.Server
             await InitConfig(false);
 
             MyCacheManager.Instance.CacheEntityList.OnRemove += CacheEntityList_OnRemove;
-            //10分钟检查一次
+            //1分钟检查一次
             timer = new System.Timers.Timer(60000);
             timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
             {
@@ -241,13 +253,73 @@ namespace RUINORERP.Server
             timer.Enabled = true;
             timer.Start();
 
+
+
+            //1分钟检查一次
+            ReminderTimer = new System.Timers.Timer(60000);
+            ReminderTimer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
+            {
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new MethodInvoker(() => CheckReminderBizDataList()));
+                }
+                else
+                {
+                    CheckReminderBizDataList();
+                }
+            });
+            ReminderTimer.Enabled = true;
+            ReminderTimer.Start();
+
+
             // 每120秒（120000毫秒）执行一次检查
             System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1200);
-
         }
 
         private void CacheEntityList_OnRemove(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
         {
+
+        }
+
+
+        private async void CheckReminderBizDataList()
+        {
+            #region 根据ReminderBizDataList检查各种提醒的业务是不是要启动工作流了。
+            try
+            {
+                foreach (var item in ReminderBizDataList)
+                {
+                    ReminderBizData BizData = item.Value;
+                    if (BizData != null)
+                    {
+                        //这里要判断规则，目前暂时todo 写死,提前一天启动提醒
+                        //如果启动时间
+                        if (BizData.StartTime > DateTime.Now.AddDays(-1) && string.IsNullOrEmpty(BizData.WorkflowId))
+                        {
+                            //启动
+                            var workflowId = await host.StartWorkflow("ReminderWorkflow", 1, BizData);
+                            BizData.WorkflowId = workflowId;
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintInfoLog($"启动{BizData.BizType} ，成功启动提醒工作流{workflowId}。");
+                            }
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (frmMain.Instance.IsDebug)
+                        {
+                            frmMain.Instance.PrintInfoLog($"提醒业务数据为空：{item.Key}。");
+                        }
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                frmMain.Instance.PrintInfoLog($"根据CheckReminderBizDataList检测数据启动工作流时出错：{exc.Message} ");
+            }
+            #endregion
 
         }
 
@@ -256,7 +328,7 @@ namespace RUINORERP.Server
             #region 根据CacheInfoList检查更新过期的缓存。
             try
             {
-                
+
                 foreach (var item in BizCacheHelper.Manager.NewTableList)
                 {
                     CacheInfo cacheInfo = MyCacheManager.Instance.CacheInfoList.Get(item.Key) as CacheInfo;

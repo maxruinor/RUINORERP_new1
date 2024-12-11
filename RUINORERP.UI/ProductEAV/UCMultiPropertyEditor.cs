@@ -24,7 +24,7 @@ using RUINORERP.Common.Extensions;
 using FastReport.DevComponents.DotNetBar.Controls;
 using RUINOR.WinFormsUI.TileListView;
 using RUINOR.WinFormsUI;
- 
+
 using System.Security.Cryptography;
 using SiteRules.aliexpress;
 using static OfficeOpenXml.ExcelErrorValue;
@@ -37,6 +37,7 @@ using RUINORERP.Common.Helper;
 using ObjectsComparer;
 using System.Collections;
 using Force.DeepCloner;
+using AutoUpdateTools;
 namespace RUINORERP.UI.ProductEAV
 {
 
@@ -1495,6 +1496,7 @@ namespace RUINORERP.UI.ProductEAV
             #region 判断是否有重复的属性值。将属性值添加到列表，按一定规则排序，然后判断是否有重复
 
             List<string> DuplicateAttributes = new List<string>();
+            string sortedDaString = string.Empty;
             foreach (var item in existDetails)
             {
                 // da 是一个 string 数组
@@ -1508,11 +1510,12 @@ namespace RUINORERP.UI.ProductEAV
                 List<string> sortedDa = da.OrderBy(x => x).ToList();
 
                 // 将排序后的列表转换为字符串
-                string sortedDaString = string.Join(", ", sortedDa);
+                sortedDaString = string.Join(", ", sortedDa);
 
                 // 添加到 DuplicateAttributes 集合中
                 DuplicateAttributes.Add(sortedDaString);
             }
+
             // 找出 DuplicateAttributes 中的重复值
             var duplicates = DuplicateAttributes
                 .GroupBy(s => s)
@@ -1723,7 +1726,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void 删除属性值ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            MessageBox.Show("该功能暂时没有实现。");
         }
 
         private async void 删除SKU明细toolStripMenuItem_Click(object sender, EventArgs e)
@@ -1750,11 +1753,14 @@ namespace RUINORERP.UI.ProductEAV
                                         .ExecuteCommandAsync(); ;
                                     if (counter)
                                     {
+                                        //如果有外键引用了。会出错。这里删除没有问题。
                                         //刷新
+                                        LoadProdDetail();
+                                        MainForm.Instance.ShowStatusText("删除SKU明细成功。");
                                     }
                                 }
                             }
-                            LoadProdDetail();
+
                         }
                     }
                 }

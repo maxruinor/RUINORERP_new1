@@ -288,10 +288,11 @@
             // 
             this.kryptonHeaderGroup2.Panel.Controls.Add(this.grid1);
             this.kryptonHeaderGroup2.Size = new System.Drawing.Size(1133, 533);
+            this.kryptonHeaderGroup2.StateNormal.HeaderPrimary.Content.LongText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
             this.kryptonHeaderGroup2.TabIndex = 111;
-            this.kryptonHeaderGroup2.ValuesPrimary.Description = "来源产品库存减少转换数量;目标产品库存将增加转换数量。";
             this.kryptonHeaderGroup2.ValuesPrimary.Heading = "";
             this.kryptonHeaderGroup2.ValuesPrimary.Image = null;
+            this.kryptonHeaderGroup2.ValuesSecondary.Heading = "来源产品库存减少转换数量;目标产品库存将增加转换数量。";
             // 
             // buttonSpecHeaderGroup2
             // 
@@ -307,7 +308,7 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1131, 486);
+            this.grid1.Size = new System.Drawing.Size(1131, 492);
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";

@@ -116,6 +116,7 @@ namespace RUINORERP.UI.PSI.INV
         {
             { "采购入库", "tb_PurEntry" },
             { "采购退回", "tb_PurEntryRe" },
+            { "采购退回入库", "tb_PurReturnEntry" },
             { "销售出库", "tb_SaleOut" },
             { "销售退回", "tb_SaleOutRe" },
             { "退货翻新领用", "tb_SaleOutReRefurbishedMaterials" },
@@ -126,9 +127,14 @@ namespace RUINORERP.UI.PSI.INV
             { "库存盘点", "tb_Stocktake" },
             { "领料单", "tb_MaterialRequisition" },
             { "退料单", "tb_MaterialReturn" },
-            { "分割单", "tb_ProdSplit" },
+            { "分割单加", "tb_ProdSplit" },
+            { "分割单减", "tb_ProdSplit" },
             { "组合单加", "tb_ProdMerge" },
             { "组合单减", "tb_ProdMerge" },
+            { "调拨入库", "tb_StockTransfer" },
+            { "调拨出库", "tb_StockTransfer" },
+            { "转换单减", "tb_ProdConversion" },
+            { "转换单加", "tb_ProdConversion" },
             { "缴库", "tb_FinishedGoodsInv" }
         };//还要添加调拨单 转换单，采购退回及采购退回入库。后面还要实现的返厂入库，返厂出库，返厂退回，返厂退回入库，返厂领用，返厂领用退回，返
             foreach (KeyValuePair<string, string> item in mappings)

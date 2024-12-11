@@ -587,6 +587,76 @@ namespace RUINORERP.UI.SysConfig
 
                 }
 
+                if (treeView1.SelectedNode.Text == "属性重复的SKU检测")
+                {
+                    //思路是将属性全查出来。将属性按规则排序后比较
+
+                    #region 判断是否有重复的属性值。将属性值添加到列表，按一定规则排序，然后判断是否有重复
+
+                    List<tb_Prod_Attr_Relation> attr_Relations = MainForm.Instance.AppContext.Db.Queryable<tb_Prod_Attr_Relation>()
+                        .IncludesAllFirstLayer()
+                        .Where(c => c.PropertyValueID.HasValue && c.Property_ID.HasValue)
+                        .ToList();
+                    //首先将这些数据按品分组
+
+                    //先找到主产品
+                    var prodIDs = attr_Relations.GroupBy(c => c.ProdBaseID).Select(c => c.Key).ToList();
+                    foreach (var prodID in prodIDs)
+                    {
+                        #region
+                        List<string> DuplicateAttributes = new List<string>();
+                        //根据主产品找到SKU详情
+                        var prodDetai = attr_Relations.Where(c => c.ProdBaseID.Value == prodID).GroupBy(c => c.ProdDetailID).Select(c => c.Key).ToList();
+
+                        //根据详情找到对应的所有属性值
+                        foreach (var detail in prodDetai)
+                        {
+                            #region 找组合值 按一个顺序串起来加到一个集合再去比较重复
+                            string sortedDaString = string.Empty;
+                            foreach (var item in attr_Relations.Where(c => c.ProdDetailID.Value == detail))
+                            {
+                                // da 是一个 string 数组
+                                string[] da = attr_Relations
+                                .Where(c => c.ProdDetailID == item.ProdDetailID)
+                                .ToList()
+                                .Select(c => c.tb_prodpropertyvalue.PropertyValueName)
+                                .ToArray();
+                                // 将 da 转换为排序后的列表
+                                List<string> sortedDa = da.OrderBy(x => x).ToList();
+
+                                // 将排序后的列表转换为字符串
+                                sortedDaString = string.Join(", ", sortedDa);
+                            }
+                            // 添加到 DuplicateAttributes 集合中
+                            DuplicateAttributes.Add(sortedDaString);
+                            #endregion
+                        }
+
+                        //这里是这个产品下面的所有SKU对应的属性值的,串起来的集合数量等于SKU的个数
+                        // 找出 DuplicateAttributes 中的重复值
+                        var duplicates = DuplicateAttributes
+                            .GroupBy(s => s)
+                            .Where(g => g.Count() > 1)
+                            .Select(g => g.Key)
+                            .ToList();
+
+                        if (duplicates.Count > 0)
+                        {
+                            // 输出重复的值
+                            foreach (var dup in duplicates)
+                            {
+                                richTextBoxLog.AppendText($"产品ID：{prodID}中的属性值重复:" + dup + "\r\n");
+                            }
+                        }
+                        #endregion
+
+                    }
+
+                    #endregion
+
+                }
+
+
                 if (treeView1.SelectedNode.Text == "生产计划数量修复")
                 {
 
@@ -742,7 +812,7 @@ namespace RUINORERP.UI.SysConfig
                                 if (!chkTestMode.Checked)
                                 {
                                     var prddetail = ManufacturingOrder.tb_productiondemand.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == ManufacturingOrder.ProdDetailID);
-                                    if (prddetail==null)
+                                    if (prddetail == null)
                                     {
                                         continue;
                                     }

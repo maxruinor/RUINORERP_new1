@@ -165,7 +165,7 @@ namespace RUINORERP.Server
         private async void btnStartReminderWF_Click(object sender, EventArgs e)
         {
             //启动提醒工作流
-            ReminderData data = new ReminderData();
+            ReminderBizData data = new ReminderBizData();
             data.RemindCount = 1;
             data.StartTime = System.DateTime.Now;
             data.BizKey = "华哥";

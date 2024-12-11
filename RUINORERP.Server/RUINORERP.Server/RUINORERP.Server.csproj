@@ -28,6 +28,7 @@
     <Compile Remove="Workflow\WFApproval\BillApprovalWorkflow.cs" />
     <Compile Remove="Workflow\WFApproval\WorkflowWithTimedPusher.cs" />
     <Compile Remove="Workflow\WFPush\GetBaseInfo.cs" />
+    <Compile Remove="Workflow\WFReminder\ReminderData.cs" />
   </ItemGroup>
 
   <ItemGroup>

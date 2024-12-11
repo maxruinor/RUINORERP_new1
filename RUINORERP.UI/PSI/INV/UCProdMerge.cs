@@ -48,9 +48,9 @@ namespace RUINORERP.UI.PSI.INV
         public UCProdMerge()
         {
             InitializeComponent();
-   
+
         }
-    
+
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;
@@ -219,7 +219,7 @@ namespace RUINORERP.UI.PSI.INV
                     }
 
 
-                    
+
                     if (entity.ProdDetailID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProdMerge>(c => c.ProdDetailID))
                     {
 
@@ -807,6 +807,16 @@ namespace RUINORERP.UI.PSI.INV
             LoadItemsFromBOM();
         }
 
-
+        private void chkNoBom_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkNoBom.Checked)
+            {
+                EditEntity.BOM_ID = null;
+            }
+            else
+            {
+                EditEntity.BOM_ID = -1;
+            }
+        }
     }
 }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/15/2024 18:45:37
+// 时间：10/10/2024 14:15:54
 // **************************************
 using System;
 using SqlSugar;
@@ -19,19 +19,15 @@ using FluentValidation;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 调拨单-两个仓库之间的库存转移验证类
+    /// 产品转换单明细验证类
     /// </summary>
-    /*public partial class tb_StockTransferValidator:AbstractValidator<tb_StockTransfer>*/
-    public partial class tb_StockTransferValidator : BaseValidatorGeneric<tb_StockTransfer>
+    /*public partial class tb_ProdConversionDetailValidator:AbstractValidator<tb_ProdConversionDetail>*/
+    public partial class tb_ProdConversionDetailValidator : BaseValidatorGeneric<tb_ProdConversionDetail>
     {
         public override void Initialize()
         {
-            // 这里添加额外的初始化代码
-            RuleFor(tb_StockTransfer => tb_StockTransfer.Location_ID_from).Must(CheckForeignKeyValue).WithMessage("调出仓库:下拉选择值不正确。");
-            RuleFor(tb_StockTransfer => tb_StockTransfer.Location_ID_to).Must(CheckForeignKeyValue).WithMessage("调入仓库:下拉选择值不正确。");
-             
+            RuleFor(x => x.ConversionQty).GreaterThan(0).WithMessage("转换数量:值要大于零。");
         }
-
     }
 
 }

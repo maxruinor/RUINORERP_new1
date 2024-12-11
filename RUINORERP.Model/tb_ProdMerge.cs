@@ -194,12 +194,12 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _BOM_ID;
+        private long? _BOM_ID=null;
         /// <summary>
-        /// 拆分配方
+        /// 组合配方
         /// </summary>
-        [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "拆分配方")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "拆分配方" )]
+        [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "组合配方")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "组合配方")]
         [FKRelationAttribute("tb_BOM_S","BOM_ID")]
         public long? BOM_ID
         { 

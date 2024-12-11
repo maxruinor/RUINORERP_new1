@@ -93,7 +93,7 @@ namespace RUINORERP.Server.Workflow
             host.RegisterWorkflow<ScheduledlWorkflow, ApprovalWFData>();
             host.RegisterWorkflow<ApprovalWorkflow, ApprovalWFData>();
 
-            host.RegisterWorkflow<ReminderWorkflow, ReminderData>();
+            host.RegisterWorkflow<ReminderWorkflow, ReminderBizData>();
 
             host.RegisterWorkflow<WFPush.PushBaseInfoWorkflow, PushData>();
 

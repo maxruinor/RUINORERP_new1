@@ -63,6 +63,7 @@
             this.grid1 = new SourceGrid.Grid();
             this.txtMergeSourceTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.lblMergeSourceTotalQty = new Krypton.Toolkit.KryptonLabel();
+            this.chkNoBom = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -92,6 +93,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkNoBom);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblSpecifications);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblproperty);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel2);
@@ -132,7 +134,7 @@
             // 
             // lblSpecifications
             // 
-            this.lblSpecifications.Location = new System.Drawing.Point(319, 46);
+            this.lblSpecifications.Location = new System.Drawing.Point(346, 47);
             this.lblSpecifications.Name = "lblSpecifications";
             this.lblSpecifications.Size = new System.Drawing.Size(62, 20);
             this.lblSpecifications.TabIndex = 173;
@@ -140,7 +142,7 @@
             // 
             // lblproperty
             // 
-            this.lblproperty.Location = new System.Drawing.Point(319, 72);
+            this.lblproperty.Location = new System.Drawing.Point(346, 73);
             this.lblproperty.Name = "lblproperty";
             this.lblproperty.Size = new System.Drawing.Size(62, 20);
             this.lblproperty.TabIndex = 174;
@@ -148,7 +150,7 @@
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(319, 96);
+            this.kryptonLabel2.Location = new System.Drawing.Point(346, 97);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel2.TabIndex = 171;
@@ -156,7 +158,7 @@
             // 
             // txtType
             // 
-            this.txtType.Location = new System.Drawing.Point(384, 95);
+            this.txtType.Location = new System.Drawing.Point(411, 96);
             this.txtType.Multiline = true;
             this.txtType.Name = "txtType";
             this.txtType.ReadOnly = true;
@@ -169,7 +171,7 @@
             this.lblBOM_ID.Name = "lblBOM_ID";
             this.lblBOM_ID.Size = new System.Drawing.Size(62, 20);
             this.lblBOM_ID.TabIndex = 165;
-            this.lblBOM_ID.Values.Text = "拆分配方";
+            this.lblBOM_ID.Values.Text = "组合配方";
             // 
             // cmbBOM_ID
             // 
@@ -264,7 +266,7 @@
             // 
             // lblMergeTargetQty
             // 
-            this.lblMergeTargetQty.Location = new System.Drawing.Point(318, 122);
+            this.lblMergeTargetQty.Location = new System.Drawing.Point(345, 123);
             this.lblMergeTargetQty.Name = "lblMergeTargetQty";
             this.lblMergeTargetQty.Size = new System.Drawing.Size(62, 20);
             this.lblMergeTargetQty.TabIndex = 147;
@@ -272,21 +274,21 @@
             // 
             // txtMergeTargetQty
             // 
-            this.txtMergeTargetQty.Location = new System.Drawing.Point(384, 122);
+            this.txtMergeTargetQty.Location = new System.Drawing.Point(411, 123);
             this.txtMergeTargetQty.Name = "txtMergeTargetQty";
             this.txtMergeTargetQty.Size = new System.Drawing.Size(152, 23);
             this.txtMergeTargetQty.TabIndex = 148;
             // 
             // txtSpecifications
             // 
-            this.txtSpecifications.Location = new System.Drawing.Point(384, 42);
+            this.txtSpecifications.Location = new System.Drawing.Point(411, 43);
             this.txtSpecifications.Name = "txtSpecifications";
             this.txtSpecifications.Size = new System.Drawing.Size(152, 23);
             this.txtSpecifications.TabIndex = 152;
             // 
             // txtproperty
             // 
-            this.txtproperty.Location = new System.Drawing.Point(384, 69);
+            this.txtproperty.Location = new System.Drawing.Point(411, 70);
             this.txtproperty.Multiline = true;
             this.txtproperty.Name = "txtproperty";
             this.txtproperty.Size = new System.Drawing.Size(152, 21);
@@ -430,6 +432,15 @@
             this.lblMergeSourceTotalQty.TabIndex = 149;
             this.lblMergeSourceTotalQty.Values.Text = "子件总数量";
             // 
+            // chkNoBom
+            // 
+            this.chkNoBom.Location = new System.Drawing.Point(277, 128);
+            this.chkNoBom.Name = "chkNoBom";
+            this.chkNoBom.Size = new System.Drawing.Size(62, 20);
+            this.chkNoBom.TabIndex = 175;
+            this.chkNoBom.Values.Text = "无配方";
+            this.chkNoBom.CheckedChanged += new System.EventHandler(this.chkNoBom_CheckedChanged);
+            // 
             // UCProdMerge
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -500,5 +511,6 @@
         private Krypton.Toolkit.KryptonTextBox txtType;
         private Krypton.Toolkit.KryptonLabel lblSpecifications;
         private Krypton.Toolkit.KryptonLabel lblproperty;
+        private Krypton.Toolkit.KryptonCheckBox chkNoBom;
     }
 }

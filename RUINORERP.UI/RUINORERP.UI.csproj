@@ -1586,6 +1586,12 @@
     <Compile Include="PSI\INV\UCInventoryTracking.Designer.cs">
       <DependentUpon>UCInventoryTracking.cs</DependentUpon>
     </Compile>
+    <Compile Include="PSI\INV\UCProdConversionStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCProdConversionStatistics.Designer.cs">
+      <DependentUpon>UCProdConversionStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="PSI\INV\UCProdMergeStatistics.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2925,6 +2931,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCInventoryTracking.resx">
       <DependentUpon>UCInventoryTracking.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCProdConversionStatistics.resx">
+      <DependentUpon>UCProdConversionStatistics.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCProdMergeStatistics.resx">
       <DependentUpon>UCProdMergeStatistics.cs</DependentUpon>

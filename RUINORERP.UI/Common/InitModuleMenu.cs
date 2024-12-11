@@ -60,9 +60,12 @@ namespace RUINORERP.UI.Common
             modules = typeof(ModuleMenuDefine.模块定义).EnumToList();
             foreach (var item in modules)
             {
+                //定义模块
                 tb_ModuleDefinition mod = new tb_ModuleDefinition();
                 mod.ModuleName = item.Name;
                 mod.ModuleNo = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ModuleDefinition);
+                mod.Available = true;
+                mod.Visible = true;
                 tb_ModuleDefinition isExistt = mdctr.IsExistEntity(e => e.ModuleName == mod.ModuleName);
                 if (isExistt == null)
                 {

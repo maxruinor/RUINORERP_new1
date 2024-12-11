@@ -665,11 +665,23 @@
     <Compile Include="BI\UCCompanyList.Designer.cs">
       <DependentUpon>UCCompanyList.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\UCModuleDefinitionEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCModuleDefinitionEdit.Designer.cs">
+      <DependentUpon>UCModuleDefinitionEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCCurrencyEdit.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="BI\UCCurrencyEdit.Designer.cs">
       <DependentUpon>UCCurrencyEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCModuleDefinitionList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCModuleDefinitionList.Designer.cs">
+      <DependentUpon>UCModuleDefinitionList.cs</DependentUpon>
     </Compile>
     <Compile Include="BI\UCCurrencyList.cs">
       <SubType>UserControl</SubType>
@@ -2485,8 +2497,14 @@
     <EmbeddedResource Include="BI\UCCompanyList.resx">
       <DependentUpon>UCCompanyList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCModuleDefinitionEdit.resx">
+      <DependentUpon>UCModuleDefinitionEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCCurrencyEdit.resx">
       <DependentUpon>UCCurrencyEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCModuleDefinitionList.resx">
+      <DependentUpon>UCModuleDefinitionList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCCurrencyList.resx">
       <DependentUpon>UCCurrencyList.cs</DependentUpon>

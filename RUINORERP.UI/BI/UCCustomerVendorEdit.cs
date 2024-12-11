@@ -30,15 +30,14 @@ namespace RUINORERP.UI.BI
             usedActionStatus = true;
             chkOther.ToolTipValues.Description = "其他类型，如物流公司，第三方仓库，加工厂等合作伙伴等。";
         }
-
+        tb_ModuleDefinition crmMod = null;
         private tb_CustomerVendor _EditEntity;
-        public override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public async override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             _EditEntity = entity as tb_CustomerVendor;
 
             if (_EditEntity.CustomerVendor_ID == 0)
             {
-
                 if (Text.Contains("其他"))
                 {
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.CVOther);
@@ -56,6 +55,11 @@ namespace RUINORERP.UI.BI
                     _EditEntity.CVCode = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.Supplier);
                     _EditEntity.IsVendor = true;
                 }
+                //新建时默认启用
+                _EditEntity.Is_available = true;
+                _EditEntity.Is_enabled = true;
+
+
             }
 
             DataBindingHelper.BindData4Cmb<tb_CustomerVendorType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);
@@ -83,6 +87,19 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
+                //如果在模块定义中客户关系是启用时，就必须录入来源的目标客户。
+                crmMod = await MainForm.Instance.AppContext.Db.Queryable<tb_ModuleDefinition>().Where(c => c.ModuleName == nameof(ModuleMenuDefine.客户关系)).FirstAsync();
+                if (crmMod.Available)
+                {
+                    lblCustomer_id.Visible = true;
+                    cmbCustomer_id.Visible = true;
+                }
+                else
+                {
+                    lblCustomer_id.Visible = false;
+                    cmbCustomer_id.Visible = false;
+                }
+
                 base.InitRequiredToControl(new tb_CustomerVendorValidator(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
@@ -111,6 +128,12 @@ namespace RUINORERP.UI.BI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            if (crmMod.Available && (!_EditEntity.Customer_id.HasValue || _EditEntity.Customer_id.Value <= 0))
+            {
+                //客户关系模块启用时，销售客户的来源必须选择。
+                MessageBox.Show("销售客户的来源必须选择。", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
             if (base.Validator())
             {
                 bindingSourceEdit.EndEdit();
@@ -147,12 +170,22 @@ namespace RUINORERP.UI.BI
             {
                 lblCustomer_id.Visible = true;
                 cmbCustomer_id.Visible = true;
+                txtIsCustomer.Checked = true;
             }
             else
             {
                 lblCustomer_id.Visible = false;
                 cmbCustomer_id.Visible = false;
+                if (Text.Contains("供应商"))
+                {
+                    txtIsVendor.Checked = true;
+                }
             }
+        }
+
+        private void cmbCustomer_id_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //将目标客户信息带过来。可以用automapper
         }
     }
 }

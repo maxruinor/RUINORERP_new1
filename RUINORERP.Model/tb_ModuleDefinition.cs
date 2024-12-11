@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:56
+// 时间：12/11/2024 10:49:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 功能模块定义（仅限部分已经硬码并体现于菜单表中）
     /// </summary>
     [Serializable()]
-    [Description("tb_ModuleDefinition")]
+    [Description("功能模块定义（仅限部分已经硬码并体现于菜单表中）")]
     [SugarTable("tb_ModuleDefinition")]
     public partial class tb_ModuleDefinition: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ModuleDefinition" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("功能模块定义（仅限部分已经硬码并体现于菜单表中）tb_ModuleDefinition" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -93,13 +93,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool? _Available;
+        private bool _Available;
         /// <summary>
         /// 是否可用
         /// </summary>
         [AdvQueryAttribute(ColName = "Available",ColDesc = "是否可用")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Available" ,IsNullable = true,ColumnDescription = "是否可用" )]
-        public bool? Available
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Available" ,IsNullable = false,ColumnDescription = "是否可用" )]
+        public bool Available
         { 
             get{return _Available;}
             set{

@@ -90,7 +90,14 @@ namespace RUINORERP.UI.CRM
                 base.InitRequiredToControl(new tb_CRM_CustomerValidator(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
-
+            if (customer.Customer_id> 0)
+            {
+                btnFastFollowUp.Visible = true;
+            }
+            else
+            {
+                btnFastFollowUp.Visible = false;
+            }
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -311,6 +318,31 @@ namespace RUINORERP.UI.CRM
                 if (frmaddg.ShowDialog() == DialogResult.OK)
                 {
                     UIBizSrvice.SaveCRMContact(ContactInfo);
+                }
+            }
+        }
+
+        private async void btnFastFollowUp_Click(object sender, EventArgs e)
+        {
+            object frm = Activator.CreateInstance(typeof(UCCRMFollowUpRecordsEdit));
+            if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+            {
+                BaseEditGeneric<tb_CRM_FollowUpRecords> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpRecords>;
+                frmaddg.Text = "跟进记录编辑";
+                frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpRecords>();
+                object obj = frmaddg.bindingSourceEdit.AddNew();
+                tb_CRM_FollowUpRecords NewInfo = obj as tb_CRM_FollowUpRecords;
+                NewInfo.Customer_id = _EditEntity.Customer_id;
+                NewInfo.Customer_id = _EditEntity.Customer_id;
+                NewInfo.Employee_ID = _EditEntity.Employee_ID;
+                BaseEntity bty = NewInfo as BaseEntity;
+                bty.ActionStatus = ActionStatus.加载;
+                BusinessHelper.Instance.EditEntity(bty);
+                frmaddg.BindData(bty, ActionStatus.新增);
+                if (frmaddg.ShowDialog() == DialogResult.OK)
+                {
+                    BaseController<tb_CRM_FollowUpRecords> ctr = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpRecords>>(typeof(tb_CRM_FollowUpRecords).Name + "Controller");
+                    ReturnResults<tb_CRM_FollowUpRecords> result = await ctr.BaseSaveOrUpdate(NewInfo);
                 }
             }
         }

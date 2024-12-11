@@ -8,6 +8,7 @@ using RUINORERP.Server.Workflow;
 using RUINORERP.Server.Workflow.Steps;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.Workflow.WFPush;
+using RUINORERP.Server.Workflow.WFReminder;
 using SharpYaml.Tokens;
 using System;
 using System.Collections.Generic;
@@ -150,15 +151,31 @@ namespace RUINORERP.Server
             {
 
             }
-                //CacheHelper cacheHelper = Startup.GetFromFac<CacheHelper>();
-                //var obj = CacheHelper.Instance.GetEntity<tb_CustomerVendor>(1740971599693221888);
+            //CacheHelper cacheHelper = Startup.GetFromFac<CacheHelper>();
+            //var obj = CacheHelper.Instance.GetEntity<tb_CustomerVendor>(1740971599693221888);
 
-                //string json = JsonConvert.SerializeObject(obj,
-                //   new JsonSerializerSettings
-                //   {
-                //       ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                //   });
+            //string json = JsonConvert.SerializeObject(obj,
+            //   new JsonSerializerSettings
+            //   {
+            //       ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+            //   });
 
-            }
+        }
+
+        private async void btnStartReminderWF_Click(object sender, EventArgs e)
+        {
+            //启动提醒工作流
+            ReminderData data = new ReminderData();
+            data.RemindCount = 1;
+            data.StartTime = System.DateTime.Now;
+            data.BizKey = "华哥";
+            data.RecipientID = 1688;
+            //var workflowId = Program.WorkflowHost.StartWorkflow("PushBaseInfoWorkflow", data);
+            //MessageBox.Show("start push：" + workflowId);
+
+            //三个参数是 ID名，版本号，数据对象
+            var workflowId = await host.StartWorkflow("ReminderWorkflow", 1, data);
+
+        }
     }
 }

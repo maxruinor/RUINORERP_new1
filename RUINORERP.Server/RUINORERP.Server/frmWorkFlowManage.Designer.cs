@@ -46,6 +46,7 @@
             txtworkflowParam = new System.Windows.Forms.TextBox();
             btnPushTest = new System.Windows.Forms.Button();
             btn缓存测试 = new System.Windows.Forms.Button();
+            btnStartReminderWF = new System.Windows.Forms.Button();
             SuspendLayout();
             // 
             // button1
@@ -202,11 +203,22 @@
             btn缓存测试.UseVisualStyleBackColor = true;
             btn缓存测试.Click += btn缓存测试_Click;
             // 
+            // btnStartReminderWF
+            // 
+            btnStartReminderWF.Location = new System.Drawing.Point(55, 551);
+            btnStartReminderWF.Name = "btnStartReminderWF";
+            btnStartReminderWF.Size = new System.Drawing.Size(130, 34);
+            btnStartReminderWF.TabIndex = 11;
+            btnStartReminderWF.Text = "启动提醒工作流";
+            btnStartReminderWF.UseVisualStyleBackColor = true;
+            btnStartReminderWF.Click += btnStartReminderWF_Click;
+            // 
             // frmWorkFlowManage
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(796, 540);
+            ClientSize = new System.Drawing.Size(1069, 626);
+            Controls.Add(btnStartReminderWF);
             Controls.Add(btn缓存测试);
             Controls.Add(btnPushTest);
             Controls.Add(txtworkflowParam);
@@ -254,5 +266,6 @@
         private System.Windows.Forms.TextBox txtworkflowParam;
         private System.Windows.Forms.Button btnPushTest;
         private System.Windows.Forms.Button btn缓存测试;
+        private System.Windows.Forms.Button btnStartReminderWF;
     }
 }

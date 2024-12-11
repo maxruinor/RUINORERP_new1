@@ -28,14 +28,27 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCCRMContactList));
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
+            this.kryptonHeaderGroupTop.SuspendLayout();
             this.SuspendLayout();
             // 
-            // UCLocationTypeList
+            // kryptonHeaderGroupTop
+            // 
+            this.kryptonHeaderGroupTop.Size = new System.Drawing.Size(467, 85);
+            this.kryptonHeaderGroupTop.ValuesPrimary.Heading = "";
+            this.kryptonHeaderGroupTop.ValuesPrimary.Image = ((System.Drawing.Image)(resources.GetObject("kryptonHeaderGroupTop.ValuesPrimary.Image")));
+            // 
+            // UCCRMContactList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UCLocationTypeList";
+            this.Name = "UCCRMContactList";
             this.Size = new System.Drawing.Size(467, 445);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).EndInit();
+            this.kryptonHeaderGroupTop.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }

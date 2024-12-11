@@ -155,7 +155,7 @@ namespace RUINORERP.Server
                     // 如果host启动了，不能再次启动，但没有判断方法
                     if (!serviceStarted)
                     {
-                        // host.Start();
+                         host.Start();
                         serviceStarted = true;
                     }
                     WorkflowHost = host;

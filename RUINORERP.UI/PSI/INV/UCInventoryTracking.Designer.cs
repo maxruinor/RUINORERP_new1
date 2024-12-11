@@ -36,10 +36,6 @@
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // frm
-            // 
-            this.frm.Location = new System.Drawing.Point(130, 130);
-            // 
             // kryptonPanelMain
             // 
             this.kryptonPanelMain.Size = new System.Drawing.Size(964, 562);

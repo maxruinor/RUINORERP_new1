@@ -31,6 +31,7 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.btnFastFollowUp = new Krypton.Toolkit.KryptonButton();
             this.lblSocialTools = new Krypton.Toolkit.KryptonLabel();
             this.txtSocialTools = new Krypton.Toolkit.KryptonTextBox();
             this.lblContact_Name = new Krypton.Toolkit.KryptonLabel();
@@ -123,6 +124,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.btnFastFollowUp);
             this.kryptonPanel1.Controls.Add(this.lblSocialTools);
             this.kryptonPanel1.Controls.Add(this.txtSocialTools);
             this.kryptonPanel1.Controls.Add(this.lblContact_Name);
@@ -172,6 +174,15 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1142, 665);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // btnFastFollowUp
+            // 
+            this.btnFastFollowUp.Location = new System.Drawing.Point(614, 605);
+            this.btnFastFollowUp.Name = "btnFastFollowUp";
+            this.btnFastFollowUp.Size = new System.Drawing.Size(90, 25);
+            this.btnFastFollowUp.TabIndex = 175;
+            this.btnFastFollowUp.Values.Text = "快速跟进";
+            this.btnFastFollowUp.Click += new System.EventHandler(this.btnFastFollowUp_Click);
             // 
             // lblSocialTools
             // 
@@ -734,5 +745,6 @@
         private Krypton.Toolkit.KryptonTextBox txtContact_Email;
         private Krypton.Toolkit.KryptonLabel lblContact_Phone;
         private Krypton.Toolkit.KryptonTextBox txtContact_Phone;
+        private Krypton.Toolkit.KryptonButton btnFastFollowUp;
     }
 }

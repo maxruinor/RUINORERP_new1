@@ -5,6 +5,7 @@ using RUINORERP.Model;
 using RUINORERP.Server.Workflow.Steps;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.Workflow.WFPush;
+using RUINORERP.Server.Workflow.WFReminder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,14 +67,14 @@ namespace RUINORERP.Server.Workflow
             services.AddTransient<PrintMessage>();
             services.AddTransient<HelloWorld>();
             //services.AddTransient<GetBaseInfo>();
-       
-            services.AddWorkflow(x => x.UseSqlServer(@"Server=192.168.0.254;Database=Workflowdb;UID=sa;Password=SA!@#123sa;", true, true));
-            
+            services.AddWorkflow();
+            //services.AddWorkflow(x => x.UseSqlServer(@"Server=192.168.0.254;Database=Workflowdb;UID=sa;Password=SA!@#123sa;", true, true));
+
             //Json格式
             services.AddWorkflowDSL();
+            //https://www.qubcedu.com/postdetail/3a14f314-b844-4092-2c0e-04a755d5ef76/1
+            //services.AddWorkflowMiddleware
 
-
-  
 
             //services.AddWorkflow(x => x.UseSqlite(@"Data Source=database2.db;", true));            
             // services.AddTransient<frmMain>();
@@ -92,6 +93,7 @@ namespace RUINORERP.Server.Workflow
             host.RegisterWorkflow<ScheduledlWorkflow, ApprovalWFData>();
             host.RegisterWorkflow<ApprovalWorkflow, ApprovalWFData>();
 
+            host.RegisterWorkflow<ReminderWorkflow, ReminderData>();
 
             host.RegisterWorkflow<WFPush.PushBaseInfoWorkflow, PushData>();
 

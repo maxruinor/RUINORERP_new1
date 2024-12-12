@@ -489,7 +489,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     switch (msg)
                     {
                         case ServerCmdEnum.工作流提醒推送:
-                            ClientService.接收服务器工作流的提醒消息(od);
+                            ClientService.接收工作流的提醒消息(od);
                             break;
 
                         case ServerCmdEnum.转发单据锁定:

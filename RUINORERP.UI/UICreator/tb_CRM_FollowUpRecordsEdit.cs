@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:14
+// 时间：12/12/2024 10:37:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -92,7 +92,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_CRM_FollowUpRecords>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_CRM_FollowUpRecords>(entity, t => t.isdeleted, chkisdeleted, false);
 }
 
 

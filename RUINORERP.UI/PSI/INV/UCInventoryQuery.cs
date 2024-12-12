@@ -138,7 +138,7 @@ namespace RUINORERP.UI.PSI.INV
             // List<string> queryConditions = new List<string>();
             //queryConditions = new List<string>(QueryConditionFilter.QueryFields.Select(t => t.FieldName).ToList());
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, QueryConditionFilter.GetFilterExpression<T>(), QueryDto, pageNum, pageSize) as List<T>;
-            List<View_Inventory> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<View_Inventory>;
+            List<View_Inventory> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize) as List<View_Inventory>;
 
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)

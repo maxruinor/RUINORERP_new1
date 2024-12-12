@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:13
+// 时间：12/12/2024 10:37:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,14 +51,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Customer_id;
+        private long _Customer_id;
         /// <summary>
         /// 目标客户
         /// </summary>
         [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "目标客户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标客户" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标客户" )]
         [FKRelationAttribute("tb_CRM_Customer","Customer_id")]
-        public long? Customer_id
+        public long Customer_id
         { 
             get{return _Customer_id;}
             set{
@@ -66,14 +66,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Employee_ID;
+        private long _Employee_ID;
         /// <summary>
         /// 执行人
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "执行人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "执行人" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "执行人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
-        public long? Employee_ID
+        public long Employee_ID
         { 
             get{return _Employee_ID;}
             set{
@@ -109,13 +109,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private int? _PlanStatus;
+        private int _PlanStatus;
         /// <summary>
         /// 计划状态
         /// </summary>
         [AdvQueryAttribute(ColName = "PlanStatus",ColDesc = "计划状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PlanStatus" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "计划状态" )]
-        public int? PlanStatus
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PlanStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "计划状态" )]
+        public int PlanStatus
         { 
             get{return _PlanStatus;}
             set{
@@ -128,7 +128,7 @@ namespace RUINORERP.Model
         /// 计划主题
         /// </summary>
         [AdvQueryAttribute(ColName = "PlanSubject",ColDesc = "计划主题")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PlanSubject" ,Length=200,IsNullable = true,ColumnDescription = "计划主题" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PlanSubject" ,Length=200,IsNullable = false,ColumnDescription = "计划主题" )]
         public string PlanSubject
         { 
             get{return _PlanSubject;}
@@ -142,7 +142,7 @@ namespace RUINORERP.Model
         /// 计划内容
         /// </summary>
         [AdvQueryAttribute(ColName = "PlanContent",ColDesc = "计划内容")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PlanContent" ,Length=1000,IsNullable = true,ColumnDescription = "计划内容" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PlanContent" ,Length=1000,IsNullable = false,ColumnDescription = "计划内容" )]
         public string PlanContent
         { 
             get{return _PlanContent;}

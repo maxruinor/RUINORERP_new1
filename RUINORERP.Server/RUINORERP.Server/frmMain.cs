@@ -20,6 +20,7 @@ using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.TransModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.Commands;
@@ -72,7 +73,7 @@ namespace RUINORERP.Server
 
 
         //保存系统所有提醒的业务数据配置,系统每分钟检测。
-        public ConcurrentDictionary<long, ReminderBizData> ReminderBizDataList = new ConcurrentDictionary<long, ReminderBizData>();
+        public ConcurrentDictionary<long, ServerReminderData> ReminderBizDataList = new ConcurrentDictionary<long, ServerReminderData>();
 
         /// <summary>
         /// 保存启动的工作流队列 2023-11-18
@@ -84,7 +85,7 @@ namespace RUINORERP.Server
 
         //一个消息缓存列表，有处理过的。未处理的。未看的。临时性还是固定到表的？
 
-        public Queue<TranMessage> MessageList = new Queue<TranMessage>();
+        public Queue<ServerReminderData> MessageList = new Queue<ServerReminderData>();
         public IServiceCollection _services { get; set; }
         public IServiceProvider _ServiceProvider { get; set; }
 
@@ -321,7 +322,7 @@ namespace RUINORERP.Server
             {
                 foreach (var item in ReminderBizDataList)
                 {
-                    ReminderBizData BizData = item.Value;
+                    ServerReminderData BizData = item.Value;
                     if (BizData != null)
                     {
                         //这里要判断规则，目前暂时todo 写死,提前一天启动提醒
@@ -528,7 +529,7 @@ namespace RUINORERP.Server
                         {
                             while (MessageList.Count > 0 && sessionforBiz.User.超级用户)
                             {
-                                TranMessage MessageInfo = MessageList.Dequeue();
+                                ServerReminderData MessageInfo = MessageList.Dequeue();
                                 SystemService.process请求协助处理(sessionforBiz, MessageInfo);
                             }
 
@@ -855,7 +856,9 @@ namespace RUINORERP.Server
         {
             if (e.ClickedItem.Text == "工作流管理")
             {
-                frmWorkFlowManage frm = Startup.GetFromFac<frmWorkFlowManage>();
+                
+                frmWFManage frm = Startup.GetFromFac<frmWFManage>();
+                frm.RefreshData();//ReminderBizDataList
                 frm.MdiParent = this;
                 frm.Show();
                 frm.Activate();

@@ -21,8 +21,18 @@ namespace RUINORERP.UI.BaseForm
         /// <returns></returns>
         public static string GetEntityPrimaryKey<T>()
         {
+            return GetEntityPrimaryKey(typeof(T));
+        }
+
+        /// <summary>
+        /// 获取Sugar类型的实体的主键
+        /// </summary>
+        /// <typeparam name="T">SqlSugar框架实体类</typeparam>
+        /// <returns></returns>
+        public static string GetEntityPrimaryKey(Type type)
+        {
             string primaryColName = string.Empty;
-            foreach (PropertyInfo field in typeof(T).GetProperties())
+            foreach (PropertyInfo field in type.GetProperties())
             {
 
                 //获取指定类型的自定义特性
@@ -74,6 +84,6 @@ namespace RUINORERP.UI.BaseForm
             }
             return primaryColName;
         }
-
     }
+
 }

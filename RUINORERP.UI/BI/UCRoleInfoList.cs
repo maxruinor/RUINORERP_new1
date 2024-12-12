@@ -106,7 +106,7 @@ namespace RUINORERP.UI.BI
             BaseController<tb_RoleInfo> ctr = Startup.GetFromFacByName<BaseController<tb_RoleInfo>>(typeof(tb_RoleInfo).Name + "Controller");
 
             //要导航查出角色属性，所以重写用了自动 导致的方法
-            List<tb_RoleInfo> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize);
+            List<tb_RoleInfo> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize);
 
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)

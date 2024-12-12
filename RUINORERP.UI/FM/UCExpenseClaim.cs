@@ -442,6 +442,7 @@ namespace RUINORERP.UI.FM
                 EditEntity.ClaimAmount = details.Sum(c => c.TotalAmount);
                 EditEntity.ApprovedAmount = EditEntity.ClaimAmount;
                 EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
+                
             }
             catch (Exception ex)
             {

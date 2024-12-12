@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:14
+// 时间：12/12/2024 10:37:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -96,14 +96,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Employee_ID;
+        private long _Employee_ID;
         /// <summary>
         /// 跟进人
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "跟进人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "跟进人" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "跟进人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
-        public long? Employee_ID
+        public long Employee_ID
         { 
             get{return _Employee_ID;}
             set{
@@ -111,13 +111,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime? _FollowUpDate;
+        private DateTime _FollowUpDate;
         /// <summary>
         /// 跟进日期
         /// </summary>
         [AdvQueryAttribute(ColName = "FollowUpDate",ColDesc = "跟进日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "FollowUpDate" ,IsNullable = true,ColumnDescription = "跟进日期" )]
-        public DateTime? FollowUpDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "FollowUpDate" ,IsNullable = false,ColumnDescription = "跟进日期" )]
+        public DateTime FollowUpDate
         { 
             get{return _FollowUpDate;}
             set{
@@ -125,13 +125,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private int? _FollowUpMethod;
+        private int _FollowUpMethod;
         /// <summary>
         /// 跟进方式
         /// </summary>
         [AdvQueryAttribute(ColName = "FollowUpMethod",ColDesc = "跟进方式")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FollowUpMethod" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "跟进方式" )]
-        public int? FollowUpMethod
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FollowUpMethod" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "跟进方式" )]
+        public int FollowUpMethod
         { 
             get{return _FollowUpMethod;}
             set{
@@ -144,7 +144,7 @@ namespace RUINORERP.Model
         /// 跟进主题
         /// </summary>
         [AdvQueryAttribute(ColName = "FollowUpSubject",ColDesc = "跟进主题")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FollowUpSubject" ,Length=200,IsNullable = true,ColumnDescription = "跟进主题" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FollowUpSubject" ,Length=200,IsNullable = false,ColumnDescription = "跟进主题" )]
         public string FollowUpSubject
         { 
             get{return _FollowUpSubject;}
@@ -158,7 +158,7 @@ namespace RUINORERP.Model
         /// 跟进内容
         /// </summary>
         [AdvQueryAttribute(ColName = "FollowUpContent",ColDesc = "跟进内容")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FollowUpContent" ,Length=1000,IsNullable = true,ColumnDescription = "跟进内容" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FollowUpContent" ,Length=1000,IsNullable = false,ColumnDescription = "跟进内容" )]
         public string FollowUpContent
         { 
             get{return _FollowUpContent;}

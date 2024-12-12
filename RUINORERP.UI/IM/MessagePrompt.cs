@@ -1,4 +1,19 @@
-﻿using System;
+﻿using Krypton.Toolkit;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Business;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.Model.TransModel;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.SuperSocketClient;
+using RUINORERP.UI.UserCenter;
+using SqlSugar;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,14 +22,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TransInstruction;
 
 namespace RUINORERP.UI.IM
 {
     public partial class MessagePrompt : Krypton.Toolkit.KryptonForm
     {
+
+        MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
         private FlowLayoutPanel messageFlowLayoutPanel;
         private Timer messageTimer;
 
+        public ServerReminderData ReminderData { get; set; }
         public MessagePrompt()
         {
             InitializeComponent();
@@ -77,14 +97,40 @@ namespace RUINORERP.UI.IM
             messageTimer.Start();
         }
 
+        public BizTypeMapper mapper { get; set; }
+        QueryParameter parameter { get; set; }
         private void MessagePrompt_Load(object sender, EventArgs e)
         {
+            //计划提醒，则把要提醒的计划查出条件找到
+            Type tableType = mapper.GetTableType(ReminderData.BizType);
+            //找到要提醒的数据
+            var conModel = new List<IConditionalModel>();
+            // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });
+
+            string FieldName = BaseUIHelper.GetEntityPrimaryKey(tableType);
+
+            conModel.Add(new ConditionalModel { FieldName = FieldName, ConditionalType = ConditionalType.Equal, FieldValue = ReminderData.BizPrimaryKey.ToString(), CSharpTypeName = "long" });
+            //如果限制
+            //if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+            //{
+            //    conModel.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            //}
+
+            parameter = new QueryParameter();
+            parameter.conditionals = conModel;
+            parameter.tableType = tableType;
+
+
+
             txtContent.Text = Content;
+            lblSendTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             // 确保窗体在显示时位于屏幕右下角
             this.SetDesktopLocation(
                 Screen.PrimaryScreen.WorkingArea.Width - this.Width,
                 Screen.PrimaryScreen.WorkingArea.Height - this.Height
             );
+
+            AddCommandForWait();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -95,8 +141,190 @@ namespace RUINORERP.UI.IM
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == parameter.tableType.Name && m.ClassPath.Contains("")).FirstOrDefault();
+            if (RelatedBillMenuInfo != null)
+            {
+                // 创建实例
+                object instance = Activator.CreateInstance(parameter.tableType);
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(parameter.tableType.Name + "Processor");
+                QueryFilter queryFilter = baseProcessor.GetQueryFilter();
+                parameter.queryFilter = queryFilter;
+                menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
+                menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
+                //要卸载，不然会多次执行
+                menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
+                ResponseToServer(MessageStatus.Cancel);
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+
+            }
+
+        }
+
+        private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, UserCenter.QueryParameter nodeParameter)
+        {
+            if (QueryDto == null)
+            {
+                return;
+            }
+            //查询条件给值前先将条件清空
+            foreach (var item in nodeParameter.queryFilter.QueryFields)
+            {
+                if (item.FKTableName.IsNotEmptyOrNull() && item.IsRelated)
+                {
+                    QueryDto.SetPropertyValue(item.FieldName, -1L);
+                    continue;
+                }
+                if (item.FieldPropertyInfo.PropertyType.IsGenericType && item.FieldPropertyInfo.PropertyType.GetBaseType().Name == "DateTime")
+                {
+                    QueryDto.SetPropertyValue(item.FieldName, null);
+                    if (QueryDto.ContainsProperty(item.FieldName + "_Start"))
+                    {
+                        QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
+                    }
+                    if (QueryDto.ContainsProperty(item.FieldName + "_End"))
+                    {
+                        QueryDto.SetPropertyValue(item.FieldName + "_End", null);
+                    }
+                    continue;
+                }
+
+            }
+
+
+
+            //传入查询对象的实例，
+            foreach (ConditionalModel item in nodeParameter.conditionals)
+            {
+                if (item.ConditionalType == ConditionalType.Equal)
+                {
+                    switch (item.CSharpTypeName)
+                    {
+                        case "int":
+                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
+                            break;
+                        case "long":
+                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
+                            break;
+                        default:
+                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
+                            break;
+                    }
+                }
+            }
+
+
+
+        }
+
+        private void btnWaitReminder_Click(object sender, EventArgs e)
+        {
+            WaitReminder(sender);
+        }
+
+
+        private void ResponseToServer(MessageStatus status = MessageStatus.Cancel, int interval = 20)
+        {
+            //回复服务器
+            ClientResponseData response = new ClientResponseData();
+            response.BizPrimaryKey = ReminderData.BizPrimaryKey;
+            response.Status = status;
+            response.RemindInterval = interval;
+            //向服务器推送工作流提醒的列表 typeof(T).Name
+            OriginalData beatDataDel = ClientDataBuilder.工作流提醒回复(response);
+            MainForm.Instance.ecs.AddSendData(beatDataDel);
+        }
+
+        #region 生成稍候提醒的指令
+
+        private void AddCommandForWait()
+        {
+
+            KryptonContextMenuItems contextMenuItems = new KryptonContextMenuItems();
+            KryptonContextMenuItem menuItem5分钟后 = new KryptonContextMenuItem();
+            KryptonCommand command5分钟后 = new KryptonCommand();
+            command5分钟后.Execute += kryptonCommandWait_Execute;
+            menuItem5分钟后.KryptonCommand = command5分钟后;
+            menuItem5分钟后.Text = "五分钟后";
+            command5分钟后.Text = menuItem5分钟后.Text;
+
+
+            KryptonContextMenuItem menuItem10分钟后 = new KryptonContextMenuItem();
+            KryptonCommand command十分钟后 = new KryptonCommand();
+            command十分钟后.Execute += kryptonCommandWait_Execute;
+            menuItem10分钟后.KryptonCommand = command十分钟后;
+            menuItem10分钟后.Text = "十分钟后";
+            command十分钟后.Text = menuItem10分钟后.Text;
+
+            KryptonContextMenuItem menuItem一小时后 = new KryptonContextMenuItem();
+            KryptonCommand command一小时后 = new KryptonCommand();
+            command一小时后.Execute += kryptonCommandWait_Execute;
+            menuItem一小时后.KryptonCommand = command一小时后;
+            menuItem一小时后.Text = "一小时后";
+            command一小时后.Text = menuItem一小时后.Text;
+
+            KryptonContextMenuItem menuItem一天后 = new KryptonContextMenuItem();
+            KryptonCommand command一天后 = new KryptonCommand();
+            command一天后.Execute += kryptonCommandWait_Execute;
+            menuItem一天后.KryptonCommand = command一天后;
+            menuItem一天后.Text = "一天后";
+            command一天后.Text = menuItem一天后.Text;
+
+            this.kryptonContextMenu1.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
+            contextMenuItems});
+
+            contextMenuItems.Items.AddRange(new Krypton.Toolkit.KryptonContextMenuItemBase[] {
+            menuItem5分钟后,
+            menuItem10分钟后,
+            menuItem一小时后,
+            menuItem一天后
+            });
+            if (this.kryptonContextMenu1.Items.Count == 0)
+            {
+                this.kryptonContextMenu1.Items.Add(contextMenuItems);
+            }
+
+        }
+
+        #endregion
+
+        private void kryptonCommandWait_Execute(object sender, EventArgs e)
+        {
+            WaitReminder(sender);
+        }
+
+        private void WaitReminder(object sender)
+        {
+            int interval = 60;
+            if (sender is KryptonDropButton dropButton)
+            {
+                //默认5分钟
+                interval = 60 * 5;
+            }
+            else if (sender is KryptonCommand command)
+            {
+                switch (command.Text)
+                {
+                    case "五分钟后":
+                        interval = 60 * 5;
+                        break;
+                    case "十分钟后":
+                        interval = 60 * 5;
+                        break;
+                    case "一小时后":
+                        interval = 60 * 5;
+                        break;
+                    case "一天后":
+                        interval = 60 * 5;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            ResponseToServer(MessageStatus.WaitRminder, interval);
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
+
     }
 }

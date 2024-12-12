@@ -128,7 +128,7 @@ namespace RUINORERP.UI.ProductEAV
             int pageNum = 1;
             int pageSize = int.Parse(txtMaxRows.Text);
 
-            List<tb_Prod> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<tb_Prod>;
+            List<tb_Prod> list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize) as List<tb_Prod>;
 
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)

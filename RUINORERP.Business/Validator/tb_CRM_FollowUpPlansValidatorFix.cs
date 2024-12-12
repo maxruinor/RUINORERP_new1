@@ -27,6 +27,8 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             RuleFor(x => x.Customer_id).NotNull().WithMessage("目标客户不能为空。");
+
+            RuleFor(x => x.PlanStartDate.Date).GreaterThan(System.DateTime.Now.Date).WithMessage("开始日期要大于当前日期。");
             RuleFor(x => x.PlanEndDate).GreaterThan(t => t.PlanStartDate).WithMessage("结束日期要大于开始日期。");
 
             RuleFor(x => x.PlanContent).NotNull().WithMessage("计划内容:不能为空。");

@@ -35,7 +35,7 @@ namespace RUINORERP.Business.CommService
             Mapping.Add(BizType.采购订单, typeof(tb_PurOrder));
             Mapping.Add(BizType.采购入库单, typeof(tb_PurEntry));
             Mapping.Add(BizType.采购退货单, typeof(tb_PurEntryRe));
-            //mapping.Add(BizType.返厂入库, typeof(tb_Return));
+            mapping.Add(BizType.采购退货入库, typeof(tb_PurReturnEntry));
             //mapping.Add(BizType.返厂出库, typeof(tb_StockCheck));
             Mapping.Add(BizType.盘点单, typeof(tb_Stocktake));
             Mapping.Add(BizType.其他入库单, typeof(tb_StockIn));
@@ -59,10 +59,10 @@ namespace RUINORERP.Business.CommService
             Mapping.Add(BizType.产品转换单, typeof(tb_ProdConversion));
             Mapping.Add(BizType.调拨单, typeof(tb_StockTransfer));
             Mapping.Add(BizType.返厂出库, typeof(tb_Return));
-            
+            Mapping.Add(BizType.CRM跟进计划, typeof(tb_CRM_FollowUpPlans));
+            Mapping.Add(BizType.CRM跟进记录, typeof(tb_CRM_FollowUpRecords));
 
             //mapping.Add(BizType.退料单, typeof(tb_Return));
-
             // 省略其他枚举值与表名的对应关系
         }
 
@@ -74,6 +74,8 @@ namespace RUINORERP.Business.CommService
             }
             throw new ArgumentException("无效的业务类型", nameof(bizType));
         }
+
+ 
 
         public BizType GetBizType(string tableName)
         {

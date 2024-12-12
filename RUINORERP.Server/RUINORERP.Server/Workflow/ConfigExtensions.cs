@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Debug;
 using RUINORERP.Model;
+using RUINORERP.Model.TransModel;
 using RUINORERP.Server.Workflow.Steps;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.Workflow.WFPush;
@@ -93,7 +94,7 @@ namespace RUINORERP.Server.Workflow
             host.RegisterWorkflow<ScheduledlWorkflow, ApprovalWFData>();
             host.RegisterWorkflow<ApprovalWorkflow, ApprovalWFData>();
 
-            host.RegisterWorkflow<ReminderWorkflow, ReminderBizData>();
+            host.RegisterWorkflow<ReminderWorkflow, ServerReminderData>();
 
             host.RegisterWorkflow<WFPush.PushBaseInfoWorkflow, PushData>();
 

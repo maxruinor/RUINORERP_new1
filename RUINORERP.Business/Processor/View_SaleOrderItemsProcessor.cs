@@ -54,14 +54,14 @@ namespace RUINORERP.Business.Processor
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.SaleDate);
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.SOrderNo);
-            queryFilter.SetQueryField<View_SaleOrderItems>(c => c.Employee_ID, true);
+            queryFilter.SetQueryField<View_SaleOrderItems>(c => c.Employee_ID, typeof(tb_Employee));
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.PayStatus, QueryFieldType.CmbEnum, typeof(PayStatus));
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.SKU);
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.CNName);
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.Model);
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.Specifications);
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.ProjectGroup_ID,  typeof(tb_ProjectGroup));
-            queryFilter.SetQueryField<View_SaleOrderItems>(c => c.Category_ID);
+            queryFilter.SetQueryField<View_SaleOrderItems>(c => c.Category_ID,typeof(tb_ProdCategories));
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
             queryFilter.SetQueryField<View_SaleOrderItems>(c => c.property);

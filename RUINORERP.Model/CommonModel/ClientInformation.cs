@@ -24,8 +24,22 @@ namespace RUINORERP.Model.CommonModel
         private string _客户端版本;
         private string _客户端IP;
         private long _静止时间;
+        private long _Employee_ID;
 
         #region  属性
+        public long Employee_ID
+        {
+            get { return _Employee_ID; }
+            set
+            {
+                if (_Employee_ID != value)
+                {
+                    _Employee_ID = value;
+                    OnPropertyChanged(nameof(Employee_ID));
+                }
+            }
+        }
+
 
         public string SessionId
         {
@@ -178,6 +192,7 @@ namespace RUINORERP.Model.CommonModel
 
         /// <summary>
         /// 用户名表中的主键
+        /// 比方系统提醒的人。这个时间员工可能都不用系统。所以是用户名
         /// </summary>
         public long UserID
         {

@@ -41,8 +41,13 @@
             this.lblDesc = new Krypton.Toolkit.KryptonLabel();
             this.txtContent = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonGroupBoxCurrentNode = new Krypton.Toolkit.KryptonGroupBox();
+            this.lblSendTime = new Krypton.Toolkit.KryptonLabel();
             this.toolTipBase = new System.Windows.Forms.ToolTip(this.components);
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.btnWaitReminder = new Krypton.Toolkit.KryptonDropButton();
+            this.kryptonContextMenu1 = new Krypton.Toolkit.KryptonContextMenu();
+            this.kryptonCommandWait = new Krypton.Toolkit.KryptonCommand();
+            this.kryptonContextMenuRadioButton1 = new Krypton.Toolkit.KryptonContextMenuRadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxCurrentNode)).BeginInit();
@@ -65,7 +70,7 @@
             // 
             this.txtSender.Location = new System.Drawing.Point(74, 7);
             this.txtSender.Name = "txtSender";
-            this.txtSender.Size = new System.Drawing.Size(208, 23);
+            this.txtSender.Size = new System.Drawing.Size(306, 23);
             this.txtSender.TabIndex = 68;
             // 
             // kryptonLabel1
@@ -79,27 +84,27 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(243, 351);
+            this.btnCancel.Location = new System.Drawing.Point(181, 340);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 13;
-            this.btnCancel.Values.Text = "取消";
+            this.btnCancel.Values.Text = "关闭";
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(125, 351);
+            this.btnOk.Location = new System.Drawing.Point(51, 340);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 12;
-            this.btnOk.Values.Text = "确定";
+            this.btnOk.Values.Text = "查看";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // txtSubject
             // 
             this.txtSubject.Location = new System.Drawing.Point(74, 34);
             this.txtSubject.Name = "txtSubject";
-            this.txtSubject.Size = new System.Drawing.Size(208, 23);
+            this.txtSubject.Size = new System.Drawing.Size(306, 23);
             this.txtSubject.TabIndex = 9;
             // 
             // lblUnitName
@@ -123,42 +128,72 @@
             this.txtContent.Location = new System.Drawing.Point(74, 82);
             this.txtContent.Multiline = true;
             this.txtContent.Name = "txtContent";
-            this.txtContent.Size = new System.Drawing.Size(210, 128);
+            this.txtContent.Size = new System.Drawing.Size(308, 128);
             this.txtContent.TabIndex = 11;
             // 
             // kryptonGroupBoxCurrentNode
             // 
-            this.kryptonGroupBoxCurrentNode.Location = new System.Drawing.Point(66, 12);
+            this.kryptonGroupBoxCurrentNode.Location = new System.Drawing.Point(12, 12);
             this.kryptonGroupBoxCurrentNode.Name = "kryptonGroupBoxCurrentNode";
             // 
             // kryptonGroupBoxCurrentNode.Panel
             // 
+            this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblSendTime);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtSender);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.kryptonLabel1);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtSubject);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblUnitName);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblDesc);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtContent);
-            this.kryptonGroupBoxCurrentNode.Size = new System.Drawing.Size(329, 311);
+            this.kryptonGroupBoxCurrentNode.Size = new System.Drawing.Size(414, 311);
             this.kryptonGroupBoxCurrentNode.TabIndex = 14;
             this.kryptonGroupBoxCurrentNode.Values.Heading = "消息概览";
             // 
+            // lblSendTime
+            // 
+            this.lblSendTime.Location = new System.Drawing.Point(74, 218);
+            this.lblSendTime.Name = "lblSendTime";
+            this.lblSendTime.Size = new System.Drawing.Size(6, 2);
+            this.lblSendTime.TabIndex = 70;
+            this.lblSendTime.Values.Text = "";
+            // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.btnWaitReminder);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBoxCurrentNode);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(438, 388);
+            this.kryptonPanel1.Size = new System.Drawing.Size(441, 379);
             this.kryptonPanel1.TabIndex = 5;
+            // 
+            // btnWaitReminder
+            // 
+            this.btnWaitReminder.KryptonContextMenu = this.kryptonContextMenu1;
+            this.btnWaitReminder.Location = new System.Drawing.Point(306, 340);
+            this.btnWaitReminder.Name = "btnWaitReminder";
+            this.btnWaitReminder.Size = new System.Drawing.Size(90, 25);
+            this.btnWaitReminder.TabIndex = 69;
+            this.btnWaitReminder.Values.Text = "稍候提醒";
+            this.btnWaitReminder.Click += new System.EventHandler(this.btnWaitReminder_Click);
+            // 
+            // kryptonCommandWait
+            // 
+            this.kryptonCommandWait.ExtraText = "...";
+            this.kryptonCommandWait.Text = "稍候提醒";
+            this.kryptonCommandWait.Execute += new System.EventHandler(this.kryptonCommandWait_Execute);
+            // 
+            // kryptonContextMenuRadioButton1
+            // 
+            this.kryptonContextMenuRadioButton1.ExtraText = "";
             // 
             // MessagePrompt
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(438, 388);
+            this.ClientSize = new System.Drawing.Size(441, 379);
             this.Controls.Add(this.kryptonPanel1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -194,5 +229,10 @@
         internal System.Windows.Forms.ToolTip toolTipBase;
         public Krypton.Toolkit.KryptonTextBox txtSender;
         public Krypton.Toolkit.KryptonTextBox txtSubject;
+        private Krypton.Toolkit.KryptonDropButton btnWaitReminder;
+        private Krypton.Toolkit.KryptonContextMenu kryptonContextMenu1;
+        private Krypton.Toolkit.KryptonCommand kryptonCommandWait;
+        private Krypton.Toolkit.KryptonLabel lblSendTime;
+        private Krypton.Toolkit.KryptonContextMenuRadioButton kryptonContextMenuRadioButton1;
     }
 }

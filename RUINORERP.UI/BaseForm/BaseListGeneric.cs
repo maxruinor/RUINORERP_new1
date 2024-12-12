@@ -48,6 +48,7 @@ using RUINORERP.Business.CommService;
 using SixLabors.ImageSharp.Memory;
 using Netron.NetronLight;
 using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.UI.UserCenter;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -520,7 +521,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public Type EditForm { get => _EditForm; set => _EditForm = value; }
 
-
+ 
 
 
         /// <summary>
@@ -598,18 +599,7 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
-
-        //public System.Windows.Forms.BindingSource _ListDataSoure = null;
-
-        //[Description("列表中的要显示的数据来源[BindingSource]"), Category("自定属性"), Browsable(true)]
-        ///// <summary>
-        ///// 列表的数据源(实际要显示的)
-        ///// </summary>
-        //public System.Windows.Forms.BindingSource ListDataSoure
-        //{
-        //    get { return _ListDataSoure; }
-        //    set { _ListDataSoure = value; }
-        //}
+ 
 
 
         /// <summary>
@@ -1315,7 +1305,7 @@ namespace RUINORERP.UI.BaseForm
                 QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
             }
 
-            List<T> list = await ctr.BaseQuerySimpleByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize, UseAutoNavQuery) as List<T>;
+            List<T> list = await ctr.BaseQuerySimpleByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize, UseAutoNavQuery) as List<T>;
 
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)
@@ -1333,12 +1323,6 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        private BaseEntity _queryDto = new BaseEntity();
-
-        /// <summary>
-        /// 查询条件保存值的对象实体
-        /// </summary>
-        public BaseEntity QueryDto { get => _queryDto; set => _queryDto = value; }
 
 
         /// <summary>
@@ -1357,7 +1341,7 @@ namespace RUINORERP.UI.BaseForm
             //暂时默认了uselike
 
             //            QueryDto = uIQueryHelper.SetQueryUI(true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
-            QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+            QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
 
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;
@@ -1389,6 +1373,48 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public List<string> InvisibleCols { get; set; } = new List<string>();
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="QueryParameters"></param>
+        /// <param name="nodeParameter"></param>
+        internal override void LoadQueryParametersToUI(object QueryParameters, QueryParameter nodeParameter)
+        {
+            if (QueryParameters != null)
+            {
+                if (nodeParameter.queryFilter != null)
+                {
+                    QueryConditionFilter = nodeParameter.queryFilter;
+                }
+                //因为时间不会去掉选择，这里特殊处理
+                foreach (var item in nodeParameter.queryFilter.QueryFields)
+                {
+                    if (item.FieldPropertyInfo.PropertyType.Name == "DateTime")
+                    {
+                        //因为查询UI生成时。自动 转换成代理类如：tb_SaleOutProxy，并且时间是区间型式,将起为null即可
+                        QueryDtoProxy.SetPropertyValue(item.FieldName + "_Start", null);
+
+                        if (kryptonPanel条件生成容器.Controls.Find(item.FieldName, true)[0] is UCAdvDateTimerPickerGroup timerPickerGroup)
+                        {
+                            timerPickerGroup.dtp1.Checked = false;
+                            timerPickerGroup.dtp2.Checked = false;
+                        }
+                        //KryptonDateTimePicker dtp = _UCBillQueryCondition.kryptonPanelQuery.Controls.Find(item.FieldName + "_Start", true) as KryptonDateTimePicker;
+                        //if (dtp != null)
+                        //{
+                        //    dtp.check
+                        //}
+                    }
+                }
+
+                QueryDtoProxy = QueryParameters;
+                ExtendedQuery(true);
+            }
+        }
+
+
+       
 
 
         /// <summary>
@@ -1443,7 +1469,7 @@ namespace RUINORERP.UI.BaseForm
             }
             ToolBarEnabledControl(MenuItemEnums.查询);
 
-            #endregion
+ 
         }
 
 
@@ -1591,55 +1617,9 @@ namespace RUINORERP.UI.BaseForm
             return list;
         }
 
+        #endregion
 
 
-        /*
-        /// <summary>
-        /// esc退出窗体
-        /// </summary>
-        /// <param name="msg"></param>
-        /// <param name="keyData"></param>
-        /// <returns></returns>
-        protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
-        {
-            int WM_KEYDOWN = 256;
-            int WM_SYSKEYDOWN = 260;
-
-            if (msg.Msg == WM_KEYDOWN | msg.Msg == WM_SYSKEYDOWN)
-            {
-                switch (keyData)
-                {
-                    case Keys.Escape:
-                        Exit(this);//csc关闭窗体
-                        break;
-                    case Keys.Enter:
-                        Query();
-                        break;
-                }
-
-            }
-            //return false;
-            var key = keyData & Keys.KeyCode;
-            var modeifierKey = keyData & Keys.Modifiers;
-            if (modeifierKey == Keys.Control && key == Keys.F)
-            {
-                // MessageBox.Show("Control+F is pressed");
-                return true;
-
-            }
-
-            var otherkey = keyData & Keys.KeyCode;
-            var othermodeifierKey = keyData & Keys.Modifiers;
-            if (othermodeifierKey == Keys.Control && otherkey == Keys.F)
-            {
-                MessageBox.Show("Control+F is pressed");
-                return true;
-            }
-
-            return base.ProcessCmdKey(ref msg, keyData);
-
-        }
-     */
         private void CloseTheForm(object thisform)
         {
             KryptonWorkspaceCell cell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
@@ -1844,3 +1824,4 @@ namespace RUINORERP.UI.BaseForm
         }
     }
 }
+

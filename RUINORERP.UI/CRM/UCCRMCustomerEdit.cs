@@ -410,7 +410,7 @@ namespace RUINORERP.UI.CRM
                 tb_CRM_FollowUpRecords NewInfo = obj as tb_CRM_FollowUpRecords;
                 NewInfo.Customer_id = _EditEntity.Customer_id;
                 NewInfo.Customer_id = _EditEntity.Customer_id;
-                NewInfo.Employee_ID = _EditEntity.Employee_ID;
+                NewInfo.Employee_ID = _EditEntity.Employee_ID.Value;
                 BaseEntity bty = NewInfo as BaseEntity;
                 bty.ActionStatus = ActionStatus.加载;
                 BusinessHelper.Instance.EditEntity(bty);

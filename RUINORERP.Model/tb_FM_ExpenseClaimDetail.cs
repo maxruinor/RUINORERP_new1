@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:34:11
+// 时间：12/12/2024 11:32:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 费用报销单明细
     /// </summary>
     [Serializable()]
-    [Description("tb_FM_ExpenseClaimDetail")]
+    [Description("费用报销单明细")]
     [SugarTable("tb_FM_ExpenseClaimDetail")]
     public partial class tb_FM_ExpenseClaimDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FM_ExpenseClaimDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("费用报销单明细tb_FM_ExpenseClaimDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -79,8 +79,6 @@ namespace RUINORERP.Model
             SetProperty(ref _ClaimName, value);
             }
         }
-
-
 
         private long? _DepartmentID;
         /// <summary>
@@ -176,7 +174,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -204,7 +202,7 @@ namespace RUINORERP.Model
         /// 摘要
         /// </summary>
         [AdvQueryAttribute(ColName = "Summary",ColDesc = "摘要")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=100,IsNullable = true,ColumnDescription = "摘要" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Summary" ,Length=500,IsNullable = true,ColumnDescription = "摘要" )]
         public string Summary
         { 
             get{return _Summary;}
@@ -232,7 +230,7 @@ namespace RUINORERP.Model
         /// 税额
         /// </summary>
         [AdvQueryAttribute(ColName = "TaxAmount",ColDesc = "税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "税额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "税额" )]
         public decimal? TaxAmount
         { 
             get{return _TaxAmount;}
@@ -246,7 +244,7 @@ namespace RUINORERP.Model
         /// 未税本位币
         /// </summary>
         [AdvQueryAttribute(ColName = "UntaxedAmount",ColDesc = "未税本位币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UntaxedAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "未税本位币" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UntaxedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "未税本位币" )]
         public decimal UntaxedAmount
         { 
             get{return _UntaxedAmount;}
@@ -297,8 +295,6 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
-         
-
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ClaimMainID))]
@@ -315,10 +311,6 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
-         if("account_id"!="Account_id")
-        {
-        // rs=false;
-        }
          if("subject_id"!="Subject_id")
         {
         // rs=false;

@@ -28,6 +28,7 @@
     <Compile Remove="Workflow\WFApproval\BillApprovalWorkflow.cs" />
     <Compile Remove="Workflow\WFApproval\WorkflowWithTimedPusher.cs" />
     <Compile Remove="Workflow\WFPush\GetBaseInfo.cs" />
+    <Compile Remove="Workflow\WFReminder\ReminderBizData.cs" />
     <Compile Remove="Workflow\WFReminder\ReminderData.cs" />
   </ItemGroup>
 
@@ -134,6 +135,12 @@
     <Content Include="Log4net_file.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="frmWFManage.cs">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties workflow_4json_4myflow_1json__JsonSchema="workflowwds" /></VisualStudio></ProjectExtensions>

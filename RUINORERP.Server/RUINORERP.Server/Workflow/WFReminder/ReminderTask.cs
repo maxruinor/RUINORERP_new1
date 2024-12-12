@@ -7,6 +7,12 @@ using TransInstruction.DataPortal;
 using TransInstruction;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
+using RUINORERP.Server.ServerService;
+using System.Numerics;
+using RUINORERP.Server.ServerSession;
+using Newtonsoft.Json;
+using Azure.Core;
+using RUINORERP.Model.TransModel;
 
 namespace RUINORERP.Server.Workflow.WFReminder
 {
@@ -16,7 +22,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
     public class ReminderTask : StepBody
     {
 
-        public ReminderBizData BizData { get; set; }
+        public ServerReminderData BizData { get; set; }
         /// <summary>
         /// 接收人ID
         /// </summary>
@@ -31,6 +37,8 @@ namespace RUINORERP.Server.Workflow.WFReminder
         public string ReminderMessage { get; set; }
 
         public string TagetTableName { get; set; }
+        public object RemindInterval { get; internal set; }
+        public object Status { get; internal set; }
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
@@ -39,37 +47,55 @@ namespace RUINORERP.Server.Workflow.WFReminder
             //服务器收到客户端基础信息变更分布
             //回推
             //WorkflowServiceSender.通知工作流启动成功(UserSession, workflowid);
-            ReminderBizData exData = null;
+            ServerReminderData exData = null;
             //检测收到的信息
-            frmMain.Instance.ReminderBizDataList.TryGetValue(BizData.BizID, out exData);
-            if (exData.StopRemind == true)
+            frmMain.Instance.ReminderBizDataList.TryGetValue(BizData.BizPrimaryKey, out exData);
+            if (exData.Status != Model.MessageStatus.Cancel)
             {
-                StopRemind = true;
-            }
-            else
-            {
+                //将客户端要求的间隔时间传到步骤的参数，再传到工作流中
+                if (exData.Status == Model.MessageStatus.WaitRminder)
+                {
+                    //将回应的参数传给步骤再传到工作流中
+                    RemindInterval = exData.RemindInterval;
+                }
+
                 foreach (var item in frmMain.Instance.sessionListBiz)
                 {
-                    if (exData.Receiver == item.Value.User.用户名)
+                    if (exData.ReceiverIDs.Contains(item.Value.User.UserID))
                     {
                         try
                         {
+                            exData.RemindTimes++;
+                            //  WorkflowServiceReceiver.发送工作流提醒();
                             OriginalData exMsg = new OriginalData();
                             exMsg.cmd = (byte)ServerCmdEnum.工作流提醒推送;
                             exMsg.One = null;
+
                             //这种可以写一个扩展方法
                             ByteBuff tx = new ByteBuff(100);
                             tx.PushString(System.DateTime.Now.ToString());
-                            tx.PushString(item.Value.SessionID);
-                            tx.PushString(exData.ReminderContent);
+                            string json = JsonConvert.SerializeObject(exData,
+                    new JsonSerializerSettings
+                    {
+                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                    });
+
+                            tx.PushString(json);
+                            //tx.PushString("【系统提醒】" + System.DateTime.Now.ToString());//发送者
+                            //tx.PushString(item.Value.SessionID);
+                            //tx.PushString(exData.RemindSubject);
+                            //tx.PushString(exData.ReminderContent);
                             tx.PushBool(true);//是否强制弹窗
                             exMsg.Two = tx.toByte();
                             item.Value.AddSendData(exMsg);
-                            frmMain.Instance.PrintInfoLog("工作流数据推送");
+
+                            frmMain.Instance.ReminderBizDataList.TryUpdate(BizData.BizPrimaryKey, exData, exData);
+                            //推送了20次后就停止？收到回应后再推送？ 
+                            frmMain.Instance.PrintInfoLog("工作流提醒推送");
                         }
                         catch (Exception ex)
                         {
-                            frmMain.Instance.PrintInfoLog("服务器收到客户端基础信息变更分布失败:" + item.Value.User.用户名 + ex.Message);
+                            frmMain.Instance.PrintInfoLog("服务器工作流提醒推送分布失败:" + item.Value.User.用户名 + ex.Message);
                         }
                     }
                     else

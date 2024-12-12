@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.Model.TransModel;
 using RUINORERP.Server.Comm;
 using RUINORERP.Server.Workflow;
 using RUINORERP.Server.Workflow.Steps;
@@ -165,9 +166,9 @@ namespace RUINORERP.Server
         private async void btnStartReminderWF_Click(object sender, EventArgs e)
         {
             //启动提醒工作流
-            ReminderBizData data = new ReminderBizData();
-            data.StartTime = System.DateTime.Now;
-            data.BizKey = "华哥";
+            ServerReminderData data = new ServerReminderData();
+            
+            //data.BizKey = "华哥";
             //var workflowId = Program.WorkflowHost.StartWorkflow("PushBaseInfoWorkflow", data);
             //MessageBox.Show("start push：" + workflowId);
 

@@ -93,7 +93,7 @@ namespace RUINORERP.UI.Common
             }
             else
             {
-                if (appContext.CurUserInfo==null)
+                if (appContext.CurUserInfo == null)
                 {
                     return new();
                 }
@@ -540,7 +540,7 @@ namespace RUINORERP.UI.Common
                                 await Task.Delay(400);
                                 billEdit.Invoke(new Action(() => billEdit.LoadDataToUI(LoadItem)));
                             }
-                           
+
                             /* LoadDataToUI只能在UI线程中调用，所以需要使用Task.Run来切换到UI线程
                             await Task.Delay(1000); // 2000 表示2秒，单位为毫秒
                             // 延迟完成后执行 BindData 方法
@@ -559,6 +559,17 @@ namespace RUINORERP.UI.Common
                             baseQuery.LoadQueryParametersToUI(baseQuery.QueryDtoProxy, nodeParameter);
                         }
 
+                        //单表列表查询参数导入
+                        //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
+                        if (page.Controls[0] is BaseUControl listQuery && nodeParameter != null)
+                        {
+                            //set value这里设置属性？
+                            if (OnSetQueryConditionsDelegate != null)
+                            {
+                                OnSetQueryConditionsDelegate(listQuery.QueryDtoProxy, nodeParameter);
+                            }
+                            listQuery.LoadQueryParametersToUI(listQuery.QueryDtoProxy, nodeParameter);
+                        }
 
                         //生产工作台 区别上面。为了不影响上面。 
                         if (page.Controls[0] is BaseQuery ucbaseQuery && LoadItems != null)

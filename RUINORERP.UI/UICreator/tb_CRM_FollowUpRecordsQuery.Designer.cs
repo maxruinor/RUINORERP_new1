@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:14
+// 时间：12/12/2024 10:37:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -173,7 +173,6 @@ this.lblFollowUpDate.Text = "跟进日期";
 //111======125
 this.dtpFollowUpDate.Location = new System.Drawing.Point(173,121);
 this.dtpFollowUpDate.Name ="dtpFollowUpDate";
-this.dtpFollowUpDate.ShowCheckBox =true;
 this.dtpFollowUpDate.Size = new System.Drawing.Size(100, 21);
 this.dtpFollowUpDate.TabIndex = 5;
 this.Controls.Add(this.lblFollowUpDate);

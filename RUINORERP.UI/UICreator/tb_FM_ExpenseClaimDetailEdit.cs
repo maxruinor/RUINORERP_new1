@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:34:10
+// 时间：12/12/2024 11:32:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,7 +49,6 @@ namespace RUINORERP.UI
         
         
         
-        
 
          }
 /*
@@ -59,8 +58,7 @@ namespace RUINORERP.UI
         tb_FM_ExpenseClaimDetail entity = new tb_FM_ExpenseClaimDetail();
                      entity.ClaimMainID = Int64.Parse(txtClaimMainID.Text);
                         entity.ClaimName = txtClaimName.Text ;
-                       entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
-                        entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
+                       entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.ExpenseType_id = Int64.Parse(txtExpenseType_id.Text);
                         entity.Account_id = Int64.Parse(txtAccount_id.Text);
                         entity.Subject_id = Int64.Parse(txtSubject_id.Text);
@@ -83,17 +81,16 @@ namespace RUINORERP.UI
         public void BindData(tb_FM_ExpenseClaimDetail entity)
         {
         _EditEntity = entity;
-                       Account_id主外字段不一致。Subject_id主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_FM_ExpenseClaim>(entity, k => k.ClaimMainID, v=>v.XXNAME, cmbClaimMainID);
+                       Subject_id主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_FM_ExpenseClaim>(entity, k => k.ClaimMainID, v=>v.XXNAME, cmbClaimMainID);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaimDetail>(entity, t => t.ClaimName, txtClaimName, BindDataType4TextBox.Text,false);
-          Account_id主外字段不一致。Subject_id主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
-          Account_id主外字段不一致。Subject_id主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
-          Account_id主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_FM_ExpenseType>(entity, k => k.ExpenseType_id, v=>v.XXNAME, cmbExpenseType_id);
-Subject_id主外字段不一致。          Account_id主外字段不一致。Subject_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaimDetail>(entity, t => t.Account_id, txtAccount_id, BindDataType4TextBox.Qty,false);
-          Account_id主外字段不一致。Subject_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaimDetail>(entity, t => t.Subject_id, txtSubject_id, BindDataType4TextBox.Qty,false);
-          Account_id主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
+          Subject_id主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
+          // DataBindingHelper.BindData4Cmb<tb_FM_ExpenseType>(entity, k => k.ExpenseType_id, v=>v.XXNAME, cmbExpenseType_id);
+Subject_id主外字段不一致。          // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
+Subject_id主外字段不一致。          Subject_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaimDetail>(entity, t => t.Subject_id, txtSubject_id, BindDataType4TextBox.Qty,false);
+          // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
 Subject_id主外字段不一致。           DataBindingHelper.BindData4DataTime<tb_FM_ExpenseClaimDetail>(entity, t => t.TranDate, dtpTranDate,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaimDetail>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_FM_ExpenseClaimDetail>(entity, t => t.IncludeTax, chkIncludeTax, false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_ExpenseClaimDetail>(entity, t => t.IncludeTax, chkIncludeTax, false);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaimDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaimDetail>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaimDetail>(entity, t => t.TaxAmount.ToString(), txtTaxAmount, BindDataType4TextBox.Money,false);

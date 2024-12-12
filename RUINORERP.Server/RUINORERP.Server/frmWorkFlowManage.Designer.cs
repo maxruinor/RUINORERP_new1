@@ -51,7 +51,7 @@
             // 
             // button1
             // 
-            button1.Location = new System.Drawing.Point(676, 24);
+            button1.Location = new System.Drawing.Point(569, 70);
             button1.Name = "button1";
             button1.Size = new System.Drawing.Size(75, 23);
             button1.TabIndex = 0;
@@ -61,14 +61,14 @@
             // 
             // textBox1
             // 
-            textBox1.Location = new System.Drawing.Point(474, 69);
+            textBox1.Location = new System.Drawing.Point(429, 70);
             textBox1.Name = "textBox1";
             textBox1.Size = new System.Drawing.Size(100, 23);
             textBox1.TabIndex = 1;
             // 
             // button2
             // 
-            button2.Location = new System.Drawing.Point(676, 99);
+            button2.Location = new System.Drawing.Point(569, 142);
             button2.Name = "button2";
             button2.Size = new System.Drawing.Size(75, 23);
             button2.TabIndex = 0;
@@ -78,14 +78,14 @@
             // 
             // textBox2
             // 
-            textBox2.Location = new System.Drawing.Point(474, 141);
+            textBox2.Location = new System.Drawing.Point(429, 142);
             textBox2.Name = "textBox2";
             textBox2.Size = new System.Drawing.Size(100, 23);
             textBox2.TabIndex = 1;
             // 
             // button3
             // 
-            button3.Location = new System.Drawing.Point(657, 378);
+            button3.Location = new System.Drawing.Point(550, 384);
             button3.Name = "button3";
             button3.Size = new System.Drawing.Size(121, 59);
             button3.TabIndex = 8;
@@ -94,7 +94,7 @@
             // 
             // btn外部事件
             // 
-            btn外部事件.Location = new System.Drawing.Point(657, 303);
+            btn外部事件.Location = new System.Drawing.Point(550, 309);
             btn外部事件.Name = "btn外部事件";
             btn外部事件.Size = new System.Drawing.Size(121, 50);
             btn外部事件.TabIndex = 2;
@@ -104,7 +104,7 @@
             // 
             // btnStart
             // 
-            btnStart.Location = new System.Drawing.Point(657, 240);
+            btnStart.Location = new System.Drawing.Point(550, 246);
             btnStart.Name = "btnStart";
             btnStart.Size = new System.Drawing.Size(121, 43);
             btnStart.TabIndex = 0;
@@ -114,7 +114,7 @@
             // 
             // textBox3
             // 
-            textBox3.Location = new System.Drawing.Point(434, 396);
+            textBox3.Location = new System.Drawing.Point(389, 397);
             textBox3.Name = "textBox3";
             textBox3.Size = new System.Drawing.Size(154, 23);
             textBox3.TabIndex = 3;
@@ -122,7 +122,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new System.Drawing.Point(320, 396);
+            label1.Location = new System.Drawing.Point(281, 397);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(98, 17);
             label1.TabIndex = 5;
@@ -145,7 +145,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new System.Drawing.Point(360, 310);
+            label2.Location = new System.Drawing.Point(321, 311);
             label2.Name = "label2";
             label2.Size = new System.Drawing.Size(68, 17);
             label2.TabIndex = 5;
@@ -171,21 +171,21 @@
             // 
             // txteventPara
             // 
-            txteventPara.Location = new System.Drawing.Point(434, 311);
+            txteventPara.Location = new System.Drawing.Point(389, 312);
             txteventPara.Name = "txteventPara";
             txteventPara.Size = new System.Drawing.Size(154, 23);
             txteventPara.TabIndex = 3;
             // 
             // txtworkflowParam
             // 
-            txtworkflowParam.Location = new System.Drawing.Point(434, 250);
+            txtworkflowParam.Location = new System.Drawing.Point(389, 251);
             txtworkflowParam.Name = "txtworkflowParam";
             txtworkflowParam.Size = new System.Drawing.Size(154, 23);
             txtworkflowParam.TabIndex = 1;
             // 
             // btnPushTest
             // 
-            btnPushTest.Location = new System.Drawing.Point(271, 12);
+            btnPushTest.Location = new System.Drawing.Point(12, 57);
             btnPushTest.Name = "btnPushTest";
             btnPushTest.Size = new System.Drawing.Size(130, 46);
             btnPushTest.TabIndex = 9;

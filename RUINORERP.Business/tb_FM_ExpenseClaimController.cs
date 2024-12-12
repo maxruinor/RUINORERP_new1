@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:34:09
+// 时间：12/12/2024 11:32:09
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -458,6 +458,7 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseClaim> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseClaim>()
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_fm_payeeinfo )
                                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .ToListAsync();
             
@@ -480,6 +481,7 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseClaim> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseClaim>().Where(exp)
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_fm_payeeinfo )
                                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .ToListAsync();
             
@@ -502,6 +504,7 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseClaim> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseClaim>().Where(exp)
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_fm_payeeinfo )
                                         .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .ToList();
             
@@ -541,6 +544,7 @@ namespace RUINORERP.Business
             tb_FM_ExpenseClaim entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseClaim>().Where(w => w.ClaimMainID == (long)id)
                              .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_fm_payeeinfo )
                                         .Includes(t => t.tb_FM_ExpenseClaimDetails )
                         .FirstAsync();
             if(entity!=null)

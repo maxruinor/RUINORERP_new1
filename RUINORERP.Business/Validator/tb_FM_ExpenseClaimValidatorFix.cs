@@ -29,7 +29,7 @@ namespace RUINORERP.Business
             // 这里添加额外的初始化代码
             // 如果选择了外发，则必须填写外发加工商
             RuleFor(x => x.PayeeInfoID).NotNull().WithMessage("收款信息:不能为空。");
-            RuleFor(x => x.PayeeInfoID).Must(CheckForeignKeyValue).WithMessage("收款信息:下拉选择值不正确。");
+            RuleFor(x => x.PayeeInfoID).Must(CheckForeignKeyValueCanNull).WithMessage("收款信息:下拉选择值不正确。");
         }
     }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:14
+// 时间：12/12/2024 10:37:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -26,13 +26,14 @@ namespace RUINORERP.Business
     {
      public tb_CRM_FollowUpPlansValidator() 
      {
-      RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Customer_id).Must(CheckForeignKeyValueCanNull).WithMessage("目标客户:下拉选择值不正确。");
- RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Customer_id).NotEmpty().When(x => x.Customer_id.HasValue);
- RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("执行人:下拉选择值不正确。");
- RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
- RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanStatus).NotEmpty().When(x => x.PlanStatus.HasValue);
+      RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Customer_id).Must(CheckForeignKeyValue).WithMessage("目标客户:下拉选择值不正确。");
+ RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Employee_ID).Must(CheckForeignKeyValue).WithMessage("执行人:下拉选择值不正确。");
+//***** 
+ RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanStatus).NotNull().WithMessage("计划状态:不能为空。");
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanSubject).MaximumLength(100).WithMessage("计划主题:不能超过最大长度,100.");
+ RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanSubject).NotEmpty().WithMessage("计划主题:不能为空。");
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanContent).MaximumLength(500).WithMessage("计划内容:不能超过最大长度,500.");
+ RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanContent).NotEmpty().WithMessage("计划内容:不能为空。");
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);

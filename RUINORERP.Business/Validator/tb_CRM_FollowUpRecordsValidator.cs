@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:14
+// 时间：12/12/2024 10:37:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -32,11 +32,13 @@ namespace RUINORERP.Business
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.LeadID).NotEmpty().When(x => x.LeadID.HasValue);
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.PlanID).Must(CheckForeignKeyValueCanNull).WithMessage("跟进计划:下拉选择值不正确。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.PlanID).NotEmpty().When(x => x.PlanID.HasValue);
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("跟进人:下拉选择值不正确。");
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpMethod).NotEmpty().When(x => x.FollowUpMethod.HasValue);
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Employee_ID).Must(CheckForeignKeyValue).WithMessage("跟进人:下拉选择值不正确。");
+//***** 
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpMethod).NotNull().WithMessage("跟进方式:不能为空。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpSubject).MaximumLength(100).WithMessage("跟进主题:不能超过最大长度,100.");
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpSubject).NotEmpty().WithMessage("跟进主题:不能为空。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpContent).MaximumLength(500).WithMessage("跟进内容:不能超过最大长度,500.");
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpContent).NotEmpty().WithMessage("跟进内容:不能为空。");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);

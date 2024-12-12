@@ -172,7 +172,7 @@ namespace RUINORERP.Server.BizService
                 //更新服务器的缓存
                 // 将item转换为JObject
                 JObject obj = JObject.Parse(json);
-
+            
                 MyCacheManager.Instance.UpdateEntityList(tableName, obj);
                 //再转发给其他客户端
 
@@ -328,11 +328,13 @@ namespace RUINORERP.Server.BizService
                     .SingleAsync();
                 if (user != null)
                 {
+
                     //登陆成功
                     UserSession.User.用户名 = user.UserName;
                     if (user.tb_employee != null)
                     {
                         UserSession.User.姓名 = user.tb_employee.Employee_Name;
+                        UserSession.User.Employee_ID = user.Employee_ID.Value;
                     }
                     //登陆时间
                     UserSession.User.登陆时间 = System.DateTime.Now;
@@ -403,7 +405,7 @@ namespace RUINORERP.Server.BizService
             {
                 //PacketProcess pp = new PacketProcess(PlayerSession);
                 ByteBuff tx = new ByteBuff(100);
-                if (ExistSessionforBiz== null)
+                if (ExistSessionforBiz == null)
                 {
                     rs = false;
                     tx.PushBool(rs);
@@ -422,7 +424,7 @@ namespace RUINORERP.Server.BizService
                         tx.PushBool(rs);
                     }
                 }
-                
+
                 PlayerSession.AddSendData((byte)ServerCmdEnum.回复用户重复登陆, null, tx.toByte());
                 return rs;
             }
@@ -498,7 +500,7 @@ namespace RUINORERP.Server.BizService
                         CacheInfos.Add(cacheInfo);
                     }
                 }
- 
+
                 string json = JsonConvert.SerializeObject(CacheInfos,
                       new JsonSerializerSettings
                       {

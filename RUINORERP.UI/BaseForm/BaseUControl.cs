@@ -11,6 +11,7 @@ using RUINORERP.Model;
 using Krypton.Workspace;
 using Krypton.Navigator;
 using RUINORERP.Business.Processor;
+using RUINORERP.UI.UserCenter;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -26,6 +27,25 @@ namespace RUINORERP.UI.BaseForm
             InitializeComponent();
         }
 
+        /// <summary>
+        /// 从工作台点击过来的时候，这个保存初始化时的查询参数
+        ///  这个可用可不用。
+        /// </summary>
+        public object QueryDtoProxy { get; set; }
+
+        /// <summary>
+        /// 传查询参数对象，对象已经给了查询参数具体值，具体在窗体那边判断
+        /// </summary>
+        /// <param name="QueryParameters"></param>
+        internal virtual void LoadQueryParametersToUI(object QueryParameters, QueryParameter nodeParameter = null)
+        {
+            //
+        }
+
+        public virtual void Query(object QueryDto, bool UseNavQuery = false)
+        {
+
+        }
 
         public virtual void Query(bool UseNavQuery = false)
         {

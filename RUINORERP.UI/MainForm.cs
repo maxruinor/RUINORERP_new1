@@ -78,6 +78,7 @@ using Mysqlx.Prepare;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Table;
 using System.Xml;
+using RUINORERP.Model.TransModel;
 
 
 
@@ -111,7 +112,7 @@ namespace RUINORERP.UI
         public List<View_ProdDetail> list = new List<View_ProdDetail>();
 
         //一个消息缓存列表，有处理过的。未处理的。未看的。临时性还是固定到表的？
-        public Queue<TranMessage> MessageList = new Queue<TranMessage>();
+        public Queue<ServerReminderData> MessageList = new Queue<ServerReminderData>();
 
         ///// <summary>
         ///// 用于连接上服务器后。保存与服务器连接的id
@@ -464,6 +465,8 @@ namespace RUINORERP.UI
 
 
         }
+
+        BizTypeMapper mapper = new BizTypeMapper();
         public AuthorizeController authorizeController;
         private void RefreshData()
         {
@@ -487,13 +490,35 @@ namespace RUINORERP.UI
             lblServerInfo.Text = lblServerStatus.ToolTipText;
             if (MessageList.Count > 0)
             {
-                TranMessage MessageInfo = MessageList.Dequeue();
+                ServerReminderData MessageInfo = MessageList.Dequeue();
                 //NotificationBox notificationBox = new NotificationBox();
                 //notificationBox.ShowForm(MessageInfo.Content);
                 MessagePrompt messager = new MessagePrompt();
+                messager.mapper = mapper;
+            
+
+                var userid = MessageInfo.ReceiverIDs.FirstOrDefault(c => c == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == userid);
+                if (userinfo == null)
+                {
+                    MessageInfo.SenderName ="系统";
+                }
+                else
+                {
+                    MessageInfo.SenderName = userinfo.姓名;
+                }
                 messager.txtSender.Text = MessageInfo.SenderName;
-                messager.txtSubject.Text = "请求协助";
-                messager.Content = MessageInfo.Content;
+                if (MessageInfo.RemindSubject.IsNotEmptyOrNull())
+                {
+                    messager.txtSubject.Text = MessageInfo.RemindSubject;
+                }
+                else
+                {
+                    messager.txtSubject.Text = "请求协助";
+                }
+           
+                messager.Content = MessageInfo.ReminderContent;
+                messager.ReminderData = MessageInfo;
                 messager.Show();
                 messager.TopMost = true;
                 //MainForm.Instance.ShowMsg(MessageInfo.Content);

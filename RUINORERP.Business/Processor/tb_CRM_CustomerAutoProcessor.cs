@@ -36,7 +36,7 @@ namespace RUINORERP.Business.Processor
     /// <summary>
     /// 目标客户，公海客户 CRM系统中使用，给成交客户作外键引用
     /// </summary>
-    public partial class tb_CRM_CustomerProcessor:BaseProcessor 
+    public partial class tb_CRM_CustomerProcessor : BaseProcessor
     {
 
         public override QueryFilter GetQueryFilter()
@@ -52,7 +52,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.FilterLimitExpressions.Add(lambda);
             queryFilter.SetQueryField<tb_CRM_Customer>(c => c.CustomerName);
             queryFilter.SetQueryField<tb_CRM_Customer>(c => c.Employee_ID, true);
-            queryFilter.SetQueryField<tb_CRM_Customer>(c => c.LeadID, true);
+            queryFilter.SetQueryField<tb_CRM_Customer>(c => c.LeadID, true);//如果视图就要typof(tableName)指定。因为视图没有设置关系
             queryFilter.SetQueryField<tb_CRM_Customer>(c => c.CityID, true);
             queryFilter.SetQueryField<tb_CRM_Customer>(c => c.ProvinceID, true);
             queryFilter.SetQueryField<tb_CRM_Customer>(c => c.Region_ID, true);

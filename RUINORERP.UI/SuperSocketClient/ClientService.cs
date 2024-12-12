@@ -11,6 +11,7 @@ using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.TransModel;
 using RUINORERP.UI.BaseForm;
 using System;
 using System.Collections.Generic;
@@ -282,11 +283,11 @@ namespace RUINORERP.UI.SuperSocketClient
                 }
                 else
                 {
-                    TranMessage MessageInfo = new TranMessage();
+                    ServerReminderData MessageInfo = new ServerReminderData();
                     MessageInfo.SendTime = sendtime;
                     //  MessageInfo.SenderID = SessionID;
                     MessageInfo.SenderName = 发送者姓名;
-                    MessageInfo.Content = Message;
+                    MessageInfo.ReminderContent = Message;
                     MainForm.Instance.MessageList.Enqueue(MessageInfo);
                 }
             }
@@ -314,11 +315,11 @@ namespace RUINORERP.UI.SuperSocketClient
                 string ExCode = ByteDataAnalysis.GetString(gd.Two, ref index);
                 bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
 
-                TranMessage MessageInfo = new TranMessage();
+                ServerReminderData MessageInfo = new ServerReminderData();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;
                 MessageInfo.SenderName = 发送者姓名;
-                MessageInfo.Content = Msg;
+                MessageInfo.ReminderContent = Msg;
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
             }
             catch (Exception ex)
@@ -343,11 +344,11 @@ namespace RUINORERP.UI.SuperSocketClient
                 string BillType = ByteDataAnalysis.GetString(gd.Two, ref index);
                 string BillData = ByteDataAnalysis.GetString(gd.Two, ref index);
                 var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == RequestUserID);
-                TranMessage MessageInfo = new TranMessage();
+                ServerReminderData MessageInfo = new ServerReminderData();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;
                 MessageInfo.SenderName = userinfo.姓名;
-                MessageInfo.Content = RequestContent + "-" + BillType;
+                MessageInfo.ReminderContent = RequestContent + "-" + BillType;
                 //保存最新的协助处理请求信息 单据信息
                 string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + $"\\FormProperty\\Data\\{userinfo.姓名}", BillType + System.DateTime.Now.ToString("yyyyMMddHHmmss") + ".cache");
                 System.IO.FileInfo fi = new System.IO.FileInfo(PathwithFileName);
@@ -546,7 +547,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
 
 
-        public static string 接收服务器工作流的提醒消息(OriginalData gd)
+        public static string 接收工作流的提醒消息(OriginalData gd)
         {
             string Message = "";
             try
@@ -554,8 +555,10 @@ namespace RUINORERP.UI.SuperSocketClient
                 int index = 0;
                 ByteBuff bg = new ByteBuff(gd.Two);
                 string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
-                Message = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+
+                // 将item转换为JObject
+                var obj = JObject.Parse(json);
                 bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
                 if (!MustDisplay)
                 {
@@ -563,11 +566,8 @@ namespace RUINORERP.UI.SuperSocketClient
                 }
                 else
                 {
-                    TranMessage MessageInfo = new TranMessage();
-                    MessageInfo.SendTime = sendtime;
-                    //  MessageInfo.SenderID = SessionID;
-                    MessageInfo.Content = Message;
-                    MainForm.Instance.MessageList.Enqueue(MessageInfo);
+                    ServerReminderData reminderData = obj.ToObject<ServerReminderData>();
+                    MainForm.Instance.MessageList.Enqueue(reminderData);
                 }
             }
             catch (Exception ex)

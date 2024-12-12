@@ -15,6 +15,7 @@ using System.Numerics;
 using System.Windows.Forms;
 using Azure.Core;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.TransModel;
 
 namespace RUINORERP.Server.ServerService
 {
@@ -56,7 +57,7 @@ namespace RUINORERP.Server.ServerService
 
         }
 
-        public static void process请求协助处理(SessionforBiz SuperAdminSession, TranMessage MessageInfo)
+        public static void process请求协助处理(SessionforBiz SuperAdminSession, ServerReminderData MessageInfo)
         {
             try
             {
@@ -64,7 +65,7 @@ namespace RUINORERP.Server.ServerService
                 tx.PushString(MessageInfo.SendTime);
                 tx.PushInt64(MessageInfo.SenderID);//请示的人ID
                 tx.PushString(MessageInfo.SenderName);
-                tx.PushString(MessageInfo.Content);
+                tx.PushString(MessageInfo.ReminderContent);
                 tx.PushString(MessageInfo.EntityType);
                 tx.PushString(MessageInfo.BillData);
                 SystemService.转发协助处理(SuperAdminSession, tx.toByte());
@@ -115,11 +116,11 @@ namespace RUINORERP.Server.ServerService
                     //tx.PushString(EntityType);//请示的人姓名。后面单据数据要保存时要名称开头
                     //tx.PushString(BillData);
 
-                    TranMessage MessageInfo = new TranMessage();
+                    ServerReminderData MessageInfo = new ServerReminderData();
                     MessageInfo.SendTime = sendtime;
                     MessageInfo.SenderID = RequestUserID;
                     MessageInfo.SenderName = RequestEmpName;
-                    MessageInfo.Content = RequestContent;
+                    MessageInfo.ReminderContent = RequestContent;
                     frmMain.Instance.MessageList.Enqueue(MessageInfo);
                 }
 

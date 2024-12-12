@@ -49,6 +49,7 @@ using WorkflowCore.Services;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Business.Security;
 using Castle.Core.Logging;
+using RUINORERP.Model.TransModel;
 
 
 namespace RUINORERP.UI
@@ -552,7 +553,7 @@ namespace RUINORERP.UI
             services.AddScoped(typeof(BaseListWithTree));
 
             services.AddScoped(typeof(Model.CacheInfo));
-            services.AddScoped(typeof(Model.TranMessage));
+            services.AddScoped(typeof(ServerReminderData));
             services.AddScoped(typeof(Model.LastCacheFetchInfo));
             services.AddScoped(typeof(Model.CacheFetchManager));
             // services.AddSingleton(new AppSettings(WebHostEnvironment));

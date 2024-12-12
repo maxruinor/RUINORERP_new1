@@ -84,9 +84,15 @@ namespace RUINORERP.Server.Commands
                     }
                     switch (CleintCmd)
                     {
-                        case ClientCmdEnum.工作流提醒添加:
+                        case ClientCmdEnum.工作流提醒回复:
 
-                            WorkflowServiceReceiver.接收工作流提醒添加(Player, gd);
+                            WorkflowServiceReceiver.接收工作流提醒回复(Player, gd);
+                            break;
+
+
+                        case ClientCmdEnum.工作流提醒请求:
+
+                            WorkflowServiceReceiver.接收工作流提醒请求(Player, gd);
                             break;
 
 

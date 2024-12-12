@@ -262,7 +262,7 @@ namespace RUINORERP.Server
 
 
             //1分钟检查一次
-            ReminderTimer = new System.Timers.Timer(20000);
+            ReminderTimer = new System.Timers.Timer(60000);
             ReminderTimer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
             {
                 if (this.InvokeRequired)
@@ -326,8 +326,8 @@ namespace RUINORERP.Server
                     if (BizData != null)
                     {
                         //这里要判断规则，目前暂时todo 写死,提前一天启动提醒
-                        //如果启动时间
-                        if (BizData.StartTime > BizData.StartTime.AddMinutes(-1) && string.IsNullOrEmpty(BizData.WorkflowId))
+                        //如果启动时间 提前1天
+                        if (System.DateTime.Now > BizData.StartTime.AddDays(-1) && string.IsNullOrEmpty(BizData.WorkflowId))
                         {
                             //启动
                             var workflowId = await host.StartWorkflow("ReminderWorkflow", 1, BizData);
@@ -851,17 +851,20 @@ namespace RUINORERP.Server
             }
         }
 
+        public frmWFManage frmWF = Startup.GetFromFac<frmWFManage>();
 
         private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             if (e.ClickedItem.Text == "工作流管理")
             {
-                
-                frmWFManage frm = Startup.GetFromFac<frmWFManage>();
-                frm.RefreshData();//ReminderBizDataList
-                frm.MdiParent = this;
-                frm.Show();
-                frm.Activate();
+                if (frmWF == null)
+                {
+                    frmWF = Startup.GetFromFac<frmWFManage>();
+                }
+                frmWF.RefreshData();//ReminderBizDataList
+                frmWF.MdiParent = this;
+                frmWF.Show();
+                frmWF.Activate();
 
             }
             if (e.ClickedItem.Text == "启动服务")

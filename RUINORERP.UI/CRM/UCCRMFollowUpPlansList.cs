@@ -83,19 +83,21 @@ namespace RUINORERP.UI.CRM
                 foreach (var item in list)
                 {
                     //向服务器推送工作流提醒的列表 typeof(T).Name
+                    if (item.PlanStatus == (int)FollowUpPlanStatus.未开始)
+                    {
+                        ClientReminderRequest request = new ClientReminderRequest();
+                        request.BizPrimaryKey = item.PlanID;
+                        request.BizType = BizType.CRM跟进计划;
+                        request.StartTime = item.PlanStartDate;
+                        request.EndTime = item.PlanEndDate;
+                        request.ReminderSubject = item.PlanSubject;
+                        request.ReminderContent = item.PlanContent;
+                        request.RemindTargetID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                        request.RemindTargetName = MainForm.Instance.AppContext.CurUserInfo.Name;
 
-                    ClientReminderRequest request = new ClientReminderRequest();
-                    request.BizPrimaryKey = item.PlanID;
-                    request.BizType = BizType.CRM跟进计划;
-                    request.StartTime = item.PlanStartDate;
-                    request.EndTime = item.PlanEndDate;
-                    request.ReminderSubject = item.PlanSubject;
-                    request.ReminderContent = item.PlanContent;
-                    request.RemindTargetID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    request.RemindTargetName = MainForm.Instance.AppContext.CurUserInfo.Name;
-
-                    OriginalData beatDataDel = ClientDataBuilder.工作流提醒请求(request);
-                    MainForm.Instance.ecs.AddSendData(beatDataDel);
+                        OriginalData beatDataDel = ClientDataBuilder.工作流提醒请求(request);
+                        MainForm.Instance.ecs.AddSendData(beatDataDel);
+                    }
                 }
 
             }

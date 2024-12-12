@@ -135,7 +135,9 @@ namespace RUINORERP.UI.IM
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.Cancel;
+            ResponseToServer(MessageStatus.Read);
+            // this.DialogResult = DialogResult.Cancel;
+            this.DialogResult = DialogResult.OK;
             this.Close();
         }
 
@@ -306,16 +308,16 @@ namespace RUINORERP.UI.IM
                 switch (command.Text)
                 {
                     case "五分钟后":
-                        interval = 60 * 5;
+                        interval = 300;
                         break;
                     case "十分钟后":
-                        interval = 60 * 5;
+                        interval = 600;
                         break;
                     case "一小时后":
-                        interval = 60 * 5;
+                        interval = 3600;
                         break;
                     case "一天后":
-                        interval = 60 * 5;
+                        interval = 3600*24;
                         break;
                     default:
                         break;

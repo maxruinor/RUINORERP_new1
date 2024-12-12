@@ -11,7 +11,7 @@ namespace RUINORERP.Model.TransModel
     {
 
         // 消息状态
-        public MessageStatus Status { get; set; } = MessageStatus.Cancel;
+        public MessageStatus Status { get; set; } = MessageStatus.Unread;
 
         // 消息优先级
         public MessagePriority Priority { get; set; }

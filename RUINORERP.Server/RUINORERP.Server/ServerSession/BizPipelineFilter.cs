@@ -127,13 +127,14 @@ namespace RUINORERP.Server.ServerSession
                 gpi.Body = PackageContents;
                 //Key就是两种指令 在注册中 指定不同的处理类
                 //连接后，服务器发送固定256后，就会收到一个256长度，内容会变化的值，暂时不知道规则
-                if (PackageContents.Length == 256)
-                {
-                    gpi.Key = "XT";
-                    //gpi.Key = "KXGame";
-                    gpi.ecode = SpecialOrder.固定256;
-                    return gpi;
-                }
+                //这里不是游戏。暂时不用这样
+                //if (PackageContents.Length == 256)
+                //{
+                //    gpi.Key = "XT";
+                //    //gpi.Key = "KXGame";
+                //    gpi.ecode = SpecialOrder.固定256;
+                //    return gpi;
+                //}
                 if (PackageContents.Length == 18)
                 {
                     gpi.Key = "XT";

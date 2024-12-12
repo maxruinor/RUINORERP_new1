@@ -20,6 +20,7 @@ using System.Numerics;
 using Newtonsoft.Json;
 using RUINORERP.Model.TransModel;
 using Mapster;
+using System.Linq;
 
 namespace RUINORERP.Server.ServerService
 {
@@ -196,6 +197,15 @@ namespace RUINORERP.Server.ServerService
                 if (reminderBizData.StartTime > System.DateTime.Now.AddMinutes(3) && reminderBizData.EndTime >= System.DateTime.Now && reminderBizData.ReceiverIDs.Length > 0)
                 {
                     frmMain.Instance.ReminderBizDataList.AddOrUpdate(reminderBizData.BizPrimaryKey, reminderBizData, (key, value) => value);
+                    if (!frmMain.Instance.frmWF.WFInfos.Contains(reminderBizData))
+                    {
+                        frmMain.Instance.frmWF.WFInfos.Add(reminderBizData);
+                    }
+                    else
+                    {
+                        var wfinfo = frmMain.Instance.frmWF.WFInfos.FirstOrDefault(c => c.BizPrimaryKey == reminderBizData.BizPrimaryKey);
+                        wfinfo=reminderBizData;
+                    }
                     if (frmMain.Instance.IsDebug)
                     {
                         frmMain.Instance.PrintInfoLog($"工作流提醒添加成功{reminderBizData.BizPrimaryKey} ");

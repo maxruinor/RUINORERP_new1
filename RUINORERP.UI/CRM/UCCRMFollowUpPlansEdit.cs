@@ -102,7 +102,19 @@ namespace RUINORERP.UI.CRM
             {
                 flowLayoutPanel1.Visible = false;
             }
-
+            entity.PropertyChanged += async (sender, s2) =>
+            {
+                
+                if (_EditEntity.ActionStatus == ActionStatus.新增 || _EditEntity.ActionStatus == ActionStatus.修改 )
+                {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_CRM_FollowUpPlans>(c => c.PlanStartDate))
+                    {
+                        //结束是起的加一天，默认
+                        _EditEntity.PlanEndDate = _EditEntity.PlanStartDate.AddDays(1);
+                    }
+               
+                }
+            };
 
         }
 

@@ -44,7 +44,7 @@ namespace RUINORERP.UI.CRM
             {
                 //第一次建的时候 应该是业务建的。分配给本人
                 record.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
-                record.FollowUpDate = DateTime.Now.AddDays(1);
+                record.FollowUpDate = DateTime.Now;
             }
 
             _EditEntity = record;
@@ -206,6 +206,9 @@ namespace RUINORERP.UI.CRM
         }
 
         #endregion
+
+
+
 
     }
 }

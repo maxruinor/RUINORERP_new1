@@ -41,6 +41,8 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Model.CommonModel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using Netron.GraphLib;
+using AutoMapper;
+using RUINORERP.Business.AutoMapper;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -586,7 +588,67 @@ namespace RUINORERP.UI.SysConfig
                 {
 
                 }
+                if (treeView1.SelectedNode.Text == "销售数量与明细数量和的检测")
+                {
+                    #region 销售订单数量与明细数量和的检测
+                    List<tb_SaleOrder> SaleOrders = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
+                        .Includes(c => c.tb_SaleOrderDetails)
+                       .ToList();
+                    foreach (tb_SaleOrder Order in SaleOrders)
+                    {
+                        if (!Order.TotalQty.Equals(Order.tb_SaleOrderDetails.Sum(c => c.Quantity)))
+                        {
+                            richTextBoxLog.AppendText($"销售订单数量不对：{Order.SOrder_ID}：{Order.SOrderNo}" + "\r\n");
+                        }
+                    }
 
+                    #endregion
+
+                    #region 销售订单数量与明细数量和的检测
+                    List<tb_SaleOut> SaleOuts = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                        .Includes(c => c.tb_SaleOutDetails)
+                       .ToList();
+                    foreach (tb_SaleOut Saleout in SaleOuts)
+                    {
+                        if (!Saleout.TotalQty.Equals(Saleout.tb_SaleOutDetails.Sum(c => c.Quantity)))
+                        {
+                            richTextBoxLog.AppendText($"销售出库数量不对：{Saleout.SaleOut_MainID}：{Saleout.SaleOutNo}" + "\r\n");
+                        }
+                    }
+
+                    #endregion
+
+                }
+
+                if (treeView1.SelectedNode.Text == "将销售客户转换为目标客户")
+                {
+                    MessageBox.Show("只能执行一次。已经执行过了。");
+                    //crm数据修复 只能执行一次。这里要注释掉。
+                    /*
+                    #region 
+                    List<tb_CustomerVendor> CustomerVendors = MainForm.Instance.AppContext.Db.Queryable<tb_CustomerVendor>()
+                        .IncludesAllFirstLayer()
+                        .Where(c => c.IsCustomer == true && !c.CVName.Contains("信保"))
+                        .ToList();
+                    List<tb_CRM_Customer> customers = new List<tb_CRM_Customer>();
+                    foreach (var Customer in CustomerVendors)
+                    {
+                        IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+                        tb_CRM_Customer entity = mapper.Map<tb_CRM_Customer>(Customer);
+                        BusinessHelper.Instance.InitEntity(entity);
+                        customers.Add(entity);
+                    }
+                    tb_CRM_CustomerController<tb_CRM_Customer> ctr = Startup.GetFromFac<tb_CRM_CustomerController<tb_CRM_Customer>>();
+                    List<long> ids = await ctr.AddAsync(customers);
+
+                    if (ids.Count > 0)
+                    {
+                        richTextBoxLog.AppendText($"保存成功：{ids.Count}条记录" + "\r\n");
+                    }
+
+                    #endregion
+                    */
+                }
                 if (treeView1.SelectedNode.Text == "属性重复的SKU检测")
                 {
                     //思路是将属性全查出来。将属性按规则排序后比较

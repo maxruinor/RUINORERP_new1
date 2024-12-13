@@ -470,60 +470,76 @@ namespace RUINORERP.UI
         public AuthorizeController authorizeController;
         private void RefreshData()
         {
-            // 更新状态栏信息
-            //if (ecs.client.Socket == null)
-            //{
-            //    lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}";
-            //}
-            //else
-            //{
-            //    lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}，sessionID:{ecs.client.Socket.LocalEndPoint}";
-            //}
-            if (ecs.client.Socket == null)
+            try
             {
-                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort},Connected:{ecs.IsConnected},FreeTime:{GetLastInputTime()}";
-            }
-            else
-            {
-                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort}，Connected:{ecs.IsConnected}，LocIP:{ecs.client.Socket.LocalEndPoint},FreeTime:{GetLastInputTime()}";
-            }
-            lblServerInfo.Text = lblServerStatus.ToolTipText;
-            if (MessageList.Count > 0)
-            {
-                ServerReminderData MessageInfo = MessageList.Dequeue();
-                //NotificationBox notificationBox = new NotificationBox();
-                //notificationBox.ShowForm(MessageInfo.Content);
-                MessagePrompt messager = new MessagePrompt();
-                messager.mapper = mapper;
-            
 
-                var userid = MessageInfo.ReceiverIDs.FirstOrDefault(c => c == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
-                var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == userid);
-                if (userinfo == null)
+
+                // 更新状态栏信息
+                //if (ecs.client.Socket == null)
+                //{
+                //    lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}";
+                //}
+                //else
+                //{
+                //    lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}，sessionID:{ecs.client.Socket.LocalEndPoint}";
+                //}
+                if (ecs.client.Socket == null)
                 {
-                    MessageInfo.SenderName ="系统";
+                    lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort},Connected:{ecs.IsConnected},FreeTime:{GetLastInputTime()}";
                 }
                 else
                 {
-                    MessageInfo.SenderName = userinfo.姓名;
+                    lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort}，Connected:{ecs.IsConnected}，LocIP:{ecs.client.Socket.LocalEndPoint},FreeTime:{GetLastInputTime()}";
                 }
-                messager.txtSender.Text = MessageInfo.SenderName;
-                if (MessageInfo.RemindSubject.IsNotEmptyOrNull())
+                lblServerInfo.Text = lblServerStatus.ToolTipText;
+                if (MessageList.Count > 0)
                 {
-                    messager.txtSubject.Text = MessageInfo.RemindSubject;
-                }
-                else
-                {
-                    messager.txtSubject.Text = "请求协助";
-                }
-           
-                messager.Content = MessageInfo.ReminderContent;
-                messager.ReminderData = MessageInfo;
-                messager.Show();
-                messager.TopMost = true;
-                //MainForm.Instance.ShowMsg(MessageInfo.Content);
-            }
+                    ServerReminderData MessageInfo = MessageList.Dequeue();
+                    //NotificationBox notificationBox = new NotificationBox();
+                    //notificationBox.ShowForm(MessageInfo.Content);
+                    MessagePrompt messager = new MessagePrompt();
+                    messager.mapper = mapper;
 
+                    if (MessageInfo.ReceiverIDs == null)
+                    {
+                        MessageInfo.SenderName = "系统";
+                    }
+                    else
+                    {
+                        var userid = MessageInfo.ReceiverIDs.FirstOrDefault(c => c == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                        var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == userid);
+                        if (userinfo == null)
+                        {
+                            MessageInfo.SenderName = "系统";
+                        }
+                        else
+                        {
+                            MessageInfo.SenderName = userinfo.姓名;
+                        }
+                    }
+                   
+                    messager.txtSender.Text = MessageInfo.SenderName;
+                    if (MessageInfo.RemindSubject.IsNotEmptyOrNull())
+                    {
+                        messager.txtSubject.Text = MessageInfo.RemindSubject;
+                    }
+                    else
+                    {
+                        messager.txtSubject.Text = "请求协助";
+                    }
+
+                    messager.Content = MessageInfo.ReminderContent;
+                    messager.ReminderData = MessageInfo;
+                    messager.Show();
+                    messager.TopMost = true;
+                    //MainForm.Instance.ShowMsg(MessageInfo.Content);
+                }
+            }
+            catch (Exception ex)
+            {
+
+
+            }
         }
 
         private void kryptonDockableWorkspace1_ActivePageChanged(object sender, ActivePageChangedEventArgs e)
@@ -2352,7 +2368,7 @@ namespace RUINORERP.UI
                     _cacheFetchManager.UpdateLastCacheFetchInfo(nextTableName);
                     if (authorizeController.GetShowDebugInfoAuthorization())
                     {
-                        if (elementType==null)
+                        if (elementType == null)
                         {
                             PrintInfoLog($"请求了缓存：{nextTableName}");
                         }

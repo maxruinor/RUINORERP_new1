@@ -17,6 +17,7 @@ using System.Windows.Forms;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINORERP.Common;
 using RUINORERP.Common.SnowflakeIdHelper;
+using RUINORERP.UI.AdvancedUIModule;
 
 namespace RUINORERP.UI.Common
 {
@@ -321,7 +322,14 @@ namespace RUINORERP.UI.Common
             {
                 _appContext.Db.CopyNew().Insertable<tb_ButtonInfo>(tb_ButtonInfos).ExecuteReturnSnowflakeIdListAsync();
             }
-
+            if (c is IFormAuth)
+            {
+                IFormAuth formAuth = c as IFormAuth;
+                if (formAuth != null)
+                {
+                    ToolStripItem[] stripItems = formAuth.AddExtendButton();
+                }
+            }
         }
 
         /// <summary>

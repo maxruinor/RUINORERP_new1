@@ -164,7 +164,7 @@ namespace RUINORERP.Business.CommService
             }
             catch (Exception ex)
             {
-                _logger.LogError("BizCacheHelper->GetEntity:" + ex.Message);
+                _logger.LogError("BizCacheHelper->GetEntity:" + ex.Message+ex.StackTrace);
             }
             return default(T);
         }

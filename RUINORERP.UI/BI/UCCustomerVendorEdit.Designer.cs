@@ -166,7 +166,6 @@
             this.cmbCustomer_id.Name = "cmbCustomer_id";
             this.cmbCustomer_id.Size = new System.Drawing.Size(274, 21);
             this.cmbCustomer_id.TabIndex = 81;
-            this.cmbCustomer_id.SelectedIndexChanged += new System.EventHandler(this.cmbCustomer_id_SelectedIndexChanged);
             // 
             // btnAddPayeeInfo
             // 
@@ -350,6 +349,7 @@
             this.txtIsCustomer.Size = new System.Drawing.Size(19, 13);
             this.txtIsCustomer.TabIndex = 34;
             this.txtIsCustomer.Values.Text = "";
+            this.txtIsCustomer.CheckedChanged += new System.EventHandler(this.txtIsCustomer_CheckedChanged);
             // 
             // txtType_ID
             // 

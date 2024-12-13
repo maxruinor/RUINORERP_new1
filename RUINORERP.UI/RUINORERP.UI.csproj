@@ -468,6 +468,7 @@
     <Compile Include="AdvancedUIModule\Class1.cs" />
     <Compile Include="AdvancedUIModule\CustomComponentResourceManager.cs" />
     <Compile Include="AdvancedUIModule\DynamicInputParams.cs" />
+    <Compile Include="AdvancedUIModule\IFormAuth.cs" />
     <Compile Include="AdvancedUIModule\UCAdvDateTimerPickerGroup.cs">
       <SubType>UserControl</SubType>
     </Compile>

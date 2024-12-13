@@ -110,7 +110,7 @@ namespace RUINORERP.UI.CRM
             }
             entity.PropertyChanged += async (sender, s2) =>
             {
-                //如果是销售订单引入变化则加载明细及相关数据
+                //如果线索引入相关数据
                 if ((customer.ActionStatus == ActionStatus.新增 || customer.ActionStatus == ActionStatus.修改) && customer.LeadID.HasValue && customer.LeadID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_CRM_Customer>(c => c.LeadID))
                 {
                     await ToCustomer(customer, customer.LeadID.Value);

@@ -23,7 +23,7 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInv>();
             CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInvDetail>();
             //测试了订单转成入库单列表集合不用单设置也可以成功,List<T>  这种转。反而有问题？
-           CreateMap<tb_PurOrder, tb_PurEntry>();
+            CreateMap<tb_PurOrder, tb_PurEntry>();
 
             CreateMap<BlogArticle, BlogViewModels>();
             CreateMap<BlogViewModels, BlogArticle>();
@@ -224,17 +224,36 @@ namespace RUINORERP.Business.AutoMapper
 
             //意思是转换时为空则给默认值?
             //CreateMap<tb_Unit, tb_UnitDto>().ForMember(destination => destination.UnitName, opt => opt.NullSubstitute("缺少值名字")); ;
-            
+
             //线索转目标客户
             CreateMap<tb_CRM_Leads, tb_CRM_Customer>()
-            .ForMember(a => a.CustomerName, o => o.MapFrom(d => d.CustomerName))
-            ;
+            .ForMember(a => a.CustomerName, o => o.MapFrom(d => d.CustomerName));
             //目标客户转销售客户
-            CreateMap<tb_CRM_Customer, tb_CustomerVendor>();
+            CreateMap<tb_CRM_Customer, tb_CustomerVendor>()
+                 .ForMember(a => a.CVName, o => o.MapFrom(d => d.CustomerName))
+                 .ForMember(a => a.Employee_ID, o => o.MapFrom(d => d.Employee_ID))
+                 .ForMember(a => a.Customer_id, o => o.MapFrom(d => d.Customer_id))
+                 .ForMember(a => a.Contact, o => o.MapFrom(d => d.Contact_Name))
+                 .ForMember(a => a.Phone, o => o.MapFrom(d => d.Contact_Phone))
+                 .ForMember(a => a.Address, o => o.MapFrom(d => d.CustomerAddress))
+                 .ForMember(a => a.Website, o => o.MapFrom(d => d.Website))
+                 .ForMember(a => a.Notes, o => o.MapFrom(d => d.Notes))
+                ;
 
             //计划转为记录
             CreateMap<tb_CRM_FollowUpPlans, tb_CRM_FollowUpRecords>();
 
+
+            //为了修复数据=销售客户转目标客户
+            CreateMap<tb_CustomerVendor, tb_CRM_Customer>()
+                .ForMember(a => a.CustomerName, o => o.MapFrom(d => d.CVName))
+                .ForMember(a => a.Employee_ID, o => o.MapFrom(d => d.Employee_ID))
+                .ForMember(a => a.Contact_Name, o => o.MapFrom(d => d.Contact))
+                 .ForMember(a => a.Contact_Phone, o => o.MapFrom(d => d.Phone))
+                 .ForMember(a => a.CustomerAddress, o => o.MapFrom(d => d.Address))
+                 .ForMember(a => a.Website, o => o.MapFrom(d => d.Website))
+                 .ForMember(a => a.Notes, o => o.MapFrom(d => d.Notes))
+            ;
         }
     }
 }

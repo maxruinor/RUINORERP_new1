@@ -59,6 +59,17 @@ namespace RUINORERP.UI.BaseForm
     [PreCheckMustOverrideBaseClass]
     public partial class BaseListGeneric<T> : BaseUControl where T : class
     {
+
+
+        //public virtual ToolStripItem[] AddExtendButton()
+        //{
+        //    //返回空的数组
+        //    return new ToolStripItem[] { };
+        //}
+
+
+
+
         /// <summary>
         /// 用来保存外键表名与外键主键列名  通过这个打到对应的名称。
         /// </summary>
@@ -423,6 +434,10 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+        /// <summary>
+        /// 没有权限的菜单不显示
+        /// </summary>
+        /// <param name="btnItem"></param>
         public void ControlButton(ToolStripButton btnItem)
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
@@ -521,7 +536,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public Type EditForm { get => _EditForm; set => _EditForm = value; }
 
- 
+
 
 
         /// <summary>
@@ -599,7 +614,7 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
- 
+
 
 
         /// <summary>
@@ -1414,14 +1429,14 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-       
+
 
 
         /// <summary>
         /// 与高级查询执行结果公共使用，如果null时，则执行普通查询？
         /// </summary>
         /// <param name="UseNavQuery">是否使用自动导航</param>
-            //[MustOverride]
+        //[MustOverride]
         public async override void Query(bool UseAutoNavQuery = false)
         {
             if (Edited)
@@ -1469,7 +1484,7 @@ namespace RUINORERP.UI.BaseForm
             }
             ToolBarEnabledControl(MenuItemEnums.查询);
 
- 
+
         }
 
 
@@ -1801,6 +1816,10 @@ namespace RUINORERP.UI.BaseForm
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == -1)
+            {
+                return;
+            }
+            if (dataGridView1.CurrentCell.Value == null)
             {
                 return;
             }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 21:24:00
+// 时间：10/22/2024 18:12:39
 // **************************************
 using System;
 using SqlSugar;
@@ -19,19 +19,17 @@ using FluentValidation;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 跟进记录表验证类
+    /// 客户厂商表 开票资料这种与财务有关另外开表验证类
     /// </summary>
-    /*public partial class tb_CRM_FollowUpRecordsValidator:AbstractValidator<tb_CRM_FollowUpRecords>*/
-    public partial class tb_CRM_FollowUpRecordsValidator : BaseValidatorGeneric<tb_CRM_FollowUpRecords>
+    /*public partial class tb_CustomerVendorValidator:AbstractValidator<tb_CustomerVendor>*/
+    public partial class tb_CustomerVendorValidator : BaseValidatorGeneric<tb_CustomerVendor>
     {
         public override void Initialize()
         {
-            RuleFor(x => x.Customer_id).NotNull().WithMessage("目标客户不能为空。");
-            RuleFor(x => x.FollowUpDate).LessThan(System.DateTime.Now).WithMessage("跟进日期要小于当前日期。");
-            RuleFor(x => x.FollowUpContent).MinimumLength(10).WithMessage("跟进内容:长度要大于10。");
+            //不在这里判断了。因为如果不用CRM模块时这个就不判断了。直接UI保存时判断
+            //  RuleFor(x => x.IsVendor).NotEqual(false).When(x => x.Customer_id.HasValue == false).WithMessage("总金额：添加客户时，总金额要大于零。");
         }
-
-
     }
+
 }
 

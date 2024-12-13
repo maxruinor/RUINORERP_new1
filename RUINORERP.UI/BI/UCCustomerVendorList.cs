@@ -23,6 +23,7 @@ using SqlSugar;
 using Krypton.Navigator;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.Processor;
+using RUINORERP.UI.AdvancedUIModule;
 namespace RUINORERP.UI.BI
 {
 
@@ -46,6 +47,8 @@ namespace RUINORERP.UI.BI
             button检查数据.ToolTipValues.Heading = "提示";
             button检查数据.Click += button检查数据_Click;
             base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
+            
+
         }
 
         private void button检查数据_Click(object sender, EventArgs e)
@@ -118,5 +121,6 @@ namespace RUINORERP.UI.BI
 
         }
 
+     
     }
 }

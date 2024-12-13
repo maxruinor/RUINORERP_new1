@@ -18,6 +18,9 @@ using RUINORERP.UI.Common;
 using RUINORERP.Global;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using AutoMapper;
+using Castle.Core.Resource;
+using RUINORERP.Business.AutoMapper;
 
 namespace RUINORERP.UI.BI
 {
@@ -112,12 +115,16 @@ namespace RUINORERP.UI.BI
             {
                 btnAddPayeeInfo.Visible = false;
             }
+
+            entity.PropertyChanged += async (sender, s2) =>
+            {
+                //如果线索引入相关数据
+                if ((_EditEntity.ActionStatus == ActionStatus.新增 || _EditEntity.ActionStatus == ActionStatus.修改) && _EditEntity.Customer_id.HasValue && _EditEntity.Customer_id.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_CustomerVendor>(c => c.Customer_id))
+                {
+                    await ToCustomer(_EditEntity);
+                }
+            };
         }
-
-
-
-
-
         private void btnCancel_Click(object sender, EventArgs e)
         {
             bindingSourceEdit.CancelEdit();
@@ -128,7 +135,7 @@ namespace RUINORERP.UI.BI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            if (crmMod.Available && (!_EditEntity.Customer_id.HasValue || _EditEntity.Customer_id.Value <= 0))
+            if (crmMod.Available && (!_EditEntity.Customer_id.HasValue || _EditEntity.Customer_id.Value <= 0) && _EditEntity.IsCustomer)
             {
                 //客户关系模块启用时，销售客户的来源必须选择。
                 MessageBox.Show("销售客户的来源必须选择。", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -183,9 +190,46 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private void cmbCustomer_id_SelectedIndexChanged(object sender, EventArgs e)
+
+        //将目标客户信息带过来。可以用automapper
+        private async Task<tb_CustomerVendor> ToCustomer(tb_CustomerVendor entity)
         {
-            //将目标客户信息带过来。可以用automapper
+            tb_CRM_Customer crmCustomer;
+            //ButtonSpecAny bsa = cmbCustomer_id.ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
+            //if (bsa == null)
+            //{
+            //    return null;
+            //}
+            //saleorder = bsa.Tag as tb_SaleOrder;
+
+            crmCustomer = await MainForm.Instance.AppContext.Db.Queryable<tb_CRM_Customer>()
+            .Where(c => c.Customer_id == entity.Customer_id)
+            .SingleAsync();
+
+            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+            mapper.Map(crmCustomer, entity);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
+                                              // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
+            entity.ActionStatus = ActionStatus.新增;
+
+            List<string> tipsMsg = new List<string>();
+
+            StringBuilder msg = new StringBuilder();
+            foreach (var item in tipsMsg)
+            {
+                msg.Append(item).Append("\r\n");
+            }
+            if (tipsMsg.Count > 0)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            BusinessHelper.Instance.InitEntity(entity);
+            return entity;
+        }
+
+        private void txtIsCustomer_CheckedChanged(object sender, EventArgs e)
+        {
+            lblCustomer_id.Visible = txtIsCustomer.Checked;
+            cmbCustomer_id.Visible = txtIsCustomer.Checked;
         }
     }
 }

@@ -21,6 +21,9 @@ using RUINORERP.Common.Helper;
 using AutoMapper;
 using Castle.Core.Resource;
 using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using SqlSugar;
 
 namespace RUINORERP.UI.BI
 {
@@ -67,8 +70,7 @@ namespace RUINORERP.UI.BI
 
             DataBindingHelper.BindData4Cmb<tb_CustomerVendorType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);
 
-            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id);
-
+           
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CVName, txtCVName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Contact, txtContact, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Phone, txtPhone, BindDataType4TextBox.Text, false);
@@ -86,22 +88,39 @@ namespace RUINORERP.UI.BI
             //有默认值
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_CustomerVendor>(entity, t => t.Is_available, rdbis_availableYes, rdbis_availableNo);
             //有默认值
+            //如果在模块定义中客户关系是启用时，就必须录入来源的目标客户。
+            crmMod = await MainForm.Instance.AppContext.Db.Queryable<tb_ModuleDefinition>().Where(c => c.ModuleName == nameof(ModuleMenuDefine.客户关系)).FirstAsync();
+            if (crmMod.Available)
+            {
+                lblCustomer_id.Visible = true;
+                cmbCustomer_id.Visible = true;
+            }
+            else
+            {
+                lblCustomer_id.Visible = false;
+                cmbCustomer_id.Visible = false;
+            }
+
+            //创建表达式
+            var lambda = Expressionable.Create<tb_CRM_Customer>()
+                            .And(t => t.Employee_ID != null)
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
+
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Customer).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            queryFilterC.FilterLimitExpressions.Add(lambda);
+
+            //带过滤的下拉绑定要这样
+            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id, queryFilterC.GetFilterExpression<tb_CRM_Customer>(), true);
+
+            DataBindingHelper.InitFilterForControlByExp<tb_CRM_Customer>(entity, cmbCustomer_id, c => c.CustomerName, queryFilterC);
+
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                //如果在模块定义中客户关系是启用时，就必须录入来源的目标客户。
-                crmMod = await MainForm.Instance.AppContext.Db.Queryable<tb_ModuleDefinition>().Where(c => c.ModuleName == nameof(ModuleMenuDefine.客户关系)).FirstAsync();
-                if (crmMod.Available)
-                {
-                    lblCustomer_id.Visible = true;
-                    cmbCustomer_id.Visible = true;
-                }
-                else
-                {
-                    lblCustomer_id.Visible = false;
-                    cmbCustomer_id.Visible = false;
-                }
 
                 base.InitRequiredToControl(new tb_CustomerVendorValidator(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);

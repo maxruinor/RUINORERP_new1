@@ -36,26 +36,17 @@ namespace RUINORERP.Business.Processor
     /// <summary>
     /// 跟进计划表
     /// </summary>
-    public partial class tb_CRM_FollowUpPlansProcessor:BaseProcessor 
+    public partial class tb_ProdPropertyProcessor : BaseProcessor 
     {
 
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-
-            //内部的公共部分，外部是特殊情况
-            var lambda = Expressionable.Create<tb_CRM_FollowUpPlans>()
-                            .And(t => t.isdeleted == false)
-                           .AndIF(AuthorizeController.GetOwnershipControl(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)
-                          .ToExpression();//注意 这一句 不能少
-
-            queryFilter.FilterLimitExpressions.Add(lambda);
-            queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.Customer_id, true);
-            queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.Employee_ID, true);
-            queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.PlanStatus, QueryFieldType.CmbEnum, typeof(FollowUpPlanStatus));
-            queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.PlanContent);
-            queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.PlanSubject);
-            queryFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.Created_at);
+            queryFilter.SetQueryField<tb_ProdProperty>(c => c.PropertyName, true);
+        
+            queryFilter.SetQueryField<tb_ProdProperty>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
+            queryFilter.SetQueryField<tb_ProdProperty>(c => c.PropertyDesc);
+         
             return queryFilter;
         }
 

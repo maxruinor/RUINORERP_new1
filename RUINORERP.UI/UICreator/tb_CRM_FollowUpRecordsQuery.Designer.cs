@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/12/2024 10:37:31
+// 时间：12/13/2024 17:41:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -72,6 +72,13 @@ this.txtFollowUpSubject = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.lblFollowUpContent = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtFollowUpContent = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtFollowUpContent.Multiline = true;
+
+this.lblHasResponse = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkHasResponse = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkHasResponse.Values.Text ="";
+
+this.lblFollowUpResult = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtFollowUpResult = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -212,75 +219,103 @@ this.txtFollowUpContent.TabIndex = 8;
 this.Controls.Add(this.lblFollowUpContent);
 this.Controls.Add(this.txtFollowUpContent);
 
+           //#####HasResponse###Boolean
+this.lblHasResponse.AutoSize = true;
+this.lblHasResponse.Location = new System.Drawing.Point(100,225);
+this.lblHasResponse.Name = "lblHasResponse";
+this.lblHasResponse.Size = new System.Drawing.Size(41, 12);
+this.lblHasResponse.TabIndex = 9;
+this.lblHasResponse.Text = "有回应";
+this.chkHasResponse.Location = new System.Drawing.Point(173,221);
+this.chkHasResponse.Name = "chkHasResponse";
+this.chkHasResponse.Size = new System.Drawing.Size(100, 21);
+this.chkHasResponse.TabIndex = 9;
+this.Controls.Add(this.lblHasResponse);
+this.Controls.Add(this.chkHasResponse);
+
+           //#####100FollowUpResult###String
+this.lblFollowUpResult.AutoSize = true;
+this.lblFollowUpResult.Location = new System.Drawing.Point(100,250);
+this.lblFollowUpResult.Name = "lblFollowUpResult";
+this.lblFollowUpResult.Size = new System.Drawing.Size(41, 12);
+this.lblFollowUpResult.TabIndex = 10;
+this.lblFollowUpResult.Text = "备注";
+this.txtFollowUpResult.Location = new System.Drawing.Point(173,246);
+this.txtFollowUpResult.Name = "txtFollowUpResult";
+this.txtFollowUpResult.Size = new System.Drawing.Size(100, 21);
+this.txtFollowUpResult.TabIndex = 10;
+this.Controls.Add(this.lblFollowUpResult);
+this.Controls.Add(this.txtFollowUpResult);
+
            //#####255Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,225);
+this.lblNotes.Location = new System.Drawing.Point(100,275);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 9;
-this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,221);
+this.lblNotes.TabIndex = 11;
+this.lblNotes.Text = "跟进结果";
+this.txtNotes.Location = new System.Drawing.Point(173,271);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 9;
+this.txtNotes.TabIndex = 11;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
 
            //#####Created_at###DateTime
 this.lblCreated_at.AutoSize = true;
-this.lblCreated_at.Location = new System.Drawing.Point(100,250);
+this.lblCreated_at.Location = new System.Drawing.Point(100,300);
 this.lblCreated_at.Name = "lblCreated_at";
 this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_at.TabIndex = 10;
+this.lblCreated_at.TabIndex = 12;
 this.lblCreated_at.Text = "创建时间";
-//111======250
-this.dtpCreated_at.Location = new System.Drawing.Point(173,246);
+//111======300
+this.dtpCreated_at.Location = new System.Drawing.Point(173,296);
 this.dtpCreated_at.Name ="dtpCreated_at";
 this.dtpCreated_at.ShowCheckBox =true;
 this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-this.dtpCreated_at.TabIndex = 10;
+this.dtpCreated_at.TabIndex = 12;
 this.Controls.Add(this.lblCreated_at);
 this.Controls.Add(this.dtpCreated_at);
 
            //#####Created_by###Int64
-//属性测试275Created_by
-//属性测试275Created_by
-//属性测试275Created_by
-//属性测试275Created_by
+//属性测试325Created_by
+//属性测试325Created_by
+//属性测试325Created_by
+//属性测试325Created_by
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
-this.lblModified_at.Location = new System.Drawing.Point(100,300);
+this.lblModified_at.Location = new System.Drawing.Point(100,350);
 this.lblModified_at.Name = "lblModified_at";
 this.lblModified_at.Size = new System.Drawing.Size(41, 12);
-this.lblModified_at.TabIndex = 12;
+this.lblModified_at.TabIndex = 14;
 this.lblModified_at.Text = "修改时间";
-//111======300
-this.dtpModified_at.Location = new System.Drawing.Point(173,296);
+//111======350
+this.dtpModified_at.Location = new System.Drawing.Point(173,346);
 this.dtpModified_at.Name ="dtpModified_at";
 this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-this.dtpModified_at.TabIndex = 12;
+this.dtpModified_at.TabIndex = 14;
 this.Controls.Add(this.lblModified_at);
 this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
-//属性测试325Modified_by
-//属性测试325Modified_by
-//属性测试325Modified_by
-//属性测试325Modified_by
+//属性测试375Modified_by
+//属性测试375Modified_by
+//属性测试375Modified_by
+//属性测试375Modified_by
 
            //#####isdeleted###Boolean
 this.lblisdeleted.AutoSize = true;
-this.lblisdeleted.Location = new System.Drawing.Point(100,350);
+this.lblisdeleted.Location = new System.Drawing.Point(100,400);
 this.lblisdeleted.Name = "lblisdeleted";
 this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
-this.lblisdeleted.TabIndex = 14;
+this.lblisdeleted.TabIndex = 16;
 this.lblisdeleted.Text = "逻辑删除";
-this.chkisdeleted.Location = new System.Drawing.Point(173,346);
+this.chkisdeleted.Location = new System.Drawing.Point(173,396);
 this.chkisdeleted.Name = "chkisdeleted";
 this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
-this.chkisdeleted.TabIndex = 14;
+this.chkisdeleted.TabIndex = 16;
 this.Controls.Add(this.lblisdeleted);
 this.Controls.Add(this.chkisdeleted);
 
@@ -313,6 +348,12 @@ this.Controls.Add(this.txtFollowUpSubject );
 
                 this.Controls.Add(this.lblFollowUpContent );
 this.Controls.Add(this.txtFollowUpContent );
+
+                this.Controls.Add(this.lblHasResponse );
+this.Controls.Add(this.chkHasResponse );
+
+                this.Controls.Add(this.lblFollowUpResult );
+this.Controls.Add(this.txtFollowUpResult );
 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
@@ -375,6 +416,16 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtFollowUpSubject;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblFollowUpContent;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtFollowUpContent;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblHasResponse;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkHasResponse;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblFollowUpResult;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtFollowUpResult;
 
     
         

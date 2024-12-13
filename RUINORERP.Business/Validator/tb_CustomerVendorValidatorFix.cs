@@ -28,6 +28,19 @@ namespace RUINORERP.Business
         {
             //不在这里判断了。因为如果不用CRM模块时这个就不判断了。直接UI保存时判断
             //  RuleFor(x => x.IsVendor).NotEqual(false).When(x => x.Customer_id.HasValue == false).WithMessage("总金额：添加客户时，总金额要大于零。");
+            //RuleFor(customer => customer.CVName).Must(BeUniqueName).WithMessage("全称不能重复。");
+            RuleFor(customer => customer.CVName)
+          .Custom((value, context) =>
+          {
+              string propertyName = context.PropertyName;
+              // 在这里使用 propertyName
+             // Console.WriteLine($"正在验证的属性: {propertyName}");
+              // 实际的唯一性验证逻辑
+              if (!BeUniqueName(propertyName, value))
+              {
+                  context.AddFailure("全称不能重复。");
+              }
+          });
         }
     }
 

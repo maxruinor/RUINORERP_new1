@@ -26,6 +26,13 @@ using SqlSugar;
 using AutoMapper;
 using RUINORERP.Global;
 using RUINORERP.Business.AutoMapper;
+using Krypton.Docking;
+using Krypton.Navigator;
+using RUINORERP.UI.CRM.DockUI;
+using Krypton.Workspace;
+using NPOI.SS.Formula.Functions;
+using System.Reflection;
+using RUINORERP.Business.Security;
 
 namespace RUINORERP.UI.CRM
 {
@@ -57,7 +64,19 @@ namespace RUINORERP.UI.CRM
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
-            DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v => v.CustomerName, cmbLeadID, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID);
+            //DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v => v.CustomerName, cmbLeadID, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID);
+            //创建表达式
+            var lambdaLeads = Expressionable.Create<tb_CRM_Leads>()
+                            .And(t => t.isdeleted == false)
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
+
+            BaseProcessor baseProcessorLeads = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Leads).Name + "Processor");
+            QueryFilter queryFilterLeads = baseProcessorLeads.GetQueryFilter();
+            queryFilterLeads.FilterLimitExpressions.Add(lambdaLeads);
+
+            DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v => v.CustomerName, cmbLeadID, queryFilterLeads.GetFilterExpression<tb_CRM_Leads>(), true);
+
             DataBindingHelper.BindData4Cmb<tb_CRM_Region>(entity, k => k.Region_ID, v => v.Region_Name, cmbRegion_ID);
             DataBindingHelper.BindData4Cmb<tb_Provinces>(entity, k => k.ProvinceID, v => v.ProvinceCNName, cmbProvinceID);
             DataBindingHelper.BindData4Cmb<tb_Cities>(entity, k => k.CityID, v => v.CityCNName, cmbCityID);
@@ -115,6 +134,30 @@ namespace RUINORERP.UI.CRM
                 {
                     await ToCustomer(customer, customer.LeadID.Value);
                 }
+                //如果实体中的下拉可以不用选。但是UI选择了请选择会将值设置为-1，验证框架会不通过。这里强制-1就改为null
+                if (customer.ActionStatus == ActionStatus.新增 || customer.ActionStatus == ActionStatus.修改)
+                {
+                    //下拉特征
+                    if (entity.GetPropertyValue(s2.PropertyName) != null && entity.GetPropertyValue(s2.PropertyName).ToString() == "-1")
+                    {
+                        Type type = typeof(tb_CRM_Customer);
+                        PropertyInfo fieldinfo = type.GetProperty(s2.PropertyName);
+                        if (fieldinfo != null)
+                        {
+                            //s2.GetType() == typeof(long) && 
+                            var propertyType = fieldinfo.PropertyType;
+                            if (Nullable.GetUnderlyingType(propertyType) != null)
+                            {
+                                entity.SetPropertyValue(s2.PropertyName, null);
+                            }
+                        }
+                    }
+
+                }
+
+
+
+
             };
 
             if (CRMConfig == null)
@@ -131,12 +174,107 @@ namespace RUINORERP.UI.CRM
                     BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Leads).Name + "Processor");
                     QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
                     queryFilterC.FilterLimitExpressions.Add(lambda);
+
+           
+
                     DataBindingHelper.InitFilterForControlByExp<tb_CRM_Leads>(entity, cmbLeadID, c => c.CustomerName, queryFilterC);
 
                 }
             }
 
+            #region 加载跟踪情况
+            bool loadTrack = false;
+            UCTrackContainer uCTrackRecordses = new UCTrackContainer();
+            if (customer.tb_CRM_FollowUpRecordses != null && customer.tb_CRM_FollowUpRecordses.Count > 0)
+            {
+
+                if (customer.tb_CRM_FollowUpRecordses.Count > 0)
+                {
+                    foreach (var item in customer.tb_CRM_FollowUpRecordses)
+                    {
+                        UCFollowUpRecord ucrecord = new UCFollowUpRecord();
+                        ucrecord.BindData(item);
+                        uCTrackRecordses.flowLayoutPanel1.Controls.Add(ucrecord);
+                        loadTrack = true;
+                    }
+                }
+            }
+
+            UCTrackContainer uCTrackPlans = new UCTrackContainer();
+            if (customer.tb_CRM_FollowUpPlanses != null && customer.tb_CRM_FollowUpPlanses.Count > 0)
+            {
+
+                if (customer.tb_CRM_FollowUpPlanses.Count > 0)
+                {
+                    foreach (var item in customer.tb_CRM_FollowUpPlanses)
+                    {
+                        UCFollowUpPlan ucplan = new UCFollowUpPlan();
+                        ucplan.BindData(item);
+                        uCTrackPlans.flowLayoutPanel1.Controls.Add(ucplan);
+                        loadTrack = true;
+                    }
+
+                }
+            }
+
+            if (loadTrack)
+            {
+                // Setup docking functionality
+                KryptonDockingWorkspace w = kryptonDockingManager.ManageWorkspace(kryptonDockableWorkspace1);
+                kryptonDockingManager.ManageControl(kryptonPanelBig, w);
+                kryptonDockingManager.ManageFloating(this);
+
+                kryptonDockingManager.ShowPageContextMenu += KryptonDockingManager1_ShowPageContextMenu;
+                kryptonDockingManager.FloatingWindowAdding += KryptonDockingManager1_FloatingWindowAdding;
+                kryptonDockableWorkspace1.WorkspaceCellAdding += kryptonDockableWorkspace1_WorkspaceCellAdding;
+
+                KryptonPage kprecords = UIForKryptonHelper.NewPage("跟踪记录", uCTrackRecordses);
+                kprecords.AllowDrop = false;
+                kprecords.SetFlags(KryptonPageFlags.All);
+                KryptonPage kpplans = UIForKryptonHelper.NewPage("跟踪计划", uCTrackPlans);
+                kpplans.AllowDrop = false;
+                kpplans.SetFlags(KryptonPageFlags.All);
+                // Add docking pages
+                kryptonDockingManager.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { kprecords, kpplans });
+
+                kryptonDockingManager.MakeAutoHiddenRequest(kpplans.UniqueName);//默认加载时隐藏
+                kryptonDockingManager.MakeAutoHiddenRequest(kprecords.UniqueName);//默认加载时隐藏
+            }
+
+
+            #endregion
+
             base.BindData(entity);
+        }
+
+        private void kryptonDockableWorkspace1_WorkspaceCellAdding(object sender, WorkspaceCellEventArgs e)
+        {
+            e.Cell.Button.CloseButtonAction = CloseButtonAction.HidePage;
+            e.Cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
+            KryptonWorkspaceCell cell = e.Cell;
+            cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
+            //cell.CloseAction += Cell_CloseAction;
+            //cell.SelectedPageChanged += Cell_SelectedPageChanged;
+            //cell.ShowContextMenu += Cell_ShowContextMenu;
+            cell.Dock = DockStyle.Fill;
+            cell.AllowDrop = true;
+            cell.AllowPageDrag = true;
+            //这里可以对具体的单元设置
+            if (cell.Pages.FirstOrDefault(c => c.Name == "") != null)
+            {
+
+            }
+        }
+
+        private void KryptonDockingManager1_FloatingWindowAdding(object sender, FloatingWindowEventArgs e)
+        {
+            e.FloatingWindow.CloseBox = false;
+        }
+
+        private void KryptonDockingManager1_ShowPageContextMenu(object sender, ContextPageEventArgs e)
+        {
+            //不显示右键
+            e.Cancel = true;
         }
 
 
@@ -158,7 +296,7 @@ namespace RUINORERP.UI.CRM
 
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
             mapper.Map(crmLeads, entity);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
-           // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
+                                           // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
             entity.ActionStatus = ActionStatus.新增;
 
             List<string> tipsMsg = new List<string>();
@@ -233,7 +371,14 @@ namespace RUINORERP.UI.CRM
                 string[] CustomerTagsArr = combinedString.Split('|');
                 AddCustomerTagsLabelsToPanel(CustomerTagsArr);
             }
+
+
+
+
         }
+
+
+
         #region 添加客户标签
         private void AddCustomerTagsLabelsToPanel(string[] CustomerTagsArr)
         {

@@ -38,6 +38,7 @@ using Newtonsoft.Json.Linq;
 using FastReport.DevComponents.DotNetBar;
 using System.Web.WebSockets;
 using RUINORERP.UI.SS;
+using System.Windows.Documents;
 
 
 namespace RUINORERP.UI.Common
@@ -276,7 +277,7 @@ namespace RUINORERP.UI.Common
                                                 }
                                                 else if (TypeHelper.IsJArrayList(listType))
                                                 {
-                                                   // Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + targetEntity.Name);
+                                                    // Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + targetEntity.Name);
 
                                                     Type elementType = null;
                                                     BizCacheHelper.Manager.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
@@ -851,6 +852,19 @@ namespace RUINORERP.UI.Common
                         InitDataToCmb<T>(expkey, expValue, cmbBox, expCondition);
                         cmbBox.SelectedItem = null;
                         cmbBox.SelectedValue = -1;
+                        //如果字段值能允许null。直接设置一下。不然验证框架会验证。导致 要重新开UI窗体
+
+                        Type type = typeof(T);
+                        PropertyInfo fieldinfo = type.GetProperty(key);
+                        if (fieldinfo != null)
+                        {
+                           var  propertyType = fieldinfo.PropertyType;
+                            if (Nullable.GetUnderlyingType(propertyType) != null)
+                            {
+                                //entity是被引用的类。要设置的是本身。这里无效。
+                                entity.SetPropertyValue(key, null);
+                            }
+                        }
                         #endregion
 
                     };

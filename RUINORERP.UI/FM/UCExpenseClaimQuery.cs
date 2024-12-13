@@ -134,11 +134,11 @@ namespace RUINORERP.UI.FM
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
-        public override void BuildQueryCondition()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_ExpenseClaim).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-        }
+        //public override void BuildQueryCondition()
+        //{
+        //    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_ExpenseClaim).Name + "Processor");
+        //    QueryConditionFilter = baseProcessor.GetQueryFilter();
+        //}
 
 
     }

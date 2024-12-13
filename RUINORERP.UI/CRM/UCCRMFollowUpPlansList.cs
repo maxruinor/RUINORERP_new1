@@ -44,12 +44,14 @@ namespace RUINORERP.UI.CRM
             System.Linq.Expressions.Expression<Func<tb_CRM_FollowUpPlans, int?>> expPlanStatus;
             expPlanStatus = (p) => p.PlanStatus;
             base.ColNameDataDictionary.TryAdd(expPlanStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(FollowUpPlanStatus)));
+
+
         }
-        public override void QueryConditionBuilder()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_FollowUpPlans).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-        }
+        //public override void QueryConditionBuilder()
+        //{
+        //    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_FollowUpPlans).Name + "Processor");
+        //    QueryConditionFilter = baseProcessor.GetQueryFilter();
+        //}
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法，供应商和客户共用所有特殊处理
@@ -119,9 +121,9 @@ namespace RUINORERP.UI.CRM
                         tb_CRM_FollowUpRecords EntityInfo = obj as tb_CRM_FollowUpRecords;
                         EntityInfo.Customer_id = plan.Customer_id;
                         EntityInfo.PlanID = plan.PlanID;
+                        BusinessHelper.Instance.InitEntity(EntityInfo);
                         BaseEntity bty = EntityInfo as BaseEntity;
                         bty.ActionStatus = ActionStatus.加载;
-                        BusinessHelper.Instance.EditEntity(bty);
                         frmaddg.BindData(bty, ActionStatus.新增);
                         if (frmaddg.ShowDialog() == DialogResult.OK)
                         {

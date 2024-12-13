@@ -50,9 +50,6 @@ namespace RUINORERP.Business.Processor
                           .ToExpression();//注意 这一句 不能少
 
             queryFilter.FilterLimitExpressions.Add(lambda);
-
-
-            queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.FollowUpDate);
             queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.Customer_id, true);
             queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.Employee_ID, true);
             queryFilter.SetQueryField<tb_CRM_FollowUpRecords>(c => c.LeadID, true);

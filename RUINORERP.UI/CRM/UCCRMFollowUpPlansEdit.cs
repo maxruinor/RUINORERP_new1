@@ -22,6 +22,10 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.UI.BI;
 using Castle.Core.Resource;
 using System.Web.WebSockets;
+using RUINORERP.UI.CRM.DockUI;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using SqlSugar;
 
 namespace RUINORERP.UI.CRM
 {
@@ -57,7 +61,7 @@ namespace RUINORERP.UI.CRM
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
 
-            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id);
+          
 
             DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.PlanStartDate, dtpPlanStartDate, false);
             DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.PlanEndDate, dtpPlanEndDate, false);
@@ -68,7 +72,21 @@ namespace RUINORERP.UI.CRM
 
             DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpPlans>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
 
+            //创建表达式
+            var lambda = Expressionable.Create<tb_CRM_Customer>()
+                            .And(t => t.Employee_ID != null)
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
 
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Customer).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            queryFilterC.FilterLimitExpressions.Add(lambda);
+
+            //带过滤的下拉绑定要这样
+            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id, queryFilterC.GetFilterExpression<tb_CRM_Customer>(), true);
+
+            DataBindingHelper.InitFilterForControlByExp<tb_CRM_Customer>(entity, cmbCustomer_id, c => c.CustomerName, queryFilterC);
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)

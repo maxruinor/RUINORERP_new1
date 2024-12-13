@@ -27,7 +27,7 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.MRP.MP
 {
 
-    [MenuAttrAssemblyInfo("计划产单查询", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制造规划, BizType.生产计划单)]
+    [MenuAttrAssemblyInfo("计划生产单查询", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制造规划, BizType.生产计划单)]
     public partial class UCProductionPlanQuery : BaseBillQueryMC<tb_ProductionPlan, tb_ProductionPlanDetail>
     {
         public UCProductionPlanQuery()
@@ -100,11 +100,11 @@ namespace RUINORERP.UI.MRP.MP
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
-        public override void BuildQueryCondition()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProductionPlan).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-        }
+        //public override void BuildQueryCondition()
+        //{
+        //    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProductionPlan).Name + "Processor");
+        //    QueryConditionFilter = baseProcessor.GetQueryFilter();
+        //}
 
         public override void BuildSummaryCols()
         {

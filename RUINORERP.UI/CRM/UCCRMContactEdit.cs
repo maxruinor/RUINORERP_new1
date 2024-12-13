@@ -19,6 +19,9 @@ using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.UI.SysConfig;
 using System.Diagnostics;
 using Org.BouncyCastle.Crypto.Macs;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using SqlSugar;
 
 namespace RUINORERP.UI.CRM
 {
@@ -39,7 +42,7 @@ namespace RUINORERP.UI.CRM
         {
              
             _EditEntity = entity as tb_CRM_Contact;
-            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id);
+            
             DataBindingHelper.BindData4TextBox<tb_CRM_Contact>(entity, t => t.SocialTools, txtSocialTools, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Contact>(entity, t => t.Contact_Name, txtContact_Name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Contact>(entity, t => t.Contact_Email, txtContact_Email, BindDataType4TextBox.Text, false);
@@ -49,7 +52,21 @@ namespace RUINORERP.UI.CRM
             DataBindingHelper.BindData4TextBox<tb_CRM_Contact>(entity, t => t.Address, txtAddress, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4TextBox<tb_CRM_Contact>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
+            //创建表达式
+            var lambda = Expressionable.Create<tb_CRM_Customer>()
+                            .And(t => t.Employee_ID != null)
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
 
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Customer).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            queryFilterC.FilterLimitExpressions.Add(lambda);
+
+            //带过滤的下拉绑定要这样
+            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id, queryFilterC.GetFilterExpression<tb_CRM_Customer>(), true);
+
+            DataBindingHelper.InitFilterForControlByExp<tb_CRM_Customer>(entity, cmbCustomer_id, c => c.CustomerName, queryFilterC);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

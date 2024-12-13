@@ -20,6 +20,11 @@ using RUINORERP.UI.SysConfig;
 using System.Diagnostics;
 using RUINORERP.Common.Extensions;
 using RUINORERP.UI.BI;
+using Castle.Core.Resource;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using SqlSugar;
 
 namespace RUINORERP.UI.CRM
 {
@@ -50,14 +55,9 @@ namespace RUINORERP.UI.CRM
             _EditEntity = record;
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id);
-            DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v => v.CustomerName, cmbLeads);
 
-            DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpDate, dtpFollowUpDate, false);
 
-            //来源计划
-            DataBindingHelper.BindData4Cmb<tb_CRM_FollowUpPlans>(entity, t => t.PlanID, v => v.PlanContent, cmbPlanID);
-      
+            DataBindingHelper.BindData4CheckBox<tb_CRM_FollowUpRecords>(entity, t => t.HasResponse, chkHasResponse, false);
 
             DataBindingHelper.BindData4CmbByEnum<tb_CRM_FollowUpRecords>(entity, k => k.FollowUpMethod, typeof(FollowUpMethod), cmbFollowUpMethod, false);
 
@@ -65,9 +65,62 @@ namespace RUINORERP.UI.CRM
 
             DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpSubject, txtFollowUpSubject, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpContent, txtFollowUpContent, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpDate, dtpFollowUpDate, false);
+            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpResult, txtFollowUpResult, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
 
+            //创建表达式
+            var lambdaCRMCustomer = Expressionable.Create<tb_CRM_Customer>()
+                            .And(t => t.Employee_ID != null)
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
+
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Customer).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            queryFilterC.FilterLimitExpressions.Add(lambdaCRMCustomer);
+
+            //带过滤的下拉绑定要这样
+            DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id, queryFilterC.GetFilterExpression<tb_CRM_Customer>(), true);
+            DataBindingHelper.InitFilterForControlByExp<tb_CRM_Customer>(entity, cmbCustomer_id, c => c.CustomerName, queryFilterC);
+
+
+
+            //创建表达式
+            var lambdaLeads = Expressionable.Create<tb_CRM_Leads>()
+                            .And(t => t.isdeleted == false)
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
+
+            BaseProcessor baseProcessorLeads = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Leads).Name + "Processor");
+            QueryFilter queryFilterLeads = baseProcessorLeads.GetQueryFilter();
+            queryFilterLeads.FilterLimitExpressions.Add(lambdaLeads);
+
+            DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v => v.CustomerName, cmbLeads, queryFilterLeads.GetFilterExpression<tb_CRM_Leads>(), true);
+
+
+            //创建表达式
+            //var lambdaRecord = Expressionable.Create<tb_CRM_FollowUpRecords>()
+            //                .And(t => t.isdeleted == false)
+            //                .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+            //                .ToExpression();//注意 这一句 不能少
+
+            //BaseProcessor baseProcessorRecord = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_FollowUpRecords).Name + "Processor");
+            //QueryFilter queryFilterRecord = baseProcessorRecord.GetQueryFilter();
+            //queryFilterRecord.FilterLimitExpressions.Add(lambdaRecord);
+
+
+            //创建表达式
+            var lambdaPlan = Expressionable.Create<tb_CRM_FollowUpPlans>()
+                            .And(t => t.isdeleted == false)
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
+                            .ToExpression();//注意 这一句 不能少
+
+            BaseProcessor baseProcessorPlan = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_FollowUpPlans).Name + "Processor");
+            QueryFilter queryFilterPlan = baseProcessorPlan.GetQueryFilter();
+            queryFilterPlan.FilterLimitExpressions.Add(lambdaPlan);
+            //来源计划
+            DataBindingHelper.BindData4Cmb<tb_CRM_FollowUpPlans>(entity, t => t.PlanID, v => v.PlanContent, cmbPlanID, queryFilterPlan.GetFilterExpression<tb_CRM_FollowUpPlans>(), true);
 
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
@@ -77,16 +130,33 @@ namespace RUINORERP.UI.CRM
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
 
-        }
+            entity.PropertyChanged += (sender, s2) =>
+            {
+                //引入相关数据
+                if ((record.ActionStatus == ActionStatus.新增 || record.ActionStatus == ActionStatus.修改) && record.PlanID.HasValue && record.PlanID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_CRM_FollowUpRecords>(c => c.PlanID))
+                {
+                    var obj = BizCacheHelper.Instance.GetEntity<tb_CRM_FollowUpPlans>(record.PlanID);
+                    if (obj != null && obj.ToString() != "System.Object")
+                    {
+                        if (obj is tb_CRM_FollowUpPlans cv)
+                        {
+                            EditEntity.Customer_id = cv.Customer_id;
+                        }
+                    }
+                }
+            };
 
+            if (EditEntity.Customer_id.HasValue)
+            {
+                btnNextFollowUpPlan.Visible = true;
+            }
+        }
         private void btnCancel_Click(object sender, EventArgs e)
         {
             bindingSourceEdit.CancelEdit();
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
-
-
         private void btnOk_Click(object sender, EventArgs e)
         {
             if (base.Validator())
@@ -205,10 +275,46 @@ namespace RUINORERP.UI.CRM
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
         }
 
+
+
+
         #endregion
 
+        private async void btnNextFollowUpPlan_Click(object sender, EventArgs e)
+        {
 
+            object frm = Activator.CreateInstance(typeof(UCCRMFollowUpPlansEdit));
+            if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+            {
+                BaseEditGeneric<tb_CRM_FollowUpPlans> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpPlans>;
+                frmaddg.Text = "跟进计划编辑";
+                frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpPlans>();
+                object obj = frmaddg.bindingSourceEdit.AddNew();
+                tb_CRM_FollowUpPlans EntityInfo = obj as tb_CRM_FollowUpPlans;
+                BusinessHelper.Instance.InitEntity(EntityInfo);
+                if (EditEntity.Customer_id.HasValue)
+                {
+                    EntityInfo.Customer_id = EditEntity.Customer_id.Value;
+                }
 
+                BaseEntity bty = EntityInfo as BaseEntity;
+                bty.ActionStatus = ActionStatus.加载;
+                frmaddg.BindData(bty, ActionStatus.新增);
+                if (frmaddg.ShowDialog() == DialogResult.OK)
+                {
+                    BaseController<tb_CRM_FollowUpPlans> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpPlans>>(typeof(tb_CRM_FollowUpPlans).Name + "Controller");
+                    ReturnResults<tb_CRM_FollowUpPlans> result = await ctrContactInfo.BaseSaveOrUpdate(EntityInfo);
+                    if (result.Succeeded)
+                    {
+                        MainForm.Instance.ShowStatusText("添加成功!");
+                    }
+                    else
+                    {
+                        MainForm.Instance.ShowStatusText("添加失败!");
+                    }
+                }
+            }
 
+        }
     }
 }

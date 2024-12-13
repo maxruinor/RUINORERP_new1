@@ -88,6 +88,9 @@
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+            this.kryptonDockingManager = new Krypton.Docking.KryptonDockingManager();
+            this.kryptonPanelBig = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonDockableWorkspace1 = new Krypton.Docking.KryptonDockableWorkspace();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -104,6 +107,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbCityID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kPanelCustomerTags)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelBig)).BeginInit();
+            this.kryptonPanelBig.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspace1)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
@@ -126,6 +132,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.AutoSize = true;
             this.kryptonPanel1.Controls.Add(this.btnFastFollowUp);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
             this.kryptonPanel1.Controls.Add(this.lblSocialTools);
@@ -173,10 +180,10 @@
             this.kryptonPanel1.Controls.Add(this.txtNotes);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
-            this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Left;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(1142, 665);
+            this.kryptonPanel1.Size = new System.Drawing.Size(771, 665);
             this.kryptonPanel1.TabIndex = 2;
             // 
             // btnFastFollowUp
@@ -220,7 +227,7 @@
             // 
             // lblContact_Name
             // 
-            this.lblContact_Name.Location = new System.Drawing.Point(484, 38);
+            this.lblContact_Name.Location = new System.Drawing.Point(512, 38);
             this.lblContact_Name.Name = "lblContact_Name";
             this.lblContact_Name.Size = new System.Drawing.Size(75, 20);
             this.lblContact_Name.TabIndex = 155;
@@ -228,14 +235,14 @@
             // 
             // txtContact_Name
             // 
-            this.txtContact_Name.Location = new System.Drawing.Point(565, 39);
+            this.txtContact_Name.Location = new System.Drawing.Point(593, 39);
             this.txtContact_Name.Name = "txtContact_Name";
             this.txtContact_Name.Size = new System.Drawing.Size(173, 23);
             this.txtContact_Name.TabIndex = 156;
             // 
             // lblContact_Email
             // 
-            this.lblContact_Email.Location = new System.Drawing.Point(523, 69);
+            this.lblContact_Email.Location = new System.Drawing.Point(551, 69);
             this.lblContact_Email.Name = "lblContact_Email";
             this.lblContact_Email.Size = new System.Drawing.Size(36, 20);
             this.lblContact_Email.TabIndex = 157;
@@ -243,7 +250,7 @@
             // 
             // txtContact_Email
             // 
-            this.txtContact_Email.Location = new System.Drawing.Point(565, 68);
+            this.txtContact_Email.Location = new System.Drawing.Point(593, 68);
             this.txtContact_Email.Name = "txtContact_Email";
             this.txtContact_Email.Size = new System.Drawing.Size(173, 23);
             this.txtContact_Email.TabIndex = 158;
@@ -276,7 +283,7 @@
             // 
             this.kPanelGetCustomerSource.Location = new System.Drawing.Point(88, 292);
             this.kPanelGetCustomerSource.Name = "kPanelGetCustomerSource";
-            this.kPanelGetCustomerSource.Size = new System.Drawing.Size(650, 56);
+            this.kPanelGetCustomerSource.Size = new System.Drawing.Size(678, 56);
             this.kPanelGetCustomerSource.TabIndex = 151;
             // 
             // kryptonGroupBox1
@@ -442,10 +449,10 @@
             // 
             // txtCustomerTags
             // 
-            this.txtCustomerTags.Location = new System.Drawing.Point(87, 172);
+            this.txtCustomerTags.Location = new System.Drawing.Point(88, 172);
             this.txtCustomerTags.Multiline = true;
             this.txtCustomerTags.Name = "txtCustomerTags";
-            this.txtCustomerTags.Size = new System.Drawing.Size(651, 21);
+            this.txtCustomerTags.Size = new System.Drawing.Size(678, 21);
             this.txtCustomerTags.TabIndex = 128;
             // 
             // lblGetCustomerSource
@@ -466,7 +473,7 @@
             // 
             // lblSalePlatform
             // 
-            this.lblSalePlatform.Location = new System.Drawing.Point(503, 262);
+            this.lblSalePlatform.Location = new System.Drawing.Point(531, 262);
             this.lblSalePlatform.Name = "lblSalePlatform";
             this.lblSalePlatform.Size = new System.Drawing.Size(62, 20);
             this.lblSalePlatform.TabIndex = 133;
@@ -474,7 +481,7 @@
             // 
             // txtSalePlatform
             // 
-            this.txtSalePlatform.Location = new System.Drawing.Point(567, 260);
+            this.txtSalePlatform.Location = new System.Drawing.Point(595, 260);
             this.txtSalePlatform.Name = "txtSalePlatform";
             this.txtSalePlatform.Size = new System.Drawing.Size(173, 23);
             this.txtSalePlatform.TabIndex = 134;
@@ -530,7 +537,7 @@
             // 
             // lblLeadID
             // 
-            this.lblLeadID.Location = new System.Drawing.Point(523, 12);
+            this.lblLeadID.Location = new System.Drawing.Point(551, 12);
             this.lblLeadID.Name = "lblLeadID";
             this.lblLeadID.Size = new System.Drawing.Size(36, 20);
             this.lblLeadID.TabIndex = 113;
@@ -540,7 +547,7 @@
             // 
             this.cmbLeadID.DropDownWidth = 100;
             this.cmbLeadID.IntegralHeight = false;
-            this.cmbLeadID.Location = new System.Drawing.Point(565, 11);
+            this.cmbLeadID.Location = new System.Drawing.Point(593, 11);
             this.cmbLeadID.Name = "cmbLeadID";
             this.cmbLeadID.Size = new System.Drawing.Size(173, 21);
             this.cmbLeadID.TabIndex = 114;
@@ -582,7 +589,7 @@
             // 
             // lblCityID
             // 
-            this.lblCityID.Location = new System.Drawing.Point(523, 105);
+            this.lblCityID.Location = new System.Drawing.Point(551, 105);
             this.lblCityID.Name = "lblCityID";
             this.lblCityID.Size = new System.Drawing.Size(36, 20);
             this.lblCityID.TabIndex = 119;
@@ -592,7 +599,7 @@
             // 
             this.cmbCityID.DropDownWidth = 100;
             this.cmbCityID.IntegralHeight = false;
-            this.cmbCityID.Location = new System.Drawing.Point(565, 104);
+            this.cmbCityID.Location = new System.Drawing.Point(593, 104);
             this.cmbCityID.Name = "cmbCityID";
             this.cmbCityID.Size = new System.Drawing.Size(173, 21);
             this.cmbCityID.TabIndex = 120;
@@ -622,10 +629,10 @@
             // 
             // txtCustomerAddress
             // 
-            this.txtCustomerAddress.Location = new System.Drawing.Point(87, 145);
+            this.txtCustomerAddress.Location = new System.Drawing.Point(88, 145);
             this.txtCustomerAddress.Multiline = true;
             this.txtCustomerAddress.Name = "txtCustomerAddress";
-            this.txtCustomerAddress.Size = new System.Drawing.Size(651, 21);
+            this.txtCustomerAddress.Size = new System.Drawing.Size(678, 21);
             this.txtCustomerAddress.TabIndex = 124;
             // 
             // lblRepeatCustomer
@@ -646,9 +653,9 @@
             // 
             // kPanelCustomerTags
             // 
-            this.kPanelCustomerTags.Location = new System.Drawing.Point(87, 200);
+            this.kPanelCustomerTags.Location = new System.Drawing.Point(88, 200);
             this.kPanelCustomerTags.Name = "kPanelCustomerTags";
-            this.kPanelCustomerTags.Size = new System.Drawing.Size(651, 56);
+            this.kPanelCustomerTags.Size = new System.Drawing.Size(678, 56);
             this.kPanelCustomerTags.TabIndex = 108;
             // 
             // cmbEmployee_ID
@@ -676,12 +683,46 @@
             this.txtNotes.Size = new System.Drawing.Size(386, 165);
             this.txtNotes.TabIndex = 52;
             // 
+            // kryptonPanelBig
+            // 
+            this.kryptonPanelBig.Controls.Add(this.kryptonDockableWorkspace1);
+            this.kryptonPanelBig.Controls.Add(this.kryptonPanel1);
+            this.kryptonPanelBig.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelBig.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanelBig.Name = "kryptonPanelBig";
+            this.kryptonPanelBig.Size = new System.Drawing.Size(1142, 665);
+            this.kryptonPanelBig.TabIndex = 3;
+            // 
+            // kryptonDockableWorkspace1
+            // 
+            this.kryptonDockableWorkspace1.ActivePage = null;
+            this.kryptonDockableWorkspace1.AutoHiddenHost = false;
+            this.kryptonDockableWorkspace1.AutoScroll = true;
+            this.kryptonDockableWorkspace1.CloseTooltip = "关闭";
+            this.kryptonDockableWorkspace1.CompactFlags = ((Krypton.Workspace.CompactFlags)(((Krypton.Workspace.CompactFlags.RemoveEmptyCells | Krypton.Workspace.CompactFlags.RemoveEmptySequences) 
+            | Krypton.Workspace.CompactFlags.PromoteLeafs)));
+            this.kryptonDockableWorkspace1.ContainerBackStyle = Krypton.Toolkit.PaletteBackStyle.PanelClient;
+            this.kryptonDockableWorkspace1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonDockableWorkspace1.Location = new System.Drawing.Point(771, 0);
+            this.kryptonDockableWorkspace1.Name = "kryptonDockableWorkspace1";
+            // 
+            // 
+            // 
+            this.kryptonDockableWorkspace1.Root.UniqueName = "444350720faa49b9b3fd9c75a1b52e73";
+            this.kryptonDockableWorkspace1.Root.WorkspaceControl = this.kryptonDockableWorkspace1;
+            this.kryptonDockableWorkspace1.SeparatorStyle = Krypton.Toolkit.SeparatorStyle.LowProfile;
+            this.kryptonDockableWorkspace1.ShowMaximizeButton = false;
+            this.kryptonDockableWorkspace1.Size = new System.Drawing.Size(371, 665);
+            this.kryptonDockableWorkspace1.SplitterWidth = 3;
+            this.kryptonDockableWorkspace1.TabIndex = 4;
+            this.kryptonDockableWorkspace1.TabStop = true;
+            // 
             // UCCRMCustomerEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1142, 665);
-            this.Controls.Add(this.kryptonPanel1);
+            this.Controls.Add(this.kryptonPanelBig);
             this.Name = "UCCRMCustomerEdit";
             this.Load += new System.EventHandler(this.UCLeadsEdit_Load);
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
@@ -702,6 +743,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbCityID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kPanelCustomerTags)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelBig)).EndInit();
+            this.kryptonPanelBig.ResumeLayout(false);
+            this.kryptonPanelBig.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspace1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -768,5 +813,8 @@
         private Krypton.Toolkit.KryptonButton btnFastFollowUp;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonTextBox txtwwSocialTools;
+        private Krypton.Docking.KryptonDockingManager kryptonDockingManager;
+        private Krypton.Toolkit.KryptonPanel kryptonPanelBig;
+        private Krypton.Docking.KryptonDockableWorkspace kryptonDockableWorkspace1;
     }
 }

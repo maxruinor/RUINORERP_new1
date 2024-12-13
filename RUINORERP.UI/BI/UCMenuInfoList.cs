@@ -29,11 +29,11 @@ namespace RUINORERP.UI.BI
         }
 
 
-        public override void QueryConditionBuilder()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_MenuInfo).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-        }
+        //public override void QueryConditionBuilder()
+        //{
+        //    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_MenuInfo).Name + "Processor");
+        //    QueryConditionFilter = baseProcessor.GetQueryFilter();
+        //}
 
 
         //因为tb_P4FieldInfo中引用了字段表中的信息，所以要使用导航删除。但是一定要细心

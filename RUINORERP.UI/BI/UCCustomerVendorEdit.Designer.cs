@@ -376,7 +376,7 @@
             this.lblCVName.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.lblCVName.Size = new System.Drawing.Size(36, 20);
             this.lblCVName.TabIndex = 17;
-            this.lblCVName.Values.Text = "名称";
+            this.lblCVName.Values.Text = "全称";
             // 
             // txtCVName
             // 

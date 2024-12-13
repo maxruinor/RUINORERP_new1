@@ -44,9 +44,10 @@ namespace RUINORERP.Business.Processor
             QueryFilter queryFilter = new QueryFilter();
 
             //内部的公共部分，外部是特殊情况
+            //这个是公海和目标客户共用 需要在UI层判断
             var lambda = Expressionable.Create<tb_CRM_Customer>()
                             .And(t => t.isdeleted == false)
-                           .AndIF(AuthorizeController.GetOwnershipControl(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)
+                           //.AndIF(AuthorizeController.GetOwnershipControl(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)
                           .ToExpression();//注意 这一句 不能少
 
             queryFilter.FilterLimitExpressions.Add(lambda);

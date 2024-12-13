@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/12/2024 10:37:31
+// 时间：12/13/2024 17:41:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,6 +48,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -63,6 +65,8 @@ namespace RUINORERP.UI
                         entity.FollowUpMethod = Int32.Parse(txtFollowUpMethod.Text);
                         entity.FollowUpSubject = txtFollowUpSubject.Text ;
                        entity.FollowUpContent = txtFollowUpContent.Text ;
+                       entity.HasResponse = Boolean.Parse(txtHasResponse.Text);
+                        entity.FollowUpResult = txtFollowUpResult.Text ;
                        entity.Notes = txtNotes.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
@@ -87,6 +91,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpMethod, txtFollowUpMethod, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpSubject, txtFollowUpSubject, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpContent, txtFollowUpContent, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_CRM_FollowUpRecords>(entity, t => t.HasResponse, chkHasResponse, false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.FollowUpResult, txtFollowUpResult, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpRecords>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_FollowUpRecords>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);

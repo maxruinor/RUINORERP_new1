@@ -54,11 +54,11 @@ namespace RUINORERP.UI.CRM
 
             
         }
-        public override void QueryConditionBuilder()
-        {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Leads).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-        }
+        //public override void QueryConditionBuilder()
+        //{
+        //    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Leads).Name + "Processor");
+        //    QueryConditionFilter = baseProcessor.GetQueryFilter();
+        //}
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法，供应商和客户共用所有特殊处理
@@ -93,11 +93,12 @@ namespace RUINORERP.UI.CRM
                         object obj = frmaddg.bindingSourceEdit.AddNew();
                         tb_CRM_Customer EntityInfo = obj as tb_CRM_Customer;
                         IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                        EntityInfo = mapper.Map<tb_CRM_Customer>(sourceEntity);
+                        mapper.Map(sourceEntity, EntityInfo);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
+                       // EntityInfo = mapper.Map<tb_CRM_Customer>(sourceEntity);
                         EntityInfo.LeadID = sourceEntity.LeadID;
+                        BusinessHelper.Instance.InitEntity(EntityInfo);
                         BaseEntity bty = EntityInfo as BaseEntity;
                         bty.ActionStatus = ActionStatus.加载;
-                        BusinessHelper.Instance.EditEntity(bty);
                         frmaddg.BindData(bty, ActionStatus.新增);
                         if (frmaddg.ShowDialog() == DialogResult.OK)
                         {

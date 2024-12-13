@@ -27,6 +27,7 @@ using AutoMapper;
 using RUINORERP.UI.BI;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.UI.AdvancedUIModule;
+using Netron.GraphLib;
 
 namespace RUINORERP.UI.CRM
 {
@@ -51,6 +52,13 @@ namespace RUINORERP.UI.CRM
             {
                 AddExtendButton();
             }
+
+            //固定值也包括枚举值,也可以将没有缓存的提前查询出来给
+
+            System.Linq.Expressions.Expression<Func<tb_CRM_Customer, int?>> exp;
+            exp = (p) => p.CustomerStatus;
+            base.ColNameDataDictionary.TryAdd(exp.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CustomerStatus)));
+
         }
 
         public ToolStripItem[] AddExtendButton()
@@ -90,11 +98,8 @@ namespace RUINORERP.UI.CRM
             }
         }
 
-        //public override void QueryConditionBuilder()
-        //{
-        //    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_Customer).Name + "Processor");
-        //    QueryConditionFilter = baseProcessor.GetQueryFilter();
-        //}
+        
+
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法，供应商和客户共用所有特殊处理
@@ -132,10 +137,10 @@ namespace RUINORERP.UI.CRM
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpPlans>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();
                         tb_CRM_FollowUpPlans EntityInfo = obj as tb_CRM_FollowUpPlans;
+                        BusinessHelper.Instance.InitEntity(EntityInfo);
                         EntityInfo.Customer_id = customer.Customer_id;
                         BaseEntity bty = EntityInfo as BaseEntity;
                         bty.ActionStatus = ActionStatus.加载;
-                        BusinessHelper.Instance.EditEntity(bty);
                         frmaddg.BindData(bty, ActionStatus.新增);
                         if (frmaddg.ShowDialog() == DialogResult.OK)
                         {
@@ -171,10 +176,11 @@ namespace RUINORERP.UI.CRM
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpRecords>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();
                         tb_CRM_FollowUpRecords EntityInfo = obj as tb_CRM_FollowUpRecords;
+                        BusinessHelper.Instance.InitEntity(EntityInfo);
                         EntityInfo.Customer_id = customer.Customer_id;
                         BaseEntity bty = EntityInfo as BaseEntity;
                         bty.ActionStatus = ActionStatus.加载;
-                        BusinessHelper.Instance.EditEntity(bty);
+                   
                         frmaddg.BindData(bty, ActionStatus.新增);
                         if (frmaddg.ShowDialog() == DialogResult.OK)
                         {
@@ -210,11 +216,14 @@ namespace RUINORERP.UI.CRM
                         object obj = frmaddg.bindingSourceEdit.AddNew();
                         tb_CustomerVendor EntityInfo = obj as tb_CustomerVendor;
                         IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                        EntityInfo = mapper.Map<tb_CustomerVendor>(sourceEntity);
+                        mapper.Map(sourceEntity, EntityInfo);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
+                       // EntityInfo = mapper.Map<tb_CustomerVendor>(sourceEntity);
                         EntityInfo.Customer_id = sourceEntity.Customer_id;
+                        EntityInfo.Employee_ID= sourceEntity.Employee_ID;
+                        BusinessHelper.Instance.InitEntity(EntityInfo);
                         BaseEntity bty = EntityInfo as BaseEntity;
                         bty.ActionStatus = ActionStatus.新增;
-                        BusinessHelper.Instance.EditEntity(bty);
+                    
                         frmaddg.BindData(bty, ActionStatus.新增);
                         if (frmaddg.ShowDialog() == DialogResult.OK)
                         {
@@ -233,5 +242,17 @@ namespace RUINORERP.UI.CRM
                 }
             }
         }
+
+   
+
+        /// <summary>
+        /// 因为客户要查出相关的记录计划这些
+        /// </summary>
+        /// <param name="UseAutoNavQuery"></param>
+        public override void Query(bool UseAutoNavQuery = false)
+        {
+            base.Query(true);
+        }
+
     }
 }

@@ -121,13 +121,14 @@ namespace RUINORERP.Global.EnumExt.CRM
     /// </summary>
     public enum FollowUpMethod
     {
-        微信 = 1,
-        电话 = 2,
-        线下 = 3,
-        邮件 = 4,
-        QQ = 5,
-        短信 = 6,
-        其他 = 7
+        旺旺 = 1,
+        微信 = 2,
+        电话 = 3,
+        线下 = 4,
+        邮件 = 5,
+        QQ = 6,
+        短信 = 7,
+        其他 = 9
     }
 
 

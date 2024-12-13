@@ -1078,6 +1078,18 @@
     <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
+    <Compile Include="CRM\DockUI\UCFollowUpPlan.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\DockUI\UCFollowUpPlan.Designer.cs">
+      <DependentUpon>UCFollowUpPlan.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\DockUI\UCTrackContainer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\DockUI\UCTrackContainer.Designer.cs">
+      <DependentUpon>UCTrackContainer.cs</DependentUpon>
+    </Compile>
     <Compile Include="CRM\UCCRMConfig.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1132,10 +1144,10 @@
     <Compile Include="CRM\UCCRMCustomerEdit.Designer.cs">
       <DependentUpon>UCCRMCustomerEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="CRM\UCFollowUpRecord.cs">
+    <Compile Include="CRM\DockUI\UCFollowUpRecord.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="CRM\UCFollowUpRecord.Designer.cs">
+    <Compile Include="CRM\DockUI\UCFollowUpRecord.Designer.cs">
       <DependentUpon>UCFollowUpRecord.cs</DependentUpon>
     </Compile>
     <Compile Include="CRM\UCLeadsEdit.cs">
@@ -2705,6 +2717,12 @@
     <EmbeddedResource Include="CommonUI\frmInputContent.resx">
       <DependentUpon>frmInputContent.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CRM\DockUI\UCFollowUpPlan.resx">
+      <DependentUpon>UCFollowUpPlan.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\DockUI\UCTrackContainer.resx">
+      <DependentUpon>UCTrackContainer.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCCRMConfig.resx">
       <DependentUpon>UCCRMConfig.cs</DependentUpon>
     </EmbeddedResource>
@@ -2732,7 +2750,7 @@
     <EmbeddedResource Include="CRM\UCCRMCustomerEdit.resx">
       <DependentUpon>UCCRMCustomerEdit.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CRM\UCFollowUpRecord.resx">
+    <EmbeddedResource Include="CRM\DockUI\UCFollowUpRecord.resx">
       <DependentUpon>UCFollowUpRecord.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCLeadsEdit.resx">

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/12/2024 10:37:31
+// 时间：12/13/2024 17:41:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -167,12 +167,40 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _Notes;
+        private bool? _HasResponse= false;
+        /// <summary>
+        /// 有回应
+        /// </summary>
+        [AdvQueryAttribute(ColName = "HasResponse",ColDesc = "有回应")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "HasResponse" ,IsNullable = true,ColumnDescription = "有回应" )]
+        public bool? HasResponse
+        { 
+            get{return _HasResponse;}
+            set{
+            SetProperty(ref _HasResponse, value);
+            }
+        }
+
+        private string _FollowUpResult;
         /// <summary>
         /// 备注
         /// </summary>
-        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=255,IsNullable = true,ColumnDescription = "备注" )]
+        [AdvQueryAttribute(ColName = "FollowUpResult",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FollowUpResult" ,Length=100,IsNullable = true,ColumnDescription = "备注" )]
+        public string FollowUpResult
+        { 
+            get{return _FollowUpResult;}
+            set{
+            SetProperty(ref _FollowUpResult, value);
+            }
+        }
+
+        private string _Notes;
+        /// <summary>
+        /// 跟进结果
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "跟进结果")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=255,IsNullable = true,ColumnDescription = "跟进结果" )]
         public string Notes
         { 
             get{return _Notes;}

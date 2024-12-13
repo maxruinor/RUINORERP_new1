@@ -21,7 +21,7 @@ using System.Diagnostics;
 using RUINORERP.Common.Extensions;
 using RUINORERP.UI.BI;
 
-namespace RUINORERP.UI.CRM
+namespace RUINORERP.UI.CRM.DockUI
 {
     public partial class UCFollowUpRecord : UserControl
     {

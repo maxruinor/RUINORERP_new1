@@ -27,6 +27,19 @@ namespace RUINORERP.Business
         {
             RuleFor(x => x.CustomerName).NotNull().WithMessage("客户名称:不能为空。");
             RuleFor(x => x.CustomerName).MinimumLength(3).WithMessage("客户名称:长度要大于3。");
+          //  RuleFor(customer => customer.CustomerName).Must(BeUniqueName).WithMessage("客户名称不能重复。");
+            RuleFor(customer => customer.CustomerName)
+         .Custom((value, context) =>
+         {
+             string propertyName = context.PropertyName;
+             // 在这里使用 propertyName
+             // Console.WriteLine($"正在验证的属性: {propertyName}");
+             // 实际的唯一性验证逻辑
+             if (!BeUniqueName(propertyName, value))
+             {
+                 context.AddFailure("客户名称不能重复。");
+             }
+         });
         }
     }
 }

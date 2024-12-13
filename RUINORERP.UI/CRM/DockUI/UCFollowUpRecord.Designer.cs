@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.CRM
+﻿namespace RUINORERP.UI.CRM.DockUI
 {
     partial class UCFollowUpRecord
     {

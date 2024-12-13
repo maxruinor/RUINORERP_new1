@@ -612,7 +612,7 @@ namespace RUINORERP.UI.SuperSocketClient
                             break;
 
                         case ServerCmdEnum.给客户端发提示消息:
-                            ClientService.接收服务器弹窗消息(od);
+                            ClientService.接收服务器提示消息(od);
 
                             //尝试找到销售订单：
                             //var ss = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell.Pages.Count;

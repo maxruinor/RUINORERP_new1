@@ -696,7 +696,8 @@ namespace RUINORERP.UI
                             // TreeView1.Nodes.Clear();
                             TreeView1.Dock = DockStyle.Fill;
                             p.ClearFlags(KryptonPageFlags.DockingAllowClose);
-                            // TreeView1.Nodes[0].Expand();
+                            //TreeView1.Nodes[0].Expand();
+                            TreeView1.ExpandAll();
                             p.Controls.Add(TreeView1);
 
                         }
@@ -741,6 +742,7 @@ namespace RUINORERP.UI
                         TreeView1.Dock = DockStyle.Fill;
                         p.ClearFlags(KryptonPageFlags.DockingAllowClose);
                         // TreeView1.Nodes[0].Expand();
+                        TreeView1.ExpandAll();
                         p.Controls.Add(TreeView1);
 
                     }

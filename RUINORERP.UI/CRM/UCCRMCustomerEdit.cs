@@ -231,14 +231,22 @@ namespace RUINORERP.UI.CRM
                 KryptonPage kprecords = UIForKryptonHelper.NewPage("跟踪记录", uCTrackRecordses);
                 kprecords.AllowDrop = false;
                 kprecords.SetFlags(KryptonPageFlags.All);
+                kprecords.Width=300;
                 KryptonPage kpplans = UIForKryptonHelper.NewPage("跟踪计划", uCTrackPlans);
                 kpplans.AllowDrop = false;
                 kpplans.SetFlags(KryptonPageFlags.All);
+                kpplans.Width = 500;
                 // Add docking pages
-                kryptonDockingManager.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { kprecords, kpplans });
+                kryptonDockingManager.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] {kpplans });
+                //kryptonDockingManager.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { kprecords, kpplans });
+                kryptonDockingManager.AddToWorkspace("Workspace", new KryptonPage[] { kprecords });
 
-                kryptonDockingManager.MakeAutoHiddenRequest(kpplans.UniqueName);//默认加载时隐藏
-                kryptonDockingManager.MakeAutoHiddenRequest(kprecords.UniqueName);//默认加载时隐藏
+                for (int i = 0; i < kryptonDockingManager.Pages.Count(); i++)
+                {
+                    kryptonDockingManager.Pages[i].ClearFlags(KryptonPageFlags.DockingAllowClose);//隐藏关闭的x
+                }
+                // kryptonDockingManager.MakeAutoHiddenRequest(kpplans.UniqueName);//默认加载时隐藏
+                // kryptonDockingManager.MakeAutoHiddenRequest(kprecords.UniqueName);//默认加载时隐藏
             }
 
 
@@ -253,7 +261,7 @@ namespace RUINORERP.UI.CRM
             e.Cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
             KryptonWorkspaceCell cell = e.Cell;
             cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
-            //cell.CloseAction += Cell_CloseAction;
+            cell.CloseAction += Cell_CloseAction;
             //cell.SelectedPageChanged += Cell_SelectedPageChanged;
             //cell.ShowContextMenu += Cell_ShowContextMenu;
             cell.Dock = DockStyle.Fill;
@@ -264,6 +272,12 @@ namespace RUINORERP.UI.CRM
             {
 
             }
+        }
+
+        private void Cell_CloseAction(object sender, CloseActionEventArgs e)
+        {
+            //关闭事件
+            e.Action = CloseButtonAction.HidePage;
         }
 
         private void KryptonDockingManager1_FloatingWindowAdding(object sender, FloatingWindowEventArgs e)

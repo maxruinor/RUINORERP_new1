@@ -66,7 +66,7 @@ namespace RUINORERP.UI.UserCenter
             UCTodoList todoList = Startup.GetFromFac<UCTodoList>();
             todoPage = UIForKryptonHelper.NewPage("待办事项", todoList);
             todoPage.AllowDrop = false;
-
+            todoPage.AutoHiddenSlideSize= new Size(200, 200);
             // Add initial docking pages
             //kryptonDockingManager1.AddToWorkspace("Workspace", new KryptonPage[] { NewDocument(), NewDocument() });
             kryptonDockingManager1.AddDockspace("Control", DockingEdge.Left, new KryptonPage[] { todoPage });

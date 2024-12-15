@@ -91,6 +91,8 @@
             this.kryptonDockingManager = new Krypton.Docking.KryptonDockingManager();
             this.kryptonPanelBig = new Krypton.Toolkit.KryptonPanel();
             this.kryptonDockableWorkspace1 = new Krypton.Docking.KryptonDockableWorkspace();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
+            this.txtCoreProdInfo = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -133,6 +135,8 @@
             // kryptonPanel1
             // 
             this.kryptonPanel1.AutoSize = true;
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel3);
+            this.kryptonPanel1.Controls.Add(this.txtCoreProdInfo);
             this.kryptonPanel1.Controls.Add(this.btnFastFollowUp);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
             this.kryptonPanel1.Controls.Add(this.lblSocialTools);
@@ -316,7 +320,7 @@
             this.cmbCustomerStatus.IntegralHeight = false;
             this.cmbCustomerStatus.Location = new System.Drawing.Point(118, 141);
             this.cmbCustomerStatus.Name = "cmbCustomerStatus";
-            this.cmbCustomerStatus.Size = new System.Drawing.Size(140, 21);
+            this.cmbCustomerStatus.Size = new System.Drawing.Size(157, 21);
             this.cmbCustomerStatus.TabIndex = 152;
             // 
             // lblPurchaseCount
@@ -333,7 +337,7 @@
             this.dtpFirstPurchaseDate.Location = new System.Drawing.Point(118, 114);
             this.dtpFirstPurchaseDate.Name = "dtpFirstPurchaseDate";
             this.dtpFirstPurchaseDate.ShowCheckBox = true;
-            this.dtpFirstPurchaseDate.Size = new System.Drawing.Size(140, 21);
+            this.dtpFirstPurchaseDate.Size = new System.Drawing.Size(157, 21);
             this.dtpFirstPurchaseDate.TabIndex = 148;
             // 
             // lblFirstPurchaseDate
@@ -351,7 +355,7 @@
             this.dtpLastPurchaseDate.Name = "dtpLastPurchaseDate";
             this.dtpLastPurchaseDate.ShowCheckBox = true;
             this.dtpLastPurchaseDate.ShowUpDown = true;
-            this.dtpLastPurchaseDate.Size = new System.Drawing.Size(140, 21);
+            this.dtpLastPurchaseDate.Size = new System.Drawing.Size(157, 21);
             this.dtpLastPurchaseDate.TabIndex = 146;
             // 
             // lblCustomerStatus
@@ -375,7 +379,7 @@
             this.txtDaysSinceLastPurchase.Location = new System.Drawing.Point(118, 64);
             this.txtDaysSinceLastPurchase.Name = "txtDaysSinceLastPurchase";
             this.txtDaysSinceLastPurchase.ReadOnly = true;
-            this.txtDaysSinceLastPurchase.Size = new System.Drawing.Size(140, 23);
+            this.txtDaysSinceLastPurchase.Size = new System.Drawing.Size(157, 23);
             this.txtDaysSinceLastPurchase.TabIndex = 144;
             // 
             // lblDaysSinceLastPurchase
@@ -391,7 +395,7 @@
             this.txtTotalPurchaseAmount.Location = new System.Drawing.Point(118, 39);
             this.txtTotalPurchaseAmount.Name = "txtTotalPurchaseAmount";
             this.txtTotalPurchaseAmount.ReadOnly = true;
-            this.txtTotalPurchaseAmount.Size = new System.Drawing.Size(140, 23);
+            this.txtTotalPurchaseAmount.Size = new System.Drawing.Size(157, 23);
             this.txtTotalPurchaseAmount.TabIndex = 142;
             // 
             // lblTotalPurchaseAmount
@@ -407,7 +411,7 @@
             this.txtPurchaseCount.Location = new System.Drawing.Point(118, 14);
             this.txtPurchaseCount.Name = "txtPurchaseCount";
             this.txtPurchaseCount.ReadOnly = true;
-            this.txtPurchaseCount.Size = new System.Drawing.Size(140, 23);
+            this.txtPurchaseCount.Size = new System.Drawing.Size(157, 23);
             this.txtPurchaseCount.TabIndex = 140;
             // 
             // txtCustomerLevel
@@ -452,7 +456,7 @@
             this.txtCustomerTags.Location = new System.Drawing.Point(88, 172);
             this.txtCustomerTags.Multiline = true;
             this.txtCustomerTags.Name = "txtCustomerTags";
-            this.txtCustomerTags.Size = new System.Drawing.Size(678, 21);
+            this.txtCustomerTags.Size = new System.Drawing.Size(386, 21);
             this.txtCustomerTags.TabIndex = 128;
             // 
             // lblGetCustomerSource
@@ -717,6 +721,21 @@
             this.kryptonDockableWorkspace1.TabIndex = 4;
             this.kryptonDockableWorkspace1.TabStop = true;
             // 
+            // kryptonLabel3
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(501, 172);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(88, 20);
+            this.kryptonLabel3.TabIndex = 176;
+            this.kryptonLabel3.Values.Text = "主营产品类目";
+            // 
+            // txtCoreProdInfo
+            // 
+            this.txtCoreProdInfo.Location = new System.Drawing.Point(595, 170);
+            this.txtCoreProdInfo.Name = "txtCoreProdInfo";
+            this.txtCoreProdInfo.Size = new System.Drawing.Size(173, 23);
+            this.txtCoreProdInfo.TabIndex = 177;
+            // 
             // UCCRMCustomerEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -816,5 +835,7 @@
         private Krypton.Docking.KryptonDockingManager kryptonDockingManager;
         private Krypton.Toolkit.KryptonPanel kryptonPanelBig;
         private Krypton.Docking.KryptonDockableWorkspace kryptonDockableWorkspace1;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel3;
+        private Krypton.Toolkit.KryptonTextBox txtCoreProdInfo;
     }
 }

@@ -355,7 +355,7 @@ namespace RUINORERP.UI.ProductEAV
 
             //指定了关键字段ProdDetailID
             listCols1 = sgh1.GetGridColumns<ProductSharePart, tb_PackingDetail>(c => c.ProdDetailID, false);
-
+            listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols1.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);

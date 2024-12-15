@@ -2238,12 +2238,6 @@
     <Compile Include="UserCenter\DataParts\UCMRPCell.Designer.cs">
       <DependentUpon>UCMRPCell.cs</DependentUpon>
     </Compile>
-    <Compile Include="UserCenter\DataParts\UCSaleCell_old.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UserCenter\DataParts\UCSaleCell_old.Designer.cs">
-      <DependentUpon>UCSaleCell_old.cs</DependentUpon>
-    </Compile>
     <Compile Include="UserCenter\DataParts\UCStockCell.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -3223,9 +3217,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCMRPCell.resx">
       <DependentUpon>UCMRPCell.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UserCenter\DataParts\UCSaleCell_old.resx">
-      <DependentUpon>UCSaleCell_old.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\DataParts\UCStockCell.resx">
       <DependentUpon>UCStockCell.cs</DependentUpon>

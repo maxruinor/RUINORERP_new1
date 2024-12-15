@@ -26,6 +26,9 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
+            RuleFor(tb_Packing => tb_Packing.PackagingName).NotEmpty().WithMessage("包装名称:不能为空.");
+             RuleFor(tb_Packing => tb_Packing.PackagingName).MinimumLength(3).WithMessage("包装名称:最小长度为3.");
+
             // 确保三个字段中至少有一个有值
             RuleFor(x => x.ProdBaseID)
                 .NotNull().WithMessage("产品:下拉选择值不正确。")
@@ -41,7 +44,7 @@ namespace RUINORERP.Business
 
         }
     }
- 
+
 
 }
 

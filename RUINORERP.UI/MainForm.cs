@@ -233,18 +233,7 @@ namespace RUINORERP.UI
             await Task.Delay(10); // 假设操作需要一段时间
             return rs;
         }
-        private void btnshowform2_Click(object sender, EventArgs e)
-        {
-
-
-
-            //InitMenu();
-
-            //LoadTypesNew();
-            //AddMDIChildWindow();
-            // MainForm_test mt = new MainForm_test();
-            //mt.ShowDialog();
-        }
+        
 
         private void AddMDIChildWindow()
         {
@@ -606,7 +595,7 @@ namespace RUINORERP.UI
                 if (kryptonDockingManager1.Pages.Count() == 0 && kryptonDockingManager1.Cells.Length == 0)
                 {
                     KryptonDockingWorkspace w = kryptonDockingManager1.ManageWorkspace(kryptonDockableWorkspace1);
-                    kryptonDockingManager1.ManageControl(kryptonPanel1, w);
+                    kryptonDockingManager1.ManageControl(kryptonPanelBigg, w);
                     kryptonDockingManager1.ManageFloating(this);
                 }
 
@@ -1763,19 +1752,7 @@ namespace RUINORERP.UI
         }
 
 
-        private void btnReLoad_Click(object sender, EventArgs e)
-        {
-            //InitEditObjectValue();
-            //清空所有菜单
-            //if (mc.ClearAllMenuItems<tb_MenuInfo>())
-            //{
-            //    InitMenu();
-            //}
-
-
-
-
-        }
+   
 
         async private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {

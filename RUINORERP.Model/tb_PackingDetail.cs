@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:01
+// 时间：12/14/2024 16:49:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 包装清单
     /// </summary>
     [Serializable()]
-    [Description("tb_PackingDetail")]
+    [Description("包装清单")]
     [SugarTable("tb_PackingDetail")]
     public partial class tb_PackingDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_PackingDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("包装清单tb_PackingDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -72,6 +72,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品详情" )]
+        [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 
             get{return _ProdDetailID;}
@@ -181,6 +182,11 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
+        public virtual tb_ProdDetail tb_proddetail { get; set; }
+
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Pack_ID))]

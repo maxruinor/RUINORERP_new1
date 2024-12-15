@@ -290,6 +290,7 @@
             this.cmbBundleID.Name = "cmbBundleID";
             this.cmbBundleID.Size = new System.Drawing.Size(221, 21);
             this.cmbBundleID.TabIndex = 81;
+            this.cmbBundleID.Visible = false;
             // 
             // txtGrossWeight
             // 
@@ -368,6 +369,7 @@
             this.lblBundleID.Size = new System.Drawing.Size(62, 20);
             this.lblBundleID.TabIndex = 78;
             this.lblBundleID.Values.Text = "套装组合";
+            this.lblBundleID.Visible = false;
             // 
             // lblPackagingName
             // 

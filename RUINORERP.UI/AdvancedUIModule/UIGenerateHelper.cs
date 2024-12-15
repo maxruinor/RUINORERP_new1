@@ -92,10 +92,16 @@ namespace RUINORERP.UI.AdvancedUIModule
                 if (queryField.IsRelated)
                 {
                     queryField.fKRelationAttribute = item.fKRelationAttribute;
-                    queryField.FKTableName = item.FKTableName;
+                    //像产品详情ID。绑定的UI时是用视图指定了View_pridel。这里不能再覆盖成tb_prodDetail
+                    if (string.IsNullOrEmpty(queryField.FKTableName))
+                    {
+                        queryField.FKTableName = item.FKTableName;
+                    }
+
                     //如果上级指定了就不要覆盖
                     if (queryField.SubQueryTargetType == null)
                     {
+
                         queryField.SubQueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + queryField.FKTableName);
                     }
 
@@ -447,7 +453,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                                 //注意这样调用不能用同名重载的方法名
                                 MethodInfo mf22 = dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { mytype });
-                                object[] args22 = new object[7] { newDto, DefaultCmb, pair.Value, queryField.SubFilter, null, null,false };
+                                object[] args22 = new object[7] { newDto, DefaultCmb, pair.Value, queryField.SubFilter, null, null, false };
                                 mf22.Invoke(dbh, args22);
 
 

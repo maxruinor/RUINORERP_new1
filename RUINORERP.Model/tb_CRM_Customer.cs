@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/11/2024 20:44:22
+// 时间：12/15/2024 22:10:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -281,12 +281,26 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _GetCustomerSource;
+        private string _CoreProductInfo;
         /// <summary>
         /// 获客来源
         /// </summary>
-        [AdvQueryAttribute(ColName = "GetCustomerSource",ColDesc = "获客来源")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "GetCustomerSource" ,Length=250,IsNullable = true,ColumnDescription = "获客来源" )]
+        [AdvQueryAttribute(ColName = "CoreProductInfo",ColDesc = "获客来源")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CoreProductInfo" ,Length=200,IsNullable = true,ColumnDescription = "获客来源" )]
+        public string CoreProductInfo
+        { 
+            get{return _CoreProductInfo;}
+            set{
+            SetProperty(ref _CoreProductInfo, value);
+            }
+        }
+
+        private string _GetCustomerSource;
+        /// <summary>
+        /// 主营产品信息
+        /// </summary>
+        [AdvQueryAttribute(ColName = "GetCustomerSource",ColDesc = "主营产品信息")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "GetCustomerSource" ,Length=250,IsNullable = true,ColumnDescription = "主营产品信息" )]
         public string GetCustomerSource
         { 
             get{return _GetCustomerSource;}

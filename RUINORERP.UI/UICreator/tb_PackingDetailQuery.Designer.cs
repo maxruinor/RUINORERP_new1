@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 14:54:20
+// 时间：12/14/2024 16:49:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,6 +53,8 @@ namespace RUINORERP.UI
      this.lblPack_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbPack_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
+this.lblProdDetailID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.cmbProdDetailID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
 this.lblproperty = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtproperty = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -77,6 +79,7 @@ this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker
          //for start
                  //#####Pack_ID###Int64
 //属性测试25Pack_ID
+//属性测试25Pack_ID
 this.lblPack_ID.AutoSize = true;
 this.lblPack_ID.Location = new System.Drawing.Point(100,25);
 this.lblPack_ID.Name = "lblPack_ID";
@@ -93,6 +96,19 @@ this.Controls.Add(this.cmbPack_ID);
 
            //#####ProdDetailID###Int64
 //属性测试50ProdDetailID
+this.lblProdDetailID.AutoSize = true;
+this.lblProdDetailID.Location = new System.Drawing.Point(100,50);
+this.lblProdDetailID.Name = "lblProdDetailID";
+this.lblProdDetailID.Size = new System.Drawing.Size(41, 12);
+this.lblProdDetailID.TabIndex = 2;
+this.lblProdDetailID.Text = "产品详情";
+//111======50
+this.cmbProdDetailID.Location = new System.Drawing.Point(173,46);
+this.cmbProdDetailID.Name ="cmbProdDetailID";
+this.cmbProdDetailID.Size = new System.Drawing.Size(100, 21);
+this.cmbProdDetailID.TabIndex = 2;
+this.Controls.Add(this.lblProdDetailID);
+this.Controls.Add(this.cmbProdDetailID);
 
            //#####255property###String
 this.lblproperty.AutoSize = true;
@@ -109,6 +125,7 @@ this.Controls.Add(this.lblproperty);
 this.Controls.Add(this.txtproperty);
 
            //#####Quantity###Int32
+//属性测试100Quantity
 //属性测试100Quantity
 
            //#####255Notes###String
@@ -143,6 +160,7 @@ this.Controls.Add(this.dtpCreated_at);
 
            //#####Created_by###Int64
 //属性测试175Created_by
+//属性测试175Created_by
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
@@ -162,6 +180,7 @@ this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
 //属性测试225Modified_by
+//属性测试225Modified_by
 
           
     //for end
@@ -174,7 +193,9 @@ this.Controls.Add(this.dtpModified_at);
                 this.Controls.Add(this.lblPack_ID );
 this.Controls.Add(this.cmbPack_ID );
 
-                
+                this.Controls.Add(this.lblProdDetailID );
+this.Controls.Add(this.cmbProdDetailID );
+
                 this.Controls.Add(this.lblproperty );
 this.Controls.Add(this.txtproperty );
 
@@ -207,7 +228,9 @@ private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbPack_ID;
 
     
         
-              
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblProdDetailID;
+private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbProdDetailID;
+
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblproperty;

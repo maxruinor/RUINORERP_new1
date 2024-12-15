@@ -57,7 +57,6 @@
             // cmbFollowUpMethod
             // 
             this.cmbFollowUpMethod.DropDownWidth = 100;
-            this.cmbFollowUpMethod.Enabled = false;
             this.cmbFollowUpMethod.IntegralHeight = false;
             this.cmbFollowUpMethod.Location = new System.Drawing.Point(71, 34);
             this.cmbFollowUpMethod.Name = "cmbFollowUpMethod";
@@ -74,7 +73,6 @@
             // 
             // txtFollowUpSubject
             // 
-            this.txtFollowUpSubject.Enabled = false;
             this.txtFollowUpSubject.Location = new System.Drawing.Point(71, 59);
             this.txtFollowUpSubject.Name = "txtFollowUpSubject";
             this.txtFollowUpSubject.Size = new System.Drawing.Size(302, 23);
@@ -91,7 +89,6 @@
             // dtpFollowUpDate
             // 
             this.dtpFollowUpDate.CalendarTodayDate = new System.DateTime(2024, 12, 9, 0, 0, 0, 0);
-            this.dtpFollowUpDate.Enabled = false;
             this.dtpFollowUpDate.Location = new System.Drawing.Point(71, 8);
             this.dtpFollowUpDate.Name = "dtpFollowUpDate";
             this.dtpFollowUpDate.Size = new System.Drawing.Size(115, 21);
@@ -115,7 +112,6 @@
             // 
             // txtFollowUpContent
             // 
-            this.txtFollowUpContent.Enabled = false;
             this.txtFollowUpContent.Location = new System.Drawing.Point(72, 88);
             this.txtFollowUpContent.Multiline = true;
             this.txtFollowUpContent.Name = "txtFollowUpContent";
@@ -125,7 +121,6 @@
             // cmbEmployee_ID
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
-            this.cmbEmployee_ID.Enabled = false;
             this.cmbEmployee_ID.IntegralHeight = false;
             this.cmbEmployee_ID.Location = new System.Drawing.Point(243, 35);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";

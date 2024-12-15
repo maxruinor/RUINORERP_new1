@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 14:54:19
+// 时间：12/14/2024 16:49:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -91,11 +91,11 @@ this.txtHeight = new Krypton.Toolkit.KryptonTextBox();
 this.lblVolume = new Krypton.Toolkit.KryptonLabel();
 this.txtVolume = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblGrossWeight = new Krypton.Toolkit.KryptonLabel();
-this.txtGrossWeight = new Krypton.Toolkit.KryptonTextBox();
-
 this.lblNetWeight = new Krypton.Toolkit.KryptonLabel();
 this.txtNetWeight = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblGrossWeight = new Krypton.Toolkit.KryptonLabel();
+this.txtGrossWeight = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblNotes = new Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
@@ -104,6 +104,8 @@ this.txtNotes.Multiline = true;
 this.lblIs_enabled = new Krypton.Toolkit.KryptonLabel();
 this.chkIs_enabled = new Krypton.Toolkit.KryptonCheckBox();
 this.chkIs_enabled.Values.Text ="";
+this.chkIs_enabled.Checked = true;
+this.chkIs_enabled.CheckState = System.Windows.Forms.CheckState.Checked;
 
 this.lblisdeleted = new Krypton.Toolkit.KryptonLabel();
 this.chkisdeleted = new Krypton.Toolkit.KryptonCheckBox();
@@ -336,35 +338,35 @@ this.txtVolume.TabIndex = 13;
 this.Controls.Add(this.lblVolume);
 this.Controls.Add(this.txtVolume);
 
-           //#####GrossWeight###Decimal
-this.lblGrossWeight.AutoSize = true;
-this.lblGrossWeight.Location = new System.Drawing.Point(100,350);
-this.lblGrossWeight.Name = "lblGrossWeight";
-this.lblGrossWeight.Size = new System.Drawing.Size(41, 12);
-this.lblGrossWeight.TabIndex = 14;
-this.lblGrossWeight.Text = "毛重G.Wt.(g)";
-//111======350
-this.txtGrossWeight.Location = new System.Drawing.Point(173,346);
-this.txtGrossWeight.Name ="txtGrossWeight";
-this.txtGrossWeight.Size = new System.Drawing.Size(100, 21);
-this.txtGrossWeight.TabIndex = 14;
-this.Controls.Add(this.lblGrossWeight);
-this.Controls.Add(this.txtGrossWeight);
-
            //#####NetWeight###Decimal
 this.lblNetWeight.AutoSize = true;
-this.lblNetWeight.Location = new System.Drawing.Point(100,375);
+this.lblNetWeight.Location = new System.Drawing.Point(100,350);
 this.lblNetWeight.Name = "lblNetWeight";
 this.lblNetWeight.Size = new System.Drawing.Size(41, 12);
-this.lblNetWeight.TabIndex = 15;
+this.lblNetWeight.TabIndex = 14;
 this.lblNetWeight.Text = "净重N.Wt.(g)";
-//111======375
-this.txtNetWeight.Location = new System.Drawing.Point(173,371);
+//111======350
+this.txtNetWeight.Location = new System.Drawing.Point(173,346);
 this.txtNetWeight.Name ="txtNetWeight";
 this.txtNetWeight.Size = new System.Drawing.Size(100, 21);
-this.txtNetWeight.TabIndex = 15;
+this.txtNetWeight.TabIndex = 14;
 this.Controls.Add(this.lblNetWeight);
 this.Controls.Add(this.txtNetWeight);
+
+           //#####GrossWeight###Decimal
+this.lblGrossWeight.AutoSize = true;
+this.lblGrossWeight.Location = new System.Drawing.Point(100,375);
+this.lblGrossWeight.Name = "lblGrossWeight";
+this.lblGrossWeight.Size = new System.Drawing.Size(41, 12);
+this.lblGrossWeight.TabIndex = 15;
+this.lblGrossWeight.Text = "毛重G.Wt.(g)";
+//111======375
+this.txtGrossWeight.Location = new System.Drawing.Point(173,371);
+this.txtGrossWeight.Name ="txtGrossWeight";
+this.txtGrossWeight.Size = new System.Drawing.Size(100, 21);
+this.txtGrossWeight.TabIndex = 15;
+this.Controls.Add(this.lblGrossWeight);
+this.Controls.Add(this.txtGrossWeight);
 
            //#####255Notes###String
 this.lblNotes.AutoSize = true;
@@ -531,11 +533,11 @@ this.Controls.Add(this.txtHeight );
                 this.Controls.Add(this.lblVolume );
 this.Controls.Add(this.txtVolume );
 
-                this.Controls.Add(this.lblGrossWeight );
-this.Controls.Add(this.txtGrossWeight );
-
                 this.Controls.Add(this.lblNetWeight );
 this.Controls.Add(this.txtNetWeight );
+
+                this.Controls.Add(this.lblGrossWeight );
+this.Controls.Add(this.txtGrossWeight );
 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
@@ -645,13 +647,13 @@ private Krypton.Toolkit.KryptonTextBox txtVolume;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblGrossWeight;
-private Krypton.Toolkit.KryptonTextBox txtGrossWeight;
+              private Krypton.Toolkit.KryptonLabel lblNetWeight;
+private Krypton.Toolkit.KryptonTextBox txtNetWeight;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblNetWeight;
-private Krypton.Toolkit.KryptonTextBox txtNetWeight;
+              private Krypton.Toolkit.KryptonLabel lblGrossWeight;
+private Krypton.Toolkit.KryptonTextBox txtGrossWeight;
 
     
         

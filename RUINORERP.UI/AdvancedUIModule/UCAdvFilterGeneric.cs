@@ -409,8 +409,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
         #endregion
 
-
-        public QueryFilter QueryConditionFilter { get; set; } = new QueryFilter();
+        //public QueryFilter QueryConditionFilter { get; set; } = new QueryFilter();
 
 
         /// <summary>
@@ -421,17 +420,14 @@ namespace RUINORERP.UI.AdvancedUIModule
         {
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
-
-            // UIQueryHelper<T> uIQueryHelper = new UIQueryHelper<T>();
-
+ 
             PanelForQuery.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance
 | System.Reflection.BindingFlags.NonPublic).SetValue(PanelForQuery, true, null);
             PanelForQuery.Visible = false;
             PanelForQuery.Controls.Clear();
             PanelForQuery.SuspendLayout();
 
-
-            //QueryDto = uIQueryHelper.SetQueryUI(true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
+ 
             QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
 
             PanelForQuery.ResumeLayout();

@@ -164,7 +164,7 @@ namespace RUINORERP.Business.CommService
             }
             catch (Exception ex)
             {
-                _logger.LogError("BizCacheHelper->GetEntity:" + ex.Message+ex.StackTrace);
+                _logger.LogError("BizCacheHelper->GetEntity:" + ex.Message + ex.StackTrace);
             }
             return default(T);
         }
@@ -449,7 +449,8 @@ namespace RUINORERP.Business.CommService
              "tb_CRM_Contact",
                 "tb_Provinces",
                 "tb_Cities",
-
+                "tb_Packing",
+                "tb_ProdBundle",
             "tb_BOMConfigHistory",
             "tb_RolePropertyConfig",
             "tb_Unit_Conversion"
@@ -460,6 +461,13 @@ namespace RUINORERP.Business.CommService
             // 遍历类型名称数组
             switch (typeName)
             {
+                case "tb_ProdBundle":
+                    SetDictDataSource<tb_ProdBundle>(k => k.BundleID, v => v.BundleName, LoadData);
+                    break;
+                case "tb_Packing":
+                    SetDictDataSource<tb_Packing>(k => k.Pack_ID, v => v.PackagingName, LoadData);
+                    break;
+
                 case "tb_CRM_Customer":
                     SetDictDataSource<tb_CRM_Customer>(k => k.Customer_id, v => v.CustomerName, LoadData);
                     break;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/11/2024 20:44:20
+// 时间：12/15/2024 22:10:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,6 +66,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -89,6 +90,7 @@ namespace RUINORERP.UI
                        entity.RepeatCustomer = Boolean.Parse(txtRepeatCustomer.Text);
                         entity.CustomerStatus = Int32.Parse(txtCustomerStatus.Text);
                         entity.CustomerTags = txtCustomerTags.Text ;
+                       entity.CoreProductInfo = txtCoreProductInfo.Text ;
                        entity.GetCustomerSource = txtGetCustomerSource.Text ;
                        entity.SalePlatform = txtSalePlatform.Text ;
                        entity.Website = txtWebsite.Text ;
@@ -131,6 +133,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4CheckBox<tb_CRM_Customer>(entity, t => t.RepeatCustomer, chkRepeatCustomer, false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerStatus, txtCustomerStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CustomerTags, txtCustomerTags, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CoreProductInfo, txtCoreProductInfo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.GetCustomerSource, txtGetCustomerSource, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.SalePlatform, txtSalePlatform, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Website, txtWebsite, BindDataType4TextBox.Text,false);

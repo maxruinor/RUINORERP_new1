@@ -93,6 +93,7 @@ namespace RUINORERP.UI.CRM
             DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.wwSocialTools, txtwwSocialTools, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.SocialTools, txtSocialTools, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.GetCustomerSource, txtGetCustomerSource, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.CoreProductInfo, txtCoreProdInfo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.SalePlatform, txtSalePlatform, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Customer>(entity, t => t.Website, txtWebsite, BindDataType4TextBox.Text, false);
 

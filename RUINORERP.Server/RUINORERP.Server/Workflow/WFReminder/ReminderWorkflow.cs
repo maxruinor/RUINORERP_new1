@@ -53,7 +53,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                 //   .Input(step => step.Password, data => data.Password)
                 //   .Output(data => data.UserId, step => step.UserId)
                 //默认30秒提醒一次
-                .Recur(data => TimeSpan.FromSeconds(30), data => data.Status == MessageStatus.Cancel)
+                .Recur(data => TimeSpan.FromSeconds(60), data => data.Status == MessageStatus.Cancel || data.EndTime <= System.DateTime.Now)
 
                   .Do(recur => recur
 
@@ -67,8 +67,8 @@ namespace RUINORERP.Server.Workflow.WFReminder
                   }
                   )
                   .Input(step => step.BizData, data => data)//直接把整个ReminderBizData数据传到步骤中去——OK
-                 // .Input(step => step.RemindInterval, data => data.RemindInterval)//直接把整个ReminderBizData数据传到步骤中去——OK
-                  //.Input(step => step.RecipientName, data => data.ReceiverName)
+                                                            // .Input(step => step.RemindInterval, data => data.RemindInterval)//直接把整个ReminderBizData数据传到步骤中去——OK
+                                                            //.Input(step => step.RecipientName, data => data.ReceiverName)
                   .Output(step => step.Status, data => data.Status)
                   // .WaitFor("提醒结果", (data, context) => context.Workflow.Id, data => DateTime.Now)
                   //如果取消提醒停止

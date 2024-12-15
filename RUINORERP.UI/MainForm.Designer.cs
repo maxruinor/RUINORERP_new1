@@ -38,9 +38,6 @@ namespace RUINORERP.UI
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
             this.buttonSpecNavigator1 = new Krypton.Navigator.ButtonSpecNavigator();
             this.kryptonPage5 = new Krypton.Navigator.KryptonPage();
-            this.btnReLoad = new Krypton.Toolkit.KryptonButton();
-            this.btnshowform2 = new Krypton.Toolkit.KryptonButton();
-            this.kryptochk = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonPage2 = new Krypton.Navigator.KryptonPage();
             this.btnSwichLang = new Krypton.Toolkit.KryptonButton();
             this.kryptonButton6 = new Krypton.Toolkit.KryptonButton();
@@ -75,20 +72,19 @@ namespace RUINORERP.UI
             this.关闭所有窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.刷新菜单ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.kryptonManager = new Krypton.Toolkit.KryptonManager(this.components);
-            this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonDockableWorkspace1 = new Krypton.Docking.KryptonDockableWorkspace();
             this.imageListSmall = new System.Windows.Forms.ImageList(this.components);
             this.kryptonTaskDialog = new Krypton.Toolkit.KryptonTaskDialog();
             this.kryptonTaskDialogCommand1 = new Krypton.Toolkit.KryptonTaskDialogCommand();
-            this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.statusTimer = new System.Windows.Forms.Timer(this.components);
             this.kryptonContextMenuItems1 = new Krypton.Toolkit.KryptonContextMenuItems();
             this.kryptonContextMenuItem1 = new Krypton.Toolkit.KryptonContextMenuItem();
+            this.kryptonPanelBigg = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonSeparator1 = new Krypton.Toolkit.KryptonSeparator();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
-            this.kryptonPage5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).BeginInit();
             this.kryptonPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage4)).BeginInit();
@@ -98,15 +94,10 @@ namespace RUINORERP.UI
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.menuStripMain.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
-            this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspace1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
-            this.kryptonSplitContainer1.Panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
-            this.kryptonSplitContainer1.Panel2.SuspendLayout();
-            this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelBigg)).BeginInit();
+            this.kryptonPanelBigg.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSeparator1)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonNavigator1
@@ -126,12 +117,12 @@ namespace RUINORERP.UI
             this.kryptonNavigator1.Bar.ItemSizing = Krypton.Navigator.BarItemSizing.SameHeight;
             this.kryptonNavigator1.Bar.TabBorderStyle = Krypton.Toolkit.TabBorderStyle.RoundedOutsizeMedium;
             this.kryptonNavigator1.Bar.TabStyle = Krypton.Toolkit.TabStyle.HighProfile;
-            this.kryptonNavigator1.Button.ButtonDisplayLogic = Krypton.Navigator.ButtonDisplayLogic.Context;
+            this.kryptonNavigator1.Button.ButtonDisplayLogic = Krypton.Navigator.ButtonDisplayLogic.ContextNextPrevious;
             this.kryptonNavigator1.Button.ButtonSpecs.Add(this.buttonSpecNavigator1);
             this.kryptonNavigator1.Button.CloseButtonAction = Krypton.Navigator.CloseButtonAction.HidePage;
             this.kryptonNavigator1.Button.CloseButtonDisplay = Krypton.Navigator.ButtonDisplay.Hide;
             this.kryptonNavigator1.Button.ContextButtonAction = Krypton.Navigator.ContextButtonAction.SelectPage;
-            this.kryptonNavigator1.Button.ContextButtonDisplay = Krypton.Navigator.ButtonDisplay.Logic;
+            this.kryptonNavigator1.Button.ContextButtonDisplay = Krypton.Navigator.ButtonDisplay.ShowEnabled;
             this.kryptonNavigator1.Button.ContextMenuMapImage = Krypton.Navigator.MapKryptonPageImage.Small;
             this.kryptonNavigator1.Button.ContextMenuMapText = Krypton.Navigator.MapKryptonPageText.Title;
             this.kryptonNavigator1.Button.NextButtonAction = Krypton.Navigator.DirectionButtonAction.ModeAppropriateAction;
@@ -139,13 +130,17 @@ namespace RUINORERP.UI
             this.kryptonNavigator1.Button.PreviousButtonAction = Krypton.Navigator.DirectionButtonAction.ModeAppropriateAction;
             this.kryptonNavigator1.Button.PreviousButtonDisplay = Krypton.Navigator.ButtonDisplay.Logic;
             this.kryptonNavigator1.ControlKryptonFormFeatures = false;
-            this.kryptonNavigator1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonNavigator1.Dock = System.Windows.Forms.DockStyle.Left;
             this.kryptonNavigator1.Header.HeaderPositionBar = Krypton.Toolkit.VisualOrientation.Left;
             this.kryptonNavigator1.Header.HeaderPositionPrimary = Krypton.Toolkit.VisualOrientation.Top;
             this.kryptonNavigator1.Header.HeaderPositionSecondary = Krypton.Toolkit.VisualOrientation.Bottom;
             this.kryptonNavigator1.Header.HeaderStyleBar = Krypton.Toolkit.HeaderStyle.Secondary;
             this.kryptonNavigator1.Header.HeaderStylePrimary = Krypton.Toolkit.HeaderStyle.Primary;
             this.kryptonNavigator1.Header.HeaderStyleSecondary = Krypton.Toolkit.HeaderStyle.Secondary;
+            this.kryptonNavigator1.Header.HeaderValuesPrimary.Heading = "";
+            this.kryptonNavigator1.Header.HeaderValuesPrimary.MapDescription = Krypton.Navigator.MapKryptonPageText.None;
+            this.kryptonNavigator1.Header.HeaderValuesPrimary.MapHeading = Krypton.Navigator.MapKryptonPageText.TitleText;
+            this.kryptonNavigator1.Header.HeaderValuesPrimary.MapImage = Krypton.Navigator.MapKryptonPageImage.SmallMedium;
             this.kryptonNavigator1.Location = new System.Drawing.Point(0, 0);
             this.kryptonNavigator1.Name = "kryptonNavigator1";
             this.kryptonNavigator1.NavigatorMode = Krypton.Navigator.NavigatorMode.OutlookFull;
@@ -156,7 +151,7 @@ namespace RUINORERP.UI
             this.kryptonPage2,
             this.kryptonPage4});
             this.kryptonNavigator1.SelectedIndex = 0;
-            this.kryptonNavigator1.Size = new System.Drawing.Size(120, 578);
+            this.kryptonNavigator1.Size = new System.Drawing.Size(168, 578);
             this.kryptonNavigator1.TabIndex = 0;
             // 
             // buttonSpecNavigator1
@@ -170,45 +165,16 @@ namespace RUINORERP.UI
             // kryptonPage5
             // 
             this.kryptonPage5.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.kryptonPage5.Controls.Add(this.btnReLoad);
-            this.kryptonPage5.Controls.Add(this.btnshowform2);
-            this.kryptonPage5.Controls.Add(this.kryptochk);
             this.kryptonPage5.Flags = 65534;
             this.kryptonPage5.LastVisibleSet = true;
             this.kryptonPage5.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPage5.Name = "kryptonPage5";
-            this.kryptonPage5.Size = new System.Drawing.Size(118, 450);
+            this.kryptonPage5.Size = new System.Drawing.Size(166, 450);
             this.kryptonPage5.Text = "仓库";
             this.kryptonPage5.TextDescription = "";
             this.kryptonPage5.TextTitle = "仓库系统";
             this.kryptonPage5.ToolTipTitle = "Page ToolTip";
             this.kryptonPage5.UniqueName = "89E27923BF004A86CE91623446B075D9";
-            // 
-            // btnReLoad
-            // 
-            this.btnReLoad.Location = new System.Drawing.Point(11, 194);
-            this.btnReLoad.Name = "btnReLoad";
-            this.btnReLoad.Size = new System.Drawing.Size(90, 25);
-            this.btnReLoad.TabIndex = 2;
-            this.btnReLoad.Values.Text = "reLoad";
-            this.btnReLoad.Click += new System.EventHandler(this.btnReLoad_Click);
-            // 
-            // btnshowform2
-            // 
-            this.btnshowform2.Location = new System.Drawing.Point(11, 77);
-            this.btnshowform2.Name = "btnshowform2";
-            this.btnshowform2.Size = new System.Drawing.Size(90, 25);
-            this.btnshowform2.TabIndex = 1;
-            this.btnshowform2.Values.Text = "showform2";
-            this.btnshowform2.Click += new System.EventHandler(this.btnshowform2_Click);
-            // 
-            // kryptochk
-            // 
-            this.kryptochk.Location = new System.Drawing.Point(11, 29);
-            this.kryptochk.Name = "kryptochk";
-            this.kryptochk.Size = new System.Drawing.Size(42, 20);
-            this.kryptochk.TabIndex = 0;
-            this.kryptochk.Values.Text = "chk";
             // 
             // kryptonPage2
             // 
@@ -539,15 +505,6 @@ namespace RUINORERP.UI
             // 
             this.kryptonManager.GlobalPaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             // 
-            // kryptonPanel1
-            // 
-            this.kryptonPanel1.Controls.Add(this.kryptonDockableWorkspace1);
-            this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
-            this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(919, 578);
-            this.kryptonPanel1.TabIndex = 11;
-            // 
             // kryptonDockableWorkspace1
             // 
             this.kryptonDockableWorkspace1.ActivePage = null;
@@ -556,7 +513,7 @@ namespace RUINORERP.UI
             | Krypton.Workspace.CompactFlags.PromoteLeafs)));
             this.kryptonDockableWorkspace1.ContainerBackStyle = Krypton.Toolkit.PaletteBackStyle.GridBackgroundCustom1;
             this.kryptonDockableWorkspace1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonDockableWorkspace1.Location = new System.Drawing.Point(0, 0);
+            this.kryptonDockableWorkspace1.Location = new System.Drawing.Point(178, 0);
             this.kryptonDockableWorkspace1.Name = "kryptonDockableWorkspace1";
             // 
             // 
@@ -565,7 +522,7 @@ namespace RUINORERP.UI
             this.kryptonDockableWorkspace1.Root.WorkspaceControl = this.kryptonDockableWorkspace1;
             this.kryptonDockableWorkspace1.SeparatorStyle = Krypton.Toolkit.SeparatorStyle.HighProfile;
             this.kryptonDockableWorkspace1.ShowMaximizeButton = false;
-            this.kryptonDockableWorkspace1.Size = new System.Drawing.Size(919, 578);
+            this.kryptonDockableWorkspace1.Size = new System.Drawing.Size(866, 578);
             this.kryptonDockableWorkspace1.SplitterWidth = 5;
             this.kryptonDockableWorkspace1.TabIndex = 2;
             this.kryptonDockableWorkspace1.TabStop = true;
@@ -597,25 +554,6 @@ namespace RUINORERP.UI
             this.kryptonTaskDialogCommand1.Text = "现在处理";
             this.kryptonTaskDialogCommand1.Execute += new System.EventHandler(this.kryptonTaskDialogCommand1_Execute);
             // 
-            // kryptonSplitContainer1
-            // 
-            this.kryptonSplitContainer1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.kryptonSplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonSplitContainer1.Location = new System.Drawing.Point(0, 49);
-            this.kryptonSplitContainer1.Name = "kryptonSplitContainer1";
-            // 
-            // kryptonSplitContainer1.Panel1
-            // 
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonNavigator1);
-            // 
-            // kryptonSplitContainer1.Panel2
-            // 
-            this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonPanel1);
-            this.kryptonSplitContainer1.SeparatorStyle = Krypton.Toolkit.SeparatorStyle.HighProfile;
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1044, 578);
-            this.kryptonSplitContainer1.SplitterDistance = 120;
-            this.kryptonSplitContainer1.TabIndex = 13;
-            // 
             // kryptonDockingManager1
             // 
             this.kryptonDockingManager1.DefaultCloseRequest = Krypton.Docking.DockingCloseRequest.RemovePageAndDispose;
@@ -634,13 +572,32 @@ namespace RUINORERP.UI
             // 
             this.kryptonContextMenuItem1.Text = "Menu Item";
             // 
+            // kryptonPanelBigg
+            // 
+            this.kryptonPanelBigg.Controls.Add(this.kryptonDockableWorkspace1);
+            this.kryptonPanelBigg.Controls.Add(this.kryptonSeparator1);
+            this.kryptonPanelBigg.Controls.Add(this.kryptonNavigator1);
+            this.kryptonPanelBigg.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelBigg.Location = new System.Drawing.Point(0, 49);
+            this.kryptonPanelBigg.Name = "kryptonPanelBigg";
+            this.kryptonPanelBigg.Size = new System.Drawing.Size(1044, 578);
+            this.kryptonPanelBigg.TabIndex = 15;
+            // 
+            // kryptonSeparator1
+            // 
+            this.kryptonSeparator1.Dock = System.Windows.Forms.DockStyle.Left;
+            this.kryptonSeparator1.Location = new System.Drawing.Point(168, 0);
+            this.kryptonSeparator1.Name = "kryptonSeparator1";
+            this.kryptonSeparator1.Size = new System.Drawing.Size(10, 578);
+            this.kryptonSeparator1.TabIndex = 3;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(1044, 649);
-            this.Controls.Add(this.kryptonSplitContainer1);
+            this.Controls.Add(this.kryptonPanelBigg);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.menuStripMain);
@@ -648,14 +605,12 @@ namespace RUINORERP.UI
             this.IsMdiContainer = true;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "企业数字化集成ERP v1.0";
+            this.Text = "企业数字化集成ERP v2.0";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).EndInit();
-            this.kryptonPage5.ResumeLayout(false);
-            this.kryptonPage5.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).EndInit();
             this.kryptonPage2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage4)).EndInit();
@@ -668,16 +623,11 @@ namespace RUINORERP.UI
             this.toolStrip1.PerformLayout();
             this.menuStripMain.ResumeLayout(false);
             this.menuStripMain.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
-            this.kryptonPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspace1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).EndInit();
-            this.kryptonSplitContainer1.Panel1.ResumeLayout(false);
-            this.kryptonSplitContainer1.Panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).EndInit();
-            this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
-            this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelBigg)).EndInit();
+            this.kryptonPanelBigg.ResumeLayout(false);
+            this.kryptonPanelBigg.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSeparator1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -692,8 +642,6 @@ namespace RUINORERP.UI
         private ButtonSpecNavigator buttonTopArrow;
         private KryptonPage kryptonPage2;
         private ButtonSpecNavigator buttonSpecNavigator1;
-        private KryptonCheckBox kryptochk;
-        private KryptonButton btnshowform2;
         private KryptonButton kryptonButton1;
         private KryptonButton kryptonButton2;
         private KryptonButton kryptonButton3;
@@ -712,8 +660,6 @@ namespace RUINORERP.UI
         internal KryptonManager kryptonManager;
         private System.Windows.Forms.ToolStripMenuItem 关闭所有窗口ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 刷新菜单ToolStripMenuItem;
-        private KryptonPanel kryptonPanel1;
-        private KryptonButton btnReLoad;
         private System.Windows.Forms.ImageList imageListSmall;
         private KryptonButton kryptonButton6;
         private KryptonButton btnSwichLang;
@@ -725,7 +671,6 @@ namespace RUINORERP.UI
         private System.Windows.Forms.ToolStripButton toolBtnExit;
         private KryptonButton kryptonbtnInitLoadMenu;
         private System.Windows.Forms.ToolStripButton toolStripBtnUpdate;
-        private KryptonSplitContainer kryptonSplitContainer1;
         private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownBtnRoles;
         private System.Windows.Forms.ToolStripComboBox cmbRoles;
         private System.Windows.Forms.Timer timer1;
@@ -736,6 +681,8 @@ namespace RUINORERP.UI
         public System.Windows.Forms.ToolStripStatusLabel lblServerInfo;
         private KryptonContextMenuItems kryptonContextMenuItems1;
         private KryptonContextMenuItem kryptonContextMenuItem1;
+        private KryptonPanel kryptonPanelBigg;
+        private KryptonSeparator kryptonSeparator1;
     }
 }
 

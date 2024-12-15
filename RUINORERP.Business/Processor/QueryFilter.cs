@@ -643,7 +643,8 @@ namespace RUINORERP.Business.Processor
 
 
         /// <summary>
-        /// 
+        /// queryFilter.SetQueryField<View_ProdDetail>(c => c.Location_ID, typeof(tb_Location));
+        /// 查询对象是视图。KEY字段在视图的实体类中没有指向外键表名这种情况。这里要指定类型
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="queryFieldExp"></param>

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 14:54:19
+// 时间：12/14/2024 16:49:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -76,8 +76,8 @@ namespace RUINORERP.UI
                         entity.Width = Decimal.Parse(txtWidth.Text);
                         entity.Height = Decimal.Parse(txtHeight.Text);
                         entity.Volume = Decimal.Parse(txtVolume.Text);
-                        entity.GrossWeight = Decimal.Parse(txtGrossWeight.Text);
                         entity.NetWeight = Decimal.Parse(txtNetWeight.Text);
+                        entity.GrossWeight = Decimal.Parse(txtGrossWeight.Text);
                         entity.Notes = txtNotes.Text ;
                        entity.Is_enabled = Boolean.Parse(txtIs_enabled.Text);
                         entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
@@ -108,11 +108,12 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.Width.ToString(), txtWidth, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.Height.ToString(), txtHeight, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.Volume.ToString(), txtVolume, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.GrossWeight.ToString(), txtGrossWeight, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.NetWeight.ToString(), txtNetWeight, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.GrossWeight.ToString(), txtGrossWeight, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_Packing>(entity, t => t.Is_enabled, chkIs_enabled, false);
-           DataBindingHelper.BindData4CehckBox<tb_Packing>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_Packing>(entity, t => t.Is_enabled, chkIs_enabled, false);
+//有默认值
+           DataBindingHelper.BindData4CheckBox<tb_Packing>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4DataTime<tb_Packing>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_Packing>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_Packing>(entity, t => t.Modified_at, dtpModified_at,false);

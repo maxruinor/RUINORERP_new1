@@ -327,7 +327,7 @@ namespace RUINORERP.Server
                     {
                         //这里要判断规则，目前暂时todo 写死,提前一天启动提醒
                         //如果启动时间 提前1天
-                        if (System.DateTime.Now > BizData.StartTime.AddDays(-1) && string.IsNullOrEmpty(BizData.WorkflowId))
+                        if (System.DateTime.Now > BizData.StartTime.AddDays(-1) && System.DateTime.Now < BizData.EndTime && string.IsNullOrEmpty(BizData.WorkflowId))
                         {
                             //启动
                             var workflowId = await host.StartWorkflow("ReminderWorkflow", 1, BizData);

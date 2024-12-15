@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:01
+// 时间：12/14/2024 16:49:17
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -460,6 +460,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_PackingDetail>> QueryByNavAsync()
         {
             List<tb_PackingDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_PackingDetail>()
+                               .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_packing )
                                     .ToListAsync();
             
@@ -480,6 +481,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_PackingDetail>> QueryByNavAsync(Expression<Func<tb_PackingDetail, bool>> exp)
         {
             List<tb_PackingDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_PackingDetail>().Where(exp)
+                               .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_packing )
                                     .ToListAsync();
             
@@ -500,6 +502,7 @@ namespace RUINORERP.Business
          public virtual List<tb_PackingDetail> QueryByNav(Expression<Func<tb_PackingDetail, bool>> exp)
         {
             List<tb_PackingDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_PackingDetail>().Where(exp)
+                            .Includes(t => t.tb_proddetail )
                             .Includes(t => t.tb_packing )
                                     .ToList();
             
@@ -537,7 +540,8 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_PackingDetail entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_PackingDetail>().Where(w => w.PackDetail_ID == (long)id)
-                             .Includes(t => t.tb_packing )
+                             .Includes(t => t.tb_proddetail )
+                            .Includes(t => t.tb_packing )
                                     .FirstAsync();
             if(entity!=null)
             {

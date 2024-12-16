@@ -43,6 +43,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using Netron.GraphLib;
 using AutoMapper;
 using RUINORERP.Business.AutoMapper;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -607,6 +608,51 @@ namespace RUINORERP.UI.SysConfig
 
                 }
 
+
+                if (treeView1.SelectedNode.Text == "拟销在制在途修复")
+                {
+
+                }
+
+                if (treeView1.SelectedNode.Text == "成本修复")
+                {
+
+                    #region 最后入库价不为0时，成本为0时，将这个入库成本给到库存成本。
+                    List<tb_Inventory> items = MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                        .Includes(c => c.tb_proddetail, d => d.tb_PurEntryDetails)
+                        .Where(c => c.ProdDetailID == 1742080348512194560)
+                       .ToList();
+
+                    foreach (tb_Inventory item in items)
+                    {
+                        if (item.Inv_Cost == 0 && item.Inv_AdvCost == 0 && item.CostFIFO == 0 && item.CostMonthlyWA == 0 && item.CostMovingWA == 0
+                            && item.tb_proddetail.tb_PurEntryDetails.Count > 0)
+                        {
+                            var transPrice = item.tb_proddetail.tb_PurEntryDetails[item.tb_proddetail.tb_PurEntryDetails.Count - 1].TransactionPrice;
+                            if (transPrice > 0)
+                            {
+                                richTextBoxLog.AppendText($"产品SKU{item.tb_proddetail.SKU}的价格以最后入库价格修复：{transPrice}：" + "\r\n");
+
+                                item.CostMovingWA = transPrice;
+                                item.CostFIFO = item.CostMovingWA;
+                                item.CostMonthlyWA = item.CostMovingWA;
+                                item.Inv_AdvCost = item.CostMovingWA;
+                                item.Inv_Cost = item.CostMovingWA;
+                            }
+                        }
+                    }
+
+                    if (!chkTestMode.Checked)
+                    {
+                        if (!chkTestMode.Checked)
+                        {
+
+                            int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(items).UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost, t.CostFIFO, t.CostMonthlyWA, t.Inv_Cost }).ExecuteCommandAsync();
+                            richTextBoxLog.AppendText($"修复价格成功：{totalamountCounter} " + "\r\n");
+                        }
+                    }
+                    #endregion
+                }
 
                 if (treeView1.SelectedNode.Text == "销售订单价格修复")
                 {

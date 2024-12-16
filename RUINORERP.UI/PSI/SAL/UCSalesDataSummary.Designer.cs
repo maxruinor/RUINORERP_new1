@@ -87,7 +87,7 @@
             this.kryptonPanel外一层Big.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel外一层Big.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel外一层Big.Name = "kryptonPanel外一层Big";
-            this.kryptonPanel外一层Big.Size = new System.Drawing.Size(934, 691);
+            this.kryptonPanel外一层Big.Size = new System.Drawing.Size(934, 666);
             this.kryptonPanel外一层Big.TabIndex = 9;
             // 
             // kryptonSplitContainerPanel内_big
@@ -106,7 +106,7 @@
             // 
             this.kryptonSplitContainerPanel内_big.Panel2.Controls.Add(this.kryptonNavigator1);
             this.kryptonSplitContainerPanel内_big.Panel2.Controls.Add(this.BaseToolStrip);
-            this.kryptonSplitContainerPanel内_big.Size = new System.Drawing.Size(934, 691);
+            this.kryptonSplitContainerPanel内_big.Size = new System.Drawing.Size(934, 666);
             this.kryptonSplitContainerPanel内_big.SplitterDistance = 258;
             this.kryptonSplitContainerPanel内_big.TabIndex = 1;
             // 
@@ -120,7 +120,7 @@
             // kryptonHeaderGroupLeft.Panel
             // 
             this.kryptonHeaderGroupLeft.Panel.Controls.Add(this.kryptonTreeViewMenu);
-            this.kryptonHeaderGroupLeft.Size = new System.Drawing.Size(258, 691);
+            this.kryptonHeaderGroupLeft.Size = new System.Drawing.Size(258, 666);
             this.kryptonHeaderGroupLeft.TabIndex = 0;
             this.kryptonHeaderGroupLeft.ValuesPrimary.Heading = "导航菜单";
             this.kryptonHeaderGroupLeft.ValuesPrimary.Image = null;
@@ -136,7 +136,7 @@
             this.kryptonTreeViewMenu.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonTreeViewMenu.Location = new System.Drawing.Point(0, 0);
             this.kryptonTreeViewMenu.Name = "kryptonTreeViewMenu";
-            this.kryptonTreeViewMenu.Size = new System.Drawing.Size(256, 638);
+            this.kryptonTreeViewMenu.Size = new System.Drawing.Size(256, 613);
             this.kryptonTreeViewMenu.TabIndex = 0;
             this.kryptonTreeViewMenu.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.kryptonTreeViewMenu_AfterSelect);
             // 
@@ -149,7 +149,7 @@
             this.kryptonNavigator1.NavigatorMode = Krypton.Navigator.NavigatorMode.BarTabGroup;
             this.kryptonNavigator1.Owner = null;
             this.kryptonNavigator1.PageBackStyle = Krypton.Toolkit.PaletteBackStyle.ControlClient;
-            this.kryptonNavigator1.Size = new System.Drawing.Size(671, 666);
+            this.kryptonNavigator1.Size = new System.Drawing.Size(671, 641);
             this.kryptonNavigator1.TabIndex = 2;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
             // 
@@ -271,7 +271,6 @@
             // 
             // txtMaxRow
             // 
-            this.txtMaxRow.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
             this.txtMaxRow.Name = "txtMaxRow";
             this.txtMaxRow.Size = new System.Drawing.Size(100, 25);
             this.txtMaxRow.Text = "200";
@@ -282,7 +281,7 @@
             // toolStripContainer最外层.ContentPanel
             // 
             this.toolStripContainer最外层.ContentPanel.Controls.Add(this.kryptonPanel外一层Big);
-            this.toolStripContainer最外层.ContentPanel.Size = new System.Drawing.Size(934, 691);
+            this.toolStripContainer最外层.ContentPanel.Size = new System.Drawing.Size(934, 666);
             this.toolStripContainer最外层.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainer最外层.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainer最外层.Name = "toolStripContainer最外层";

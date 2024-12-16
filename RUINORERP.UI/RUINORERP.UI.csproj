@@ -502,6 +502,7 @@
     <Compile Include="AdvancedUIModule\UIGenerateHelper.cs" />
     <Compile Include="AdvancedUIModule\UIQueryHelper.cs" />
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
+    <Compile Include="ATechnologyStack\IValidationRule.cs" />
     <Compile Include="ATechnologyStack\ServiceRegister\AutofacServiceRegister.cs" />
     <Compile Include="AutoFacBootStrapper.cs" />
     <Compile Include="BaseForm\BaseBillEdit.cs">
@@ -1067,6 +1068,12 @@
     </Compile>
     <Compile Include="BusinessFlow\FlowDesign.Designer.cs">
       <DependentUpon>FlowDesign.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CommonUI\frmInputObject.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonUI\frmInputObject.Designer.cs">
+      <DependentUpon>frmInputObject.cs</DependentUpon>
     </Compile>
     <Compile Include="CommonUI\frmSelectObject.cs">
       <SubType>Form</SubType>
@@ -2732,6 +2739,9 @@
     <EmbeddedResource Include="BusinessFlow\FlowDesign.resx">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommonUI\frmInputObject.resx">
+      <DependentUpon>frmInputObject.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmSelectObject.resx">
       <DependentUpon>frmSelectObject.cs</DependentUpon>
     </EmbeddedResource>
@@ -3416,6 +3426,8 @@
     <None Include="ResourceFile\locked.png" />
     <Content Include="ResourceFile\lock_security_padlock_secure_icon.png" />
     <None Include="Resources\分配-.png" />
+    <None Include="ResourceFile\分配业务员.png" />
+    <None Include="Resources\成本中心.png" />
     <Content Include="ruinor.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

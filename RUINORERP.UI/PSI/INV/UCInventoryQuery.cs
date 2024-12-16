@@ -24,11 +24,14 @@ using RUINORERP.Common.Helper;
 using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
 using System.Collections;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.CommonUI;
+using RUINORERP.UI.ATechnologyStack;
 
 namespace RUINORERP.UI.PSI.INV
 {
     [MenuAttrAssemblyInfo("库存查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.库存查询)]
-    public partial class UCInventoryQuery : BaseForm.BaseListGeneric<View_Inventory>  
+    public partial class UCInventoryQuery : BaseForm.BaseListGeneric<View_Inventory>, IFormAuth
     {
         public UCInventoryQuery()
         {
@@ -55,8 +58,75 @@ namespace RUINORERP.UI.PSI.INV
             //表格显示时DataGridView1_CellFormatting 取外键类型
             ColDisplayTypes.Add(typeof(tb_Prod));
             ColDisplayTypes.Add(typeof(tb_ProdDetail));
+            AddExtendButton();
         }
-   
+
+        #region 添加成本确认
+
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public ToolStripItem[] AddExtendButton()
+        {
+            ToolStripButton toolStripButton成本确认 = new System.Windows.Forms.ToolStripButton();
+            toolStripButton成本确认.Text = "成本确认";
+            toolStripButton成本确认.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
+            toolStripButton成本确认.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton成本确认.Name = "成本确认MakesureCost";
+            ControlButton(toolStripButton成本确认);
+            toolStripButton成本确认.ToolTipText = "成本确认。";
+            toolStripButton成本确认.Click += new System.EventHandler(this.toolStripButton成本确认_Click);
+
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton成本确认 };
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+
+
+
+        }
+
+        private async void toolStripButton成本确认_Click(object sender, EventArgs e)
+        {
+            if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+            {
+                //  弹出提示说：您确定将这个公司回收投入到公海吗？
+                if (bindingSourceList.Current is tb_Inventory Inventory)
+                {
+                    var emailRule = new EmailValidationRule();
+                    using (var inputForm = new frmInputObject(emailRule))
+                    {
+                        if (inputForm.ShowDialog() == DialogResult.OK)
+                        {
+                            if (MessageBox.Show($"您确定将当前选中的产品库存成本设置为：{inputForm.InputContent}吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                            {
+                                Inventory.CostFIFO = inputForm.ToDecimal();
+                                Inventory.CostMonthlyWA = inputForm.ToDecimal();
+                                Inventory.CostMovingWA = inputForm.ToDecimal();
+                                Inventory.Inv_AdvCost = inputForm.ToDecimal();
+                                Inventory.Inv_Cost = inputForm.ToDecimal();
+
+                                int result = await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(Inventory).UpdateColumns(t => new { t.CostFIFO, t.CostMonthlyWA, t.CostMovingWA, t.Inv_AdvCost, t.Inv_Cost }).ExecuteCommandAsync();
+                                if (result > 0)
+                                {
+                                    MainForm.Instance.ShowStatusText("成本确认成功!");
+                                    Query();
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+
+
+
+
+
+        #endregion
+
 
         public override void QueryConditionBuilder()
         {
@@ -70,7 +140,7 @@ namespace RUINORERP.UI.PSI.INV
         }
 
 
-        public  override void BuildSummaryCols()
+        public override void BuildSummaryCols()
         {
             SummaryCols.Add(c => c.Quantity);
         }
@@ -115,8 +185,8 @@ namespace RUINORERP.UI.PSI.INV
                 ExtendedQuery();
             }
             ToolBarEnabledControl(MenuItemEnums.查询);
-            
-        
+
+
         }
 
         /// <summary>
@@ -154,7 +224,7 @@ namespace RUINORERP.UI.PSI.INV
         }
 
 
-     
+
 
     }
 }

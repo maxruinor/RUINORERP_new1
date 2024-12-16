@@ -215,13 +215,64 @@ namespace RUINORERP.Model
         }
 
 
+        private decimal? _成本;
+
+
+        /// <summary>
+        /// 成本
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "成本", ColDesc = "成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "成本", DecimalDigits = 255, Length = 8, IsNullable = true, ColumnDescription = "成本")]
+        [Display(Name = "成本")]
+        public decimal? 成本
+        {
+            get { return _成本; }            set
+            {                SetProperty(ref _成本, value);
+            }
+        }
+
+        private decimal? _毛利润;
+
+
+        /// <summary>
+        /// 毛利润
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "毛利润", ColDesc = "毛利润")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "毛利润", DecimalDigits = 255, Length = 8, IsNullable = true, ColumnDescription = "毛利润")]
+        [Display(Name = "毛利润")]
+        public decimal? 毛利润
+        {
+            get { return _毛利润; }            set
+            {                SetProperty(ref _毛利润, value);
+            }
+        }
+
+
+        private decimal? _毛利率;
+
+
+        /// <summary>
+        /// 毛利率
+        /// </summary>
+
+        [AdvQueryAttribute(ColName = "毛利率", ColDesc = "毛利率")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "毛利率", DecimalDigits = 6, Length = 8, IsNullable = true, ColumnDescription = "毛利率")]
+        [Display(Name = "毛利率")]
+        public decimal? 毛利率
+        {
+            get { return _毛利率; }            set
+            {                SetProperty(ref _毛利率, value);
+            }
+        }
 
 
 
 
 
-//如果为false,则不可以。
-private bool PK_FK_ID_Check()
+        //如果为false,则不可以。
+        private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;

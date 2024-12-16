@@ -37,14 +37,15 @@ sum(isnull(退货税额,0)) as 退货税额,
 sum(佣金返点) as 佣金返点,
 sum(isnull(佣金返还,0)) as 佣金返还,
 sum(总销售出库数量-isnull(退货数量,0)) as 实际成交数量,
-sum(出库成交金额-isnull(退货金额,0)-佣金返点+isnull(佣金返还,0)-销售税额+isnull(退货税额,0)) as 实际成交金额
-
-
+sum(出库成交金额-isnull(退货金额,0)-佣金返点+isnull(佣金返还,0)-销售税额+isnull(退货税额,0)) as 实际成交金额,
+sum(isnull(成本,0)) as 成本,
+sum(出库成交金额-isnull(退货金额,0)-佣金返点+isnull(佣金返还,0)-销售税额+isnull(退货税额,0)-isnull(成本,0)) as 毛利润,
+sum(出库成交金额-isnull(退货金额,0)-佣金返点+isnull(佣金返还,0)-销售税额+isnull(退货税额,0)-isnull(成本,0))/NULLIF(sum(出库成交金额-isnull(退货金额,0)-佣金返点+isnull(佣金返还,0)-销售税额+isnull(退货税额,0)),0) *100 as  毛利率
   from (
 
-SELECT A.Employee_ID,A.ProjectGroup_ID,总销售出库数量,出库成交金额,销售税额,佣金返点,退货数量,退货金额,退货税额,佣金返还 from 
+SELECT A.Employee_ID,A.ProjectGroup_ID,总销售出库数量,出库成交金额,销售税额,佣金返点,退货数量,退货金额,退货税额,佣金返还,a.成本-b.成本 as 成本 from 
 
-( SELECT Employee_ID,ProjectGroup_ID,sum(c.Quantity) as  总销售出库数量, sum(c.TransactionPrice*c.Quantity)  as 出库成交金额 ,sum(c.SubtotalTaxAmount) as [销售税额] ,sum(c.CommissionAmount) as 佣金返点 from  tb_SaleOut m RIGHT JOIN  tb_SaleOutDetail c on  m.SaleOut_MainID=c.SaleOut_MainID
+( SELECT Employee_ID,ProjectGroup_ID,sum(c.Quantity) as  总销售出库数量, sum(c.TransactionPrice*c.Quantity)  as 出库成交金额 ,sum(c.SubtotalTaxAmount) as [销售税额] ,sum(c.CommissionAmount) as 佣金返点,sum(cost*Quantity) as 成本 from  tb_SaleOut m RIGHT JOIN  tb_SaleOutDetail c on  m.SaleOut_MainID=c.SaleOut_MainID
 
 WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 
  and  Convert(varchar(10),m.OutDate,120) >=''' + @Start + '''
@@ -54,17 +55,18 @@ LEFT JOIN
 
 (
 
-SELECT Employee_ID,ProjectGroup_ID, sum(c.SubtotalTaxAmount)  as [退货税额] , sum(Quantity) as 退货数量,sum(c.TransactionPrice*c.Quantity) as 退货金额 , sum(CommissionAmount) as 佣金返还 from  tb_SaleOutRe m RIGHT JOIN  tb_SaleOutReDetail c on  m.SaleOutRe_ID=c.SaleOutRe_ID
+SELECT Employee_ID,ProjectGroup_ID, sum(c.SubtotalTaxAmount)  as [退货税额] , sum(Quantity) as 退货数量,sum(c.TransactionPrice*c.Quantity) as 退货金额 , sum(CommissionAmount) as 佣金返还 ,sum(cost*Quantity) as 成本 from  tb_SaleOutRe m RIGHT JOIN  tb_SaleOutReDetail c on  m.SaleOutRe_ID=c.SaleOutRe_ID
 WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.RefundOnly=0
  and  Convert(varchar(10),m.ReturnDate,120) >=''' + @Start + '''
  and  Convert(varchar(10),m.ReturnDate,120) <= ''' + @End + '''
 GROUP BY Employee_ID,m.ProjectGroup_ID 
 union all
-SELECT Employee_ID,ProjectGroup_ID, 0  as [退货税额] , sum(TotalQty) as 退货数量,sum(ActualRefundAmount) as 退货金额 , sum(0) as 佣金返还 from  tb_SaleOutRe m 
+SELECT Employee_ID,ProjectGroup_ID, 0  as [退货税额] , sum(TotalQty) as 退货数量,sum(ActualRefundAmount) as 退货金额 , sum(0) as 佣金返还,sum(cost*Quantity) as 成本 from  tb_SaleOutRe m RIGHT JOIN  tb_SaleOutReDetail c on  m.SaleOutRe_ID=c.SaleOutRe_ID
 WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.RefundOnly=1
  and  Convert(varchar(10),m.ReturnDate,120) >=''' + @Start + '''
  and  Convert(varchar(10),m.ReturnDate,120) <= ''' + @End + '''
 GROUP BY Employee_ID,m.ProjectGroup_ID 
+ 
  
  
  

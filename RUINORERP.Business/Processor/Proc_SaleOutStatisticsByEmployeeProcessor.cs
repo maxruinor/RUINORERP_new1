@@ -59,6 +59,8 @@ namespace RUINORERP.Business.Processor
             SummaryCols.Add(c => c.总销售出库数量);
             SummaryCols.Add(c => c.实际成交数量);
             SummaryCols.Add(c => c.实际成交金额);
+            SummaryCols.Add(c => c.成本);
+            SummaryCols.Add(c => c.毛利润);
             List<string> SummaryList = ExpressionHelper.ExpressionListToStringList<Proc_SaleOutStatisticsByEmployee>(SummaryCols);
             return SummaryList;
         }

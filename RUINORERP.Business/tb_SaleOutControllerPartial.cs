@@ -141,9 +141,8 @@ namespace RUINORERP.Business
                 {
 
                     entity.tb_saleorder = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
-                        //.Includes(t => t.tb_SaleOrderDetails)
                         .Includes(a => a.tb_SaleOuts, b => b.tb_SaleOutDetails)
-                        .Includes(a => a.tb_customervendor.tb_crm_customer)
+                        .Includes(a => a.tb_customervendor, b => b.tb_crm_customer, c => c.tb_crm_leads)
                         .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                       .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
                         .Where(c => c.SOrder_ID == entity.SOrder_ID).Single();
@@ -372,6 +371,13 @@ namespace RUINORERP.Business
                         }
 
                         await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer).UpdateColumns(t => new { t.CustomerStatus, t.PurchaseCount, t.TotalPurchaseAmount, t.LastPurchaseDate, t.DaysSinceLastPurchase, t.FirstPurchaseDate }).ExecuteCommandAsync();
+
+                        //如果这个客户是由线索转过来的则线索转化成功
+                        if (entity.tb_saleorder.tb_customervendor.tb_crm_customer.tb_crm_leads != null)
+                        {
+                            entity.tb_saleorder.tb_customervendor.tb_crm_customer.tb_crm_leads.LeadsStatus = (int)LeadsStatus.已转化;
+                            await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer.tb_crm_leads).UpdateColumns(t => new { t.LeadsStatus }).ExecuteCommandAsync();
+                        }
                     }
 
                     #endregion
@@ -514,7 +520,7 @@ namespace RUINORERP.Business
                     //处理销售订单
                     entity.tb_saleorder = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                          .Includes(a => a.tb_SaleOuts, b => b.tb_SaleOutDetails)
-                         .Includes(t => t.tb_SaleOrderDetails)
+                         .Includes(a => a.tb_customervendor, b => b.tb_crm_customer, c => c.tb_crm_leads)
                          .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                          .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
                          .Where(c => c.SOrder_ID == entity.SOrder_ID)
@@ -630,6 +636,8 @@ namespace RUINORERP.Business
                                                                                                                                             // crm_customer.DaysSinceLastPurchase = days
 
                     await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer).UpdateColumns(t => new { t.CustomerStatus, t.PurchaseCount, t.TotalPurchaseAmount, t.LastPurchaseDate }).ExecuteCommandAsync();
+
+
                 }
 
 

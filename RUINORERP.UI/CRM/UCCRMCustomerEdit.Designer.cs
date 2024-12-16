@@ -31,6 +31,8 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
+            this.txtCoreProdInfo = new Krypton.Toolkit.KryptonTextBox();
             this.btnFastFollowUp = new Krypton.Toolkit.KryptonButton();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.lblSocialTools = new Krypton.Toolkit.KryptonLabel();
@@ -91,8 +93,7 @@
             this.kryptonDockingManager = new Krypton.Docking.KryptonDockingManager();
             this.kryptonPanelBig = new Krypton.Toolkit.KryptonPanel();
             this.kryptonDockableWorkspace1 = new Krypton.Docking.KryptonDockableWorkspace();
-            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
-            this.txtCoreProdInfo = new Krypton.Toolkit.KryptonTextBox();
+            this.btnCollaborate = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -116,25 +117,26 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(147, 605);
+            this.btnOk.Location = new System.Drawing.Point(219, 591);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
-            this.btnOk.Values.Text = "确定";
+            this.btnOk.Values.Text = "确定(&S)";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(289, 605);
+            this.btnCancel.Location = new System.Drawing.Point(361, 591);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
-            this.btnCancel.Values.Text = "取消";
+            this.btnCancel.Values.Text = "取消(&C)";
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // kryptonPanel1
             // 
             this.kryptonPanel1.AutoSize = true;
+            this.kryptonPanel1.Controls.Add(this.btnCollaborate);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel3);
             this.kryptonPanel1.Controls.Add(this.txtCoreProdInfo);
             this.kryptonPanel1.Controls.Add(this.btnFastFollowUp);
@@ -190,9 +192,24 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(771, 665);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // kryptonLabel3
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(501, 172);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(88, 20);
+            this.kryptonLabel3.TabIndex = 176;
+            this.kryptonLabel3.Values.Text = "主营产品类目";
+            // 
+            // txtCoreProdInfo
+            // 
+            this.txtCoreProdInfo.Location = new System.Drawing.Point(595, 170);
+            this.txtCoreProdInfo.Name = "txtCoreProdInfo";
+            this.txtCoreProdInfo.Size = new System.Drawing.Size(173, 23);
+            this.txtCoreProdInfo.TabIndex = 177;
+            // 
             // btnFastFollowUp
             // 
-            this.btnFastFollowUp.Location = new System.Drawing.Point(621, 605);
+            this.btnFastFollowUp.Location = new System.Drawing.Point(671, 591);
             this.btnFastFollowUp.Name = "btnFastFollowUp";
             this.btnFastFollowUp.Size = new System.Drawing.Size(90, 25);
             this.btnFastFollowUp.TabIndex = 175;
@@ -276,11 +293,11 @@
             // 
             // btnAddContactInfo
             // 
-            this.btnAddContactInfo.Location = new System.Drawing.Point(463, 605);
+            this.btnAddContactInfo.Location = new System.Drawing.Point(498, 591);
             this.btnAddContactInfo.Name = "btnAddContactInfo";
             this.btnAddContactInfo.Size = new System.Drawing.Size(104, 25);
             this.btnAddContactInfo.TabIndex = 152;
-            this.btnAddContactInfo.Values.Text = "添加联系人信息";
+            this.btnAddContactInfo.Values.Text = "添加联系人";
             this.btnAddContactInfo.Click += new System.EventHandler(this.btnAddContactInfo_Click);
             // 
             // kPanelGetCustomerSource
@@ -721,20 +738,14 @@
             this.kryptonDockableWorkspace1.TabIndex = 4;
             this.kryptonDockableWorkspace1.TabStop = true;
             // 
-            // kryptonLabel3
+            // btnCollaborate
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(501, 172);
-            this.kryptonLabel3.Name = "kryptonLabel3";
-            this.kryptonLabel3.Size = new System.Drawing.Size(88, 20);
-            this.kryptonLabel3.TabIndex = 176;
-            this.kryptonLabel3.Values.Text = "主营产品类目";
-            // 
-            // txtCoreProdInfo
-            // 
-            this.txtCoreProdInfo.Location = new System.Drawing.Point(595, 170);
-            this.txtCoreProdInfo.Name = "txtCoreProdInfo";
-            this.txtCoreProdInfo.Size = new System.Drawing.Size(173, 23);
-            this.txtCoreProdInfo.TabIndex = 177;
+            this.btnCollaborate.Location = new System.Drawing.Point(71, 591);
+            this.btnCollaborate.Name = "btnCollaborate";
+            this.btnCollaborate.Size = new System.Drawing.Size(104, 25);
+            this.btnCollaborate.TabIndex = 178;
+            this.btnCollaborate.Values.Text = "添加协作人（&L)";
+            this.btnCollaborate.Click += new System.EventHandler(this.btnCollaborate_Click);
             // 
             // UCCRMCustomerEdit
             // 
@@ -837,5 +848,6 @@
         private Krypton.Docking.KryptonDockableWorkspace kryptonDockableWorkspace1;
         private Krypton.Toolkit.KryptonLabel kryptonLabel3;
         private Krypton.Toolkit.KryptonTextBox txtCoreProdInfo;
+        private Krypton.Toolkit.KryptonButton btnCollaborate;
     }
 }

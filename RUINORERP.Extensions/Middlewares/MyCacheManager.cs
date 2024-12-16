@@ -362,16 +362,18 @@ namespace RUINORERP.Extensions.Middlewares
                         // Type elementType = TypeHelper.GetFirstArgumentType(listType);
                         Type elementType = NewTableTypeList.GetValue(tableName);
                         #region  强类型
-                        List<object> oldlist = (List<object>)cachelist;
+                        var lastlist = ((IEnumerable<dynamic>)cachelist).Select(item => Activator.CreateInstance(elementType)).ToList();
+
+                        //List<object> oldlist = (List<object>)cachelist;
                         List<object> myList = TypeHelper.ConvertJArrayToList(elementType, newJarryList);
-                        if (myList.Count == oldlist.Count)
+                        if (myList.Count == lastlist.Count)
                         {
                             CacheEntityList.Update(tableName, k => myList);
                         }
                         else
                         {
                             // 合并JArray并排除重复项,因为有分页传所以不能全部替换
-                            var combinedList = CombineLists(elementType, (List<object>)cachelist, myList, pair.Key);
+                            var combinedList = CombineLists(elementType, lastlist, myList, pair.Key);
                             CacheEntityList.Update(tableName, k => combinedList);
                         }
 
@@ -416,6 +418,7 @@ namespace RUINORERP.Extensions.Middlewares
                 .Concat(newList)
                 .GroupBy(item => item.GetPropertyValue(key))
                 .Select(group => group.First())
+                .Where(c => c.GetPropertyValue(key).IsNotEmptyOrNull() && c.GetPropertyValue(key).ToString() != "0")
                 .ToList();
 
             return combinedList;

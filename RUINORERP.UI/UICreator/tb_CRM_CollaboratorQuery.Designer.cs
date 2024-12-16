@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:10
+// 时间：12/16/2024 16:57:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -56,6 +56,22 @@ this.cmbEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 this.lblCustomer_id = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbCustomer_id = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
+this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.txtNotes.Multiline = true;
+
+this.lblCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.dtpCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+
+
+this.lblModified_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+
+
+this.lblisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkisdeleted.Values.Text ="";
+
     //for end
     this.SuspendLayout();
     
@@ -93,6 +109,73 @@ this.cmbCustomer_id.TabIndex = 2;
 this.Controls.Add(this.lblCustomer_id);
 this.Controls.Add(this.cmbCustomer_id);
 
+           //#####255Notes###String
+this.lblNotes.AutoSize = true;
+this.lblNotes.Location = new System.Drawing.Point(100,75);
+this.lblNotes.Name = "lblNotes";
+this.lblNotes.Size = new System.Drawing.Size(41, 12);
+this.lblNotes.TabIndex = 3;
+this.lblNotes.Text = "备注";
+this.txtNotes.Location = new System.Drawing.Point(173,71);
+this.txtNotes.Name = "txtNotes";
+this.txtNotes.Size = new System.Drawing.Size(100, 21);
+this.txtNotes.TabIndex = 3;
+this.Controls.Add(this.lblNotes);
+this.Controls.Add(this.txtNotes);
+
+           //#####Created_at###DateTime
+this.lblCreated_at.AutoSize = true;
+this.lblCreated_at.Location = new System.Drawing.Point(100,100);
+this.lblCreated_at.Name = "lblCreated_at";
+this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_at.TabIndex = 4;
+this.lblCreated_at.Text = "创建时间";
+//111======100
+this.dtpCreated_at.Location = new System.Drawing.Point(173,96);
+this.dtpCreated_at.Name ="dtpCreated_at";
+this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
+this.dtpCreated_at.TabIndex = 4;
+this.Controls.Add(this.lblCreated_at);
+this.Controls.Add(this.dtpCreated_at);
+
+           //#####Created_by###Int64
+//属性测试125Created_by
+//属性测试125Created_by
+
+           //#####Modified_at###DateTime
+this.lblModified_at.AutoSize = true;
+this.lblModified_at.Location = new System.Drawing.Point(100,150);
+this.lblModified_at.Name = "lblModified_at";
+this.lblModified_at.Size = new System.Drawing.Size(41, 12);
+this.lblModified_at.TabIndex = 6;
+this.lblModified_at.Text = "修改时间";
+//111======150
+this.dtpModified_at.Location = new System.Drawing.Point(173,146);
+this.dtpModified_at.Name ="dtpModified_at";
+this.dtpModified_at.ShowCheckBox =true;
+this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
+this.dtpModified_at.TabIndex = 6;
+this.Controls.Add(this.lblModified_at);
+this.Controls.Add(this.dtpModified_at);
+
+           //#####Modified_by###Int64
+//属性测试175Modified_by
+//属性测试175Modified_by
+
+           //#####isdeleted###Boolean
+this.lblisdeleted.AutoSize = true;
+this.lblisdeleted.Location = new System.Drawing.Point(100,200);
+this.lblisdeleted.Name = "lblisdeleted";
+this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
+this.lblisdeleted.TabIndex = 8;
+this.lblisdeleted.Text = "逻辑删除";
+this.chkisdeleted.Location = new System.Drawing.Point(173,196);
+this.chkisdeleted.Name = "chkisdeleted";
+this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
+this.chkisdeleted.TabIndex = 8;
+this.Controls.Add(this.lblisdeleted);
+this.Controls.Add(this.chkisdeleted);
+
           
     //for end
 
@@ -106,6 +189,20 @@ this.Controls.Add(this.cmbEmployee_ID );
 
                 this.Controls.Add(this.lblCustomer_id );
 this.Controls.Add(this.cmbCustomer_id );
+
+                this.Controls.Add(this.lblNotes );
+this.Controls.Add(this.txtNotes );
+
+                this.Controls.Add(this.lblCreated_at );
+this.Controls.Add(this.dtpCreated_at );
+
+                
+                this.Controls.Add(this.lblModified_at );
+this.Controls.Add(this.dtpModified_at );
+
+                
+                this.Controls.Add(this.lblisdeleted );
+this.Controls.Add(this.chkisdeleted );
 
                     
             this.Name = "tb_CRM_CollaboratorQuery";
@@ -126,6 +223,32 @@ private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCustomer_id;
 private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbCustomer_id;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCreated_at;
+private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
+
+    
+        
+              
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblModified_at;
+private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
+
+    
+        
+              
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblisdeleted;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkisdeleted;
 
     
     

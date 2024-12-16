@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:09
+// 时间：12/16/2024 16:57:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -36,6 +36,12 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
+        
+        
 
          }
 /*
@@ -45,6 +51,12 @@ namespace RUINORERP.UI
         tb_CRM_Collaborator entity = new tb_CRM_Collaborator();
                      entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.Customer_id = Int64.Parse(txtCustomer_id.Text);
+                        entity.Notes = txtNotes.Text ;
+                       entity.Created_at = DateTime.Parse(txtCreated_at.Text);
+                        entity.Created_by = Int64.Parse(txtCreated_by.Text);
+                        entity.Modified_at = DateTime.Parse(txtModified_at.Text);
+                        entity.Modified_by = Int64.Parse(txtModified_by.Text);
+                        entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
                                 return entity;
 }
         */
@@ -57,6 +69,12 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v=>v.XXNAME, cmbCustomer_id);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Collaborator>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4DataTime<tb_CRM_Collaborator>(entity, t => t.Created_at, dtpCreated_at,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Collaborator>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_CRM_Collaborator>(entity, t => t.Modified_at, dtpModified_at,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Collaborator>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4CheckBox<tb_CRM_Collaborator>(entity, t => t.isdeleted, chkisdeleted, false);
 }
 
 

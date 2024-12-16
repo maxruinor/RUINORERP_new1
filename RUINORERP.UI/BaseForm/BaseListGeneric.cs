@@ -113,40 +113,10 @@ namespace RUINORERP.UI.BaseForm
             //这里不这样了，直接用登陆时查出来的。按菜单路径找到菜单 去再搜索 字段。
             //    显示按钮也一样的思路
             this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
-
-
-
-
-
-
-            /*
-            tb_MenuInfo menuInfo = MainForm.Instance.AppContext.CurUserInfo.UserModList..FirstOrDefault(m => m.ClassPath == this.GetType().FullName);
-            if (menuInfo != null)
-            {
-                var fields = MainForm.Instance.AppContext.CurUserInfo.UserFieldList.Where(f => f.MenuID == menuInfo.MenuID).ToList();
-                foreach (var field in fields)
-                {
-                    //这里权限控制了一下
-                    if (!field.IsEnabled)
-                    {
-                        continue;
-                    }
-                    KeyValuePair<string, bool> kv;
-                    if (this.dataGridView1.FieldNameList.TryGetValue(field.FieldName, out kv) && !field.IsEnabled)
-                    {
-                        //存在但不可用就是无权限   
-                        this.dataGridView1.FieldNameList.TryRemove(field.FieldName, out kv);
-                    }
-
-                }
-            }
-            */
-
-
-            //重构？
+       
             dataGridView1.XmlFileName = tableName;
 
-            // Refreshs();
+         
         }
 
 

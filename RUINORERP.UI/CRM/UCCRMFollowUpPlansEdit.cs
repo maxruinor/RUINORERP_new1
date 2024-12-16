@@ -26,6 +26,8 @@ using RUINORERP.UI.CRM.DockUI;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using SqlSugar;
+using RUINORERP.Business.CommService;
+using TransInstruction;
 
 namespace RUINORERP.UI.CRM
 {
@@ -61,7 +63,7 @@ namespace RUINORERP.UI.CRM
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
 
-          
+
 
             DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.PlanStartDate, dtpPlanStartDate, false);
             DataBindingHelper.BindData4DataTime<tb_CRM_FollowUpPlans>(entity, t => t.PlanEndDate, dtpPlanEndDate, false);
@@ -102,7 +104,7 @@ namespace RUINORERP.UI.CRM
             {
                 btnFastFollowUp.Visible = false;
             }
-            if (plan.tb_CRM_FollowUpRecordses==null)
+            if (plan.tb_CRM_FollowUpRecordses == null)
             {
                 plan.tb_CRM_FollowUpRecordses = new List<tb_CRM_FollowUpRecords>();
             }
@@ -122,15 +124,15 @@ namespace RUINORERP.UI.CRM
             }
             entity.PropertyChanged += async (sender, s2) =>
             {
-                
-                if (_EditEntity.ActionStatus == ActionStatus.新增 || _EditEntity.ActionStatus == ActionStatus.修改 )
+
+                if (_EditEntity.ActionStatus == ActionStatus.新增 || _EditEntity.ActionStatus == ActionStatus.修改)
                 {
                     if (s2.PropertyName == entity.GetPropertyName<tb_CRM_FollowUpPlans>(c => c.PlanStartDate))
                     {
                         //结束是起的加一天，默认
                         _EditEntity.PlanEndDate = _EditEntity.PlanStartDate.AddDays(1);
                     }
-               
+
                 }
             };
 
@@ -263,6 +265,36 @@ namespace RUINORERP.UI.CRM
                 {
                     BaseController<tb_CRM_FollowUpRecords> ctr = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpRecords>>(typeof(tb_CRM_FollowUpRecords).Name + "Controller");
                     ReturnResults<tb_CRM_FollowUpRecords> result = await ctr.BaseSaveOrUpdate(NewInfo);
+
+                    if (result.Succeeded)
+                    {
+
+                        //记录添加成功后。客户如果是新客户 则转换为 潜在客户
+                        if (_EditEntity.tb_crm_customer != null)
+                        {
+                            if (_EditEntity.tb_crm_customer.CustomerStatus == (int)CustomerStatus.新增客户)
+                            {
+                                _EditEntity.tb_crm_customer.CustomerStatus = (int)CustomerStatus.潜在客户;
+                                BaseController<tb_CRM_Customer> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Customer>>(typeof(tb_CRM_Customer).Name + "Controller");
+                                ReturnResults<tb_CRM_Customer> resultCustomer = await ctrContactInfo.BaseSaveOrUpdate(_EditEntity.tb_crm_customer);
+                                if (resultCustomer.Succeeded)
+                                {
+
+                                }
+                            }
+
+                            //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                            //只处理需要缓存的表
+                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_FollowUpRecords).Name, out pair))
+                            {
+                                //如果有更新变动就上传到服务器再分发到所有客户端
+                                OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_FollowUpRecords>(result.ReturnObject);
+                                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                MainForm.Instance.ecs.client.Send(buffer);
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -14,16 +14,13 @@
 
                         例如，将oldList中的ID列提取出来存放到newList中：
 
-List<ushort> newList = new List<ushort>(oldList.Select(t => t.ID).ToList())
+                        List<ushort> newList = new List<ushort>(oldList.Select(t => t.ID).ToList())
 
-2.使用 LINQ 查询语句选择要保留的列。例如：
+                        2.使用 LINQ 查询语句选择要保留的列。例如：
 
-List myList = new List();
-// ...
-var filteredList = myList.Select(x => new { x.Column1, x.Column3 }).ToList();
-
-
-
+                        List myList = new List();
+                        // ...
+                        var filteredList = myList.Select(x => new { x.Column1, x.Column3 }).ToList();
 
                          //非常值和学习借鉴有代码 TODO 重点学习代码
                                     ExpConverter expConverter = new ExpConverter();

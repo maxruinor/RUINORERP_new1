@@ -30,6 +30,7 @@ using RUINORERP.UI.SysConfig;
 using TransInstruction;
 using AutoUpdateTools;
 using RUINORERP.Model.TransModel;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.CRM
 {
@@ -127,10 +128,35 @@ namespace RUINORERP.UI.CRM
                         frmaddg.BindData(bty, ActionStatus.新增);
                         if (frmaddg.ShowDialog() == DialogResult.OK)
                         {
-                            BaseController<tb_CRM_FollowUpRecords> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpRecords>>(typeof(tb_CRM_FollowUpRecords).Name + "Controller");
-                            ReturnResults<tb_CRM_FollowUpRecords> result = await ctrContactInfo.BaseSaveOrUpdate(EntityInfo);
+                            BaseController<tb_CRM_FollowUpRecords> ctrRecords = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpRecords>>(typeof(tb_CRM_FollowUpRecords).Name + "Controller");
+                            ReturnResults<tb_CRM_FollowUpRecords> result = await ctrRecords.BaseSaveOrUpdate(EntityInfo);
                             if (result.Succeeded)
                             {
+                                //记录添加成功后。客户如果是新客户 则转换为 潜在客户
+                                if (plan.tb_crm_customer != null)
+                                {
+                                    if (plan.tb_crm_customer.CustomerStatus == (int)CustomerStatus.新增客户)
+                                    {
+                                        plan.tb_crm_customer.CustomerStatus = (int)CustomerStatus.潜在客户;
+                                        BaseController<tb_CRM_Customer> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Customer>>(typeof(tb_CRM_Customer).Name + "Controller");
+                                        ReturnResults<tb_CRM_Customer> resultCustomer = await ctrContactInfo.BaseSaveOrUpdate(plan.tb_crm_customer);
+                                        if (resultCustomer.Succeeded)
+                                        {
+
+                                        }
+                                    }
+
+                                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                                    //只处理需要缓存的表
+                                    if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_FollowUpRecords).Name, out pair))
+                                    {
+                                        //如果有更新变动就上传到服务器再分发到所有客户端
+                                        OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_FollowUpRecords>(result.ReturnObject);
+                                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                        MainForm.Instance.ecs.client.Send(buffer);
+                                    }
+                                }
                                 MainForm.Instance.ShowStatusText("添加成功!");
                             }
                             else

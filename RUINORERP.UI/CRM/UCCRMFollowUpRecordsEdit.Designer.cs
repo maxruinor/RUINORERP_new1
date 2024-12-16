@@ -31,6 +31,10 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblFollowUpResult = new Krypton.Toolkit.KryptonLabel();
+            this.txtFollowUpResult = new Krypton.Toolkit.KryptonTextBox();
+            this.chkHasResponse = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblHasResponse = new Krypton.Toolkit.KryptonLabel();
             this.btnNextFollowUpPlan = new Krypton.Toolkit.KryptonButton();
             this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
             this.cmbFollowUpMethod = new Krypton.Toolkit.KryptonComboBox();
@@ -51,10 +55,6 @@
             this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.chkHasResponse = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblHasResponse = new Krypton.Toolkit.KryptonLabel();
-            this.lblFollowUpResult = new Krypton.Toolkit.KryptonLabel();
-            this.txtFollowUpResult = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -72,7 +72,7 @@
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
-            this.btnOk.Values.Text = "确定";
+            this.btnOk.Values.Text = "确定(&S)";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // btnCancel
@@ -81,7 +81,7 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
-            this.btnCancel.Values.Text = "取消";
+            this.btnCancel.Values.Text = "取消(&C)";
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // kryptonPanel1
@@ -117,6 +117,39 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(769, 618);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // lblFollowUpResult
+            // 
+            this.lblFollowUpResult.Location = new System.Drawing.Point(37, 411);
+            this.lblFollowUpResult.Name = "lblFollowUpResult";
+            this.lblFollowUpResult.Size = new System.Drawing.Size(62, 20);
+            this.lblFollowUpResult.TabIndex = 185;
+            this.lblFollowUpResult.Values.Text = "跟进结果";
+            // 
+            // txtFollowUpResult
+            // 
+            this.txtFollowUpResult.Location = new System.Drawing.Point(104, 408);
+            this.txtFollowUpResult.Multiline = true;
+            this.txtFollowUpResult.Name = "txtFollowUpResult";
+            this.txtFollowUpResult.Size = new System.Drawing.Size(565, 43);
+            this.txtFollowUpResult.TabIndex = 186;
+            // 
+            // chkHasResponse
+            // 
+            this.chkHasResponse.Location = new System.Drawing.Point(444, 290);
+            this.chkHasResponse.Name = "chkHasResponse";
+            this.chkHasResponse.Size = new System.Drawing.Size(19, 13);
+            this.chkHasResponse.TabIndex = 184;
+            this.chkHasResponse.Values.Text = "";
+            // 
+            // lblHasResponse
+            // 
+            this.lblHasResponse.Location = new System.Drawing.Point(389, 286);
+            this.lblHasResponse.Name = "lblHasResponse";
+            this.lblHasResponse.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
+            this.lblHasResponse.Size = new System.Drawing.Size(49, 20);
+            this.lblHasResponse.TabIndex = 183;
+            this.lblHasResponse.Values.Text = "有回应";
             // 
             // btnNextFollowUpPlan
             // 
@@ -280,39 +313,6 @@
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(566, 106);
             this.txtNotes.TabIndex = 52;
-            // 
-            // chkHasResponse
-            // 
-            this.chkHasResponse.Location = new System.Drawing.Point(444, 290);
-            this.chkHasResponse.Name = "chkHasResponse";
-            this.chkHasResponse.Size = new System.Drawing.Size(19, 13);
-            this.chkHasResponse.TabIndex = 184;
-            this.chkHasResponse.Values.Text = "";
-            // 
-            // lblHasResponse
-            // 
-            this.lblHasResponse.Location = new System.Drawing.Point(389, 286);
-            this.lblHasResponse.Name = "lblHasResponse";
-            this.lblHasResponse.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
-            this.lblHasResponse.Size = new System.Drawing.Size(49, 20);
-            this.lblHasResponse.TabIndex = 183;
-            this.lblHasResponse.Values.Text = "有回应";
-            // 
-            // lblFollowUpResult
-            // 
-            this.lblFollowUpResult.Location = new System.Drawing.Point(37, 411);
-            this.lblFollowUpResult.Name = "lblFollowUpResult";
-            this.lblFollowUpResult.Size = new System.Drawing.Size(62, 20);
-            this.lblFollowUpResult.TabIndex = 185;
-            this.lblFollowUpResult.Values.Text = "跟进结果";
-            // 
-            // txtFollowUpResult
-            // 
-            this.txtFollowUpResult.Location = new System.Drawing.Point(104, 408);
-            this.txtFollowUpResult.Multiline = true;
-            this.txtFollowUpResult.Name = "txtFollowUpResult";
-            this.txtFollowUpResult.Size = new System.Drawing.Size(565, 43);
-            this.txtFollowUpResult.TabIndex = 186;
             // 
             // UCCRMFollowUpRecordsEdit
             // 

@@ -33,6 +33,9 @@ using Krypton.Workspace;
 using NPOI.SS.Formula.Functions;
 using System.Reflection;
 using RUINORERP.Business.Security;
+using RUINORERP.Business.CommService;
+using System.Numerics;
+using TransInstruction;
 
 namespace RUINORERP.UI.CRM
 {
@@ -176,7 +179,7 @@ namespace RUINORERP.UI.CRM
                     QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
                     queryFilterC.FilterLimitExpressions.Add(lambda);
 
-           
+
 
                     DataBindingHelper.InitFilterForControlByExp<tb_CRM_Leads>(entity, cmbLeadID, c => c.CustomerName, queryFilterC);
 
@@ -218,6 +221,25 @@ namespace RUINORERP.UI.CRM
                 }
             }
 
+            #region 加载联系人
+
+            UCCRMContact uCContact = new UCCRMContact();
+            if (customer.tb_CRM_Contacts != null && customer.tb_CRM_Contacts.Count > 0)
+            {
+                if (customer.tb_CRM_Contacts.Count > 0)
+                {
+                    uCContact.BindData<tb_CRM_Contact>(customer.tb_CRM_Contacts.Select(c => new
+                    {
+                        c.Contact_Name,
+                        c.Contact_Phone,
+                        c.Contact_Email
+                    }).ToList());
+                    loadTrack = true;
+                }
+            }
+
+            #endregion
+
             if (loadTrack)
             {
                 // Setup docking functionality
@@ -232,13 +254,20 @@ namespace RUINORERP.UI.CRM
                 KryptonPage kprecords = UIForKryptonHelper.NewPage("跟踪记录", uCTrackRecordses);
                 kprecords.AllowDrop = false;
                 kprecords.SetFlags(KryptonPageFlags.All);
-                kprecords.Width=300;
+                kprecords.Width = 300;
                 KryptonPage kpplans = UIForKryptonHelper.NewPage("跟踪计划", uCTrackPlans);
                 kpplans.AllowDrop = false;
                 kpplans.SetFlags(KryptonPageFlags.All);
                 kpplans.Width = 500;
+
+
+                KryptonPage kpContacts = UIForKryptonHelper.NewPage("联系人", uCContact);
+                kpContacts.AllowDrop = false;
+                kpContacts.SetFlags(KryptonPageFlags.All);
+                kpContacts.Width = 300;
+
                 // Add docking pages
-                kryptonDockingManager.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] {kpplans });
+                kryptonDockingManager.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { kpplans, kpContacts });
                 //kryptonDockingManager.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { kprecords, kpplans });
                 kryptonDockingManager.AddToWorkspace("Workspace", new KryptonPage[] { kprecords });
 
@@ -252,6 +281,9 @@ namespace RUINORERP.UI.CRM
 
 
             #endregion
+
+
+
 
             base.BindData(entity);
         }
@@ -547,12 +579,18 @@ namespace RUINORERP.UI.CRM
                 object obj = frmaddg.bindingSourceEdit.AddNew();
                 tb_CRM_Contact ContactInfo = obj as tb_CRM_Contact;
                 ContactInfo.Customer_id = _EditEntity.Customer_id;
+                ContactInfo.Contact_Name = _EditEntity.Contact_Name;
+                ContactInfo.Contact_Phone = _EditEntity.Contact_Phone;
+                ContactInfo.Contact_Email = _EditEntity.Contact_Email;
+
                 BaseEntity bty = ContactInfo as BaseEntity;
                 bty.ActionStatus = ActionStatus.加载;
                 BusinessHelper.Instance.EditEntity(bty);
-                frmaddg.BindData(bty);
+                frmaddg.BindData(bty, ActionStatus.无操作);
                 if (frmaddg.ShowDialog() == DialogResult.OK)
                 {
+                    //暂时没有限制不让修改。但是客户对应不能是其它客户。这里再一次指定一下。
+                    ContactInfo.Customer_id = _EditEntity.Customer_id;
                     UIBizSrvice.SaveCRMContact(ContactInfo);
                 }
             }
@@ -579,6 +617,34 @@ namespace RUINORERP.UI.CRM
                 {
                     BaseController<tb_CRM_FollowUpRecords> ctr = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpRecords>>(typeof(tb_CRM_FollowUpRecords).Name + "Controller");
                     ReturnResults<tb_CRM_FollowUpRecords> result = await ctr.BaseSaveOrUpdate(NewInfo);
+                    if (result.Succeeded)
+                    {
+                        //记录添加成功后。客户如果是新客户 则转换为 潜在客户
+                        if (_EditEntity != null)
+                        {
+                            if (_EditEntity.CustomerStatus == (int)CustomerStatus.新增客户)
+                            {
+                                _EditEntity.CustomerStatus = (int)CustomerStatus.潜在客户;
+                                BaseController<tb_CRM_Customer> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Customer>>(typeof(tb_CRM_Customer).Name + "Controller");
+                                ReturnResults<tb_CRM_Customer> resultCustomer = await ctrContactInfo.BaseSaveOrUpdate(_EditEntity);
+                                if (resultCustomer.Succeeded)
+                                {
+
+                                }
+                            }
+
+                            //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                            //只处理需要缓存的表
+                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_FollowUpRecords).Name, out pair))
+                            {
+                                //如果有更新变动就上传到服务器再分发到所有客户端
+                                OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_FollowUpRecords>(result.ReturnObject);
+                                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                MainForm.Instance.ecs.client.Send(buffer);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -586,6 +652,31 @@ namespace RUINORERP.UI.CRM
         private void cmbLeadID_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void btnCollaborate_Click(object sender, EventArgs e)
+        {
+            object frm = Activator.CreateInstance(typeof(UCCRMCollaboratorEdit));
+            if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+            {
+                BaseEditGeneric<tb_CRM_Collaborator> frmaddg = frm as BaseEditGeneric<tb_CRM_Collaborator>;
+                frmaddg.Text = "协作人编辑";
+                frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_Collaborator>();
+                object obj = frmaddg.bindingSourceEdit.AddNew();
+                tb_CRM_Collaborator ContactInfo = obj as tb_CRM_Collaborator;
+                ContactInfo.Customer_id = _EditEntity.Customer_id;
+
+                BaseEntity bty = ContactInfo as BaseEntity;
+                bty.ActionStatus = ActionStatus.加载;
+                BusinessHelper.Instance.EditEntity(bty);
+                frmaddg.BindData(bty, ActionStatus.无操作);
+                if (frmaddg.ShowDialog() == DialogResult.OK)
+                {
+                    //暂时没有限制不让修改。但是客户对应不能是其它客户。这里再一次指定一下。
+                    ContactInfo.Customer_id = _EditEntity.Customer_id;
+                    UIBizSrvice.SaveCRMCollaborator(ContactInfo);
+                }
+            }
         }
     }
 }

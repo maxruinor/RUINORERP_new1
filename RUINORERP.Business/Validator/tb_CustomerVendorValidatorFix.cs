@@ -32,13 +32,19 @@ namespace RUINORERP.Business
             RuleFor(customer => customer.CVName)
           .Custom((value, context) =>
           {
-              string propertyName = context.PropertyName;
-              // 在这里使用 propertyName
-             // Console.WriteLine($"正在验证的属性: {propertyName}");
-              // 实际的唯一性验证逻辑
-              if (!BeUniqueName(propertyName, value))
+             var customer = context.InstanceToValidate as tb_CustomerVendor; // 假设你的实体类名为Customer
+
+              // 确保customer不为null  并且是新增时才判断
+              if (customer != null && customer.CustomerVendor_ID == 0)
               {
-                  context.AddFailure("全称不能重复。");
+                  string propertyName = context.PropertyName;
+                  // 在这里使用 propertyName
+                  // Console.WriteLine($"正在验证的属性: {propertyName}");
+                  // 实际的唯一性验证逻辑
+                  if (!BeUniqueName(propertyName, value))
+                  {
+                      context.AddFailure("全称不能重复。");
+                  }
               }
           });
         }

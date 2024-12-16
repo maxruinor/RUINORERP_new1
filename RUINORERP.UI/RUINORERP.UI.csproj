@@ -1068,6 +1068,12 @@
     <Compile Include="BusinessFlow\FlowDesign.Designer.cs">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </Compile>
+    <Compile Include="CommonUI\frmSelectObject.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CommonUI\frmSelectObject.Designer.cs">
+      <DependentUpon>frmSelectObject.cs</DependentUpon>
+    </Compile>
     <Compile Include="CommonUI\frmInputContent.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1078,6 +1084,12 @@
     <Compile Include="Common\UIForKryptonHelper.cs" />
     <Compile Include="Common\UIBaseTool.cs" />
     <Compile Include="Common\UIBizSrvice.cs" />
+    <Compile Include="CRM\DockUI\UCCRMContact.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\DockUI\UCCRMContact.Designer.cs">
+      <DependentUpon>UCCRMContact.cs</DependentUpon>
+    </Compile>
     <Compile Include="CRM\DockUI\UCFollowUpPlan.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1096,11 +1108,23 @@
     <Compile Include="CRM\UCCRMConfig.Designer.cs">
       <DependentUpon>UCCRMConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="CRM\UCCRMCollaboratorEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMCollaboratorEdit.Designer.cs">
+      <DependentUpon>UCCRMCollaboratorEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="CRM\UCCRMContactEdit.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="CRM\UCCRMContactEdit.Designer.cs">
       <DependentUpon>UCCRMContactEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CRM\UCCRMCollaboratorList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CRM\UCCRMCollaboratorList.Designer.cs">
+      <DependentUpon>UCCRMCollaboratorList.cs</DependentUpon>
     </Compile>
     <Compile Include="CRM\UCCRMFollowUpRecordsEdit.cs">
       <SubType>Form</SubType>
@@ -2708,8 +2732,14 @@
     <EmbeddedResource Include="BusinessFlow\FlowDesign.resx">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommonUI\frmSelectObject.resx">
+      <DependentUpon>frmSelectObject.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CommonUI\frmInputContent.resx">
       <DependentUpon>frmInputContent.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\DockUI\UCCRMContact.resx">
+      <DependentUpon>UCCRMContact.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CRM\DockUI\UCFollowUpPlan.resx">
       <DependentUpon>UCFollowUpPlan.cs</DependentUpon>
@@ -2720,8 +2750,14 @@
     <EmbeddedResource Include="CRM\UCCRMConfig.resx">
       <DependentUpon>UCCRMConfig.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMCollaboratorEdit.resx">
+      <DependentUpon>UCCRMCollaboratorEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCCRMContactEdit.resx">
       <DependentUpon>UCCRMContactEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CRM\UCCRMCollaboratorList.resx">
+      <DependentUpon>UCCRMCollaboratorList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CRM\UCCRMFollowUpRecordsEdit.resx">
       <DependentUpon>UCCRMFollowUpRecordsEdit.cs</DependentUpon>
@@ -3379,6 +3415,7 @@
     <None Include="ResourceFile\Lock.png" />
     <None Include="ResourceFile\locked.png" />
     <Content Include="ResourceFile\lock_security_padlock_secure_icon.png" />
+    <None Include="Resources\分配-.png" />
     <Content Include="ruinor.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

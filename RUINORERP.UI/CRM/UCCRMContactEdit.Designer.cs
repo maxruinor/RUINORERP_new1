@@ -31,8 +31,6 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.lblNotes = new Krypton.Toolkit.KryptonLabel();
-            this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
             this.lblCustomer_id = new Krypton.Toolkit.KryptonLabel();
             this.cmbCustomer_id = new Krypton.Toolkit.KryptonComboBox();
             this.lblSocialTools = new Krypton.Toolkit.KryptonLabel();
@@ -49,6 +47,8 @@
             this.txtPreferences = new Krypton.Toolkit.KryptonTextBox();
             this.lblAddress = new Krypton.Toolkit.KryptonLabel();
             this.txtAddress = new Krypton.Toolkit.KryptonTextBox();
+            this.lblNotes = new Krypton.Toolkit.KryptonLabel();
+            this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -61,7 +61,7 @@
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
-            this.btnOk.Values.Text = "确定";
+            this.btnOk.Values.Text = "确定(&S)";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // btnCancel
@@ -70,7 +70,7 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
-            this.btnCancel.Values.Text = "取消";
+            this.btnCancel.Values.Text = "取消(&C)";
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // kryptonPanel1
@@ -100,22 +100,6 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(609, 424);
             this.kryptonPanel1.TabIndex = 2;
-            // 
-            // lblNotes
-            // 
-            this.lblNotes.Location = new System.Drawing.Point(105, 243);
-            this.lblNotes.Name = "lblNotes";
-            this.lblNotes.Size = new System.Drawing.Size(36, 20);
-            this.lblNotes.TabIndex = 51;
-            this.lblNotes.Values.Text = "备注";
-            // 
-            // txtNotes
-            // 
-            this.txtNotes.Location = new System.Drawing.Point(152, 242);
-            this.txtNotes.Multiline = true;
-            this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(345, 96);
-            this.txtNotes.TabIndex = 52;
             // 
             // lblCustomer_id
             // 
@@ -240,13 +224,29 @@
             this.txtAddress.Size = new System.Drawing.Size(345, 21);
             this.txtAddress.TabIndex = 68;
             // 
-            // UCContactEdit
+            // lblNotes
+            // 
+            this.lblNotes.Location = new System.Drawing.Point(105, 243);
+            this.lblNotes.Name = "lblNotes";
+            this.lblNotes.Size = new System.Drawing.Size(36, 20);
+            this.lblNotes.TabIndex = 51;
+            this.lblNotes.Values.Text = "备注";
+            // 
+            // txtNotes
+            // 
+            this.txtNotes.Location = new System.Drawing.Point(152, 242);
+            this.txtNotes.Multiline = true;
+            this.txtNotes.Name = "txtNotes";
+            this.txtNotes.Size = new System.Drawing.Size(345, 96);
+            this.txtNotes.TabIndex = 52;
+            // 
+            // UCCRMContactEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(609, 424);
             this.Controls.Add(this.kryptonPanel1);
-            this.Name = "UCContactEdit";
+            this.Name = "UCCRMContactEdit";
             this.Load += new System.EventHandler(this.UCLeadsEdit_Load);
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();

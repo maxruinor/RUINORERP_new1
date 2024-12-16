@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:11
+// 时间：12/16/2024 16:57:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,14 +51,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Employee_ID;
+        private long _Employee_ID;
         /// <summary>
         /// 协作人
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "协作人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "协作人" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "协作人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
-        public long? Employee_ID
+        public long Employee_ID
         { 
             get{return _Employee_ID;}
             set{
@@ -66,18 +66,103 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Customer_id;
+        private long _Customer_id;
         /// <summary>
         /// 目标客户
         /// </summary>
         [AdvQueryAttribute(ColName = "Customer_id",ColDesc = "目标客户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "目标客户" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Customer_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标客户" )]
         [FKRelationAttribute("tb_CRM_Customer","Customer_id")]
-        public long? Customer_id
+        public long Customer_id
         { 
             get{return _Customer_id;}
             set{
             SetProperty(ref _Customer_id, value);
+            }
+        }
+
+        private string _Notes;
+        /// <summary>
+        /// 备注
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Notes",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Notes" ,Length=255,IsNullable = true,ColumnDescription = "备注" )]
+        public string Notes
+        { 
+            get{return _Notes;}
+            set{
+            SetProperty(ref _Notes, value);
+            }
+        }
+
+        private DateTime _Created_at;
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = false,ColumnDescription = "创建时间" )]
+        public DateTime Created_at
+        { 
+            get{return _Created_at;}
+            set{
+            SetProperty(ref _Created_at, value);
+            }
+        }
+
+        private long _Created_by;
+        /// <summary>
+        /// 创建人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_by",ColDesc = "创建人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Created_by" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "创建人" )]
+        public long Created_by
+        { 
+            get{return _Created_by;}
+            set{
+            SetProperty(ref _Created_by, value);
+            }
+        }
+
+        private DateTime? _Modified_at;
+        /// <summary>
+        /// 修改时间
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = true,ColumnDescription = "修改时间" )]
+        public DateTime? Modified_at
+        { 
+            get{return _Modified_at;}
+            set{
+            SetProperty(ref _Modified_at, value);
+            }
+        }
+
+        private long? _Modified_by;
+        /// <summary>
+        /// 修改人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Modified_by",ColDesc = "修改人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Modified_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "修改人" )]
+        public long? Modified_by
+        { 
+            get{return _Modified_by;}
+            set{
+            SetProperty(ref _Modified_by, value);
+            }
+        }
+
+        private bool? _isdeleted= false;
+        /// <summary>
+        /// 逻辑删除
+        /// </summary>
+        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "isdeleted" ,IsNullable = true,ColumnDescription = "逻辑删除" )]
+        [Browsable(false)]
+        public bool? isdeleted
+        { 
+            get{return _isdeleted;}
+            set{
+            SetProperty(ref _isdeleted, value);
             }
         }
 

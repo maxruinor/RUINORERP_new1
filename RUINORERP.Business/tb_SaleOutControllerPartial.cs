@@ -28,6 +28,7 @@ using RUINORERP.Global;
 using System.Windows.Forms;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using RUINORERP.Business.Security;
+using RUINORERP.Global.EnumExt.CRM;
 
 
 namespace RUINORERP.Business
@@ -126,8 +127,8 @@ namespace RUINORERP.Business
                 }
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-            
-             
+
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
                 // entity.ApprovalOpinions = approvalEntity.ApprovalComments;
@@ -141,6 +142,7 @@ namespace RUINORERP.Business
                     entity.tb_saleorder = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                         //.Includes(t => t.tb_SaleOrderDetails)
                         .Includes(a => a.tb_SaleOuts, b => b.tb_SaleOutDetails)
+                        .Includes(a => a.tb_customervendor.tb_crm_customer)
                         .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                       .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
                         .Where(c => c.SOrder_ID == entity.SOrder_ID).Single();
@@ -338,6 +340,26 @@ namespace RUINORERP.Business
                         {
                             // _logger.Debug(entity.SaleOutNo + "==>" + entity.tb_saleorder.SOrderNo + $"对应的订单更新成功===重点代码 看已交数量是否正确");
                         }
+                    }
+
+
+                    //如果是新客户或潜在客户。则转换为首单客户
+
+                    if (entity.tb_saleorder.tb_customervendor.tb_crm_customer != null)
+                    {
+                        var crm_customer = entity.tb_saleorder.tb_customervendor.tb_crm_customer;
+                        if (crm_customer.CustomerStatus == (int)CustomerStatus.潜在客户 ||
+                            crm_customer.CustomerStatus == (int)CustomerStatus.新增客户)
+                        {
+                            crm_customer.CustomerStatus = (int)CustomerStatus.首单客户;
+                            crm_customer.LastPurchaseDate = entity.OutDate;
+                        }
+
+                        //更新采购金额
+                        crm_customer.PurchaseCount++;
+                        crm_customer.TotalPurchaseAmount += entity.tb_SaleOutDetails.Sum(c => c.Quantity * c.TransactionPrice);
+                        crm_customer.LastPurchaseDate = entity.OutDate;
+                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer).UpdateColumns(t => new { t.CustomerStatus, t.PurchaseCount, t.TotalPurchaseAmount, t.LastPurchaseDate }).ExecuteCommandAsync();
                     }
 
                     #endregion

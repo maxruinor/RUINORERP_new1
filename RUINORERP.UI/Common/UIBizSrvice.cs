@@ -1,5 +1,6 @@
 ﻿using FastReport.Table;
 using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -138,6 +139,30 @@ namespace RUINORERP.UI.Common
         #endregion
 
         /// <summary>
+        /// 保存协作人信息
+        /// </summary>
+        /// <param name="ContactInfo"></param>
+        public static async void SaveCRMCollaborator(tb_CRM_Collaborator ContactInfo)
+        {
+            BaseController<tb_CRM_Collaborator> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Collaborator>>(typeof(tb_CRM_Collaborator).Name + "Controller");
+            ReturnResults<tb_CRM_Collaborator> result = await ctrContactInfo.BaseSaveOrUpdate(ContactInfo);
+            if (result.Succeeded)
+            {
+                ////根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                //KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                ////只处理需要缓存的表
+                //if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_Collaborator).Name, out pair))
+                //{
+                //    //如果有更新变动就上传到服务器再分发到所有客户端
+                //    OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_Collaborator>(result.ReturnObject);
+                //    byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                //    MainForm.Instance.ecs.client.Send(buffer);
+                //}
+            }
+        }
+
+
+        /// <summary>
         /// 保存联系人信息
         /// </summary>
         /// <param name="ContactInfo"></param>
@@ -145,6 +170,19 @@ namespace RUINORERP.UI.Common
         {
             BaseController<tb_CRM_Contact> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Contact>>(typeof(tb_CRM_Contact).Name + "Controller");
             ReturnResults<tb_CRM_Contact> result = await ctrContactInfo.BaseSaveOrUpdate(ContactInfo);
+            if (result.Succeeded)
+            {
+                //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                //只处理需要缓存的表
+                if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_Contact).Name, out pair))
+                {
+                    //如果有更新变动就上传到服务器再分发到所有客户端
+                    OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_Contact>(result.ReturnObject);
+                    byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                    MainForm.Instance.ecs.client.Send(buffer);
+                }
+            }
         }
 
 
@@ -208,8 +246,23 @@ namespace RUINORERP.UI.Common
                     await MainForm.Instance.AppContext.Db.Updateable<tb_FM_PayeeInfo>(payeeInfos).UpdateColumns(it => new { it.IsDefault }).ExecuteCommandAsync();
                 }
 
+
             }
             #endregion
+            if (result.Succeeded)
+            {
+
+                //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                //只处理需要缓存的表
+                if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_FM_PayeeInfo).Name, out pair))
+                {
+                    //如果有更新变动就上传到服务器再分发到所有客户端
+                    OriginalData odforCache = ActionForClient.更新缓存<tb_FM_PayeeInfo>(result.ReturnObject);
+                    byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                    MainForm.Instance.ecs.client.Send(buffer);
+                }
+            }
         }
 
         public static void RequestCache<T>()

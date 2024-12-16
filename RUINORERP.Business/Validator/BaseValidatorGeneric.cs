@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Business
@@ -87,6 +88,22 @@ namespace RUINORERP.Business
         //{
 
         //}
+
+
+        public bool IsValidEmailFormat(string email)
+        {
+            // 正则表达式，匹配邮箱格式
+            string pattern = @"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
+            return Regex.IsMatch(email, pattern);
+        }
+
+        public bool IsValidPhoneOrLandlineFormat(string phone)
+        {
+            // 正则表达式，匹配11位或12位手机号码
+            string mobilePattern = @"^1\d{10,11}$"; // 手机号码
+            string landlinePattern = @"^(\d{3,4}-)?\d{7,8}$"; // 座机号码
+            return Regex.IsMatch(phone, mobilePattern) || Regex.IsMatch(phone, landlinePattern);
+        }
 
     }
 }

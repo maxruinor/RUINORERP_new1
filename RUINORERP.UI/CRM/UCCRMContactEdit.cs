@@ -38,11 +38,12 @@ namespace RUINORERP.UI.CRM
 
         private tb_CRM_Contact _EditEntity;
         public tb_CRM_Contact EditEntity { get => _EditEntity; set => _EditEntity = value; }
-        public override void BindData(BaseEntity entity,ActionStatus actionStatus = ActionStatus.无操作)
+        public override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
-             
+
             _EditEntity = entity as tb_CRM_Contact;
-            
+
+
             DataBindingHelper.BindData4TextBox<tb_CRM_Contact>(entity, t => t.SocialTools, txtSocialTools, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Contact>(entity, t => t.Contact_Name, txtContact_Name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CRM_Contact>(entity, t => t.Contact_Email, txtContact_Email, BindDataType4TextBox.Text, false);
@@ -67,6 +68,19 @@ namespace RUINORERP.UI.CRM
             DataBindingHelper.BindData4Cmb<tb_CRM_Customer>(entity, k => k.Customer_id, v => v.CustomerName, cmbCustomer_id, queryFilterC.GetFilterExpression<tb_CRM_Customer>(), true);
 
             DataBindingHelper.InitFilterForControlByExp<tb_CRM_Customer>(entity, cmbCustomer_id, c => c.CustomerName, queryFilterC);
+
+
+
+            //公海过来的。选择不到客户。因为这时客户还是不是这个人的。所有暂时不绑定显示出来。
+            if (_EditEntity.tb_crm_customer != null)
+            {
+                if (_EditEntity.tb_crm_customer.Employee_ID == null || _EditEntity.tb_crm_customer.Employee_ID == 0)
+                {
+                    cmbCustomer_id.Visible = false;
+                }
+            }
+
+
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

@@ -99,16 +99,7 @@ namespace RUINORERP.UI.CRM
 
             DataBindingHelper.BindData4Cmb<tb_CRM_Leads>(entity, k => k.LeadID, v => v.CustomerName, cmbLeads, queryFilterLeads.GetFilterExpression<tb_CRM_Leads>(), true);
 
-
-            //创建表达式
-            //var lambdaRecord = Expressionable.Create<tb_CRM_FollowUpRecords>()
-            //                .And(t => t.isdeleted == false)
-            //                .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户
-            //                .ToExpression();//注意 这一句 不能少
-
-            //BaseProcessor baseProcessorRecord = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_FollowUpRecords).Name + "Processor");
-            //QueryFilter queryFilterRecord = baseProcessorRecord.GetQueryFilter();
-            //queryFilterRecord.FilterLimitExpressions.Add(lambdaRecord);
+ 
 
 
             //创建表达式
@@ -151,6 +142,16 @@ namespace RUINORERP.UI.CRM
             {
                 btnNextFollowUpPlan.Visible = true;
             }
+
+            //公海过来的。选择不到客户。因为这时客户还是不是这个人的。所有暂时不绑定显示出来。
+            if (_EditEntity.tb_crm_customer != null)
+            {
+                if (_EditEntity.tb_crm_customer.Employee_ID == null || _EditEntity.tb_crm_customer.Employee_ID == 0)
+                {
+                    cmbCustomer_id.Visible = false;
+                }
+            }
+
         }
         private void btnCancel_Click(object sender, EventArgs e)
         {

@@ -46,6 +46,9 @@
             this.txtMaxRow = new System.Windows.Forms.ToolStripTextBox();
             this.kryptonPanelMainBig = new Krypton.Toolkit.KryptonPanel();
             this.kryptonDockableWorkspaceQuery = new Krypton.Docking.KryptonDockableWorkspace();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.txtSearchKey = new System.Windows.Forms.ToolStripTextBox();
             this.kryptonHeaderGroupTop = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
@@ -67,6 +70,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).BeginInit();
             this.kryptonPanelMainBig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).BeginInit();
+            this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).BeginInit();
             this.kryptonHeaderGroupTop.Panel.SuspendLayout();
@@ -200,6 +204,7 @@
             // kryptonPanelMainBig
             // 
             this.kryptonPanelMainBig.Controls.Add(this.kryptonDockableWorkspaceQuery);
+            this.kryptonPanelMainBig.Controls.Add(this.toolStrip1);
             this.kryptonPanelMainBig.Controls.Add(this.kryptonHeaderGroupTop);
             this.kryptonPanelMainBig.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelMainBig.Location = new System.Drawing.Point(0, 25);
@@ -215,7 +220,7 @@
             | Krypton.Workspace.CompactFlags.PromoteLeafs)));
             this.kryptonDockableWorkspaceQuery.ContainerBackStyle = Krypton.Toolkit.PaletteBackStyle.PanelClient;
             this.kryptonDockableWorkspaceQuery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonDockableWorkspaceQuery.Location = new System.Drawing.Point(0, 94);
+            this.kryptonDockableWorkspaceQuery.Location = new System.Drawing.Point(0, 119);
             this.kryptonDockableWorkspaceQuery.Name = "kryptonDockableWorkspaceQuery";
             // 
             // 
@@ -224,10 +229,35 @@
             this.kryptonDockableWorkspaceQuery.Root.WorkspaceControl = this.kryptonDockableWorkspaceQuery;
             this.kryptonDockableWorkspaceQuery.SeparatorStyle = Krypton.Toolkit.SeparatorStyle.LowProfile;
             this.kryptonDockableWorkspaceQuery.ShowMaximizeButton = false;
-            this.kryptonDockableWorkspaceQuery.Size = new System.Drawing.Size(1110, 602);
+            this.kryptonDockableWorkspaceQuery.Size = new System.Drawing.Size(1110, 577);
             this.kryptonDockableWorkspaceQuery.SplitterWidth = 5;
             this.kryptonDockableWorkspaceQuery.TabIndex = 0;
             this.kryptonDockableWorkspaceQuery.TabStop = true;
+            // 
+            // toolStrip1
+            // 
+            this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLabel1,
+            this.txtSearchKey});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 94);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.Size = new System.Drawing.Size(1110, 25);
+            this.toolStrip1.TabIndex = 32;
+            this.toolStrip1.Text = "toolStrip1";
+            // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(59, 22);
+            this.toolStripLabel1.Text = "主要内容";
+            // 
+            // txtSearchKey
+            // 
+            this.txtSearchKey.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
+            this.txtSearchKey.Name = "txtSearchKey";
+            this.txtSearchKey.Size = new System.Drawing.Size(200, 25);
+            this.txtSearchKey.TextChanged += new System.EventHandler(this.txtSearchKey_TextChanged);
             // 
             // kryptonHeaderGroupTop
             // 
@@ -392,6 +422,8 @@
             this.kryptonPanelMainBig.ResumeLayout(false);
             this.kryptonPanelMainBig.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).EndInit();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop.Panel)).EndInit();
             this.kryptonHeaderGroupTop.Panel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonHeaderGroupTop)).EndInit();
@@ -440,5 +472,8 @@
         private Krypton.Toolkit.KryptonTextBox txtMRNO;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonTextBox txtMRRENO;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel1;
+        private System.Windows.Forms.ToolStripTextBox txtSearchKey;
     }
 }

@@ -103,6 +103,13 @@ namespace RUINORERP.UI.PSI.SAL
                 return;
             }
 
+            if (AppContext.IsSuperUser)
+            {
+                await Save(true);
+                await ctr.BaseSaveOrUpdate(EditEntity);
+                return;
+            }
+
             ReturnResults<bool> rr = await ctr.UpdatePaymentStatus(EditEntity);
             if (rr.Succeeded)
             {
@@ -484,7 +491,7 @@ namespace RUINORERP.UI.PSI.SAL
             MainForm.Instance.uclog.AddLog("加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
 
             base.ControlMasterColumnsInvisible();
-            
+
         }
 
         /// <summary>
@@ -815,7 +822,7 @@ namespace RUINORERP.UI.PSI.SAL
             return false;
         }
 
-     
+
 
 
 

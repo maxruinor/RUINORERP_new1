@@ -31,6 +31,7 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.btnCollaborate = new Krypton.Toolkit.KryptonButton();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.txtCoreProdInfo = new Krypton.Toolkit.KryptonTextBox();
             this.btnFastFollowUp = new Krypton.Toolkit.KryptonButton();
@@ -93,7 +94,6 @@
             this.kryptonDockingManager = new Krypton.Docking.KryptonDockingManager();
             this.kryptonPanelBig = new Krypton.Toolkit.KryptonPanel();
             this.kryptonDockableWorkspace1 = new Krypton.Docking.KryptonDockableWorkspace();
-            this.btnCollaborate = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -191,6 +191,15 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(771, 665);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // btnCollaborate
+            // 
+            this.btnCollaborate.Location = new System.Drawing.Point(71, 591);
+            this.btnCollaborate.Name = "btnCollaborate";
+            this.btnCollaborate.Size = new System.Drawing.Size(104, 25);
+            this.btnCollaborate.TabIndex = 178;
+            this.btnCollaborate.Values.Text = "添加协作人（&L)";
+            this.btnCollaborate.Click += new System.EventHandler(this.btnCollaborate_Click);
             // 
             // kryptonLabel3
             // 
@@ -737,15 +746,6 @@
             this.kryptonDockableWorkspace1.SplitterWidth = 3;
             this.kryptonDockableWorkspace1.TabIndex = 4;
             this.kryptonDockableWorkspace1.TabStop = true;
-            // 
-            // btnCollaborate
-            // 
-            this.btnCollaborate.Location = new System.Drawing.Point(71, 591);
-            this.btnCollaborate.Name = "btnCollaborate";
-            this.btnCollaborate.Size = new System.Drawing.Size(104, 25);
-            this.btnCollaborate.TabIndex = 178;
-            this.btnCollaborate.Values.Text = "添加协作人（&L)";
-            this.btnCollaborate.Click += new System.EventHandler(this.btnCollaborate_Click);
             // 
             // UCCRMCustomerEdit
             // 

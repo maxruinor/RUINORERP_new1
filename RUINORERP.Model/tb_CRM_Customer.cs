@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/15/2024 22:10:36
+// 时间：12/16/2024 18:39:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -157,10 +157,10 @@ namespace RUINORERP.Model
 
         private string _wwSocialTools;
         /// <summary>
-        /// 其他/IM工具
+        /// 旺旺/IM工具
         /// </summary>
-        [AdvQueryAttribute(ColName = "wwSocialTools",ColDesc = "其他/IM工具")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "wwSocialTools" ,Length=200,IsNullable = true,ColumnDescription = "其他/IM工具" )]
+        [AdvQueryAttribute(ColName = "wwSocialTools",ColDesc = "旺旺/IM工具")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "wwSocialTools" ,Length=200,IsNullable = true,ColumnDescription = "旺旺/IM工具" )]
         public string wwSocialTools
         { 
             get{return _wwSocialTools;}
@@ -171,10 +171,10 @@ namespace RUINORERP.Model
 
         private string _SocialTools;
         /// <summary>
-        /// 旺旺/IM工具
+        /// 其他/IM工具
         /// </summary>
-        [AdvQueryAttribute(ColName = "SocialTools",ColDesc = "旺旺/IM工具")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SocialTools" ,Length=200,IsNullable = true,ColumnDescription = "旺旺/IM工具" )]
+        [AdvQueryAttribute(ColName = "SocialTools",ColDesc = "其他/IM工具")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SocialTools" ,Length=200,IsNullable = true,ColumnDescription = "其他/IM工具" )]
         public string SocialTools
         { 
             get{return _SocialTools;}
@@ -381,10 +381,10 @@ namespace RUINORERP.Model
 
         private int? _DaysSinceLastPurchase;
         /// <summary>
-        /// 距上次采购间隔天
+        /// 最近距上次采购间隔天
         /// </summary>
-        [AdvQueryAttribute(ColName = "DaysSinceLastPurchase",ColDesc = "距上次采购间隔天")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DaysSinceLastPurchase" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "距上次采购间隔天" )]
+        [AdvQueryAttribute(ColName = "DaysSinceLastPurchase",ColDesc = "最近距上次采购间隔天")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "DaysSinceLastPurchase" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "最近距上次采购间隔天" )]
         public int? DaysSinceLastPurchase
         { 
             get{return _DaysSinceLastPurchase;}

@@ -582,7 +582,7 @@ namespace RUINORERP.UI.CRM
                 ContactInfo.Contact_Name = _EditEntity.Contact_Name;
                 ContactInfo.Contact_Phone = _EditEntity.Contact_Phone;
                 ContactInfo.Contact_Email = _EditEntity.Contact_Email;
-
+                ContactInfo.tb_crm_customer = _EditEntity;
                 BaseEntity bty = ContactInfo as BaseEntity;
                 bty.ActionStatus = ActionStatus.加载;
                 BusinessHelper.Instance.EditEntity(bty);
@@ -607,7 +607,7 @@ namespace RUINORERP.UI.CRM
                 object obj = frmaddg.bindingSourceEdit.AddNew();
                 tb_CRM_FollowUpRecords NewInfo = obj as tb_CRM_FollowUpRecords;
                 NewInfo.Customer_id = _EditEntity.Customer_id;
-                NewInfo.Customer_id = _EditEntity.Customer_id;
+                NewInfo.tb_crm_customer = _EditEntity;
                 NewInfo.Employee_ID = _EditEntity.Employee_ID.Value;
                 BaseEntity bty = NewInfo as BaseEntity;
                 bty.ActionStatus = ActionStatus.加载;

@@ -29,6 +29,7 @@ using System.Windows.Forms;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt.CRM;
+using System.Runtime.InteropServices.ComTypes;
 
 
 namespace RUINORERP.Business
@@ -352,14 +353,25 @@ namespace RUINORERP.Business
                             crm_customer.CustomerStatus == (int)CustomerStatus.新增客户)
                         {
                             crm_customer.CustomerStatus = (int)CustomerStatus.首单客户;
-                            crm_customer.LastPurchaseDate = entity.OutDate;
+                            crm_customer.FirstPurchaseDate = entity.OutDate;
                         }
 
                         //更新采购金额
-                        crm_customer.PurchaseCount++;
+                        crm_customer.PurchaseCount = crm_customer.PurchaseCount + 1;
                         crm_customer.TotalPurchaseAmount += entity.tb_SaleOutDetails.Sum(c => c.Quantity * c.TransactionPrice);
                         crm_customer.LastPurchaseDate = entity.OutDate;
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer).UpdateColumns(t => new { t.CustomerStatus, t.PurchaseCount, t.TotalPurchaseAmount, t.LastPurchaseDate }).ExecuteCommandAsync();
+                        if (crm_customer.FirstPurchaseDate.HasValue)
+                        {
+                            TimeSpan duration = crm_customer.LastPurchaseDate.Value - crm_customer.FirstPurchaseDate.Value;
+                            int days = duration.Days;
+                            crm_customer.DaysSinceLastPurchase = days; //这个可以反审时倒算出来。
+                        }
+                        else
+                        {
+                            crm_customer.FirstPurchaseDate = entity.OutDate;
+                        }
+
+                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer).UpdateColumns(t => new { t.CustomerStatus, t.PurchaseCount, t.TotalPurchaseAmount, t.LastPurchaseDate, t.DaysSinceLastPurchase, t.FirstPurchaseDate }).ExecuteCommandAsync();
                     }
 
                     #endregion
@@ -599,6 +611,29 @@ namespace RUINORERP.Business
                         await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
                     }
                 }
+
+                //如果是新客户或潜在客户。则转换为首单客户
+                //降级 退回
+                if (entity.tb_saleorder.tb_customervendor.tb_crm_customer != null)
+                {
+                    var crm_customer = entity.tb_saleorder.tb_customervendor.tb_crm_customer;
+                    if (crm_customer.CustomerStatus == (int)CustomerStatus.首单客户)
+                    {
+                        crm_customer.CustomerStatus = (int)CustomerStatus.潜在客户;
+                        crm_customer.LastPurchaseDate = entity.OutDate;
+                    }
+
+                    //更新采购金额
+                    crm_customer.PurchaseCount = crm_customer.PurchaseCount - 1;
+                    crm_customer.TotalPurchaseAmount -= entity.tb_SaleOutDetails.Sum(c => c.Quantity * c.TransactionPrice);
+                    crm_customer.LastPurchaseDate = crm_customer.LastPurchaseDate.Value.AddDays(-crm_customer.DaysSinceLastPurchase.Value); //todo ??// 这个如何退回？
+                                                                                                                                            // crm_customer.DaysSinceLastPurchase = days
+
+                    await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer).UpdateColumns(t => new { t.CustomerStatus, t.PurchaseCount, t.TotalPurchaseAmount, t.LastPurchaseDate }).ExecuteCommandAsync();
+                }
+
+
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;

@@ -6,6 +6,7 @@ using FastReport.Utils;
 using Krypton.Docking;
 using Krypton.Navigator;
 using Krypton.Toolkit;
+using Krypton.Toolkit.Suite.Extended.TreeGridView;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
@@ -721,28 +722,77 @@ namespace RUINORERP.UI.MRP
             uCMRP.Name = "uCMRP";
             uCMRP.Dock = DockStyle.Fill;
             uCMRP.kryptonTreeGridView1.RowHeadersVisible = true;
-            KryptonPage page = NewPage("生产", 1, uCMRP);
+            KryptonPage page = UIForKryptonHelper.NewPage("生产", 1, uCMRP);
             page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
             return page;
         }
 
-        private KryptonPage NewPage(string name, int image, Control content)
+        private void txtSearchKey_TextChanged(object sender, EventArgs e)
         {
-            // Create new page with title and image
-            KryptonPage p = new KryptonPage();
-            p.Text = name;
-            p.TextTitle = name;
-            p.TextDescription = name;
-            p.UniqueName = p.Text;
-            // p.ImageSmall = imageListSmall.Images[image];
+            foreach (var item in uCMRP.kryptonTreeGridView1.GridNodes)
+            {
+                string keywords = txtSearchKey.Text.ToLower().Trim();
+                if (keywords.Length > 0)
+                {
+                    if (HasSearchKey(item, keywords))
+                    {
+                        item.Visible = true;
+                    }
+                    else
+                    {
+                        item.Visible = false;
+                    }
+                    // foreach  写一个方法来实现一些查找功能
+                    //item.Nodes.ForEach(node =>
+                    //{
+                    //    if (node.Cells[4].Value.ToString().Contains(keywords)) // 假设我们正在查找"keywords"
+                    //    {
+                    //        item.Visible = true; // 找到节点后赋值
+                    //    }
+                    //    else
+                    //    {
+                    //        item.Visible = false;
+                    //    }
+                    //});
 
-            // Add the control for display inside the page
-            content.Dock = DockStyle.Fill;
-            p.Controls.Add(content);
 
-            // _count++;
-            return p;
+                }
+                else
+                {
+                    item.Visible = true;
+                }
+
+
+            }
         }
+
+
+
+        private bool HasSearchKey(KryptonTreeGridNodeRow item, string keywords)
+        {
+            bool rs = false;
+
+            foreach (var node in item.Nodes)
+            {
+                if (node.Cells[4].Value.ToString().ToLower().Contains(keywords)) // 假设我们正在查找"keywords"
+                {
+                    rs = true;
+                    break;
+                }
+                else
+                {
+                    rs = false;
+                    break;
+                }
+            }
+            //item.Nodes.ForEach(node =>
+            //{
+
+            //});
+            return rs;
+        }
+
+
 
     }
 }

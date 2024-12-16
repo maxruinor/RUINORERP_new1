@@ -29,6 +29,12 @@ namespace RUINORERP.Business
             //不在这里判断了。因为如果不用CRM模块时这个就不判断了。直接UI保存时判断
             //  RuleFor(x => x.IsVendor).NotEqual(false).When(x => x.Customer_id.HasValue == false).WithMessage("总金额：添加客户时，总金额要大于零。");
             //RuleFor(customer => customer.CVName).Must(BeUniqueName).WithMessage("全称不能重复。");
+
+            //RuleFor(u => u.Contact_Email)
+            //.NotEmpty().WithMessage("邮箱：不能为空。")
+            //.EmailAddress().WithMessage("邮箱：格式不正确。");
+
+
             RuleFor(customer => customer.CVName)
           .Custom((value, context) =>
           {
@@ -47,6 +53,11 @@ namespace RUINORERP.Business
                   }
               }
           });
+
+ 
+
+
+
         }
     }
 

@@ -17,6 +17,9 @@ using RUINORERP.Common.Helper;
 using System.Collections;
 using System.Linq;
 using Castle.Core.Resource;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Text.RegularExpressions;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -50,11 +53,69 @@ namespace RUINORERP.Business
                      }
                  }
              });
+
+            RuleFor(x => x.Contact_Phone).
+                   Custom((contact, context) =>
+                   {
+                       var customer = context.InstanceToValidate as tb_CRM_Contact; // 假设你的实体类名为Customer
+                       bool isPhoneValid = !string.IsNullOrWhiteSpace(customer.Contact_Phone);
+                       bool isEmailValid = !string.IsNullOrWhiteSpace(customer.Contact_Email);
+                       bool isIMValid = !string.IsNullOrWhiteSpace(customer.SocialTools);
+          
+                       if (!isPhoneValid && !isEmailValid && !isIMValid)
+                       {
+                           context.AddFailure("电话、邮箱、旺旺，微信，QQ等，至少填写一个。");
+                       }
+                       else if (isPhoneValid && !IsValidPhoneOrLandlineFormat(customer.Contact_Phone))
+                       {
+                           context.AddFailure("电话格式不正确。");
+                       }
+                   });
+
+            RuleFor(x => x.Contact_Email).
+           Custom((contact, context) =>
+           {
+               var customer = context.InstanceToValidate as tb_CRM_Contact; // 假设你的实体类名为Customer
+               bool isPhoneValid = !string.IsNullOrWhiteSpace(customer.Contact_Phone);
+               bool isEmailValid = !string.IsNullOrWhiteSpace(customer.Contact_Email);
+               bool isIMValid = !string.IsNullOrWhiteSpace(customer.SocialTools);
+ 
+               if (!isPhoneValid && !isEmailValid && !isIMValid)
+               {
+                   context.AddFailure("电话、邮箱、旺旺，微信，QQ等，至少填写一个。");
+               }
+               else if (isEmailValid && !IsValidEmailFormat(customer.Contact_Email))
+               {
+                   context.AddFailure("邮箱格式不正确。");
+               }
+           });
+
+
+
+
+            RuleFor(x => x.SocialTools).
+           Custom((contact, context) =>
+           {
+               var customer = context.InstanceToValidate as tb_CRM_Contact; // 假设你的实体类名为Customer
+               bool isPhoneValid = !string.IsNullOrWhiteSpace(customer.Contact_Phone);
+               bool isEmailValid = !string.IsNullOrWhiteSpace(customer.Contact_Email);
+               bool isIMValid = !string.IsNullOrWhiteSpace(customer.SocialTools);
+         
+               if (!isPhoneValid && !isEmailValid && !isIMValid)
+               {
+                   context.AddFailure("电话、邮箱、旺旺，微信，QQ等，至少填写一个。");
+               }
+           });
+
+            // RuleFor(u => u.Contact_Email)
+            //.NotEmpty().WithMessage("邮箱：不能为空。")
+            //.EmailAddress().WithMessage("邮箱：格式不正确。");
+
         }
 
+ 
 
-
-        public bool BeUniqueNameContact(string FiledName, string FieldValue,string groupKey, string groupValue)
+        public bool BeUniqueNameContact(string FiledName, string FieldValue, string groupKey, string groupValue)
         {
             // 在此处实现检查客户名称是否唯一的逻辑
             // 例如，查询数据库或其他数据存储来验证

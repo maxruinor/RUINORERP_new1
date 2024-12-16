@@ -30,6 +30,7 @@ using Krypton.Toolkit;
 using Krypton.Toolkit.Suite.Extended.Outlook.Grid;
 using RUINORERP.UI.PSI.SAL;
 using RUINORERP.UI.MRP.MP;
+using SuperSocket.ClientEngine;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -53,7 +54,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
         public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
 
 
+
+
+
         public List<tb_ProductionPlan> PURList = new List<tb_ProductionPlan>();
+
+
+
+
 
         public async Task<int> QueryMRPDataStatus(List<tb_ProductionPlan> _PURList = null)
         {
@@ -91,14 +99,15 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_employee)
                   .Includes(c => c.tb_department)
                    .Includes(c => c.tb_projectgroup)
-                  .Includes(c => c.tb_ProductionPlanDetails)
+//                  .Includes(c => c.tb_ProductionPlanDetails,d=>d.tb_proddetail,e=>e.tb_prod)
+                    .Includes(c => c.tb_ProductionPlanDetails)
                   .Includes(c => c.tb_ProductionDemands, d => d.tb_ProductionDemandTargetDetails)
                   .AsNavQueryable()
                   .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, e => e.tb_FinishedGoodsInvs, f => f.tb_FinishedGoodsInvDetails)
                   .AsNavQueryable()
                   .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
                   .Where(c => (c.DataStatus == 2 || c.DataStatus == 4)).OrderBy(c => c.RequirementDate)
-                   // .WithCache(60) // 缓存60秒
+                  // .WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;
@@ -234,7 +243,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <param name="ProduceDetail"></param>
         /// <param name="ProduceDetailrow"></param>
         /// <param name="prodDetail"></param>
-        private async void LoadSelfMadeProducts(tb_ProductionDemand demand, tb_ProduceGoodsRecommendDetail ProduceDetail, KryptonTreeGridNodeRow ProduceDetailrow, View_ProdDetail prodDetail)
+        private void LoadSelfMadeProducts(tb_ProductionDemand demand, tb_ProduceGoodsRecommendDetail ProduceDetail, KryptonTreeGridNodeRow ProduceDetailrow, View_ProdDetail prodDetail)
         {
             List<tb_ProduceGoodsRecommendDetail> SubSelfDetails = new List<tb_ProduceGoodsRecommendDetail>();
             SubSelfDetails = demand.tb_ProduceGoodsRecommendDetails.Where(c => c.ParentId == ProduceDetail.ID).ToList();

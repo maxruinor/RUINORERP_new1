@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/15/2024 22:10:34
+// 时间：12/16/2024 18:39:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -317,7 +317,7 @@ this.lblwwSocialTools.Location = new System.Drawing.Point(100,200);
 this.lblwwSocialTools.Name = "lblwwSocialTools";
 this.lblwwSocialTools.Size = new System.Drawing.Size(41, 12);
 this.lblwwSocialTools.TabIndex = 8;
-this.lblwwSocialTools.Text = "其他/IM工具";
+this.lblwwSocialTools.Text = "旺旺/IM工具";
 this.txtwwSocialTools.Location = new System.Drawing.Point(173,196);
 this.txtwwSocialTools.Name = "txtwwSocialTools";
 this.txtwwSocialTools.Size = new System.Drawing.Size(100, 21);
@@ -331,7 +331,7 @@ this.lblSocialTools.Location = new System.Drawing.Point(100,225);
 this.lblSocialTools.Name = "lblSocialTools";
 this.lblSocialTools.Size = new System.Drawing.Size(41, 12);
 this.lblSocialTools.TabIndex = 9;
-this.lblSocialTools.Text = "旺旺/IM工具";
+this.lblSocialTools.Text = "其他/IM工具";
 this.txtSocialTools.Location = new System.Drawing.Point(173,221);
 this.txtSocialTools.Name = "txtSocialTools";
 this.txtSocialTools.Size = new System.Drawing.Size(100, 21);
@@ -566,7 +566,7 @@ this.lblDaysSinceLastPurchase.Location = new System.Drawing.Point(100,600);
 this.lblDaysSinceLastPurchase.Name = "lblDaysSinceLastPurchase";
 this.lblDaysSinceLastPurchase.Size = new System.Drawing.Size(41, 12);
 this.lblDaysSinceLastPurchase.TabIndex = 24;
-this.lblDaysSinceLastPurchase.Text = "距上次采购间隔天";
+this.lblDaysSinceLastPurchase.Text = "最近距上次采购间隔天";
 this.txtDaysSinceLastPurchase.Location = new System.Drawing.Point(173,596);
 this.txtDaysSinceLastPurchase.Name = "txtDaysSinceLastPurchase";
 this.txtDaysSinceLastPurchase.Size = new System.Drawing.Size(100, 21);

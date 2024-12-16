@@ -6,6 +6,7 @@ using FastReport.Utils;
 using Krypton.Docking;
 using Krypton.Navigator;
 using Krypton.Toolkit;
+using Krypton.Toolkit.Suite.Extended.TreeGridView;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using Mysqlx.Expr;
@@ -51,6 +52,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -713,6 +715,68 @@ namespace RUINORERP.UI.PUR
             return page;
         }
 
+        private void txtSearchKey_TextChanged(object sender, EventArgs e)
+        {
+            foreach (var item in uCPur.kryptonTreeGridView1.GridNodes)
+            {
+                string keywords = txtSearchKey.Text.ToLower().Trim();
+                if (keywords.Length > 0)
+                {
+                    if (HasSearchKey(item, keywords))
+                    {
+                        item.Visible = true;
+                    }
+                    else
+                    {
+                        item.Visible = false;
+                    }
+                    // foreach  写一个方法来实现一些查找功能
+                    //item.Nodes.ForEach(node =>
+                    //{
+                    //    if (node.Cells[4].Value.ToString().Contains(keywords)) // 假设我们正在查找"keywords"
+                    //    {
+                    //        item.Visible = true; // 找到节点后赋值
+                    //    }
+                    //    else
+                    //    {
+                    //        item.Visible = false;
+                    //    }
+                    //});
+
+
+                }
+                else
+                {
+                    item.Visible = true;
+                }
+
+
+            }
+        }
+
+        private bool HasSearchKey(KryptonTreeGridNodeRow item, string keywords)
+        {
+            bool rs = false;
+
+            foreach (var node in item.Nodes)
+            {
+                if (node.Cells[4].Value.ToString().ToLower().Contains(keywords)) // 假设我们正在查找"keywords"
+                {
+                    rs = true;
+                    break;
+                }
+                else
+                {
+                    rs = false;
+                    break;
+                }
+            }
+            //item.Nodes.ForEach(node =>
+            //{
+
+            //});
+            return rs;
+        }
 
     }
 }

@@ -39,6 +39,7 @@
             System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("属性重复的SKU检测");
             System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("将销售客户转换为目标客户");
             System.Windows.Forms.TreeNode treeNode10 = new System.Windows.Forms.TreeNode("销售数量与明细数量和的检测");
+            System.Windows.Forms.TreeNode treeNode11 = new System.Windows.Forms.TreeNode("借出已还修复为完结");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCDataCorrectionCenter));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.treeViewTableList = new Krypton.Toolkit.KryptonTreeView();
@@ -187,6 +188,8 @@
             treeNode9.Text = "将销售客户转换为目标客户";
             treeNode10.Name = "销售数量与明细数量和的检测";
             treeNode10.Text = "销售数量与明细数量和的检测";
+            treeNode11.Name = "借出已还修复为完结";
+            treeNode11.Text = "借出已还修复为完结";
             this.treeView1.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1,
             treeNode2,
@@ -197,7 +200,8 @@
             treeNode7,
             treeNode8,
             treeNode9,
-            treeNode10});
+            treeNode10,
+            treeNode11});
             this.treeView1.Size = new System.Drawing.Size(532, 354);
             this.treeView1.TabIndex = 0;
             this.treeView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseDoubleClick);

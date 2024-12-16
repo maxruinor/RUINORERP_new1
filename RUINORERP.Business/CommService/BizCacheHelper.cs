@@ -233,9 +233,6 @@ namespace RUINORERP.Business.CommService
         }
 
 
-
-
-
         /// <summary>
         /// 通过表和主键名去找，int为主键类型
         /// 重点重要学习代码
@@ -456,6 +453,8 @@ namespace RUINORERP.Business.CommService
             "tb_Unit_Conversion"
         };
 
+
+        //.Select
         public void SetDictDataSource(string typeName, bool LoadData = true)
         {
             // 遍历类型名称数组

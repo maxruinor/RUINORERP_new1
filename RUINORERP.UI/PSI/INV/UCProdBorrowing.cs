@@ -52,7 +52,7 @@ namespace RUINORERP.UI.PSI.INV
             InitializeComponent();
         }
 
- 
+
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;
@@ -143,7 +143,7 @@ namespace RUINORERP.UI.PSI.INV
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
@@ -216,7 +216,7 @@ namespace RUINORERP.UI.PSI.INV
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();
         List<View_ProdDetail> list = new List<View_ProdDetail>();
-        private async void UCStockOut_Load(object sender, System.EventArgs e)
+        private void UCStockOut_Load(object sender, System.EventArgs e)
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -230,7 +230,6 @@ namespace RUINORERP.UI.PSI.INV
             List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_ProdBorrowingDetail>(c => c.ProdDetailID, false);
-
             listCols.SetCol_NeverVisible<tb_ProdBorrowingDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<tb_ProdBorrowingDetail>(c => c.BorrowDetaill_ID);
             listCols.SetCol_NeverVisible<tb_ProdBorrowingDetail>(c => c.BorrowID);
@@ -239,7 +238,7 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
-
+            listCols.SetCol_ReadOnly<tb_ProdBorrowingDetail>(c => c.ReQty);
             //具体审核权限的人才显示
             /*
             if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())

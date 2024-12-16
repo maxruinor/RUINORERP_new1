@@ -579,6 +579,35 @@ namespace RUINORERP.UI.SysConfig
 
                 }
 
+                if (treeView1.SelectedNode.Text == "借出已还修复为完结")
+                {
+                    List<tb_ProdBorrowing> items = MainForm.Instance.AppContext.Db.Queryable<tb_ProdBorrowing>()
+                       .Includes(c => c.tb_ProdBorrowingDetails)
+                       .Where(c => c.DataStatus == (int)DataStatus.确认)
+                       .ToList();
+
+                    foreach (tb_ProdBorrowing item in items)
+                    {
+                        if (!item.TotalQty.Equals(item.tb_ProdBorrowingDetails.Sum(c => c.Qty)))
+                        {
+                            richTextBoxLog.AppendText($"借出总数量和明细和不对：{item.BorrowID}：{item.BorrowNo}" + "\r\n");
+                        }
+
+                        if (item.TotalQty.Equals(item.tb_ProdBorrowingDetails.Sum(c => c.ReQty)))
+                        {
+                            richTextBoxLog.AppendText($"借出数量等于归还数量：{item.BorrowID}：{item.BorrowNo}" + "\r\n");
+                        }
+                    }
+
+                    if (chkTestMode.Checked)
+                    {
+
+                    }
+
+
+                }
+
+
                 if (treeView1.SelectedNode.Text == "销售订单价格修复")
                 {
 

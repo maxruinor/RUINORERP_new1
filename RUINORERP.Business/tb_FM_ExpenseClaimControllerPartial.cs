@@ -101,6 +101,19 @@ namespace RUINORERP.Business
 
         }
 
+        public async Task<bool> BaseLogicDeleteAsync(tb_FM_ExpenseClaim ObjectEntity)
+        {
+          //  ReturnResults<tb_FM_ExpenseClaim> rrs = new Business.ReturnResults<tb_FM_ExpenseClaim>();
+            int count = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_ExpenseClaim>(ObjectEntity).IsLogic().ExecuteCommandAsync();
+            if (count > 0)
+            {
+                //rrs.Succeeded = true;
+                return true;
+                ////生成时暂时只考虑了一个主键的情况
+                // MyCacheManager.Instance.DeleteEntityList<tb_FM_ExpenseClaim>(entity);
+            }
+            return false;
+        }
 
         /// <summary>
         /// 

@@ -6,6 +6,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.Model;
 using RUINORERP.Model;
+using RUINORERP.UI.PSI.INV;
 using SourceGrid2.Win32;
 using SqlSugar;
 using System;
@@ -499,7 +500,7 @@ namespace RUINORERP.UI.Common
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
-
+            
             if (tableName == typeof(tb_ManufacturingOrder).Name)
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
@@ -557,6 +558,7 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+
             if (tableName == typeof(tb_ProdBorrowing).Name)
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdBorrowing>()
@@ -566,12 +568,14 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+
+
             if (tableName == typeof(tb_ProdReturning).Name)
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdReturning>()
                     .Includes(c => c.tb_ProdReturningDetails)
                     .WhereIF(billno.GetType() == typeof(long), c => c.ReturnID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.BorrowNO == billno.ToString())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.ReturnNo == billno.ToString())
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }

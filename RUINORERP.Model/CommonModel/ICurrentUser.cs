@@ -15,7 +15,7 @@ namespace RUINORERP.Model
         /// </summary>
         string Name { get; set; }
         /// <summary>
-        /// 当前登录用户ID
+        /// 当前登录用户ID empID
         /// </summary>
         long Id { get; set; }
 

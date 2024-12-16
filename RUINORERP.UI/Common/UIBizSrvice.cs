@@ -228,27 +228,9 @@ namespace RUINORERP.UI.Common
             {
                 //请求本身
                 var rslist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (rslist == null)
+                if (NeedRequesCache(rslist, tableName))
                 {
                     ClientService.请求缓存(tableName);
-                }
-                else
-                {
-                    CacheInfo cacheInfo = new CacheInfo();
-                    //对比缓存信息概率。行数变化了也要请求最新的
-                    if (MainForm.Instance.CacheInfoList.TryGetValue(tableName, out cacheInfo))
-                    {
-                        if (rslist != null && rslist.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
-                        {
-                            var jsonlist = rslist as Newtonsoft.Json.Linq.JArray;
-                            if (cacheInfo.CacheCount != jsonlist.Count)
-                            {
-                                ClientService.请求缓存(tableName);
-                            }
-                        }
-
-
-                    }
                 }
             }
 
@@ -273,13 +255,45 @@ namespace RUINORERP.UI.Common
                 foreach (var item in kvlist)
                 {
                     var rslist = BizCacheHelper.Manager.CacheEntityList.Get(item.Value);
-                    if (rslist == null)
+                    if (NeedRequesCache(rslist, item.Value))
                     {
                         ClientService.请求缓存(item.Value);
                     }
+
                 }
             }
 
+        }
+
+
+        //将来是不是要判断具体的行里面的数据是不是有变化。
+        public static bool NeedRequesCache(object rslist, string tableName)
+        {
+            if (rslist == null)
+            {
+                return true;
+            }
+            CacheInfo cacheInfo = new CacheInfo();
+            //对比缓存信息概率。行数变化了也要请求最新的
+            if (MainForm.Instance.CacheInfoList.TryGetValue(tableName, out cacheInfo))
+            {
+                if (rslist.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
+                {
+                    var jsonlist = rslist as Newtonsoft.Json.Linq.JArray;
+                    if (cacheInfo.CacheCount != jsonlist.Count)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    //强类型
+                   
+                    return true;
+                }
+            }
+
+            return true;
         }
 
 

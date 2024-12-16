@@ -1107,6 +1107,8 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public virtual void BuildQueryCondition()
         {
+             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(M).Name + "Processor");
+             QueryConditionFilter = baseProcessor.GetQueryFilter();
             //添加默认全局的
             // base.QueryConditions.Add(c => c.Created_by);
             // List<string> slist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);

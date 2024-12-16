@@ -46,6 +46,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using NPOI.SS.Formula.Functions;
+using System.Configuration;
 
 namespace RUINORERP.UI.FM
 {
@@ -442,7 +443,7 @@ namespace RUINORERP.UI.FM
                 EditEntity.ClaimAmount = details.Sum(c => c.TotalAmount);
                 EditEntity.ApprovedAmount = EditEntity.ClaimAmount;
                 EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
-                
+
             }
             catch (Exception ex)
             {
@@ -715,6 +716,66 @@ namespace RUINORERP.UI.FM
                 }
             }
             return result;
+        }
+
+        protected async override Task<ReturnResults<tb_FM_ExpenseClaim>> Delete()
+        {
+            ReturnResults<tb_FM_ExpenseClaim> rss = new ReturnResults<tb_FM_ExpenseClaim>();
+            if (EditEntity == null)
+            {
+                //提示一下删除成功
+                MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
+                return rss;
+            }
+
+            if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+                //https://www.runoob.com/w3cnote/csharp-enum.html
+                var dataStatus = (DataStatus)(EditEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                {
+                    //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
+                    if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
+                    {
+                        if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
+                        {
+                            MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            rss.ErrorMsg = "只有创建人才能删除提交的单据。";
+                            rss.Succeeded = false;
+                            return rss;
+                        }
+                    }
+
+                    tb_FM_ExpenseClaimController<tb_FM_ExpenseClaim> ctr = Startup.GetFromFac<tb_FM_ExpenseClaimController<tb_FM_ExpenseClaim>>();
+                    bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_FM_ExpenseClaim);
+                    if (rs)
+                    {
+                        //AuditLogHelper.Instance.CreateAuditLog<T>("删除", EditEntity);
+                        //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                        //{
+                        //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
+                        //}
+                        // bindingSourceSub.Clear();
+
+                        ////删除远程图片及本地图片
+                        //await DeleteRemoteImages();
+
+                        //提示一下删除成功
+                        MainForm.Instance.uclog.AddLog("提示", "删除成功");
+
+                        //加载一个空的显示的UI
+                        // bindingSourceSub.Clear();
+                        //base.OnBindDataToUIEvent(EditEntity as tb_FM_ExpenseClaim, ActionStatus.删除);
+                        Exit(this);
+                    }
+                }
+                else
+                {
+                    //
+                    MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
+                }
+            }
+            return rss;
         }
 
         private void btnInfo_Click(object sender, EventArgs e)

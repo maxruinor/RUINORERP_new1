@@ -54,7 +54,7 @@ namespace RUINORERP.Business.Processor
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_ProdReturning>(c => c.ReturnNo);
             queryFilter.SetQueryField<tb_ProdReturning>(c => c.BorrowNO);
-            queryFilter.SetQueryField<tb_ProdReturning>(c => c.BorrowID, true);
+           // queryFilter.SetQueryField<tb_ProdReturning>(c => c.BorrowID, true);
             queryFilter.SetQueryField<tb_ProdReturning>(c => c.Employee_ID, true);
             queryFilter.SetQueryField<tb_ProdReturning>(c => c.ReturnDate);
             queryFilter.SetQueryField<tb_ProdReturning>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));

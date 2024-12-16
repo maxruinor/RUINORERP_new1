@@ -262,6 +262,17 @@ namespace RUINORERP.Business
             //return null;
         }
 
+        public virtual Task<bool> BaseLogicDeleteAsync(T model)
+        {
+            //逻辑删除
+            //await _unitOfWorkManage.GetDbClient().Deleteable(detail.tb_Prod_Attr_Relations).IsLogic().ExecuteCommandAsync();
+            //await _unitOfWorkManage.GetDbClient().Deleteable(detail).IsLogic().ExecuteCommandAsync();
+            //子类重写
+            throw new Exception("子类要重写BaseLogicDeleteAsync");
+            //return null;
+        }
+
+       
         public virtual Task<bool> BaseDeleteAsync(List<T> models)
         {
             throw new Exception("子类要重写BaseDeleteAsync");

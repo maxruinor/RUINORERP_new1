@@ -49,7 +49,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         // 创建实例
                         object instance = Activator.CreateInstance(nodeParameter.tableType);
                         menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
-                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance , nodeParameter);
+                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, nodeParameter);
                         //要卸载，不然会多次执行
                         menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
 
@@ -105,6 +105,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         case "long":
                             QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
                             break;
+                        case "bool":
+                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
+                            break;
                         default:
                             QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
                             break;
@@ -112,7 +115,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
 
- 
+
 
         }
 
@@ -153,6 +156,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var conModel未审核 = new List<IConditionalModel>();
             conModel未审核.Add(new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "0", CSharpTypeName = "int" }); //设置类型 和C#名称一样常用的支持
             conModel未审核.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "2", CSharpTypeName = "int" });
+            // conModel未审核.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool", FieldValueConvertFunc = ConvertStringToBoolean });
+            //这里的类型转换只要符合后，下面还会有一个case判断转换。将FieldValue.Tolong()
+            conModel未审核.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
             //如果限制
             if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
             {
@@ -166,6 +173,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 conModel未提交.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
             }
+            conModel未提交.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
             var conModel未出库 = new List<IConditionalModel>();
             conModel未出库.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" });
             //如果限制
@@ -173,6 +183,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 conModel未出库.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
             }
+
+            conModel未出库.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
             var conModel待收款 = new List<IConditionalModel>();
             conModel待收款.Add(new ConditionalModel { FieldName = "PayStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" });
             conModel待收款.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" });
@@ -181,6 +195,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 conModel待收款.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
             }
+            conModel待收款.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
             //未入库
             var conModel未入库 = new List<IConditionalModel>();
             conModel未入库.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });
@@ -189,6 +205,22 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 conModel未入库.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
             }
+            conModel未入库.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
+
+            //暂时这样没有完结就是没有还。
+            var conModel借出未还清 = new List<IConditionalModel>();
+            conModel借出未还清.Add(new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" });
+            conModel借出未还清.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" });
+            if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
+            {
+                conModel借出未还清.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            }
+            conModel借出未还清.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
+
 
             List<BizType> bizTypes = new List<BizType>();
             if (centerConfig != null)
@@ -303,6 +335,27 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     }
                 }
 
+                //下面是特殊情况。上面是所有单据的情况
+                if (item == BizType.借出单)
+                {
+                    QueryParameter parameter = new QueryParameter();
+                    parameter.conditionals = conModel借出未还清;
+                    parameter.tableType = tableType;
+                    //未出库
+                    TreeNode SubNode借出未还清 = new TreeNode(item.ToString());
+                    DataTable queryList借出未还清 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel借出未还清).ToDataTable();
+                    if (queryList借出未还清.Rows.Count > 0)
+                    {
+                        SubNode借出未还清.Text = "未还清【" + queryList借出未还清.Rows.Count + "】";
+                        SubNode借出未还清.Tag = parameter;
+                        if (!node.Nodes.Contains(SubNode借出未还清))
+                        {
+                            node.Nodes.Add(SubNode借出未还清);
+                        }
+                    }
+                }
+
+
                 if (item == BizType.销售订单)
                 {
                     QueryParameter parameter = new QueryParameter();
@@ -321,6 +374,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         }
                     }
                 }
+
+
                 if (item == BizType.销售出库单)
                 {
                     QueryParameter parameter = new QueryParameter();
@@ -340,6 +395,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         }
                     }
                 }
+
+
                 if (item == BizType.采购订单)
                 {
                     // 待付款
@@ -389,6 +446,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
             kryptonTreeViewJobList.ExpandAll();
         }
 
+        // 假设您有一个方法，用于将字符串转换为布尔值
+        private static object ConvertStringToBoolean(string value)
+        {
+            // 这里只是一个简单的示例，实际转换可能需要更复杂的逻辑
+            return value.Equals("False", StringComparison.OrdinalIgnoreCase);
+
+        }
         private void UCTodoList_Load(object sender, EventArgs e)
         {
             if (this.DesignMode)
@@ -405,7 +469,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
             BuilderToDoListTreeView(centerConfig);
-      
+
         }
     }
 }

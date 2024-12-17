@@ -858,7 +858,7 @@ namespace RUINORERP.UI.Common
                         PropertyInfo fieldinfo = type.GetProperty(key);
                         if (fieldinfo != null)
                         {
-                           var  propertyType = fieldinfo.PropertyType;
+                            var propertyType = fieldinfo.PropertyType;
                             if (Nullable.GetUnderlyingType(propertyType) != null)
                             {
                                 //entity是被引用的类。要设置的是本身。这里无效。
@@ -2185,6 +2185,20 @@ namespace RUINORERP.UI.Common
                     if (TypeHelper.IsGenericList(listType))
                     {
                         tlist = cachelist as List<T>;
+                        if (tlist == null)
+                        {
+                            // Type elementType = TypeHelper.GetFirstArgumentType(listType);
+                            Type elementType = null;
+                            if (BizCacheHelper.Manager.NewTableTypeList.TryGetValue(tableName, out elementType))
+                            {
+                                #region  强类型
+                                var lastlist = ((IEnumerable<dynamic>)cachelist).Select(item => Activator.CreateInstance(elementType)).ToList();
+                                tlist = lastlist as List<T>;
+                                #endregion
+                            }
+
+                        }
+
                     }
                     else if (TypeHelper.IsJArrayList(listType))
                     {

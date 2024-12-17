@@ -25,7 +25,7 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
-            //RuleFor(tb_BoxRules => tb_BoxRules.Pack_ID).Must(CheckForeignKeyValue).WithMessage("包装信息:下拉选择值不正确。");
+            RuleFor(tb_BoxRules => tb_BoxRules.QuantityPerBox).GreaterThan(0).WithMessage(" 每箱数量:数量必须大于零。");
 
             // 这里添加额外的初始化代码
             RuleFor(x => x.NetWeight).GreaterThan(0).WithMessage("净重N.Wt.(kg):要大于零。");

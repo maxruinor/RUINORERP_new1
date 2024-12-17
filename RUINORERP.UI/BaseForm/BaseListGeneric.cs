@@ -431,6 +431,10 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
+            else
+            {
+                btnItem.Visible = true;
+            }
         }
 
 

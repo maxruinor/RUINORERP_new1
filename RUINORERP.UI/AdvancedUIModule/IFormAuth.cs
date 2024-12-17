@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINORERP.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,11 @@ namespace RUINORERP.UI.AdvancedUIModule
     /// </summary>
     public interface IFormAuth
     {
-        ToolStripItem[] AddExtendButton();
+        /// <summary>
+        /// 根据菜单判断来扩展可能要额外添加的按钮
+        /// </summary>
+        /// <param name="menuInfo"></param>
+        /// <returns></returns>
+        ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo);
     }
 }

@@ -18,6 +18,7 @@ using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINORERP.Common;
 using RUINORERP.Common.SnowflakeIdHelper;
 using RUINORERP.UI.AdvancedUIModule;
+using Castle.Components.DictionaryAdapter.Xml;
 
 namespace RUINORERP.UI.Common
 {
@@ -318,18 +319,36 @@ namespace RUINORERP.UI.Common
 
                 }
             }
-            if (tb_ButtonInfos.Count > 0)
-            {
-                _appContext.Db.CopyNew().Insertable<tb_ButtonInfo>(tb_ButtonInfos).ExecuteReturnSnowflakeIdListAsync();
-            }
             if (c is IFormAuth)
             {
                 IFormAuth formAuth = c as IFormAuth;
                 if (formAuth != null)
                 {
-                    ToolStripItem[] stripItems = formAuth.AddExtendButton();
+                    ToolStripItem[] stripItems = formAuth.AddExtendButton(menuInfo);
+                    foreach (var tsitem in stripItems)
+                    {
+                        //添加
+                        tb_ButtonInfo btnInfoSub = new tb_ButtonInfo();
+                        btnInfoSub.BtnName = tsitem.Name;
+                        btnInfoSub.BtnText = tsitem.Text;
+                        btnInfoSub.FormName = info.ClassName;
+                        btnInfoSub.ClassPath = info.ClassPath;
+                        btnInfoSub.MenuID = menuInfo.MenuID;
+                        btnInfoSub.IsEnabled = true;
+                        tb_ButtonInfo ExistBtnInfoSub = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
+                        if (ExistBtnInfoSub == null)
+                        {
+                            tb_ButtonInfos.Add(btnInfoSub);
+                        }
+                    }
                 }
             }
+
+            if (tb_ButtonInfos.Count > 0)
+            {
+                _appContext.Db.CopyNew().Insertable<tb_ButtonInfo>(tb_ButtonInfos).ExecuteReturnSnowflakeIdListAsync();
+            }
+           
         }
 
         /// <summary>

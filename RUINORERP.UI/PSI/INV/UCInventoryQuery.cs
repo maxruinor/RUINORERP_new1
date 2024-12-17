@@ -58,7 +58,7 @@ namespace RUINORERP.UI.PSI.INV
             //表格显示时DataGridView1_CellFormatting 取外键类型
             ColDisplayTypes.Add(typeof(tb_Prod));
             ColDisplayTypes.Add(typeof(tb_ProdDetail));
-            AddExtendButton();
+            AddExtendButton(CurMenuInfo);
         }
 
         #region 添加成本确认
@@ -67,13 +67,14 @@ namespace RUINORERP.UI.PSI.INV
         /// 添加回收
         /// </summary>
         /// <returns></returns>
-        public ToolStripItem[] AddExtendButton()
+        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             ToolStripButton toolStripButton成本确认 = new System.Windows.Forms.ToolStripButton();
             toolStripButton成本确认.Text = "成本确认";
             toolStripButton成本确认.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
             toolStripButton成本确认.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton成本确认.Name = "成本确认MakesureCost";
+            toolStripButton成本确认.Visible = false;//默认隐藏
             ControlButton(toolStripButton成本确认);
             toolStripButton成本确认.ToolTipText = "成本确认。";
             toolStripButton成本确认.Click += new System.EventHandler(this.toolStripButton成本确认_Click);
@@ -83,8 +84,6 @@ namespace RUINORERP.UI.PSI.INV
             this.BaseToolStrip.Items.AddRange(extendButtons);
             return extendButtons;
 
-
-
         }
 
         private async void toolStripButton成本确认_Click(object sender, EventArgs e)
@@ -92,20 +91,22 @@ namespace RUINORERP.UI.PSI.INV
             if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
             {
                 //  弹出提示说：您确定将这个公司回收投入到公海吗？
-                if (bindingSourceList.Current is tb_Inventory Inventory)
+                if (bindingSourceList.Current is View_Inventory ViewInventory)
                 {
-                    var emailRule = new EmailValidationRule();
-                    using (var inputForm = new frmInputObject(emailRule))
+                    var amountRule = new AmountValidationRule();
+                    using (var inputForm = new frmInputObject(amountRule))
                     {
+                        inputForm.DefaultTitle = "请输入成本价格";
+                        tb_Inventory Inventory = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>().Where(c => c.Inventory_ID == ViewInventory.Inventory_ID).SingleAsync();
                         if (inputForm.ShowDialog() == DialogResult.OK)
                         {
-                            if (MessageBox.Show($"您确定将当前选中的产品库存成本设置为：{inputForm.InputContent}吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                            if (MessageBox.Show($"确定将产品:【{ViewInventory.SKU + "-" + ViewInventory.CNName}】库存成本设为：{inputForm.InputContent}吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
                             {
-                                Inventory.CostFIFO = inputForm.ToDecimal();
-                                Inventory.CostMonthlyWA = inputForm.ToDecimal();
-                                Inventory.CostMovingWA = inputForm.ToDecimal();
-                                Inventory.Inv_AdvCost = inputForm.ToDecimal();
-                                Inventory.Inv_Cost = inputForm.ToDecimal();
+                                Inventory.CostFIFO = inputForm.InputContent.ToDecimal();
+                                Inventory.CostMonthlyWA = inputForm.InputContent.ToDecimal();
+                                Inventory.CostMovingWA = inputForm.InputContent.ToDecimal();
+                                Inventory.Inv_AdvCost = inputForm.InputContent.ToDecimal();
+                                Inventory.Inv_Cost = inputForm.InputContent.ToDecimal();
 
                                 int result = await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(Inventory).UpdateColumns(t => new { t.CostFIFO, t.CostMonthlyWA, t.CostMovingWA, t.Inv_AdvCost, t.Inv_Cost }).ExecuteCommandAsync();
                                 if (result > 0)

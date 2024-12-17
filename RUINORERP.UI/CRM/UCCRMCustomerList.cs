@@ -56,101 +56,7 @@ namespace RUINORERP.UI.CRM
         }
 
 
-        #region 添加回收 分配
-
-        /// <summary>
-        /// 添加回收
-        /// </summary>
-        /// <returns></returns>
-        public ToolStripItem[] AddExtendButton()
-        {
-            ToolStripButton toolStripButton回收 = new System.Windows.Forms.ToolStripButton();
-            toolStripButton回收.Text = "回收";
-            toolStripButton回收.Image = global::RUINORERP.UI.Properties.Resources.reset;
-            toolStripButton回收.ImageTransparentColor = System.Drawing.Color.Magenta;
-            toolStripButton回收.Name = "回收RecyclingToHighSeas";
-            ControlButton(toolStripButton回收);
-            toolStripButton回收.ToolTipText = "回收到公海。";
-            toolStripButton回收.Click += new System.EventHandler(this.toolStripButton回收_Click);
-
-
-            ToolStripButton toolStripButton分配 = new System.Windows.Forms.ToolStripButton();
-            toolStripButton分配.Text = "分配";
-            toolStripButton分配.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
-            toolStripButton分配.ImageTransparentColor = System.Drawing.Color.Magenta;
-            toolStripButton分配.Name = "分配AssignmentToBizEmp";
-            ControlButton(toolStripButton分配);
-            toolStripButton分配.ToolTipText = "分配给指定业务员。";
-            toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
-
-            //一个是公海一个是目标客户
-            if (CurMenuInfo.CaptionCN.Contains("公海客户"))
-            {
-                System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton分配 };
-                this.BaseToolStrip.Items.AddRange(extendButtons);
-                return extendButtons;
-            }
-            else
-            {
-                System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton回收 };
-                this.BaseToolStrip.Items.AddRange(extendButtons);
-                return extendButtons;
-            }
-         
-            // this.BaseToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {            this.toolStripButtonAdd});
-           
-        }
-
-        private async void toolStripButton回收_Click(object sender, EventArgs e)
-        {
-            if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
-            {
-                //  弹出提示说：您确定将这个公司回收投入到公海吗？
-                if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
-                {
-                    if (MessageBox.Show($"您确定将这个客户：{sourceEntity.CustomerName}回收到公海吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
-                    {
-                        sourceEntity.Employee_ID = null;
-                        int result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(sourceEntity).ExecuteCommandAsync();
-                        if (result > 0)
-                        {
-                            MainForm.Instance.ShowStatusText("回收成功!");
-                            Query();
-                        }
-                    }
-                }
-            }
-        }
-
-
-        private async void toolStripButton分配_Click(object sender, EventArgs e)
-        {
-            if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
-            {
-                //  弹出提示说：？
-                if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
-                {
-                    frmSelectObject frm = new frmSelectObject();
-                    //frm.selectedObject = sourceEntity;
-                    frm.SetSelectDataList<tb_Employee>(sourceEntity, C => C.Employee_ID, n => n.Employee_Name);
-                    if (frm.ShowDialog() == DialogResult.OK)
-                    {
-                        if (MessageBox.Show($"您确定将这个客户：【{sourceEntity.CustomerName}】分配给【{frm.SelectItemText}】吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
-                        {
-                            int result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(sourceEntity).ExecuteCommandAsync();
-                            if (result > 0)
-                            {
-                                MainForm.Instance.ShowStatusText("分配成功!");
-                                Query();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-
-        #endregion
+ 
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法，供应商和客户共用所有特殊处理
@@ -179,7 +85,7 @@ namespace RUINORERP.UI.CRM
                 toolStripButtonDelete.Visible = false;
             }
 
-            AddExtendButton();
+            AddExtendButton(CurMenuInfo);
 
         }
 
@@ -337,5 +243,105 @@ namespace RUINORERP.UI.CRM
             base.Query(true);
         }
 
+  
+
+            #region 添加回收 分配
+
+            /// <summary>
+            /// 添加回收
+            /// </summary>
+            /// <returns></returns>
+            public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+            {
+                //一个是公海一个是目标客户
+                if (menuInfo.CaptionCN.Contains("公海客户"))
+                {
+                ToolStripButton toolStripButton分配 = new System.Windows.Forms.ToolStripButton();
+                toolStripButton分配.Text = "分配";
+                toolStripButton分配.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+                toolStripButton分配.ImageTransparentColor = System.Drawing.Color.Magenta;
+                toolStripButton分配.Name = "分配AssignmentToBizEmp";
+                toolStripButton分配.Visible = false;//默认隐藏
+                ControlButton(toolStripButton分配);
+                toolStripButton分配.ToolTipText = "分配给指定业务员。";
+                toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
+
+                System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton分配 };
+                    this.BaseToolStrip.Items.AddRange(extendButtons);
+                    return extendButtons;
+                }
+                else
+                {
+                ToolStripButton toolStripButton回收 = new System.Windows.Forms.ToolStripButton();
+                toolStripButton回收.Text = "回收";
+                toolStripButton回收.Image = global::RUINORERP.UI.Properties.Resources.reset;
+                toolStripButton回收.ImageTransparentColor = System.Drawing.Color.Magenta;
+                toolStripButton回收.Name = "回收RecyclingToHighSeas";
+                toolStripButton回收.Visible = false;//默认隐藏
+                ControlButton(toolStripButton回收);
+                toolStripButton回收.ToolTipText = "回收到公海。";
+                toolStripButton回收.Click += new System.EventHandler(this.toolStripButton回收_Click);
+
+                System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton回收 };
+                    this.BaseToolStrip.Items.AddRange(extendButtons);
+                    return extendButtons;
+                }
+
+                // this.BaseToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {            this.toolStripButtonAdd});
+
+            }
+
+            private async void toolStripButton回收_Click(object sender, EventArgs e)
+            {
+                if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+                {
+                    //  弹出提示说：您确定将这个公司回收投入到公海吗？
+                    if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                    {
+                        if (MessageBox.Show($"您确定将这个客户：{sourceEntity.CustomerName}回收到公海吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                        {
+                            sourceEntity.Employee_ID = null;
+                            int result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(sourceEntity).ExecuteCommandAsync();
+                            if (result > 0)
+                            {
+                                MainForm.Instance.ShowStatusText("回收成功!");
+                                Query();
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            private async void toolStripButton分配_Click(object sender, EventArgs e)
+            {
+                if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+                {
+                    //  弹出提示说：？
+                    if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                    {
+                        frmSelectObject frm = new frmSelectObject();
+                        //frm.selectedObject = sourceEntity;
+                        frm.SetSelectDataList<tb_Employee>(sourceEntity, C => C.Employee_ID, n => n.Employee_Name);
+                        if (frm.ShowDialog() == DialogResult.OK)
+                        {
+                            if (MessageBox.Show($"您确定将这个客户：【{sourceEntity.CustomerName}】分配给【{frm.SelectItemText}】吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                            {
+                                int result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(sourceEntity).ExecuteCommandAsync();
+                                if (result > 0)
+                                {
+                                    MainForm.Instance.ShowStatusText("分配成功!");
+                                    Query();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            #endregion
+
+     
     }
 }

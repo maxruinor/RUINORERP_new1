@@ -551,6 +551,8 @@ namespace RUINORERP.UI.ProductEAV
             //attrGoupsByName = GetAttrGoups(listView1, g => g.GroupID, lvitem => lvitem.Text);
             //List<string> newMixName = ArrayCombination.Combination4Table(attrGoupsByName);
 #endif
+
+            //要比较的集合数据
             List<string> MixByTreeGrid = new List<string>();
 
             #region 获取最新的组合关系。并且保存为一个新的数组与现有的组合关系进行比较 取差集
@@ -1165,6 +1167,9 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
             }
+            // 按照 PropertyValueID 进行排序 方便后面比较
+            prodDetails_relation = prodDetails_relation.OrderBy(p => p.PropertyValueID).ToList();
+
             return prodDetails_relation;
         }
 
@@ -1261,6 +1266,7 @@ namespace RUINORERP.UI.ProductEAV
             LoadProdDetail();
         }
 
+        //加载产品属性时也要排序，按后面添加多属性一样的规则，这样才正确的比较重复等
         private void LoadProdDetail()
         {
             if (dataGridViewProd.CurrentRow != null)
@@ -1342,19 +1348,30 @@ namespace RUINORERP.UI.ProductEAV
             //遍历产品明细集合
             foreach (var item in prod.tb_ProdDetails)
             {
+
+
+                // 按照 PropertyValueID 进行排序 方便后面比较
+                List<tb_Prod_Attr_Relation> ProdAttrRelations = item.tb_Prod_Attr_Relations.OrderBy(p => p.PropertyValueID).ToList();
+
+
                 //根据产品明细ID查询View_ProdDetail视图
                 var viewProdDetail = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_ProdDetail>()
                                 .Where(c => c.ProdDetailID == item.ProdDetailID).Single();
                 //如果查询到视图，则添加节点
                 if (viewProdDetail != null)
                 {
-                    TreeGridNode node = treeGridView1.Nodes.Add(item.ProdDetailID, item.ProdDetailID, "", viewProdDetail.prop, item.SKU, viewProdDetail.CNName, "加载");
+
+                    string DisplayPropText = viewProdDetail.prop;
+                    // var array = ProdAttrRelations.Where(c => c.ProdDetailID == item.ProdDetailID).ToList().Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
+                    var array = ProdAttrRelations.Where(c => c.ProdDetailID == item.ProdDetailID).ToList().Select(c => c.tb_prodpropertyvalue.PropertyValueName).ToArray();
+                    DisplayPropText = string.Join(",", array);
+                    TreeGridNode node = treeGridView1.Nodes.Add(item.ProdDetailID, item.ProdDetailID, "", DisplayPropText, item.SKU, viewProdDetail.CNName, "加载");
                     //标记节点ID，实际就是产品明细ID
                     node.NodeName = item.ProdDetailID.ToString();
                     node.Tag = item;
                     node.ImageIndex = 0;
                     //遍历产品属性关系集合
-                    foreach (var par in item.tb_Prod_Attr_Relations)
+                    foreach (var par in ProdAttrRelations)
                     {
                         node.DefaultCellStyle.Font = boldFont;
                         //如果属性值不为空，则添加子节点,

@@ -283,10 +283,10 @@ namespace RUINORERP.Model
 
         private string _CoreProductInfo;
         /// <summary>
-        /// 获客来源
+        /// 主营产品信息
         /// </summary>
-        [AdvQueryAttribute(ColName = "CoreProductInfo",ColDesc = "获客来源")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CoreProductInfo" ,Length=200,IsNullable = true,ColumnDescription = "获客来源" )]
+        [AdvQueryAttribute(ColName = "CoreProductInfo",ColDesc = "主营产品信息")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CoreProductInfo" ,Length=200,IsNullable = true,ColumnDescription = "主营产品信息")]
         public string CoreProductInfo
         { 
             get{return _CoreProductInfo;}
@@ -297,10 +297,10 @@ namespace RUINORERP.Model
 
         private string _GetCustomerSource;
         /// <summary>
-        /// 主营产品信息
+        /// 获客来源
         /// </summary>
-        [AdvQueryAttribute(ColName = "GetCustomerSource",ColDesc = "主营产品信息")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "GetCustomerSource" ,Length=250,IsNullable = true,ColumnDescription = "主营产品信息" )]
+        [AdvQueryAttribute(ColName = "GetCustomerSource",ColDesc = "获客来源")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "GetCustomerSource" ,Length=250,IsNullable = true,ColumnDescription = "获客来源")]
         public string GetCustomerSource
         { 
             get{return _GetCustomerSource;}

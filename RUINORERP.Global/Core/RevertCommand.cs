@@ -4,7 +4,7 @@ using System.Text;
 
 namespace RUINOR.Core
 {
-    public class Command : ICommand
+    public class RevertCommand : IRevertCommand
     {
         private ActionHandler doOperation;
 

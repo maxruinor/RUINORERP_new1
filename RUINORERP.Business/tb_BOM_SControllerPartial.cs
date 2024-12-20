@@ -44,7 +44,7 @@ namespace RUINORERP.Business
         public async Task<ReturnMainSubResults<T>> SaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;
-            Command command = new Command();
+            RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
             try
             {

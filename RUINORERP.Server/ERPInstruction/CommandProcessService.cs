@@ -5,6 +5,51 @@ using System.Text;
 
 namespace TransInstruction
 {
+    //public enum DataTransCommand
+    //{
+    //    None = 0,
+    //    UserManagement = 1,
+    //    ProductManagement = 2,
+    //    OrderManagement = 3,
+    //    // 其他主指令
+    //}
+
+    /// <summary>
+    /// 服务器发出的消息指令
+    /// </summary>
+    public enum ServerPushMessageSubCmd
+    {
+        Login = 1,
+        Logout = 2,
+        Register = 3,
+        // 用户管理的子指令
+    }
+
+    public enum ClientPushMessageSubCmd
+    {
+        Login = 1,
+        Logout = 2,
+        Register = 3,
+        // 用户管理的子指令
+    }
+
+    public enum ClientSubCmdUserManagement
+    {
+        Login = 1,
+        Logout = 2,
+        Register = 3,
+        // 用户管理的子指令
+    }
+
+    public enum ProductManagementCommand
+    {
+        AddProduct = 1,
+        UpdateProduct = 2,
+        DeleteProduct = 3,
+        // 产品管理的子指令
+    }
+
+    // 为其他主指令定义子指令枚举
     public interface ICommandHandler
     {
         void HandleCommand(object parameters);
@@ -32,14 +77,14 @@ namespace TransInstruction
     /// </summary>
     public class CommandDispatcher
     {
-        public void DispatchCommand(Command command, object parameters)
+        public void DispatchCommand(RevertCommand command, object parameters)
         {
             switch (command)
             {
-                case Command.UserManagement:
+                case RevertCommand.UserManagement:
                     // 根据子指令进一步分发
                     break;
-                case Command.ProductManagement:
+                case RevertCommand.ProductManagement:
                     // 根据子指令进一步分发
                     break;
                     // 其他主指令

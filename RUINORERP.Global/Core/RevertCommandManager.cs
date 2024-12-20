@@ -4,27 +4,27 @@ using System.Text;
 
 namespace RUINOR.Core
 {
-    public static class CommandManager
+    public static class RevertCommandManager
     {
 
         //public bool CanUnDo { get { return undoMementos.Count != 0; } }
         //public bool CanReDo { get { return redoMementos.Count != 0; } }
 
-        private static Stack<ICommand> redoMementos;
+        private static Stack<IRevertCommand> redoMementos;
 
-        private static Stack<ICommand> undoMementos;
+        private static Stack<IRevertCommand> undoMementos;
 
-        static CommandManager()
+        static RevertCommandManager()
         {
-            redoMementos = new Stack<ICommand>();
-            undoMementos = new Stack<ICommand>();
+            redoMementos = new Stack<IRevertCommand>();
+            undoMementos = new Stack<IRevertCommand>();
         }
 
         /// <summary>
         /// 先清空Redo栈，将Command对象压入栈
         /// </summary>
         /// <param name="command">Command对象</param>
-        public static void AddNewCommand(ICommand command)
+        public static void AddNewCommand(IRevertCommand command)
         {
             redoMementos.Clear();
             undoMementos.Push(command);
@@ -39,7 +39,7 @@ namespace RUINOR.Core
             {
                 if (redoMementos.Count > 0)
                 {
-                    ICommand command = redoMementos.Pop();
+                    IRevertCommand command = redoMementos.Pop();
                     if (command != null)
                     {
                         undoMementos.Push(command);
@@ -62,7 +62,7 @@ namespace RUINOR.Core
             {
                 if (undoMementos.Count > 0)
                 {
-                    ICommand command = undoMementos.Pop();
+                    IRevertCommand command = undoMementos.Pop();
                     if (command != null)
                     {
                         command.Undo();

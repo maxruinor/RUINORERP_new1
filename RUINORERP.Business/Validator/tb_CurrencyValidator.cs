@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:32
+// 时间：12/18/2024 17:45:26
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,20 +26,44 @@ namespace RUINORERP.Business
     /*public partial class tb_CurrencyValidator:AbstractValidator<tb_Currency>*/
     public partial class tb_CurrencyValidator:BaseValidatorGeneric<tb_Currency>
     {
-     public tb_CurrencyValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_CurrencyValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_Currency =>tb_Currency.GroupName).MaximumLength(25).WithMessage("组合名称:不能超过最大长度,25.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_Currency =>tb_Currency.GroupName).MaximumLength(25).WithMessage("组合名称:不能超过最大长度,25.");
+
+
  RuleFor(tb_Currency =>tb_Currency.CurrencyName).MaximumLength(10).WithMessage("外币名称:不能超过最大长度,10.");
  RuleFor(tb_Currency =>tb_Currency.CurrencyName).NotEmpty().WithMessage("外币名称:不能为空。");
+
+
  RuleFor(x => x.DefaultExchRate).PrecisionScale(10,2,true).WithMessage("预设汇率:小数位不能超过2。");
+
  RuleFor(x => x.BuyExchRate).PrecisionScale(10,2,true).WithMessage("买入汇率:小数位不能超过2。");
+
  RuleFor(x => x.SellOutExchRate).PrecisionScale(10,2,true).WithMessage("卖出汇率:小数位不能超过2。");
+
  RuleFor(x => x.MonthEndExchRate).PrecisionScale(10,2,true).WithMessage("月末汇率:小数位不能超过2。");
+
 //有默认值
+
 //有默认值
+
+
  RuleFor(tb_Currency =>tb_Currency.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_Currency =>tb_Currency.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-       	
+
+
            	        Initialize();
      }
 

@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
+using Microsoft.Extensions.Options;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Helper;
@@ -20,6 +21,7 @@ using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.ConfigModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.Comm;
@@ -63,6 +65,18 @@ namespace RUINORERP.Server
     public partial class frmMain : Form
     {
 
+        public SystemProtectionData protectionData = new SystemProtectionData();
+
+        /// <summary>
+        /// 可配置性全局参数
+        /// </summary>
+        public readonly IOptionsMonitor<SystemGlobalconfig> Globalconfig;
+
+
+        //保存要更新 分发的配置数据，（客户不在线时） 是不是 类似的情况。通知都是这样。比方管理员发布一个通知 在线吗上收到。没在线的 上线后收到
+        public ConcurrentDictionary<long, BaseConfig> UpdateConfigDataList = new ConcurrentDictionary<long, BaseConfig>();
+
+
 
         /// <summary>
         /// 保存服务器的一些缓存信息。让客户端可以根据一些机制来获取。得到最新的信息
@@ -98,13 +112,22 @@ namespace RUINORERP.Server
         }
 
         IWorkflowHost host;
-        public frmMain(ILogger<frmMain> logger, IWorkflowHost workflowHost)
+        public frmMain(ILogger<frmMain> logger, IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
             _main = this;
             _logger = logger;
             _services = Startup.Services;
             host = workflowHost;
+
+
+            Globalconfig = config;
+            // 监听配置变化
+            Globalconfig.OnChange(updatedConfig =>
+            {
+                Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
+            });
+
 
             //ILoggerFactory loggerFactory = LoggerFactory.Create(logbuilder => logbuilder
             // .AddFilter("Microsoft", LogLevel.Debug)
@@ -217,7 +240,7 @@ namespace RUINORERP.Server
 
         private async void frmMain_Load(object sender, EventArgs e)
         {
-
+            protectionData = new SystemProtectionData();
             _logger.Error("ErrorError2233");
             _logger.LogError("LogErrorLogError2233");
 
@@ -280,6 +303,12 @@ namespace RUINORERP.Server
 
             // 每120秒（120000毫秒）执行一次检查
             System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1200);
+
+
+            //加载提醒数据
+
+            DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
+            loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
         }
 
         private void CacheInfoList_OnUpdate(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
@@ -383,10 +412,10 @@ namespace RUINORERP.Server
                     }
                     else
                     {
-                        if (frmMain.Instance.IsDebug)
-                        {
-                            frmMain.Instance.PrintInfoLog($"检查更新过期的缓存时没有找到{item.Key}概览信息。");
-                        }
+                        //if (frmMain.Instance.IsDebug)
+                        //{
+                        //    frmMain.Instance.PrintInfoLog($"检查更新过期的缓存时没有找到{item.Key}概览信息。");
+                        //}
                     }
                 }
             }
@@ -955,6 +984,22 @@ namespace RUINORERP.Server
             tsmNo.Checked = !tsmY.Checked;
             IsDebug = !tsmNo.Checked;
             PrintMsg($"当前调式模式:{IsDebug}");
+        }
+
+        private void tsbtnDataViewer_Click(object sender, EventArgs e)
+        {
+            frmMemoryDataViewer frm = Startup.GetFromFac<frmMemoryDataViewer>();
+            frm.MdiParent = this;
+            frm.Show();
+            frm.Activate();
+        }
+
+        private void 参数配置ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            frmGlobalConfig frm = Startup.GetFromFac<frmGlobalConfig>();
+            frm.MdiParent = this;
+            frm.Show();
+            frm.Activate();
         }
     }
 }

@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/18/2024 22:55:51
+// 时间：12/18/2024 18:07:05
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -21,13 +23,58 @@ namespace RUINORERP.Business
     /// <summary>
     /// 销售出库统计分析验证类
     /// </summary>
-    public partial class View_SaleOutItemsValidator:AbstractValidator<View_SaleOutItems>
+    /*public partial class View_SaleOutItemsValidator:AbstractValidator<View_SaleOutItems>*/
+    public partial class View_SaleOutItemsValidator:BaseValidatorGeneric<View_SaleOutItems>
     {
-     public View_SaleOutItemsValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public View_SaleOutItemsValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(View_SaleOutItems =>View_SaleOutItems.SKU).MaximumLength(80).WithMessage("SKU码:不能超过最大长度,80.");
-  
-           	
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+           	        Initialize();
      }
 
 

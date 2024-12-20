@@ -32,7 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseBillEdit));
             this.toolTipBase = new System.Windows.Forms.ToolTip(this.components);
             this.timerForToolTip = new System.Windows.Forms.Timer(this.components);
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
             this.toolStripbtnAdd = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnCancel = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnModify = new System.Windows.Forms.ToolStripButton();
@@ -48,7 +48,6 @@
             this.toolStripbtnReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnReverseReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButton付款调整 = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnFunction = new System.Windows.Forms.ToolStripDropDownButton();
             this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
@@ -57,7 +56,7 @@
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
-            this.toolStrip1.SuspendLayout();
+            this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             this.SuspendLayout();
@@ -66,10 +65,10 @@
             // 
             this.timerForToolTip.Interval = 1000;
             // 
-            // toolStrip1
+            // BaseToolStrip
             // 
-            this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.BaseToolStrip.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.BaseToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripbtnAdd,
             this.toolStripBtnCancel,
             this.toolStripbtnModify,
@@ -83,16 +82,15 @@
             this.toolStripbtnReview,
             this.toolStripBtnReverseReview,
             this.toolStripButton结案,
-            this.toolStripButton付款调整,
             this.toolStripbtnFunction,
             this.toolStripbtnProperty,
             this.toolStripbtnClose,
             this.tslLocked});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(869, 25);
-            this.toolStrip1.TabIndex = 3;
-            this.toolStrip1.Text = "toolStrip1";
+            this.BaseToolStrip.Location = new System.Drawing.Point(0, 0);
+            this.BaseToolStrip.Name = "BaseToolStrip";
+            this.BaseToolStrip.Size = new System.Drawing.Size(869, 25);
+            this.BaseToolStrip.TabIndex = 3;
+            this.BaseToolStrip.Text = "toolStrip1";
             // 
             // toolStripbtnAdd
             // 
@@ -210,14 +208,6 @@
             this.toolStripButton结案.Size = new System.Drawing.Size(53, 22);
             this.toolStripButton结案.Text = "结案";
             // 
-            // toolStripButton付款调整
-            // 
-            this.toolStripButton付款调整.Image = global::RUINORERP.UI.Properties.Resources.US_Dollar;
-            this.toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton付款调整.Name = "toolStripButton付款调整";
-            this.toolStripButton付款调整.Size = new System.Drawing.Size(79, 22);
-            this.toolStripButton付款调整.Text = "付款调整";
-            // 
             // toolStripbtnFunction
             // 
             this.toolStripbtnFunction.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -231,7 +221,7 @@
             // 复制性新增ToolStripMenuItem
             // 
             this.复制性新增ToolStripMenuItem.Name = "复制性新增ToolStripMenuItem";
-            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.复制性新增ToolStripMenuItem.Text = "复制性新增";
             // 
             // toolStripbtnProperty
@@ -271,12 +261,12 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.toolStrip1);
+            this.Controls.Add(this.BaseToolStrip);
             this.Name = "BaseBillEdit";
             this.Size = new System.Drawing.Size(869, 524);
             this.Load += new System.EventHandler(this.BaseBillEdit_Load);
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
+            this.BaseToolStrip.ResumeLayout(false);
+            this.BaseToolStrip.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).EndInit();
             this.ResumeLayout(false);
@@ -289,7 +279,7 @@
         internal System.Windows.Forms.ToolTip toolTipBase;
         public System.Windows.Forms.Timer timerForToolTip;
         public System.Windows.Forms.BindingSource bindingSourceSub;
-        public System.Windows.Forms.ToolStrip toolStrip1;
+        public System.Windows.Forms.ToolStrip BaseToolStrip;
         public System.Windows.Forms.ToolStripButton toolStripbtnDelete;
         public System.Windows.Forms.ToolStripButton toolStripbtnModify;
         public System.Windows.Forms.ToolStripButton toolStripButtonSave;
@@ -310,7 +300,6 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
         public System.Windows.Forms.ToolStripSplitButton toolStripbtnPrint;
-        public System.Windows.Forms.ToolStripButton toolStripButton付款调整;
         private System.ComponentModel.BackgroundWorker bwRemoting;
         public System.Windows.Forms.ToolStripLabel tslLocked;
     }

@@ -283,27 +283,9 @@ namespace RUINORERP.UI.ProductEAV
             // AddTopPage();
             // Do not allow the document pages to be closed or made auto hidden/docked
             kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.Hide;
-
-            //设置导航子集合加载时没有变化过
-            if (EditEntity != null)
-            {
-                //if (EditEntity.tb_BoxRuleses != null)
-                //{
-                //    EditEntity.tb_BoxRuleses.ForEach(c => c.HasChanged = false);
-                //}
-                //else
-                //{
-                //    EditEntity.tb_BoxRuleses = new List<tb_BoxRules>();
-                //    //因为后面会添加到这个集合中
-                //}
-            }
-
-            //kryptonNavigator1.Pages.Add(NewDocument());
-
-            //txtBarCode.Text = BizCodeGenerationHelper.GetBizNo(BizType.销售订单);
-            // txtNo.Text = BizCodeGenerationHelper.GetProdNo(BizType.);
-            //txtBarCode.Text = Common.BarCodeCreator.CreateProductBarCode("2", "3232423");
-
+            UIProdCateHelper.BindToTreeView(categorylist, kryptonTreeView1, false);
+            ExpandOrCollapseNodes(true);
+            this.chkexpandAll.CheckedChanged += new System.EventHandler(this.chkexpandAll_CheckedChanged);
         }
         /// <summary>
         /// 加载下拉值
@@ -429,7 +411,7 @@ namespace RUINORERP.UI.ProductEAV
         {
 
             //比方 暂时没有供应商  又是外键，则是如何处理的？
-            bool vb = base.ShowInvalidMessage(mcProdBase.Validator(EditEntity, mcProdBase));
+            bool vb = base.ShowInvalidMessage(mcProdBase.Validator(EditEntity));
             if (!vb)
             {
                 return;
@@ -925,7 +907,7 @@ namespace RUINORERP.UI.ProductEAV
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_ProdValidator(), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             base.BindData(entity);
@@ -1623,7 +1605,7 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-   
+
 
         /// <summary>
         /// 添加产品特性
@@ -1811,7 +1793,7 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
-     
+
 
         /// <summary>
         /// 将listview的UI值转为属性组
@@ -2392,6 +2374,90 @@ namespace RUINORERP.UI.ProductEAV
 
             }
 
+        }
+
+        private void kryptonTreeView1_DoubleClick(object sender, EventArgs e)
+        {
+            if (kryptonTreeView1.SelectedNode != null)
+            {
+                if (sender is KryptonTreeView treeView)
+                {
+                    if (treeView.SelectedNode.Tag is tb_ProdCategories prodCategorie)
+                    {
+                        EditEntity.Category_ID = prodCategorie.Category_ID;
+                        txtcategory_ID.Text = prodCategorie.Category_name;
+                        txtcategory_ID.TreeView.SelectedNode.Tag = prodCategorie;
+                    }
+                }
+            }
+
+        }
+
+        private void chkexpandAll_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkexpandAll.Checked)
+            {
+                ExpandOrCollapseNodes(true);
+            }
+            else
+            {
+                ExpandOrCollapseNodes(false);
+            }
+        }
+        public void ExpandOrCollapseNodes(bool expand)
+        {
+            // 展开或收拢根节点（0级）
+            foreach (TreeNode rootNode in kryptonTreeView1.Nodes)
+            {
+                // 如果需要展开，则展开根节点和所有子节点
+                if (expand)
+                {
+                    rootNode.Expand();
+
+                }
+                // 如果需要收拢，则只收拢根节点，保留子节点的当前状态
+                else
+                {
+                    rootNode.Collapse();
+                }
+            }
+
+            // 展开或收拢二级节点（1级）
+            foreach (TreeNode rootNode in kryptonTreeView1.Nodes)
+            {
+                ExpandCollapseSecondLevel(rootNode, expand);
+            }
+            // 选中第一个节点
+            if (expand && kryptonTreeView1.Nodes.Count > 0 && kryptonTreeView1.Nodes[0].Nodes.Count > 0)
+            {
+                kryptonTreeView1.SelectedNode = kryptonTreeView1.Nodes[0].Nodes[0];
+                kryptonTreeView1.SelectedNode.EnsureVisible(); // 确保节点可见
+            }
+        }
+
+        private void ExpandCollapseSecondLevel(TreeNode parentNode, bool expand)
+        {
+            foreach (TreeNode childNode in parentNode.Nodes)
+            {
+                // 展开或收拢二级节点
+                if (expand)
+                {
+                    childNode.Expand();
+                }
+                else
+                {
+                    childNode.Collapse();
+                }
+
+                // 如果需要收拢二级节点，同时收拢三级节点（如果有）
+                if (!expand && childNode.Nodes.Count > 0)
+                {
+                    foreach (TreeNode grandChildNode in childNode.Nodes)
+                    {
+                        grandChildNode.Collapse();
+                    }
+                }
+            }
         }
 
     }

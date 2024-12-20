@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:01
+// 时间：12/18/2024 18:02:08
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_PaymentMethod info)
+        public ValidationResult Validator(tb_PaymentMethod info)
         {
-            tb_PaymentMethodValidator validator = new tb_PaymentMethodValidator();
+
+           // tb_PaymentMethodValidator validator = new tb_PaymentMethodValidator();
+           tb_PaymentMethodValidator validator = _appContext.GetRequiredService<tb_PaymentMethodValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_PaymentMethodValidator validator = new tb_PaymentMethodValidator();
+            //tb_PaymentMethodValidator validator = new tb_PaymentMethodValidator();
+           tb_PaymentMethodValidator validator = _appContext.GetRequiredService<tb_PaymentMethodValidator>();
             ValidationResult results = validator.Validate(info as tb_PaymentMethod);
             return results;
         }
@@ -246,10 +247,12 @@ namespace RUINORERP.Business
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_PaymentMethod>(entity as tb_PaymentMethod)
                         .Include(m => m.tb_PurOrders)
-                    .Include(m => m.tb_PurEntryRes)
                     .Include(m => m.tb_PurEntries)
                     .Include(m => m.tb_SaleOuts)
+                    .Include(m => m.tb_PurReturnEntries)
                     .Include(m => m.tb_SaleOrders)
+                    .Include(m => m.tb_SaleOutRes)
+                    .Include(m => m.tb_PurEntryRes)
                     .Include(m => m.tb_CustomerVendors)
                             .ExecuteCommandAsync();
          
@@ -258,10 +261,12 @@ namespace RUINORERP.Business
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_PaymentMethod>(entity as tb_PaymentMethod)
                 .Include(m => m.tb_PurOrders)
-                .Include(m => m.tb_PurEntryRes)
                 .Include(m => m.tb_PurEntries)
                 .Include(m => m.tb_SaleOuts)
+                .Include(m => m.tb_PurReturnEntries)
                 .Include(m => m.tb_SaleOrders)
+                .Include(m => m.tb_SaleOutRes)
+                .Include(m => m.tb_PurEntryRes)
                 .Include(m => m.tb_CustomerVendors)
                                 .ExecuteCommandAsync();
         }
@@ -294,10 +299,12 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>()
                                 .Includes(m => m.tb_PurOrders)
-                        .Includes(m => m.tb_PurEntryRes)
                         .Includes(m => m.tb_PurEntries)
                         .Includes(m => m.tb_SaleOuts)
+                        .Includes(m => m.tb_PurReturnEntries)
                         .Includes(m => m.tb_SaleOrders)
+                        .Includes(m => m.tb_SaleOutRes)
+                        .Includes(m => m.tb_PurEntryRes)
                         .Includes(m => m.tb_CustomerVendors)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -309,10 +316,12 @@ namespace RUINORERP.Business
             tb_PaymentMethod entity = model as tb_PaymentMethod;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_PaymentMethod>(m => m.Paytype_ID== entity.Paytype_ID)
                                 .Include(m => m.tb_PurOrders)
-                        .Include(m => m.tb_PurEntryRes)
                         .Include(m => m.tb_PurEntries)
                         .Include(m => m.tb_SaleOuts)
+                        .Include(m => m.tb_PurReturnEntries)
                         .Include(m => m.tb_SaleOrders)
+                        .Include(m => m.tb_SaleOutRes)
+                        .Include(m => m.tb_PurEntryRes)
                         .Include(m => m.tb_CustomerVendors)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -477,10 +486,12 @@ namespace RUINORERP.Business
         {
             List<tb_PaymentMethod> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>()
                                             .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_PurEntryRes )
                                 .Includes(t => t.tb_PurEntries )
                                 .Includes(t => t.tb_SaleOuts )
+                                .Includes(t => t.tb_PurReturnEntries )
                                 .Includes(t => t.tb_SaleOrders )
+                                .Includes(t => t.tb_SaleOutRes )
+                                .Includes(t => t.tb_PurEntryRes )
                                 .Includes(t => t.tb_CustomerVendors )
                         .ToListAsync();
             
@@ -502,10 +513,12 @@ namespace RUINORERP.Business
         {
             List<tb_PaymentMethod> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>().Where(exp)
                                             .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_PurEntryRes )
                                 .Includes(t => t.tb_PurEntries )
                                 .Includes(t => t.tb_SaleOuts )
+                                .Includes(t => t.tb_PurReturnEntries )
                                 .Includes(t => t.tb_SaleOrders )
+                                .Includes(t => t.tb_SaleOutRes )
+                                .Includes(t => t.tb_PurEntryRes )
                                 .Includes(t => t.tb_CustomerVendors )
                         .ToListAsync();
             
@@ -527,10 +540,12 @@ namespace RUINORERP.Business
         {
             List<tb_PaymentMethod> list = _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>().Where(exp)
                                         .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_PurEntryRes )
                             .Includes(t => t.tb_PurEntries )
                             .Includes(t => t.tb_SaleOuts )
+                            .Includes(t => t.tb_PurReturnEntries )
                             .Includes(t => t.tb_SaleOrders )
+                            .Includes(t => t.tb_SaleOutRes )
+                            .Includes(t => t.tb_PurEntryRes )
                             .Includes(t => t.tb_CustomerVendors )
                         .ToList();
             
@@ -569,10 +584,12 @@ namespace RUINORERP.Business
         {
             tb_PaymentMethod entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>().Where(w => w.Paytype_ID == (long)id)
                                          .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_PurEntryRes )
                             .Includes(t => t.tb_PurEntries )
                             .Includes(t => t.tb_SaleOuts )
+                            .Includes(t => t.tb_PurReturnEntries )
                             .Includes(t => t.tb_SaleOrders )
+                            .Includes(t => t.tb_SaleOutRes )
+                            .Includes(t => t.tb_PurEntryRes )
                             .Includes(t => t.tb_CustomerVendors )
                         .FirstAsync();
             if(entity!=null)

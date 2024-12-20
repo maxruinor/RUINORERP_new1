@@ -7,6 +7,7 @@ using RUINORERP.Server.Workflow.Steps;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.Workflow.WFPush;
 using RUINORERP.Server.Workflow.WFReminder;
+using RUINORERP.Server.Workflow.WFScheduled;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,6 +93,7 @@ namespace RUINORERP.Server.Workflow
             host.Registry.GetDefinition("HelloWorkflow");
             host.RegisterWorkflow<IfWorkflow, MyData>();
             host.RegisterWorkflow<ScheduledlWorkflow, ApprovalWFData>();
+            host.RegisterWorkflow<NightlyWorkflow, GlobalScheduledData>();
             host.RegisterWorkflow<ApprovalWorkflow, ApprovalWFData>();
 
             host.RegisterWorkflow<ReminderWorkflow, ServerReminderData>();

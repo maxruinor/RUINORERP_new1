@@ -11,6 +11,9 @@ using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using Microsoft.Extensions.Options;
+using RUINORERP.Model.ConfigModel;
+using RUINORERP.Global;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,8 +27,44 @@ namespace RUINORERP.Business
     /*public partial class tb_PurOrderValidator:AbstractValidator<tb_PurOrder>*/
     public partial class tb_PurOrderValidator : BaseValidatorGeneric<tb_PurOrder>
     {
+
+        //  /// <summary>
+        //  /// 可配置性全局参数
+        //  /// </summary>
+        //public readonly IOptionsMonitor<SystemGlobalconfig> Globalconfig;
+        //public tb_PurOrderValidator(IOptionsMonitor<SystemGlobalconfig> _Globalconfig)
+        //{
+        //    Globalconfig = _Globalconfig;
+        //}
+
+
         public override void Initialize()
         {
+            RuleFor(customer => customer.PreDeliveryDate)
+           .Custom((value, context) =>
+           {
+               var purOrder = context.InstanceToValidate as tb_PurOrder;
+               if (purOrder != null && purOrder.DataStatus == (int)DataStatus.新建)
+               {
+                   //根据配置判断预交日期是不是必须填写
+                   //实际情况是 保存时可能不清楚交期，保存后截图发给供应商后才知道。这时提交才要求
+                   if (ValidatorConfig.CurrentValue.预交日期必填)
+                   {
+                       RuleFor(x => x.PreDeliveryDate).NotNull().WithMessage("预交日期：必须填写。");
+                       RuleFor(x => x.PreDeliveryDate).NotEmpty().When(c => c.PreDeliveryDate.HasValue).WithMessage("预交日期：必须填写。");
+                   }
+                   //string propertyName = context.PropertyName;
+                   //if (!BeUniqueName(propertyName, value))
+                   //{
+                   //    context.AddFailure("客户名称不能重复。");
+                   //}
+               }
+           });
+
+
+
+
+
             // 这里添加额外的初始化代码
             RuleFor(x => x.PreDeliveryDate).GreaterThan(x => x.PurDate)
                 .When(c => c.PreDeliveryDate.HasValue)

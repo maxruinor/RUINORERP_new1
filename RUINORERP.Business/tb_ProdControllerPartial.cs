@@ -362,36 +362,30 @@ namespace RUINORERP.Business
             return rr;
         }
 
-        public ValidationResult Validator(tb_Prod info, tb_ProdController<tb_Prod> controller)
-        {
-            tb_ProdValidator validator;
+        //public ValidationResult Validator(tb_Prod info, tb_ProdController<tb_Prod> controller)
+        //{
+        //    tb_ProdValidator validator;
+        //    if (info.ActionStatus == ActionStatus.新增)
+        //    {
+        //        validator = _appContext.GetRequiredService<tb_ProdValidator>();
+        //        foreach (var item in validator)
+        //        {
+        //            LambdaExpression ex = item.Expression;
+        //            string colName = item.PropertyName;
+        //            var rr = item.Components;
+        //            foreach (var com in item.Components)
+        //            {
+        //                if (com.Validator.Name == "NotEmptyValidator")
+        //                {
+        //                    //这里找到了不能为空的验证器。为了体验在UI
+        //                }
+        //            }
+        //        }
+        //    }
 
-            if (info.ActionStatus == ActionStatus.新增)
-            {
-                validator = new tb_ProdValidator(controller);
-            }
-            else
-            {
-                validator = new tb_ProdValidator();
-                foreach (var item in validator)
-                {
-                    LambdaExpression ex = item.Expression;
-                    string colName = item.PropertyName;
-                    var rr = item.Components;
-                    foreach (var com in item.Components)
-                    {
-                        if (com.Validator.Name == "NotEmptyValidator")
-                        {
-                            //这里找到了不能为空的验证器。为了体验在UI
-                        }
-                    }
-                }
-            }
-
-
-            ValidationResult results = validator.Validate(info);
-            return results;
-        }
+        //    ValidationResult results = validator.Validate(info);
+        //    return results;
+        //}
 
 
 

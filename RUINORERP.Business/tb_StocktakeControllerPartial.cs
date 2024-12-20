@@ -69,29 +69,7 @@ namespace RUINORERP.Business
                     //标记是否有期初
                     bool Opening = false;
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID);
-                    if (inv != null)
-                    {
-                        Opening = false;
-                        //更新库存
-
-                        if (entity.Adjust_Type == (int)Adjust_Type.全部)
-                        {
-                            inv.Quantity = inv.Quantity + child.DiffQty;
-                        }
-                        if (entity.Adjust_Type == (int)Adjust_Type.减少 && child.DiffQty < 0)
-                        {
-                            inv.Quantity = inv.Quantity + child.DiffQty;
-                        }
-                        if (entity.Adjust_Type == (int)Adjust_Type.增加 && child.DiffQty > 0)
-                        {
-                            inv.Quantity = inv.Quantity + child.DiffQty;
-                        }
-                        inv.LastInventoryDate = System.DateTime.Now;
-                        //ctrinv.EditEntity(inv);
-                        BusinessHelper.Instance.EditEntity(inv);
-
-                    }
-                    else
+                    if (inv == null)
                     {
                         if (CheckMode.期初盘点 != cm)
                         {
@@ -104,10 +82,18 @@ namespace RUINORERP.Business
                         inv = new tb_Inventory();
                         inv.Location_ID = entity.Location_ID;
                         inv.ProdDetailID = child.ProdDetailID;
-                        inv.Quantity = inv.Quantity + child.DiffQty;
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
+
+                    }
+                    else
+                    {
+                        Opening = false;
+                        
+                        inv.LastInventoryDate = System.DateTime.Now;
+                        //ctrinv.EditEntity(inv);
+                        BusinessHelper.Instance.EditEntity(inv);
                     }
 
                     /*
@@ -121,16 +107,25 @@ namespace RUINORERP.Business
                  市场价格：参考市场上类似产品或物品的价格。
                   */
 
-
                     //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.
                     if (CheckMode.期初盘点 == cm)
                     {
                         CommService.CostCalculations.CostCalculation(_appContext, inv, inv.Quantity, child.Cost);
                     }
-                    //inv.CostFIFO = child.Cost;
-                    //inv.CostMonthlyWA = child.Cost;
-                    //inv.CostMovingWA = child.Cost;
-                    //inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
+                    //更新库存
+                    if (entity.Adjust_Type == (int)Adjust_Type.全部)
+                    {
+                        inv.Quantity = inv.Quantity + child.DiffQty;
+                    }
+                    if (entity.Adjust_Type == (int)Adjust_Type.减少 && child.DiffQty < 0)
+                    {
+                        inv.Quantity = inv.Quantity + child.DiffQty;
+                    }
+                    if (entity.Adjust_Type == (int)Adjust_Type.增加 && child.DiffQty > 0)
+                    {
+                        inv.Quantity = inv.Quantity + child.DiffQty;
+                    }
+                  
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Rack_ID = child.Rack_ID;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;

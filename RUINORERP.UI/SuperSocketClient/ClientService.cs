@@ -137,6 +137,37 @@ namespace RUINORERP.UI.SuperSocketClient
             return rs;
         }
 
+
+        /// <summary>
+        /// 告诉服务器，我已登陆，原来用户在线也要强制下线。
+        /// </summary>
+        /// <param name="gd"></param>
+        /// <returns></returns>
+        public static bool 请求强制登陆上线(string userName)
+        {
+            bool rs = false;
+            try
+            {
+                ByteBuff tx = new ByteBuff(100);
+                tx.PushString(System.DateTime.Now.ToString());
+                tx.PushString(userName);
+                //排除自己当前的SessionId
+                tx.PushString(MainForm.Instance.AppContext.OnlineUser.SessionId);
+                OriginalData gd = new OriginalData();
+                gd.cmd = (byte)ClientCmdEnum.请求强制登陆上线;
+                gd.One = null;
+                gd.Two = tx.toByte();
+                byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(gd);
+                MainForm.Instance.ecs.client.Send(buffer);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("请求强制用户下线:" + ex.Message);
+            }
+            return rs;
+        }
+
+
         public static bool 接收在线用户列表(OriginalData gd)
         {
             bool rs = false;
@@ -286,7 +317,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     ServerReminderData MessageInfo = new ServerReminderData();
                     MessageInfo.SendTime = sendtime;
                     //  MessageInfo.SenderID = SessionID;
-                    MessageInfo.SenderName = 发送者姓名;
+                    MessageInfo.SenderEmployeeName = 发送者姓名;
                     MessageInfo.ReminderContent = Message;
                     MainForm.Instance.MessageList.Enqueue(MessageInfo);
                 }
@@ -318,7 +349,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 ServerReminderData MessageInfo = new ServerReminderData();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;
-                MessageInfo.SenderName = 发送者姓名;
+                MessageInfo.SenderEmployeeName = 发送者姓名;
                 MessageInfo.ReminderContent = Msg;
                 MainForm.Instance.MessageList.Enqueue(MessageInfo);
             }
@@ -347,7 +378,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 ServerReminderData MessageInfo = new ServerReminderData();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;
-                MessageInfo.SenderName = userinfo.姓名;
+                MessageInfo.SenderEmployeeName = userinfo.姓名;
                 MessageInfo.ReminderContent = RequestContent + "-" + BillType;
                 //保存最新的协助处理请求信息 单据信息
                 string PathwithFileName = System.IO.Path.Combine(Application.StartupPath + $"\\FormProperty\\Data\\{userinfo.姓名}", BillType + System.DateTime.Now.ToString("yyyyMMddHHmmss") + ".cache");
@@ -370,6 +401,34 @@ namespace RUINORERP.UI.SuperSocketClient
             }
 
         }
+
+        /// <summary>
+        /// 管理员发送到服务器。服务器再发到其它客户端，如果客户端不在线。则在线后接收
+        /// </summary>
+        /// <param name="gd"></param>
+        internal static void 接收转发更新动态配置(OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+
+                // 将item转换为JObject
+                var obj = JObject.Parse(json);
+                MyCacheManager.Instance.UpdateEntityList(tableName, obj);
+                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                {
+                    MainForm.Instance.PrintInfoLog($"接收转发更新动态配置{tableName}成功！");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收转发更新动态配置:" + ex.Message);
+            }
+        }
+
 
         internal static void 接收转发更新缓存(OriginalData gd)
         {

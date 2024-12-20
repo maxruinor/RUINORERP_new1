@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/11/2024 10:49:19
+// 时间：12/18/2024 18:02:07
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_ModuleDefinition info)
+        public ValidationResult Validator(tb_ModuleDefinition info)
         {
-            tb_ModuleDefinitionValidator validator = new tb_ModuleDefinitionValidator();
+
+           // tb_ModuleDefinitionValidator validator = new tb_ModuleDefinitionValidator();
+           tb_ModuleDefinitionValidator validator = _appContext.GetRequiredService<tb_ModuleDefinitionValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_ModuleDefinitionValidator validator = new tb_ModuleDefinitionValidator();
+            //tb_ModuleDefinitionValidator validator = new tb_ModuleDefinitionValidator();
+           tb_ModuleDefinitionValidator validator = _appContext.GetRequiredService<tb_ModuleDefinitionValidator>();
             ValidationResult results = validator.Validate(info as tb_ModuleDefinition);
             return results;
         }

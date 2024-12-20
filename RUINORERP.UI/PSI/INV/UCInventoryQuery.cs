@@ -50,7 +50,6 @@ namespace RUINORERP.UI.PSI.INV
             toolStripButtonAdd.Visible = false;
             toolStripButtonDelete.Visible = false;
 
-
         }
 
         private void UCInventoryQuery_Load(object sender, EventArgs e)
@@ -121,9 +120,6 @@ namespace RUINORERP.UI.PSI.INV
                 }
             }
         }
-
-
-
 
 
         #endregion

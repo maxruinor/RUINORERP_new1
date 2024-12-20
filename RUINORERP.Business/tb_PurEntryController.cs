@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:17
+// 时间：12/18/2024 18:02:12
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_PurEntry info)
+        public ValidationResult Validator(tb_PurEntry info)
         {
-            tb_PurEntryValidator validator = new tb_PurEntryValidator();
+
+           // tb_PurEntryValidator validator = new tb_PurEntryValidator();
+           tb_PurEntryValidator validator = _appContext.GetRequiredService<tb_PurEntryValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_PurEntryValidator validator = new tb_PurEntryValidator();
+            //tb_PurEntryValidator validator = new tb_PurEntryValidator();
+           tb_PurEntryValidator validator = _appContext.GetRequiredService<tb_PurEntryValidator>();
             ValidationResult results = validator.Validate(info as tb_PurEntry);
             return results;
         }
@@ -245,16 +246,16 @@ namespace RUINORERP.Business
             if (entity.PurEntryID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_PurEntry>(entity as tb_PurEntry)
-                        .Include(m => m.tb_PurEntryRes)
-                    .Include(m => m.tb_PurEntryDetails)
+                        .Include(m => m.tb_PurEntryDetails)
+                    .Include(m => m.tb_PurEntryRes)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_PurEntry>(entity as tb_PurEntry)
-                .Include(m => m.tb_PurEntryRes)
                 .Include(m => m.tb_PurEntryDetails)
+                .Include(m => m.tb_PurEntryRes)
                                 .ExecuteCommandAsync();
         }
         
@@ -285,8 +286,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntry>()
-                                .Includes(m => m.tb_PurEntryRes)
-                        .Includes(m => m.tb_PurEntryDetails)
+                                .Includes(m => m.tb_PurEntryDetails)
+                        .Includes(m => m.tb_PurEntryRes)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -296,8 +297,8 @@ namespace RUINORERP.Business
         {
             tb_PurEntry entity = model as tb_PurEntry;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_PurEntry>(m => m.PurEntryID== entity.PurEntryID)
-                                .Include(m => m.tb_PurEntryRes)
-                        .Include(m => m.tb_PurEntryDetails)
+                                .Include(m => m.tb_PurEntryDetails)
+                        .Include(m => m.tb_PurEntryRes)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -465,8 +466,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_department )
                                .Includes(t => t.tb_purorder )
-                                            .Includes(t => t.tb_PurEntryRes )
-                                .Includes(t => t.tb_PurEntryDetails )
+                                            .Includes(t => t.tb_PurEntryDetails )
+                                .Includes(t => t.tb_PurEntryRes )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -491,8 +492,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_department )
                                .Includes(t => t.tb_purorder )
-                                            .Includes(t => t.tb_PurEntryRes )
-                                .Includes(t => t.tb_PurEntryDetails )
+                                            .Includes(t => t.tb_PurEntryDetails )
+                                .Includes(t => t.tb_PurEntryRes )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -517,8 +518,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_purorder )
-                                        .Includes(t => t.tb_PurEntryRes )
-                            .Includes(t => t.tb_PurEntryDetails )
+                                        .Includes(t => t.tb_PurEntryDetails )
+                            .Includes(t => t.tb_PurEntryRes )
                         .ToList();
             
             foreach (var item in list)
@@ -560,8 +561,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_purorder )
-                                        .Includes(t => t.tb_PurEntryRes )
-                            .Includes(t => t.tb_PurEntryDetails )
+                                        .Includes(t => t.tb_PurEntryDetails )
+                            .Includes(t => t.tb_PurEntryRes )
                         .FirstAsync();
             if(entity!=null)
             {

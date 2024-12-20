@@ -15,6 +15,7 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.Business.LogicaService;
 using RUINORERP.UI.Common;
 using RUINORERP.Business;
+using FastReport;
 
 namespace RUINORERP.UI.BI
 {
@@ -29,7 +30,7 @@ namespace RUINORERP.UI.BI
 
         public override void BindData(BaseEntity entity)
         {
-             DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.subject_id, v=>v.subject_name, cmbsubject_id);
+            DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.subject_id, v => v.subject_name, cmbsubject_id);
 
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseType>(entity, t => t.Expense_name, txtExpense_name, BindDataType4TextBox.Text, false);
 
@@ -41,9 +42,10 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_FM_ExpenseTypeValidator(), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_FM_ExpenseTypeValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
+            base.BindData(entity);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

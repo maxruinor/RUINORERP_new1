@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:39
+// 时间：12/18/2024 18:02:16
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_Unit info)
+        public ValidationResult Validator(tb_Unit info)
         {
-            tb_UnitValidator validator = new tb_UnitValidator();
+
+           // tb_UnitValidator validator = new tb_UnitValidator();
+           tb_UnitValidator validator = _appContext.GetRequiredService<tb_UnitValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_UnitValidator validator = new tb_UnitValidator();
+            //tb_UnitValidator validator = new tb_UnitValidator();
+           tb_UnitValidator validator = _appContext.GetRequiredService<tb_UnitValidator>();
             ValidationResult results = validator.Validate(info as tb_Unit);
             return results;
         }
@@ -245,11 +246,11 @@ namespace RUINORERP.Business
             if (entity.Unit_ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Unit>(entity as tb_Unit)
-                        .Include(m => m.tb_ManufacturingOrders)
-                    .Include(m => m.tb_FinishedGoodsInvDetails)
+                        .Include(m => m.tb_FinishedGoodsInvDetails)
                     .Include(m => m.tb_Prods)
                     .Include(m => m.tb_Packings)
                     .Include(m => m.tb_BOM_SDetails)
+                    .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_ProdBundles)
                             .ExecuteCommandAsync();
          
@@ -257,11 +258,11 @@ namespace RUINORERP.Business
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Unit>(entity as tb_Unit)
-                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_FinishedGoodsInvDetails)
                 .Include(m => m.tb_Prods)
                 .Include(m => m.tb_Packings)
                 .Include(m => m.tb_BOM_SDetails)
+                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_ProdBundles)
                                 .ExecuteCommandAsync();
         }
@@ -293,11 +294,11 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Unit>()
-                                .Includes(m => m.tb_ManufacturingOrders)
-                        .Includes(m => m.tb_FinishedGoodsInvDetails)
+                                .Includes(m => m.tb_FinishedGoodsInvDetails)
                         .Includes(m => m.tb_Prods)
                         .Includes(m => m.tb_Packings)
                         .Includes(m => m.tb_BOM_SDetails)
+                        .Includes(m => m.tb_ManufacturingOrders)
                         .Includes(m => m.tb_ProdBundles)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -308,11 +309,11 @@ namespace RUINORERP.Business
         {
             tb_Unit entity = model as tb_Unit;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Unit>(m => m.Unit_ID== entity.Unit_ID)
-                                .Include(m => m.tb_ManufacturingOrders)
-                        .Include(m => m.tb_FinishedGoodsInvDetails)
+                                .Include(m => m.tb_FinishedGoodsInvDetails)
                         .Include(m => m.tb_Prods)
                         .Include(m => m.tb_Packings)
                         .Include(m => m.tb_BOM_SDetails)
+                        .Include(m => m.tb_ManufacturingOrders)
                         .Include(m => m.tb_ProdBundles)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -476,11 +477,11 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Unit>> QueryByNavAsync()
         {
             List<tb_Unit> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Unit>()
-                                            .Includes(t => t.tb_ManufacturingOrders )
-                                .Includes(t => t.tb_FinishedGoodsInvDetails )
+                                            .Includes(t => t.tb_FinishedGoodsInvDetails )
                                 .Includes(t => t.tb_Prods )
                                 .Includes(t => t.tb_Packings )
                                 .Includes(t => t.tb_BOM_SDetails )
+                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_ProdBundles )
                         .ToListAsync();
             
@@ -501,11 +502,11 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Unit>> QueryByNavAsync(Expression<Func<tb_Unit, bool>> exp)
         {
             List<tb_Unit> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Unit>().Where(exp)
-                                            .Includes(t => t.tb_ManufacturingOrders )
-                                .Includes(t => t.tb_FinishedGoodsInvDetails )
+                                            .Includes(t => t.tb_FinishedGoodsInvDetails )
                                 .Includes(t => t.tb_Prods )
                                 .Includes(t => t.tb_Packings )
                                 .Includes(t => t.tb_BOM_SDetails )
+                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_ProdBundles )
                         .ToListAsync();
             
@@ -526,11 +527,11 @@ namespace RUINORERP.Business
          public virtual List<tb_Unit> QueryByNav(Expression<Func<tb_Unit, bool>> exp)
         {
             List<tb_Unit> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Unit>().Where(exp)
-                                        .Includes(t => t.tb_ManufacturingOrders )
-                            .Includes(t => t.tb_FinishedGoodsInvDetails )
+                                        .Includes(t => t.tb_FinishedGoodsInvDetails )
                             .Includes(t => t.tb_Prods )
                             .Includes(t => t.tb_Packings )
                             .Includes(t => t.tb_BOM_SDetails )
+                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_ProdBundles )
                         .ToList();
             
@@ -568,11 +569,11 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Unit entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Unit>().Where(w => w.Unit_ID == (long)id)
-                                         .Includes(t => t.tb_ManufacturingOrders )
-                            .Includes(t => t.tb_FinishedGoodsInvDetails )
+                                         .Includes(t => t.tb_FinishedGoodsInvDetails )
                             .Includes(t => t.tb_Prods )
                             .Includes(t => t.tb_Packings )
                             .Includes(t => t.tb_BOM_SDetails )
+                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_ProdBundles )
                         .FirstAsync();
             if(entity!=null)

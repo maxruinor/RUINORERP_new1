@@ -121,6 +121,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private void RefreshData_Click(object sender, EventArgs e)
         {
+
+            //tb_WorkCenterConfig
             if (sender is ToolStripMenuItem menuItem)
             {
                 if (menuItem.Owner is ContextMenuStrip contextMenu)
@@ -134,7 +136,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     }
                 }
             }
-            //tb_WorkCenterConfig
+        }
+
+
+        public void RefreshTreeData()
+        {
 
         }
 
@@ -440,8 +446,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
 
             //添加重新加载的菜单
-            nd.ContextMenuStrip = contextMenuStrip1;
-            kryptonTreeViewJobList.Nodes.Add(nd);
+            // nd.ContextMenuStrip = contextMenuStrip1;
+           // kryptonTreeViewJobList.Nodes.Add(nd);
+            //直接添加子节点
+            foreach (TreeNode item in nd.Nodes)
+            {
+                kryptonTreeViewJobList.Nodes.Add(item);
+            }
+
             //  kryptonTreeViewJobList.Nodes[0].Expand();
             kryptonTreeViewJobList.ExpandAll();
         }

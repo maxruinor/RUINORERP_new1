@@ -48,11 +48,23 @@ namespace RUINORERP.UI.CRM
 
 
         }
-        //public override void QueryConditionBuilder()
-        //{
-        //    BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CRM_FollowUpPlans).Name + "Processor");
-        //    QueryConditionFilter = baseProcessor.GetQueryFilter();
-        //}
+        protected override void Delete()
+        {
+            tb_CRM_FollowUpPlans rowInfo = (tb_CRM_FollowUpPlans)this.bindingSourceList.Current;
+            if (rowInfo.Employee_ID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID && !MainForm.Instance.AppContext.IsSuperUser)
+            {
+                //只能删除自己的收款信息。
+                MessageBox.Show("只能删除自己的计划信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (rowInfo.PlanStatus != (int)FollowUpPlanStatus.未开始)
+            {
+                //只能删除自己的收款信息。
+                MessageBox.Show("只有【未开始】的计划才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            base.Delete();
+        }
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法，供应商和客户共用所有特殊处理
@@ -71,13 +83,94 @@ namespace RUINORERP.UI.CRM
         {
             base.Query(true);
         }
+        private ToolStripMenuItem toolStripMenuItem1;
+
+
 
         private void UCCRMFollowUpPlansList_Load(object sender, EventArgs e)
         {
             ContextMenuStrip newContextMenuStrip = base.dataGridView1.GetContextMenu(contextMenuStrip1);
+
+
+
+            // 初始化ContextMenuStrip 中的一项 如果未开始 可以设置为已取消
+            toolStripMenuItem1 = new ToolStripMenuItem("取消跟进计划");
+            toolStripMenuItem1.Click += new System.EventHandler(this.toolStripButton取消跟进计划_Click);
+            //插到前面
+            newContextMenuStrip.Items.Insert(0, toolStripMenuItem1);
+
+
+            // 将ContextMenuStrip关联到DataGridView
+            dataGridView1.ContextMenuStrip = contextMenuStrip1;
+
             base.dataGridView1.ContextMenuStrip = newContextMenuStrip;
         }
 
+        private async void toolStripButton取消跟进计划_Click(object sender, EventArgs e)
+        {
+            if (base.bindingSourceList.Current != null)
+            {
+                if (bindingSourceList.Current is tb_CRM_FollowUpPlans plan)
+                {
+                    //如果计划已取消  或计划未执行 则不能添加记录了。
+                    //如果未开始  进行中  延期中 则能添加记录
+
+                    if (plan.PlanStatus == (int)FollowUpPlanStatus.未开始 || plan.PlanStatus == (int)FollowUpPlanStatus.延期中)
+                    {
+                        plan.PlanStatus = (int)FollowUpPlanStatus.已取消;
+
+                        BaseController<tb_CRM_FollowUpPlans> ctrPlan = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpPlans>>(typeof(tb_CRM_FollowUpPlans).Name + "Controller");
+                        ReturnResults<tb_CRM_FollowUpPlans> result = await ctrPlan.BaseSaveOrUpdate(plan);
+                        if (result.Succeeded)
+                        {
+                            MainForm.Instance.ShowStatusText("操作成功");
+                            Query();
+                        }
+                        else
+                        {
+                            MainForm.Instance.ShowStatusText("操作失败");
+                        }
+                    }
+                }
+
+            }
+        }
+
+
+        /// <summary>
+        /// 重写基类方法，这个特殊少用
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public override void dataGridView1_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            // 确保点击的是单元格，而不是行的其他部分
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                // 获取当前行的数据
+                DataGridViewRow row = dataGridView1.Rows[e.RowIndex];
+
+                // 根据数据情况启用或禁用菜单项
+                // 例如，如果某一列的值为特定值，启用或禁用某个菜单项
+                if (row.DataBoundItem is tb_CRM_FollowUpPlans plan)
+                {
+                    if (plan.PlanStatus == (int)FollowUpPlanStatus.未开始 || plan.PlanStatus == (int)FollowUpPlanStatus.延期中)
+                    {
+                        toolStripMenuItem1.Enabled = true;
+                    }
+                    else
+                    {
+                        toolStripMenuItem1.Visible = false;
+                    }
+                }
+                else
+                {
+                    toolStripMenuItem1.Visible = false;
+                }
+                // 显示上下文菜单
+                contextMenuStrip1.Show(dataGridView1, e.Location);
+            }
+        }
         public override async Task<List<tb_CRM_FollowUpPlans>> Save()
         {
             List<tb_CRM_FollowUpPlans> list = await base.Save();
@@ -112,59 +205,81 @@ namespace RUINORERP.UI.CRM
             {
                 if (bindingSourceList.Current is tb_CRM_FollowUpPlans plan)
                 {
-                    object frm = Activator.CreateInstance(typeof(UCCRMFollowUpRecordsEdit));
-                    if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
-                    {
-                        BaseEditGeneric<tb_CRM_FollowUpRecords> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpRecords>;
-                        frmaddg.Text = "跟进记录编辑";
-                        frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpRecords>();
-                        object obj = frmaddg.bindingSourceEdit.AddNew();
-                        tb_CRM_FollowUpRecords EntityInfo = obj as tb_CRM_FollowUpRecords;
-                        EntityInfo.Customer_id = plan.Customer_id;
-                        EntityInfo.PlanID = plan.PlanID;
-                        BusinessHelper.Instance.InitEntity(EntityInfo);
-                        BaseEntity bty = EntityInfo as BaseEntity;
-                        bty.ActionStatus = ActionStatus.加载;
-                        frmaddg.BindData(bty, ActionStatus.新增);
-                        if (frmaddg.ShowDialog() == DialogResult.OK)
-                        {
-                            BaseController<tb_CRM_FollowUpRecords> ctrRecords = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpRecords>>(typeof(tb_CRM_FollowUpRecords).Name + "Controller");
-                            ReturnResults<tb_CRM_FollowUpRecords> result = await ctrRecords.BaseSaveOrUpdate(EntityInfo);
-                            if (result.Succeeded)
-                            {
-                                //记录添加成功后。客户如果是新客户 则转换为 潜在客户
-                                if (plan.tb_crm_customer != null)
-                                {
-                                    if (plan.tb_crm_customer.CustomerStatus == (int)CustomerStatus.新增客户)
-                                    {
-                                        plan.tb_crm_customer.CustomerStatus = (int)CustomerStatus.潜在客户;
-                                        BaseController<tb_CRM_Customer> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Customer>>(typeof(tb_CRM_Customer).Name + "Controller");
-                                        ReturnResults<tb_CRM_Customer> resultCustomer = await ctrContactInfo.BaseSaveOrUpdate(plan.tb_crm_customer);
-                                        if (resultCustomer.Succeeded)
-                                        {
+                    //如果计划已取消  或计划未执行 则不能添加记录了。
+                    //如果未开始  进行中  延期中 则能添加记录
 
+                    if (plan.PlanStatus == (int)FollowUpPlanStatus.未开始 || plan.PlanStatus == (int)FollowUpPlanStatus.进行中 || plan.PlanStatus == (int)FollowUpPlanStatus.延期中)
+                    {
+                        object frm = Activator.CreateInstance(typeof(UCCRMFollowUpRecordsEdit));
+                        if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+                        {
+                            BaseEditGeneric<tb_CRM_FollowUpRecords> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpRecords>;
+                            frmaddg.Text = "跟进记录编辑";
+                            frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpRecords>();
+                            object obj = frmaddg.bindingSourceEdit.AddNew();
+                            tb_CRM_FollowUpRecords EntityInfo = obj as tb_CRM_FollowUpRecords;
+                            EntityInfo.Customer_id = plan.Customer_id;
+                            EntityInfo.PlanID = plan.PlanID;
+                            BusinessHelper.Instance.InitEntity(EntityInfo);
+                            BaseEntity bty = EntityInfo as BaseEntity;
+                            bty.ActionStatus = ActionStatus.加载;
+                            frmaddg.BindData(bty, ActionStatus.新增);
+                            if (frmaddg.ShowDialog() == DialogResult.OK)
+                            {
+                                BaseController<tb_CRM_FollowUpRecords> ctrRecords = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpRecords>>(typeof(tb_CRM_FollowUpRecords).Name + "Controller");
+                                ReturnResults<tb_CRM_FollowUpRecords> result = await ctrRecords.BaseSaveOrUpdate(EntityInfo);
+                                if (result.Succeeded)
+                                {
+                                    //记录添加成功后。客户如果是新客户 则转换为 潜在客户
+                                    if (plan.tb_crm_customer != null)
+                                    {
+                                        if (plan.tb_crm_customer.CustomerStatus == (int)CustomerStatus.新增客户)
+                                        {
+                                            plan.tb_crm_customer.CustomerStatus = (int)CustomerStatus.潜在客户;
+                                            BaseController<tb_CRM_Customer> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Customer>>(typeof(tb_CRM_Customer).Name + "Controller");
+                                            ReturnResults<tb_CRM_Customer> resultCustomer = await ctrContactInfo.BaseSaveOrUpdate(plan.tb_crm_customer);
+                                            if (resultCustomer.Succeeded)
+                                            {
+
+                                            }
+                                        }
+
+                                        //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
+                                        KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                                        //只处理需要缓存的表
+                                        if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_FollowUpRecords).Name, out pair))
+                                        {
+                                            //如果有更新变动就上传到服务器再分发到所有客户端
+                                            OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_FollowUpRecords>(result.ReturnObject);
+                                            byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                            MainForm.Instance.ecs.client.Send(buffer);
                                         }
                                     }
 
-                                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                                    //只处理需要缓存的表
-                                    if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_FollowUpRecords).Name, out pair))
+                                    //
+                                    if (plan.PlanStatus == (int)FollowUpPlanStatus.未开始)
                                     {
-                                        //如果有更新变动就上传到服务器再分发到所有客户端
-                                        OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_FollowUpRecords>(result.ReturnObject);
-                                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                        MainForm.Instance.ecs.client.Send(buffer);
+
                                     }
+
+
+
+                                    MainForm.Instance.ShowStatusText("添加成功!");
                                 }
-                                MainForm.Instance.ShowStatusText("添加成功!");
-                            }
-                            else
-                            {
-                                MainForm.Instance.ShowStatusText("添加失败!");
+                                else
+                                {
+                                    MainForm.Instance.ShowStatusText("添加失败!");
+                                }
                             }
                         }
                     }
+                    else
+                    {
+                        //提示出计划的状态。不能添加记录。
+                        MessageBox.Show($"跟进计划状态为{plan.PlanStatus.ToString()},不能添加记录。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+
+
                 }
 
             }

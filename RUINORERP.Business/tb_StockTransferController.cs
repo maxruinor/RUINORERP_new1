@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/15/2024 18:45:35
+// 时间：12/18/2024 18:02:16
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_StockTransfer info)
+        public ValidationResult Validator(tb_StockTransfer info)
         {
-            tb_StockTransferValidator validator = new tb_StockTransferValidator();
+
+           // tb_StockTransferValidator validator = new tb_StockTransferValidator();
+           tb_StockTransferValidator validator = _appContext.GetRequiredService<tb_StockTransferValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_StockTransferValidator validator = new tb_StockTransferValidator();
+            //tb_StockTransferValidator validator = new tb_StockTransferValidator();
+           tb_StockTransferValidator validator = _appContext.GetRequiredService<tb_StockTransferValidator>();
             ValidationResult results = validator.Validate(info as tb_StockTransfer);
             return results;
         }
@@ -457,8 +458,7 @@ namespace RUINORERP.Business
         {
             List<tb_StockTransfer> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>()
                                .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_location_from )
-                               .Includes(t => t.tb_location_to )
+                             
                                             .Includes(t => t.tb_StockTransferDetails )
                         .ToListAsync();
             
@@ -480,8 +480,7 @@ namespace RUINORERP.Business
         {
             List<tb_StockTransfer> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(exp)
                                .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_location_from)
-                               .Includes(t => t.tb_location_to)
+                              
                                             .Includes(t => t.tb_StockTransferDetails )
                         .ToListAsync();
             
@@ -503,8 +502,8 @@ namespace RUINORERP.Business
         {
             List<tb_StockTransfer> list = _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(exp)
                             .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_location_from)
-                               .Includes(t => t.tb_location_to)
+                       
+                           
                                         .Includes(t => t.tb_StockTransferDetails )
                         .ToList();
             
@@ -543,8 +542,7 @@ namespace RUINORERP.Business
         {
             tb_StockTransfer entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockTransfer>().Where(w => w.StockTransferID == (long)id)
                              .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_location_from)
-                               .Includes(t => t.tb_location_to)
+                          
                                         .Includes(t => t.tb_StockTransferDetails )
                         .FirstAsync();
             if(entity!=null)

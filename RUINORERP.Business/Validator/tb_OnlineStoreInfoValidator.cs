@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:57
+// 时间：12/18/2024 17:45:28
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,20 +26,42 @@ namespace RUINORERP.Business
     /*public partial class tb_OnlineStoreInfoValidator:AbstractValidator<tb_OnlineStoreInfo>*/
     public partial class tb_OnlineStoreInfoValidator:BaseValidatorGeneric<tb_OnlineStoreInfo>
     {
-     public tb_OnlineStoreInfoValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_OnlineStoreInfoValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.StoreCode).MaximumLength(25).WithMessage("项目代码:不能超过最大长度,25.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.StoreCode).MaximumLength(25).WithMessage("项目代码:不能超过最大长度,25.");
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.StoreName).MaximumLength(25).WithMessage("项目名称:不能超过最大长度,25.");
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.PlatformName).MaximumLength(50).WithMessage("平台名称:不能超过最大长度,50.");
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.Contact).MaximumLength(25).WithMessage("联系人:不能超过最大长度,25.");
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.Phone).MaximumLength(127).WithMessage("电话:不能超过最大长度,127.");
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.Address).MaximumLength(127).WithMessage("地址:不能超过最大长度,127.");
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.Website).MaximumLength(127).WithMessage("网址:不能超过最大长度,127.");
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.ResponsiblePerson).MaximumLength(25).WithMessage("负责人:不能超过最大长度,25.");
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_OnlineStoreInfo =>tb_OnlineStoreInfo.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-       	
+
            	        Initialize();
      }
 

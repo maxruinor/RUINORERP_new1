@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:18
+// 时间：12/18/2024 17:45:30
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,40 +26,83 @@ namespace RUINORERP.Business
     /*public partial class tb_PurEntryValidator:AbstractValidator<tb_PurEntry>*/
     public partial class tb_PurEntryValidator:BaseValidatorGeneric<tb_PurEntry>
     {
-     public tb_PurEntryValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_PurEntryValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_PurEntry =>tb_PurEntry.PurEntryNo).MaximumLength(25).WithMessage("入库单号:不能超过最大长度,25.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_PurEntry =>tb_PurEntry.PurEntryNo).MaximumLength(25).WithMessage("入库单号:不能超过最大长度,25.");
  RuleFor(tb_PurEntry =>tb_PurEntry.PurEntryNo).NotEmpty().WithMessage("入库单号:不能为空。");
+
  RuleFor(tb_PurEntry =>tb_PurEntry.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("厂商:下拉选择值不正确。");
+
  RuleFor(tb_PurEntry =>tb_PurEntry.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
  RuleFor(tb_PurEntry =>tb_PurEntry.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
+
  RuleFor(tb_PurEntry =>tb_PurEntry.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("经办人:下拉选择值不正确。");
  RuleFor(tb_PurEntry =>tb_PurEntry.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
+
  RuleFor(tb_PurEntry =>tb_PurEntry.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("交易方式:下拉选择值不正确。");
  RuleFor(tb_PurEntry =>tb_PurEntry.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
+
  RuleFor(tb_PurEntry =>tb_PurEntry.PurOrder_ID).Must(CheckForeignKeyValueCanNull).WithMessage("采购订单:下拉选择值不正确。");
  RuleFor(tb_PurEntry =>tb_PurEntry.PurOrder_ID).NotEmpty().When(x => x.PurOrder_ID.HasValue);
- RuleFor(x => x.TotalQty).PrecisionScale(19,6,true).WithMessage("合计数量:小数位不能超过6。");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("合计金额:小数位不能超过6。");
- RuleFor(x => x.ActualAmount).PrecisionScale(19,6,true).WithMessage("实付金额:小数位不能超过6。");
- RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,6,true).WithMessage("合计税额:小数位不能超过6。");
- RuleFor(x => x.DiscountAmount).PrecisionScale(19,6,true).WithMessage("折扣金额总计:小数位不能超过6。");
+
+ RuleFor(x => x.TotalQty).PrecisionScale(19,4,true).WithMessage("合计数量:小数位不能超过4。");
+
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("合计金额:小数位不能超过4。");
+
+ RuleFor(x => x.ActualAmount).PrecisionScale(19,4,true).WithMessage("实付金额:小数位不能超过4。");
+
+ RuleFor(x => x.TotalTaxAmount).PrecisionScale(19,4,true).WithMessage("合计税额:小数位不能超过4。");
+
+ RuleFor(x => x.DiscountAmount).PrecisionScale(19,4,true).WithMessage("折扣金额总计:小数位不能超过4。");
+
+
  RuleFor(tb_PurEntry =>tb_PurEntry.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+
+
+
  RuleFor(tb_PurEntry =>tb_PurEntry.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_PurEntry =>tb_PurEntry.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+
  RuleFor(tb_PurEntry =>tb_PurEntry.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+
+
+
 //***** 
  RuleFor(tb_PurEntry =>tb_PurEntry.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
+
  RuleFor(tb_PurEntry =>tb_PurEntry.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
+
+
 //***** 
  RuleFor(tb_PurEntry =>tb_PurEntry.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
+
+
  RuleFor(tb_PurEntry =>tb_PurEntry.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
- RuleFor(x => x.Deposit).PrecisionScale(19,6,true).WithMessage("订金:小数位不能超过6。");
+
+ RuleFor(x => x.Deposit).PrecisionScale(19,4,true).WithMessage("订金:小数位不能超过4。");
+
  RuleFor(tb_PurEntry =>tb_PurEntry.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);
+
+
+
  RuleFor(tb_PurEntry =>tb_PurEntry.VoucherNO).MaximumLength(25).WithMessage("凭证号码:不能超过最大长度,25.");
+
  RuleFor(tb_PurEntry =>tb_PurEntry.PurOrder_NO).MaximumLength(25).WithMessage("采购订单号:不能超过最大长度,25.");
- RuleFor(x => x.ShippingCost).PrecisionScale(19,6,true).WithMessage(":小数位不能超过6。");
-       	
+
+ RuleFor(x => x.ShippingCost).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
+
            	                //long
                 //PurEntryID
                 //tb_PurEntryDetail
@@ -66,8 +111,7 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_PurEntryDetails).NotNull();
                 //RuleForEach(x => x.tb_PurEntryDetails).NotNull();
                 //RuleFor(x => x.tb_PurEntryDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-        
-                Initialize();
+                    Initialize();
      }
 
 

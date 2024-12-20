@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:57
+// 时间：12/18/2024 17:45:28
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,19 +26,37 @@ namespace RUINORERP.Business
     /*public partial class tb_OpeningInventoryValidator:AbstractValidator<tb_OpeningInventory>*/
     public partial class tb_OpeningInventoryValidator:BaseValidatorGeneric<tb_OpeningInventory>
     {
-     public tb_OpeningInventoryValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_OpeningInventoryValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_OpeningInventory =>tb_OpeningInventory.Inventory_ID).Must(CheckForeignKeyValueCanNull).WithMessage("库存:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_OpeningInventory =>tb_OpeningInventory.Inventory_ID).Must(CheckForeignKeyValueCanNull).WithMessage("库存:下拉选择值不正确。");
  RuleFor(tb_OpeningInventory =>tb_OpeningInventory.Inventory_ID).NotEmpty().When(x => x.Inventory_ID.HasValue);
+
 //***** 
  RuleFor(tb_OpeningInventory =>tb_OpeningInventory.InitQty).NotNull().WithMessage("期初库存:不能为空。");
- RuleFor(x => x.Cost_price).PrecisionScale(19,6,true).WithMessage("成本价格:小数位不能超过6。");
- RuleFor(x => x.Subtotal_Cost_Price).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
+
+ RuleFor(x => x.Cost_price).PrecisionScale(19,4,true).WithMessage("成本价格:小数位不能超过4。");
+
+ RuleFor(x => x.Subtotal_Cost_Price).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
+
+
  RuleFor(tb_OpeningInventory =>tb_OpeningInventory.RefBillID).NotEmpty().When(x => x.RefBillID.HasValue);
+
  RuleFor(tb_OpeningInventory =>tb_OpeningInventory.RefNO).MaximumLength(25).WithMessage("引用单据:不能超过最大长度,25.");
+
  RuleFor(tb_OpeningInventory =>tb_OpeningInventory.RefBizType).MaximumLength(25).WithMessage("单据类型:不能超过最大长度,25.");
+
  RuleFor(tb_OpeningInventory =>tb_OpeningInventory.Notes).MaximumLength(50).WithMessage("备注:不能超过最大长度,50.");
-       	
+
            	        Initialize();
      }
 

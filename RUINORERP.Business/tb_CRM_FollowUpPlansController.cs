@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/12/2024 10:37:30
+// 时间：12/18/2024 18:02:02
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_CRM_FollowUpPlans info)
+        public ValidationResult Validator(tb_CRM_FollowUpPlans info)
         {
-            tb_CRM_FollowUpPlansValidator validator = new tb_CRM_FollowUpPlansValidator();
+
+           // tb_CRM_FollowUpPlansValidator validator = new tb_CRM_FollowUpPlansValidator();
+           tb_CRM_FollowUpPlansValidator validator = _appContext.GetRequiredService<tb_CRM_FollowUpPlansValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_CRM_FollowUpPlansValidator validator = new tb_CRM_FollowUpPlansValidator();
+            //tb_CRM_FollowUpPlansValidator validator = new tb_CRM_FollowUpPlansValidator();
+           tb_CRM_FollowUpPlansValidator validator = _appContext.GetRequiredService<tb_CRM_FollowUpPlansValidator>();
             ValidationResult results = validator.Validate(info as tb_CRM_FollowUpPlans);
             return results;
         }

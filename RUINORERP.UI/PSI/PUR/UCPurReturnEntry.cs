@@ -219,7 +219,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 //绑定这个。数据感叹号快捷查询
                 DataBindingHelper.InitFilterForControlByExp<tb_PurEntryRe>(entity, txtPurEntryRe_ID, c => c.PurEntryReNo, queryFilter);
-                base.InitRequiredToControl(new tb_PurReturnEntryValidator(), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_PurReturnEntryValidator> (), kryptonSplitContainer1.Panel1.Controls);
                 //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
 

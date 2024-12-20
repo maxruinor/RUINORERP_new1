@@ -174,7 +174,7 @@ namespace RUINORERP.Business
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv != null)
                     {
-                        inv.Quantity = inv.Quantity + child.Quantity;
+                       
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     else
@@ -198,6 +198,7 @@ namespace RUINORERP.Business
                  市场价格：参考市场上类似产品或物品的价格。
                   */
                     CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
+                    inv.Quantity = inv.Quantity + child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
                     #endregion

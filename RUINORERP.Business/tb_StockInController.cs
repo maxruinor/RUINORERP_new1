@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 19:02:37
+// 时间：12/18/2024 18:02:15
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_StockIn info)
+        public ValidationResult Validator(tb_StockIn info)
         {
-            tb_StockInValidator validator = new tb_StockInValidator();
+
+           // tb_StockInValidator validator = new tb_StockInValidator();
+           tb_StockInValidator validator = _appContext.GetRequiredService<tb_StockInValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_StockInValidator validator = new tb_StockInValidator();
+            //tb_StockInValidator validator = new tb_StockInValidator();
+           tb_StockInValidator validator = _appContext.GetRequiredService<tb_StockInValidator>();
             ValidationResult results = validator.Validate(info as tb_StockIn);
             return results;
         }
@@ -457,6 +458,7 @@ namespace RUINORERP.Business
         {
             List<tb_StockIn> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockIn>()
                                .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_StockInDetails )
                         .ToListAsync();
             
@@ -478,6 +480,7 @@ namespace RUINORERP.Business
         {
             List<tb_StockIn> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockIn>().Where(exp)
                                .Includes(t => t.tb_customervendor )
+                               .Includes(t => t.tb_employee )
                                             .Includes(t => t.tb_StockInDetails )
                         .ToListAsync();
             
@@ -499,6 +502,7 @@ namespace RUINORERP.Business
         {
             List<tb_StockIn> list = _unitOfWorkManage.GetDbClient().Queryable<tb_StockIn>().Where(exp)
                             .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_StockInDetails )
                         .ToList();
             
@@ -537,6 +541,7 @@ namespace RUINORERP.Business
         {
             tb_StockIn entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_StockIn>().Where(w => w.MainID == (long)id)
                              .Includes(t => t.tb_customervendor )
+                            .Includes(t => t.tb_employee )
                                         .Includes(t => t.tb_StockInDetails )
                         .FirstAsync();
             if(entity!=null)

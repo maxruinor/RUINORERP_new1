@@ -49,6 +49,7 @@ namespace RUINORERP.Extensions.Middlewares
         /// 得到实体列表，用于下拉等绑定 实际保存的是强类型，如果jobject则要转换一下
         /// 
         /// 在服务器端：保存的是强类型List<Customer>  ,在客户端保存的是 JArray
+        /// 目前暂时不改格式。先优化转换。再看是否要统一。
         /// </summary>
         public ICacheManager<object> CacheEntityList { get => _cacheEntityList; set => _cacheEntityList = value; }
 

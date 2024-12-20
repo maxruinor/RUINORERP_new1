@@ -296,6 +296,21 @@ namespace RUINORERP.UI.Common
                         {   //暂时只有二级。不用循环了
                             if (btnItem is ToolStripDropDownButton btnddb)
                             {
+                                //添加
+                                tb_ButtonInfo btnInfoDrop = new tb_ButtonInfo();
+                                btnInfoDrop.BtnName = btnddb.Name;
+                                btnInfoDrop.BtnText = btnddb.Text;
+                                btnInfoDrop.FormName = info.ClassName;
+                                btnInfoDrop.ClassPath = info.ClassPath;
+                                btnInfoDrop.MenuID = menuInfo.MenuID;
+                                btnInfoDrop.IsEnabled = true;
+                                tb_ButtonInfo ExistBtnInfoDrop = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnddb.Text && it.MenuID == menuInfo.MenuID);
+                                if (ExistBtnInfoDrop == null)
+                                {
+                                    //tnController.AddReEntity(btnInfo);
+                                    tb_ButtonInfos.Add(btnInfoDrop);
+                                }
+
                                 foreach (ToolStripItem tsi in btnddb.DropDownItems)
                                 {
                                     //添加

@@ -50,6 +50,9 @@ using RUINORERP.UI.SysConfig;
 using RUINORERP.Business.Security;
 using Castle.Core.Logging;
 using RUINORERP.Model.TransModel;
+using RUINORERP.Model.ConfigModel;
+using RUINORERP.UI.IM;
+using System.Net.Mail;
 
 
 namespace RUINORERP.UI
@@ -538,6 +541,19 @@ namespace RUINORERP.UI
         /// <param name="services"></param>
         public static void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<SmtpClient>(new SmtpClient("your.smtp.server"));
+            services.AddTransient<INotificationSender, EmailNotificationSender>();
+
+            // 读取自定义的 JSON 配置文件
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles"))
+                .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
+                .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
+                .Build();
+
+            services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
+            services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
+
             services.AddSingleton(typeof(ConfigManager));
             //services.AddSingleton(typeof(MainForm_test));//MDI最大。才开一次才能单例
             services.AddSingleton(typeof(MainForm));//MDI最大。才开一次才能单例

@@ -53,7 +53,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.QueryPageLayoutCustomize, chkQueryPageLayoutCustomize, false);
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.QueryGridColCustomize, chkQueryGridColCustomize, false);
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(entity, t => t.BillGridColCustomize, chkBillGridColCustomize, false);
-
+            base.BindData(entity);
         }
 
 

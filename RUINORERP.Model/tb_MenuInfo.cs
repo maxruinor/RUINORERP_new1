@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:54
+// 时间：12/18/2024 18:16:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 菜单程序集信息表
     /// </summary>
     [Serializable()]
-    [Description("tb_MenuInfo")]
+    [Description("菜单程序集信息表")]
     [SugarTable("tb_MenuInfo")]
     public partial class tb_MenuInfo: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_MenuInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("菜单程序集信息表tb_MenuInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -376,10 +376,10 @@ namespace RUINORERP.Model
 
         private string _DefaultLayout;
         /// <summary>
-        /// 
+        /// 菜单默认布局
         /// </summary>
-        [AdvQueryAttribute(ColName = "DefaultLayout",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "DefaultLayout" ,Length=2147483647,IsNullable = true,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "DefaultLayout",ColDesc = "菜单默认布局")] 
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "DefaultLayout" ,Length=2147483647,IsNullable = true,ColumnDescription = "菜单默认布局" )]
         public string DefaultLayout
         { 
             get{return _DefaultLayout;}
@@ -411,6 +411,14 @@ namespace RUINORERP.Model
         public virtual List<tb_P4Field> tb_P4Fields { get; set; }
         //tb_P4Field.MenuID)
         //MenuID.FK_TB_P4FIE_REFERENCE_TB_MENUI)
+        //tb_MenuInfo.MenuID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_UIMenuPersonalization.MenuID))]
+        public virtual List<tb_UIMenuPersonalization> tb_UIMenuPersonalizations { get; set; }
+        //tb_UIMenuPersonalization.MenuID)
+        //MenuID.FK_TB_UIMENPERSONALIZation_REF_MENUINFO)
         //tb_MenuInfo.MenuID)
 
         //[Browsable(false)]

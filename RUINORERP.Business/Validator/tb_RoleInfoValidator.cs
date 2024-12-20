@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/29/2024 23:20:20
+// 时间：12/18/2024 17:45:31
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,13 +26,26 @@ namespace RUINORERP.Business
     /*public partial class tb_RoleInfoValidator:AbstractValidator<tb_RoleInfo>*/
     public partial class tb_RoleInfoValidator:BaseValidatorGeneric<tb_RoleInfo>
     {
-     public tb_RoleInfoValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_RoleInfoValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_RoleInfo =>tb_RoleInfo.RoleName).MaximumLength(25).WithMessage("角色名称:不能超过最大长度,25.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_RoleInfo =>tb_RoleInfo.RoleName).MaximumLength(25).WithMessage("角色名称:不能超过最大长度,25.");
  RuleFor(tb_RoleInfo =>tb_RoleInfo.RoleName).NotEmpty().WithMessage("角色名称:不能为空。");
+
  RuleFor(tb_RoleInfo =>tb_RoleInfo.Desc).MaximumLength(125).WithMessage("描述:不能超过最大长度,125.");
+
+ RuleFor(tb_RoleInfo =>tb_RoleInfo.RolePropertyID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
  RuleFor(tb_RoleInfo =>tb_RoleInfo.RolePropertyID).NotEmpty().When(x => x.RolePropertyID.HasValue);
-       	
+
            	        Initialize();
      }
 

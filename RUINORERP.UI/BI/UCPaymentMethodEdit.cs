@@ -34,6 +34,7 @@ namespace RUINORERP.UI.BI
         {
             DataBindingHelper.BindData4TextBox<tb_PaymentMethod>(entity, t => t.Paytype_Name, txtPaytype_Name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PaymentMethod>(entity, t => t.Desc, txtDesc, BindDataType4TextBox.Text, false);
+            base.BindData(entity);
         }
 
 

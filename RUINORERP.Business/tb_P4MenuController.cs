@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:59
+// 时间：12/18/2024 18:02:08
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_P4Menu info)
+        public ValidationResult Validator(tb_P4Menu info)
         {
-            tb_P4MenuValidator validator = new tb_P4MenuValidator();
+
+           // tb_P4MenuValidator validator = new tb_P4MenuValidator();
+           tb_P4MenuValidator validator = _appContext.GetRequiredService<tb_P4MenuValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_P4MenuValidator validator = new tb_P4MenuValidator();
+            //tb_P4MenuValidator validator = new tb_P4MenuValidator();
+           tb_P4MenuValidator validator = _appContext.GetRequiredService<tb_P4MenuValidator>();
             ValidationResult results = validator.Validate(info as tb_P4Menu);
             return results;
         }

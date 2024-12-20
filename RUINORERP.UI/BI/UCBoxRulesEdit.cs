@@ -36,7 +36,7 @@ namespace RUINORERP.UI.BI
 
             if (entity.BoxRules_ID == 0)
             {
-                entity.ActionStatus= ActionStatus.新增;
+                entity.ActionStatus = ActionStatus.新增;
                 entity.Is_enabled = true;
                 entity.Created_at = DateTime.Now;
                 entity.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
@@ -45,6 +45,7 @@ namespace RUINORERP.UI.BI
             {
                 entity.Modified_at = DateTime.Now;
                 entity.Modified_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
+                entity.PrimaryKeyID = entity.BoxRules_ID;
             }
 
             DataBindingHelper.BindData4TextBox<tb_BoxRules>(entity, t => t.BoxRuleName, txtBoxRuleName, BindDataType4TextBox.Text, false);
@@ -69,7 +70,8 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_BoxRulesValidator(), kryptonPanel1.Controls);
+               
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_BoxRulesValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
 
                 var lambda = Expressionable.Create<tb_Packing>()
@@ -102,7 +104,7 @@ namespace RUINORERP.UI.BI
                     if (entity.CartonID > 0 && s2.PropertyName == entity.GetPropertyName<tb_BoxRules>(c => c.CartonID))
                     {
                         //entity.Length=0;
-                      
+
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_BoxRules>(c => c.Length) ||
@@ -121,8 +123,7 @@ namespace RUINORERP.UI.BI
 
             };
 
-
-
+            base.BindData(entity);
 
         }
 

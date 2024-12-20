@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/08/2024 01:40:30
+// 时间：12/18/2024 18:07:04
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// View_BOM
+    /// 
     /// </summary>
     public partial class View_BOMController<T>:BaseController<T> where T : class
     {
@@ -51,7 +51,15 @@ namespace RUINORERP.Business
       
         
         
-         
+        
+         public ValidationResult Validator(View_BOM info)
+        {
+
+           // View_BOMValidator validator = new View_BOMValidator();
+           View_BOMValidator validator = _appContext.GetRequiredService<View_BOMValidator>();
+            ValidationResult results = validator.Validate(info);
+            return results;
+        }
         
         #region 扩展方法
         

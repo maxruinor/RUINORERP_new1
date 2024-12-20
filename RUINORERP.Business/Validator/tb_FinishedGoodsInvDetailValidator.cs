@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/08/2024 01:29:55
+// 时间：12/18/2024 17:45:27
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,32 +26,59 @@ namespace RUINORERP.Business
     /*public partial class tb_FinishedGoodsInvDetailValidator:AbstractValidator<tb_FinishedGoodsInvDetail>*/
     public partial class tb_FinishedGoodsInvDetailValidator:BaseValidatorGeneric<tb_FinishedGoodsInvDetail>
     {
-     public tb_FinishedGoodsInvDetailValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_FinishedGoodsInvDetailValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.FG_ID).NotEmpty().When(x => x.FG_ID.HasValue);
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.FG_ID).NotEmpty().When(x => x.FG_ID.HasValue);
+
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Unit_ID).Must(CheckForeignKeyValueCanNull).WithMessage("单位:下拉选择值不正确。");
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Unit_ID).NotEmpty().When(x => x.Unit_ID.HasValue);
+
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
+
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
+
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("货架:下拉选择值不正确。");
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
+
 //***** 
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.PayableQty).NotNull().WithMessage("应缴数量:不能为空。");
+
 //***** 
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Qty).NotNull().WithMessage("实缴数量:不能为空。");
- RuleFor(x => x.UnitCost).PrecisionScale(19,6,true).WithMessage("单位成本:小数位不能超过6。");
+
+ RuleFor(x => x.UnitCost).PrecisionScale(19,4,true).WithMessage("单位成本:小数位不能超过4。");
+
 //***** 
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.UnpaidQty).NotNull().WithMessage("未缴数量:不能为空。");
- RuleFor(x => x.NetMachineHours).PrecisionScale(15,5,true).WithMessage("实际工时:小数位不能超过5。");
- RuleFor(x => x.NetWorkingHours).PrecisionScale(15,5,true).WithMessage("实际工时:小数位不能超过5。");
- RuleFor(x => x.ApportionedCost).PrecisionScale(19,6,true).WithMessage("分摊成本:小数位不能超过6。");
- RuleFor(x => x.ManuFee).PrecisionScale(19,6,true).WithMessage("制造费用:小数位不能超过6。");
- RuleFor(x => x.MaterialCost).PrecisionScale(19,6,true).WithMessage("材料成本:小数位不能超过6。");
- RuleFor(x => x.SubtotalMaterialCost).PrecisionScale(19,6,true).WithMessage("材料小计:小数位不能超过6。");
- RuleFor(x => x.ProductionAllCost).PrecisionScale(19,6,true).WithMessage("生产总成本:小数位不能超过6。");
+
+ RuleFor(x => x.NetMachineHours).PrecisionScale(15,5,true).WithMessage("单位实际机时:小数位不能超过5。");
+
+ RuleFor(x => x.NetWorkingHours).PrecisionScale(15,5,true).WithMessage("单位实际工时:小数位不能超过5。");
+
+ RuleFor(x => x.ApportionedCost).PrecisionScale(19,4,true).WithMessage("单位分摊成本:小数位不能超过4。");
+
+ RuleFor(x => x.ManuFee).PrecisionScale(19,4,true).WithMessage("单位制造费用:小数位不能超过4。");
+
+ RuleFor(x => x.MaterialCost).PrecisionScale(19,4,true).WithMessage("单位材料成本:小数位不能超过4。");
+
+ RuleFor(x => x.SubtotalMaterialCost).PrecisionScale(19,4,true).WithMessage("材料小计:小数位不能超过4。");
+
+ RuleFor(x => x.ProductionAllCost).PrecisionScale(19,4,true).WithMessage("单项总成本:小数位不能超过4。");
+
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
+
  RuleFor(tb_FinishedGoodsInvDetail =>tb_FinishedGoodsInvDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
-       	
+
            	        Initialize();
      }
 

@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:30
+// 时间：12/18/2024 17:45:25
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,24 +26,50 @@ namespace RUINORERP.Business
     /*public partial class tb_CompanyValidator:AbstractValidator<tb_Company>*/
     public partial class tb_CompanyValidator:BaseValidatorGeneric<tb_Company>
     {
-     public tb_CompanyValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_CompanyValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_Company =>tb_Company.CompanyCode).MaximumLength(5).WithMessage("公司代号:不能超过最大长度,5.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_Company =>tb_Company.CompanyCode).MaximumLength(5).WithMessage("公司代号:不能超过最大长度,5.");
+
  RuleFor(tb_Company =>tb_Company.CNName).MaximumLength(50).WithMessage("名称:不能超过最大长度,50.");
+
  RuleFor(tb_Company =>tb_Company.ENName).MaximumLength(50).WithMessage("英语名称:不能超过最大长度,50.");
+
  RuleFor(tb_Company =>tb_Company.ShortName).MaximumLength(25).WithMessage("简称:不能超过最大长度,25.");
+
  RuleFor(tb_Company =>tb_Company.LegalPersonName).MaximumLength(25).WithMessage("法人姓名:不能超过最大长度,25.");
+
  RuleFor(tb_Company =>tb_Company.UnifiedSocialCreditIdentifier).MaximumLength(25).WithMessage("公司执照代码:不能超过最大长度,25.");
+
  RuleFor(tb_Company =>tb_Company.Contact).MaximumLength(50).WithMessage("联系人:不能超过最大长度,50.");
+
  RuleFor(tb_Company =>tb_Company.Phone).MaximumLength(50).WithMessage("电话:不能超过最大长度,50.");
+
  RuleFor(tb_Company =>tb_Company.Address).MaximumLength(127).WithMessage("地址:不能超过最大长度,127.");
+
  RuleFor(tb_Company =>tb_Company.ENAddress).MaximumLength(127).WithMessage("英文地址:不能超过最大长度,127.");
+
  RuleFor(tb_Company =>tb_Company.Website).MaximumLength(127).WithMessage("网址:不能超过最大长度,127.");
+
  RuleFor(tb_Company =>tb_Company.Email).MaximumLength(50).WithMessage("电子邮件:不能超过最大长度,50.");
+
+
  RuleFor(tb_Company =>tb_Company.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_Company =>tb_Company.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+
  RuleFor(tb_Company =>tb_Company.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
-       	
+
            	        Initialize();
      }
 

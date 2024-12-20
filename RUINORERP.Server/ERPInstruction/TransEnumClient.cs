@@ -1,5 +1,34 @@
 ﻿namespace TransInstruction
 {
+    #region 新的指令集合系统
+
+
+    public enum ServerCommand
+    {
+        None = 0,
+        UserManagement = 1,
+        BizManagement = 2,
+        OtherManagement = 3,
+        // 其他主指令
+    }
+    public enum UserManagementCommand
+    {
+        Login = 1,
+        Logout = 2,
+        Register = 3,
+        // 用户管理的子指令
+    }
+
+    public enum BizManagementCommand
+    {
+        AddProduct = 1,
+        UpdateProduct = 2,
+        DeleteProduct = 3,
+        // 产品管理的子指令
+    }
+
+    #endregion
+
     public enum PackageSourceType
     {
         Client,
@@ -14,6 +43,9 @@
         提示 = 150
     }
 
+
+
+
     /// <summary>
     /// 来自客户端的指令 动作
     /// </summary>
@@ -26,20 +58,24 @@
         更新缓存 = 0x04,
         实时汇报异常 = 0x5,
         请求协助处理 = 0x6,
-        发送弹窗消息 = 0x11,
         删除缓存 = 0x07,
+        工作流启动 = 0x8,
+        工作流指令 = 0x9,
+        更新动态配置 = 0x10,
+        发送弹窗消息 = 0x11,
+
         客户端心跳包 = 0x99,
         打开U帮助 = 0x90156,
         删除帮助项 = 0x90158,
         换线登陆 = 0x90091,
         角色处于等待 = 0x90092,
-        工作流指令 = 0x9,
-        工作流启动 = 0x8,
+
+
         工作流审批 = 0x12,
         单据锁定 = 0x13,
         单据锁定释放 = 0x14,
         请求强制用户下线 = 0x15,
-
+        
         /// <summary>
         /// 客户端提交数据有很多很多种
         /// </summary>
@@ -49,6 +85,11 @@
 
         //回复服务器是已经读取还是稍候提醒
         工作流提醒回复 = 0x18,
+
+        /// <summary>
+        /// 有用户数限制时，希望T掉别人。
+        /// </summary>
+        请求强制登陆上线 = 0x19,
     }
 
     /// <summary>
@@ -104,7 +145,7 @@
         回复用户重复登陆 = 0x20,
 
         工作流提醒推送 = 0x21,
-
+        转发更新动态配置 = 0x22,
 
         心跳回复 = 0x99,
         关机 = 0x94,

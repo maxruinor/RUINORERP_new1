@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:28
+// 时间：12/18/2024 18:02:01
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 请购单，可能来自销售订单,也可以来自其他日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表
+    /// 请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表
    
     /// </summary>
     public partial class tb_BuyingRequisitionController<T>:BaseController<T> where T : class
@@ -51,11 +51,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_BuyingRequisition info)
+        public ValidationResult Validator(tb_BuyingRequisition info)
         {
-            tb_BuyingRequisitionValidator validator = new tb_BuyingRequisitionValidator();
+
+           // tb_BuyingRequisitionValidator validator = new tb_BuyingRequisitionValidator();
+           tb_BuyingRequisitionValidator validator = _appContext.GetRequiredService<tb_BuyingRequisitionValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -213,7 +213,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_BuyingRequisitionValidator validator = new tb_BuyingRequisitionValidator();
+            //tb_BuyingRequisitionValidator validator = new tb_BuyingRequisitionValidator();
+           tb_BuyingRequisitionValidator validator = _appContext.GetRequiredService<tb_BuyingRequisitionValidator>();
             ValidationResult results = validator.Validate(info as tb_BuyingRequisition);
             return results;
         }

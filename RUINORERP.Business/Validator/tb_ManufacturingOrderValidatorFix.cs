@@ -11,6 +11,7 @@ using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Global;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -30,6 +31,42 @@ namespace RUINORERP.Business
             // 如果选择了外发，则必须填写外发加工商
             RuleFor(x => x.CustomerVendor_ID_Out).NotNull().When(x => x.IsOutSourced == true).WithMessage("选择外发时，必须要选择外发的工厂。");
             RuleFor(x => x.CustomerVendor_ID_Out).GreaterThan(0).When(x => x.IsOutSourced == true).WithMessage("选择外发时，必须要选择外发的工厂。");
+
+
+            RuleFor(x => x.PreStartDate)
+          .Custom((value, context) =>
+          {
+              var validEntity = context.InstanceToValidate as tb_ManufacturingOrder;
+             // if (validEntity != null && validEntity.DataStatus == (int)DataStatus.新建)
+             // {
+                  //实际情况是 保存时可能不清楚交期。这时提交才要求
+                  if (ValidatorConfig.CurrentValue.预开工日期必填)
+                  {
+                      RuleFor(x => x.PreStartDate).NotNull().WithMessage("预开工日期：必须填写。");
+                      RuleFor(x => x.PreStartDate).NotEmpty().When(c => c.PreStartDate.HasValue).WithMessage("预开工日期：必须填写。");
+                  }
+             // }
+          });
+
+
+            RuleFor(x => x.PreEndDate)
+            .Custom((value, context) =>
+            {
+              var validEntity = context.InstanceToValidate as tb_ManufacturingOrder;
+                // if (validEntity != null && validEntity.DataStatus == (int)DataStatus.新建)
+                // {
+                //实际情况是 保存时可能不清楚交期。这时提交才要求
+              if (ValidatorConfig.CurrentValue.预完工日期必填)
+              {
+                  RuleFor(x => x.PreEndDate).NotNull().WithMessage("预完工日期：必须填写。");
+                  RuleFor(x => x.PreEndDate).NotEmpty().When(c => c.PreStartDate.HasValue).WithMessage("预完工日期：必须填写。");
+              }
+                // }
+            });
+
+
+
+
         }
     }
 

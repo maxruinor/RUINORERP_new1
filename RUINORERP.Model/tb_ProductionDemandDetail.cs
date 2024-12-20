@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:15
+// 时间：12/19/2024 12:18:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 生产需求分析表明细
     /// </summary>
     [Serializable()]
-    [Description("tb_ProductionDemandDetail")]
+    [Description("生产需求分析表明细")]
     [SugarTable("tb_ProductionDemandDetail")]
     public partial class tb_ProductionDemandDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProductionDemandDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("生产需求分析表明细tb_ProductionDemandDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -51,14 +51,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long _PDID;
+        private long? _PDID;
         /// <summary>
         /// 
         /// </summary>
         [AdvQueryAttribute(ColName = "PDID",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
         [FKRelationAttribute("tb_ProductionDemand","PDID")]
-        public long PDID
+        public long? PDID
         { 
             get{return _PDID;}
             set{
@@ -70,8 +70,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 

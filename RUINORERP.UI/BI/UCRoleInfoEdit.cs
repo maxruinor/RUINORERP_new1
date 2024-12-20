@@ -47,7 +47,7 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_RoleInfoValidator(), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_RoleInfoValidator> (), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             //处理角色属性
@@ -62,6 +62,7 @@ namespace RUINORERP.UI.BI
             {
                 chk创建角色属性.Checked = false;
             }
+            base.BindData(entity);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

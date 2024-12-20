@@ -205,7 +205,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_ProductionPlanValidator(), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProductionPlanValidator> (), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);

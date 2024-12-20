@@ -182,7 +182,7 @@ namespace RUINORERP.UI.PSI.PUR
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_PurEntryReValidator(), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_PurEntryReValidator> (), kryptonSplitContainer1.Panel1.Controls);
                 //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
 

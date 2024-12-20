@@ -1,8 +1,10 @@
 ﻿using FluentValidation;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Model.ConfigModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,10 +17,24 @@ namespace RUINORERP.Business
 {
     public abstract class BaseValidatorGeneric<T> : AbstractValidator<T> where T : class
     {
-        protected BaseValidatorGeneric()
-        {
 
-        }
+
+       // public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+
+        //protected BaseValidatorGeneric(IOptionsMonitor<GlobalValidatorConfig> config)
+        //{
+           // ValidatorConfig = config;
+            // 监听配置变化
+           // ValidatorConfig.OnChange(updatedConfig =>
+            //{
+            //    Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
+            //});
+        //}
+
+         protected BaseValidatorGeneric()
+         {
+         
+         }
         //public abstract void Initialize();
 
         public virtual void Initialize()

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:17
+// 时间：12/18/2024 18:02:12
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_ProductType info)
+        public ValidationResult Validator(tb_ProductType info)
         {
-            tb_ProductTypeValidator validator = new tb_ProductTypeValidator();
+
+           // tb_ProductTypeValidator validator = new tb_ProductTypeValidator();
+           tb_ProductTypeValidator validator = _appContext.GetRequiredService<tb_ProductTypeValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_ProductTypeValidator validator = new tb_ProductTypeValidator();
+            //tb_ProductTypeValidator validator = new tb_ProductTypeValidator();
+           tb_ProductTypeValidator validator = _appContext.GetRequiredService<tb_ProductTypeValidator>();
             ValidationResult results = validator.Validate(info as tb_ProductType);
             return results;
         }
@@ -245,16 +246,18 @@ namespace RUINORERP.Business
             if (entity.Type_ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProductType>(entity as tb_ProductType)
-                        .Include(m => m.tb_ManufacturingOrders)
-                    .Include(m => m.tb_Prods)
+                        .Include(m => m.tb_Prods)
+                  
+                    .Include(m => m.tb_ManufacturingOrders)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProductType>(entity as tb_ProductType)
-                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_Prods)
+    
+                .Include(m => m.tb_ManufacturingOrders)
                                 .ExecuteCommandAsync();
         }
         
@@ -285,8 +288,9 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>()
-                                .Includes(m => m.tb_ManufacturingOrders)
-                        .Includes(m => m.tb_Prods)
+                                .Includes(m => m.tb_Prods)
+            
+                        .Includes(m => m.tb_ManufacturingOrders)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -296,8 +300,9 @@ namespace RUINORERP.Business
         {
             tb_ProductType entity = model as tb_ProductType;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProductType>(m => m.Type_ID== entity.Type_ID)
-                                .Include(m => m.tb_ManufacturingOrders)
-                        .Include(m => m.tb_Prods)
+                                .Include(m => m.tb_Prods)
+                 
+                        .Include(m => m.tb_ManufacturingOrders)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -460,8 +465,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProductType>> QueryByNavAsync()
         {
             List<tb_ProductType> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>()
-                                            .Includes(t => t.tb_ManufacturingOrders )
-                                .Includes(t => t.tb_Prods )
+                                            .Includes(t => t.tb_Prods )
+                             
                         .ToListAsync();
             
             foreach (var item in list)
@@ -481,8 +486,9 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProductType>> QueryByNavAsync(Expression<Func<tb_ProductType, bool>> exp)
         {
             List<tb_ProductType> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>().Where(exp)
-                                            .Includes(t => t.tb_ManufacturingOrders )
-                                .Includes(t => t.tb_Prods )
+                                            .Includes(t => t.tb_Prods )
+                            
+                                .Includes(t => t.tb_ManufacturingOrders )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -502,8 +508,9 @@ namespace RUINORERP.Business
          public virtual List<tb_ProductType> QueryByNav(Expression<Func<tb_ProductType, bool>> exp)
         {
             List<tb_ProductType> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>().Where(exp)
-                                        .Includes(t => t.tb_ManufacturingOrders )
-                            .Includes(t => t.tb_Prods )
+                                        .Includes(t => t.tb_Prods )
+                      
+                            .Includes(t => t.tb_ManufacturingOrders )
                         .ToList();
             
             foreach (var item in list)
@@ -540,8 +547,9 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_ProductType entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductType>().Where(w => w.Type_ID == (long)id)
-                                         .Includes(t => t.tb_ManufacturingOrders )
-                            .Includes(t => t.tb_Prods )
+                                         .Includes(t => t.tb_Prods )
+                            
+                            .Includes(t => t.tb_ManufacturingOrders )
                         .FirstAsync();
             if(entity!=null)
             {

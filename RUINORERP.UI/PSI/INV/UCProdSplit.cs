@@ -190,7 +190,7 @@ namespace RUINORERP.UI.PSI.INV
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ProdSplit>(entity, v => v.ProdDetailID, txtProdDetailID, true);
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_ProdSplitValidator(), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProdSplitValidator> (), kryptonSplitContainer1.Panel1.Controls);
 
                 //创建表达式  草稿 结案 和没有提交的都不显示
                 var lambdaOrder = Expressionable.Create<View_ProdDetail>()

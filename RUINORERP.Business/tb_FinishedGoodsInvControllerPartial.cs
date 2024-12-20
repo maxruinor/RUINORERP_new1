@@ -69,14 +69,14 @@ namespace RUINORERP.Business
                     {
                         Opening = true;
                         inv = new tb_Inventory();
-                        inv.Quantity = inv.Quantity + child.Qty;
+                        
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
                     }
                     else
                     {
-                        inv.Quantity = inv.Quantity + child.Qty;
+                       
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     inv.ProdDetailID = child.ProdDetailID;
@@ -119,9 +119,14 @@ namespace RUINORERP.Business
                             await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
                         }
                     }
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+                    if (bomDetails.Count>0)
+                    {
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+                    }
+                    
 
                     #endregion
+                    inv.Quantity = inv.Quantity + child.Qty;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
 
@@ -401,7 +406,7 @@ namespace RUINORERP.Business
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //实际 反审时 期初已经有数据
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    inv.Quantity = inv.Quantity - child.Qty;
+                  
                     BusinessHelper.Instance.EditEntity(inv);
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Location_ID = child.Location_ID;
@@ -409,6 +414,7 @@ namespace RUINORERP.Business
                     inv.LatestOutboundTime = System.DateTime.Now;
                     inv.MakingQty = inv.MakingQty + child.Qty;
                     CommService.CostCalculations.AntiCostCalculation(_appContext, inv, child.Qty, child.UnitCost);
+                    inv.Quantity = inv.Quantity - child.Qty;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion

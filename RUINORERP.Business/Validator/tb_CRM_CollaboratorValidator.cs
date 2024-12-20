@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/16/2024 16:57:12
+// 时间：12/18/2024 17:45:26
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,15 +26,32 @@ namespace RUINORERP.Business
     /*public partial class tb_CRM_CollaboratorValidator:AbstractValidator<tb_CRM_Collaborator>*/
     public partial class tb_CRM_CollaboratorValidator:BaseValidatorGeneric<tb_CRM_Collaborator>
     {
-     public tb_CRM_CollaboratorValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_CRM_CollaboratorValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Employee_ID).Must(CheckForeignKeyValue).WithMessage("协作人:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Employee_ID).Must(CheckForeignKeyValue).WithMessage("协作员工:下拉选择值不正确。");
+
  RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Customer_id).Must(CheckForeignKeyValue).WithMessage("目标客户:下拉选择值不正确。");
+
  RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+
+
 //***** 
  RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Created_by).NotNull().WithMessage("创建人:不能为空。");
+
+
  RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-       	
+
+
            	        Initialize();
      }
 

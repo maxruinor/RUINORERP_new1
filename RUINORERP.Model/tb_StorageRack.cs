@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:37
+// 时间：12/18/2024 18:16:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 货架信息表
     /// </summary>
     [Serializable()]
-    [Description("tb_StorageRack")]
+    [Description("货架信息表")]
     [SugarTable("tb_StorageRack")]
     public partial class tb_StorageRack: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_StorageRack" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("货架信息表tb_StorageRack" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -149,6 +149,14 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntryDetail.Rack_ID))]
+        public virtual List<tb_PurReturnEntryDetail> tb_PurReturnEntryDetails { get; set; }
+        //tb_PurReturnEntryDetail.Rack_ID)
+        //Rack_ID.FK_PURRETURNENTRYDETAIL_REF_STORAGERACK)
+        //tb_StorageRack.Rack_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInvDetail.Rack_ID))]
         public virtual List<tb_FinishedGoodsInvDetail> tb_FinishedGoodsInvDetails { get; set; }
         //tb_FinishedGoodsInvDetail.Rack_ID)
@@ -181,18 +189,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.Rack_ID))]
-        public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
-        //tb_PurEntryReDetail.Rack_ID)
-        //Rack_ID.FK_TB_PURENTRYREDETAIL_REF_TB_STORA)
-        //tb_StorageRack.Rack_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutDetail.Rack_ID))]
         public virtual List<tb_SaleOutDetail> tb_SaleOutDetails { get; set; }
         //tb_SaleOutDetail.Rack_ID)
         //Rack_ID.FK_TB_SO_RE_STORAGERACK)
+        //tb_StorageRack.Rack_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.Rack_ID))]
+        public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
+        //tb_PurEntryReDetail.Rack_ID)
+        //Rack_ID.FK_TB_PURENTRYREDETAIL_REF_TB_STORA)
         //tb_StorageRack.Rack_ID)
 
         //[Browsable(false)]

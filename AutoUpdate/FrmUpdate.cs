@@ -741,6 +741,11 @@ namespace AutoUpdate
             System.Diagnostics.Process.Start(linkLabel1.Text);
         }
 
+        /// <summary>
+        /// 保留最多最新的版本数量
+        /// </summary>
+        public int MaxVersionCount = 5;
+
         public int mainResult = 0;
         //点击完成复制更新文件到应用程序目录
         private void btnFinish_Click(object sender, System.EventArgs e)
@@ -772,7 +777,7 @@ namespace AutoUpdate
                     //删除最旧的版本
                     // 对版本号进行排序
                     versions.Sort();
-                    int deleteCount = versions.Count - 5;
+                    int deleteCount = versions.Count - MaxVersionCount;
                     // 移除最小的 保留最新的5个
                     versions = versions.Take(deleteCount).ToList();
 

@@ -248,13 +248,7 @@ namespace RUINORERP.UI.BaseForm
             ToolBarEnabledControl(Entity);
         }
 
-        /// <summary>
-        /// 更新付款状态
-        /// </summary>
-        protected virtual void UpdatePaymentStatus()
-        {
-            ToolBarEnabledControl(MenuItemEnums.付款调整);
-        }
+
 
 
         /// <summary>
@@ -352,9 +346,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.导出:
 
                     break;
-                case MenuItemEnums.付款调整:
-                    toolStripButton付款调整.Enabled = false;
-                    break;
+             
                 default:
                     break;
             }
@@ -1232,13 +1224,7 @@ namespace RUINORERP.UI.BaseForm
                     break;
                 case MenuItemEnums.导出:
                     break;
-                case MenuItemEnums.付款调整:
-                    if (IsLock())
-                    {
-                        return;
-                    }
-                    UpdatePaymentStatus();
-                    break;
+          
                 default:
                     break;
             }

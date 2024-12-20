@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/27/2024 19:36:47
+// 时间：12/18/2024 18:07:04
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -54,7 +54,9 @@ namespace RUINORERP.Business
         
          public ValidationResult Validator(View_FM_OtherExpenseItems info)
         {
-            View_FM_OtherExpenseItemsValidator validator = new View_FM_OtherExpenseItemsValidator();
+
+           // View_FM_OtherExpenseItemsValidator validator = new View_FM_OtherExpenseItemsValidator();
+           View_FM_OtherExpenseItemsValidator validator = _appContext.GetRequiredService<View_FM_OtherExpenseItemsValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }

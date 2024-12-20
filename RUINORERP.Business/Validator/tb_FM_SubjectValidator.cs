@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 16:24:10
+// 时间：12/18/2024 17:45:27
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,20 +26,40 @@ namespace RUINORERP.Business
     /*public partial class tb_FM_SubjectValidator:AbstractValidator<tb_FM_Subject>*/
     public partial class tb_FM_SubjectValidator:BaseValidatorGeneric<tb_FM_Subject>
     {
-     public tb_FM_SubjectValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_FM_SubjectValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_FM_Subject =>tb_FM_Subject.parent_subject_id).NotEmpty().When(x => x.parent_subject_id.HasValue);
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.parent_subject_id).NotEmpty().When(x => x.parent_subject_id.HasValue);
+
  RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_code).MaximumLength(25).WithMessage("科目代码:不能超过最大长度,25.");
  RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_code).NotEmpty().WithMessage("科目代码:不能为空。");
+
  RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_name).MaximumLength(50).WithMessage("科目名称:不能超过最大长度,50.");
  RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_name).NotEmpty().WithMessage("科目名称:不能为空。");
+
  RuleFor(tb_FM_Subject =>tb_FM_Subject.subject_en_name).MaximumLength(50).WithMessage("科目名称:不能超过最大长度,50.");
+
 //***** 
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Subject_Type).NotNull().WithMessage("科目类型:不能为空。");
+
+
 //有默认值
+
+
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Sort).NotEmpty().When(x => x.Sort.HasValue);
+
+
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
-       	
+
            	        Initialize();
      }
 

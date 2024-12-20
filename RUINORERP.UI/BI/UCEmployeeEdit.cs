@@ -74,7 +74,7 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_EmployeeValidator(), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_EmployeeValidator> (), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             if (_EditEntity.Employee_ID > 0)
@@ -85,7 +85,7 @@ namespace RUINORERP.UI.BI
             {
                 btnAddPayeeInfo.Visible = false;
             }
-
+            base.BindData(entity);
         }
 
 

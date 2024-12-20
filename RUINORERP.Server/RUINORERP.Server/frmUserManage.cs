@@ -1,5 +1,6 @@
 ﻿using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.ServerSession;
@@ -234,7 +235,7 @@ namespace RUINORERP.Server
             }
             if (e.ClickedItem.Text == "强制用户退出")
             {
-                
+
                 if (dataGridView1.CurrentRow != null)
                 {
                     if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
@@ -251,17 +252,20 @@ namespace RUINORERP.Server
 
             if (e.ClickedItem.Text == "删除列配置文件")
             {
-                if (dataGridView1.CurrentRow != null)
+                if (dataGridView1.SelectedRows != null)
                 {
-                    if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
+                    foreach (DataGridViewRow item in dataGridView1.SelectedRows)
                     {
-                        SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SessionState.Connected)
+                        if (item.DataBoundItem is UserInfo userInfo)
                         {
-                            UserService.删除列配置文件(SB);
+                            SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
+                            if (SB.State == SessionState.Connected)
+                            {
+                                UserService.删除列配置文件(SB);
+                            }
+
+
                         }
-
-
                     }
                 }
             }
@@ -279,7 +283,9 @@ namespace RUINORERP.Server
                             frmMessager frm = new frmMessager();
                             if (frm.ShowDialog() == DialogResult.OK)
                             {
-                                UserService.给客户端发消息(SB, frm.Message, frm.MustDisplay);
+                                MessageModel messageModel = new MessageModel();
+                                messageModel.msg = frm.Message;
+                                UserService.给客户端发消息实体(SB, messageModel, frm.MustDisplay);
                             }
 
                         }
@@ -290,35 +296,43 @@ namespace RUINORERP.Server
 
             if (e.ClickedItem.Text == "推送版本更新")
             {
-                if (dataGridView1.CurrentRow != null)
-                {
-                    if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
-                    {
-                        SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SessionState.Connected)
-                        {
-                            UserService.推送版本更新(SB);
-                        }
 
+                if (dataGridView1.SelectedRows != null)
+                {
+                    foreach (DataGridViewRow item in dataGridView1.SelectedRows)
+                    {
+                        if (item.DataBoundItem is UserInfo userInfo)
+                        {
+                            SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
+                            if (SB.State == SessionState.Connected)
+                            {
+                                UserService.推送版本更新(SB);
+                            }
+
+                        }
                     }
+
                 }
             }
 
 
             if (e.ClickedItem.Text == "推送缓存数据")
             {
-                if (dataGridView1.CurrentRow != null)
+                if (dataGridView1.SelectedRows != null)
                 {
-                    if (dataGridView1.CurrentRow.DataBoundItem is UserInfo userInfo)
+                    foreach (DataGridViewRow item in dataGridView1.SelectedRows)
                     {
-                        SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
-                        if (SB.State == SessionState.Connected)
+                        if (item.DataBoundItem is UserInfo userInfo)
                         {
-                            foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+                            SessionforBiz SB = frmMain.Instance.sessionListBiz[userInfo.SessionId];
+                            if (SB.State == SessionState.Connected)
                             {
-                                UserService.发送缓存数据列表(SB, tableName);
-                            }
+                                foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+                                {
+                                    UserService.发送缓存数据列表(SB, tableName);
+                                }
 
+                            }
                         }
                     }
                 }
@@ -359,7 +373,7 @@ namespace RUINORERP.Server
         }
 
 
-       
+
 
         private void toolStripMenuItem5_Click_1(object sender, EventArgs e)
         {
@@ -367,6 +381,11 @@ namespace RUINORERP.Server
         }
 
         private void toolStripMenuItem5_Click_2(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolStripMenuItem2_Click(object sender, EventArgs e)
         {
 
         }

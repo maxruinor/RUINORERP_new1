@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/18/2024 22:55:50
+// 时间：12/18/2024 18:07:05
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -21,13 +23,53 @@ namespace RUINORERP.Business
     /// <summary>
     /// 销售订单统计分析验证类
     /// </summary>
-    public partial class View_SaleOrderItemsValidator:AbstractValidator<View_SaleOrderItems>
+    /*public partial class View_SaleOrderItemsValidator:AbstractValidator<View_SaleOrderItems>*/
+    public partial class View_SaleOrderItemsValidator:BaseValidatorGeneric<View_SaleOrderItems>
     {
-     public View_SaleOrderItemsValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public View_SaleOrderItemsValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(View_SaleOrderItems =>View_SaleOrderItems.SOrder_ID).NotEmpty().When(x => x.SOrder_ID.HasValue);
+     
+        ValidatorConfig = config;
+        
  
-           	
+        
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+           	        Initialize();
      }
 
 

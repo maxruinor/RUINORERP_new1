@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/05/2024 23:44:20
+// 时间：12/18/2024 18:02:16
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_UIGridSetting info)
+        public ValidationResult Validator(tb_UIGridSetting info)
         {
-            tb_UIGridSettingValidator validator = new tb_UIGridSettingValidator();
+
+           // tb_UIGridSettingValidator validator = new tb_UIGridSettingValidator();
+           tb_UIGridSettingValidator validator = _appContext.GetRequiredService<tb_UIGridSettingValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_UIGridSettingValidator validator = new tb_UIGridSettingValidator();
+            //tb_UIGridSettingValidator validator = new tb_UIGridSettingValidator();
+           tb_UIGridSettingValidator validator = _appContext.GetRequiredService<tb_UIGridSettingValidator>();
             ValidationResult results = validator.Validate(info as tb_UIGridSetting);
             return results;
         }

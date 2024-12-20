@@ -60,14 +60,11 @@ namespace RUINORERP.UI.BaseForm
     public partial class BaseListGeneric<T> : BaseUControl where T : class
     {
 
-
         //public virtual ToolStripItem[] AddExtendButton()
         //{
         //    //返回空的数组
         //    return new ToolStripItem[] { };
         //}
-
-
 
 
         /// <summary>
@@ -113,10 +110,10 @@ namespace RUINORERP.UI.BaseForm
             //这里不这样了，直接用登陆时查出来的。按菜单路径找到菜单 去再搜索 字段。
             //    显示按钮也一样的思路
             this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
-       
+
             dataGridView1.XmlFileName = tableName;
 
-         
+
         }
 
 
@@ -1294,7 +1291,7 @@ namespace RUINORERP.UI.BaseForm
                 QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
             }
 
-            List<T> list = await ctr.BaseQuerySimpleByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize, UseAutoNavQuery) as List<T>;
+            List<T> list = await ctr.BaseQuerySimpleByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDtoProxy, pageNum, pageSize, UseAutoNavQuery);
 
             List<string> masterlist = ExpressionHelper.ExpressionListToStringList(SummaryCols);
             if (masterlist.Count > 0)
@@ -1532,6 +1529,17 @@ namespace RUINORERP.UI.BaseForm
                         {
                             //MainForm.Instance.logger.LogInformation($"保存:{typeof(T).Name}");
                         }
+
+                        if (entity.PrimaryKeyID > 0)
+                        {
+                            BusinessHelper.Instance.EditEntity(entity);
+                        }
+                        else
+                        {
+                            BusinessHelper.Instance.InitEntity(entity);
+                        }
+
+
                         ReturnResults<T> rr = new ReturnResults<T>();
                         rr = await ctr.BaseSaveOrUpdate(entity as T);
                         if (rr.Succeeded)
@@ -1813,6 +1821,11 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
+
+        }
+
+        public virtual void dataGridView1_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
+        {
 
         }
     }

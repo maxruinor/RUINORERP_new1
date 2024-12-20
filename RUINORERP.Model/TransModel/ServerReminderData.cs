@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Model.TransModel
 {
+
+    /// <summary>
+    /// 注意所有发送者  接受者都是员工
+    /// </summary>
     public class ServerReminderData : ReminderDataBase
     {
 
@@ -19,9 +23,9 @@ namespace RUINORERP.Model.TransModel
         // 发送时间
         public string SendTime { get; set; }
 
-        public long SenderID { get; set; }
+        public long SenderEmployeeID { get; set; }
         // 发送者
-        public string SenderName { get; set; }
+        public string SenderEmployeeName { get; set; }
 
         // 消息内容
         public string ReminderContent { get; set; }
@@ -47,9 +51,17 @@ namespace RUINORERP.Model.TransModel
         /// </summary>
         public double RemindInterval { get; set; } = 20;
         /// <summary>
-        /// 可以提醒多个人。
+        /// 可以提醒多个人 注意是员工ID
         /// </summary>
-        public long[] ReceiverIDs { get; set; }
+        public long[] ReceiverEmployeeIDs { get; set; }
+
+        public string ReceiverEmployee
+        { 
+            get
+            {
+                return string.Join(",", ReceiverEmployeeIDs);
+            }
+        }
 
         // 构造函数
         public ServerReminderData()

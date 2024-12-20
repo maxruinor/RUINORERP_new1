@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/10/2024 14:15:53
+// 时间：12/18/2024 18:16:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品转换单 A变成B出库,AB相近。可能只是换说明书或刷机  A  数量  加或减 。B数量增加或减少。
     /// </summary>
     [Serializable()]
-    [Description("tb_ProdConversion")]
+    [Description("产品转换单 A变成B出库,AB相近。可能只是换说明书或刷机  A  数量  加或减 。B数量增加或减少。")]
     [SugarTable("tb_ProdConversion")]
     public partial class tb_ProdConversion: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProdConversion" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("产品转换单 A变成B出库,AB相近。可能只是换说明书或刷机  A  数量  加或减 。B数量增加或减少。tb_ProdConversion" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -57,7 +57,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "经办人" )]
-        [FKRelationAttribute("tb_Employee", "Employee_ID")]
+        [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID
         { 
             get{return _Employee_ID;}
@@ -72,7 +72,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "库位")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "库位" )]
-        [FKRelationAttribute("tb_Location", "Location_ID")]
+        [FKRelationAttribute("tb_Location","Location_ID")]
         public long Location_ID
         { 
             get{return _Location_ID;}
@@ -97,10 +97,10 @@ namespace RUINORERP.Model
 
         private DateTime? _ConversionDate;
         /// <summary>
-        /// 单据日期
+        /// 转换日期
         /// </summary>
-        [AdvQueryAttribute(ColName = "ConversionDate",ColDesc = "单据日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "ConversionDate" ,IsNullable = true,ColumnDescription = "单据日期")]
+        [AdvQueryAttribute(ColName = "ConversionDate",ColDesc = "转换日期")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "ConversionDate" ,IsNullable = true,ColumnDescription = "转换日期" )]
         public DateTime? ConversionDate
         { 
             get{return _ConversionDate;}
@@ -125,19 +125,17 @@ namespace RUINORERP.Model
 
         private string _Reason;
         /// <summary>
-        /// 转换原因
+        /// 备注
         /// </summary>
-        [AdvQueryAttribute(ColName = "Reason", ColDesc = "转换原因")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Reason", Length = 1500, IsNullable = true, ColumnDescription = "转换原因")]
+        [AdvQueryAttribute(ColName = "Reason",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Reason" ,Length=300,IsNullable = true,ColumnDescription = "备注" )]
         public string Reason
-        {
-            get { return _Reason; }
-            set
-            {
-                SetProperty(ref _Reason, value);
+        { 
+            get{return _Reason;}
+            set{
+            SetProperty(ref _Reason, value);
             }
         }
-
 
         private string _Notes;
         /// <summary>
@@ -325,12 +323,25 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
+        public virtual tb_Employee tb_employee { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
+        public virtual tb_Location tb_location { get; set; }
+
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.ConversionID))]
         public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails { get; set; }
-        
+        //tb_ProdConversionDetail.ConversionID)
+        //ConversionID.FK_PRODConversionDetail_REF_PRODConversion)
+        //tb_ProdConversion.ConversionID)
+
 
         #endregion
 

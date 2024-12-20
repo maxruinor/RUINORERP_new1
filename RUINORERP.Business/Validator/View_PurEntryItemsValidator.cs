@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/07/2024 20:12:59
+// 时间：12/18/2024 18:07:05
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -21,32 +23,84 @@ namespace RUINORERP.Business
     /// <summary>
     /// 采购入库统计验证类
     /// </summary>
-    public partial class View_PurEntryItemsValidator : AbstractValidator<View_PurEntryItems>
+    /*public partial class View_PurEntryItemsValidator:AbstractValidator<View_PurEntryItems>*/
+    public partial class View_PurEntryItemsValidator:BaseValidatorGeneric<View_PurEntryItems>
     {
-        public View_PurEntryItemsValidator()
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public View_PurEntryItemsValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+     {
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+           	        Initialize();
+     }
+
+
+
+
+
+
+
+    
+          private bool CheckForeignKeyValue(long ForeignKeyID)
         {
-
-
-
-        }
-
-
-
-
-
-
-
-
-        private bool CheckForeignKeyValue(long ForeignKeyID)
-        {
-            bool rs = true;
+            bool rs = true;    
             if (ForeignKeyID == 0 || ForeignKeyID == -1)
             {
                 return false;
             }
             return rs;
         }
-
+        
         private bool CheckForeignKeyValueCanNull(long? ForeignKeyID)
         {
             bool rs = true;
@@ -58,9 +112,9 @@ namespace RUINORERP.Business
                 }
             }
             return rs;
-
-        }
+        
     }
+}
 
 }
 

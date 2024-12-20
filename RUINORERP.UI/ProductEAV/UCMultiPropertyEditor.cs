@@ -1360,11 +1360,13 @@ namespace RUINORERP.UI.ProductEAV
                 //如果查询到视图，则添加节点
                 if (viewProdDetail != null)
                 {
-
-                    string DisplayPropText = viewProdDetail.prop;
-                    // var array = ProdAttrRelations.Where(c => c.ProdDetailID == item.ProdDetailID).ToList().Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
-                    var array = ProdAttrRelations.Where(c => c.ProdDetailID == item.ProdDetailID).ToList().Select(c => c.tb_prodpropertyvalue.PropertyValueName).ToArray();
-                    DisplayPropText = string.Join(",", array);
+                    string DisplayPropText = string.Empty;
+                    if (viewProdDetail.prop != null)
+                    {
+                        DisplayPropText = viewProdDetail.prop;
+                        var array = ProdAttrRelations.Where(c => c.ProdDetailID == item.ProdDetailID).ToList().Select(c => c.tb_prodpropertyvalue.PropertyValueName).ToArray();
+                        DisplayPropText = string.Join(",", array);
+                    }
                     TreeGridNode node = treeGridView1.Nodes.Add(item.ProdDetailID, item.ProdDetailID, "", DisplayPropText, item.SKU, viewProdDetail.CNName, "加载");
                     //标记节点ID，实际就是产品明细ID
                     node.NodeName = item.ProdDetailID.ToString();

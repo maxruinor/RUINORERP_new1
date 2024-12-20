@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/05/2024 23:44:22
+// 时间：12/18/2024 17:45:33
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,10 +26,22 @@ namespace RUINORERP.Business
     /*public partial class tb_UserPersonalizedValidator:AbstractValidator<tb_UserPersonalized>*/
     public partial class tb_UserPersonalizedValidator:BaseValidatorGeneric<tb_UserPersonalized>
     {
-     public tb_UserPersonalizedValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_UserPersonalizedValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_UserPersonalized =>tb_UserPersonalized.ID).Must(CheckForeignKeyValue).WithMessage("用户角色:下拉选择值不正确。");
-       	
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+
+
+ RuleFor(tb_UserPersonalized =>tb_UserPersonalized.ID).Must(CheckForeignKeyValue).WithMessage("用户角色:下拉选择值不正确。");
+
            	        Initialize();
      }
 

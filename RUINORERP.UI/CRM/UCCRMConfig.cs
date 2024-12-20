@@ -69,7 +69,7 @@ namespace RUINORERP.UI.CRM
 
         private async void btnOk_Click(object sender, EventArgs e)
         {
-            tb_CRMConfigValidator validator = new tb_CRMConfigValidator();
+            tb_CRMConfigValidator validator = MainForm.Instance.AppContext.GetRequiredService<tb_CRMConfigValidator>();
             ValidationResult results = validator.Validate(EditEntity);
             bool validationSucceeded = results.IsValid;
             IList<ValidationFailure> failures = results.Errors;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/12/2024 11:32:09
+// 时间：12/18/2024 18:02:04
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_FM_ExpenseClaim info)
+        public ValidationResult Validator(tb_FM_ExpenseClaim info)
         {
-            tb_FM_ExpenseClaimValidator validator = new tb_FM_ExpenseClaimValidator();
+
+           // tb_FM_ExpenseClaimValidator validator = new tb_FM_ExpenseClaimValidator();
+           tb_FM_ExpenseClaimValidator validator = _appContext.GetRequiredService<tb_FM_ExpenseClaimValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_FM_ExpenseClaimValidator validator = new tb_FM_ExpenseClaimValidator();
+            //tb_FM_ExpenseClaimValidator validator = new tb_FM_ExpenseClaimValidator();
+           tb_FM_ExpenseClaimValidator validator = _appContext.GetRequiredService<tb_FM_ExpenseClaimValidator>();
             ValidationResult results = validator.Validate(info as tb_FM_ExpenseClaim);
             return results;
         }

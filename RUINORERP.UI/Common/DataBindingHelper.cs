@@ -1906,6 +1906,7 @@ namespace RUINORERP.UI.Common
                     else if (TypeHelper.IsJArrayList(listType))
                     {
                         List<T> lastOKList = new List<T>();
+                        
                         var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
                         var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
                         foreach (var item in lastlist)

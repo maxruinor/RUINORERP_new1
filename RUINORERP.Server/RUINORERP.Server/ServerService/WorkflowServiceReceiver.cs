@@ -185,7 +185,7 @@ namespace RUINORERP.Server.ServerService
                 reminderBizData.BizType = request.BizType;
                 List<long> receiverIDs = new List<long>();
                 receiverIDs.Add(request.RemindTargetID);
-                reminderBizData.ReceiverIDs = receiverIDs.ToArray();
+                reminderBizData.ReceiverEmployeeIDs = receiverIDs.ToArray();
                 //  reminderBizData.ReceiverName = request.RemindTargetName;
                 reminderBizData.RemindSubject = request.ReminderSubject;
                 reminderBizData.ReminderContent = request.ReminderContent;
@@ -194,7 +194,7 @@ namespace RUINORERP.Server.ServerService
                 //将来再加上提醒配置规则
                 //将来的才提醒。过去了就不管一
                 //三分钟后的事情才提醒
-                if (reminderBizData.StartTime > System.DateTime.Now.AddMinutes(3) && reminderBizData.EndTime >= System.DateTime.Now && reminderBizData.ReceiverIDs.Length > 0)
+                if (reminderBizData.StartTime > System.DateTime.Now.AddMinutes(3) && reminderBizData.EndTime >= System.DateTime.Now && reminderBizData.ReceiverEmployeeIDs.Length > 0)
                 {
                     frmMain.Instance.ReminderBizDataList.AddOrUpdate(reminderBizData.BizPrimaryKey, reminderBizData, (key, value) => value);
                     if (!frmMain.Instance.frmWF.WFInfos.Contains(reminderBizData))

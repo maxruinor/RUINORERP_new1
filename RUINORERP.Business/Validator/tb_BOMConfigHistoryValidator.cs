@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:27
+// 时间：12/18/2024 17:45:25
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,13 +26,31 @@ namespace RUINORERP.Business
     /*public partial class tb_BOMConfigHistoryValidator:AbstractValidator<tb_BOMConfigHistory>*/
     public partial class tb_BOMConfigHistoryValidator:BaseValidatorGeneric<tb_BOMConfigHistory>
     {
-     public tb_BOMConfigHistoryValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_BOMConfigHistoryValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.VerNo).NotEmpty().WithMessage("版本号:不能为空。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.VerNo).NotEmpty().WithMessage("版本号:不能为空。");
+
+
+
+
  RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.Notes).MaximumLength(250).WithMessage("备注说明:不能超过最大长度,250.");
+
+
  RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-       	
+
            	        Initialize();
      }
 

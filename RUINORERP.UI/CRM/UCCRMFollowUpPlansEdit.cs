@@ -44,6 +44,8 @@ namespace RUINORERP.UI.CRM
 
         private tb_CRM_FollowUpPlans _EditEntity;
         public tb_CRM_FollowUpPlans EditEntity { get => _EditEntity; set => _EditEntity = value; }
+
+        public DateTime oldEndDate = DateTime.MinValue;
         public override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
 
@@ -56,6 +58,10 @@ namespace RUINORERP.UI.CRM
                 plan.PlanStatus = (int)FollowUpPlanStatus.未开始;
                 plan.PlanStartDate = DateTime.Now.AddDays(1);
                 plan.PlanEndDate = DateTime.Now.AddDays(2);
+            }
+            else
+            {
+                oldEndDate = plan.PlanEndDate;
             }
 
             cmbPlanStatus.Enabled = false;
@@ -93,7 +99,7 @@ namespace RUINORERP.UI.CRM
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_CRM_FollowUpPlansValidator(), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_CRM_FollowUpPlansValidator> (), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             if (plan.PlanID > 0)
@@ -122,7 +128,7 @@ namespace RUINORERP.UI.CRM
             {
                 flowLayoutPanel1.Visible = false;
             }
-            entity.PropertyChanged += async (sender, s2) =>
+            entity.PropertyChanged += (sender, s2) =>
             {
 
                 if (_EditEntity.ActionStatus == ActionStatus.新增 || _EditEntity.ActionStatus == ActionStatus.修改)
@@ -136,6 +142,17 @@ namespace RUINORERP.UI.CRM
                 }
             };
 
+
+            if (plan.PlanStatus == (int)FollowUpPlanStatus.未开始 || plan.PlanStatus == (int)FollowUpPlanStatus.进行中 || plan.PlanStatus == (int)FollowUpPlanStatus.延期中)
+            {
+                btnFastFollowUp.Visible = true;
+            }
+            else
+            {
+                btnFastFollowUp.Enabled = false;
+                btnFastFollowUp.Text = plan.PlanStatus.ToString();
+            }
+
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -148,6 +165,35 @@ namespace RUINORERP.UI.CRM
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+
+            if (EditEntity.PlanStartDate > EditEntity.PlanEndDate)
+            {
+                MessageBox.Show("开始日期不能大于结束日期");
+                return;
+            }
+
+            //开始日期不能超过1年，并且结束日期PlanEndDate和开始日期PlanStartDate的间隔不能超1个月
+
+            if (EditEntity.PlanStartDate > DateTime.Now.AddYears(1))
+            {
+                MessageBox.Show("开始日期不能大于1年。");
+                return;
+            }
+
+            if (EditEntity.PlanEndDate > EditEntity.PlanStartDate.AddMonths(1))
+            {
+                MessageBox.Show("结束日期不能大于计划开始日期1个月。");
+                return;
+            }
+
+
+            if (EditEntity.PlanID > 0)
+            {
+                if (oldEndDate <= EditEntity.PlanEndDate)
+                {
+                    EditEntity.PlanStatus = (int)FollowUpPlanStatus.延期中;
+                }
+            }
 
             if (base.Validator())
             {

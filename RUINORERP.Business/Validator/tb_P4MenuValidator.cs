@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:59
+// 时间：12/18/2024 17:45:28
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,17 +26,34 @@ namespace RUINORERP.Business
     /*public partial class tb_P4MenuValidator:AbstractValidator<tb_P4Menu>*/
     public partial class tb_P4MenuValidator:BaseValidatorGeneric<tb_P4Menu>
     {
-     public tb_P4MenuValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_P4MenuValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_P4Menu =>tb_P4Menu.MenuID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_P4Menu =>tb_P4Menu.MenuID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单:下拉选择值不正确。");
  RuleFor(tb_P4Menu =>tb_P4Menu.MenuID).NotEmpty().When(x => x.MenuID.HasValue);
+
  RuleFor(tb_P4Menu =>tb_P4Menu.RoleID).Must(CheckForeignKeyValueCanNull).WithMessage("角色:下拉选择值不正确。");
  RuleFor(tb_P4Menu =>tb_P4Menu.RoleID).NotEmpty().When(x => x.RoleID.HasValue);
+
  RuleFor(tb_P4Menu =>tb_P4Menu.ModuleID).Must(CheckForeignKeyValueCanNull).WithMessage("模块:下拉选择值不正确。");
  RuleFor(tb_P4Menu =>tb_P4Menu.ModuleID).NotEmpty().When(x => x.ModuleID.HasValue);
+
+
+
  RuleFor(tb_P4Menu =>tb_P4Menu.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_P4Menu =>tb_P4Menu.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-       	
+
            	        Initialize();
      }
 

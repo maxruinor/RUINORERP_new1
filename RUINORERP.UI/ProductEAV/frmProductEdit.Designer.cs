@@ -35,6 +35,7 @@ namespace RUINORERP.UI.ProductEAV
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmProductEdit));
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPageMain = new Krypton.Navigator.KryptonPage();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.txtVendorModelCode = new Krypton.Toolkit.KryptonTextBox();
@@ -75,6 +76,7 @@ namespace RUINORERP.UI.ProductEAV
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.lblis_enabled = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonTreeView1 = new Krypton.Toolkit.KryptonTreeView();
             this.kryptonPage3 = new Krypton.Navigator.KryptonPage();
             this.kryptonPanel3 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSplitContainer3 = new Krypton.Toolkit.KryptonSplitContainer();
@@ -115,11 +117,16 @@ namespace RUINORERP.UI.ProductEAV
             this.openFileDialog4Img = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
+            this.chkexpandAll = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             this.kryptonNavigator1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageMain)).BeginInit();
             this.kryptonPageMain.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbSourceType)).BeginInit();
@@ -201,7 +208,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage3,
             this.kryptonPageImage,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 2;
+            this.kryptonNavigator1.SelectedIndex = 0;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1024, 614);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -210,7 +217,7 @@ namespace RUINORERP.UI.ProductEAV
             // kryptonPageMain
             // 
             this.kryptonPageMain.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.kryptonPageMain.Controls.Add(this.kryptonPanel1);
+            this.kryptonPageMain.Controls.Add(this.splitContainer1);
             this.kryptonPageMain.Flags = 65534;
             this.kryptonPageMain.LastVisibleSet = true;
             this.kryptonPageMain.MinimumSize = new System.Drawing.Size(50, 50);
@@ -225,6 +232,24 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPageMain.TextTitle = "主要资料";
             this.kryptonPageMain.ToolTipTitle = "Page ToolTip";
             this.kryptonPageMain.UniqueName = "60445288435B49021FB28348D07C5399";
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.kryptonPanel1);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.kryptonTreeView1);
+            this.splitContainer1.Panel2.Controls.Add(this.chkexpandAll);
+            this.splitContainer1.Size = new System.Drawing.Size(1022, 583);
+            this.splitContainer1.SplitterDistance = 687;
+            this.splitContainer1.TabIndex = 148;
             // 
             // kryptonPanel1
             // 
@@ -270,7 +295,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(1022, 583);
+            this.kryptonPanel1.Size = new System.Drawing.Size(687, 583);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // kryptonLabel1
@@ -341,7 +366,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblSalePublish
             // 
-            this.lblSalePublish.Location = new System.Drawing.Point(363, 313);
+            this.lblSalePublish.Location = new System.Drawing.Point(355, 313);
             this.lblSalePublish.Name = "lblSalePublish";
             this.lblSalePublish.Size = new System.Drawing.Size(62, 20);
             this.lblSalePublish.TabIndex = 137;
@@ -589,6 +614,16 @@ namespace RUINORERP.UI.ProductEAV
             this.lblis_enabled.TabIndex = 68;
             this.lblis_enabled.Values.Text = "是否启用";
             // 
+            // kryptonTreeView1
+            // 
+            this.kryptonTreeView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonTreeView1.Location = new System.Drawing.Point(0, 20);
+            this.kryptonTreeView1.Name = "kryptonTreeView1";
+            this.kryptonTreeView1.Size = new System.Drawing.Size(331, 563);
+            this.kryptonTreeView1.Sorted = true;
+            this.kryptonTreeView1.TabIndex = 3;
+            this.kryptonTreeView1.DoubleClick += new System.EventHandler(this.kryptonTreeView1_DoubleClick);
+            // 
             // kryptonPage3
             // 
             this.kryptonPage3.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
@@ -632,7 +667,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.kryptonSplitContainer3.Panel2.Controls.Add(this.kryptonSplitContainer多属性);
             this.kryptonSplitContainer3.Size = new System.Drawing.Size(1022, 583);
-            this.kryptonSplitContainer3.SplitterDistance = 61;
+            this.kryptonSplitContainer3.SplitterDistance = 95;
             this.kryptonSplitContainer3.TabIndex = 134;
             // 
             // btnClear
@@ -705,7 +740,7 @@ namespace RUINORERP.UI.ProductEAV
             // kryptonSplitContainer多属性.Panel2
             // 
             this.kryptonSplitContainer多属性.Panel2.Controls.Add(this.kryptonPanelDetailGrid);
-            this.kryptonSplitContainer多属性.Size = new System.Drawing.Size(1022, 517);
+            this.kryptonSplitContainer多属性.Size = new System.Drawing.Size(1022, 483);
             this.kryptonSplitContainer多属性.SplitterDistance = 173;
             this.kryptonSplitContainer多属性.TabIndex = 2;
             // 
@@ -724,7 +759,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanelDetailGrid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelDetailGrid.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelDetailGrid.Name = "kryptonPanelDetailGrid";
-            this.kryptonPanelDetailGrid.Size = new System.Drawing.Size(1022, 339);
+            this.kryptonPanelDetailGrid.Size = new System.Drawing.Size(1022, 305);
             this.kryptonPanelDetailGrid.TabIndex = 2;
             // 
             // dataGridView1
@@ -746,7 +781,7 @@ namespace RUINORERP.UI.ProductEAV
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(1022, 339);
+            this.dataGridView1.Size = new System.Drawing.Size(1022, 305);
             this.dataGridView1.SumColumns = null;
             this.dataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.dataGridView1.SumRowCellFormat = "N2";
@@ -763,7 +798,7 @@ namespace RUINORERP.UI.ProductEAV
             // groupLine2
             // 
             this.groupLine2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine2.Location = new System.Drawing.Point(0, 338);
+            this.groupLine2.Location = new System.Drawing.Point(0, 304);
             this.groupLine2.Name = "groupLine2";
             this.groupLine2.Size = new System.Drawing.Size(1022, 1);
             this.groupLine2.TabIndex = 2;
@@ -1016,6 +1051,16 @@ namespace RUINORERP.UI.ProductEAV
             this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
+            // chkexpandAll
+            // 
+            this.chkexpandAll.Dock = System.Windows.Forms.DockStyle.Top;
+            this.chkexpandAll.Location = new System.Drawing.Point(0, 0);
+            this.chkexpandAll.Name = "chkexpandAll";
+            this.chkexpandAll.Size = new System.Drawing.Size(331, 20);
+            this.chkexpandAll.TabIndex = 133;
+            this.chkexpandAll.Values.Text = "全部展开";
+            
+            // 
             // frmProductEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -1029,6 +1074,11 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonNavigator1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageMain)).EndInit();
             this.kryptonPageMain.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
@@ -1172,5 +1222,8 @@ namespace RUINORERP.UI.ProductEAV
         private RUINOR.WinFormsUI.TileListView.TileListView listView1;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonTextBox txtVendorModelCode;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        internal Krypton.Toolkit.KryptonTreeView kryptonTreeView1;
+        private Krypton.Toolkit.KryptonCheckBox chkexpandAll;
     }
 }

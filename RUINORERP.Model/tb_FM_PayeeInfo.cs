@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 18:15:11
+// 时间：12/18/2024 18:05:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 收款信息，供应商报销人的收款账号
     /// </summary>
     [Serializable()]
-    [Description("tb_FM_PayeeInfo")]
+    [Description("收款信息，供应商报销人的收款账号")]
     [SugarTable("tb_FM_PayeeInfo")]
     public partial class tb_FM_PayeeInfo: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FM_PayeeInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("收款信息，供应商报销人的收款账号tb_FM_PayeeInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -95,21 +95,6 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _IsDefault = false;
-        /// <summary>
-        /// 默认账号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsDefault", ColDesc = "默认账号")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsDefault", IsNullable = false, ColumnDescription = "默认账号")]
-        public bool IsDefault
-        {
-            get { return _IsDefault; }
-            set
-            {
-                SetProperty(ref _IsDefault, value);
-            }
-        }
-
         private string _Account_name;
         /// <summary>
         /// 账户名称
@@ -143,7 +128,7 @@ namespace RUINORERP.Model
         /// 收款码
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentCodeImagePath",ColDesc = "收款码")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PaymentCodeImagePath" ,Length=100,IsNullable = true,ColumnDescription = "收款码" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PaymentCodeImagePath" ,Length=300,IsNullable = true,ColumnDescription = "收款码" )]
         public string PaymentCodeImagePath
         { 
             get{return _PaymentCodeImagePath;}
@@ -194,20 +179,34 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _Is_enabled = true;
+        private bool _IsDefault= false;
+        /// <summary>
+        /// 默认账号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsDefault",ColDesc = "默认账号")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsDefault" ,IsNullable = false,ColumnDescription = "默认账号" )]
+        public bool IsDefault
+        { 
+            get{return _IsDefault;}
+            set{
+            SetProperty(ref _IsDefault, value);
+            }
+        }
+
+        private bool _Is_enabled= true;
         /// <summary>
         /// 是否启用
         /// </summary>
-        [AdvQueryAttribute(ColName = "Is_enabled", ColDesc = "是否启用")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Is_enabled", IsNullable = false, ColumnDescription = "是否启用")]
+        [AdvQueryAttribute(ColName = "Is_enabled",ColDesc = "是否启用")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_enabled" ,IsNullable = false,ColumnDescription = "是否启用" )]
         public bool Is_enabled
-        {
-            get { return _Is_enabled; }
-            set
-            {
-                SetProperty(ref _Is_enabled, value);
+        { 
+            get{return _Is_enabled;}
+            set{
+            SetProperty(ref _Is_enabled, value);
             }
         }
+
         #endregion
 
         #region 扩展属性
@@ -221,6 +220,14 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.PayeeInfoID))]
+        public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
+        //tb_FM_ExpenseClaim.PayeeInfoID)
+        //PayeeInfoID.FK_EXPENSECLAIM_REF_PAYEEINFO)
+        //tb_FM_PayeeInfo.PayeeInfoID)
 
 
         #endregion

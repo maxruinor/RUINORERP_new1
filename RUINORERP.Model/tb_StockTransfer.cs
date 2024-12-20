@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/15/2024 18:45:36
+// 时间：12/18/2024 18:16:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 调拨单-两个仓库之间的库存转移
     /// </summary>
     [Serializable()]
-    [Description("tb_StockTransfer")]
+    [Description("调拨单-两个仓库之间的库存转移")]
     [SugarTable("tb_StockTransfer")]
     public partial class tb_StockTransfer: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_StockTransfer" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("调拨单-两个仓库之间的库存转移tb_StockTransfer" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -129,7 +129,7 @@ namespace RUINORERP.Model
         /// 总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总成本" )]
         public decimal TotalCost
         { 
             get{return _TotalCost;}
@@ -143,7 +143,7 @@ namespace RUINORERP.Model
         /// 调拨金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalTransferAmount",ColDesc = "调拨金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTransferAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "调拨金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTransferAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "调拨金额" )]
         public decimal TotalTransferAmount
         { 
             get{return _TotalTransferAmount;}
@@ -198,14 +198,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 修改时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "Modified_at", ColDesc = "修改时间")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "Modified_at", IsNullable = true, ColumnDescription = "修改时间")]
+        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = true,ColumnDescription = "修改时间" )]
         public DateTime? Modified_at
-        {
-            get { return _Modified_at; }
-            set
-            {
-                SetProperty(ref _Modified_at, value);
+        { 
+            get{return _Modified_at;}
+            set{
+            SetProperty(ref _Modified_at, value);
             }
         }
 

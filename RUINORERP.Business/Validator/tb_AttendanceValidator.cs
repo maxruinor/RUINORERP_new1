@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:23
+// 时间：12/18/2024 17:45:25
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,9 +26,28 @@ namespace RUINORERP.Business
     /*public partial class tb_AttendanceValidator:AbstractValidator<tb_Attendance>*/
     public partial class tb_AttendanceValidator:BaseValidatorGeneric<tb_Attendance>
     {
-     public tb_AttendanceValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_AttendanceValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-            	
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+
+
+
+
+
+
+
+
+
+
            	        Initialize();
      }
 

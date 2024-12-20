@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:16
+// 时间：12/18/2024 17:45:30
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,34 +26,69 @@ namespace RUINORERP.Business
     /*public partial class tb_ProductionPlanValidator:AbstractValidator<tb_ProductionPlan>*/
     public partial class tb_ProductionPlanValidator:BaseValidatorGeneric<tb_ProductionPlan>
     {
-     public tb_ProductionPlanValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_ProductionPlanValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_ProductionPlan =>tb_ProductionPlan.SOrder_ID).Must(CheckForeignKeyValueCanNull).WithMessage("销售单号:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_ProductionPlan =>tb_ProductionPlan.SOrder_ID).Must(CheckForeignKeyValueCanNull).WithMessage("销售单号:下拉选择值不正确。");
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.SOrder_ID).NotEmpty().When(x => x.SOrder_ID.HasValue);
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.SaleOrderNo).MaximumLength(25).WithMessage("销售单号:不能超过最大长度,25.");
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.PPNo).MaximumLength(50).WithMessage("计划单号:不能超过最大长度,50.");
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.PPNo).NotEmpty().WithMessage("计划单号:不能为空。");
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.DepartmentID).Must(CheckForeignKeyValue).WithMessage("需求部门:下拉选择值不正确。");
+
 //***** 
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.Priority).NotNull().WithMessage("紧急程度:不能为空。");
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
+
+
+
 //***** 
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.TotalCompletedQuantity).NotNull().WithMessage("完成数:不能为空。");
+
 //***** 
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.TotalQuantity).NotNull().WithMessage("计划数:不能为空。");
+
+
 //***** 
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.DataStatus).NotNull().WithMessage("单据状态:不能为空。");
+
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+
+
+
+
 //***** 
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
+
+
  RuleFor(tb_ProductionPlan =>tb_ProductionPlan.CloseCaseOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
-       	
+
            	                //long
                 //PPID
                 //tb_ProductionPlanDetail
@@ -60,8 +97,7 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_ProductionPlanDetails).NotNull();
                 //RuleForEach(x => x.tb_ProductionPlanDetails).NotNull();
                 //RuleFor(x => x.tb_ProductionPlanDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-        
-                Initialize();
+                    Initialize();
      }
 
 

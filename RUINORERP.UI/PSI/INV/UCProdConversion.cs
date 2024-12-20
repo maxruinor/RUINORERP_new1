@@ -129,7 +129,7 @@ namespace RUINORERP.UI.PSI.INV
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_ProdConversionValidator(), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProdConversionValidator> (), kryptonSplitContainer1.Panel1.Controls);
             }
 
             //如果属性变化 则状态为修改

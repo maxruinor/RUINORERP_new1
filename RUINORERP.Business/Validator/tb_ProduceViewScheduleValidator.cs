@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:14
+// 时间：12/18/2024 17:45:30
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,11 +26,24 @@ namespace RUINORERP.Business
     /*public partial class tb_ProduceViewScheduleValidator:AbstractValidator<tb_ProduceViewSchedule>*/
     public partial class tb_ProduceViewScheduleValidator:BaseValidatorGeneric<tb_ProduceViewSchedule>
     {
-     public tb_ProduceViewScheduleValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_ProduceViewScheduleValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_ProduceViewSchedule =>tb_ProduceViewSchedule.product_id).NotEmpty().When(x => x.product_id.HasValue);
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_ProduceViewSchedule =>tb_ProduceViewSchedule.product_id).NotEmpty().When(x => x.product_id.HasValue);
+
  RuleFor(tb_ProduceViewSchedule =>tb_ProduceViewSchedule.quantity).NotEmpty().When(x => x.quantity.HasValue);
-       	
+
+
+
            	        Initialize();
      }
 

@@ -32,6 +32,7 @@
             System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer1 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCBillOfMaterials));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
             this.lblReview = new Krypton.Toolkit.KryptonLabel();
             this.txtProdDetailID = new Krypton.Toolkit.KryptonTextBox();
@@ -112,7 +113,6 @@
             this.kryptonTreeGridViewBOMDetail = new Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView();
             this.kryptonTreeView1 = new Krypton.Toolkit.KryptonTreeView();
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -222,6 +222,14 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(909, 746);
             this.kryptonSplitContainer1.SplitterDistance = 261;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(273, 173);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(64, 20);
+            this.kryptonLabel1.TabIndex = 146;
+            this.kryptonLabel1.Values.Text = "BOM图片";
             // 
             // lblDataStatus
             // 
@@ -354,6 +362,8 @@
             this.txtSelfApportionedCost.Name = "txtSelfApportionedCost";
             this.txtSelfApportionedCost.Size = new System.Drawing.Size(90, 23);
             this.txtSelfApportionedCost.TabIndex = 132;
+            this.txtSelfApportionedCost.ToolTipValues.Description = "运营管理租金成本";
+            this.txtSelfApportionedCost.ToolTipValues.Heading = "";
             // 
             // lblSelfApportionedCost
             // 
@@ -377,6 +387,8 @@
             this.txtTotalSelfManuCost.Name = "txtTotalSelfManuCost";
             this.txtTotalSelfManuCost.Size = new System.Drawing.Size(90, 23);
             this.txtTotalSelfManuCost.TabIndex = 112;
+            this.txtTotalSelfManuCost.ToolTipValues.Description = "人工设备损耗等费用";
+            this.txtTotalSelfManuCost.ToolTipValues.Heading = "";
             // 
             // txtSelfProductionAllCosts
             // 
@@ -416,6 +428,9 @@
             this.txtOutApportionedCost.Name = "txtOutApportionedCost";
             this.txtOutApportionedCost.Size = new System.Drawing.Size(90, 23);
             this.txtOutApportionedCost.TabIndex = 131;
+            this.txtOutApportionedCost.ToolTipValues.Description = "其他损耗间接费用";
+            this.txtOutApportionedCost.ToolTipValues.EnableToolTips = true;
+            this.txtOutApportionedCost.ToolTipValues.Heading = "";
             // 
             // lblOutApportionedCost
             // 
@@ -446,6 +461,8 @@
             this.txtTotalOutManuCost.Name = "txtTotalOutManuCost";
             this.txtTotalOutManuCost.Size = new System.Drawing.Size(90, 23);
             this.txtTotalOutManuCost.TabIndex = 107;
+            this.txtTotalOutManuCost.ToolTipValues.Description = "加工的直接费用";
+            this.txtTotalOutManuCost.ToolTipValues.Heading = "";
             // 
             // lblTotalOutManuCost
             // 
@@ -929,7 +946,9 @@
             this.kryptonTreeGridViewBOMDetail.Location = new System.Drawing.Point(3, 3);
             this.kryptonTreeGridViewBOMDetail.Name = "kryptonTreeGridViewBOMDetail";
             this.kryptonTreeGridViewBOMDetail.ParentIdRootValue = ((long)(0));
+            this.kryptonTreeGridViewBOMDetail.SelectFilter = "";
             this.kryptonTreeGridViewBOMDetail.Size = new System.Drawing.Size(205, 714);
+            this.kryptonTreeGridViewBOMDetail.SortColumnName = "";
             this.kryptonTreeGridViewBOMDetail.TabIndex = 12;
             this.kryptonTreeGridViewBOMDetail.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.kryptonTreeGridViewBOMDetail_CellFormatting);
             // 
@@ -941,14 +960,6 @@
             this.kryptonTreeView1.Size = new System.Drawing.Size(205, 714);
             this.kryptonTreeView1.Sorted = true;
             this.kryptonTreeView1.TabIndex = 3;
-            // 
-            // kryptonLabel1
-            // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(273, 173);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(64, 20);
-            this.kryptonLabel1.TabIndex = 146;
-            this.kryptonLabel1.Values.Text = "BOM图片";
             // 
             // UCBillOfMaterials
             // 

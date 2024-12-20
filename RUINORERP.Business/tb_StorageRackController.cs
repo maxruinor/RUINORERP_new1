@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:37
+// 时间：12/18/2024 18:02:16
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_StorageRack info)
+        public ValidationResult Validator(tb_StorageRack info)
         {
-            tb_StorageRackValidator validator = new tb_StorageRackValidator();
+
+           // tb_StorageRackValidator validator = new tb_StorageRackValidator();
+           tb_StorageRackValidator validator = _appContext.GetRequiredService<tb_StorageRackValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_StorageRackValidator validator = new tb_StorageRackValidator();
+            //tb_StorageRackValidator validator = new tb_StorageRackValidator();
+           tb_StorageRackValidator validator = _appContext.GetRequiredService<tb_StorageRackValidator>();
             ValidationResult results = validator.Validate(info as tb_StorageRack);
             return results;
         }
@@ -247,12 +248,13 @@ namespace RUINORERP.Business
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_StorageRack>(entity as tb_StorageRack)
                         .Include(m => m.tb_StockOutDetails)
                     .Include(m => m.tb_SaleOutReDetails)
+                    .Include(m => m.tb_PurReturnEntryDetails)
                     .Include(m => m.tb_FinishedGoodsInvDetails)
                     .Include(m => m.tb_Prods)
                     .Include(m => m.tb_StocktakeDetails)
                     .Include(m => m.tb_PurEntryDetails)
-                    .Include(m => m.tb_PurEntryReDetails)
                     .Include(m => m.tb_SaleOutDetails)
+                    .Include(m => m.tb_PurEntryReDetails)
                     .Include(m => m.tb_Inventories)
                     .Include(m => m.tb_StockInDetails)
                             .ExecuteCommandAsync();
@@ -263,12 +265,13 @@ namespace RUINORERP.Business
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_StorageRack>(entity as tb_StorageRack)
                 .Include(m => m.tb_StockOutDetails)
                 .Include(m => m.tb_SaleOutReDetails)
+                .Include(m => m.tb_PurReturnEntryDetails)
                 .Include(m => m.tb_FinishedGoodsInvDetails)
                 .Include(m => m.tb_Prods)
                 .Include(m => m.tb_StocktakeDetails)
                 .Include(m => m.tb_PurEntryDetails)
-                .Include(m => m.tb_PurEntryReDetails)
                 .Include(m => m.tb_SaleOutDetails)
+                .Include(m => m.tb_PurEntryReDetails)
                 .Include(m => m.tb_Inventories)
                 .Include(m => m.tb_StockInDetails)
                                 .ExecuteCommandAsync();
@@ -303,12 +306,13 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_StorageRack>()
                                 .Includes(m => m.tb_StockOutDetails)
                         .Includes(m => m.tb_SaleOutReDetails)
+                        .Includes(m => m.tb_PurReturnEntryDetails)
                         .Includes(m => m.tb_FinishedGoodsInvDetails)
                         .Includes(m => m.tb_Prods)
                         .Includes(m => m.tb_StocktakeDetails)
                         .Includes(m => m.tb_PurEntryDetails)
-                        .Includes(m => m.tb_PurEntryReDetails)
                         .Includes(m => m.tb_SaleOutDetails)
+                        .Includes(m => m.tb_PurEntryReDetails)
                         .Includes(m => m.tb_Inventories)
                         .Includes(m => m.tb_StockInDetails)
                                         .Where(useLike, dto);
@@ -321,15 +325,7 @@ namespace RUINORERP.Business
             tb_StorageRack entity = model as tb_StorageRack;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_StorageRack>(m => m.Rack_ID== entity.Rack_ID)
                                 .Include(m => m.tb_StockOutDetails)
-                        .Include(m => m.tb_SaleOutReDetails)
-                        .Include(m => m.tb_FinishedGoodsInvDetails)
-                        .Include(m => m.tb_Prods)
-                        .Include(m => m.tb_StocktakeDetails)
-                        .Include(m => m.tb_PurEntryDetails)
-                        .Include(m => m.tb_PurEntryReDetails)
-                        .Include(m => m.tb_SaleOutDetails)
-                        .Include(m => m.tb_Inventories)
-                        .Include(m => m.tb_StockInDetails)
+                      
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -495,12 +491,13 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_StockOutDetails )
                                 .Includes(t => t.tb_SaleOutReDetails )
+                                .Includes(t => t.tb_PurReturnEntryDetails )
                                 .Includes(t => t.tb_FinishedGoodsInvDetails )
                                 .Includes(t => t.tb_Prods )
                                 .Includes(t => t.tb_StocktakeDetails )
                                 .Includes(t => t.tb_PurEntryDetails )
-                                .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_SaleOutDetails )
+                                .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_Inventories )
                                 .Includes(t => t.tb_StockInDetails )
                         .ToListAsync();
@@ -525,12 +522,13 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_StockOutDetails )
                                 .Includes(t => t.tb_SaleOutReDetails )
+                                .Includes(t => t.tb_PurReturnEntryDetails )
                                 .Includes(t => t.tb_FinishedGoodsInvDetails )
                                 .Includes(t => t.tb_Prods )
                                 .Includes(t => t.tb_StocktakeDetails )
                                 .Includes(t => t.tb_PurEntryDetails )
-                                .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_SaleOutDetails )
+                                .Includes(t => t.tb_PurEntryReDetails )
                                 .Includes(t => t.tb_Inventories )
                                 .Includes(t => t.tb_StockInDetails )
                         .ToListAsync();
@@ -555,12 +553,13 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_location )
                                         .Includes(t => t.tb_StockOutDetails )
                             .Includes(t => t.tb_SaleOutReDetails )
+                            .Includes(t => t.tb_PurReturnEntryDetails )
                             .Includes(t => t.tb_FinishedGoodsInvDetails )
                             .Includes(t => t.tb_Prods )
                             .Includes(t => t.tb_StocktakeDetails )
                             .Includes(t => t.tb_PurEntryDetails )
-                            .Includes(t => t.tb_PurEntryReDetails )
                             .Includes(t => t.tb_SaleOutDetails )
+                            .Includes(t => t.tb_PurEntryReDetails )
                             .Includes(t => t.tb_Inventories )
                             .Includes(t => t.tb_StockInDetails )
                         .ToList();
@@ -602,12 +601,13 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_location )
                                         .Includes(t => t.tb_StockOutDetails )
                             .Includes(t => t.tb_SaleOutReDetails )
+                            .Includes(t => t.tb_PurReturnEntryDetails )
                             .Includes(t => t.tb_FinishedGoodsInvDetails )
                             .Includes(t => t.tb_Prods )
                             .Includes(t => t.tb_StocktakeDetails )
                             .Includes(t => t.tb_PurEntryDetails )
-                            .Includes(t => t.tb_PurEntryReDetails )
                             .Includes(t => t.tb_SaleOutDetails )
+                            .Includes(t => t.tb_PurEntryReDetails )
                             .Includes(t => t.tb_Inventories )
                             .Includes(t => t.tb_StockInDetails )
                         .FirstAsync();

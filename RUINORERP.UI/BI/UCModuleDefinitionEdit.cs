@@ -35,6 +35,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<tb_ModuleDefinition>(entity, t => t.Visible, chkVisible, false);
             DataBindingHelper.BindData4CheckBox<tb_ModuleDefinition>(entity, t => t.Available, chkAvailable, false);
             DataBindingHelper.BindData4TextBox<tb_ModuleDefinition>(entity, t => t.IconFile_Path, txtIconFile_Path, BindDataType4TextBox.Text, false);
+            base.BindData(entity);
         }
 
 

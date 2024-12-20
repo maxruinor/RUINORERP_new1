@@ -53,6 +53,8 @@ using RUINORERP.Server.BizService;
 using Microsoft.Extensions.Caching.Memory;
 using Autofac.Core;
 using RUINORERP.Business.Security;
+using RUINORERP.Model.ConfigModel;
+using System.Configuration;
 
 namespace RUINORERP.Server
 {
@@ -376,6 +378,26 @@ namespace RUINORERP.Server
             //    logBuilder.AddLog4Net("ConfigFile/log4net.config", true);
             //});
 
+            //services.Configure<SystemGlobalconfig>(Configuration.GetSection("SystemGlobalConfig"));
+            //IOptionsSnapshot适用于作用域（Scoped）生命周期的服务，每次请求都会重新获取一次配置。这意味着在Web API的每个请求中，你都可以获得最新的配置值。
+            //IOptionsMonitor适用于单例（Singleton）生命周期的服务，它会监听配置文件发生的更新，并且自动同步响应
+            //在这两种情况下，当你的config.json文件发生变化时，IOptionsSnapshot和IOptionsMonitor都会确保你的服务能够获取到最新的配置值。选择使用哪一个取决于你的服务的生命周期和需求。如果你的服务是短期的，并且每个请求都需要最新的配置，那么IOptionsSnapshot是更好的选择。如果你的服务是长期的，并且需要在配置变化时得到通知，那么IOptionsMonitor是更合适的选择
+
+
+            // 读取自定义的 JSON 配置文件
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(System.IO.Path.Combine( Directory.GetCurrentDirectory(), "SysConfigFiles"))
+                .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
+                .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
+                //客户端才用。验证是UI添加实体时用
+                //.AddJsonFile("GlobalValidator.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            //services.Configure<SystemGlobalconfig>(builder.GetSection("SystemGlobalConfig"));
+            //services.Configure<GlobalValidatorConfig>(builder.GetSection("GlobalValidatorConfig"));
+            services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
+            services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
+
             services.AddSingleton(typeof(frmMain));//MDI最大。才开一次才能单例
                                                    // services.AddSingleton(new AppSettings(WebHostEnvironment));
                                                    //services.AddScoped<ICurrentUser, CurrentUser>();
@@ -454,6 +476,7 @@ namespace RUINORERP.Server
             services.AddAutoMapperInstall();
             */
             services.AddSingleton<UserService>();
+            services.AddSingleton<DataServiceChannel>();
             //映射暂时注释掉
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 18:15:11
+// 时间：12/18/2024 18:05:53
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_FM_PayeeInfo info)
+        public ValidationResult Validator(tb_FM_PayeeInfo info)
         {
-            tb_FM_PayeeInfoValidator validator = new tb_FM_PayeeInfoValidator();
+
+           // tb_FM_PayeeInfoValidator validator = new tb_FM_PayeeInfoValidator();
+           tb_FM_PayeeInfoValidator validator = _appContext.GetRequiredService<tb_FM_PayeeInfoValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_FM_PayeeInfoValidator validator = new tb_FM_PayeeInfoValidator();
+            //tb_FM_PayeeInfoValidator validator = new tb_FM_PayeeInfoValidator();
+           tb_FM_PayeeInfoValidator validator = _appContext.GetRequiredService<tb_FM_PayeeInfoValidator>();
             ValidationResult results = validator.Validate(info as tb_FM_PayeeInfo);
             return results;
         }
@@ -245,16 +246,14 @@ namespace RUINORERP.Business
             if (entity.PayeeInfoID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_PayeeInfo>(entity as tb_FM_PayeeInfo)
-                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                        .Include(m => m.tb_FM_ExpenseClaims)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PayeeInfo>(entity as tb_FM_PayeeInfo)
-                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                .Include(m => m.tb_FM_ExpenseClaims)
                                 .ExecuteCommandAsync();
         }
         
@@ -285,9 +284,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .Includes(m => m.tb_FM_ExpenseClaims)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -296,9 +294,8 @@ namespace RUINORERP.Business
         {
             tb_FM_PayeeInfo entity = model as tb_FM_PayeeInfo;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_PayeeInfo>(m => m.PayeeInfoID== entity.PayeeInfoID)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                .Include(m => m.tb_FM_ExpenseClaims)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -462,7 +459,8 @@ namespace RUINORERP.Business
             List<tb_FM_PayeeInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>()
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_FM_ExpenseClaims )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -483,7 +481,8 @@ namespace RUINORERP.Business
             List<tb_FM_PayeeInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>().Where(exp)
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_FM_ExpenseClaims )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -504,7 +503,8 @@ namespace RUINORERP.Business
             List<tb_FM_PayeeInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>().Where(exp)
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
-                                    .ToList();
+                                        .Includes(t => t.tb_FM_ExpenseClaims )
+                        .ToList();
             
             foreach (var item in list)
             {
@@ -542,7 +542,8 @@ namespace RUINORERP.Business
             tb_FM_PayeeInfo entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PayeeInfo>().Where(w => w.PayeeInfoID == (long)id)
                              .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
-                                    .FirstAsync();
+                                        .Includes(t => t.tb_FM_ExpenseClaims )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

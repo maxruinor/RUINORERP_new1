@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:45
+// 时间：12/18/2024 17:45:27
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,25 +26,46 @@ namespace RUINORERP.Business
     /*public partial class tb_FM_PrePaymentBillDetailValidator:AbstractValidator<tb_FM_PrePaymentBillDetail>*/
     public partial class tb_FM_PrePaymentBillDetailValidator:BaseValidatorGeneric<tb_FM_PrePaymentBillDetail>
     {
-     public tb_FM_PrePaymentBillDetailValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_FM_PrePaymentBillDetailValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.PrePaymentBill_id).NotEmpty().When(x => x.PrePaymentBill_id.HasValue);
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.PrePaymentBill_id).NotEmpty().When(x => x.PrePaymentBill_id.HasValue);
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("厂商:下拉选择值不正确。");
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币别:下拉选择值不正确。");
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
- RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.account_id).Must(CheckForeignKeyValueCanNull).WithMessage("账户:下拉选择值不正确。");
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.account_id).NotEmpty().When(x => x.account_id.HasValue);
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.PaymentReason).MaximumLength(25).WithMessage("事由:不能超过最大长度,25.");
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.SourceBill_BizType).NotEmpty().When(x => x.SourceBill_BizType.HasValue);
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.SourceBill_ID).NotEmpty().When(x => x.SourceBill_ID.HasValue);
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.SourceBillNO).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.Reason).MaximumLength(25).WithMessage("原因:不能超过最大长度,25.");
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.OffsetMethod).MaximumLength(25).WithMessage("冲销方式:不能超过最大长度,25.");
- RuleFor(x => x.Amount).PrecisionScale(19,6,true).WithMessage("金额:小数位不能超过6。");
- RuleFor(x => x.PrepaidAmount).PrecisionScale(19,6,true).WithMessage("已转金额:小数位不能超过6。");
+
+ RuleFor(x => x.Amount).PrecisionScale(19,4,true).WithMessage("金额:小数位不能超过4。");
+
+ RuleFor(x => x.PrepaidAmount).PrecisionScale(19,4,true).WithMessage("已转金额:小数位不能超过4。");
+
  RuleFor(tb_FM_PrePaymentBillDetail =>tb_FM_PrePaymentBillDetail.Notes).MaximumLength(15).WithMessage("备注:不能超过最大长度,15.");
-       	
+
            	        Initialize();
      }
 

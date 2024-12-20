@@ -34,6 +34,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_OutInStockType>(entity, t => t.OutIn, rdbis_in, rdbis_out);
             //有默认值
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_OutInStockType>(entity, t => t.Is_enabled, rdbis_enabledYes, rdbis_enabledNo);
+            base.BindData(entity);
         }
         
 

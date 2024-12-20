@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/05/2024 23:44:21
+// 时间：12/18/2024 17:45:32
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,12 +26,24 @@ namespace RUINORERP.Business
     /*public partial class tb_UIGridSettingValidator:AbstractValidator<tb_UIGridSetting>*/
     public partial class tb_UIGridSettingValidator:BaseValidatorGeneric<tb_UIGridSetting>
     {
-     public tb_UIGridSettingValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_UIGridSettingValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_UIGridSetting =>tb_UIGridSetting.UIMenuPID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单设置:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_UIGridSetting =>tb_UIGridSetting.UIMenuPID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单设置:下拉选择值不正确。");
  RuleFor(tb_UIGridSetting =>tb_UIGridSetting.UIMenuPID).NotEmpty().When(x => x.UIMenuPID.HasValue);
+
  RuleFor(tb_UIGridSetting =>tb_UIGridSetting.GridKeyName).MaximumLength(127).WithMessage("表格名称:不能超过最大长度,127.");
-       	
+
+
            	        Initialize();
      }
 

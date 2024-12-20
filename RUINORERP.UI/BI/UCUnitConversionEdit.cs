@@ -41,6 +41,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_Unit_Conversion>(entity, t => t.Conversion_ratio.ToString(), txtConversion_ratio, BindDataType4TextBox.Money, false);
 
             base.errorProviderForAllInput.DataSource = entity;
+            base.BindData(entity);
         }
 
 

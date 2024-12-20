@@ -50,6 +50,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CmbByEnum<tb_SysGlobalDynamicConfig>(entity, k => k.ValueType, typeof(ConfigValueType), cmbValueType, false);
             DataBindingHelper.BindData4TextBox<tb_SysGlobalDynamicConfig>(entity, t => t.ConfigType, txtConfigType, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_SysGlobalDynamicConfig>(entity, t => t.IsActive, chkIsActive, false);
+            base.BindData(entity);
         }
         private void btnCancel_Click(object sender, EventArgs e)
         {

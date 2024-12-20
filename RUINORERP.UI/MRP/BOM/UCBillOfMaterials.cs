@@ -883,7 +883,7 @@ namespace RUINORERP.UI.MRP.BOM
             //这样在新增加和修改时才会触发添加母件的快捷按钮
             if ((EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改))
             {
-                base.InitRequiredToControl(new tb_BOM_SValidator(), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_BOM_SValidator> (), kryptonSplitContainer1.Panel1.Controls);
                 //  base.InitEditItemToControl(EditEntity, kryptonPanel1.Controls);
                 //  base.InitFilterForControl<View_ProdDetail, View_ProdDetailQueryDto>(EditEntity, txtProdDetailID, c => c.CNName);
 

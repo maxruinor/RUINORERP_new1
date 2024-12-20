@@ -28,7 +28,7 @@
     <MapFileExtensions>true</MapFileExtensions>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -1039,11 +1039,23 @@
     <Compile Include="BI\UCUnitConversionList.Designer.cs">
       <DependentUpon>UCUnitConversionList.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\UCglCommentEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCglCommentEdit.Designer.cs">
+      <DependentUpon>UCglCommentEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCUnitEdit.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="BI\UCUnitEdit.Designer.cs">
       <DependentUpon>UCUnitEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCglCommentList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCglCommentList.Designer.cs">
+      <DependentUpon>UCglCommentList.cs</DependentUpon>
     </Compile>
     <Compile Include="BI\UCUnitList.cs">
       <SubType>UserControl</SubType>
@@ -1403,6 +1415,7 @@
     <Compile Include="IM\NotificationBox.Designer.cs">
       <DependentUpon>NotificationBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="IM\NotificationService.cs" />
     <Compile Include="IM\WidgetMessager.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2724,8 +2737,14 @@
     <EmbeddedResource Include="BI\UCUnitConversionList.resx">
       <DependentUpon>UCUnitConversionList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCglCommentEdit.resx">
+      <DependentUpon>UCglCommentEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCUnitEdit.resx">
       <DependentUpon>UCUnitEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCglCommentList.resx">
+      <DependentUpon>UCglCommentList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCUnitList.resx">
       <DependentUpon>UCUnitList.cs</DependentUpon>
@@ -3377,6 +3396,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include=".editorconfig" />
+    <Content Include="SysConfigFiles\GlobalValidatorConfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -3432,6 +3454,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="RUINORERP.UI_TemporaryKey.pfx" />
+    <Content Include="SysConfigFiles\SystemGlobalConfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 19:02:35
+// 时间：12/18/2024 18:16:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 销售出库退回单
     /// </summary>
     [Serializable()]
-    [Description("tb_SaleOutRe")]
+    [Description("销售出库退回单")]
     [SugarTable("tb_SaleOutRe")]
     public partial class tb_SaleOutRe: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_SaleOutRe" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("销售出库退回单tb_SaleOutRe" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -71,7 +71,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProjectGroup_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "项目组" )]
-        [FKRelationAttribute("tb_ProjectGroup", "ProjectGroup_ID")]
+        [FKRelationAttribute("tb_ProjectGroup","ProjectGroup_ID")]
         public long? ProjectGroup_ID
         { 
             get{return _ProjectGroup_ID;}
@@ -100,7 +100,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Paytype_ID",ColDesc = "退款类型")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Paytype_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "退款类型" )]
-        [FKRelationAttribute("tb_PaymentMethod", "Paytype_ID")]
+        [FKRelationAttribute("tb_PaymentMethod","Paytype_ID")]
         public long? Paytype_ID
         { 
             get{return _Paytype_ID;}
@@ -187,7 +187,7 @@ namespace RUINORERP.Model
         /// 实际退款金额
         /// </summary>
         [AdvQueryAttribute(ColName = "ActualRefundAmount",ColDesc = "实际退款金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualRefundAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "实际退款金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualRefundAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实际退款金额" )]
         public decimal ActualRefundAmount
         { 
             get{return _ActualRefundAmount;}
@@ -201,7 +201,7 @@ namespace RUINORERP.Model
         /// 退款金额合计
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "退款金额合计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "退款金额合计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "退款金额合计" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -229,7 +229,7 @@ namespace RUINORERP.Model
         /// 需退运费
         /// </summary>
         [AdvQueryAttribute(ColName = "ShipCost",ColDesc = "需退运费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "需退运费" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "需退运费" )]
         public decimal ShipCost
         { 
             get{return _ShipCost;}
@@ -328,7 +328,7 @@ namespace RUINORERP.Model
         /// 退货原因
         /// </summary>
         [AdvQueryAttribute(ColName = "ReturnReason",ColDesc = "退货原因")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReturnReason" ,Length=1000,IsNullable = true,ColumnDescription = "退货原因")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReturnReason" ,Length=1000,IsNullable = true,ColumnDescription = "退货原因" )]
         public string ReturnReason
         { 
             get{return _ReturnReason;}
@@ -522,6 +522,16 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(Paytype_ID))]
+        public virtual tb_PaymentMethod tb_paymentmethod { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
+        public virtual tb_ProjectGroup tb_projectgroup { get; set; }
+
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(SaleOut_MainID))]

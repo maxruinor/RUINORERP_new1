@@ -44,6 +44,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<tb_Favorite>(base.bindingSourceEdit, t => t.is_enabled, chkis_enabled, false);
             DataBindingHelper.BindData4CheckBox<tb_Favorite>(base.bindingSourceEdit, t => t.is_available, chkis_available, false);
             DataBindingHelper.BindData4TextBox<tb_Favorite>(base.bindingSourceEdit, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
+          //  base.BindData(BASE.bindingSourceEdit);
         }
 
    

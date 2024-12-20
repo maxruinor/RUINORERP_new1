@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:07
+// 时间：12/18/2024 17:45:29
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,21 +26,43 @@ namespace RUINORERP.Business
     /*public partial class tb_ProdBundleDetailValidator:AbstractValidator<tb_ProdBundleDetail>*/
     public partial class tb_ProdBundleDetailValidator:BaseValidatorGeneric<tb_ProdBundleDetail>
     {
-     public tb_ProdBundleDetailValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_ProdBundleDetailValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-     //***** 
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+//***** 
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.BundleID).NotNull().WithMessage("套装组合:不能为空。");
+
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品:下拉选择值不正确。");
+
 //***** 
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
+
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.SKU).MaximumLength(40).WithMessage("SKU:不能超过最大长度,40.");
+
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.property).MaximumLength(127).WithMessage("子件属性:不能超过最大长度,127.");
+
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+
 //有默认值
+
 //有默认值
+
+
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-       	
+
+
            	        Initialize();
      }
 

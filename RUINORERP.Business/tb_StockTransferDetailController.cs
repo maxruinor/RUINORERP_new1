@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/15/2024 18:45:37
+// 时间：12/18/2024 18:02:16
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_StockTransferDetail info)
+        public ValidationResult Validator(tb_StockTransferDetail info)
         {
-            tb_StockTransferDetailValidator validator = new tb_StockTransferDetailValidator();
+
+           // tb_StockTransferDetailValidator validator = new tb_StockTransferDetailValidator();
+           tb_StockTransferDetailValidator validator = _appContext.GetRequiredService<tb_StockTransferDetailValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_StockTransferDetailValidator validator = new tb_StockTransferDetailValidator();
+            //tb_StockTransferDetailValidator validator = new tb_StockTransferDetailValidator();
+           tb_StockTransferDetailValidator validator = _appContext.GetRequiredService<tb_StockTransferDetailValidator>();
             ValidationResult results = validator.Validate(info as tb_StockTransferDetail);
             return results;
         }

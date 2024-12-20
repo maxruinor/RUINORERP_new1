@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:29
+// 时间：12/18/2024 18:02:14
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_SaleOut info)
+        public ValidationResult Validator(tb_SaleOut info)
         {
-            tb_SaleOutValidator validator = new tb_SaleOutValidator();
+
+           // tb_SaleOutValidator validator = new tb_SaleOutValidator();
+           tb_SaleOutValidator validator = _appContext.GetRequiredService<tb_SaleOutValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_SaleOutValidator validator = new tb_SaleOutValidator();
+            //tb_SaleOutValidator validator = new tb_SaleOutValidator();
+           tb_SaleOutValidator validator = _appContext.GetRequiredService<tb_SaleOutValidator>();
             ValidationResult results = validator.Validate(info as tb_SaleOut);
             return results;
         }
@@ -464,6 +465,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_saleorder )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_paymentmethod )
+                   
                                             .Includes(t => t.tb_SaleOutRes )
                                 .Includes(t => t.tb_SaleOutDetails )
                         .ToListAsync();
@@ -489,6 +491,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_saleorder )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_paymentmethod )
+                    
                                             .Includes(t => t.tb_SaleOutRes )
                                 .Includes(t => t.tb_SaleOutDetails )
                         .ToListAsync();
@@ -514,6 +517,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_saleorder )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_paymentmethod )
+                     
                                         .Includes(t => t.tb_SaleOutRes )
                             .Includes(t => t.tb_SaleOutDetails )
                         .ToList();
@@ -556,7 +560,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_saleorder )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_paymentmethod )
-                                        .Includes(t => t.tb_SaleOutRes )
+                 
                             .Includes(t => t.tb_SaleOutDetails )
                         .FirstAsync();
             if(entity!=null)

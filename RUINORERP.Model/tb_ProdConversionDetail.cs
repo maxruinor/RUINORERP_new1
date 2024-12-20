@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/10/2024 14:15:54
+// 时间：12/18/2024 18:17:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品转换单明细
     /// </summary>
     [Serializable()]
-    [Description("tb_ProdConversionDetail")]
+    [Description("产品转换单明细")]
     [SugarTable("tb_ProdConversionDetail")]
     public partial class tb_ProdConversionDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProdConversionDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("产品转换单明细tb_ProdConversionDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -66,8 +66,6 @@ namespace RUINORERP.Model
             }
         }
 
- 
-
         private long _ProdDetailID_from;
         /// <summary>
         /// 来源产品
@@ -87,18 +85,15 @@ namespace RUINORERP.Model
         /// <summary>
         /// 来源条码
         /// </summary>
-        [AdvQueryAttribute(ColName = "BarCode_from", ColDesc = "来源条码")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BarCode_from", Length = 255, IsNullable = true, ColumnDescription = "来源条码")]
+        [AdvQueryAttribute(ColName = "BarCode_from",ColDesc = "来源条码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BarCode_from" ,Length=255,IsNullable = true,ColumnDescription = "来源条码" )]
         public string BarCode_from
-        {
-            get { return _BarCode_from; }
-            set
-            {
-                SetProperty(ref _BarCode_from, value);
+        { 
+            get{return _BarCode_from;}
+            set{
+            SetProperty(ref _BarCode_from, value);
             }
         }
-
-
 
         private string _SKU_from;
         /// <summary>
@@ -176,7 +171,7 @@ namespace RUINORERP.Model
         /// 来源属性
         /// </summary>
         [AdvQueryAttribute(ColName = "property_from",ColDesc = "来源属性")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "property_from" ,Length=255,IsNullable = false,ColumnDescription = "来源属性" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "property_from" ,Length=255,IsNullable = true,ColumnDescription = "来源属性" )]
         public string property_from
         { 
             get{return _property_from;}
@@ -198,35 +193,33 @@ namespace RUINORERP.Model
             SetProperty(ref _ConversionQty, value);
             }
         }
+
         private long _ProdDetailID_to;
         /// <summary>
-        /// 目标产品
+        /// 产品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID_to", ColDesc = "目标产品")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProdDetailID_to", DecimalDigits = 0, IsNullable = false, ColumnDescription = "目标产品")]
-        [FKRelationAttribute("tb_ProdDetail", "ProdDetailID")]
+        [AdvQueryAttribute(ColName = "ProdDetailID_to",ColDesc = "产品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID_to" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品" )]
+        [FKRelationAttribute("tb_ProdDetail","ProdDetailID_to")]
         public long ProdDetailID_to
-        {
-            get { return _ProdDetailID_to; }
-            set
-            {
-                SetProperty(ref _ProdDetailID_to, value);
+        { 
+            get{return _ProdDetailID_to;}
+            set{
+            SetProperty(ref _ProdDetailID_to, value);
             }
         }
-
 
         private string _BarCode_to;
         /// <summary>
         /// 目标条码
         /// </summary>
-        [AdvQueryAttribute(ColName = "BarCode_to", ColDesc = "目标条码")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "BarCode_to", Length = 255, IsNullable = true, ColumnDescription = "目标条码")]
+        [AdvQueryAttribute(ColName = "BarCode_to",ColDesc = "目标条码")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "BarCode_to" ,Length=255,IsNullable = true,ColumnDescription = "目标条码" )]
         public string BarCode_to
-        {
-            get { return _BarCode_to; }
-            set
-            {
-                SetProperty(ref _BarCode_to, value);
+        { 
+            get{return _BarCode_to;}
+            set{
+            SetProperty(ref _BarCode_to, value);
             }
         }
 
@@ -235,7 +228,7 @@ namespace RUINORERP.Model
         /// 目标SKU
         /// </summary>
         [AdvQueryAttribute(ColName = "SKU_to",ColDesc = "目标SKU")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU_to" ,Length=255,IsNullable = true,ColumnDescription = "目标SKU")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SKU_to" ,Length=255,IsNullable = true,ColumnDescription = "目标SKU" )]
         public string SKU_to
         { 
             get{return _SKU_to;}
@@ -335,7 +328,7 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID_from))]
-        public virtual tb_ProdDetail tb_proddetail_from { get; set; }
+        public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
@@ -347,11 +340,10 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID_to))]
         public virtual tb_ProdDetail tb_proddetail_to { get; set; }
 
-
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Type_ID_from))]
-        public virtual tb_ProductType tb_producttype { get; set; }
+        public virtual tb_ProductType tb_producttype_from { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
@@ -370,6 +362,10 @@ private bool PK_FK_ID_Check()
 {
   bool rs=true;
          if("ProdDetailID"!="ProdDetailID_from")
+        {
+        // rs=false;
+        }
+         if("ProdDetailID"!="ProdDetailID_to")
         {
         // rs=false;
         }

@@ -2,6 +2,7 @@
 
 using Microsoft.Extensions.Logging;
 using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using RUINORERP.Repository.UnitOfWorks;
@@ -17,11 +18,9 @@ namespace RUINORERP.Business.Processor
 
     public partial class View_InventoryProcessor : BaseProcessor
     {
-
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-    
             queryFilter.SetQueryField<View_Inventory>(c => c.SKU);
             queryFilter.SetQueryField<View_Inventory>(c => c.CNName);
             queryFilter.SetQueryField<View_Inventory>(c => c.Model);
@@ -35,6 +34,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_Inventory>(c => c.Rack_ID);
             queryFilter.SetQueryField<View_Inventory>(c => c.BOM_ID);
             queryFilter.SetQueryField<View_Inventory>(c => c.Unit_ID);
+            queryFilter.SetQueryField<View_Inventory>(c => c.SourceType, QueryFieldType.CmbEnum, typeof(GoodsSource));
             //queryFilter.SetQueryField<View_Inventory>(c => c.LastInventoryDate);
             //queryFilter.SetQueryField<View_Inventory>(c => c.LatestStorageTime);
             //queryFilter.SetQueryField<View_Inventory>(c => c.LatestOutboundTime);

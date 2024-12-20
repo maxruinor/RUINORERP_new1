@@ -151,6 +151,29 @@ namespace TransInstruction
             return gd;
         }
 
+        /// <summary>
+        /// 管理员编辑了一些模板或系统级的配置参数时要上传到服务器再分发到其它客户端。
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <returns></returns>
+        public static OriginalData 更新动态配置<T>(object entity)
+        {
+            var tx = new ByteBuff(2 + 4);
+            //发送缓存数据
+            string json = JsonConvert.SerializeObject(entity,
+               new JsonSerializerSettings
+               {
+                   ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+               });
+            tx.PushString(System.DateTime.Now.ToString());
+            tx.PushString(typeof(T).Name);
+            tx.PushString(json);
+            OriginalData gd = new OriginalData();
+            gd.cmd = (byte)ClientCmdEnum.更新动态配置;
+            gd.One = null;
+            gd.Two = tx.toByte();
+            return gd;
+        }
 
         /// <summary>
         /// 表名为空则是所有表

@@ -79,6 +79,8 @@ using FastReport.DevComponents.DotNetBar;
 using FastReport.Table;
 using System.Xml;
 using RUINORERP.Model.TransModel;
+using Microsoft.Extensions.Options;
+using RUINORERP.Model.ConfigModel;
 
 
 
@@ -89,6 +91,18 @@ namespace RUINORERP.UI
     public partial class MainForm : KryptonForm
     {
 
+        //        IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
+        //。
+
+        //IOptionsMonitor<T> 是一个单例服务，但它可以监听配置文件的更改并自动更新其值。当文件发生更改时，它会自动重新加载配置，使得下一次访问 CurrentValue 属性时能够获取到最新的配置值。这种机制使得 IOptionsMonitor<T> 适用于那些需要实时反映配置更改的场景
+        //。
+
+        //IOptionsSnapshot<T> 的生命周期是作用域（Scoped），这意味着对于每一次HTTP请求，都会提供一个新的实例。如果在请求过程中配置文件发生了更改，这个实例仍然保持旧的值，直到新的请求到达，才会获取到新的配置值。因此，IOptionsSnapshot<T> 适合用在那些需要每个请求都使用最新配置快照的场景
+
+        /// <summary>
+        /// 可配置性全局参数
+        /// </summary>
+        public readonly IOptionsMonitor<SystemGlobalconfig> Globalconfig;
 
         #region 当前系统中所有用户信息
         private List<UserInfo> userInfos = new List<UserInfo>();
@@ -138,7 +152,7 @@ namespace RUINORERP.UI
         public ILogger<MainForm> logger { get; set; }
         public string Version { get => version; set => version = value; }
 
-        public MainForm(ILogger<MainForm> _logger)
+        public MainForm(ILogger<MainForm> _logger, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
             lblStatusGlobal.Text = string.Empty;
@@ -149,6 +163,13 @@ namespace RUINORERP.UI
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;
             ecs.OnConnectClosed += Ecs_OnConnectClosed;
+
+            Globalconfig = config;
+            // 监听配置变化
+            Globalconfig.OnChange(updatedConfig =>
+            {
+                Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
+            });
 
             AppContext = Program.AppContextData;
 
@@ -233,7 +254,7 @@ namespace RUINORERP.UI
             await Task.Delay(10); // 假设操作需要一段时间
             return rs;
         }
-        
+
 
         private void AddMDIChildWindow()
         {
@@ -489,28 +510,29 @@ namespace RUINORERP.UI
                     MessagePrompt messager = new MessagePrompt();
                     messager.mapper = mapper;
 
-                    if (MessageInfo.ReceiverIDs == null)
+                    if (MessageInfo.ReceiverEmployeeIDs == null)
                     {
-                        MessageInfo.SenderName = "系统";
+                        MessageInfo.SenderEmployeeName = "系统";
                     }
                     else
                     {
-                        var userid = MessageInfo.ReceiverIDs.FirstOrDefault(c => c == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
-                        var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == userid);
+                        var Employee_ID = MessageInfo.ReceiverEmployeeIDs.FirstOrDefault(c => c == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID);
+                        var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.Employee_ID == Employee_ID);
                         if (userinfo == null)
                         {
-                            MessageInfo.SenderName = "系统";
+                            MessageInfo.SenderEmployeeName = "系统";
                         }
                         else
                         {
-                            MessageInfo.SenderName = userinfo.姓名;
+                            MessageInfo.SenderEmployeeName = userinfo.姓名;
                         }
                     }
-                   
-                    messager.txtSender.Text = MessageInfo.SenderName;
+
+
+                    messager.txtSender.Text =  MessageInfo.SenderEmployeeName;
                     if (MessageInfo.RemindSubject.IsNotEmptyOrNull())
                     {
-                        messager.txtSubject.Text = MessageInfo.RemindSubject;
+                        messager.txtSubject.Text = "【" + MessageInfo.BizType + "】" + MessageInfo.RemindSubject;
                     }
                     else
                     {
@@ -1752,7 +1774,7 @@ namespace RUINORERP.UI
         }
 
 
-   
+
 
         async private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {

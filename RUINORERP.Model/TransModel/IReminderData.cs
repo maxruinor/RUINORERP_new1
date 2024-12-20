@@ -11,7 +11,7 @@ namespace RUINORERP.Model.TransModel
         string Id { get; set; }
 
         /// <summary>
-        /// 所有业务的唯一主键
+        /// 所有业务的唯一主键值
         /// </summary>
         long BizPrimaryKey { get; set; }
 

@@ -43,7 +43,7 @@ namespace RUINORERP.UI.UserCenter
             {
                 return;
             }
-          
+
 
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
@@ -66,7 +66,11 @@ namespace RUINORERP.UI.UserCenter
             UCTodoList todoList = Startup.GetFromFac<UCTodoList>();
             todoPage = UIForKryptonHelper.NewPage("待办事项", todoList);
             todoPage.AllowDrop = false;
-            todoPage.AutoHiddenSlideSize= new Size(200, 200);
+            todoPage.AutoHiddenSlideSize = new Size(200, 200);
+            ButtonSpecAny buttonSpecRefresh = new ButtonSpecAny();
+            buttonSpecRefresh.Text = "刷新";
+            buttonSpecRefresh.Click += ButtonSpecAny_Click;
+            todoPage.ButtonSpecs.Add(buttonSpecRefresh);
             // Add initial docking pages
             //kryptonDockingManager1.AddToWorkspace("Workspace", new KryptonPage[] { NewDocument(), NewDocument() });
             kryptonDockingManager1.AddDockspace("Control", DockingEdge.Left, new KryptonPage[] { todoPage });
@@ -99,6 +103,11 @@ namespace RUINORERP.UI.UserCenter
             // kryptonDockingManager1.ShowWorkspacePageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowWorkspacePageContextMenu);
         }
 
+        private void ButtonSpecAny_Click(object sender, EventArgs e)
+        {
+            
+        }
+
         private void KryptonDockingManager1_DockspaceCellAdding(object sender, DockspaceCellEventArgs e)
         {
             //设置待办事项无法拖动
@@ -108,6 +117,8 @@ namespace RUINORERP.UI.UserCenter
                 if (todo != null)
                 {
                     todo.AllowPageDrag = false;
+                    //todo.ContextMenuStrip = new ContextMenuStrip();
+                    //todo.ContextMenuStrip.Items.Add("测试");
                 }
             }
         }

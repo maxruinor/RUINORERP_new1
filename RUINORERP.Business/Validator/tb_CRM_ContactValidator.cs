@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:12
+// 时间：12/18/2024 17:45:26
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,20 +26,43 @@ namespace RUINORERP.Business
     /*public partial class tb_CRM_ContactValidator:AbstractValidator<tb_CRM_Contact>*/
     public partial class tb_CRM_ContactValidator:BaseValidatorGeneric<tb_CRM_Contact>
     {
-     public tb_CRM_ContactValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_CRM_ContactValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Customer_id).Must(CheckForeignKeyValue).WithMessage("目标客户:下拉选择值不正确。");
- RuleFor(tb_CRM_Contact =>tb_CRM_Contact.SocialTools).MaximumLength(100).WithMessage("社交工具:不能超过最大长度,100.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Customer_id).Must(CheckForeignKeyValue).WithMessage("目标客户:下拉选择值不正确。");
+
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.SocialTools).MaximumLength(100).WithMessage("社交账号:不能超过最大长度,100.");
+
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Contact_Name).MaximumLength(25).WithMessage("姓名:不能超过最大长度,25.");
+
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Contact_Email).MaximumLength(50).WithMessage("邮箱:不能超过最大长度,50.");
+
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Contact_Phone).MaximumLength(15).WithMessage("电话:不能超过最大长度,15.");
+
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Position).MaximumLength(25).WithMessage("职位:不能超过最大长度,25.");
+
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Preferences).MaximumLength(100).WithMessage("爱好:不能超过最大长度,100.");
+
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Address).MaximumLength(127).WithMessage("联系地址:不能超过最大长度,127.");
+
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+
+
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-       	
+
+
            	        Initialize();
      }
 

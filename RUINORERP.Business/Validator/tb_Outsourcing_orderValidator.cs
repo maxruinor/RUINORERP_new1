@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:58
+// 时间：12/18/2024 17:45:28
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,14 +26,29 @@ namespace RUINORERP.Business
     /*public partial class tb_Outsourcing_orderValidator:AbstractValidator<tb_Outsourcing_order>*/
     public partial class tb_Outsourcing_orderValidator:BaseValidatorGeneric<tb_Outsourcing_order>
     {
-     public tb_Outsourcing_orderValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_Outsourcing_orderValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-     //***** 
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+//***** 
  RuleFor(tb_Outsourcing_order =>tb_Outsourcing_order.Quantity).NotNull().WithMessage(":不能为空。");
+
  RuleFor(x => x.Unit_price).PrecisionScale(10,2,true).WithMessage(":小数位不能超过2。");
+
  RuleFor(x => x.Total_amount).PrecisionScale(10,2,true).WithMessage(":小数位不能超过2。");
+
  RuleFor(tb_Outsourcing_order =>tb_Outsourcing_order.Status).NotEmpty().When(x => x.Status.HasValue);
-       	
+
+
+
            	        Initialize();
      }
 

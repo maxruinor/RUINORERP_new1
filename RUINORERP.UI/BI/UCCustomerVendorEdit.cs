@@ -64,12 +64,9 @@ namespace RUINORERP.UI.BI
                 //新建时默认启用
                 _EditEntity.Is_available = true;
                 _EditEntity.Is_enabled = true;
-
-
             }
 
             DataBindingHelper.BindData4Cmb<tb_CustomerVendorType>(entity, k => k.Type_ID, v => v.TypeName, txtType_ID);
-
            
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.CVName, txtCVName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Contact, txtContact, BindDataType4TextBox.Text, false);
@@ -90,7 +87,7 @@ namespace RUINORERP.UI.BI
             //有默认值
             //如果在模块定义中客户关系是启用时，就必须录入来源的目标客户。
             crmMod = await MainForm.Instance.AppContext.Db.Queryable<tb_ModuleDefinition>().Where(c => c.ModuleName == nameof(ModuleMenuDefine.客户关系)).FirstAsync();
-            if (crmMod.Available)
+            if (crmMod.Available && _EditEntity.IsCustomer)
             {
                 lblCustomer_id.Visible = true;
                 cmbCustomer_id.Visible = true;
@@ -122,7 +119,7 @@ namespace RUINORERP.UI.BI
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
 
-                base.InitRequiredToControl(new tb_CustomerVendorValidator(), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_CustomerVendorValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
 
@@ -143,6 +140,8 @@ namespace RUINORERP.UI.BI
                     await ToCustomer(_EditEntity);
                 }
             };
+
+            base.BindData(entity);
         }
         private void btnCancel_Click(object sender, EventArgs e)
         {
@@ -160,6 +159,8 @@ namespace RUINORERP.UI.BI
                 MessageBox.Show("销售客户的来源必须选择。", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
+
+
             if (base.Validator())
             {
                 bindingSourceEdit.EndEdit();
@@ -197,6 +198,7 @@ namespace RUINORERP.UI.BI
                 lblCustomer_id.Visible = true;
                 cmbCustomer_id.Visible = true;
                 txtIsCustomer.Checked = true;
+               
             }
             else
             {

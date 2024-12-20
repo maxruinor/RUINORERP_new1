@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:26
+// 时间：12/18/2024 18:11:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 角色属性配置不同角色权限功能等不一样
     /// </summary>
     [Serializable()]
-    [Description("tb_RolePropertyConfig")]
+    [Description("角色属性配置不同角色权限功能等不一样")]
     [SugarTable("tb_RolePropertyConfig")]
     public partial class tb_RolePropertyConfig: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_RolePropertyConfig" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("角色属性配置不同角色权限功能等不一样tb_RolePropertyConfig" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

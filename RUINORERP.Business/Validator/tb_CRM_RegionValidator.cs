@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:15
+// 时间：12/18/2024 17:45:26
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,15 +26,30 @@ namespace RUINORERP.Business
     /*public partial class tb_CRM_RegionValidator:AbstractValidator<tb_CRM_Region>*/
     public partial class tb_CRM_RegionValidator:BaseValidatorGeneric<tb_CRM_Region>
     {
-     public tb_CRM_RegionValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_CRM_RegionValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_CRM_Region =>tb_CRM_Region.Region_Name).MaximumLength(25).WithMessage("地区名称:不能超过最大长度,25.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_CRM_Region =>tb_CRM_Region.Region_Name).MaximumLength(25).WithMessage("地区名称:不能超过最大长度,25.");
+
  RuleFor(tb_CRM_Region =>tb_CRM_Region.Region_code).MaximumLength(10).WithMessage("地区代码:不能超过最大长度,10.");
+
  RuleFor(tb_CRM_Region =>tb_CRM_Region.Parent_region_id).NotEmpty().When(x => x.Parent_region_id.HasValue);
+
  RuleFor(tb_CRM_Region =>tb_CRM_Region.Sort).NotEmpty().When(x => x.Sort.HasValue);
+
 //有默认值
+
  RuleFor(tb_CRM_Region =>tb_CRM_Region.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
-       	
+
            	        Initialize();
      }
 

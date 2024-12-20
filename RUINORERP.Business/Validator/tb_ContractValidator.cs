@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:31
+// 时间：12/18/2024 17:45:26
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,25 +26,53 @@ namespace RUINORERP.Business
     /*public partial class tb_ContractValidator:AbstractValidator<tb_Contract>*/
     public partial class tb_ContractValidator:BaseValidatorGeneric<tb_Contract>
     {
-     public tb_ContractValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_ContractValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_Contract =>tb_Contract.InvoiceInfo_ID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_Contract =>tb_Contract.InvoiceInfo_ID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
  RuleFor(tb_Contract =>tb_Contract.InvoiceInfo_ID).NotEmpty().When(x => x.InvoiceInfo_ID.HasValue);
+
+
+
  RuleFor(tb_Contract =>tb_Contract.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
+
  RuleFor(tb_Contract =>tb_Contract.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
+
  RuleFor(tb_Contract =>tb_Contract.ContractNo).MaximumLength(25).WithMessage("合同编号:不能超过最大长度,25.");
+
  RuleFor(tb_Contract =>tb_Contract.TotalQty).NotEmpty().When(x => x.TotalQty.HasValue);
- RuleFor(x => x.TotalCost).PrecisionScale(19,6,true).WithMessage("总金额:小数位不能超过6。");
- RuleFor(x => x.TotalAmount).PrecisionScale(19,6,true).WithMessage("总金额:小数位不能超过6。");
+
+ RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
+
+ RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
+
+
  RuleFor(tb_Contract =>tb_Contract.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_Contract =>tb_Contract.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+
  RuleFor(tb_Contract =>tb_Contract.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+
+
  RuleFor(tb_Contract =>tb_Contract.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
+
 //***** 
  RuleFor(tb_Contract =>tb_Contract.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
+
  RuleFor(tb_Contract =>tb_Contract.Buyer).NotEmpty().When(x => x.Buyer.HasValue);
+
  RuleFor(tb_Contract =>tb_Contract.Seller).NotEmpty().When(x => x.Seller.HasValue);
-       	
+
            	                //long?
                 //ContractID
                 //tb_ContractDetail
@@ -51,8 +81,7 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_ContractDetails).NotNull();
                 //RuleForEach(x => x.tb_ContractDetails).NotNull();
                 //RuleFor(x => x.tb_ContractDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-        
-                Initialize();
+                    Initialize();
      }
 
 

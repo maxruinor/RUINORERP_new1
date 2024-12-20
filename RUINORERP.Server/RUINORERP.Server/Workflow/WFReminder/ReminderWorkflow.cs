@@ -52,11 +52,9 @@ namespace RUINORERP.Server.Workflow.WFReminder
 
                 //   .Input(step => step.Password, data => data.Password)
                 //   .Output(data => data.UserId, step => step.UserId)
-                //默认30秒提醒一次
-                .Recur(data => TimeSpan.FromSeconds(60), data => data.Status == MessageStatus.Cancel || data.EndTime <= System.DateTime.Now)
-
+                //默认30秒提醒一次，只要到期 或人为取消提醒（取消计划）才停止
+                  .Recur(data => TimeSpan.FromSeconds(60), data => data.Status == MessageStatus.Cancel || data.EndTime <= System.DateTime.Now)
                   .Do(recur => recur
-
                   .StartWith<ReminderTask>
                   (
                   context =>

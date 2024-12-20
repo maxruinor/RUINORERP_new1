@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:22
+// 时间：12/18/2024 17:45:25
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,11 +26,26 @@ namespace RUINORERP.Business
     /*public partial class tb_ApprovalValidator:AbstractValidator<tb_Approval>*/
     public partial class tb_ApprovalValidator:BaseValidatorGeneric<tb_Approval>
     {
-     public tb_ApprovalValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_ApprovalValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_Approval =>tb_Approval.ApprovalResults).NotEmpty().When(x => x.ApprovalResults.HasValue);
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+
+
+
+ RuleFor(tb_Approval =>tb_Approval.ApprovalResults).NotEmpty().When(x => x.ApprovalResults.HasValue);
+
+
  RuleFor(tb_Approval =>tb_Approval.Module).NotEmpty().When(x => x.Module.HasValue);
-       	
+
            	                //long?
                 //ApprovalID
                 //tb_ApprovalProcessDetail
@@ -37,8 +54,7 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_ApprovalProcessDetails).NotNull();
                 //RuleForEach(x => x.tb_ApprovalProcessDetails).NotNull();
                 //RuleFor(x => x.tb_ApprovalProcessDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-        
-                Initialize();
+                    Initialize();
      }
 
 

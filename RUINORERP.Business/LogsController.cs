@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:21
+// 时间：12/18/2024 18:01:59
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(Logs info)
+        public ValidationResult Validator(Logs info)
         {
-            LogsValidator validator = new LogsValidator();
+
+           // LogsValidator validator = new LogsValidator();
+           LogsValidator validator = _appContext.GetRequiredService<LogsValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            LogsValidator validator = new LogsValidator();
+            //LogsValidator validator = new LogsValidator();
+           LogsValidator validator = _appContext.GetRequiredService<LogsValidator>();
             ValidationResult results = validator.Validate(info as Logs);
             return results;
         }

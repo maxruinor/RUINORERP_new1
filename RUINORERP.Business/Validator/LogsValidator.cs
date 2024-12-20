@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:22
+// 时间：12/18/2024 17:45:25
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,21 +26,43 @@ namespace RUINORERP.Business
     /*public partial class LogsValidator:AbstractValidator<Logs>*/
     public partial class LogsValidator:BaseValidatorGeneric<Logs>
     {
-     public LogsValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public LogsValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(Logs =>Logs.Level).MaximumLength(5).WithMessage("级别:不能超过最大长度,5.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+
+ RuleFor(Logs =>Logs.Level).MaximumLength(5).WithMessage("级别:不能超过最大长度,5.");
+
  RuleFor(Logs =>Logs.Logger).MaximumLength(25).WithMessage("记录器:不能超过最大长度,25.");
+
  RuleFor(Logs =>Logs.Message).MaximumLength(1500).WithMessage("消息:不能超过最大长度,1500.");
+
+
  RuleFor(Logs =>Logs.Operator).MaximumLength(25).WithMessage("操作者:不能超过最大长度,25.");
+
  RuleFor(Logs =>Logs.ModName).MaximumLength(25).WithMessage("模块名:不能超过最大长度,25.");
+
  RuleFor(Logs =>Logs.Path).MaximumLength(50).WithMessage("路径:不能超过最大长度,50.");
+
  RuleFor(Logs =>Logs.ActionName).MaximumLength(25).WithMessage("动作:不能超过最大长度,25.");
+
  RuleFor(Logs =>Logs.IP).MaximumLength(10).WithMessage("网络地址:不能超过最大长度,10.");
+
  RuleFor(Logs =>Logs.MAC).MaximumLength(15).WithMessage("物理地址:不能超过最大长度,15.");
+
  RuleFor(Logs =>Logs.MachineName).MaximumLength(25).WithMessage("电脑名:不能超过最大长度,25.");
+
  RuleFor(Logs =>Logs.User_ID).Must(CheckForeignKeyValueCanNull).WithMessage("用户:下拉选择值不正确。");
  RuleFor(Logs =>Logs.User_ID).NotEmpty().When(x => x.User_ID.HasValue);
-       	
+
            	        Initialize();
      }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/19/2024 15:29:25
+// 时间：12/18/2024 18:07:05
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 分割明细统计-只管明细产品的数据主表的用查询
+    /// 产品分割统计
     /// </summary>
     public partial class View_ProdSplitItemsController<T>:BaseController<T> where T : class
     {
@@ -54,7 +54,9 @@ namespace RUINORERP.Business
         
          public ValidationResult Validator(View_ProdSplitItems info)
         {
-            View_ProdSplitItemsValidator validator = new View_ProdSplitItemsValidator();
+
+           // View_ProdSplitItemsValidator validator = new View_ProdSplitItemsValidator();
+           View_ProdSplitItemsValidator validator = _appContext.GetRequiredService<View_ProdSplitItemsValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }

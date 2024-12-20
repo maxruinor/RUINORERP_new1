@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/22/2024 16:08:32
+// 时间：12/18/2024 18:02:08
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_PrintConfig info)
+        public ValidationResult Validator(tb_PrintConfig info)
         {
-            tb_PrintConfigValidator validator = new tb_PrintConfigValidator();
+
+           // tb_PrintConfigValidator validator = new tb_PrintConfigValidator();
+           tb_PrintConfigValidator validator = _appContext.GetRequiredService<tb_PrintConfigValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_PrintConfigValidator validator = new tb_PrintConfigValidator();
+            //tb_PrintConfigValidator validator = new tb_PrintConfigValidator();
+           tb_PrintConfigValidator validator = _appContext.GetRequiredService<tb_PrintConfigValidator>();
             ValidationResult results = validator.Validate(info as tb_PrintConfig);
             return results;
         }

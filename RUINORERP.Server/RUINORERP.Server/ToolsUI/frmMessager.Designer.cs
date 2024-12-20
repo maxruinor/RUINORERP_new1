@@ -37,9 +37,9 @@
             // 
             // btnOK
             // 
-            btnOK.Location = new System.Drawing.Point(144, 394);
+            btnOK.Location = new System.Drawing.Point(154, 374);
             btnOK.Name = "btnOK";
-            btnOK.Size = new System.Drawing.Size(75, 23);
+            btnOK.Size = new System.Drawing.Size(92, 31);
             btnOK.TabIndex = 0;
             btnOK.Text = "确定";
             btnOK.UseVisualStyleBackColor = true;
@@ -47,9 +47,9 @@
             // 
             // btnCancel
             // 
-            btnCancel.Location = new System.Drawing.Point(330, 394);
+            btnCancel.Location = new System.Drawing.Point(340, 374);
             btnCancel.Name = "btnCancel";
-            btnCancel.Size = new System.Drawing.Size(75, 23);
+            btnCancel.Size = new System.Drawing.Size(92, 31);
             btnCancel.TabIndex = 1;
             btnCancel.Text = "取消";
             btnCancel.UseVisualStyleBackColor = true;
@@ -75,7 +75,7 @@
             // chkMustDisplay
             // 
             chkMustDisplay.AutoSize = true;
-            chkMustDisplay.Location = new System.Drawing.Point(82, 345);
+            chkMustDisplay.Location = new System.Drawing.Point(82, 330);
             chkMustDisplay.Name = "chkMustDisplay";
             chkMustDisplay.Size = new System.Drawing.Size(123, 21);
             chkMustDisplay.TabIndex = 6;

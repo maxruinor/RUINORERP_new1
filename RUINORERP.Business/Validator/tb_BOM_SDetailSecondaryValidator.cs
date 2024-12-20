@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:26
+// 时间：12/18/2024 17:45:25
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,19 +26,37 @@ namespace RUINORERP.Business
     /*public partial class tb_BOM_SDetailSecondaryValidator:AbstractValidator<tb_BOM_SDetailSecondary>*/
     public partial class tb_BOM_SDetailSecondaryValidator:BaseValidatorGeneric<tb_BOM_SDetailSecondary>
     {
-     public tb_BOM_SDetailSecondaryValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_BOM_SDetailSecondaryValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("货品详情:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("货品详情:下拉选择值不正确。");
  RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);
+
  RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.BOM_ID).NotEmpty().When(x => x.BOM_ID.HasValue);
+
  RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.Location_ID).Must(CheckForeignKeyValue).WithMessage("仓库:下拉选择值不正确。");
+
  RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
- RuleFor(x => x.Qty).PrecisionScale(8,4,true).WithMessage("数量:小数位不能超过6。");
- RuleFor(x => x.Scale).PrecisionScale(8,4,true).WithMessage("比例:小数位不能超过6。");
- RuleFor(x => x.UnitCost).PrecisionScale(8,4,true).WithMessage("单位成本:小数位不能超过6。");
- RuleFor(x => x.SubtotalCost).PrecisionScale(19,6,true).WithMessage("成本小计:小数位不能超过6。");
+
+ RuleFor(x => x.Qty).PrecisionScale(8,4,true).WithMessage("数量:小数位不能超过4。");
+
+ RuleFor(x => x.Scale).PrecisionScale(8,4,true).WithMessage("比例:小数位不能超过4。");
+
+ RuleFor(x => x.UnitCost).PrecisionScale(8,4,true).WithMessage("单位成本:小数位不能超过4。");
+
+ RuleFor(x => x.SubtotalCost).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
+
  RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.Remarks).MaximumLength(100).WithMessage("备注说明:不能超过最大长度,100.");
-       	
+
            	        Initialize();
      }
 

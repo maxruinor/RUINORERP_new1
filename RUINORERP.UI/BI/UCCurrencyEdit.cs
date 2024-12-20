@@ -52,6 +52,7 @@ namespace RUINORERP.UI.BI
             //有默认值
             DataBindingHelper.BindData4CheckBox<tb_Currency>(entity, t => t.Is_available, chkIs_available, false);
             DataBindingHelper.BindData4DataTime<tb_Currency>(entity, t => t.AdjustDate, dtpAdjustDate, false);
+            base.BindData(entity);
         }
 
 

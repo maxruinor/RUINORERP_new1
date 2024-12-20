@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:13
+// 时间：12/18/2024 17:45:30
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,17 +26,32 @@ namespace RUINORERP.Business
     /*public partial class tb_ProdSplitDetailValidator:AbstractValidator<tb_ProdSplitDetail>*/
     public partial class tb_ProdSplitDetailValidator:BaseValidatorGeneric<tb_ProdSplitDetail>
     {
-     public tb_ProdSplitDetailValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_ProdSplitDetailValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-     //***** 
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+//***** 
  RuleFor(tb_ProdSplitDetail =>tb_ProdSplitDetail.SplitID).NotNull().WithMessage("拆分单:不能为空。");
+
  RuleFor(tb_ProdSplitDetail =>tb_ProdSplitDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
+
  RuleFor(tb_ProdSplitDetail =>tb_ProdSplitDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("子件:下拉选择值不正确。");
+
  RuleFor(tb_ProdSplitDetail =>tb_ProdSplitDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+
 //***** 
  RuleFor(tb_ProdSplitDetail =>tb_ProdSplitDetail.Qty).NotNull().WithMessage("子件数量:不能为空。");
+
  RuleFor(tb_ProdSplitDetail =>tb_ProdSplitDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
-       	
+
            	        Initialize();
      }
 

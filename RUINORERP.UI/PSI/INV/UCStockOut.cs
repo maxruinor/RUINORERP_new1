@@ -137,7 +137,7 @@ namespace RUINORERP.UI.PSI.INV
                 }
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
-                    base.InitRequiredToControl(new tb_StockOutValidator(), kryptonPanelMainInfo.Controls);
+                    base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_StockOutValidator> (), kryptonPanelMainInfo.Controls);
                     // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
                 }
                 //显示 打印状态 如果是草稿状态 不显示打印
@@ -174,7 +174,7 @@ namespace RUINORERP.UI.PSI.INV
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_StockOutValidator(), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_StockOutValidator> (), kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
         }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:14
+// 时间：12/18/2024 18:02:11
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_ProductionDemand info)
+        public ValidationResult Validator(tb_ProductionDemand info)
         {
-            tb_ProductionDemandValidator validator = new tb_ProductionDemandValidator();
+
+           // tb_ProductionDemandValidator validator = new tb_ProductionDemandValidator();
+           tb_ProductionDemandValidator validator = _appContext.GetRequiredService<tb_ProductionDemandValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_ProductionDemandValidator validator = new tb_ProductionDemandValidator();
+            //tb_ProductionDemandValidator validator = new tb_ProductionDemandValidator();
+           tb_ProductionDemandValidator validator = _appContext.GetRequiredService<tb_ProductionDemandValidator>();
             ValidationResult results = validator.Validate(info as tb_ProductionDemand);
             return results;
         }
@@ -246,10 +247,10 @@ namespace RUINORERP.Business
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
                         .Include(m => m.tb_PurOrders)
-                    .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_ProduceGoodsRecommendDetails)
                     .Include(m => m.tb_ProductionDemandDetails)
                     .Include(m => m.tb_ProductionDemandTargetDetails)
+                    .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_PurGoodsRecommendDetails)
                             .ExecuteCommandAsync();
          
@@ -258,10 +259,10 @@ namespace RUINORERP.Business
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProductionDemand>(entity as tb_ProductionDemand)
                 .Include(m => m.tb_PurOrders)
-                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_ProduceGoodsRecommendDetails)
                 .Include(m => m.tb_ProductionDemandDetails)
                 .Include(m => m.tb_ProductionDemandTargetDetails)
+                .Include(m => m.tb_ManufacturingOrders)
                 .Include(m => m.tb_PurGoodsRecommendDetails)
                                 .ExecuteCommandAsync();
         }
@@ -294,10 +295,10 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
                                 .Includes(m => m.tb_PurOrders)
-                        .Includes(m => m.tb_ManufacturingOrders)
                         .Includes(m => m.tb_ProduceGoodsRecommendDetails)
                         .Includes(m => m.tb_ProductionDemandDetails)
                         .Includes(m => m.tb_ProductionDemandTargetDetails)
+                        .Includes(m => m.tb_ManufacturingOrders)
                         .Includes(m => m.tb_PurGoodsRecommendDetails)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -309,10 +310,10 @@ namespace RUINORERP.Business
             tb_ProductionDemand entity = model as tb_ProductionDemand;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProductionDemand>(m => m.PDID== entity.PDID)
                                 .Include(m => m.tb_PurOrders)
-                        .Include(m => m.tb_ManufacturingOrders)
                         .Include(m => m.tb_ProduceGoodsRecommendDetails)
                         .Include(m => m.tb_ProductionDemandDetails)
                         .Include(m => m.tb_ProductionDemandTargetDetails)
+                        .Include(m => m.tb_ManufacturingOrders)
                         .Include(m => m.tb_PurGoodsRecommendDetails)
                                         .ExecuteCommandAsync();
             if (rs)
@@ -479,10 +480,10 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_productionplan )
                                             .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
+                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_PurGoodsRecommendDetails )
                         .ToListAsync();
             
@@ -506,10 +507,10 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_productionplan )
                                             .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                                 .Includes(t => t.tb_ProductionDemandDetails )
                                 .Includes(t => t.tb_ProductionDemandTargetDetails )
+                                .Includes(t => t.tb_ManufacturingOrders )
                                 .Includes(t => t.tb_PurGoodsRecommendDetails )
                         .ToListAsync();
             
@@ -533,10 +534,10 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_productionplan )
                                         .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProductionDemandTargetDetails )
+                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_PurGoodsRecommendDetails )
                         .ToList();
             
@@ -577,10 +578,10 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_productionplan )
                                         .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_ProduceGoodsRecommendDetails )
                             .Includes(t => t.tb_ProductionDemandDetails )
                             .Includes(t => t.tb_ProductionDemandTargetDetails )
+                            .Includes(t => t.tb_ManufacturingOrders )
                             .Includes(t => t.tb_PurGoodsRecommendDetails )
                         .FirstAsync();
             if(entity!=null)

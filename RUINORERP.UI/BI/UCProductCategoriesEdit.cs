@@ -97,7 +97,7 @@ namespace RUINORERP.UI.BI
 
             cmbTreeParent_id.DataBindings.Add(parent_categorie);
 
-
+            base.BindData(entity);
 
 
 

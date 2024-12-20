@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:30
+// 时间：12/18/2024 17:45:26
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,13 +26,25 @@ namespace RUINORERP.Business
     /*public partial class tb_ConNodeConditionsValidator:AbstractValidator<tb_ConNodeConditions>*/
     public partial class tb_ConNodeConditionsValidator:BaseValidatorGeneric<tb_ConNodeConditions>
     {
-     public tb_ConNodeConditionsValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_ConNodeConditionsValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Field).MaximumLength(25).WithMessage("表达式:不能超过最大长度,25.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Field).MaximumLength(25).WithMessage("表达式:不能超过最大长度,25.");
  RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Field).NotEmpty().WithMessage("表达式:不能为空。");
+
  RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Operator).MaximumLength(25).WithMessage("操作符:不能超过最大长度,25.");
+
  RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Value).MaximumLength(25).WithMessage("表达式值:不能超过最大长度,25.");
-       	
+
            	        Initialize();
      }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/19/2024 15:29:21
+// 时间：12/18/2024 18:07:04
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -54,7 +54,9 @@ namespace RUINORERP.Business
         
          public ValidationResult Validator(View_ProdConversionItems info)
         {
-            View_ProdConversionItemsValidator validator = new View_ProdConversionItemsValidator();
+
+           // View_ProdConversionItemsValidator validator = new View_ProdConversionItemsValidator();
+           View_ProdConversionItemsValidator validator = _appContext.GetRequiredService<View_ProdConversionItemsValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }

@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:33
+// 时间：12/18/2024 17:45:32
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,15 +26,29 @@ namespace RUINORERP.Business
     /*public partial class tb_StepBodyParaValidator:AbstractValidator<tb_StepBodyPara>*/
     public partial class tb_StepBodyParaValidator:BaseValidatorGeneric<tb_StepBodyPara>
     {
-     public tb_StepBodyParaValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_StepBodyParaValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Key).MaximumLength(25).WithMessage("参数key:不能超过最大长度,25.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Key).MaximumLength(25).WithMessage("参数key:不能超过最大长度,25.");
  RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Key).NotEmpty().WithMessage("参数key:不能为空。");
+
  RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Name).MaximumLength(25).WithMessage("参数名:不能超过最大长度,25.");
+
  RuleFor(tb_StepBodyPara =>tb_StepBodyPara.DisplayName).MaximumLength(25).WithMessage("显示名称:不能超过最大长度,25.");
+
  RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Value).MaximumLength(25).WithMessage("参数值:不能超过最大长度,25.");
+
  RuleFor(tb_StepBodyPara =>tb_StepBodyPara.StepBodyParaType).MaximumLength(25).WithMessage("参数类型:不能超过最大长度,25.");
-       	
+
            	        Initialize();
      }
 

@@ -124,17 +124,17 @@
     <value>165, 17</value>
   </metadata>
   <metadata name="errorProviderForAllInput.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>438, 17</value>
+    <value>462, 17</value>
   </metadata>
   <metadata name="imageList1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>843, 17</value>
+    <value>867, 17</value>
   </metadata>
   <data name="imageList1.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAADU
-        FAAAAk1TRnQBSQFMAgEBBgEAAagBAAGoAQABEAEAARABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAFA
+        FAAAAk1TRnQBSQFMAgEBBgEAAbABAAGwAQABEAEAARABAAT/ASEBAAj/AUIBTQE2BwABNgMAASgDAAFA
         AwABIAMAAQEBAAEgBgABIFIAAdcBxgHNAf8B1wHGAc0B/wHXAcYBzQH/AdcBxgHNAf8B1wHGAc0B/wHX
         AcYBzQH/AdcBxgHNAf8BHQEZAc4B/wFCASIBWAH/AdcBxgHNAf8B1wHGAc0B/wHXAcYBzQH/AdcBxgHN
         Af8B1wHGAc0B/wHXAcYBzQH/AdcBxgHNAf+PAAH/MAAB1wHGAc0B/wHXAcYBzQH/AdcBxgHNAf8B1wHG
@@ -235,6 +235,6 @@
 </value>
   </data>
   <metadata name="kryptonDockingManager1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>635, 17</value>
+    <value>659, 17</value>
   </metadata>
 </root>

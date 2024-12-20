@@ -24,6 +24,12 @@ using Krypton.Navigator;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.Processor;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.Global.EnumExt.CRM;
+using RUINORERP.Global;
+using RUINORERP.Model.TransModel;
+using RUINORERP.UI.SuperSocketClient;
+using TransInstruction;
+using AutoUpdateTools;
 namespace RUINORERP.UI.BI
 {
 
@@ -47,7 +53,7 @@ namespace RUINORERP.UI.BI
             button检查数据.ToolTipValues.Heading = "提示";
             button检查数据.Click += button检查数据_Click;
             base.frm.flowLayoutPanelButtonsArea.Controls.Add(button检查数据);
-            
+
 
         }
 
@@ -60,6 +66,43 @@ namespace RUINORERP.UI.BI
         private void UCCustomerVendorList_Load(object sender, EventArgs e)
         {
 
+        }
+
+        public override async Task<List<tb_CustomerVendor>> Save()
+        {
+            List<tb_CustomerVendor> list = await base.Save();
+            if (list.Count > 0)
+            {
+                foreach (var item in list)
+                {
+                    if (item.Customer_id.HasValue)
+                    {
+                        //对象的目标客户设置为已转换
+                        item.IsCustomer = true;
+                        var result = MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>()
+                            .SetColumns(it => it.Converted == true)//SetColumns是可以叠加的 写2个就2个字段赋值
+                            .Where(it => it.Customer_id == item.Customer_id.Value)
+                            .ExecuteCommandAsync();
+                    }
+
+                    if (item.tb_crm_customer != null)
+                    {
+                        //如果修改了客户名称，则和销售客户同步
+                        if (item.CVName != item.tb_crm_customer.CustomerName)
+                        {
+                            item.tb_crm_customer.CustomerName = item.CVName;
+                            var result = MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(item.tb_crm_customer)
+                            .SetColumns(it => it.CustomerName == item.CVName)//SetColumns是可以叠加的 写2个就2个字段赋值
+                            .Where(it => it.Customer_id == item.Customer_id.Value)
+                            .ExecuteCommandAsync();
+                        }
+
+                    }
+
+                }
+
+            }
+            return list;
         }
 
 
@@ -121,6 +164,6 @@ namespace RUINORERP.UI.BI
 
         }
 
-     
+
     }
 }

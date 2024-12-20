@@ -616,42 +616,81 @@ namespace RUINORERP.UI.SysConfig
 
                 if (treeView1.SelectedNode.Text == "成本修复")
                 {
+                    //成本修复思路
+                    //1）成本本身修复，将所有入库明细按加权平均算一下。更新到库存里面。
+                    //2）修复所有出库明细
+                    #region 成本本身修复
+                    List<tb_Inventory> Allitems = MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                    .Includes(c => c.tb_proddetail, d => d.tb_PurEntryDetails)
+                   .ToList();
 
-                    #region 最后入库价不为0时，成本为0时，将这个入库成本给到库存成本。
-                    List<tb_Inventory> items = MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
-                        .Includes(c => c.tb_proddetail, d => d.tb_PurEntryDetails)
-                        .Where(c => c.ProdDetailID == 1742080348512194560)
-                       .ToList();
-
-                    foreach (tb_Inventory item in items)
+                    List<tb_Inventory> updateList = new List<tb_Inventory>();
+                    foreach (tb_Inventory item in Allitems)
                     {
-                        if (item.Inv_Cost == 0 && item.Inv_AdvCost == 0 && item.CostFIFO == 0 && item.CostMonthlyWA == 0 && item.CostMovingWA == 0
-                            && item.tb_proddetail.tb_PurEntryDetails.Count > 0)
+                        if (item.tb_proddetail.tb_PurEntryDetails.Count > 0
+                            && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.TransactionPrice) > 0
+                            && item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity) > 0
+                            )
                         {
-                            var transPrice = item.tb_proddetail.tb_PurEntryDetails[item.tb_proddetail.tb_PurEntryDetails.Count - 1].TransactionPrice;
+                            //第笔的入库的数量*成交价/总数量
+                            var transPrice = item.tb_proddetail.tb_PurEntryDetails
+                                .Where(c => c.TransactionPrice > 0 && c.Quantity>0)
+                                .Sum(c => c.TransactionPrice * c.Quantity) / item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity);
                             if (transPrice > 0)
                             {
-                                richTextBoxLog.AppendText($"产品SKU{item.tb_proddetail.SKU}的价格以最后入库价格修复：{transPrice}：" + "\r\n");
-
+                                transPrice=Math.Round(transPrice,3);
                                 item.CostMovingWA = transPrice;
-                                item.CostFIFO = item.CostMovingWA;
-                                item.CostMonthlyWA = item.CostMovingWA;
                                 item.Inv_AdvCost = item.CostMovingWA;
                                 item.Inv_Cost = item.CostMovingWA;
+                                richTextBoxLog.AppendText($"产品SKU:{item.tb_proddetail.SKU}的价格以最后成本价格修复为：{transPrice}：" + "\r\n");
+                                updateList.Add(item);
                             }
                         }
                     }
-
-                    if (!chkTestMode.Checked)
+                    if (chkTestMode.Checked)
                     {
-                        if (!chkTestMode.Checked)
-                        {
-
-                            int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(items).UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost, t.CostFIFO, t.CostMonthlyWA, t.Inv_Cost }).ExecuteCommandAsync();
-                            richTextBoxLog.AppendText($"修复价格成功：{totalamountCounter} " + "\r\n");
-                        }
+                        richTextBoxLog.AppendText($"要修复的行数为:{Allitems.Count}" + "\r\n");
                     }
+                        if (!chkTestMode.Checked)
+                    {
+                        int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updateList).UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost,   t.Inv_Cost }).ExecuteCommandAsync();
+                        richTextBoxLog.AppendText($"修复成本价格成功：{totalamountCounter} " + "\r\n");
+                    }
+
                     #endregion
+
+                    //#region 最后入库价不为0时，成本为0时，将这个入库成本给到库存成本。
+                    //List<tb_Inventory> items = MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                    //    .Includes(c => c.tb_proddetail, d => d.tb_PurEntryDetails)
+                    //   .ToList();
+
+                    //foreach (tb_Inventory item in items)
+                    //{
+                    //    if (item.Inv_Cost == 0 && item.Inv_AdvCost == 0 && item.CostFIFO == 0 && item.CostMonthlyWA == 0 && item.CostMovingWA == 0
+                    //        && item.tb_proddetail.tb_PurEntryDetails.Count > 0)
+                    //    {
+                    //        var transPrice = item.tb_proddetail.tb_PurEntryDetails[item.tb_proddetail.tb_PurEntryDetails.Count - 1].TransactionPrice;
+                    //        if (transPrice > 0)
+                    //        {
+                    //            richTextBoxLog.AppendText($"产品SKU{item.tb_proddetail.SKU}的价格以最后入库价格修复：{transPrice}：" + "\r\n");
+
+                    //            item.CostFIFO = item.CostMovingWA;
+                    //            item.CostMonthlyWA = item.CostMovingWA;
+                    //            item.Inv_AdvCost = item.CostMovingWA;
+                    //            item.Inv_Cost = item.CostMovingWA;
+                    //            item.CostMovingWA = transPrice;
+                    //        }
+                    //    }
+                    //}
+
+                    //if (!chkTestMode.Checked)
+                    //{
+
+                    //    int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(items).UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost, t.CostFIFO, t.CostMonthlyWA, t.Inv_Cost }).ExecuteCommandAsync();
+                    //    richTextBoxLog.AppendText($"修复价格成功：{totalamountCounter} " + "\r\n");
+                    //}
+
+                    //#endregion
                 }
 
                 if (treeView1.SelectedNode.Text == "销售订单价格修复")

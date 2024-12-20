@@ -54,7 +54,7 @@ namespace RUINORERP.UI.CRM
             expLeadsStatus = (p) => p.LeadsStatus;
             base.ColNameDataDictionary.TryAdd(expLeadsStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(LeadsStatus)));
 
-            
+
         }
         //public override void QueryConditionBuilder()
         //{
@@ -80,6 +80,23 @@ namespace RUINORERP.UI.CRM
             base.dataGridView1.ContextMenuStrip = newContextMenuStrip;
         }
 
+        protected override void Delete()
+        {
+            tb_CRM_Leads rowInfo = (tb_CRM_Leads)this.bindingSourceList.Current;
+            if (rowInfo.Employee_ID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID && !MainForm.Instance.AppContext.IsSuperUser)
+            {
+                //只能删除自己的收款信息。
+                MessageBox.Show("只能删除自己的线索信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (rowInfo.tb_CRM_Customers != null || rowInfo.LeadsStatus != (int)LeadsStatus.新建)
+            {
+                //只能删除自己的收款信息。
+                MessageBox.Show("只有【新建】的线索,并且没有转换为目标客户时才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            base.Delete();
+        }
         private async void 转为目标客户ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (base.bindingSourceList.Current != null)
@@ -96,7 +113,7 @@ namespace RUINORERP.UI.CRM
                         tb_CRM_Customer EntityInfo = obj as tb_CRM_Customer;
                         IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
                         mapper.Map(sourceEntity, EntityInfo);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
-                       // EntityInfo = mapper.Map<tb_CRM_Customer>(sourceEntity);
+                                                               // EntityInfo = mapper.Map<tb_CRM_Customer>(sourceEntity);
                         EntityInfo.LeadID = sourceEntity.LeadID;
                         BusinessHelper.Instance.InitEntity(EntityInfo);
                         BaseEntity bty = EntityInfo as BaseEntity;

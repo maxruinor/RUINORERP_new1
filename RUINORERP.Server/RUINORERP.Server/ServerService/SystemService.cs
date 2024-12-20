@@ -63,8 +63,8 @@ namespace RUINORERP.Server.ServerService
             {
                 ByteBuff tx = new ByteBuff(200);
                 tx.PushString(MessageInfo.SendTime);
-                tx.PushInt64(MessageInfo.SenderID);//请示的人ID
-                tx.PushString(MessageInfo.SenderName);
+                tx.PushInt64(MessageInfo.SenderEmployeeID);//请示的人ID
+                tx.PushString(MessageInfo.SenderEmployeeName);
                 tx.PushString(MessageInfo.ReminderContent);
                 tx.PushString(MessageInfo.EntityType);
                 tx.PushString(MessageInfo.BillData);
@@ -118,8 +118,8 @@ namespace RUINORERP.Server.ServerService
 
                     ServerReminderData MessageInfo = new ServerReminderData();
                     MessageInfo.SendTime = sendtime;
-                    MessageInfo.SenderID = RequestUserID;
-                    MessageInfo.SenderName = RequestEmpName;
+                    MessageInfo.SenderEmployeeID = RequestUserID;
+                    MessageInfo.SenderEmployeeName = RequestEmpName;
                     MessageInfo.ReminderContent = RequestContent;
                     frmMain.Instance.MessageList.Enqueue(MessageInfo);
                 }

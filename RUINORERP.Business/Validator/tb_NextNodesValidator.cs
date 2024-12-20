@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:56
+// 时间：12/18/2024 17:45:28
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,13 +26,24 @@ namespace RUINORERP.Business
     /*public partial class tb_NextNodesValidator:AbstractValidator<tb_NextNodes>*/
     public partial class tb_NextNodesValidator:BaseValidatorGeneric<tb_NextNodes>
     {
-     public tb_NextNodesValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_NextNodesValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_NextNodes =>tb_NextNodes.ConNodeConditions_Id).Must(CheckForeignKeyValueCanNull).WithMessage("条件:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_NextNodes =>tb_NextNodes.ConNodeConditions_Id).Must(CheckForeignKeyValueCanNull).WithMessage("条件:下拉选择值不正确。");
  RuleFor(tb_NextNodes =>tb_NextNodes.ConNodeConditions_Id).NotEmpty().When(x => x.ConNodeConditions_Id.HasValue);
+
  RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).MaximumLength(25).WithMessage("下节点名称:不能超过最大长度,25.");
  RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).NotEmpty().WithMessage("下节点名称:不能为空。");
-       	
+
            	        Initialize();
      }
 

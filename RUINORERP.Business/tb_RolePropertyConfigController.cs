@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:26
+// 时间：12/18/2024 18:02:14
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_RolePropertyConfig info)
+        public ValidationResult Validator(tb_RolePropertyConfig info)
         {
-            tb_RolePropertyConfigValidator validator = new tb_RolePropertyConfigValidator();
+
+           // tb_RolePropertyConfigValidator validator = new tb_RolePropertyConfigValidator();
+           tb_RolePropertyConfigValidator validator = _appContext.GetRequiredService<tb_RolePropertyConfigValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_RolePropertyConfigValidator validator = new tb_RolePropertyConfigValidator();
+            //tb_RolePropertyConfigValidator validator = new tb_RolePropertyConfigValidator();
+           tb_RolePropertyConfigValidator validator = _appContext.GetRequiredService<tb_RolePropertyConfigValidator>();
             ValidationResult results = validator.Validate(info as tb_RolePropertyConfig);
             return results;
         }

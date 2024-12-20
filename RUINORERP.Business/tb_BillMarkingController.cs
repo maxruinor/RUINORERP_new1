@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:24
+// 时间：12/18/2024 18:02:00
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_BillMarking info)
+        public ValidationResult Validator(tb_BillMarking info)
         {
-            tb_BillMarkingValidator validator = new tb_BillMarkingValidator();
+
+           // tb_BillMarkingValidator validator = new tb_BillMarkingValidator();
+           tb_BillMarkingValidator validator = _appContext.GetRequiredService<tb_BillMarkingValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_BillMarkingValidator validator = new tb_BillMarkingValidator();
+            //tb_BillMarkingValidator validator = new tb_BillMarkingValidator();
+           tb_BillMarkingValidator validator = _appContext.GetRequiredService<tb_BillMarkingValidator>();
             ValidationResult results = validator.Validate(info as tb_BillMarking);
             return results;
         }

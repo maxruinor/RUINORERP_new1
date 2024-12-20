@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:34:11
+// 时间：12/18/2024 18:02:04
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 其他费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单
+    /// 其它费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单
     /// </summary>
     public partial class tb_FM_OtherExpenseController<T>:BaseController<T> where T : class
     {
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_FM_OtherExpense info)
+        public ValidationResult Validator(tb_FM_OtherExpense info)
         {
-            tb_FM_OtherExpenseValidator validator = new tb_FM_OtherExpenseValidator();
+
+           // tb_FM_OtherExpenseValidator validator = new tb_FM_OtherExpenseValidator();
+           tb_FM_OtherExpenseValidator validator = _appContext.GetRequiredService<tb_FM_OtherExpenseValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_FM_OtherExpenseValidator validator = new tb_FM_OtherExpenseValidator();
+            //tb_FM_OtherExpenseValidator validator = new tb_FM_OtherExpenseValidator();
+           tb_FM_OtherExpenseValidator validator = _appContext.GetRequiredService<tb_FM_OtherExpenseValidator>();
             ValidationResult results = validator.Validate(info as tb_FM_OtherExpense);
             return results;
         }

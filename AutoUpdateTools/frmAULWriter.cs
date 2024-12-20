@@ -10,6 +10,11 @@ using System.Diagnostics;
 using System.Collections.Specialized;
 using System.Threading;
 using AutoUpdateTools;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Xml.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+using System.IO.Compression;
 /*------------------------------------------------------------
 * 
 * 
@@ -35,15 +40,6 @@ namespace AULWriter
         #endregion [基本入口构造函数]
 
 
-        #region [关闭写程序界面]
-
-        private void btnExit_Click(object sender, EventArgs e)
-        {
-            this.Close();
-            this.Dispose();
-        }
-
-        #endregion [关闭写程序界面]
 
         #region [选择文件保存路径]
 
@@ -54,7 +50,7 @@ namespace AULWriter
 
         private void sfdSrcPath_FileOk(object sender, CancelEventArgs e)
         {
-            this.txtDest.Text = this.sfdDest.FileName.Substring(0, this.sfdDest.FileName.LastIndexOf(@"\")) + @"\AutoUpdaterList.xml";
+            this.txtAutoUpdateXmlSavePath.Text = this.sfdDest.FileName.Substring(0, this.sfdDest.FileName.LastIndexOf(@"\")) + @"\AutoUpdaterList.xml";
         }
 
         #endregion [选择文件保存路径]
@@ -85,7 +81,7 @@ namespace AULWriter
 
         private void ofdDest_FileOk(object sender, CancelEventArgs e)
         {
-            this.txtSrc.Text = this.ofdSrc.FileName;
+            this.txtMainExePath.Text = this.ofdSrc.FileName;
         }
 
         #endregion [选择主程序]
@@ -109,8 +105,10 @@ namespace AULWriter
                 {
                     dataConfig = SerializeXmlHelper.DeserializeXml<DataConfig>(path);
                     txtUrl.Text = dataConfig.UpdateHttpAddress;
-                    txtDest.Text = dataConfig.SavePath;
-                    txtSrc.Text = dataConfig.EntryPoint;
+                    txtCompareSource.Text = dataConfig.CompareSource;
+                    txtBaseDir.Text = dataConfig.BaseDir;
+                    txtAutoUpdateXmlSavePath.Text = dataConfig.SavePath;
+                    txtMainExePath.Text = dataConfig.EntryPoint;
                     StringBuilder sbexfiles = new StringBuilder();
                     string[] exfiles = dataConfig.ExcludeFiles.Split(new string[] { "\n" }, StringSplitOptions.None);
                     foreach (var item in exfiles)
@@ -144,7 +142,11 @@ namespace AULWriter
 
         private void btnProduce_Click(object sender, EventArgs e)
         {
-            WriterAUList(true);
+            UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtBaseDir.Text,false, chk哈希值比较.Checked);
+            tabControl1.SelectedTab = tbpLastXml;
+            //复制到服务器上去再生成
+            //WriterAUList(chk哈希值比较.Checked, false);
+
             try
             {
                 saveConfigToFile();
@@ -227,12 +229,12 @@ namespace AULWriter
         /// 是否进行哈希值比较，如果是，则哈希值不一样才增加版本号。否则不变
         /// </summary>
         /// <param name="HashValueComparison"></param>
-        void WriterAUList(bool HashValueComparison = false)
+        void WriterAUList_old(bool HashValueComparison = false)
         {
             #region [写AutoUpdaterlist]
 
-            string strEntryPoint = this.txtSrc.Text.Trim().Substring(this.txtSrc.Text.Trim().LastIndexOf(@"\") + 1, this.txtSrc.Text.Trim().Length - this.txtSrc.Text.Trim().LastIndexOf(@"\") - 1);
-            string strFilePath = this.txtDest.Text.Trim();
+            string strEntryPoint = this.txtMainExePath.Text.Trim().Substring(this.txtMainExePath.Text.Trim().LastIndexOf(@"\") + 1, this.txtMainExePath.Text.Trim().Length - this.txtMainExePath.Text.Trim().LastIndexOf(@"\") - 1);
+            string strFilePath = this.txtAutoUpdateXmlSavePath.Text.Trim();
 
             FileStream fs = new FileStream(strFilePath, FileMode.Create);
             StreamWriter sw = new StreamWriter(fs, System.Text.Encoding.Default);
@@ -256,7 +258,7 @@ namespace AULWriter
             sw.Write("</Url>\r\n");
 
             sw.Write("\t\t<LastUpdateTime>");
-            sw.Write(DateTime.Now.AddDays(-15).ToString("yyyy-MM-dd"));
+            sw.Write(DateTime.Now.ToString("yyyy-MM-dd"));
             sw.Write("</LastUpdateTime>\r\n");
 
             sw.Write("\t</Updater>\r\n");
@@ -275,7 +277,7 @@ namespace AULWriter
             sw.Write(".");
             sw.Write("</Location>\r\n");
 
-            FileVersionInfo _lcObjFVI = FileVersionInfo.GetVersionInfo(this.txtSrc.Text);
+            FileVersionInfo _lcObjFVI = FileVersionInfo.GetVersionInfo(this.txtMainExePath.Text);
 
             sw.Write("\t\t<Version>");
             sw.Write(string.Format("{0}.{1}.{2}.{3}", _lcObjFVI.FileMajorPart, _lcObjFVI.FileMinorPart, _lcObjFVI.FileBuildPart, _lcObjFVI.FilePrivatePart));
@@ -291,7 +293,7 @@ namespace AULWriter
 
             sw.Write("\t<Files>\r\n");
 
-            StringCollection strColl = GetAllFiles(this.txtSrc.Text.Substring(0, this.txtSrc.Text.LastIndexOf(@"\")));
+            StringCollection strColl = GetAllFiles(this.txtMainExePath.Text.Substring(0, this.txtMainExePath.Text.LastIndexOf(@"\")));
 
             //如果指定了要更新的文件,优先这个。
             if (txtUpdatedFiles.Text.Trim().Length > 0)
@@ -316,7 +318,7 @@ namespace AULWriter
                         if (chkCustomVer.Checked)
                         {
                             txtVerNo.Text = strVerNo;
-                            string rootDir = this.txtSrc.Text.Substring(0, this.txtSrc.Text.LastIndexOf(@"\")) + @"\";
+                            string rootDir = this.txtMainExePath.Text.Substring(0, this.txtMainExePath.Text.LastIndexOf(@"\")) + @"\";
                             //MessageBox.Show( @files[i].Replace(@rootDir,""));
                             sw.Write("\t\t<File Ver=\""
                                 + strVerNo
@@ -326,7 +328,7 @@ namespace AULWriter
                         else
                         {
                             FileVersionInfo m_lcObjFVI = FileVersionInfo.GetVersionInfo(files[i].ToString());
-                            string rootDir = this.txtSrc.Text.Substring(0, this.txtSrc.Text.LastIndexOf(@"\")) + @"\";
+                            string rootDir = this.txtMainExePath.Text.Substring(0, this.txtMainExePath.Text.LastIndexOf(@"\")) + @"\";
                             //MessageBox.Show( @files[i].Replace(@rootDir,""));
                             sw.Write("\t\t<File Ver=\""
                                 + string.Format("{0}.{1}.{2}.{3}", _lcObjFVI.FileMajorPart, _lcObjFVI.FileMinorPart, _lcObjFVI.FileBuildPart, _lcObjFVI.FilePrivatePart)
@@ -354,7 +356,7 @@ namespace AULWriter
 
                         FileVersionInfo m_lcObjFVI = FileVersionInfo.GetVersionInfo(strColl[i].ToString());
 
-                        string rootDir = this.txtSrc.Text.Substring(0, this.txtSrc.Text.LastIndexOf(@"\")) + @"\";
+                        string rootDir = this.txtMainExePath.Text.Substring(0, this.txtMainExePath.Text.LastIndexOf(@"\")) + @"\";
 
                         //MessageBox.Show( @strColl[i].Replace(@rootDir,""));
 
@@ -378,10 +380,11 @@ namespace AULWriter
             sw.Close();
             fs.Close();
 
+            tbpLastXml.Text = "生成成功:" + this.txtAutoUpdateXmlSavePath.Text.Trim();
 
             #region [Notification]
 
-            MessageBox.Show(this, "自动更新文件生成成功:" + this.txtDest.Text.Trim(), "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "自动更新文件生成成功:" + this.txtAutoUpdateXmlSavePath.Text.Trim(), "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             this.prbProd.Value = 0;
             this.prbProd.Visible = false;
@@ -391,6 +394,288 @@ namespace AULWriter
             #endregion [写AutoUpdaterlist]
         }
 
+
+        #region 工具性静态方法
+        /// <summary>
+        /// 计算哈希值
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public static string CalculateFileHash(string filePath)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                using (var stream = File.OpenRead(filePath))
+                {
+                    var hash = sha256.ComputeHash(stream);
+                    return BitConverter.ToString(hash).Replace("-", string.Empty);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 源文件夹是最新的。目标是要更新的。 
+        /// </summary>
+        /// <param name="sourceFolder"></param>
+        /// <param name="targetFolder"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public static string FindDifferentFileByHash(string sourceFolder, string targetFolder, string fileName)
+        {
+            // 构建两个文件夹中指定文件的完整路径
+            string sourceFilePath = Path.Combine(sourceFolder, fileName);
+            string targetFilePath = Path.Combine(targetFolder, fileName);
+
+            //如果最新的有，目标没有则要返回文件名到时要复制过去。
+            if (File.Exists(sourceFilePath) && !File.Exists(targetFilePath))
+            {
+                return fileName;
+            }
+
+            // 检查两个文件夹中是否存在指定的文件  这种情况就是最新的没有。则不需要要更新列表中。
+            if (!File.Exists(sourceFilePath) || !File.Exists(targetFilePath))
+            {
+                // 如果任一文件夹中不存在该文件，则返回存在的文件路径
+                return File.Exists(sourceFilePath) ? sourceFilePath : targetFilePath;
+            }
+
+            // 计算两个文件的哈希值
+            string sourceHash = CalculateFileHash(sourceFilePath);
+            string targetHash = CalculateFileHash(targetFilePath);
+
+            // 比较哈希值
+            if (sourceHash != targetHash)
+            {
+                // 如果哈希值不相同，则返回文件名
+                return fileName;
+            }
+
+            // 如果哈希值相同，则返回null
+            return null;
+        }
+
+        /// <summary>
+        /// 到得相对路径
+        /// </summary>
+        /// <param name="fromPath"></param>
+        /// <param name="toPath"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static string GetRelativePath(string fromPath, string toPath)
+        {
+            // 将两个路径转换为绝对路径
+            fromPath = Path.GetFullPath(fromPath);
+            toPath = Path.GetFullPath(toPath);
+
+            // 将路径转换为规范化的形式，以确保比较时不会因路径大小写或斜杠方向不同而出错
+            fromPath = fromPath.Replace("\\", "/").ToLower();
+            toPath = toPath.Replace("\\", "/").ToLower();
+
+            // 找到共同的根路径
+            int length = Math.Min(fromPath.Length, toPath.Length);
+            int index = 0;
+            while (index < length && fromPath[index] == toPath[index])
+            {
+                index++;
+            }
+            // 计算需要回退到根目录的次数（即盘符不同的情况）
+            int backSteps = 0;
+            for (int i = index; i < fromPath.Length; i++)
+            {
+                if (fromPath[i] == '/')
+                {
+                    backSteps++;
+                }
+            }
+
+            // 构建回退到根目录的路径
+            string relativePath = "";
+            for (int i = 0; i < backSteps; i++)
+            {
+                relativePath += "../";
+            }
+
+            // 从共同根路径之后的部分开始构建相对路径
+            relativePath += toPath.Substring(index);
+
+            // 替换斜杠方向并返回结果
+            return relativePath.Replace("/", "\\");
+        }
+
+
+
+
+
+        #endregion
+
+
+        /// <summary>
+        /// 是否进行哈希值比较，如果是，则哈希值不一样才增加版本号。否则不变
+        /// </summary>
+        /// <param name="HashValueComparison"></param>
+        void WriterAUList(bool HashValueComparison = false, bool Preview = false)
+        {
+
+            List<string> DiffList = new List<string>();
+            if (HashValueComparison)
+            {
+                txtDiff.Clear();
+                List<string> files = txtUpdatedFiles.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                foreach (string fullPath in files)
+                {
+
+                    string sourceFolder = this.txtCompareSource.Text.Trim();
+                    string targetFolder = this.txtBaseDir.Text.Trim();
+
+                    string relativePath = GetRelativePath(targetFolder, fullPath);
+                    //去掉前导字符\\
+                    relativePath = relativePath.TrimStart('\\');
+                    string result = FindDifferentFileByHash(sourceFolder, targetFolder, relativePath);
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        //差异不同的，返回的是一个文件名。以目标为基准生成一个路径。
+                        //System.IO.Path.Combine(sourceFolder, result)
+                        txtDiff.AppendText(result);
+                        DiffList.Add(result);
+                        txtDiff.AppendText("\r\n");
+                    }
+                }
+
+            }
+
+
+            #region [写AutoUpdaterlist]
+
+            string strEntryPoint = this.txtMainExePath.Text.Trim().Substring(this.txtMainExePath.Text.Trim().LastIndexOf(@"\") + 1, this.txtMainExePath.Text.Trim().Length - this.txtMainExePath.Text.Trim().LastIndexOf(@"\") - 1);
+            string strFilePath = this.txtAutoUpdateXmlSavePath.Text.Trim();
+            //Append  默认就换行了
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<?xml version=\"1.0\" encoding=\"gb2312\" ?>");
+            sb.Append("\r\n<AutoUpdater>\r\n");
+
+            #region[description]
+            sb.Append("<Description>");
+            sb.Append(strEntryPoint.Substring(0, strEntryPoint.LastIndexOf(".")) + " autoUpdate");
+            sb.Append("</Description>\r\n");
+            #endregion[description]
+
+            #region [Updater]
+            sb.Append("\t<Updater>\r\n");
+            sb.Append("\t\t<Url>");
+            sb.Append(this.txtUrl.Text.Trim());
+            sb.Append("</Url>\r\n");
+            sb.Append("\t\t<LastUpdateTime>");
+            sb.Append(DateTime.Now.ToString("yyyy-MM-dd"));
+            sb.Append("</LastUpdateTime>\r\n");
+            sb.Append("\t</Updater>\r\n");
+            #endregion [Updater]
+
+            #region [application]
+            sb.Append("\t<Application applicationId = \"" + strEntryPoint.Substring(0, strEntryPoint.LastIndexOf(".")) + "\">\r\n");
+            sb.Append("\t\t<EntryPoint>");
+            sb.Append(strEntryPoint);
+            sb.Append("</EntryPoint>\r\n");
+            sb.Append("\t\t<Location>");
+            sb.Append(".");
+            sb.Append("</Location>\r\n");
+
+            FileVersionInfo _lcObjFVI = FileVersionInfo.GetVersionInfo(this.txtMainExePath.Text);
+            sb.Append("\t\t<Version>");
+            sb.Append(string.Format("{0}.{1}.{2}.{3}", _lcObjFVI.FileMajorPart, _lcObjFVI.FileMinorPart, _lcObjFVI.FileBuildPart, _lcObjFVI.FilePrivatePart));
+            sb.Append("</Version>\r\n");
+            sb.Append("\t</Application>\r\n");
+            #endregion [application]
+
+            #region [Files]
+            sb.Append("\t<Files>\r\n");
+
+            StringCollection strColl = GetAllFiles(this.txtMainExePath.Text.Substring(0, this.txtMainExePath.Text.LastIndexOf(@"\")));
+
+            //如果指定了要更新的文件,优先这个。
+            if (txtUpdatedFiles.Text.Trim().Length > 0)
+            {
+                string[] files = txtUpdatedFiles.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+                string strVerNo = string.Empty;
+                strVerNo = txtVerNo.Text;
+                int seed = int.Parse(txtVerNo.Text.Split('.')[3]);
+                seed++;
+                strVerNo = strVerNo.TrimEnd(txtVerNo.Text.Split('.')[3].ToCharArray()) + seed.ToString();
+
+                this.prbProd.Visible = true;
+                this.prbProd.Minimum = 0;
+                this.prbProd.Maximum = files.Length;
+
+                for (int i = 0; i < files.Length; i++)
+                {
+                    if (!CheckExist(files[i].Trim()))
+                    {
+                        //暂时统一了。如果指定版本号
+                        if (chkCustomVer.Checked)
+                        {
+                            sb.Append("\t\t<File Ver=\""
+                                + strVerNo
+                                + "\" Name= \"" + files[i].Replace(this.txtMainExePath.Text.Substring(0, this.txtMainExePath.Text.LastIndexOf(@"\")) + @"\", "")
+                                + "\" />\r\n");
+                        }
+                        else
+                        {
+                            FileVersionInfo m_lcObjFVI = FileVersionInfo.GetVersionInfo(files[i].ToString());
+                            sb.Append("\t\t<File Ver=\""
+                                + string.Format("{0}.{1}.{2}.{3}", _lcObjFVI.FileMajorPart, _lcObjFVI.FileMinorPart, _lcObjFVI.FileBuildPart, _lcObjFVI.FilePrivatePart)
+                                + "\" Name= \"" + files[i].Replace(this.txtMainExePath.Text.Substring(0, this.txtMainExePath.Text.LastIndexOf(@"\")) + @"\", "")
+                                + "\" />\r\n");
+                        }
+                    }
+
+                    prbProd.Value = i;
+                }
+            }
+            else
+            {
+                #region 默认
+                this.prbProd.Visible = true;
+                this.prbProd.Minimum = 0;
+                this.prbProd.Maximum = strColl.Count;
+
+                for (int i = 0; i < strColl.Count; i++)
+                {
+                    if (!CheckExist(strColl[i].Trim()))
+                    {
+                        FileVersionInfo m_lcObjFVI = FileVersionInfo.GetVersionInfo(strColl[i].ToString());
+                        string rootDir = this.txtMainExePath.Text.Substring(0, this.txtMainExePath.Text.LastIndexOf(@"\")) + @"\";
+                        sb.Append("\t\t<File Ver=\""
+                            + string.Format("{0}.{1}.{2}.{3}", _lcObjFVI.FileMajorPart, _lcObjFVI.FileMinorPart, _lcObjFVI.FileBuildPart, _lcObjFVI.FilePrivatePart)
+                            + "\" Name= \"" + strColl[i].Replace(rootDir, "")
+                            + "\" />\r\n");
+                    }
+
+                    prbProd.Value = i;
+                }
+                #endregion
+            }
+
+            sb.Append("\t</Files>\r\n");
+            sb.Append("</AutoUpdater>");
+
+            #endregion [Files]
+            if (Preview)
+            {
+                txtLastXml.Text = sb.ToString();
+            }
+            else
+            {
+                // 将StringBuilder的内容写入文件
+                File.WriteAllText(strFilePath, sb.ToString(), System.Text.Encoding.GetEncoding("gb2312"));
+                MessageBox.Show(this, "自动更新文件生成成功:" + this.txtAutoUpdateXmlSavePath.Text.Trim(), "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                this.prbProd.Value = 0;
+                this.prbProd.Visible = false;
+            }
+
+
+            #endregion [写AutoUpdaterlist]
+        }
         #endregion [写AutoUpdaterList]
 
         #region [遍历子目录]
@@ -444,7 +729,8 @@ namespace AULWriter
             try
             {
                 saveConfigToFile();
-                MessageBox.Show("配置保存成功");
+                richTxtLog.AppendText("配置保存成功");
+                //MessageBox.Show("配置保存成功");
             }
             catch (Exception ex)
             {
@@ -460,12 +746,14 @@ namespace AULWriter
             {
                 DataConfig dataConfig = new DataConfig();
                 dataConfig.UpdateHttpAddress = txtUrl.Text.Trim();
-                dataConfig.SavePath = txtDest.Text;
-                dataConfig.EntryPoint = txtSrc.Text;
+                dataConfig.SavePath = txtAutoUpdateXmlSavePath.Text;
+                dataConfig.EntryPoint = txtMainExePath.Text;
                 dataConfig.ExcludeFiles = txtExpt.Text;
                 dataConfig.CustomVer = chkCustomVer.Checked;
                 dataConfig.CustomVersion = txtVerNo.Text;
                 dataConfig.UpdatedFiles = txtUpdatedFiles.Text;
+                dataConfig.CompareSource = txtCompareSource.Text;
+                dataConfig.BaseDir = txtBaseDir.Text;
                 string path = configFilePath;
                 SerializeXmlHelper.SerializeXml(dataConfig, path);
             }
@@ -511,7 +799,7 @@ namespace AULWriter
             {
                 string[] filePaths = (string[])e.Data.GetData(DataFormats.FileDrop);//获得拖放文件的路径。
                 string filePath = filePaths[0];//取得第一个文件的路径。
-                txtSrc.Text = filePath; //在TextBox中显示第一个文件路径。
+                txtMainExePath.Text = filePath; //在TextBox中显示第一个文件路径。
             }
             // base.OnDragDrop(e);
 
@@ -592,6 +880,191 @@ namespace AULWriter
         private void frmAULWriter_FormClosing(object sender, FormClosingEventArgs e)
         {
             saveConfigToFile();
+        }
+
+        #region 读取原来的xml配置文件
+
+        //private string ReadoldXml()
+        //{
+        //    string content = string.Empty;
+        //    string filePath = txtAutoUpdateXmlSavePath.Text;
+
+        //    try
+        //    {
+        //        // 读取文件内容
+        //        content = File.ReadAllText(filePath);
+
+        //        // 输出文件内容
+        //        //Console.WriteLine(content);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // 处理可能的异常，例如文件不存在或网络问题
+        //        Console.WriteLine("Error reading file: " + ex.Message);
+        //    }
+        //    return content;
+        //}
+        List<string> DiffList = new List<string>();
+
+        public void UpdateXmlFile(string xmlFilePath, string sourceFolder, string targetFolder, bool Preview = true, bool HashValueComparison = true)
+        {
+            // 读取XML文件
+            XDocument doc = XDocument.Load(xmlFilePath);
+            DiffList.Clear();
+            txtDiff.Clear();
+
+            // 遍历<Files>节点下的所有<File>节点
+            foreach (XElement fileElement in doc.Descendants("File"))
+            {
+                string fileName = fileElement.Attribute("Name").Value;
+                string sourceFilePath = Path.Combine(sourceFolder, fileName);
+                string targetFilePath = Path.Combine(targetFolder, fileName);
+
+                if (HashValueComparison)
+                {
+                    // 如果启用哈希值比较
+                    if (File.Exists(sourceFilePath) && File.Exists(targetFilePath))
+                    {
+                        // 计算两个文件的哈希值
+                        string sourceHash = CalculateFileHash(sourceFilePath);
+                        string targetHash = CalculateFileHash(targetFilePath);
+
+                        // 如果哈希值不同，则更新版本号
+                        if (sourceHash != targetHash)
+                        {
+                            // 递增版本号
+                            string version = fileElement.Attribute("Ver").Value;
+                            IncrementVersion(ref version);
+                            fileElement.SetAttributeValue("Ver", version);
+
+                            // 记录差异的文件
+                            DiffList.Add(fileName);
+                            txtDiff.AppendText(fileName);
+                            txtDiff.AppendText("\r\n");
+                        }
+                    }
+                    else if (File.Exists(sourceFilePath))
+                    {
+                        // 如果目标文件夹中不存在文件，则添加新文件的版本号
+                        string version = "1.0.0.0"; // 假设新文件的初始版本号
+                        fileElement.SetAttributeValue("Ver", version);
+                        DiffList.Add(fileName);
+                        txtDiff.AppendText(fileName);
+                        txtDiff.AppendText("\r\n");
+                    }
+                }
+                else
+                {
+                    // 如果不启用哈希值比较，所有文件版本号加1
+                    string version = fileElement.Attribute("Ver").Value;
+                    IncrementVersion(ref version);
+                    fileElement.SetAttributeValue("Ver", version);
+                }
+            }
+
+            if (Preview)
+            {
+                // 获取XML内容的字符串表示，用于预览
+                string xmlContent = doc.ToString();
+                txtLastXml.Text = xmlContent;
+                richTxtLog.AppendText("预览-生成最新的XML文件成功。");
+                richTxtLog.AppendText("\r\n");
+            }
+            else
+            {
+                // 保存更新后的XML文件
+                doc.Save(xmlFilePath);
+                richTxtLog.AppendText("保存-生成最新的XML文件成功。");
+                richTxtLog.AppendText("\r\n");
+            }
+        }
+
+        private void IncrementVersion(ref string version)
+        {
+            var parts = version.Split('.');
+            int revision = int.Parse(parts[3]) + 1;
+            version = $"{parts[0]}.{parts[1]}.{parts[2]}.{revision}";
+        }
+    
+    #endregion
+
+    private void btnPreview_Click(object sender, EventArgs e)
+        {
+            //显示差异及生成后的xml
+            UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtBaseDir.Text, true,chk哈希值比较.Checked);
+            tabControl1.SelectedTab = tbpLastXml;
+        }
+
+        private void btnCompareSource_Click(object sender, EventArgs e)
+        {
+            if (folderBrowserDialogCompareSource.ShowDialog() == DialogResult.OK)
+            {
+                txtCompareSource.Text = folderBrowserDialogCompareSource.SelectedPath;
+            }
+        }
+
+        private void btnBaseDir_Click(object sender, EventArgs e)
+        {
+            if (folderBrowserDialogCompareSource.ShowDialog() == DialogResult.OK)
+            {
+                txtBaseDir.Text = folderBrowserDialogCompareSource.SelectedPath;
+            }
+        }
+
+        private void chk哈希值比较_CheckedChanged(object sender, EventArgs e)
+        {
+            //btnrelease.Visible = chk哈希值比较.Checked;
+        }
+
+
+        #region [复制发布]
+
+
+
+        /// <summary>
+        /// 复制文件  将版本号下面的文件 全部
+        /// </summary>
+        /// <param name="sourceDir"></param>
+        /// <param name="objPath"></param>
+        public void CopyFile(string sourceDir, string targetDir, string tartgetfileName)
+        {
+            string sourcePath = System.IO.Path.Combine(sourceDir, tartgetfileName);
+            string targetPath = System.IO.Path.Combine(targetDir, tartgetfileName);
+            if (!Directory.Exists(targetDir))
+            {
+                Directory.CreateDirectory(targetDir);
+            }
+            try
+            {
+                File.Copy(sourcePath, targetPath, true);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+        //将差异的文件 复制I盘临时目录，再到服务器。并且生成时版本号只对差异的更新  保存配置到文件中
+        //先复制 再生成xml
+
+        #endregion [复制发布]
+        private void btnrelease_Click(object sender, EventArgs e)
+        {
+            foreach (var item in DiffList)
+            {
+                CopyFile(txtCompareSource.Text, txtBaseDir.Text, item);
+            }
+
+            richTxtLog.AppendText($"保存到目标-{txtBaseDir.Text}成功。");
+            richTxtLog.AppendText("\r\n");
+
+            string lastTargetPath = Path.GetDirectoryName(txtAutoUpdateXmlSavePath.Text.Trim());
+
+            foreach (var item in DiffList)
+            {
+                CopyFile(txtCompareSource.Text, lastTargetPath, item);
+            }
+            richTxtLog.AppendText($"发布到目标-{lastTargetPath}成功。");
+            richTxtLog.AppendText("\r\n");
         }
     }
 }

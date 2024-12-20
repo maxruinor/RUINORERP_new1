@@ -43,7 +43,7 @@ sum(出库成交金额-isnull(退货金额,0)-佣金返点+isnull(佣金返还,0
 sum(出库成交金额-isnull(退货金额,0)-佣金返点+isnull(佣金返还,0)-销售税额+isnull(退货税额,0)-isnull(成本,0))/NULLIF(sum(出库成交金额-isnull(退货金额,0)-佣金返点+isnull(佣金返还,0)-销售税额+isnull(退货税额,0)),0) *100 as  毛利率
   from (
 
-SELECT A.Employee_ID,A.ProjectGroup_ID,总销售出库数量,出库成交金额,销售税额,佣金返点,退货数量,退货金额,退货税额,佣金返还,a.成本-b.成本 as 成本 from 
+SELECT A.Employee_ID,A.ProjectGroup_ID,总销售出库数量,出库成交金额,销售税额,佣金返点,退货数量,退货金额,退货税额,佣金返还,isnull(a.成本,0)-isnull(b.成本,0) as 成本  from 
 
 ( SELECT Employee_ID,ProjectGroup_ID,sum(c.Quantity) as  总销售出库数量, sum(c.TransactionPrice*c.Quantity)  as 出库成交金额 ,sum(c.SubtotalTaxAmount) as [销售税额] ,sum(c.CommissionAmount) as 佣金返点,sum(cost*Quantity) as 成本 from  tb_SaleOut m RIGHT JOIN  tb_SaleOutDetail c on  m.SaleOut_MainID=c.SaleOut_MainID
 

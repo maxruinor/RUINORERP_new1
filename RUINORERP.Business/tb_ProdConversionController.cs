@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/10/2024 14:15:52
+// 时间：12/18/2024 18:02:10
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_ProdConversion info)
+        public ValidationResult Validator(tb_ProdConversion info)
         {
-            tb_ProdConversionValidator validator = new tb_ProdConversionValidator();
+
+           // tb_ProdConversionValidator validator = new tb_ProdConversionValidator();
+           tb_ProdConversionValidator validator = _appContext.GetRequiredService<tb_ProdConversionValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_ProdConversionValidator validator = new tb_ProdConversionValidator();
+            //tb_ProdConversionValidator validator = new tb_ProdConversionValidator();
+           tb_ProdConversionValidator validator = _appContext.GetRequiredService<tb_ProdConversionValidator>();
             ValidationResult results = validator.Validate(info as tb_ProdConversion);
             return results;
         }
@@ -456,6 +457,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProdConversion>> QueryByNavAsync()
         {
             List<tb_ProdConversion> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdConversion>()
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_ProdConversionDetails )
                         .ToListAsync();
             
@@ -476,6 +479,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ProdConversion>> QueryByNavAsync(Expression<Func<tb_ProdConversion, bool>> exp)
         {
             List<tb_ProdConversion> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdConversion>().Where(exp)
+                               .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_ProdConversionDetails )
                         .ToListAsync();
             
@@ -496,6 +501,8 @@ namespace RUINORERP.Business
          public virtual List<tb_ProdConversion> QueryByNav(Expression<Func<tb_ProdConversion, bool>> exp)
         {
             List<tb_ProdConversion> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdConversion>().Where(exp)
+                            .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_location )
                                         .Includes(t => t.tb_ProdConversionDetails )
                         .ToList();
             
@@ -533,7 +540,9 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_ProdConversion entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdConversion>().Where(w => w.ConversionID == (long)id)
-                                         .Includes(t => t.tb_ProdConversionDetails )
+                             .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_location )
+                                        .Includes(t => t.tb_ProdConversionDetails )
                         .FirstAsync();
             if(entity!=null)
             {

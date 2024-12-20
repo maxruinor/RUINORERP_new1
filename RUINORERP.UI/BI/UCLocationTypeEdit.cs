@@ -36,6 +36,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_LocationType>(entity, t => t.TypeName,txtTypeName, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBox<tb_LocationType>(entity, t => t.Desc, txtDesc, BindDataType4TextBox.Text, true);
             base.errorProviderForAllInput.DataSource = entity;
+            base.BindData(entity);
         }
 
  

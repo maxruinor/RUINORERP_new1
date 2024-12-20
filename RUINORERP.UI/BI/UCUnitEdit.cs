@@ -36,6 +36,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_Unit>(entity, t => t.is_measurement_unit, rdbis_enabledYes, rdbis_enabledNo);
 
             base.errorProviderForAllInput.DataSource = entity;
+            base.BindData(entity);
         }
 
         //public override void BindData(tb_Unit entity)

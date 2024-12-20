@@ -14,6 +14,8 @@ using Newtonsoft.Json;
 using Azure.Core;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Model;
+using RUINORERP.Server.Workflow.WFApproval;
+using RUINORERP.Server.BizService;
 
 namespace RUINORERP.Server.Workflow.WFReminder
 {
@@ -22,6 +24,15 @@ namespace RUINORERP.Server.Workflow.WFReminder
     /// </summary>
     public class ReminderTask : StepBody
     {
+
+
+        DataServiceChannel serviceChannel;
+
+        public ReminderTask(DataServiceChannel _serviceChannel)
+        {
+            serviceChannel = _serviceChannel;
+        }
+
         /// <summary>
         /// 提醒时间，只要当前时间大于这个时间就推送提醒
         /// </summary>
@@ -40,7 +51,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
 
         public string TagetTableName { get; set; }
 
-        public object Status { get; internal set; }
+        public MessageStatus Status { get; set; }
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
@@ -55,6 +66,8 @@ namespace RUINORERP.Server.Workflow.WFReminder
             if (exData.EndTime < System.DateTime.Now)
             {
                 Status = MessageStatus.Cancel;
+                //提醒到期了
+                serviceChannel.ProcessCRMFollowUpPlansData(exData, Status);
             }
             if (exData.Status != Model.MessageStatus.Cancel)
             {
@@ -64,13 +77,12 @@ namespace RUINORERP.Server.Workflow.WFReminder
                     //将回应的参数传给步骤再传到工作流中
                     RemindTime = System.DateTime.Now.AddSeconds(exData.RemindInterval);
                 }
-                
                 //相同的事情提醒最多10次
                 if (System.DateTime.Now > RemindTime && exData.RemindTimes < 10)
                 {
                     foreach (var item in frmMain.Instance.sessionListBiz)
                     {
-                        if (exData.ReceiverIDs.Contains(item.Value.User.UserID))
+                        if (exData.ReceiverEmployeeIDs.Contains(item.Value.User.Employee_ID))
                         {
                             try
                             {
@@ -99,23 +111,26 @@ namespace RUINORERP.Server.Workflow.WFReminder
                                 item.Value.AddSendData(exMsg);
 
                                 frmMain.Instance.ReminderBizDataList.TryUpdate(BizData.BizPrimaryKey, exData, exData);
-                                //推送了10次后就停止？收到回应后再推送？ 
-                                frmMain.Instance.PrintInfoLog("工作流提醒推送");
+                                if (frmMain.Instance.IsDebug)
+                                {
+                                    frmMain.Instance.PrintInfoLog($"工作流提醒推送到{item.Value.User.用户名}");
+                                }
+
                             }
                             catch (Exception ex)
                             {
                                 frmMain.Instance.PrintInfoLog("服务器工作流提醒推送分布失败:" + item.Value.User.用户名 + ex.Message);
                             }
                         }
-                        else
-                        {
-                            continue;
-                        }
+                        //如果不注释，相同的员工有多个帐号时。员工只会提醒一个。
+                        //else
+                        //{
+                        //    continue;
+                        //}
 
 
                     }
                 }
-
             }
             return ExecutionResult.Next();
         }

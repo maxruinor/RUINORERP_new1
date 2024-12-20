@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:27
+// 时间：12/19/2024 15:52:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 箱规表
     /// </summary>
     [Serializable()]
-    [Description("tb_BoxRules")]
+    [Description("箱规表")]
     [SugarTable("tb_BoxRules")]
     public partial class tb_BoxRules: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_BoxRules" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("箱规表tb_BoxRules" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -51,14 +51,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long _Pack_ID;
+        private long? _Pack_ID;
         /// <summary>
         /// 包装信息
         /// </summary>
         [AdvQueryAttribute(ColName = "Pack_ID",ColDesc = "包装信息")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Pack_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "包装信息" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Pack_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "包装信息" )]
         [FKRelationAttribute("tb_Packing","Pack_ID")]
-        public long Pack_ID
+        public long? Pack_ID
         { 
             get{return _Pack_ID;}
             set{

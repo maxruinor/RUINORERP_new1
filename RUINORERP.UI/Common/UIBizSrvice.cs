@@ -14,6 +14,7 @@ using RUINORERP.UI.SuperSocketClient;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -84,7 +85,7 @@ namespace RUINORERP.UI.Common
 
 
         #region 从缓存中取产品显示数据
-
+        [Obsolete]
         public static List<KeyValuePair<object, string>> GetProductList()
         {
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();

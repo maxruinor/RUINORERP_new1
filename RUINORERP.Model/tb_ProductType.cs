@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:17
+// 时间：12/18/2024 18:17:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 货物类型  成品  半成品  包装材料 下脚料这种内容
     /// </summary>
     [Serializable()]
-    [Description("tb_ProductType")]
+    [Description("货物类型  成品  半成品  包装材料 下脚料这种内容")]
     [SugarTable("tb_ProductType")]
     public partial class tb_ProductType: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProductType" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("货物类型  成品  半成品  包装材料 下脚料这种内容tb_ProductType" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -85,18 +85,34 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Type_ID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.Type_ID)
-        //Type_ID.FK_MANUFACTURINGORDER_REF_PRODUCTYPE)
-        //tb_ProductType.Type_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Type_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
         //tb_Prod.Type_ID)
         //Type_ID.FK_TB_PROD_REFERENCE_TB_PRODU)
+        //tb_ProductType.Type_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.Type_ID_from))]
+        public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails_from { get; set; }
+        //tb_ProdConversionDetail.Type_ID)
+        //Type_ID.FK_TB_PRODConvertiondetail_REFE_TB_PRODU_typeFrom)
+        //tb_ProductType.Type_ID_from)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.Type_ID_to))]
+        public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails_to { get; set; }
+        //tb_ProdConversionDetail.Type_ID)
+        //Type_ID.FK_TB_PRODConvertiondetail_REFE_TB_PRODU_typeTo)
+        //tb_ProductType.Type_ID_to)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Type_ID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.Type_ID)
+        //Type_ID.FK_MANUFACTURINGORDER_REF_PRODUCTYPE)
         //tb_ProductType.Type_ID)
 
 

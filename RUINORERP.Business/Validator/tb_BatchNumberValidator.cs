@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:24
+// 时间：12/18/2024 17:45:25
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,15 +26,33 @@ namespace RUINORERP.Business
     /*public partial class tb_BatchNumberValidator:AbstractValidator<tb_BatchNumber>*/
     public partial class tb_BatchNumberValidator:BaseValidatorGeneric<tb_BatchNumber>
     {
-     public tb_BatchNumberValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_BatchNumberValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_BatchNumber =>tb_BatchNumber.BatchNO).MaximumLength(25).WithMessage(":不能超过最大长度,25.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_BatchNumber =>tb_BatchNumber.BatchNO).MaximumLength(25).WithMessage(":不能超过最大长度,25.");
+
  RuleFor(tb_BatchNumber =>tb_BatchNumber.采购单号).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
+
+
  RuleFor(tb_BatchNumber =>tb_BatchNumber.供应商).NotEmpty().When(x => x.供应商.HasValue);
+
  RuleFor(x => x.采购单价).PrecisionScale(10,0,true).WithMessage(":小数位不能超过0。");
+
+
+
  RuleFor(x => x.sale_price).PrecisionScale(10,2,true).WithMessage(":小数位不能超过2。");
+
  RuleFor(tb_BatchNumber =>tb_BatchNumber.quantity).NotEmpty().When(x => x.quantity.HasValue);
-       	
+
            	        Initialize();
      }
 

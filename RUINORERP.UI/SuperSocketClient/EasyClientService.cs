@@ -190,7 +190,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 tx.PushString(MainForm.Instance.AppContext.log.ModName);
                 tx.PushBool(MainForm.Instance.AppContext.OnlineUser.在线状态);
                 tx.PushBool(MainForm.Instance.AppContext.OnlineUser.授权状态);
-                tx.PushString(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//客户端时间，用来对比服务器的时间，如果多个客户端时间与服务器不一样。则服务器有问题。
+                tx.PushString(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//客户端时间，用来对比服务器的时间，如果多个客户端时间与服务器不一样。则服务器有问题。相差一个小时以上。就直接断开客户端
                 gd.cmd = (byte)ClientCmdEnum.客户端心跳包;
                 gd.One = null;
                 gd.Two = tx.toByte();
@@ -503,6 +503,10 @@ namespace RUINORERP.UI.SuperSocketClient
                         case ServerCmdEnum.根据锁定用户释放:
                             //单个实例
                             ClientService.接收根据锁定用户释放(od);
+                            break;
+                        case ServerCmdEnum.转发更新动态配置:
+                            //单个实例
+                            ClientService.接收转发更新动态配置(od);
                             break;
                         case ServerCmdEnum.转发更新缓存:
                             //单个实例

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/11/2024 20:44:23
+// 时间：12/18/2024 18:02:02
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_CRM_Leads info)
+        public ValidationResult Validator(tb_CRM_Leads info)
         {
-            tb_CRM_LeadsValidator validator = new tb_CRM_LeadsValidator();
+
+           // tb_CRM_LeadsValidator validator = new tb_CRM_LeadsValidator();
+           tb_CRM_LeadsValidator validator = _appContext.GetRequiredService<tb_CRM_LeadsValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_CRM_LeadsValidator validator = new tb_CRM_LeadsValidator();
+            //tb_CRM_LeadsValidator validator = new tb_CRM_LeadsValidator();
+           tb_CRM_LeadsValidator validator = _appContext.GetRequiredService<tb_CRM_LeadsValidator>();
             ValidationResult results = validator.Validate(info as tb_CRM_Leads);
             return results;
         }
@@ -245,16 +246,16 @@ namespace RUINORERP.Business
             if (entity.LeadID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_CRM_Leads>(entity as tb_CRM_Leads)
-                        .Include(m => m.tb_CRM_Customers)
-                    .Include(m => m.tb_CRM_FollowUpRecordses)
+                        .Include(m => m.tb_CRM_FollowUpRecordses)
+                    .Include(m => m.tb_CRM_Customers)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_CRM_Leads>(entity as tb_CRM_Leads)
-                .Include(m => m.tb_CRM_Customers)
                 .Include(m => m.tb_CRM_FollowUpRecordses)
+                .Include(m => m.tb_CRM_Customers)
                                 .ExecuteCommandAsync();
         }
         
@@ -285,8 +286,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Leads>()
-                                .Includes(m => m.tb_CRM_Customers)
-                        .Includes(m => m.tb_CRM_FollowUpRecordses)
+                                .Includes(m => m.tb_CRM_FollowUpRecordses)
+                        .Includes(m => m.tb_CRM_Customers)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -296,8 +297,8 @@ namespace RUINORERP.Business
         {
             tb_CRM_Leads entity = model as tb_CRM_Leads;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_CRM_Leads>(m => m.LeadID== entity.LeadID)
-                                .Include(m => m.tb_CRM_Customers)
-                        .Include(m => m.tb_CRM_FollowUpRecordses)
+                                .Include(m => m.tb_CRM_FollowUpRecordses)
+                        .Include(m => m.tb_CRM_Customers)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -461,8 +462,8 @@ namespace RUINORERP.Business
         {
             List<tb_CRM_Leads> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Leads>()
                                .Includes(t => t.tb_employee )
-                                            .Includes(t => t.tb_CRM_Customers )
-                                .Includes(t => t.tb_CRM_FollowUpRecordses )
+                                            .Includes(t => t.tb_CRM_FollowUpRecordses )
+                                .Includes(t => t.tb_CRM_Customers )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -483,8 +484,8 @@ namespace RUINORERP.Business
         {
             List<tb_CRM_Leads> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Leads>().Where(exp)
                                .Includes(t => t.tb_employee )
-                                            .Includes(t => t.tb_CRM_Customers )
-                                .Includes(t => t.tb_CRM_FollowUpRecordses )
+                                            .Includes(t => t.tb_CRM_FollowUpRecordses )
+                                .Includes(t => t.tb_CRM_Customers )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -505,8 +506,8 @@ namespace RUINORERP.Business
         {
             List<tb_CRM_Leads> list = _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Leads>().Where(exp)
                             .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_CRM_Customers )
-                            .Includes(t => t.tb_CRM_FollowUpRecordses )
+                                        .Includes(t => t.tb_CRM_FollowUpRecordses )
+                            .Includes(t => t.tb_CRM_Customers )
                         .ToList();
             
             foreach (var item in list)
@@ -544,8 +545,8 @@ namespace RUINORERP.Business
         {
             tb_CRM_Leads entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Leads>().Where(w => w.LeadID == (long)id)
                              .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_CRM_Customers )
-                            .Includes(t => t.tb_CRM_FollowUpRecordses )
+                                        .Includes(t => t.tb_CRM_FollowUpRecordses )
+                            .Includes(t => t.tb_CRM_Customers )
                         .FirstAsync();
             if(entity!=null)
             {

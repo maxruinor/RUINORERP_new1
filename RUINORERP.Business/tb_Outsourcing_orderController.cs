@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:58
+// 时间：12/18/2024 18:02:07
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_Outsourcing_order info)
+        public ValidationResult Validator(tb_Outsourcing_order info)
         {
-            tb_Outsourcing_orderValidator validator = new tb_Outsourcing_orderValidator();
+
+           // tb_Outsourcing_orderValidator validator = new tb_Outsourcing_orderValidator();
+           tb_Outsourcing_orderValidator validator = _appContext.GetRequiredService<tb_Outsourcing_orderValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_Outsourcing_orderValidator validator = new tb_Outsourcing_orderValidator();
+            //tb_Outsourcing_orderValidator validator = new tb_Outsourcing_orderValidator();
+           tb_Outsourcing_orderValidator validator = _appContext.GetRequiredService<tb_Outsourcing_orderValidator>();
             ValidationResult results = validator.Validate(info as tb_Outsourcing_order);
             return results;
         }

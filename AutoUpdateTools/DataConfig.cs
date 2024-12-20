@@ -11,7 +11,17 @@ namespace AutoUpdateTools
     {
 
         /// <summary>
-        /// 煤矿编码
+        /// 存在的目录
+        /// </summary>
+        public string BaseDir { get; set; }
+
+
+        /// <summary>
+        /// 哈希比较时新的来源目录
+        /// </summary>
+        public string CompareSource { get; set; }
+        /// <summary>
+        /// 编码
         /// </summary>
         public string MineCode { get; set; }
 

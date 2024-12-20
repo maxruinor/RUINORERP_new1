@@ -40,7 +40,7 @@ namespace RUINORERP.UI.BaseForm
         public BaseBillEdit()
         {
             InitializeComponent();
-            toolStripButton付款调整.Visible = false;
+         
             bwRemoting.DoWork += bwRemoting_DoWork;
             bwRemoting.RunWorkerCompleted += bwRemoting_RunWorkerCompleted;
             bwRemoting.ProgressChanged += bwRemoting_progressChanged;
@@ -725,7 +725,7 @@ namespace RUINORERP.UI.BaseForm
                                     return;
                                 }
                             }
-                            foreach (var item in toolStrip1.Items)
+                            foreach (var item in BaseToolStrip.Items)
                             {
                                 if (item is ToolStripButton)
                                 {

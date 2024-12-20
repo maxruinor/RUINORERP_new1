@@ -22,6 +22,7 @@ using SuperSocket.Server.Abstractions.Session;
 using System.Diagnostics;
 using System.Windows.Forms;
 using Microsoft.VisualBasic.ApplicationServices;
+using System.Numerics;
 
 namespace RUINORERP.Server.Commands
 {
@@ -79,11 +80,20 @@ namespace RUINORERP.Server.Commands
                     {
                         if (frmMain.Instance.IsDebug)
                         {
-                            frmMain.Instance.PrintMsg(CleintCmd.ToString());
+                            frmMain.Instance.PrintMsg($"收到客户端{Player.User.用户名}的指令:" + CleintCmd.ToString());
                         }
                     }
                     switch (CleintCmd)
                     {
+
+                        case ClientCmdEnum.更新动态配置:
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintMsg(Player.User.用户名 + "更新动态配置");
+                            }
+                            UserService.接收更新动态配置指令(Player, gd);
+                            break;
+
                         case ClientCmdEnum.工作流提醒回复:
 
                             WorkflowServiceReceiver.接收工作流提醒回复(Player, gd);
@@ -115,6 +125,11 @@ namespace RUINORERP.Server.Commands
                             //请求强制用户下线
                             UserService.处理请求强制用户下线(gd);
                             break;
+                        case ClientCmdEnum.请求强制登陆上线:
+                            //T掉指定用户。
+                            //请求强制用户下线
+                            UserService.处理请求强制登陆上线(gd);
+                            break;
                         case ClientCmdEnum.准备登陆:
                             byte[] source = gd.Two;
                             try
@@ -134,19 +149,39 @@ namespace RUINORERP.Server.Commands
                             tb_UserInfo user = await UserService.接收用户登陆指令(Player, gd);
                             if (UserService.用户登陆回复(Player, user))
                             {
+                                //判断 是不是有相同的用户已经登陆了。有的话，则提示新登陆的人是不是T掉旧的用户。不是的话自己退出。
+                                var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(Player.SessionID) && c.User.用户名 == user.UserName);
+                                if (ExistSession != null)
+                                {
+                                    UserService.回复用户重复登陆(Player, ExistSession);
+                                }
+                                else
+                                {
+                                    UserService.回复用户重复登陆(Player, ExistSession);
+                                }
+
+                                //登陆成功时。
+                                if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.protectionData.UserOnlineCount)
+                                {
+                                    //超出人数时：提示一下再T掉第一个人
+                                    //优先T重复的人。
+                                    if (ExistSession != null)
+                                    {
+
+                                    }
+                                    else
+                                    {
+
+                                    }
+
+                                }
+
                                 UserService.发送在线列表(Player);
                                 UserService.发送缓存信息列表(Player);
+
+
                             }
-                            //判断 是不是有相同的用户已经登陆了。有的话，则提示新登陆的人是不是T掉旧的用户。不是的话自己退出。
-                            var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(Player.SessionID) && c.User.用户名 == user.UserName);
-                            if (ExistSession != null)
-                            {
-                                UserService.回复用户重复登陆(Player, ExistSession);
-                            }
-                            else
-                            {
-                                UserService.回复用户重复登陆(Player, ExistSession);
-                            }
+
 
                             break;
 
@@ -180,10 +215,11 @@ namespace RUINORERP.Server.Commands
                             stopwatchSender.Stop();
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintInfoLog($"发送缓存数据{RequestTableName}给{Player.User.用户名 } 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
+                                frmMain.Instance.PrintInfoLog($"发送缓存数据{RequestTableName}给{Player.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
                             }
 
                             break;
+
                         case ClientCmdEnum.更新缓存:
                             if (frmMain.Instance.IsDebug)
                             {
@@ -354,8 +390,15 @@ namespace RUINORERP.Server.Commands
                         TimeSpan timeDifference = currentTime - clientTime;
                         if (Math.Abs(timeDifference.TotalHours) > 1)
                         {
-                            // MessageBox.Show("当前时间与客户端时间相差1小时以上，请检查！", "时间差异提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            //当3个以前的客户端时间与服务器时间相差1小时以上，则断开连接
+                            frmMain.Instance.PrintInfoLog($"{empName}的客户端电脑时间异常，请检查!");
+                            //客户端时间与服务器时间相差1小时以上，则断开连接
+                            if (PlayerSession.State == SuperSocket.Server.Abstractions.SessionState.Connected)
+                            {
+                                //发出一个提示？
+                                // UserService.发消息给客户端()
+                                //这里是强制用户退出，让客户端自动断开服务器。
+                                UserService.强制用户退出(PlayerSession);
+                            }
                         }
                     }
 

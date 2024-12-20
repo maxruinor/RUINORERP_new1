@@ -74,6 +74,8 @@ namespace RUINORERP.UI.BI
                 
 
             };
+
+            base.BindData(entity);
         }
         private void btnCancel_Click(object sender, EventArgs e)
         {

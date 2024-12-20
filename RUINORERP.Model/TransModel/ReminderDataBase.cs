@@ -11,6 +11,9 @@ namespace RUINORERP.Model.TransModel
     {
         public string Id { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public long BizPrimaryKey { get; set; }
 
         public BizType BizType { get; set; }

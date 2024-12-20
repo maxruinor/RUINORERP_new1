@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/17/2024 19:26:50
+// 时间：12/18/2024 18:07:04
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 库存视图
+    /// 库存视图-得从表取不能视图套视图
     /// </summary>
     public partial class View_InventoryController<T>:BaseController<T> where T : class
     {
@@ -52,7 +52,15 @@ namespace RUINORERP.Business
         
         
         
-  
+         public ValidationResult Validator(View_Inventory info)
+        {
+
+           // View_InventoryValidator validator = new View_InventoryValidator();
+           View_InventoryValidator validator = _appContext.GetRequiredService<View_InventoryValidator>();
+            ValidationResult results = validator.Validate(info);
+            return results;
+        }
+        
         #region 扩展方法
         
         /// <summary>

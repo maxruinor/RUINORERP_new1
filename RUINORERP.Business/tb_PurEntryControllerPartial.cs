@@ -193,21 +193,19 @@ namespace RUINORERP.Business
                     {
                         Opening = true;
                         inv = new tb_Inventory();
-                        inv.Quantity = inv.Quantity + child.Quantity;
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
                     }
                     else
                     {
-                        inv.Quantity = inv.Quantity + child.Quantity;
+
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Location_ID = child.Location_ID;
                     inv.Notes = "";//后面修改数据库是不需要？
                     inv.LatestStorageTime = System.DateTime.Now;
-
                     //采购订单时添加 。这里减掉在路上的数量
                     inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
 
@@ -241,10 +239,15 @@ namespace RUINORERP.Business
                                 await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
                             }
                         }
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+                         if (bomDetails.Count > 0)
+                         {
+                             await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+                         }
+                         
 
                         #endregion
                     }
+                    inv.Quantity = inv.Quantity + child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
@@ -396,14 +399,14 @@ namespace RUINORERP.Business
                     {
                         Opening = true;
                         inv = new tb_Inventory();
-                        inv.Quantity = inv.Quantity - child.Quantity;
+
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
                     }
                     else
                     {
-                        inv.Quantity = inv.Quantity - child.Quantity;
+
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     inv.ProdDetailID = child.ProdDetailID;
@@ -446,11 +449,16 @@ namespace RUINORERP.Business
                                 await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
                             }
                         }
-                        await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+                        if (bomDetails.Count>0)
+                        {
+                            await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
+                        }
+                        
 
 
                         #endregion
                     }
+                    inv.Quantity = inv.Quantity - child.Quantity;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:48
+// 时间：12/18/2024 18:16:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 库位表
     /// </summary>
     [Serializable()]
-    [Description("tb_Location")]
+    [Description("库位表")]
     [SugarTable("tb_Location")]
     public partial class tb_Location: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Location" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("库位表tb_Location" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -191,14 +191,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Location_ID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.Location_ID)
-        //Location_ID.FK_MANUFACTURINGORDER_REF_LOCATION)
-        //tb_Location.Location_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProduceGoodsRecommendDetail.Location_ID))]
         public virtual List<tb_ProduceGoodsRecommendDetail> tb_ProduceGoodsRecommendDetails { get; set; }
         //tb_ProduceGoodsRecommendDetail.Location_ID)
@@ -223,6 +215,14 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntryDetail.Location_ID))]
+        public virtual List<tb_PurReturnEntryDetail> tb_PurReturnEntryDetails { get; set; }
+        //tb_PurReturnEntryDetail.Location_ID)
+        //Location_ID.FK_PURRETURNENTRYDETAIL_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturnDetail.Location_ID))]
         public virtual List<tb_MaterialReturnDetail> tb_MaterialReturnDetails { get; set; }
         //tb_MaterialReturnDetail.Location_ID)
@@ -231,10 +231,10 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ProdMergeDetail.Location_ID))]
-        public virtual List<tb_ProdMergeDetail> tb_ProdMergeDetails { get; set; }
-        //tb_ProdMergeDetail.Location_ID)
-        //Location_ID.FK_PRODMergeDetail_REF_LOCATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.Location_ID))]
+        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
+        //tb_MaterialRequisition.Location_ID)
+        //Location_ID.FK_MATERIALREQUISITIONS_REF_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]
@@ -255,9 +255,27 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdMergeDetail.Location_ID))]
+        public virtual List<tb_ProdMergeDetail> tb_ProdMergeDetails { get; set; }
+        //tb_ProdMergeDetail.Location_ID)
+        //Location_ID.FK_PRODMergeDetail_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrderDetail.Location_ID))]
+        public virtual List<tb_SaleOrderDetail> tb_SaleOrderDetails { get; set; }
+        //tb_SaleOrderDetail.Location_ID)
+        //Location_ID.FK_SALEORDERDETAIL_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdReturningDetail.Location_ID))]
         public virtual List<tb_ProdReturningDetail> tb_ProdReturningDetails { get; set; }
-
+        //tb_ProdReturningDetail.Location_ID)
+        //Location_ID.FK_PRODRetruningdetail_REF_LOCAT)
+        //tb_Location.Location_ID)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -309,19 +327,19 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrderDetail.Location_ID))]
-        public virtual List<tb_ManufacturingOrderDetail> tb_ManufacturingOrderDetails { get; set; }
-        //tb_ManufacturingOrderDetail.Location_ID)
-        //Location_ID.FK_MANUFACTURINGORDERDETAIL_REF_LOCATION)
-        //tb_Location.Location_ID)
+        [Navigate(NavigateType.OneToMany, nameof(tb_StockTransfer.Location_ID_from))]
+        public virtual List<tb_StockTransfer> tb_StockTransfers_from { get; set; }
+        //tb_StockTransfer.Location_ID)
+        //Location_ID.FK_STOCKtransfer_REF_LOCATion_1)
+        //tb_Location.Location_ID_from)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrderDetail.Location_ID))]
-        public virtual List<tb_SaleOrderDetail> tb_SaleOrderDetails { get; set; }
-        //tb_SaleOrderDetail.Location_ID)
-        //Location_ID.FK_SALEORDERDETAIL_REF_LOCATION)
-        //tb_Location.Location_ID)
+        [Navigate(NavigateType.OneToMany, nameof(tb_StockTransfer.Location_ID_to))]
+        public virtual List<tb_StockTransfer> tb_StockTransfers_to { get; set; }
+        //tb_StockTransfer.Location_ID)
+        //Location_ID.FK_STOCKtransfer_REF_LOCATion_2)
+        //tb_Location.Location_ID_to)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -349,10 +367,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.Location_ID))]
-        public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
-        //tb_PurEntryReDetail.Location_ID)
-        //Location_ID.FK_PURENREDETAIL_LOCATION)
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrderDetail.Location_ID))]
+        public virtual List<tb_ManufacturingOrderDetail> tb_ManufacturingOrderDetails { get; set; }
+        //tb_ManufacturingOrderDetail.Location_ID)
+        //Location_ID.FK_MANUFACTURINGORDERDETAIL_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversion.Location_ID))]
+        public virtual List<tb_ProdConversion> tb_ProdConversions { get; set; }
+        //tb_ProdConversion.Location_ID)
+        //Location_ID.FK_TB_PRODCONVERSION_REF_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]
@@ -381,10 +407,26 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Location_ID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.Location_ID)
+        //Location_ID.FK_MANUFACTURINGORDER_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdMerge.Location_ID))]
         public virtual List<tb_ProdMerge> tb_ProdMerges { get; set; }
         //tb_ProdMerge.Location_ID)
         //Location_ID.FK_PRODMerge_REF_LOCATION)
+        //tb_Location.Location_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.Location_ID))]
+        public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
+        //tb_PurEntryReDetail.Location_ID)
+        //Location_ID.FK_PURENREDETAIL_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]
@@ -401,14 +443,6 @@ namespace RUINORERP.Model
         public virtual List<tb_PurOrderReDetail> tb_PurOrderReDetails { get; set; }
         //tb_PurOrderReDetail.Location_ID)
         //Location_ID.FK_PURORDERREDETAIL_REF_LOCATION)
-        //tb_Location.Location_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.Location_ID))]
-        public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
-        //tb_MaterialRequisition.Location_ID)
-        //Location_ID.FK_MATERIALREQUISITIONS_REF_LOCATION)
         //tb_Location.Location_ID)
 
         //[Browsable(false)]

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:01
+// 时间：12/18/2024 18:13:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 付款方式 交易方式，后面扩展有关账期 账龄分析的字段
     /// </summary>
     [Serializable()]
-    [Description("tb_PaymentMethod")]
+    [Description("付款方式 交易方式，后面扩展有关账期 账龄分析的字段")]
     [SugarTable("tb_PaymentMethod")]
     public partial class tb_PaymentMethod: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_PaymentMethod" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("付款方式 交易方式，后面扩展有关账期 账龄分析的字段tb_PaymentMethod" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -107,14 +107,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.Paytype_ID))]
-        public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
-        //tb_PurEntryRe.Paytype_ID)
-        //Paytype_ID.FK_PURENTRYRE_PAYMETHOD)
-        //tb_PaymentMethod.Paytype_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntry.Paytype_ID))]
         public virtual List<tb_PurEntry> tb_PurEntries { get; set; }
         //tb_PurEntry.Paytype_ID)
@@ -131,10 +123,34 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntry.Paytype_ID))]
+        public virtual List<tb_PurReturnEntry> tb_PurReturnEntries { get; set; }
+        //tb_PurReturnEntry.Paytype_ID)
+        //Paytype_ID.FK_PURRETURNENTRY_REE_PAYMENTMETHOD)
+        //tb_PaymentMethod.Paytype_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrder.Paytype_ID))]
         public virtual List<tb_SaleOrder> tb_SaleOrders { get; set; }
         //tb_SaleOrder.Paytype_ID)
         //Paytype_ID.FK_TB_SALEO_REFERENCE_TB_PAYME)
+        //tb_PaymentMethod.Paytype_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutRe.Paytype_ID))]
+        public virtual List<tb_SaleOutRe> tb_SaleOutRes { get; set; }
+        //tb_SaleOutRe.Paytype_ID)
+        //Paytype_ID.FK_SALEOUTRE_REF_PAYMENTMETHOD)
+        //tb_PaymentMethod.Paytype_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.Paytype_ID))]
+        public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
+        //tb_PurEntryRe.Paytype_ID)
+        //Paytype_ID.FK_PURENTRYRE_PAYMETHOD)
         //tb_PaymentMethod.Paytype_ID)
 
         //[Browsable(false)]

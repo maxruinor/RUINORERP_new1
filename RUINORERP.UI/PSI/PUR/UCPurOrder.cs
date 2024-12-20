@@ -48,10 +48,10 @@ namespace RUINORERP.UI.PSI.PUR
         public UCPurOrder()
         {
             InitializeComponent();
-            
+
 
         }
- 
+
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;
@@ -150,7 +150,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
-                    
+
                 }
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.PreDeliveryDate))
@@ -214,7 +214,7 @@ namespace RUINORERP.UI.PSI.PUR
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_PurOrderValidator(), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_PurOrderValidator>(), kryptonSplitContainer1.Panel1.Controls);
                 //  base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
 
@@ -232,7 +232,7 @@ namespace RUINORERP.UI.PSI.PUR
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
-        
+
         DateTime PreDeliveryDate = System.DateTime.Now;
 
         List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
@@ -538,137 +538,23 @@ namespace RUINORERP.UI.PSI.PUR
             return false;
         }
 
+
+
+        protected async override Task<bool> Submit()
+        {
+            if (!base.Validator(EditEntity))
+            {
+                return false;
+            }
+            bool rs = await base.Submit();
+            return rs;
+        }
+
+
         tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
 
-        /*
-        protected async override Task<ApprovalEntity> Review()
-        {
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            //如果已经审核通过，则不能重复审核
-            if (EditEntity.ApprovalStatus.HasValue)
-            {
-                if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核)
-                {
-                    if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                    {
-                        MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                        return null;
-                    }
-                }
-            }
-            Command command = new Command();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_PurOrder oldobj = CloneHelper.DeepCloneObject<tb_PurOrder>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_PurOrder>(EditEntity, oldobj);
-            };
-            ApprovalEntity ae = await base.Review();
-            if (EditEntity == null)
-            {
-                return null;
-            }
-            if (ae.ApprovalStatus == (int)ApprovalStatus.未审核)
-            {
-                return null;
-            }
-
-            // BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            //因为只需要更新主表
-            //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-            // rmr = await ctr.BaseSaveOrUpdateWithChild<T>(EditEntity);
-            ReturnResults<T> rmrs = await ctr.ApprovalAsync(EditEntity);
-            if (rmrs.Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.审核);
-                //如果审核结果为不通过时，审核不是灰色。
-                if (!ae.ApprovalResults)
-                {
-                    toolStripbtnReview.Enabled = true;
-                }
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
-                MainForm.Instance.PrintInfoLog(rmrs.ErrorMsg);
-            }
-
-            return ae;
-        }
-        */
-        /*
-        protected async override void ReReview()
-        {
-            if (EditEntity == null)
-            {
-                return;
-            }
-
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return;
-            }
-
-
-            if (EditEntity.tb_PurOrderDetails == null || EditEntity.tb_PurOrderDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
-                return;
-            }
-
-            Command command = new Command();
-
-            tb_PurOrder oldobj = CloneHelper.DeepCloneObject<tb_PurOrder>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                CloneHelper.SetValues<tb_PurOrder>(EditEntity, oldobj);
-            };
-
-            ReturnResults<bool> rs = await ctr.AntiApprovalAsync(EditEntity);
-            if (rs.Succeeded)
-            {
-
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.反审);
-                toolStripbtnReview.Enabled = true;
-
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{EditEntity.PurOrderNo}反审失败{rs.ErrorMsg},请联系管理员！", Color.Red);
-            }
-
-        }
-        */
+    
+     
 
         /// <summary>
         /// 结案

@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/29/2024 23:20:21
+// 时间：12/18/2024 17:45:33
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,19 +26,41 @@ namespace RUINORERP.Business
     /*public partial class tb_UserInfoValidator:AbstractValidator<tb_UserInfo>*/
     public partial class tb_UserInfoValidator:BaseValidatorGeneric<tb_UserInfo>
     {
-     public tb_UserInfoValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_UserInfoValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_UserInfo =>tb_UserInfo.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("员工信息:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_UserInfo =>tb_UserInfo.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("员工信息:下拉选择值不正确。");
  RuleFor(tb_UserInfo =>tb_UserInfo.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
+
  RuleFor(tb_UserInfo =>tb_UserInfo.UserName).MaximumLength(127).WithMessage("用户名:不能超过最大长度,127.");
  RuleFor(tb_UserInfo =>tb_UserInfo.UserName).NotEmpty().WithMessage("用户名:不能为空。");
+
  RuleFor(tb_UserInfo =>tb_UserInfo.Password).MaximumLength(127).WithMessage("密码:不能超过最大长度,127.");
+
 //有默认值
+
 //有默认值
+
+
  RuleFor(tb_UserInfo =>tb_UserInfo.Notes).MaximumLength(50).WithMessage("备注说明:不能超过最大长度,50.");
+
+
+
+
  RuleFor(tb_UserInfo =>tb_UserInfo.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
  RuleFor(tb_UserInfo =>tb_UserInfo.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-       	
+
            	        Initialize();
      }
 

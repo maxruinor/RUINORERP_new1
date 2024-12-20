@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:38
+// 时间：12/18/2024 18:02:16
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_SysGlobalDynamicConfig info)
+        public ValidationResult Validator(tb_SysGlobalDynamicConfig info)
         {
-            tb_SysGlobalDynamicConfigValidator validator = new tb_SysGlobalDynamicConfigValidator();
+
+           // tb_SysGlobalDynamicConfigValidator validator = new tb_SysGlobalDynamicConfigValidator();
+           tb_SysGlobalDynamicConfigValidator validator = _appContext.GetRequiredService<tb_SysGlobalDynamicConfigValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_SysGlobalDynamicConfigValidator validator = new tb_SysGlobalDynamicConfigValidator();
+            //tb_SysGlobalDynamicConfigValidator validator = new tb_SysGlobalDynamicConfigValidator();
+           tb_SysGlobalDynamicConfigValidator validator = _appContext.GetRequiredService<tb_SysGlobalDynamicConfigValidator>();
             ValidationResult results = validator.Validate(info as tb_SysGlobalDynamicConfig);
             return results;
         }

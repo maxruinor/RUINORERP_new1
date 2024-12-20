@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:41
+// 时间：12/18/2024 18:02:04
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_FM_ExpenseType info)
+        public ValidationResult Validator(tb_FM_ExpenseType info)
         {
-            tb_FM_ExpenseTypeValidator validator = new tb_FM_ExpenseTypeValidator();
+
+           // tb_FM_ExpenseTypeValidator validator = new tb_FM_ExpenseTypeValidator();
+           tb_FM_ExpenseTypeValidator validator = _appContext.GetRequiredService<tb_FM_ExpenseTypeValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_FM_ExpenseTypeValidator validator = new tb_FM_ExpenseTypeValidator();
+            //tb_FM_ExpenseTypeValidator validator = new tb_FM_ExpenseTypeValidator();
+           tb_FM_ExpenseTypeValidator validator = _appContext.GetRequiredService<tb_FM_ExpenseTypeValidator>();
             ValidationResult results = validator.Validate(info as tb_FM_ExpenseType);
             return results;
         }
@@ -246,8 +247,8 @@ namespace RUINORERP.Business
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_ExpenseType>(entity as tb_FM_ExpenseType)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
-                    .Include(m => m.tb_FM_Initial_PayAndReceivables)
                     .Include(m => m.tb_FM_ExpenseClaimDetails)
+                    .Include(m => m.tb_FM_Initial_PayAndReceivables)
                             .ExecuteCommandAsync();
          
         }
@@ -255,8 +256,8 @@ namespace RUINORERP.Business
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_ExpenseType>(entity as tb_FM_ExpenseType)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
-                .Include(m => m.tb_FM_Initial_PayAndReceivables)
                 .Include(m => m.tb_FM_ExpenseClaimDetails)
+                .Include(m => m.tb_FM_Initial_PayAndReceivables)
                                 .ExecuteCommandAsync();
         }
         
@@ -288,8 +289,8 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseType>()
                                 .Includes(m => m.tb_FM_OtherExpenseDetails)
-                        .Includes(m => m.tb_FM_Initial_PayAndReceivables)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
+                        .Includes(m => m.tb_FM_Initial_PayAndReceivables)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -300,8 +301,8 @@ namespace RUINORERP.Business
             tb_FM_ExpenseType entity = model as tb_FM_ExpenseType;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_ExpenseType>(m => m.ExpenseType_id== entity.ExpenseType_id)
                                 .Include(m => m.tb_FM_OtherExpenseDetails)
-                        .Include(m => m.tb_FM_Initial_PayAndReceivables)
                         .Include(m => m.tb_FM_ExpenseClaimDetails)
+                        .Include(m => m.tb_FM_Initial_PayAndReceivables)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -466,8 +467,8 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseType> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseType>()
                                .Includes(t => t.tb_fm_subject )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
-                                .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
+                                .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -489,8 +490,8 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseType> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseType>().Where(exp)
                                .Includes(t => t.tb_fm_subject )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
-                                .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
+                                .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -512,8 +513,8 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseType> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseType>().Where(exp)
                             .Includes(t => t.tb_fm_subject )
                                         .Includes(t => t.tb_FM_OtherExpenseDetails )
-                            .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
+                            .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                         .ToList();
             
             foreach (var item in list)
@@ -552,8 +553,8 @@ namespace RUINORERP.Business
             tb_FM_ExpenseType entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseType>().Where(w => w.ExpenseType_id == (long)id)
                              .Includes(t => t.tb_fm_subject )
                                         .Includes(t => t.tb_FM_OtherExpenseDetails )
-                            .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
+                            .Includes(t => t.tb_FM_Initial_PayAndReceivables )
                         .FirstAsync();
             if(entity!=null)
             {

@@ -127,7 +127,6 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.PreStartDate, dtpPreStartDate, false);
             DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.PreEndDate, dtpPreEndDate, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.Created_at, dtpCreate_at, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PDNO, txtRefBillNO, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ManufacturingOrder>(entity, v => v.PDID, txtRefBillNO, true);
@@ -146,8 +145,6 @@ namespace RUINORERP.UI.MRP.MP
             txtQuantityDelivered.ReadOnly = true;
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ManufacturingQty, txtManufacturingQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, cmbLocation_ID);
-
-
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, v => v.CNName, txtProdDetail, BindDataType4TextBox.Text, true);
@@ -211,19 +208,17 @@ namespace RUINORERP.UI.MRP.MP
                     {
                         if (entity.IsOutSourced)
                         {
-                            entity.ApportionedCost = entity.tb_bom_s.OutApportionedCost * entity.ManufacturingQty;
-                            entity.TotalManuFee = entity.tb_bom_s.TotalOutManuCost * entity.ManufacturingQty;
-                            entity.TotalProductionCost = entity.tb_bom_s.OutProductionAllCosts * entity.ManufacturingQty;
+                            entity.ApportionedCost = entity.tb_bom_s.OutApportionedCost/ entity.tb_bom_s.OutputQty * entity.ManufacturingQty;
+                            entity.TotalManuFee = entity.tb_bom_s.TotalOutManuCost / entity.tb_bom_s.OutputQty * entity.ManufacturingQty;
                         }
                         else
                         {
-                            entity.ApportionedCost = entity.tb_bom_s.SelfApportionedCost * entity.ManufacturingQty;
-                            entity.TotalManuFee = entity.tb_bom_s.TotalSelfManuCost * entity.ManufacturingQty;
-                            entity.TotalProductionCost = entity.tb_bom_s.SelfProductionAllCosts * entity.ManufacturingQty;
+                            entity.ApportionedCost = entity.tb_bom_s.SelfApportionedCost / entity.tb_bom_s.OutputQty * entity.ManufacturingQty;
+                            entity.TotalManuFee = entity.tb_bom_s.TotalSelfManuCost / entity.tb_bom_s.OutputQty * entity.ManufacturingQty;
                             entity.CustomerVendor_ID_Out = null;
                         }
+                        entity.TotalProductionCost = entity.ApportionedCost * entity.TotalManuFee + entity.TotalMaterialCost;
                     }
-
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PDID.HasValue && entity.PDID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.PDID))
@@ -318,7 +313,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_ManufacturingOrderValidator(), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ManufacturingOrderValidator> (), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
@@ -471,6 +466,15 @@ namespace RUINORERP.UI.MRP.MP
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
+                //if (EditEntity.IsOutSourced)
+                //{
+                //    //外发
+                //    EditEntity.TotalManuFee =bom EditEntity.ManufacturingQty
+                //}
+                //else
+                //{
+                //    //自制
+                //}
                 EditEntity.TotalMaterialCost = details.Sum(c => c.SubtotalUnitCost);
                 EditEntity.TotalProductionCost = EditEntity.TotalMaterialCost + EditEntity.ApportionedCost + EditEntity.TotalManuFee;
             }

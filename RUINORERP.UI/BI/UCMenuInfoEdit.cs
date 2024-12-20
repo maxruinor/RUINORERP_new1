@@ -55,6 +55,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.Sort, txtSort, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.HotKey, txtHotKey, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_MenuInfo>(entity, t => t.DefaultLayout, txtDefaultLayout, BindDataType4TextBox.Text, false);
+            base.BindData(entity);
         }
         private void btnCancel_Click(object sender, EventArgs e)
         {

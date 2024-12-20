@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 19:02:36
+// 时间：12/18/2024 18:16:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 销售出库退回明细
     /// </summary>
     [Serializable()]
-    [Description("tb_SaleOutReDetail")]
+    [Description("销售出库退回明细")]
     [SugarTable("tb_SaleOutReDetail")]
     public partial class tb_SaleOutReDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_SaleOutReDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("销售出库退回明细tb_SaleOutReDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -85,8 +85,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 
@@ -144,7 +144,7 @@ namespace RUINORERP.Model
         /// 成交单价
         /// </summary>
         [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成交单价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成交单价" )]
         public decimal TransactionPrice
         { 
             get{return _TransactionPrice;}
@@ -158,7 +158,7 @@ namespace RUINORERP.Model
         /// 小计
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalTransAmount",ColDesc = "小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalTransAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalTransAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "小计" )]
         public decimal SubtotalTransAmount
         { 
             get{return _SubtotalTransAmount;}
@@ -200,7 +200,7 @@ namespace RUINORERP.Model
         /// 成本
         /// </summary>
         [AdvQueryAttribute(ColName = "Cost",ColDesc = "成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本" )]
         public decimal Cost
         { 
             get{return _Cost;}
@@ -214,7 +214,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal SubtotalCostAmount
         { 
             get{return _SubtotalCostAmount;}
@@ -228,7 +228,7 @@ namespace RUINORERP.Model
         /// 未税本位币
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalUntaxedAmount",ColDesc = "未税本位币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUntaxedAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "未税本位币" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUntaxedAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "未税本位币" )]
         public decimal SubtotalUntaxedAmount
         { 
             get{return _SubtotalUntaxedAmount;}
@@ -256,7 +256,7 @@ namespace RUINORERP.Model
         /// 税率
         /// </summary>
         [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "税率")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TaxRate" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "税率")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TaxRate" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "税率" )]
         public decimal TaxRate
         { 
             get{return _TaxRate;}
@@ -270,7 +270,7 @@ namespace RUINORERP.Model
         /// 税额
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalTaxAmount",ColDesc = "税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalTaxAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "税额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalTaxAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "税额" )]
         public decimal SubtotalTaxAmount
         { 
             get{return _SubtotalTaxAmount;}
@@ -284,7 +284,7 @@ namespace RUINORERP.Model
         /// 抽成返还
         /// </summary>
         [AdvQueryAttribute(ColName = "CommissionAmount",ColDesc = "抽成返还")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CommissionAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "抽成返还" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CommissionAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "抽成返还" )]
         public decimal? CommissionAmount
         { 
             get{return _CommissionAmount;}

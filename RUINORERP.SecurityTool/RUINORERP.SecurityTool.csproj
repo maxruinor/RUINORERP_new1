@@ -111,6 +111,7 @@
   <ItemGroup>
     <Content Include="1034363_advantage_protection_protect_security_shield_icon.ico" />
     <Content Include="1034363_advantage_protection_protect_security_shield_icon.png" />
+    <Content Include="使用说明.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

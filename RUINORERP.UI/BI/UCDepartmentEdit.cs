@@ -39,6 +39,7 @@ namespace RUINORERP.UI.BI
             }
             DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.DepartmentName, txtDepartmentName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
+            base.BindData(entity);
         }
 
 

@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:38
+// 时间：12/18/2024 17:45:27
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,14 +26,26 @@ namespace RUINORERP.Business
     /*public partial class tb_FlowchartDefinitionValidator:AbstractValidator<tb_FlowchartDefinition>*/
     public partial class tb_FlowchartDefinitionValidator:BaseValidatorGeneric<tb_FlowchartDefinition>
     {
-     public tb_FlowchartDefinitionValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_FlowchartDefinitionValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.ModuleID).Must(CheckForeignKeyValueCanNull).WithMessage("模块:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.ModuleID).Must(CheckForeignKeyValueCanNull).WithMessage("模块:下拉选择值不正确。");
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.ModuleID).NotEmpty().When(x => x.ModuleID.HasValue);
+
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartNo).NotEmpty().WithMessage("流程图编号:不能为空。");
+
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).MaximumLength(10).WithMessage("流程图名称:不能超过最大长度,10.");
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).NotEmpty().WithMessage("流程图名称:不能为空。");
-       	
+
            	        Initialize();
      }
 

@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:26
+// 时间：12/18/2024 17:45:31
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,20 +26,45 @@ namespace RUINORERP.Business
     /*public partial class tb_RolePropertyConfigValidator:AbstractValidator<tb_RolePropertyConfig>*/
     public partial class tb_RolePropertyConfigValidator:BaseValidatorGeneric<tb_RolePropertyConfig>
     {
-     public tb_RolePropertyConfigValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_RolePropertyConfigValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.RolePropertyName).MaximumLength(127).WithMessage("角色名称:不能超过最大长度,127.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.RolePropertyName).MaximumLength(127).WithMessage("角色名称:不能超过最大长度,127.");
+
 //***** 
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.QtyDataPrecision).NotNull().WithMessage("数量精度:不能为空。");
+
 //***** 
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.TaxRateDataPrecision).NotNull().WithMessage("税率精度:不能为空。");
+
 //***** 
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.MoneyDataPrecision).NotNull().WithMessage("金额精度:不能为空。");
+
 //有默认值
+
 //***** 
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.CostCalculationMethod).NotNull().WithMessage("成本方式:不能为空。");
+
+
+
+
+
+
+
+
+
+
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.DataBoardUnits).MaximumLength(250).WithMessage(":不能超过最大长度,250.");
-       	
+
            	        Initialize();
      }
 

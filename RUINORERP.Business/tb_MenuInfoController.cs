@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:54
+// 时间：12/18/2024 18:02:07
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_MenuInfo info)
+        public ValidationResult Validator(tb_MenuInfo info)
         {
-            tb_MenuInfoValidator validator = new tb_MenuInfoValidator();
+
+           // tb_MenuInfoValidator validator = new tb_MenuInfoValidator();
+           tb_MenuInfoValidator validator = _appContext.GetRequiredService<tb_MenuInfoValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_MenuInfoValidator validator = new tb_MenuInfoValidator();
+            //tb_MenuInfoValidator validator = new tb_MenuInfoValidator();
+           tb_MenuInfoValidator validator = _appContext.GetRequiredService<tb_MenuInfoValidator>();
             ValidationResult results = validator.Validate(info as tb_MenuInfo);
             return results;
         }
@@ -247,6 +248,7 @@ namespace RUINORERP.Business
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_MenuInfo>(entity as tb_MenuInfo)
                         .Include(m => m.tb_ButtonInfos)
                     .Include(m => m.tb_P4Fields)
+                    .Include(m => m.tb_UIMenuPersonalizations)
                     .Include(m => m.tb_FieldInfos)
                     .Include(m => m.tb_P4Buttons)
                     .Include(m => m.tb_P4Menus)
@@ -258,6 +260,7 @@ namespace RUINORERP.Business
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_MenuInfo>(entity as tb_MenuInfo)
                 .Include(m => m.tb_ButtonInfos)
                 .Include(m => m.tb_P4Fields)
+                .Include(m => m.tb_UIMenuPersonalizations)
                 .Include(m => m.tb_FieldInfos)
                 .Include(m => m.tb_P4Buttons)
                 .Include(m => m.tb_P4Menus)
@@ -293,6 +296,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>()
                                 .Includes(m => m.tb_ButtonInfos)
                         .Includes(m => m.tb_P4Fields)
+                        .Includes(m => m.tb_UIMenuPersonalizations)
                         .Includes(m => m.tb_FieldInfos)
                         .Includes(m => m.tb_P4Buttons)
                         .Includes(m => m.tb_P4Menus)
@@ -307,6 +311,7 @@ namespace RUINORERP.Business
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_MenuInfo>(m => m.MenuID== entity.MenuID)
                                 .Include(m => m.tb_ButtonInfos)
                         .Include(m => m.tb_P4Fields)
+                        .Include(m => m.tb_UIMenuPersonalizations)
                         .Include(m => m.tb_FieldInfos)
                         .Include(m => m.tb_P4Buttons)
                         .Include(m => m.tb_P4Menus)
@@ -475,6 +480,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_moduledefinition )
                                             .Includes(t => t.tb_ButtonInfos )
                                 .Includes(t => t.tb_P4Fields )
+                                .Includes(t => t.tb_UIMenuPersonalizations )
                                 .Includes(t => t.tb_FieldInfos )
                                 .Includes(t => t.tb_P4Buttons )
                                 .Includes(t => t.tb_P4Menus )
@@ -500,6 +506,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_moduledefinition )
                                             .Includes(t => t.tb_ButtonInfos )
                                 .Includes(t => t.tb_P4Fields )
+                                .Includes(t => t.tb_UIMenuPersonalizations )
                                 .Includes(t => t.tb_FieldInfos )
                                 .Includes(t => t.tb_P4Buttons )
                                 .Includes(t => t.tb_P4Menus )
@@ -525,6 +532,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_moduledefinition )
                                         .Includes(t => t.tb_ButtonInfos )
                             .Includes(t => t.tb_P4Fields )
+                            .Includes(t => t.tb_UIMenuPersonalizations )
                             .Includes(t => t.tb_FieldInfos )
                             .Includes(t => t.tb_P4Buttons )
                             .Includes(t => t.tb_P4Menus )
@@ -567,6 +575,7 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_moduledefinition )
                                         .Includes(t => t.tb_ButtonInfos )
                             .Includes(t => t.tb_P4Fields )
+                            .Includes(t => t.tb_UIMenuPersonalizations )
                             .Includes(t => t.tb_FieldInfos )
                             .Includes(t => t.tb_P4Buttons )
                             .Includes(t => t.tb_P4Menus )

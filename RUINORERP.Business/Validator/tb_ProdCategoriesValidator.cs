@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:07
+// 时间：12/18/2024 17:45:29
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,15 +26,31 @@ namespace RUINORERP.Business
     /*public partial class tb_ProdCategoriesValidator:AbstractValidator<tb_ProdCategories>*/
     public partial class tb_ProdCategoriesValidator:BaseValidatorGeneric<tb_ProdCategories>
     {
-     public tb_ProdCategoriesValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_ProdCategoriesValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_ProdCategories =>tb_ProdCategories.Category_name).MaximumLength(25).WithMessage("类别名称:不能超过最大长度,25.");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_ProdCategories =>tb_ProdCategories.Category_name).MaximumLength(25).WithMessage("类别名称:不能超过最大长度,25.");
+
  RuleFor(tb_ProdCategories =>tb_ProdCategories.CategoryCode).MaximumLength(10).WithMessage("类别代码:不能超过最大长度,10.");
+
 //有默认值
+
  RuleFor(tb_ProdCategories =>tb_ProdCategories.Sort).NotEmpty().When(x => x.Sort.HasValue);
+
  RuleFor(tb_ProdCategories =>tb_ProdCategories.Parent_id).NotEmpty().When(x => x.Parent_id.HasValue);
+
+
  RuleFor(tb_ProdCategories =>tb_ProdCategories.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
-       	
+
            	        Initialize();
      }
 

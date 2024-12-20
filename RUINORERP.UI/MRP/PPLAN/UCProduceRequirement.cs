@@ -115,23 +115,23 @@ namespace RUINORERP.UI.MRP.MP
                     entity.AnalysisDate = System.DateTime.Now;
                     if (entity.tb_ProductionDemandDetails != null && entity.tb_ProductionDemandDetails.Count > 0)
                     {
-                        entity.tb_ProductionDemandDetails.ForEach(c => c.PDID = 0);
+                        entity.tb_ProductionDemandDetails.ForEach(c => c.PDID = null);
                         entity.tb_ProductionDemandDetails.ForEach(c => c.PDCID = 0);
                     }
                     if (entity.tb_ProduceGoodsRecommendDetails != null && entity.tb_ProduceGoodsRecommendDetails.Count > 0)
                     {
-                        entity.tb_ProduceGoodsRecommendDetails.ForEach(c => c.PDID = 0);
+                        entity.tb_ProduceGoodsRecommendDetails.ForEach(c => c.PDID = null);
                         entity.tb_ProduceGoodsRecommendDetails.ForEach(c => c.PDCID = 0);
                     }
                     if (entity.tb_ProductionDemandTargetDetails != null && entity.tb_ProductionDemandTargetDetails.Count > 0)
                     {
-                        entity.tb_ProductionDemandTargetDetails.ForEach(c => c.PDID = 0);
+                        entity.tb_ProductionDemandTargetDetails.ForEach(c => c.PDID = null);
                         entity.tb_ProductionDemandTargetDetails.ForEach(c => c.PDTCID = 0);
                     }
 
                     if (entity.tb_PurGoodsRecommendDetails != null && entity.tb_PurGoodsRecommendDetails.Count > 0)
                     {
-                        entity.tb_PurGoodsRecommendDetails.ForEach(c => c.PDID = 0);
+                        entity.tb_PurGoodsRecommendDetails.ForEach(c => c.PDID = null);
                         entity.tb_PurGoodsRecommendDetails.ForEach(c => c.PGRCID = 0);
                     }
                 }
@@ -241,7 +241,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_ProductionDemandValidator(), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProductionDemandValidator> (), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
                 rdbis_available净需求.Enabled = true;
                 rdbis_available毛需求.Enabled = true;

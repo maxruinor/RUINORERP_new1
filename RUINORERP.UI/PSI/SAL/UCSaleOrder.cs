@@ -41,19 +41,20 @@ using System.Diagnostics;
 using RUINORERP.Common.Extensions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using MySqlX.XDevAPI.Common;
+using RUINORERP.UI.AdvancedUIModule;
+using FastReport.DevComponents.DotNetBar.Controls;
+using RUINORERP.UI.CommonUI;
 
 
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.销售管理, BizType.销售订单)]
-    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>
+    public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IFormAuth
     {
         public UCSaleOrder()
         {
             InitializeComponent();
-            toolStripButton付款调整.Visible = true;
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
-
         }
 
 
@@ -73,7 +74,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        protected async override void UpdatePaymentStatus()
+        protected async void UpdatePaymentStatus()
         {
             if (EditEntity == null)
             {
@@ -121,7 +122,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                 //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                 //MainForm.Instance.ecs.AddSendData(od);
-                base.ToolBarEnabledControl(MenuItemEnums.付款调整);
+                base.ToolBarEnabledControl(MenuItemEnums.结案);
             }
             else
             {
@@ -129,7 +130,7 @@ namespace RUINORERP.UI.PSI.SAL
                 command.Undo();
                 MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}付款调整失败{rr.ErrorMsg},请联系管理员！", Color.Red);
             }
-            base.UpdatePaymentStatus();
+
         }
 
 
@@ -314,7 +315,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_SaleOrderValidator(), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_SaleOrderValidator>(), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
@@ -345,6 +346,7 @@ namespace RUINORERP.UI.PSI.SAL
         List<View_ProdDetail> list = new List<View_ProdDetail>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
+            AddExtendButton(CurMenuInfo);
             var sw = new Stopwatch();
             sw.Start();
             //InitDataTocmbbox();
@@ -1027,5 +1029,37 @@ namespace RUINORERP.UI.PSI.SAL
         {
 
         }
+
+        #region 付款调整
+        ToolStripButton toolStripButton付款调整 = new System.Windows.Forms.ToolStripButton();
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+            toolStripButton付款调整.Text = "付款调整";
+            toolStripButton付款调整.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton付款调整.Name = "付款调整";
+            toolStripButton付款调整.Visible = false;//默认隐藏
+            ControlButton(toolStripButton付款调整);
+            toolStripButton付款调整.ToolTipText = "客户付款情况变动时，使用本功能。";
+            toolStripButton付款调整.Click += new System.EventHandler(this.toolStripButton付款调整_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton付款调整 };
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+        }
+
+        private void toolStripButton付款调整_Click(object sender, EventArgs e)
+        {
+            UpdatePaymentStatus();
+        }
+
+
+
+
+        #endregion
     }
 }

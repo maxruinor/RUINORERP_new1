@@ -121,7 +121,7 @@ namespace RUINORERP.UI.ProductEAV
                     }
                     if (entity.tb_BoxRuleses != null && entity.tb_BoxRuleses.Count > 0)
                     {
-                        entity.tb_BoxRuleses.ForEach(c => c.Pack_ID = 0);
+                        entity.tb_BoxRuleses.ForEach(c => c.Pack_ID = null);
                         entity.tb_BoxRuleses.ForEach(c => c.BoxRules_ID = 0);
                     }
                 }
@@ -235,7 +235,7 @@ namespace RUINORERP.UI.ProductEAV
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(new tb_PackingValidator(), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_PackingValidator> (), kryptonPanelMainInfo.Controls);
                 //UIBaseTool uIBaseTool = new();
                 //uIBaseTool.CurMenuInfo = CurMenuInfo;
                 //uIBaseTool.InitEditItemToControl<tb_Packing>(entity, kryptonPanelMainInfo.Controls);

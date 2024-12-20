@@ -4,13 +4,15 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:49
+// 时间：12/18/2024 17:45:27
 // **************************************
 using System;
 ﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
+using RUINORERP.Model.ConfigModel;
+using Microsoft.Extensions.Options;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -24,20 +26,36 @@ namespace RUINORERP.Business
     /*public partial class tb_LocationValidator:AbstractValidator<tb_Location>*/
     public partial class tb_LocationValidator:BaseValidatorGeneric<tb_Location>
     {
-     public tb_LocationValidator() 
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_LocationValidator(IOptionsMonitor<GlobalValidatorConfig> config)
      {
-      RuleFor(tb_Location =>tb_Location.LocationType_ID).Must(CheckForeignKeyValueCanNull).WithMessage("库位类型:下拉选择值不正确。");
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_Location =>tb_Location.LocationType_ID).Must(CheckForeignKeyValueCanNull).WithMessage("库位类型:下拉选择值不正确。");
  RuleFor(tb_Location =>tb_Location.LocationType_ID).NotEmpty().When(x => x.LocationType_ID.HasValue);
+
  RuleFor(tb_Location =>tb_Location.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("联系人:下拉选择值不正确。");
  RuleFor(tb_Location =>tb_Location.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
+
 //有默认值
+
  RuleFor(tb_Location =>tb_Location.LocationCode).MaximumLength(25).WithMessage("仓库代码:不能超过最大长度,25.");
  RuleFor(tb_Location =>tb_Location.LocationCode).NotEmpty().WithMessage("仓库代码:不能为空。");
+
  RuleFor(tb_Location =>tb_Location.Tel).MaximumLength(10).WithMessage("电话:不能超过最大长度,10.");
+
  RuleFor(tb_Location =>tb_Location.Name).MaximumLength(25).WithMessage("仓库名称:不能超过最大长度,25.");
  RuleFor(tb_Location =>tb_Location.Name).NotEmpty().WithMessage("仓库名称:不能为空。");
+
  RuleFor(tb_Location =>tb_Location.Desc).MaximumLength(50).WithMessage("描述:不能超过最大长度,50.");
-       	
+
            	        Initialize();
      }
 
@@ -99,7 +117,29 @@ namespace RUINORERP.Business
         }
         
 
+        private bool DetailedRecordsNotEmpty(List<tb_PurReturnEntryDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
         private bool DetailedRecordsNotEmpty(List<tb_MaterialReturnDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_FinishedGoodsInvDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -121,7 +161,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_FinishedGoodsInvDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_SaleOrderDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -187,28 +227,6 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_ManufacturingOrderDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
-        private bool DetailedRecordsNotEmpty(List<tb_SaleOrderDetail> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
         private bool DetailedRecordsNotEmpty(List<tb_ProdBorrowingDetail> details)
         {
             bool rs = true;
@@ -220,7 +238,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_PurEntryReDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_ManufacturingOrderDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -254,6 +272,17 @@ namespace RUINORERP.Business
         
 
         private bool DetailedRecordsNotEmpty(List<tb_ProductionDemandTargetDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_PurEntryReDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

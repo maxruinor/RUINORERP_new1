@@ -72,7 +72,7 @@ namespace RUINORERP.UI.BI
             //将控件的数据类型转换为数据源要求的数据类型。
             sort.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
             txtSort.DataBindings.Add(sort);
-
+            base.BindData(entity);
         }
 
         private void DataSourceToControl(object sender, ConvertEventArgs cevent)

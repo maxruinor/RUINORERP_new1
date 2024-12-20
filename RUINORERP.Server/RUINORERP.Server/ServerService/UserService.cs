@@ -17,6 +17,7 @@ using RUINORERP.Server.ServerSession;
 using RUINORERP.Services;
 using RUINORERP.WF.BizOperation.Condition;
 using SharpYaml.Tokens;
+using StackExchange.Redis;
 using SuperSocket.Server;
 using System;
 using System.Collections.Generic;
@@ -214,6 +215,55 @@ namespace RUINORERP.Server.BizService
         }
 
 
+
+        /// <summary>
+        /// 同时分发出去了
+        /// </summary>
+        /// <param name="UserSession"></param>
+        /// <param name="gd"></param>
+        public static void 接收更新动态配置指令(SessionforBiz UserSession, OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string configEntityName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                //更新服务器的缓存
+                // 将item转换为JObject
+                JObject obj = JObject.Parse(json);
+                MyCacheManager.Instance.UpdateEntityList(configEntityName, obj);
+                //再转发给其他客户端
+
+                ByteBuff tx = new ByteBuff(200);
+                tx.PushString(时间);
+                tx.PushString(configEntityName);
+                tx.PushString(json);
+
+                foreach (var item in frmMain.Instance.sessionListBiz)
+                {
+                    //排除更新者自己
+                    if (item.Key == UserSession.SessionID)
+                    {
+                        continue;
+                    }
+                    SessionforBiz sessionforBiz = item.Value as SessionforBiz;
+                    sessionforBiz.AddSendData((byte)ServerCmdEnum.转发更新动态配置, null, tx.toByte());
+
+                    if (frmMain.Instance.IsDebug)
+                    {
+                        frmMain.Instance.PrintMsg($"转发转发更新动态配置{configEntityName}给：" + item.Value.User.姓名);
+                    }
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("接收更新缓存指令:" + ex.Message);
+            }
+
+        }
+
         /// <summary>
         /// 同时分发出去了。
         /// </summary>
@@ -308,6 +358,12 @@ namespace RUINORERP.Server.BizService
             }
         }
 
+        /// <summary>
+        /// 返回用户登陆信息
+        /// </summary>
+        /// <param name="UserSession"></param>
+        /// <param name="gd"></param>
+        /// <returns></returns>
         public async static Task<tb_UserInfo> 接收用户登陆指令(SessionforBiz UserSession, OriginalData gd)
         {
 
@@ -358,6 +414,7 @@ namespace RUINORERP.Server.BizService
             return user;
         }
 
+
         public static bool 用户登陆回复(SessionforBiz PlayerSession, tb_UserInfo user)
         {
             bool rs = false;
@@ -374,7 +431,6 @@ namespace RUINORERP.Server.BizService
                     tx.PushInt64(user.User_ID);
                     tx.PushString(user.UserName);
                     tx.PushString(user.tb_employee.Employee_Name);
-
                 }
                 else
                 {
@@ -398,6 +454,51 @@ namespace RUINORERP.Server.BizService
 
 
         public static bool 回复用户重复登陆(SessionforBiz PlayerSession, SessionforBiz ExistSessionforBiz = null)
+        {
+            bool rs = false;
+#pragma warning disable CS0168 // 声明了变量，但从未使用过
+            try
+            {
+                //PacketProcess pp = new PacketProcess(PlayerSession);
+                ByteBuff tx = new ByteBuff(100);
+                if (ExistSessionforBiz == null)
+                {
+                    rs = false;
+                    tx.PushBool(rs);
+                }
+                else
+                {
+                    if (ExistSessionforBiz.User != null)
+                    {
+                        rs = true;
+                        tx.PushBool(rs);
+                        tx.PushString(ExistSessionforBiz.User.SessionId);
+                    }
+                    else
+                    {
+                        rs = false;
+                        tx.PushBool(rs);
+                    }
+                }
+
+                PlayerSession.AddSendData((byte)ServerCmdEnum.回复用户重复登陆, null, tx.toByte());
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                rs = false;
+            }
+#pragma warning restore CS0168 // 声明了变量，但从未使用过
+            return rs;
+        }
+
+        /// <summary>
+        /// 回复用户登陆受限，要么退出。要么T掉人家。自己上。
+        /// </summary>
+        /// <param name="PlayerSession"></param>
+        /// <param name="ExistSessionforBiz"></param>
+        /// <returns></returns>
+        public static bool 回复用户登陆受限(SessionforBiz PlayerSession, SessionforBiz ExistSessionforBiz = null)
         {
             bool rs = false;
 #pragma warning disable CS0168 // 声明了变量，但从未使用过
@@ -570,6 +671,39 @@ namespace RUINORERP.Server.BizService
 
             return rs;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="PlayerSession"></param>
+        /// <param name="Message"></param>
+        /// <param name="MustDisplay"></param>
+        /// <returns></returns>
+        public static void 给客户端发消息实体(SessionforBiz PlayerSession, MessageModel messageModel, bool MustDisplay)
+        {
+            
+            try
+            {
+                //发送缓存数据
+                string json = JsonConvert.SerializeObject(messageModel,
+                   new JsonSerializerSettings
+                   {
+                       ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                   });
+                ByteBuff tx = new ByteBuff(200);
+                tx.PushString(typeof(MessageModel).Name);
+                tx.PushString(json);
+                tx.PushBool(MustDisplay);
+                PlayerSession.AddSendData((byte)ServerCmdEnum.给客户端发提示消息, null, tx.toByte());
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("给客户端发消息实体:" + ex.Message);
+            }
+            
+
+             
+        }
         public static bool 转发弹窗消息(SessionforBiz PlayerSession, OriginalData gd)
         {
             bool rs = false;
@@ -650,7 +784,34 @@ namespace RUINORERP.Server.BizService
             return rs;
         }
 
+        /// <summary>
+        /// 发出一个警告后直接断开。
+        /// T掉的是集合中的第一个人。
+        /// </summary>
+        /// <param name="gd"></param>
+        public static void 处理请求强制登陆上线(OriginalData gd)
+        {
+            try
+            {
+                int index = 0;
+                string 登陆时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
+                var UserName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                //要保存的用户。其它下线
+                string SaveSessionId = ByteDataAnalysis.GetString(gd.Two, ref index);
 
+                SessionforBiz UserSession = frmMain.Instance.sessionListBiz
+                    .Values.FirstOrDefault(c => c.User.用户名 == UserName && !c.User.SessionId.Equals(SaveSessionId));
+                if (UserSession != null && UserSession.State == SuperSocket.Server.Abstractions.SessionState.Connected)
+                {
+                    强制用户退出(UserSession, "有相同账号登陆，系统强制下线");
+                }
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("处理请求强制用户下线:" + ex.Message);
+            }
+
+        }
         public static void 处理请求强制用户下线(OriginalData gd)
         {
             try

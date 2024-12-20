@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 19:02:34
+// 时间：12/18/2024 18:02:14
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -50,11 +50,11 @@ namespace RUINORERP.Business
         }
       
         
-        
-        
-         public ValidationResult Validator(tb_SaleOutRe info)
+        public ValidationResult Validator(tb_SaleOutRe info)
         {
-            tb_SaleOutReValidator validator = new tb_SaleOutReValidator();
+
+           // tb_SaleOutReValidator validator = new tb_SaleOutReValidator();
+           tb_SaleOutReValidator validator = _appContext.GetRequiredService<tb_SaleOutReValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -212,7 +212,8 @@ namespace RUINORERP.Business
         
         public override ValidationResult BaseValidator(T info)
         {
-            tb_SaleOutReValidator validator = new tb_SaleOutReValidator();
+            //tb_SaleOutReValidator validator = new tb_SaleOutReValidator();
+           tb_SaleOutReValidator validator = _appContext.GetRequiredService<tb_SaleOutReValidator>();
             ValidationResult results = validator.Validate(info as tb_SaleOutRe);
             return results;
         }
@@ -460,6 +461,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_SaleOutRe>> QueryByNavAsync()
         {
             List<tb_SaleOutRe> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>()
+                               .Includes(t => t.tb_paymentmethod )
+                               .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_saleout )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_customervendor )
@@ -484,6 +487,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_SaleOutRe>> QueryByNavAsync(Expression<Func<tb_SaleOutRe, bool>> exp)
         {
             List<tb_SaleOutRe> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>().Where(exp)
+                               .Includes(t => t.tb_paymentmethod )
+                               .Includes(t => t.tb_projectgroup )
                                .Includes(t => t.tb_saleout )
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_customervendor )
@@ -508,6 +513,8 @@ namespace RUINORERP.Business
          public virtual List<tb_SaleOutRe> QueryByNav(Expression<Func<tb_SaleOutRe, bool>> exp)
         {
             List<tb_SaleOutRe> list = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>().Where(exp)
+                            .Includes(t => t.tb_paymentmethod )
+                            .Includes(t => t.tb_projectgroup )
                             .Includes(t => t.tb_saleout )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_customervendor )
@@ -549,7 +556,9 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_SaleOutRe entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOutRe>().Where(w => w.SaleOutRe_ID == (long)id)
-                             .Includes(t => t.tb_saleout )
+                             .Includes(t => t.tb_paymentmethod )
+                            .Includes(t => t.tb_projectgroup )
+                            .Includes(t => t.tb_saleout )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_customervendor )
                                         .Includes(t => t.tb_SaleOutReDetails )

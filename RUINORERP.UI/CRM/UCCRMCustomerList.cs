@@ -31,6 +31,9 @@ using Netron.GraphLib;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.Business.CommService;
 using TransInstruction;
+using RUINORERP.Global;
+using RUINORERP.Model.TransModel;
+using RUINORERP.UI.SuperSocketClient;
 
 namespace RUINORERP.UI.CRM
 {
@@ -55,8 +58,24 @@ namespace RUINORERP.UI.CRM
 
         }
 
+        protected override void Delete()
+        {
+            tb_CRM_Customer rowInfo = (tb_CRM_Customer)this.bindingSourceList.Current;
+            if (rowInfo.Employee_ID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID && !MainForm.Instance.AppContext.IsSuperUser)
+            {
+                //只能删除自己的收款信息。
+                MessageBox.Show("只能删除自己的目标客户信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (rowInfo.tb_CRM_FollowUpPlanses != null || rowInfo.tb_CRM_FollowUpRecordses != null || rowInfo.CustomerStatus != (int)CustomerStatus.新增客户)
+            {
+                //只能删除自己的收款信息。
+                MessageBox.Show("只有【新增客户】的线索,并且没有任何跟进信息时才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            base.Delete();
+        }
 
- 
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法，供应商和客户共用所有特殊处理
@@ -173,7 +192,6 @@ namespace RUINORERP.UI.CRM
                         }
                     }
                 }
-
             }
         }
 
@@ -183,6 +201,12 @@ namespace RUINORERP.UI.CRM
             {
                 if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
                 {
+                    if (sourceEntity.Converted.HasValue && sourceEntity.Converted.Value)
+                    {
+                        //提示当前目标客户已经转换为销售客户。不能重复转换。
+                        MessageBox.Show("当前目标客户已经转换为销售客户，不能重复转换", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
                     object frm = Activator.CreateInstance(typeof(UCCustomerVendorEdit));
                     if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                     {
@@ -207,7 +231,10 @@ namespace RUINORERP.UI.CRM
                             ReturnResults<tb_CustomerVendor> result = await ctrContactInfo.BaseSaveOrUpdate(EntityInfo);
                             if (result.Succeeded)
                             {
-                                if (result.Succeeded)
+                                sourceEntity.Converted = true;
+                                BaseController<tb_CRM_Customer> ctr_Customer = Startup.GetFromFacByName<BaseController<tb_CRM_Customer>>(typeof(tb_CRM_Customer).Name + "Controller");
+                                ReturnResults<tb_CRM_Customer> resultCustomer = await ctr_Customer.BaseSaveOrUpdate(sourceEntity);
+                                if (resultCustomer.Succeeded)
                                 {
                                     //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                                     KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
@@ -232,7 +259,36 @@ namespace RUINORERP.UI.CRM
             }
         }
 
+        public override async Task<List<tb_CRM_Customer>> Save()
+        {
+            List<tb_CRM_Customer> list = await base.Save();
+            if (list.Count > 0)
+            {
+                foreach (var item in list)
+                {
+                    if (item.Converted.HasValue && item.Converted.Value)
+                    {
+                        //对象的目标客户设置为已转换
+                        var result = await MainForm.Instance.AppContext.Db.Queryable<tb_CustomerVendor>()
+                            .Where(it => it.Customer_id == item.Customer_id)
+                            .SingleAsync();
 
+                        //如果修改了客户名称，则和销售客户同步
+                        if (result != null && result.CVName != item.CustomerName)
+                        {
+                            result.CVName = item.CustomerName;
+                            result.Phone = item.Contact_Phone;
+                            await MainForm.Instance.AppContext.Db.Updateable<tb_CustomerVendor>(result)
+                                .UpdateColumns(it => new { it.CVName, it.Phone })
+                            //.SetColumns(it => it.CVName == item.CustomerName)//SetColumns是可以叠加的 写2个就2个字段赋值
+                            .Where(it => it.Customer_id == item.Customer_id)
+                            .ExecuteCommandAsync();
+                        }
+                    }
+                }
+            }
+            return list;
+        }
 
         /// <summary>
         /// 因为客户要查出相关的记录计划这些
@@ -243,19 +299,19 @@ namespace RUINORERP.UI.CRM
             base.Query(true);
         }
 
-  
 
-            #region 添加回收 分配
 
-            /// <summary>
-            /// 添加回收
-            /// </summary>
-            /// <returns></returns>
-            public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        #region 添加回收 分配
+
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+            //一个是公海一个是目标客户
+            if (menuInfo.CaptionCN.Contains("公海客户"))
             {
-                //一个是公海一个是目标客户
-                if (menuInfo.CaptionCN.Contains("公海客户"))
-                {
                 ToolStripButton toolStripButton分配 = new System.Windows.Forms.ToolStripButton();
                 toolStripButton分配.Text = "分配";
                 toolStripButton分配.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
@@ -267,11 +323,11 @@ namespace RUINORERP.UI.CRM
                 toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
 
                 System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton分配 };
-                    this.BaseToolStrip.Items.AddRange(extendButtons);
-                    return extendButtons;
-                }
-                else
-                {
+                this.BaseToolStrip.Items.AddRange(extendButtons);
+                return extendButtons;
+            }
+            else
+            {
                 ToolStripButton toolStripButton回收 = new System.Windows.Forms.ToolStripButton();
                 toolStripButton回收.Text = "回收";
                 toolStripButton回收.Image = global::RUINORERP.UI.Properties.Resources.reset;
@@ -283,65 +339,65 @@ namespace RUINORERP.UI.CRM
                 toolStripButton回收.Click += new System.EventHandler(this.toolStripButton回收_Click);
 
                 System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton回收 };
-                    this.BaseToolStrip.Items.AddRange(extendButtons);
-                    return extendButtons;
-                }
-
-                // this.BaseToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {            this.toolStripButtonAdd});
-
+                this.BaseToolStrip.Items.AddRange(extendButtons);
+                return extendButtons;
             }
 
-            private async void toolStripButton回收_Click(object sender, EventArgs e)
+            // this.BaseToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {            this.toolStripButtonAdd});
+
+        }
+
+        private async void toolStripButton回收_Click(object sender, EventArgs e)
+        {
+            if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
             {
-                if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+                //  弹出提示说：您确定将这个公司回收投入到公海吗？
+                if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
                 {
-                    //  弹出提示说：您确定将这个公司回收投入到公海吗？
-                    if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                    if (MessageBox.Show($"您确定将这个客户：{sourceEntity.CustomerName}回收到公海吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
                     {
-                        if (MessageBox.Show($"您确定将这个客户：{sourceEntity.CustomerName}回收到公海吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                        sourceEntity.Employee_ID = null;
+                        int result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(sourceEntity).ExecuteCommandAsync();
+                        if (result > 0)
                         {
-                            sourceEntity.Employee_ID = null;
+                            MainForm.Instance.ShowStatusText("回收成功!");
+                            Query();
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private async void toolStripButton分配_Click(object sender, EventArgs e)
+        {
+            if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
+            {
+                //  弹出提示说：？
+                if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
+                {
+                    frmSelectObject frm = new frmSelectObject();
+                    //frm.selectedObject = sourceEntity;
+                    frm.SetSelectDataList<tb_Employee>(sourceEntity, C => C.Employee_ID, n => n.Employee_Name);
+                    if (frm.ShowDialog() == DialogResult.OK)
+                    {
+                        if (MessageBox.Show($"您确定将这个客户：【{sourceEntity.CustomerName}】分配给【{frm.SelectItemText}】吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+                        {
                             int result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(sourceEntity).ExecuteCommandAsync();
                             if (result > 0)
                             {
-                                MainForm.Instance.ShowStatusText("回收成功!");
+                                MainForm.Instance.ShowStatusText("分配成功!");
                                 Query();
                             }
                         }
                     }
                 }
             }
+        }
 
 
-            private async void toolStripButton分配_Click(object sender, EventArgs e)
-            {
-                if (bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
-                {
-                    //  弹出提示说：？
-                    if (bindingSourceList.Current is tb_CRM_Customer sourceEntity)
-                    {
-                        frmSelectObject frm = new frmSelectObject();
-                        //frm.selectedObject = sourceEntity;
-                        frm.SetSelectDataList<tb_Employee>(sourceEntity, C => C.Employee_ID, n => n.Employee_Name);
-                        if (frm.ShowDialog() == DialogResult.OK)
-                        {
-                            if (MessageBox.Show($"您确定将这个客户：【{sourceEntity.CustomerName}】分配给【{frm.SelectItemText}】吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
-                            {
-                                int result = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_Customer>(sourceEntity).ExecuteCommandAsync();
-                                if (result > 0)
-                                {
-                                    MainForm.Instance.ShowStatusText("分配成功!");
-                                    Query();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        #endregion
 
 
-            #endregion
-
-     
     }
 }

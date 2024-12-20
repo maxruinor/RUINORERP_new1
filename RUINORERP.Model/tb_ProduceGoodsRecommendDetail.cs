@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:13
+// 时间：12/19/2024 12:18:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 自制成品建议
     /// </summary>
     [Serializable()]
-    [Description("tb_ProduceGoodsRecommendDetail")]
+    [Description("自制成品建议")]
     [SugarTable("tb_ProduceGoodsRecommendDetail")]
     public partial class tb_ProduceGoodsRecommendDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProduceGoodsRecommendDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("自制成品建议tb_ProduceGoodsRecommendDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -41,7 +41,7 @@ namespace RUINORERP.Model
         /// 
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDCID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "建议成品RowID" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PDCID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
         public long PDCID
         { 
             get{return _PDCID;}
@@ -70,8 +70,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 
@@ -172,7 +172,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal SubtotalCostAmount
         { 
             get{return _SubtotalCostAmount;}
@@ -186,7 +186,7 @@ namespace RUINORERP.Model
         /// 单位成本
         /// </summary>
         [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单位成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
         public decimal UnitCost
         { 
             get{return _UnitCost;}

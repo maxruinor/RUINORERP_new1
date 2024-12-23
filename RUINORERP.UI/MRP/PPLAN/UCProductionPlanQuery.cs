@@ -222,7 +222,7 @@ namespace RUINORERP.UI.MRP.MP
                     continue;
                 }
 
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 tb_ProductionPlan oldobj = CloneHelper.DeepCloneObject<tb_ProductionPlan>(EditEntity);
                 command.UndoOperation = delegate ()

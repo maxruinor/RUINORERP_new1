@@ -11,7 +11,6 @@ namespace TransInstruction
     /// </summary>
     public class ActionForClient
     {
-       
 
         public static OriginalData 单据锁定释放(long billid, long lockUserID, string lockName, int BizType)
         {

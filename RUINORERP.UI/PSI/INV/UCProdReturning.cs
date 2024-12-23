@@ -441,7 +441,7 @@ namespace RUINORERP.UI.PSI.INV
            }
        }
 
-       Command command = new Command();
+       RevertCommand command = new RevertCommand();
        //缓存当前编辑的对象。如果撤销就回原来的值
        tb_ProdReturning oldobj = CloneHelper.DeepCloneObject<tb_ProdReturning>(EditEntity);
        command.UndoOperation = delegate ()
@@ -512,7 +512,7 @@ namespace RUINORERP.UI.PSI.INV
                if (EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
                {
                    // MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据不能重复审核。");
-                   Command command = new Command();
+                   RevertCommand command = new RevertCommand();
                    //缓存当前编辑的对象。如果撤销就回原来的值
                    tb_ProdReturning oldobj = CloneHelper.DeepCloneObject<tb_ProdReturning>(EditEntity);
                    command.UndoOperation = delegate ()

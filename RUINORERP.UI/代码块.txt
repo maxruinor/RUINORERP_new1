@@ -148,3 +148,8 @@ new ConditionalModel() { FieldName = "id", ConditionalType = ConditionalType.Equ
 }
 });
 var student = db.Queryable<Student>().Where(conModels).ToList();
+
+
+
+阅读器关闭时尝试调用 FieldCount 无效。
+重复调用 查询的方法就会出这个错。因为还没有等待结束又使用了。

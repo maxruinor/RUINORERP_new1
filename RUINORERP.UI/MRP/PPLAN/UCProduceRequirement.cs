@@ -38,7 +38,6 @@ using ZXing.Common;
 using FastReport.DevComponents.DotNetBar.Controls;
 using Krypton.Toolkit;
 using FastReport.DevComponents.DotNetBar;
-using Command = RUINOR.Core.Command;
 
 using NPOI.Util;
 using NPOI.POIFS.Properties;
@@ -995,7 +994,7 @@ protected async override Task<ApprovalEntity> Review()
         return null;
     }
 
-    Command command = new Command();
+    RevertCommand command = new RevertCommand();
     //缓存当前编辑的对象。如果撤销就回原来的值
     tb_ProductionDemand oldobj = CloneHelper.DeepCloneObject<tb_ProductionDemand>(EditEntity);
     command.UndoOperation = delegate ()
@@ -1076,7 +1075,7 @@ protected async override Task<ApprovalEntity> ReReview()
     //    return;
     //}
 
-    Command command = new Command();
+    RevertCommand command = new RevertCommand();
     //缓存当前编辑的对象。如果撤销就回原来的值
     tb_ProductionDemand oldobj = CloneHelper.DeepCloneObject<tb_ProductionDemand>(EditEntity);
     command.UndoOperation = delegate ()

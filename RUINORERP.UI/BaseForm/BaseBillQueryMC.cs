@@ -639,7 +639,7 @@ namespace RUINORERP.UI.BaseForm
             await Task.Delay(1);
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 M oldobj = CloneHelper.DeepCloneObject<M>(EditEntity);
 
@@ -762,7 +762,7 @@ namespace RUINORERP.UI.BaseForm
             frm.BindData(ae);
             if (frm.ShowDialog() == DialogResult.OK)
             {
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 M oldobj = CloneHelper.DeepCloneObject<M>(EditEntity);
                 command.UndoOperation = delegate ()
@@ -896,7 +896,7 @@ namespace RUINORERP.UI.BaseForm
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
             ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            Command command = new Command();
+            RevertCommand command = new RevertCommand();
             //缓存当前编辑的对象。如果撤销就回原来的值
             M oldobj = CloneHelper.DeepCloneObject<M>(EditEntity);
             frm.BindData(ae);

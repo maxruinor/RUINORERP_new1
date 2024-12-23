@@ -897,23 +897,7 @@ namespace RUINORERP.Server.BizService
 
         }
 
-        public static void 发消息给客户端(SessionforBiz PlayerSession)
-        {
-#pragma warning disable CS0168 // 声明了变量，但从未使用过
-            try
-            {
-                ByteBuff tx = new ByteBuff(50);
-                tx.PushString(System.DateTime.Now.ToString());
-                tx.PushString("你好，这只是一个消息测试");
-                PlayerSession.AddSendData((byte)ServerCmdEnum.给客户端发提示消息, null, tx.toByte());
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("发消息给客户端时出错" + ex.Message);
-            }
-#pragma warning restore CS0168 // 声明了变量，但从未使用过
-
-        }
+ 
 
 
         public static void 推送版本更新(SessionforBiz PlayerSession)

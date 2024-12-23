@@ -5,6 +5,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
@@ -99,26 +100,11 @@ namespace RUINORERP.UI.IM
 
         public BizTypeMapper mapper { get; set; }
         QueryParameter parameter { get; set; }
+
+
         private void MessagePrompt_Load(object sender, EventArgs e)
         {
-            //计划提醒，则把要提醒的计划查出条件找到
-            Type tableType = mapper.GetTableType(ReminderData.BizType);
-            //找到要提醒的数据
-            var conModel = new List<IConditionalModel>();
-            // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });
 
-            string FieldName = BaseUIHelper.GetEntityPrimaryKey(tableType);
-
-            conModel.Add(new ConditionalModel { FieldName = FieldName, ConditionalType = ConditionalType.Equal, FieldValue = ReminderData.BizPrimaryKey.ToString(), CSharpTypeName = "long" });
-            //如果限制
-            //if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
-            //{
-            //    conModel.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
-            //}
-
-            parameter = new QueryParameter();
-            parameter.conditionals = conModel;
-            parameter.tableType = tableType;
 
 
 
@@ -143,14 +129,44 @@ namespace RUINORERP.UI.IM
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            //计划提醒，则把要提醒的计划查出条件找到
+            Type tableType = mapper.GetTableType(ReminderData.BizType);
+            //找到要提醒的数据
+            var conModel = new List<IConditionalModel>();
+            // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });
+
+            string FieldName = BaseUIHelper.GetEntityPrimaryKey(tableType);
+
+            conModel.Add(new ConditionalModel { FieldName = FieldName, ConditionalType = ConditionalType.Equal, FieldValue = ReminderData.BizPrimaryKey.ToString(), CSharpTypeName = "long" });
+            //如果有限制条件
+            //if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+            //{
+            //    conModel.Add(new ConditionalModel { FieldName = "Employee_ID", ConditionalType = ConditionalType.Equal, FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(), CSharpTypeName = "long" });
+            //}
+
+            parameter = new QueryParameter();
+            parameter.conditionals = conModel;
+            parameter.tableType = tableType;
+            // 创建实例
+            object instance = Activator.CreateInstance(parameter.tableType);
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(parameter.tableType.Name + "Processor");
+            QueryFilter queryFilter = baseProcessor.GetQueryFilter();
+
+
+            //这里知道ID 在这里虚拟一下主键的查询条件。将ID给过去。一次性查询。或 时间也给过去。
+            //应该是给计划特殊处理。指令系统用上？
+            QueryField queryField = new QueryField();
+            queryField.QueryTargetType = tableType;
+            queryField.FieldName = FieldName;
+            queryField.FieldPropertyInfo = tableType.GetProperties().FirstOrDefault(c => c.Name == FieldName);
+            if (!queryFilter.QueryFields.Contains(queryField))
+            {
+                queryFilter.QueryFields.Add(queryField);
+            }
+            parameter.queryFilter = queryFilter;
             var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == parameter.tableType.Name && m.ClassPath.Contains("")).FirstOrDefault();
             if (RelatedBillMenuInfo != null)
             {
-                // 创建实例
-                object instance = Activator.CreateInstance(parameter.tableType);
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(parameter.tableType.Name + "Processor");
-                QueryFilter queryFilter = baseProcessor.GetQueryFilter();
-                parameter.queryFilter = queryFilter;
                 menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
                 menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
                 //要卸载，不然会多次执行
@@ -317,7 +333,7 @@ namespace RUINORERP.UI.IM
                         interval = 3600;
                         break;
                     case "一天后":
-                        interval = 3600*24;
+                        interval = 3600 * 24;
                         break;
                     default:
                         break;

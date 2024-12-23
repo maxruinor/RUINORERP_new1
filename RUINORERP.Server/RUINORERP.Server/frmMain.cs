@@ -54,6 +54,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TransInstruction;
+using TransInstruction.CommandService;
 using WorkflowCore.Interface;
 using WorkflowCore.Primitives;
 using WorkflowCore.Services;
@@ -611,10 +612,22 @@ namespace RUINORERP.Server
                                 // services = Startup.Services;
                                 //services.AddMemoryCache();
                                 services.AddMemoryCacheSetupWithInstance(cache);
+
+                                //services.AddSingleton<CommandDispatcher>();
+                                //services.AddTransient<ICommandHandler, LoginCommandHandler>();
+
+                                foreach (var service in Startup.Services)
+                                {
+                                    // 假设 service 是一个 ServiceDescriptor 对象
+                                    // 将 service 注册添加到 OtherServices 中
+                                    services.Add(service);
+                                }
+
                             })
 
                             .UseCommand(commandOptions =>
                             {
+                               
                                 commandOptions.AddCommand<BizCommand>();
                                 commandOptions.AddCommand<XTCommand>();
                             });

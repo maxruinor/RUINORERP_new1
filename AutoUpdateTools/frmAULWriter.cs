@@ -142,7 +142,7 @@ namespace AULWriter
 
         private void btnProduce_Click(object sender, EventArgs e)
         {
-            UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtBaseDir.Text,false, chk哈希值比较.Checked);
+            UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtBaseDir.Text, false, chk文件比较.Checked);
             tabControl1.SelectedTab = tbpLastXml;
             //复制到服务器上去再生成
             //WriterAUList(chk哈希值比较.Checked, false);
@@ -401,18 +401,17 @@ namespace AULWriter
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public static string CalculateFileHash(string filePath)
+        private static string CalculateFileHash(string filePath)
         {
-            using (var sha256 = SHA256.Create())
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
             {
                 using (var stream = File.OpenRead(filePath))
                 {
-                    var hash = sha256.ComputeHash(stream);
-                    return BitConverter.ToString(hash).Replace("-", string.Empty);
+                    byte[] hash = sha256.ComputeHash(stream);
+                    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
                 }
             }
         }
-
         /// <summary>
         /// 源文件夹是最新的。目标是要更新的。 
         /// </summary>
@@ -904,94 +903,128 @@ namespace AULWriter
         //    }
         //    return content;
         //}
+
         List<string> DiffList = new List<string>();
 
-        public void UpdateXmlFile(string xmlFilePath, string sourceFolder, string targetFolder, bool Preview = true, bool HashValueComparison = true)
+        public void UpdateXmlFile(string xmlFilePath, string sourceFolder, string targetFolder, bool Preview = true, bool FileComparison = true)
         {
-            // 读取XML文件
             XDocument doc = XDocument.Load(xmlFilePath);
-            DiffList.Clear();
             txtDiff.Clear();
 
-            // 遍历<Files>节点下的所有<File>节点
             foreach (XElement fileElement in doc.Descendants("File"))
             {
-                string fileName = fileElement.Attribute("Name").Value;
-                string sourceFilePath = Path.Combine(sourceFolder, fileName);
-                string targetFilePath = Path.Combine(targetFolder, fileName);
-
-                if (HashValueComparison)
+                if (FileComparison)
                 {
-                    // 如果启用哈希值比较
-                    if (File.Exists(sourceFilePath) && File.Exists(targetFilePath))
+                    string fileName = fileElement.Attribute("Name").Value;
+                    string sourceFilePath = Path.Combine(sourceFolder, fileName);
+                    string targetFilePath = Path.Combine(targetFolder, fileName);
+
+                    bool isSourceExist = File.Exists(sourceFilePath);
+                    bool isTargetExist = File.Exists(targetFilePath);
+                    long sourceSize = isSourceExist ? new FileInfo(sourceFilePath).Length : 0;
+                    long targetSize = isTargetExist ? new FileInfo(targetFilePath).Length : 0;
+                    DateTime sourceLastWriteTime = isSourceExist ? File.GetLastWriteTimeUtc(sourceFilePath) : DateTime.MinValue;
+                    DateTime targetLastWriteTime = isTargetExist ? File.GetLastWriteTimeUtc(targetFilePath) : DateTime.MinValue;
+
+                    if (sourceLastWriteTime != targetLastWriteTime || sourceSize != targetSize)
                     {
-                        // 计算两个文件的哈希值
+                        // 如果文件大小或修改时间不同，直接更新版本号
+                        string version = fileElement.Attribute("Ver").Value;
+                        IncrementVersion(ref version);
+                        fileElement.SetAttributeValue("Ver", version);
+                        DiffList.Add(fileName);
+                        txtDiff.AppendText(fileName + "\r\n");
+                    }
+                    else if (isSourceExist && isTargetExist)
+                    {
+                        // 如果启用哈希值比较
                         string sourceHash = CalculateFileHash(sourceFilePath);
                         string targetHash = CalculateFileHash(targetFilePath);
 
-                        // 如果哈希值不同，则更新版本号
                         if (sourceHash != targetHash)
                         {
-                            // 递增版本号
+                            // 如果哈希值不同，则更新版本号
                             string version = fileElement.Attribute("Ver").Value;
                             IncrementVersion(ref version);
                             fileElement.SetAttributeValue("Ver", version);
-
-                            // 记录差异的文件
                             DiffList.Add(fileName);
-                            txtDiff.AppendText(fileName);
-                            txtDiff.AppendText("\r\n");
+                            txtDiff.AppendText(fileName + "\r\n");
                         }
                     }
-                    else if (File.Exists(sourceFilePath))
+                    else if (isSourceExist && sourceSize < 1048576) // 文件小于1MB
                     {
-                        // 如果目标文件夹中不存在文件，则添加新文件的版本号
-                        string version = "1.0.0.0"; // 假设新文件的初始版本号
-                        fileElement.SetAttributeValue("Ver", version);
-                        DiffList.Add(fileName);
-                        txtDiff.AppendText(fileName);
-                        txtDiff.AppendText("\r\n");
+                        // 如果文件小于1MB，进行逐字节比较
+                        bool isContentSame = CompareFilesByChunk(sourceFilePath, targetFilePath);
+                        if (!isContentSame)
+                        {
+                            string version = fileElement.Attribute("Ver").Value;
+                            IncrementVersion(ref version);
+                            fileElement.SetAttributeValue("Ver", version);
+                            DiffList.Add(fileName);
+                            txtDiff.AppendText(fileName + "\r\n");
+                        }
                     }
-                }
-                else
-                {
-                    // 如果不启用哈希值比较，所有文件版本号加1
-                    string version = fileElement.Attribute("Ver").Value;
-                    IncrementVersion(ref version);
-                    fileElement.SetAttributeValue("Ver", version);
                 }
             }
 
             if (Preview)
             {
-                // 获取XML内容的字符串表示，用于预览
-                string xmlContent = doc.ToString();
-                txtLastXml.Text = xmlContent;
-                richTxtLog.AppendText("预览-生成最新的XML文件成功。");
-                richTxtLog.AppendText("\r\n");
+                txtLastXml.Text = doc.ToString();
+                richTxtLog.AppendText("预览-生成最新的XML文件成功。\r\n");
             }
             else
             {
-                // 保存更新后的XML文件
                 doc.Save(xmlFilePath);
-                richTxtLog.AppendText("保存-生成最新的XML文件成功。");
-                richTxtLog.AppendText("\r\n");
+                richTxtLog.AppendText("保存-生成最新的XML文件成功。\r\n");
+            }
+        }
+
+
+        /// <summary>
+        /// 逐字节比较
+        /// </summary>
+        /// <param name="filePath1"></param>
+        /// <param name="filePath2"></param>
+        /// <returns></returns>
+        private bool CompareFilesByChunk(string filePath1, string filePath2)
+        {
+            using (var fs1 = File.OpenRead(filePath1))
+            using (var fs2 = File.OpenRead(filePath2))
+            {
+                int bufferSize = 1024 * 1024; // 1MB buffer size
+                byte[] buffer1 = new byte[bufferSize];
+                byte[] buffer2 = new byte[bufferSize];
+
+                while (true)
+                {
+                    int bytesRead1 = fs1.Read(buffer1, 0, buffer1.Length);
+                    int bytesRead2 = fs2.Read(buffer2, 0, buffer2.Length);
+
+                    if (bytesRead1 != bytesRead2 || !buffer1.SequenceEqual(buffer2))
+                        return false;
+
+                    if (bytesRead1 == 0) break;
+                }
+
+                return true;
             }
         }
 
         private void IncrementVersion(ref string version)
         {
             var parts = version.Split('.');
-            int revision = int.Parse(parts[3]) + 1;
-            version = $"{parts[0]}.{parts[1]}.{parts[2]}.{revision}";
+            parts[3] = (int.Parse(parts[3]) + 1).ToString();
+            version = string.Join(".", parts);
         }
-    
-    #endregion
 
-    private void btnPreview_Click(object sender, EventArgs e)
+
+
+        #endregion
+
+        private void btnPreview_Click(object sender, EventArgs e)
         {
             //显示差异及生成后的xml
-            UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtBaseDir.Text, true,chk哈希值比较.Checked);
+            UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtBaseDir.Text, true, chk文件比较.Checked);
             tabControl1.SelectedTab = tbpLastXml;
         }
 

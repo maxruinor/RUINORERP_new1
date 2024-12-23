@@ -570,6 +570,16 @@ namespace RUINORERP.UI.Common
                             }
                             listQuery.LoadQueryParametersToUI(listQuery.QueryDtoProxy, nodeParameter);
                         }
+                        else
+                        {
+                            if (page.Controls[0] is BaseUControl baseUControl)
+                            {
+                                //加载默认的
+                                baseUControl.LoadQueryParametersToUI(null, null);
+                            }
+                        }
+
+
 
                         //生产工作台 区别上面。为了不影响上面。 
                         if (page.Controls[0] is BaseQuery ucbaseQuery && LoadItems != null)

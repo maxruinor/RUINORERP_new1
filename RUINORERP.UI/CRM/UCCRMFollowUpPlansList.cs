@@ -259,6 +259,14 @@ namespace RUINORERP.UI.CRM
                                     //
                                     if (plan.PlanStatus == (int)FollowUpPlanStatus.未开始)
                                     {
+                                        //修改为进行中
+                                        plan.PlanStatus = (int)FollowUpPlanStatus.进行中;
+                                        BaseController<tb_CRM_FollowUpPlans> ctrplan = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpPlans>>(typeof(tb_CRM_FollowUpPlans).Name + "Controller");
+                                        ReturnResults<tb_CRM_FollowUpPlans> rsPlan = await ctrplan.BaseSaveOrUpdate(plan);
+                                        if (rsPlan.Succeeded)
+                                        {
+
+                                        }
 
                                     }
 

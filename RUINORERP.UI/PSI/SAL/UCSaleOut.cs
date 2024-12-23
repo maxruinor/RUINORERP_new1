@@ -644,7 +644,7 @@ namespace RUINORERP.UI.PSI.SAL
                 MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整数量和金额。", UILogType.警告);
                 return null;
             }
-            Command command = new Command();
+            RevertCommand command = new RevertCommand();
             //缓存当前编辑的对象。如果撤销就回原来的值
             tb_SaleOut oldobj = CloneHelper.DeepCloneObject<tb_SaleOut>(EditEntity);
             command.UndoOperation = delegate ()
@@ -725,7 +725,7 @@ namespace RUINORERP.UI.PSI.SAL
                 return;
             }
 
-            Command command = new Command();
+            RevertCommand command = new RevertCommand();
             //缓存当前编辑的对象。如果撤销就回原来的值
             tb_SaleOut oldobj = CloneHelper.DeepCloneObject<tb_SaleOut>(EditEntity);
             command.UndoOperation = delegate ()

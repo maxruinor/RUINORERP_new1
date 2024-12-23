@@ -23,6 +23,10 @@ namespace RUINORERP.Model.TransModel
         Event // 事件通知
     }
 
+    public enum PromptType
+    {
+        弹窗,
+    }
 
     public class TextMessage : MessageBase
     {
@@ -54,67 +58,7 @@ namespace RUINORERP.Model.TransModel
     }
 
 
-    public class MessageProcessingService
-    {
-        public void ProcessMessage(MessageBase message)
-        {
-            switch (message)
-            {
-                case TextMessage textMessage:
-                    HandleTextMessage(textMessage);
-                    break;
-                case BusinessDataMessage businessDataMessage:
-                    HandleBusinessDataMessage(businessDataMessage);
-                    break;
-                case EventMessage eventMessage:
-                    HandleEventMessage(eventMessage);
-                    break;
-                default:
-                    HandleUnknownMessageType(message);
-                    break;
-            }
-        }
-
-        private void HandleTextMessage(TextMessage message)
-        {
-            // 处理文本消息逻辑
-            Console.WriteLine($"Received text message: {message.Text}");
-        }
-
-        private void HandleBusinessDataMessage(BusinessDataMessage message)
-        {
-            // 处理业务数据逻辑
-            Console.WriteLine($"Received business data: {message.Data}");
-        }
-
-        private void HandleEventMessage(EventMessage message)
-        {
-            // 触发事件逻辑
-            Console.WriteLine($"Received event: {message.EventName} with arguments: {message.EventArgs}");
-        }
-
-        private void HandleUnknownMessageType(MessageBase message)
-        {
-            // 未知消息类型处理逻辑
-            Console.WriteLine($"Received unknown message type: {message.Type}");
-        }
-    }
-
-
-    //使用
-
-    //var messageService = new MessageProcessingService();
-
-    //// 模拟接收消息
-    //var textMessage = new TextMessage { Text = "Hello, World!" };
-    //messageService.ProcessMessage(textMessage);
-
-    //    var businessDataMessage = new BusinessDataMessage { Data = new { Value = 42 } };
-    //messageService.ProcessMessage(businessDataMessage);
-
-    //    var eventMessage = new EventMessage { EventName = "UserLoggedIn", EventArgs = new { UserId = 123 } };
-    //messageService.ProcessMessage(eventMessage);
-
+     
 
 
 

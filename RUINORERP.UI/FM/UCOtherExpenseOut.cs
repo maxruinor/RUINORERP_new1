@@ -387,7 +387,7 @@ namespace RUINORERP.UI.FM
                 return ae;
             }
 
-            Command command = new Command();
+            RevertCommand command = new RevertCommand();
             //缓存当前编辑的对象。如果撤销就回原来的值
             tb_FM_OtherExpense oldobj = CloneHelper.DeepCloneObject<tb_FM_OtherExpense>(EditEntity);
             command.UndoOperation = delegate ()

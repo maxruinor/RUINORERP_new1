@@ -311,7 +311,7 @@ namespace RUINORERP.UI.PSI.SAL
              continue;
          }
 
-         Command command = new Command();
+         RevertCommand command = new RevertCommand();
          //缓存当前编辑的对象。如果撤销就回原来的值
          tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
          command.UndoOperation = delegate ()

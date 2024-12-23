@@ -735,7 +735,6 @@ namespace AutoUpdate
             }
         }
 
-
         private void linkLabel1_LinkClicked(object sender, System.Windows.Forms.LinkLabelLinkClickedEventArgs e)
         {
             System.Diagnostics.Process.Start(linkLabel1.Text);
@@ -744,7 +743,7 @@ namespace AutoUpdate
         /// <summary>
         /// 保留最多最新的版本数量
         /// </summary>
-        public int MaxVersionCount = 5;
+        public int MaxVersionCount = 10;
 
         public int mainResult = 0;
         //点击完成复制更新文件到应用程序目录
@@ -761,34 +760,39 @@ namespace AutoUpdate
                 {
                     CopyFile((tempUpdatePath + versionDirList[i]), Directory.GetCurrentDirectory());
                 }
-
-                #region 为了实现版本回滚只保留5个版本
-                List<string> versions = new List<string>();
-                // 获取所有子文件夹的路径
-                string[] subDirectories = Directory.GetDirectories(tempUpdatePath);
-                foreach (var subdir in subDirectories)
+                try
                 {
-                    string verDir = Path.GetFileName(subdir);
-                    versions.Add(verDir);
-                }
-
-                if (versions.Count > 0)
-                {
-                    //删除最旧的版本
-                    // 对版本号进行排序
-                    versions.Sort();
-                    int deleteCount = versions.Count - MaxVersionCount;
-                    // 移除最小的 保留最新的5个
-                    versions = versions.Take(deleteCount).ToList();
-
-                    // 输出排序并移除多余的版本号后的列表
-                    foreach (var version in versions)
+                    #region 为了实现版本回滚只保留5个版本
+                    List<string> versions = new List<string>();
+                    // 获取所有子文件夹的路径
+                    string[] subDirectories = Directory.GetDirectories(tempUpdatePath);
+                    foreach (var subdir in subDirectories)
                     {
-                        System.IO.Directory.Delete(tempUpdatePath + version, true);
+                        string verDir = Path.GetFileName(subdir);
+                        versions.Add(verDir);
                     }
-                }
-                #endregion
 
+                    if (versions.Count > 0)
+                    {
+                        //删除最旧的版本
+                        // 对版本号进行排序
+                        versions.Sort();
+                        int deleteCount = versions.Count - MaxVersionCount;
+                        // 移除最小的 保留最新的5个
+                        versions = versions.Take(deleteCount).ToList();
+
+                        // 输出排序并移除多余的版本号后的列表
+                        foreach (var version in versions)
+                        {
+                            System.IO.Directory.Delete(tempUpdatePath + version, true);
+                        }
+                    }
+                    #endregion
+                }
+                catch (Exception exx)
+                {
+ 
+                }
 
             }
             catch (Exception ex)

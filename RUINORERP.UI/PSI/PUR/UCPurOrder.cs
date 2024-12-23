@@ -592,7 +592,7 @@ namespace RUINORERP.UI.PSI.PUR
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
                 EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 tb_PurOrder oldobj = CloneHelper.DeepCloneObject<tb_PurOrder>(EditEntity);
                 command.UndoOperation = delegate ()
                 {

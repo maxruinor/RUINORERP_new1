@@ -742,7 +742,7 @@ namespace RUINORERP.Business
                     querySqlQueryable = querySqlQueryable.Where(SqlItem);
                 }
             }
-            return await querySqlQueryable.ToPageListAsync(pageNum, pageSize) as List<T>;
+            return await querySqlQueryable.ToPageListAsync(pageNum, pageSize);
         }
 
 

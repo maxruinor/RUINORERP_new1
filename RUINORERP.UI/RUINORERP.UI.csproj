@@ -1081,6 +1081,12 @@
     <Compile Include="BusinessFlow\FlowDesign.Designer.cs">
       <DependentUpon>FlowDesign.cs</DependentUpon>
     </Compile>
+    <Compile Include="ClientCmdService\ClientCommandDispatcher.cs" />
+    <Compile Include="ClientCmdService\ClientCommandHandlerFactory.cs" />
+    <Compile Include="ClientCmdService\CommandRegistry.cs" />
+    <Compile Include="ClientCmdService\IClientCommand.cs" />
+    <Compile Include="ClientCmdService\ReceiveCacheCommand.cs" />
+    <Compile Include="ClientCmdService\ReceiveMessageCommand.cs" />
     <Compile Include="CommonUI\frmInputObject.cs">
       <SubType>Form</SubType>
     </Compile>

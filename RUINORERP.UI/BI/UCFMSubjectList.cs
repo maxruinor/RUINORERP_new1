@@ -52,7 +52,7 @@ namespace RUINORERP.UI.BI
             frmadd.bindingSourceEdit = bindingSourceList;
             object obj = frmadd.bindingSourceEdit.AddNew();
             frmadd.BindData(obj as BaseEntity);
-            //Command command = new Command();
+            //RevertCommand command = new RevertCommand();
             ///*
             //* 使用匿名委托，更加简单，而且匿名委托方法里还可以使用外部变量。
             //*/
@@ -89,7 +89,7 @@ namespace RUINORERP.UI.BI
         {
             if (base.bindingSourceList.Current != null)
             {
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 UCFMSubjectEdit frmadd = new UCFMSubjectEdit();
                 frmadd.bindingSourceEdit = bindingSourceList;
                 frmadd.BindData(base.bindingSourceList.Current as BaseEntity);

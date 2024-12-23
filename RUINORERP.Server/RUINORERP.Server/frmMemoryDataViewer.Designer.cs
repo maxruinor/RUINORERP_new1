@@ -37,6 +37,8 @@
             dataGridView1 = new System.Windows.Forms.DataGridView();
             toolStrip1 = new System.Windows.Forms.ToolStrip();
             tsbtnRefresh = new System.Windows.Forms.ToolStripButton();
+            contextMenuStripGrid = new System.Windows.Forms.ContextMenuStrip(components);
+            发送提醒ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
@@ -44,6 +46,7 @@
             contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             toolStrip1.SuspendLayout();
+            contextMenuStripGrid.SuspendLayout();
             SuspendLayout();
             // 
             // splitContainer1
@@ -89,6 +92,7 @@
             // dataGridView1
             // 
             dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridView1.ContextMenuStrip = contextMenuStripGrid;
             dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             dataGridView1.Location = new System.Drawing.Point(0, 0);
             dataGridView1.Name = "dataGridView1";
@@ -115,6 +119,19 @@
             tsbtnRefresh.Text = "刷新";
             tsbtnRefresh.Click += tsbtnRefresh_Click;
             // 
+            // contextMenuStripGrid
+            // 
+            contextMenuStripGrid.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 发送提醒ToolStripMenuItem });
+            contextMenuStripGrid.Name = "contextMenuStripGrid";
+            contextMenuStripGrid.Size = new System.Drawing.Size(181, 48);
+            // 
+            // 发送提醒ToolStripMenuItem
+            // 
+            发送提醒ToolStripMenuItem.Name = "发送提醒ToolStripMenuItem";
+            发送提醒ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            发送提醒ToolStripMenuItem.Text = "发送提醒";
+            发送提醒ToolStripMenuItem.Click += 发送提醒ToolStripMenuItem_Click;
+            // 
             // frmMemoryDataViewer
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -133,6 +150,7 @@
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
+            contextMenuStripGrid.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -146,5 +164,7 @@
         private System.Windows.Forms.ToolStripButton tsbtnRefresh;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem 加载数据ToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripGrid;
+        private System.Windows.Forms.ToolStripMenuItem 发送提醒ToolStripMenuItem;
     }
 }

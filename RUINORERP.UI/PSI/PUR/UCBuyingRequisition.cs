@@ -450,7 +450,7 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
             }
-            Command command = new Command();
+            RevertCommand command = new RevertCommand();
             //缓存当前编辑的对象。如果撤销就回原来的值
             tb_BuyingRequisition oldobj = CloneHelper.DeepCloneObject<tb_BuyingRequisition>(EditEntity);
             command.UndoOperation = delegate ()
@@ -525,7 +525,7 @@ namespace RUINORERP.UI.PSI.PUR
                 return;
             }
 
-            Command command = new Command();
+            RevertCommand command = new RevertCommand();
 
             tb_BuyingRequisition oldobj = CloneHelper.DeepCloneObject<tb_BuyingRequisition>(EditEntity);
             command.UndoOperation = delegate ()
@@ -596,7 +596,7 @@ namespace RUINORERP.UI.PSI.PUR
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
                 EditEntity.CloseCaseOpinions = frm.txtOpinion.Text;
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 tb_BuyingRequisition oldobj = CloneHelper.DeepCloneObject<tb_BuyingRequisition>(EditEntity);
                 command.UndoOperation = delegate ()
                 {

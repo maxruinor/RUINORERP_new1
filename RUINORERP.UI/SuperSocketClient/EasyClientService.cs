@@ -21,6 +21,7 @@ using SourceLibrary.Security;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using RUINORERP.Model.CommonModel;
 using System.Drawing;
+using RUINORERP.UI.ClientCmdService;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -477,6 +478,12 @@ namespace RUINORERP.UI.SuperSocketClient
 
         private async void OnPackageReceived(object sender, PackageEventArgs<BizPackageInfo> e)
         {
+            //var command = ParseCommandFromPackage(e.Package);
+            //await dispatcher.DispatchAsync(command, CancellationToken.None);
+            //            这里的 ParseCommandFromPackage 是一个假设的方法，你需要根据实际的包格式来实现它，以从接收到的数据包中解析出命令和必要的参数。
+
+            //通过这种方式，你的代码将更加模块化，易于扩展和维护。每个命令和处理器都是独立的，这有助于降低系统的复杂性并提高可测试性。
+
             if (e.Package.ecode == SpecialOrder.正常)
             {
                 #region  
@@ -488,6 +495,11 @@ namespace RUINORERP.UI.SuperSocketClient
                     OriginalData od = e.Package.od;
                     switch (msg)
                     {
+                        case ServerCmdEnum.复合型消息推送:
+                            var command = new ReceiveMessageCommand(od);
+                            MainForm.Instance._dispatcher.Dispatch(command, od);
+                            break;
+
                         case ServerCmdEnum.工作流提醒推送:
                             ClientService.接收工作流的提醒消息(od);
                             break;

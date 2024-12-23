@@ -1037,7 +1037,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (bindingSourceList.Current != null)
             {
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 frmadd.bindingSourceEdit = bindingSourceList;
                 T CurrencyObj = (T)bindingSourceList.Current;
                 BaseEntity bty = CurrencyObj as BaseEntity;
@@ -1134,7 +1134,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (bindingSourceList.Current != null)
             {
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 frmadd.bindingSourceEdit = bindingSourceList;
                 T CurrencyObj = (T)bindingSourceList.Current;
                 BaseEntity bty = CurrencyObj as BaseEntity;
@@ -1315,7 +1315,7 @@ namespace RUINORERP.UI.BaseForm
         /// 默认不是模糊查询
         /// </summary>
         /// <param name="useLike"></param>
-        public void LoadQueryConditionToUI(decimal QueryConditionShowColQty)
+        public object LoadQueryConditionToUI(decimal QueryConditionShowColQty)
         {
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
@@ -1344,7 +1344,7 @@ namespace RUINORERP.UI.BaseForm
             bindingSourceList.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             dataGridView1.DataSource = bindingSourceList;
 
-
+            return QueryDtoProxy;
 
         }
 
@@ -1367,16 +1367,30 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="nodeParameter"></param>
         internal override void LoadQueryParametersToUI(object QueryParameters, QueryParameter nodeParameter)
         {
-            if (QueryParameters != null)
+            if (QueryParameters != null && nodeParameter != null)
             {
                 if (nodeParameter.queryFilter != null)
                 {
                     QueryConditionFilter = nodeParameter.queryFilter;
                 }
-                //因为时间不会去掉选择，这里特殊处理
+
+                //nodeParameter参数中包含了这个实体的KEY主键是可以通过主键来查询到准确的一行数据
+               // QueryConditionFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.Customer_id, true);
+             
+                #region  因为时间不会去掉选择，这里特殊处理
                 foreach (var item in nodeParameter.queryFilter.QueryFields)
                 {
-                    if (item.FieldPropertyInfo.PropertyType.Name == "DateTime")
+                    Type propertyType = null;
+                    if (item.FieldPropertyInfo.PropertyType.IsGenericType && item.FieldPropertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    {
+                        propertyType = item.FieldPropertyInfo.PropertyType.GenericTypeArguments[0];
+                    }
+                    else
+                    {
+                        propertyType = item.FieldPropertyInfo.PropertyType;
+                    }
+
+                    if (propertyType.Name == "DateTime")
                     {
                         //因为查询UI生成时。自动 转换成代理类如：tb_SaleOutProxy，并且时间是区间型式,将起为null即可
                         QueryDtoProxy.SetPropertyValue(item.FieldName + "_Start", null);
@@ -1392,10 +1406,18 @@ namespace RUINORERP.UI.BaseForm
                         //    dtp.check
                         //}
                     }
+
+
                 }
+
+                #endregion
 
                 QueryDtoProxy = QueryParameters;
                 ExtendedQuery(true);
+            }
+            else
+            {
+                Refreshs();
             }
         }
 
@@ -1673,7 +1695,8 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        protected virtual void Refreshs()
+
+        protected override void Refreshs()
         {
             LimitQueryConditionsBuilder();
             if (!Edited)
@@ -1775,17 +1798,13 @@ namespace RUINORERP.UI.BaseForm
                 if (personalization != null)
                 {
                     decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                    LoadQueryConditionToUI(QueryShowColQty);
+                    QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
                 }
                 else
                 {
-                    LoadQueryConditionToUI(4);
+                    QueryDtoProxy = LoadQueryConditionToUI(4);
                 }
             }
-            //默认收起查询框
-            Refreshs();
-
-
 
         }
 

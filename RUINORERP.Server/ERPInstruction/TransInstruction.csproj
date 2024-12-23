@@ -5,12 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="DataModel\**" />
-    <EmbeddedResource Remove="DataModel\**" />
-    <None Remove="DataModel\**" />
+    <Compile Remove="CommandService\CommandPublisher.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="RabbitMQ.Client" Version="7.0.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
   </ItemGroup>
 

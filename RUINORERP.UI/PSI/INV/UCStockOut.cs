@@ -396,7 +396,7 @@ protected async override Task<ApprovalEntity> Review()
         }
     }
 
-    Command command = new Command();
+    RevertCommand command = new RevertCommand();
     //缓存当前编辑的对象。如果撤销就回原来的值
     tb_StockOut oldobj = CloneHelper.DeepCloneObject<tb_StockOut>(EditEntity);
     command.UndoOperation = delegate ()
@@ -477,7 +477,7 @@ protected async override void ReReview()
         return;
     }
 
-    Command command = new Command();
+    RevertCommand command = new RevertCommand();
     //缓存当前编辑的对象。如果撤销就回原来的值
     tb_StockOut oldobj = CloneHelper.DeepCloneObject<tb_StockOut>(EditEntity);
     command.UndoOperation = delegate ()

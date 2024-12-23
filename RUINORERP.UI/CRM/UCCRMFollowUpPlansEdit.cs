@@ -28,6 +28,7 @@ using RUINORERP.Business.Security;
 using SqlSugar;
 using RUINORERP.Business.CommService;
 using TransInstruction;
+using System.Numerics;
 
 namespace RUINORERP.UI.CRM
 {
@@ -305,7 +306,7 @@ namespace RUINORERP.UI.CRM
                 NewInfo.Employee_ID = _EditEntity.Employee_ID;
                 BaseEntity bty = NewInfo as BaseEntity;
                 bty.ActionStatus = ActionStatus.加载;
-                BusinessHelper.Instance.EditEntity(bty);
+                BusinessHelper.Instance.InitEntity(bty);
                 frmaddg.BindData(bty, ActionStatus.新增);
                 if (frmaddg.ShowDialog() == DialogResult.OK)
                 {
@@ -340,6 +341,20 @@ namespace RUINORERP.UI.CRM
                                 MainForm.Instance.ecs.client.Send(buffer);
                             }
                         }
+
+                        if (_EditEntity.PlanStatus == (int)FollowUpPlanStatus.未开始)
+                        {
+                            //修改为进行中
+                            _EditEntity.PlanStatus = (int)FollowUpPlanStatus.进行中;
+                            BaseController<tb_CRM_FollowUpPlans> ctrplan = Startup.GetFromFacByName<BaseController<tb_CRM_FollowUpPlans>>(typeof(tb_CRM_FollowUpPlans).Name + "Controller");
+                            ReturnResults<tb_CRM_FollowUpPlans> rsPlan = await ctrplan.BaseSaveOrUpdate(_EditEntity);
+                            if (rsPlan.Succeeded)
+                            {
+
+                            }
+
+                        }
+
                     }
                 }
             }

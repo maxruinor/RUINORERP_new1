@@ -35,7 +35,7 @@ namespace RUINORERP.UI
         private void btnNew_Click(object sender, EventArgs e)
         {
             btnRedo.Enabled = false;
-            Command command = new Command();
+          RUINOR.Core.RevertCommand command = new RevertCommand();
             Label label = new Label();
             Random r = new Random();
             label.Text = ((char)r.Next(65, 99)).ToString();
@@ -60,15 +60,15 @@ namespace RUINORERP.UI
                 this.Controls.Remove(label);
             };
             command.Do();//执行DoOperation相应代码
-            CommandManager.AddNewCommand(command);
+            RevertCommandManager.AddNewCommand(command);
             btnUndo.Enabled = true;
         }
 
         private void btnRedo_Click(object sender, EventArgs e)
         {
             btnUndo.Enabled = true;
-            CommandManager.Redo();
-            if (CommandManager.RedoStepsCount == 0)
+            RevertCommandManager.Redo();
+            if (RevertCommandManager.RedoStepsCount == 0)
             {
                 btnRedo.Enabled = false;
             }
@@ -77,8 +77,8 @@ namespace RUINORERP.UI
         private void btnUndo_Click(object sender, EventArgs e)
         {
             btnRedo.Enabled = true;
-            CommandManager.Undo();
-            if (CommandManager.UndoStepsCount == 0)
+            RevertCommandManager.Undo();
+            if (RevertCommandManager.UndoStepsCount == 0)
             {
                 btnUndo.Enabled = false;
             }

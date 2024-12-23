@@ -33,7 +33,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnPreview = new System.Windows.Forms.Button();
-            this.chk哈希值比较 = new System.Windows.Forms.CheckBox();
+            this.chk文件比较 = new System.Windows.Forms.CheckBox();
             this.button_save_config = new System.Windows.Forms.Button();
             this.prbProd = new System.Windows.Forms.ProgressBar();
             this.btnrelease = new System.Windows.Forms.Button();
@@ -112,7 +112,7 @@
             // panel2
             // 
             this.panel2.Controls.Add(this.btnPreview);
-            this.panel2.Controls.Add(this.chk哈希值比较);
+            this.panel2.Controls.Add(this.chk文件比较);
             this.panel2.Controls.Add(this.button_save_config);
             this.panel2.Controls.Add(this.prbProd);
             this.panel2.Controls.Add(this.btnrelease);
@@ -134,18 +134,18 @@
             this.btnPreview.UseVisualStyleBackColor = true;
             this.btnPreview.Click += new System.EventHandler(this.btnPreview_Click);
             // 
-            // chk哈希值比较
+            // chk文件比较
             // 
-            this.chk哈希值比较.AutoSize = true;
-            this.chk哈希值比较.Checked = true;
-            this.chk哈希值比较.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chk哈希值比较.Location = new System.Drawing.Point(408, 14);
-            this.chk哈希值比较.Name = "chk哈希值比较";
-            this.chk哈希值比较.Size = new System.Drawing.Size(84, 16);
-            this.chk哈希值比较.TabIndex = 4;
-            this.chk哈希值比较.Text = "哈希值比较";
-            this.chk哈希值比较.UseVisualStyleBackColor = true;
-            this.chk哈希值比较.CheckedChanged += new System.EventHandler(this.chk哈希值比较_CheckedChanged);
+            this.chk文件比较.AutoSize = true;
+            this.chk文件比较.Checked = true;
+            this.chk文件比较.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chk文件比较.Location = new System.Drawing.Point(408, 14);
+            this.chk文件比较.Name = "chk文件比较";
+            this.chk文件比较.Size = new System.Drawing.Size(84, 16);
+            this.chk文件比较.TabIndex = 4;
+            this.chk文件比较.Text = "哈希值比较";
+            this.chk文件比较.UseVisualStyleBackColor = true;
+            this.chk文件比较.CheckedChanged += new System.EventHandler(this.chk哈希值比较_CheckedChanged);
             // 
             // button_save_config
             // 
@@ -650,7 +650,7 @@
         private System.Windows.Forms.TextBox txtUpdatedFiles;
         private System.Windows.Forms.CheckBox chkAppend;
         private System.Windows.Forms.CheckBox chk目录转为明细;
-        private System.Windows.Forms.CheckBox chk哈希值比较;
+        private System.Windows.Forms.CheckBox chk文件比较;
         private System.Windows.Forms.Button btnCompareSource;
         private System.Windows.Forms.TextBox txtCompareSource;
         private System.Windows.Forms.Label label6;

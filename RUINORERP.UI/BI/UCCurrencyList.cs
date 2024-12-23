@@ -73,7 +73,7 @@ protected override void Add()
 
        if (base.bindingSourceList.Current != null)
        {
-           Command command = new Command();
+           RevertCommand command = new RevertCommand();
            UCCurrencyEdit frmadd = new UCCurrencyEdit();
            frmadd.bindingSourceEdit = bindingSourceList;
            frmadd.BindData(base.bindingSourceList.Current as tb_Currency);

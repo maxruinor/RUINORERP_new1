@@ -346,7 +346,7 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.导出:
 
                     break;
-             
+
                 default:
                     break;
             }
@@ -739,7 +739,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-   
+
 
         #region 帮助信息提示
 
@@ -1224,7 +1224,7 @@ namespace RUINORERP.UI.BaseForm
                     break;
                 case MenuItemEnums.导出:
                     break;
-          
+
                 default:
                     break;
             }
@@ -1353,7 +1353,7 @@ namespace RUINORERP.UI.BaseForm
                 ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
                 {
-                    if (ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
+                    if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
                         string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
                         byte[] bytes = UI.Common.ImageHelper.imageToByteArray(frm.CloseCaseImage);
@@ -1430,7 +1430,7 @@ namespace RUINORERP.UI.BaseForm
             await Task.Delay(1);
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
             {
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
 
@@ -1603,7 +1603,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
 
-                Command command = new Command();
+                RevertCommand command = new RevertCommand();
                 //缓存当前编辑的对象。如果撤销就回原来的值
                 T oldobj = CloneHelper.DeepCloneObject<T>(EditEntity);
                 command.UndoOperation = delegate ()
@@ -2197,7 +2197,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 if (saleOrder.TotalAmount < AppContext.SysConfig.AutoApprovedSaleOrderAmount)
                                 {
-                                    Command command = new Command();
+                                    RevertCommand command = new RevertCommand();
                                     //缓存当前编辑的对象。如果撤销就回原来的值
                                     tb_SaleOrder oldobj = CloneHelper.DeepCloneObject<tb_SaleOrder>(EditEntity);
                                     command.UndoOperation = delegate ()
@@ -2239,7 +2239,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 if (purOrder.TotalAmount < AppContext.SysConfig.AutoApprovedPurOrderAmount)
                                 {
-                                    Command command = new Command();
+                                    RevertCommand command = new RevertCommand();
                                     //缓存当前编辑的对象。如果撤销就回原来的值
                                     tb_PurOrder oldobj = CloneHelper.DeepCloneObject<tb_PurOrder>(EditEntity);
                                     command.UndoOperation = delegate ()

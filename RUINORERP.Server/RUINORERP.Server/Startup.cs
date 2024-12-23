@@ -55,6 +55,9 @@ using Autofac.Core;
 using RUINORERP.Business.Security;
 using RUINORERP.Model.ConfigModel;
 using System.Configuration;
+using TransInstruction;
+using TransInstruction.CommandService;
+using RUINORERP.Server.CommandService;
 
 namespace RUINORERP.Server
 {
@@ -369,6 +372,43 @@ namespace RUINORERP.Server
         /// <param name="services"></param>
         public static void ConfigureServices(IServiceCollection services)
         {
+            // 注册 CommandProcessor
+            services.AddSingleton<CommandProcessor>();
+
+            // 注册 CommandPublisher 和 CommandSubscriber
+          //  services.AddSingleton<IMessageQueue, MyMessageQueue>(); // 假设使用自定义消息队列实现
+            //services.AddTransient<CommandPublisher>();
+           // services.AddTransient<CommandSubscriber>();
+
+            // 注册 CommandQueue
+            services.AddSingleton<CommandQueue>();
+
+            // 注册 ICommandHandler 实现
+            services.AddTransient<ICommandHandler, LoginCommandHandler>();
+            services.AddTransient<ICommandHandler, AddProductCommandHandler>();
+
+            // 注册 Command 实现
+            services.AddTransient<TransInstruction.CommandService.IServerCommand, LoginCommand>();
+            services.AddTransient<TransInstruction.CommandService.IServerCommand, AddProductCommand>();
+            services.AddTransient<TransInstruction.CommandService.IServerCommand, SendMessageCommand>();
+            // 注册 CommandRegistry
+            services.AddSingleton<CommandRegistry>();
+
+            // 注册 CommandDispatcher 和其他相关服务
+            ///services.AddSingleton<ICommandHandler<LoginCommand>, LoginCommandHandler>();
+                     // 可以添加更多的处理器
+            // 注册命令处理器工厂
+            services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
+       
+
+            // 注册CommandDispatcher和它的处理器
+           services.AddSingleton<CommandDispatcher>();
+            // 注册 CommandDispatcher，只传递 allHandlers
+            //services.AddSingleton<CommandDispatcher>(provider => new CommandDispatcher(allHandlers));
+
+
+
+
             //setup dependency injection
             //services.AddLogging();
 

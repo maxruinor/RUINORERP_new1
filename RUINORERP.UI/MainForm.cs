@@ -81,6 +81,7 @@ using System.Xml;
 using RUINORERP.Model.TransModel;
 using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
+using RUINORERP.UI.ClientCmdService;
 
 
 
@@ -114,6 +115,10 @@ namespace RUINORERP.UI
 
 
         #endregion
+
+
+        public ClientCommandDispatcher _dispatcher;
+
 
         /// <summary>
         /// 保存服务器的一些缓存信息。让客户端可以根据一些机制来获取。得到最新的信息
@@ -172,6 +177,16 @@ namespace RUINORERP.UI
             });
 
             AppContext = Program.AppContextData;
+
+
+            var clientCommandHandlers = new List<IClientCommand>
+            {
+                new ReceiveCacheCommand(),
+                new ReceiveMessageCommand(),
+                // ... 添加其他命令处理器
+            };
+
+            _dispatcher = new ClientCommandDispatcher(clientCommandHandlers);
 
         }
 
@@ -501,9 +516,17 @@ namespace RUINORERP.UI
                 {
                     lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort}，Connected:{ecs.IsConnected}，LocIP:{ecs.client.Socket.LocalEndPoint},FreeTime:{GetLastInputTime()}";
                 }
+
+
+
+
+
                 lblServerInfo.Text = lblServerStatus.ToolTipText;
                 if (MessageList.Count > 0)
                 {
+
+
+
                     ServerReminderData MessageInfo = MessageList.Dequeue();
                     //NotificationBox notificationBox = new NotificationBox();
                     //notificationBox.ShowForm(MessageInfo.Content);
@@ -529,7 +552,7 @@ namespace RUINORERP.UI
                     }
 
 
-                    messager.txtSender.Text =  MessageInfo.SenderEmployeeName;
+                    messager.txtSender.Text = MessageInfo.SenderEmployeeName;
                     if (MessageInfo.RemindSubject.IsNotEmptyOrNull())
                     {
                         messager.txtSubject.Text = "【" + MessageInfo.BizType + "】" + MessageInfo.RemindSubject;
@@ -538,6 +561,12 @@ namespace RUINORERP.UI
                     {
                         messager.txtSubject.Text = "请求协助";
                     }
+                    //#region 消息命令处理器
+                    //var command = new ReceiveMessageCommand(Model.TransModel.MessageType.Text, "888");
+
+                    //command.message = MessageInfo.ReminderContent;
+                    //_dispatcher.Dispatch(command);
+                    //#endregion
 
                     messager.Content = MessageInfo.ReminderContent;
                     messager.ReminderData = MessageInfo;
@@ -2251,33 +2280,42 @@ namespace RUINORERP.UI
         private CacheFetchManager _cacheFetchManager = new CacheFetchManager();
         private void timer1_Tick(object sender, EventArgs e)
         {
-            //!MainForm.Instance.AppContext.IsOnline  屏蔽了更新工作台。可能会卡列。需要优化
-            if (GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
+            try
             {
-                //刷新工作台数据？
-                //指向工作台
-                KryptonWorkspaceCell cell = kryptonDockableWorkspace1.ActiveCell;
-                if (cell != null || kryptonDockableWorkspace1.PageCount > 0)
+                //!MainForm.Instance.AppContext.IsOnline  屏蔽了更新工作台。可能会卡列。需要优化
+                if (GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
                 {
-                    KryptonPage databaord = cell.Pages.Where(x => x.Text == "工作台").FirstOrDefault();
-                    if (databaord != null)
+                    //刷新工作台数据？
+                    //指向工作台
+                    KryptonWorkspaceCell cell = kryptonDockableWorkspace1.ActiveCell;
+                    if (cell != null || kryptonDockableWorkspace1.PageCount > 0)
                     {
-                        cell.SelectedPage = databaord;
-                        kryptonDockableWorkspace1.ActivePage = kryptonDockableWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == "工作台");
+                        KryptonPage databaord = cell.Pages.Where(x => x.Text == "工作台").FirstOrDefault();
+                        if (databaord != null)
+                        {
+                            cell.SelectedPage = databaord;
+                            kryptonDockableWorkspace1.ActivePage = kryptonDockableWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == "工作台");
+                        }
                     }
                 }
-            }
 
-            //超过60 就去抓一下缓存  如果不好用。则用线程定时器
-            if (GetLastInputTime() > 5 && MainForm.Instance.AppContext.IsOnline)
+                //超过60 就去抓一下缓存  如果不好用。则用线程定时器
+                if (GetLastInputTime() > 5 && MainForm.Instance.AppContext.IsOnline)
+                {
+                    var tableNames = CacheInfoList.Keys.ToList();
+                    string nextTableName = _cacheFetchManager.GetNextTableName(tableNames);
+                    TryRequestCache(nextTableName);
+                }
+
+
+
+            }
+            catch (Exception ex)
             {
-                var tableNames = CacheInfoList.Keys.ToList();
-                string nextTableName = _cacheFetchManager.GetNextTableName(tableNames);
-                TryRequestCache(nextTableName);
+                MainForm.Instance.logger.LogError(ex, "timer1_Tick");
             }
-
-
         }
+           
 
 
         public void TryRequestCache(string nextTableName, Type elementType = null)

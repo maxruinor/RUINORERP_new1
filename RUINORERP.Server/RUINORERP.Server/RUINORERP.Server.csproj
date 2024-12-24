@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <Compile Remove="AutoMapperConfig.cs" />
+    <Compile Remove="CommandService\CommandProcessor.cs" />
+    <Compile Remove="CommandService\CommandQueue.cs" />
     <Compile Remove="Comm\AutoMapperProfile.cs" />
     <Compile Remove="Comm\CacheHelper.cs" />
     <Compile Remove="frmUserOnline.cs" />

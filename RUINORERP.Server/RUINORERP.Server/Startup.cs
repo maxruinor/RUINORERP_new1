@@ -58,6 +58,7 @@ using System.Configuration;
 using TransInstruction;
 using TransInstruction.CommandService;
 using RUINORERP.Server.CommandService;
+using ZXing;
 
 namespace RUINORERP.Server
 {
@@ -91,7 +92,7 @@ namespace RUINORERP.Server
             #region  注册
             Services = new ServiceCollection();
 
-        
+
 
             //注册当前程序集的所有类成员
             //builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
@@ -165,7 +166,7 @@ namespace RUINORERP.Server
             {
                 logBuilder.ClearProviders();
                 //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
-          //引用的long4net.dll要版本一样。
+                //引用的long4net.dll要版本一样。
                 logBuilder.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", conn, Program.AppContextData));
                 logBuilder.AddLog4Net();
             });
@@ -372,37 +373,34 @@ namespace RUINORERP.Server
         /// <param name="services"></param>
         public static void ConfigureServices(IServiceCollection services)
         {
-            // 注册 CommandProcessor
-            services.AddSingleton<CommandProcessor>();
+
 
             // 注册 CommandPublisher 和 CommandSubscriber
-          //  services.AddSingleton<IMessageQueue, MyMessageQueue>(); // 假设使用自定义消息队列实现
+            //  services.AddSingleton<IMessageQueue, MyMessageQueue>(); // 假设使用自定义消息队列实现
             //services.AddTransient<CommandPublisher>();
-           // services.AddTransient<CommandSubscriber>();
+            // services.AddTransient<CommandSubscriber>();
 
             // 注册 CommandQueue
-            services.AddSingleton<CommandQueue>();
-
+            //services.AddSingleton<CommandQueue>();
+            //后面优化要指注册
             // 注册 ICommandHandler 实现
             services.AddTransient<ICommandHandler, LoginCommandHandler>();
-            services.AddTransient<ICommandHandler, AddProductCommandHandler>();
-
+            services.AddTransient<ICommandHandler, ReceiveReminderCmdHandler>();
+            services.AddTransient<ICommandHandler, SendMessageCmdHandler>();
             // 注册 Command 实现
-            services.AddTransient<TransInstruction.CommandService.IServerCommand, LoginCommand>();
-            services.AddTransient<TransInstruction.CommandService.IServerCommand, AddProductCommand>();
-            services.AddTransient<TransInstruction.CommandService.IServerCommand, SendMessageCommand>();
-            // 注册 CommandRegistry
-            services.AddSingleton<CommandRegistry>();
+            services.AddTransient<IServerCommand, LoginCommand>();
+            services.AddTransient<IServerCommand, ReceiveReminderCmd>();
+            services.AddTransient<IServerCommand, SendMessageCmd>();
+
 
             // 注册 CommandDispatcher 和其他相关服务
             ///services.AddSingleton<ICommandHandler<LoginCommand>, LoginCommandHandler>();
-                     // 可以添加更多的处理器
+            // 可以添加更多的处理器
             // 注册命令处理器工厂
             services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
-       
 
             // 注册CommandDispatcher和它的处理器
-           services.AddSingleton<CommandDispatcher>();
+            services.AddSingleton<CommandDispatcher>();
             // 注册 CommandDispatcher，只传递 allHandlers
             //services.AddSingleton<CommandDispatcher>(provider => new CommandDispatcher(allHandlers));
 
@@ -426,7 +424,7 @@ namespace RUINORERP.Server
 
             // 读取自定义的 JSON 配置文件
             var builder = new ConfigurationBuilder()
-                .SetBasePath(System.IO.Path.Combine( Directory.GetCurrentDirectory(), "SysConfigFiles"))
+                .SetBasePath(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles"))
                 .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
                 .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
                 //客户端才用。验证是UI添加实体时用
@@ -503,7 +501,7 @@ namespace RUINORERP.Server
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
             IConfiguration configuration = cfgBuilder.Build();
             AppSettings.Configuration = configuration;
-           // string conn = AppSettings.GetValue("ConnectString");
+            // string conn = AppSettings.GetValue("ConnectString");
             ///services.AddSqlsugarSetup(configuration);
             services.AddSqlsugarSetup(Program.AppContextData, configuration);
 

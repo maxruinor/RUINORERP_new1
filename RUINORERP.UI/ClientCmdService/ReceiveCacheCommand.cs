@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TransInstruction;
 
 namespace RUINORERP.UI.ClientCmdService
 {
@@ -11,7 +12,12 @@ namespace RUINORERP.UI.ClientCmdService
     {
         public string productName { get; set; }
 
-        public void Execute(object parameters = null)
+        public bool AnalyzeDataPacket(OriginalData gd)
+        {
+            throw new NotImplementedException();
+        }
+
+        public OriginalData BuildDataPacket(object request = null)
         {
             throw new NotImplementedException();
         }

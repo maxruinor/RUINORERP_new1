@@ -25,7 +25,18 @@ namespace RUINORERP.Model.TransModel
 
     public enum PromptType
     {
-        弹窗,
+        
+        提示窗口,
+
+
+        通知窗口,
+
+
+        确认窗口,
+
+        //只是显示到日志行
+        日志消息,
+
     }
 
     public class TextMessage : MessageBase

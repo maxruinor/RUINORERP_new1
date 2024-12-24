@@ -41,17 +41,17 @@ namespace RUINORERP.Server.Commands
         //保存在Log4net_cath
         public ILogger<BizCommand> _logger { get; set; }
         private readonly CommandDispatcher _commandDispatcher;
-        private CommandQueue _commandQueue;
+        //private CommandQueue _commandQueue;
         private CommandScheduler _commandScheduler;
 
-        public BizCommand(IMemoryCache cache, ILogger<BizCommand> logger, CommandQueue commandQueue,
+        public BizCommand(IMemoryCache cache, ILogger<BizCommand> logger,
             CommandDispatcher dispatcher)
         {
             _cache = cache;
             _logger = logger;
-            _commandQueue = commandQueue;
+
             _commandDispatcher = dispatcher;
-            _commandScheduler = new CommandScheduler(_commandQueue, _commandDispatcher);
+            _commandScheduler = new CommandScheduler(_commandDispatcher);
             _commandScheduler.StartProcessing();
         }
 
@@ -99,6 +99,30 @@ namespace RUINORERP.Server.Commands
                     }
                     switch (CleintCmd)
                     {
+                        case ClientCmdEnum.复合型登陆请求:
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintMsg(Player.User.用户名 + "复合型登陆请求");
+                            }
+                            // 创建一个命令实例 
+                            var MixLoginCommand = new LoginCommand();
+                            MixLoginCommand.gd = gd;
+                            MixLoginCommand.RequestSession = Player;
+                            _commandScheduler.queue.Add(MixLoginCommand);
+
+                            break;
+
+                        case ClientCmdEnum.复合型工作流请求:
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintMsg(Player.User.用户名 + "复合型工作流请求");
+                            }
+                            // 创建一个命令实例 
+                            var receiveReminderCmd = new ReceiveReminderCmd(gd, Player);
+                            // _dispatcher.RegisterHandler<LoginCommand>(loginCommand); // 注册命令处理函数
+                            _commandScheduler.queue.Add(receiveReminderCmd);
+                            break;
+
                         case ClientCmdEnum.更新动态配置:
                             if (frmMain.Instance.IsDebug)
                             {
@@ -158,15 +182,6 @@ namespace RUINORERP.Server.Commands
                         case ClientCmdEnum.用户登陆:
                             _cache.Set("用户登陆", "用户登陆");
 
-                            // 创建一个命令实例（例如 LoginCommand）
-                            var loginCommand = new LoginCommand { Username = "admin", Password = "password" };
-
-                            // _dispatcher.RegisterHandler<LoginCommand>(loginCommand); // 注册命令处理函数>
-                            _commandQueue.EnqueueCommand(loginCommand);
-                            // 调度命令
-                            // _dispatcher.Dispatch(loginCommand);
-
-                            // var obj = CacheHelper.Instance.GetEntity<tb_CustomerVendor>(1740971599693221888);
                             tb_UserInfo user = await UserService.接收用户登陆指令(Player, gd);
                             if (UserService.用户登陆回复(Player, user))
                             {

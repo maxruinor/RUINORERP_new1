@@ -9,9 +9,9 @@ namespace RUINORERP.Model.TransModel
 {
 
     /// <summary>
-    /// 注意所有发送者  接受者都是员工
+    /// 提醒数据用于工作流和所有交互
     /// </summary>
-    public class ServerReminderData : ReminderDataBase
+    public class ReminderData : ReminderDataBase
     {
 
         // 消息状态
@@ -39,11 +39,11 @@ namespace RUINORERP.Model.TransModel
 
         // 下次处理者
         //public string NextProcessor { get; set; }
- 
+
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public string RemindSubject { get; set; }
- 
+
         public int RemindTimes { get; set; }
 
         /// <summary>
@@ -53,10 +53,10 @@ namespace RUINORERP.Model.TransModel
         /// <summary>
         /// 可以提醒多个人 注意是员工ID
         /// </summary>
-        public long[] ReceiverEmployeeIDs { get; set; }
+        public List<long> ReceiverEmployeeIDs { get; set; } = new List<long>();
 
         public string ReceiverEmployee
-        { 
+        {
             get
             {
                 return string.Join(",", ReceiverEmployeeIDs);
@@ -64,7 +64,7 @@ namespace RUINORERP.Model.TransModel
         }
 
         // 构造函数
-        public ServerReminderData()
+        public ReminderData()
         {
             SendTime = DateTime.Now.ToString();
         }

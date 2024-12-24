@@ -506,7 +506,7 @@ namespace RUINORERP.UI
                         Application.Run(form1);
 
                         //ILogger<MainForm> logger = null;
-                        //MainForm form1 = new MainForm(logger);
+                        // MainForm form1 = new MainForm(logger,null);
                         //Application.Run(form1);
 
                     }

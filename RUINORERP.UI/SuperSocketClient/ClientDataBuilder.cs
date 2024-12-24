@@ -54,7 +54,7 @@ namespace RUINORERP.UI.SuperSocketClient
         /// <param name="StartTime"></param>
         /// <param name="TableName"></param>
         /// <returns></returns>
-        public static OriginalData 工作流提醒请求(ClientReminderRequest request)
+        public static OriginalData 工作流提醒请求(ReminderData request)
         {
             OriginalData gd = new OriginalData();
             try

@@ -142,10 +142,17 @@ namespace AULWriter
 
         private void btnProduce_Click(object sender, EventArgs e)
         {
-            UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtBaseDir.Text, false, chk文件比较.Checked);
-            tabControl1.SelectedTab = tbpLastXml;
-            //复制到服务器上去再生成
-            //WriterAUList(chk哈希值比较.Checked, false);
+            if (chk文件比较.Checked)
+            {
+                UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtBaseDir.Text, false, chk文件比较.Checked);
+                tabControl1.SelectedTab = tbpLastXml;
+            }
+            else
+            {
+                //全部复制到服务器上去再生成
+                WriterAUList();
+            }
+
 
             try
             {
@@ -512,36 +519,9 @@ namespace AULWriter
         /// 是否进行哈希值比较，如果是，则哈希值不一样才增加版本号。否则不变
         /// </summary>
         /// <param name="HashValueComparison"></param>
-        void WriterAUList(bool HashValueComparison = false, bool Preview = false)
+        void WriterAUList()
         {
 
-            List<string> DiffList = new List<string>();
-            if (HashValueComparison)
-            {
-                txtDiff.Clear();
-                List<string> files = txtUpdatedFiles.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries).ToList();
-
-                foreach (string fullPath in files)
-                {
-
-                    string sourceFolder = this.txtCompareSource.Text.Trim();
-                    string targetFolder = this.txtBaseDir.Text.Trim();
-
-                    string relativePath = GetRelativePath(targetFolder, fullPath);
-                    //去掉前导字符\\
-                    relativePath = relativePath.TrimStart('\\');
-                    string result = FindDifferentFileByHash(sourceFolder, targetFolder, relativePath);
-                    if (!string.IsNullOrEmpty(result))
-                    {
-                        //差异不同的，返回的是一个文件名。以目标为基准生成一个路径。
-                        //System.IO.Path.Combine(sourceFolder, result)
-                        txtDiff.AppendText(result);
-                        DiffList.Add(result);
-                        txtDiff.AppendText("\r\n");
-                    }
-                }
-
-            }
 
 
             #region [写AutoUpdaterlist]
@@ -659,18 +639,15 @@ namespace AULWriter
             sb.Append("</AutoUpdater>");
 
             #endregion [Files]
-            if (Preview)
-            {
-                txtLastXml.Text = sb.ToString();
-            }
-            else
-            {
-                // 将StringBuilder的内容写入文件
-                File.WriteAllText(strFilePath, sb.ToString(), System.Text.Encoding.GetEncoding("gb2312"));
-                MessageBox.Show(this, "自动更新文件生成成功:" + this.txtAutoUpdateXmlSavePath.Text.Trim(), "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                this.prbProd.Value = 0;
-                this.prbProd.Visible = false;
-            }
+
+            txtLastXml.Text = sb.ToString();
+
+            // 将StringBuilder的内容写入文件
+            File.WriteAllText(strFilePath, sb.ToString(), System.Text.Encoding.GetEncoding("gb2312"));
+            MessageBox.Show(this, "自动更新文件生成成功:" + this.txtAutoUpdateXmlSavePath.Text.Trim(), "AutoUpdater", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.prbProd.Value = 0;
+            this.prbProd.Visible = false;
+
 
 
             #endregion [写AutoUpdaterlist]
@@ -1023,6 +1000,7 @@ namespace AULWriter
 
         private void btnPreview_Click(object sender, EventArgs e)
         {
+
             //显示差异及生成后的xml
             UpdateXmlFile(txtAutoUpdateXmlSavePath.Text, txtCompareSource.Text, txtBaseDir.Text, true, chk文件比较.Checked);
             tabControl1.SelectedTab = tbpLastXml;
@@ -1046,7 +1024,7 @@ namespace AULWriter
 
         private void chk哈希值比较_CheckedChanged(object sender, EventArgs e)
         {
-            //btnrelease.Visible = chk哈希值比较.Checked;
+            btnPreview.Visible = chk文件比较.Checked;
         }
 
 

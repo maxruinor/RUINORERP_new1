@@ -129,7 +129,7 @@ namespace RUINORERP.Server
         {
            if( dataGridView1.CurrentRow!=null && dataGridView1.CurrentRow.DataBoundItem!=null)
             {
-                if (dataGridView1.CurrentRow.DataBoundItem is ServerReminderData exData)
+                if (dataGridView1.CurrentRow.DataBoundItem is ReminderData exData)
                 {
                    // ServerReminderData olddata = exData.DeepCloneObject<ServerReminderData>();
                     foreach (var item in frmMain.Instance.sessionListBiz)

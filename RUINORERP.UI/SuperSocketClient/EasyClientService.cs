@@ -497,7 +497,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     {
                         case ServerCmdEnum.复合型消息推送:
                             var command = new ReceiveMessageCommand(od);
-                            MainForm.Instance._dispatcher.Dispatch(command, od);
+                            MainForm.Instance._dispatcher.DispatchAsync(command, CancellationToken.None, od);
                             break;
 
                         case ServerCmdEnum.工作流提醒推送:

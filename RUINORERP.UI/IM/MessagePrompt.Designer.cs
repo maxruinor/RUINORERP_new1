@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MessagePrompt));
             this.bindingSourceEdit = new System.Windows.Forms.BindingSource(this.components);
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.timerForToolTip = new System.Windows.Forms.Timer(this.components);
@@ -195,10 +196,11 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(441, 379);
             this.Controls.Add(this.kryptonPanel1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "MessagePrompt";
-            this.Text = "消息提示";
+            this.Text = "智能提醒";
             this.Load += new System.EventHandler(this.MessagePrompt_Load);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();

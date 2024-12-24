@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Global;
+using RUINORERP.Model.TransModel;
+using RUINORERP.UI.ClientCmdService;
 using RUINORERP.UI.SuperSocketClient;
 using SourceGrid2.Win32;
 using System;
@@ -10,6 +13,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TransInstruction;
+using TransInstruction.CommandService;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.UI.Common
 {
@@ -63,7 +68,7 @@ namespace RUINORERP.UI.Common
         /// <param name="password">密码</param>
         /// <param name="timeOutSec">超时时间（秒）</param>
         /// <returns>如果登录成功，返回true；否则返回false。</returns>
-        public async Task<bool> AlreadyloggedinAsync(EasyClientService _ecs,  string userName, int timeOutSec)
+        public async Task<bool> AlreadyloggedinAsync(EasyClientService _ecs, string userName, int timeOutSec)
         {
             using (var tokenSource = new CancellationTokenSource())
             {
@@ -105,7 +110,7 @@ namespace RUINORERP.UI.Common
                 var startTime = DateTime.Now;
 
                 // 发送用户名和密码到服务器
-                bool rs = await LoginServerByEasyClient(_ecs, userName, password);
+                bool rs = await LoginServerByEasyClient(_ecs, userName, password, tokenSource.Token);
 
                 // 等待服务器响应，直到超时或收到登录状态
                 while (!_ecs.LoginStatus && rs)
@@ -127,7 +132,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        public async Task<bool> LoginServerByEasyClient(EasyClientService _ecs, string userName, string password)
+        public async Task<bool> LoginServerByEasyClient(EasyClientService _ecs, string userName, string password, CancellationToken cancellationToken)
         {
             bool rs = false;
             try
@@ -170,9 +175,21 @@ namespace RUINORERP.UI.Common
                 //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
                 //_ecs.client.Send(buffer);
 
-                OriginalData od1 = ActionForClient.UserLogin(userName, password);
-                byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(od1);
-                _ecs.client.Send(buffer1);
+
+
+
+
+                //OriginalData od1 = ActionForClient.UserLogin(userName, password);
+                //byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(od1);
+                //_ecs.client.Send(buffer1);
+
+                RequestLoginCommand request = new RequestLoginCommand();
+                request.requestType = LoginProcessType.登陆;
+                request.Username = userName;
+                request.Password = password;
+                MainForm.Instance._dispatcher.DispatchAsync(request, cancellationToken);
+
+
 
                 rs = _ecs.client.IsConnected;
                 UserGlobalConfig.Instance.Serialize();

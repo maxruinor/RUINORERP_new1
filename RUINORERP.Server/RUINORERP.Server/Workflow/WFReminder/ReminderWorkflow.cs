@@ -21,7 +21,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
     /// 提示功能：比方跟踪计划，工作流是从服务器的一个缓存集合中去找到计划的启动时间与当前时间比较。按配置规则或默认提前1天开始提醒（启动工作流）。间隔多久提示一次。直接收到通知。（已经收到提醒或稍后提醒，或延长时间)
     /// 
     /// </summary>
-    public class ReminderWorkflow : IWorkflow<ServerReminderData>
+    public class ReminderWorkflow : IWorkflow<ReminderData>
     {
         private readonly ILogger<ReminderWorkflow> _logger;
 
@@ -38,12 +38,13 @@ namespace RUINORERP.Server.Workflow.WFReminder
 
 
         //循环任务：比如在工作流步骤中设置一个延迟5秒进行的循环任务，知道Counter > 5才结束
-        public void Build(IWorkflowBuilder<ServerReminderData> builder)
+        public void Build(IWorkflowBuilder<ReminderData> builder)
         {
             builder
             .StartWith<ReminderStart>(
                     context =>
                     {
+                         
                         Console.WriteLine("Hello");
                         // MessageBox.Show("开始提示前先提示一下");
                     }

@@ -88,7 +88,7 @@ namespace RUINORERP.Server
 
 
         //保存系统所有提醒的业务数据配置,系统每分钟检测。
-        public ConcurrentDictionary<long, ServerReminderData> ReminderBizDataList = new ConcurrentDictionary<long, ServerReminderData>();
+        public ConcurrentDictionary<long, ReminderData> ReminderBizDataList = new ConcurrentDictionary<long, ReminderData>();
 
         /// <summary>
         /// 保存启动的工作流队列 2023-11-18
@@ -100,7 +100,7 @@ namespace RUINORERP.Server
 
         //一个消息缓存列表，有处理过的。未处理的。未看的。临时性还是固定到表的？
 
-        public Queue<ServerReminderData> MessageList = new Queue<ServerReminderData>();
+        public Queue<ReminderData> MessageList = new Queue<ReminderData>();
         public IServiceCollection _services { get; set; }
         public IServiceProvider _ServiceProvider { get; set; }
 
@@ -112,7 +112,7 @@ namespace RUINORERP.Server
             get { return _main; }
         }
 
-        IWorkflowHost host;
+        public IWorkflowHost host;
         public frmMain(ILogger<frmMain> logger, IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
@@ -310,6 +310,13 @@ namespace RUINORERP.Server
 
             DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
             loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
+
+            //启动每天要执行的定时任务
+            //启动
+            var DailyworkflowId = await host.StartWorkflow("DailyTaskWorkflow", 1, null);
+
+            frmMain.Instance.PrintInfoLog($"每日任务启动{DailyworkflowId}。");
+
         }
 
         private void CacheInfoList_OnUpdate(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
@@ -344,7 +351,6 @@ namespace RUINORERP.Server
             }
         }
 
-
         private async void CheckReminderBizDataList()
         {
             #region 根据ReminderBizDataList检查各种提醒的业务是不是要启动工作流了。
@@ -352,7 +358,7 @@ namespace RUINORERP.Server
             {
                 foreach (var item in ReminderBizDataList)
                 {
-                    ServerReminderData BizData = item.Value;
+                    ReminderData BizData = item.Value;
                     if (BizData != null)
                     {
                         //这里要判断规则，目前暂时todo 写死,提前一天启动提醒
@@ -559,7 +565,7 @@ namespace RUINORERP.Server
                         {
                             while (MessageList.Count > 0 && sessionforBiz.User.超级用户)
                             {
-                                ServerReminderData MessageInfo = MessageList.Dequeue();
+                                ReminderData MessageInfo = MessageList.Dequeue();
                                 SystemService.process请求协助处理(sessionforBiz, MessageInfo);
                             }
 
@@ -627,7 +633,7 @@ namespace RUINORERP.Server
 
                             .UseCommand(commandOptions =>
                             {
-                               
+
                                 commandOptions.AddCommand<BizCommand>();
                                 commandOptions.AddCommand<XTCommand>();
                             });

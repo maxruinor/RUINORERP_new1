@@ -89,12 +89,13 @@ namespace RUINORERP.UI.BI
         //因为tb_P4Button中引用了按钮表中的信息，所以要使用导航删除。但是一定要细心
 
         tb_ButtonInfoController<tb_ButtonInfo> childctr = Startup.GetFromFac<tb_ButtonInfoController<tb_ButtonInfo>>();
-        protected async override void Delete()
+        protected async override Task<bool> Delete()
         {
+            bool rs = false;
             foreach (DataGridViewRow dr in this.dataGridView1.SelectedRows)
             {
                 tb_ButtonInfo buttonInfo = dr.DataBoundItem as tb_ButtonInfo;
-                bool rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_ButtonInfo);
+                 rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_ButtonInfo);
                 if (rs)
                 {
                     //提示
@@ -102,6 +103,7 @@ namespace RUINORERP.UI.BI
                 }
             }
             Query();
+            return rs;
         }
 
 

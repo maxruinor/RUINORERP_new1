@@ -12,6 +12,10 @@ namespace RUINORERP.Model.TransModel
         public string Id { get; set; }
 
         /// <summary>
+        ///  是否取消提醒，是的话，先按这个条件停止工作流，然后会在集合中删除这些要提醒的数据
+        /// </summary>
+        public bool IsCancelled { get; set; } = false;
+        /// <summary>
         /// 
         /// </summary>
         public long BizPrimaryKey { get; set; }

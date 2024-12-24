@@ -57,7 +57,7 @@ namespace RUINORERP.Server.ServerService
 
         }
 
-        public static void process请求协助处理(SessionforBiz SuperAdminSession, ServerReminderData MessageInfo)
+        public static void process请求协助处理(SessionforBiz SuperAdminSession, ReminderData MessageInfo)
         {
             try
             {
@@ -116,7 +116,7 @@ namespace RUINORERP.Server.ServerService
                     //tx.PushString(EntityType);//请示的人姓名。后面单据数据要保存时要名称开头
                     //tx.PushString(BillData);
 
-                    ServerReminderData MessageInfo = new ServerReminderData();
+                    ReminderData MessageInfo = new ReminderData();
                     MessageInfo.SendTime = sendtime;
                     MessageInfo.SenderEmployeeID = RequestUserID;
                     MessageInfo.SenderEmployeeName = RequestEmpName;

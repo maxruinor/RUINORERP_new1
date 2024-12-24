@@ -17,25 +17,19 @@ using MessageType = RUINORERP.Model.TransModel.MessageType;
 
 namespace RUINORERP.Server.CommandService
 {
-    public class SendMessageCommand : IServerCommand
+    public class SendMessageCmd : IServerCommand
     {
-        private MessageType messageType { get; set; }
-        private PromptType promptType { get; set; }
-
-        private string MessageContent { get; set; }
-
-
-
-        public SessionforBiz FromSession { get; set; }
+        private MessageType messageType { get; set; }=MessageType.Text;
+        public PromptType promptType { get; set; }
+        public string MessageContent { get; set; }
 
         public SessionforBiz ToSession { get; set; }
-        public OriginalData gd { get; set; }
 
-        public SendMessageCommand(OriginalData gd, SessionforBiz FromSession, SessionforBiz ToSession)
+        public SendMessageCmd(SessionforBiz ToSession)
         {
-            this.FromSession = FromSession;
+
             this.ToSession = ToSession;
-            this.gd = gd;
+
         }
 
 
@@ -44,25 +38,18 @@ namespace RUINORERP.Server.CommandService
             // 添加产品逻辑
             await Task.Run(
                 () =>
-                //只是一行做对。为了编译通过
-               1 == 1
-                //ProductService.AddProduct(productName, price)
+              {
 
+                  SendMessage();
+              }
 
                 ,
 
                 cancellationToken
-                ); ; ;
-        }
-        public void Execute()
-        {
-            SendMessage();
+                );
         }
 
-        public void Undo()
-        {
-            throw new NotImplementedException();
-        }
+
 
 
         public void SendMessage(SessionforBiz FromSession = null, SessionforBiz ToSession = null)
@@ -84,7 +71,7 @@ namespace RUINORERP.Server.CommandService
                     default:
                         break;
                 }
-
+                messageBase.Content = MessageContent;
                 string json = JsonConvert.SerializeObject(messageBase,
                    new JsonSerializerSettings
                    {
@@ -95,24 +82,26 @@ namespace RUINORERP.Server.CommandService
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 tx.PushString(json);
-
-                foreach (var item in frmMain.Instance.sessionListBiz)
-                {
-                    tx.PushString(item.Value.SessionID);
-                    tx.PushString(item.Value.User.用户名);
-                    tx.PushString(item.Value.User.姓名);
-                }
+                tx.PushInt((int)promptType);
+                //foreach (var item in frmMain.Instance.sessionListBiz)
+                //{
+                //    tx.PushString(item.Value.SessionID);
+                //    tx.PushString(item.Value.User.用户名);
+                //    tx.PushString(item.Value.User.姓名);
+                //}
                 ToSession.AddSendData((byte)ServerCmdEnum.复合型消息推送, new byte[] { (byte)messageType }, tx.toByte());
             }
             catch (Exception ex)
             {
-                
+
             }
 
 
         }
 
-
-
+        public bool AnalyzeDataPacket(OriginalData gd, SessionforBiz FromSession)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

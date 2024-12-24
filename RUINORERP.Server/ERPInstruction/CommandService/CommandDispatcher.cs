@@ -27,7 +27,6 @@ namespace TransInstruction.CommandService
         public CommandDispatcher(ICommandHandlerFactory factory)
         {
             _factory = factory;
-
             var handlers = new List<ICommandHandler>();
             Type[] filter = new Type[] { typeof(ICommandHandler) };
             //查找实现接口ICommandHandler的类。

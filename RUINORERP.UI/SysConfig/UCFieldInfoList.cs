@@ -97,12 +97,13 @@ namespace RUINORERP.UI.BI
 
         public object groupedList { get; private set; }
 
-        protected async override void Delete()
+        protected async override Task<bool> Delete()
         {
+            bool rs = false;
             foreach (DataGridViewRow dr in this.dataGridView1.SelectedRows)
             {
                 tb_FieldInfo buttonInfo = dr.DataBoundItem as tb_FieldInfo;
-                bool rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_FieldInfo);
+                 rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_FieldInfo);
                 if (rs)
                 {
                     //提示
@@ -110,6 +111,7 @@ namespace RUINORERP.UI.BI
                 }
             }
             Query();
+            return rs;
         }
 
     }

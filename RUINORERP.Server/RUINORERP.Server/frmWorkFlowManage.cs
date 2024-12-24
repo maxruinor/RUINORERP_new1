@@ -166,7 +166,7 @@ namespace RUINORERP.Server
         private async void btnStartReminderWF_Click(object sender, EventArgs e)
         {
             //启动提醒工作流
-            ServerReminderData data = new ServerReminderData();
+            ReminderData data = new ReminderData();
             
             //data.BizKey = "华哥";
             //var workflowId = Program.WorkflowHost.StartWorkflow("PushBaseInfoWorkflow", data);

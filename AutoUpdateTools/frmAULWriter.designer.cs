@@ -141,9 +141,9 @@
             this.chk文件比较.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chk文件比较.Location = new System.Drawing.Point(408, 14);
             this.chk文件比较.Name = "chk文件比较";
-            this.chk文件比较.Size = new System.Drawing.Size(84, 16);
+            this.chk文件比较.Size = new System.Drawing.Size(72, 16);
             this.chk文件比较.TabIndex = 4;
-            this.chk文件比较.Text = "哈希值比较";
+            this.chk文件比较.Text = "文件比较";
             this.chk文件比较.UseVisualStyleBackColor = true;
             this.chk文件比较.CheckedChanged += new System.EventHandler(this.chk哈希值比较_CheckedChanged);
             // 

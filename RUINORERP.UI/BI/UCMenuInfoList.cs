@@ -39,12 +39,13 @@ namespace RUINORERP.UI.BI
         //因为tb_P4FieldInfo中引用了字段表中的信息，所以要使用导航删除。但是一定要细心
 
         tb_MenuInfoController<tb_MenuInfo> childctr = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
-        protected async override void Delete()
+        protected async override Task<bool> Delete()
         {
+            bool rs = false;
             foreach (DataGridViewRow dr in this.dataGridView1.SelectedRows)
             {
                 tb_MenuInfo Info = dr.DataBoundItem as tb_MenuInfo;
-                bool rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_MenuInfo);
+                 rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_MenuInfo);
                 if (rs)
                 {
                     //提示
@@ -52,6 +53,7 @@ namespace RUINORERP.UI.BI
                 }
             }
             Query();
+            return rs;
         }
     }
 }

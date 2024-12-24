@@ -80,22 +80,22 @@ namespace RUINORERP.UI.CRM
             base.dataGridView1.ContextMenuStrip = newContextMenuStrip;
         }
 
-        protected override void Delete()
+        protected override Task<bool> Delete()
         {
             tb_CRM_Leads rowInfo = (tb_CRM_Leads)this.bindingSourceList.Current;
             if (rowInfo.Employee_ID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID && !MainForm.Instance.AppContext.IsSuperUser)
             {
                 //只能删除自己的收款信息。
                 MessageBox.Show("只能删除自己的线索信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                return Task.FromResult(false);
             }
             if (rowInfo.tb_CRM_Customers != null || rowInfo.LeadsStatus != (int)LeadsStatus.新建)
             {
                 //只能删除自己的收款信息。
                 MessageBox.Show("只有【新建】的线索,并且没有转换为目标客户时才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                return Task.FromResult(false);
             }
-            base.Delete();
+           return base.Delete();
         }
         private async void 转为目标客户ToolStripMenuItem_Click(object sender, EventArgs e)
         {

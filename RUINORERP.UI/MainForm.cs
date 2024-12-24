@@ -82,6 +82,8 @@ using RUINORERP.Model.TransModel;
 using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.ClientCmdService;
+using RUINORERP.Global;
+using TransInstruction.CommandService;
 
 
 
@@ -131,7 +133,7 @@ namespace RUINORERP.UI
         public List<View_ProdDetail> list = new List<View_ProdDetail>();
 
         //一个消息缓存列表，有处理过的。未处理的。未看的。临时性还是固定到表的？
-        public Queue<ServerReminderData> MessageList = new Queue<ServerReminderData>();
+        public Queue<ReminderData> MessageList = new Queue<ReminderData>();
 
         ///// <summary>
         ///// 用于连接上服务器后。保存与服务器连接的id
@@ -179,13 +181,15 @@ namespace RUINORERP.UI
             AppContext = Program.AppContextData;
 
 
-            var clientCommandHandlers = new List<IClientCommand>
-            {
-                new ReceiveCacheCommand(),
-                new ReceiveMessageCommand(),
-                // ... 添加其他命令处理器
-            };
+            //var clientCommandHandlers = new List<IClientCommand>
+            //{
+            //    new ReceiveCacheCommand(),
+            //    new ReceiveMessageCommand(),
+            //    new RequestReminderCommand(),
+            //};
 
+            var clientCommandRegistry = new ClientCommandRegistry();
+            var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
             _dispatcher = new ClientCommandDispatcher(clientCommandHandlers);
 
         }
@@ -527,7 +531,7 @@ namespace RUINORERP.UI
 
 
 
-                    ServerReminderData MessageInfo = MessageList.Dequeue();
+                    ReminderData MessageInfo = MessageList.Dequeue();
                     //NotificationBox notificationBox = new NotificationBox();
                     //notificationBox.ShowForm(MessageInfo.Content);
                     MessagePrompt messager = new MessagePrompt();
@@ -2315,7 +2319,7 @@ namespace RUINORERP.UI
                 MainForm.Instance.logger.LogError(ex, "timer1_Tick");
             }
         }
-           
+
 
 
         public void TryRequestCache(string nextTableName, Type elementType = null)
@@ -2478,6 +2482,16 @@ namespace RUINORERP.UI
             lblServerInfo.Visible = false;
         }
 
-
+        private void tsbtnloginFileServer_Click(object sender, EventArgs e)
+        {
+            //如果删除了。服务器上的工作流就可以删除了。
+            RequestReminderCommand request = new RequestReminderCommand();
+            request.requestType = RequestReminderType.删除提醒;
+            ReminderData reminderRequest = new ReminderData();
+            reminderRequest.BizPrimaryKey = 11231321;
+            reminderRequest.BizType = BizType.CRM跟进计划;
+            request.requestInfo = reminderRequest;
+            MainForm.Instance._dispatcher.DispatchAsync(request,CancellationToken.None);
+        }
     }
 }

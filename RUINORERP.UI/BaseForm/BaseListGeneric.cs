@@ -49,6 +49,7 @@ using SixLabors.ImageSharp.Memory;
 using Netron.NetronLight;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.UI.UserCenter;
+using OfficeOpenXml.FormulaParsing.Excel.Functions;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -942,15 +943,16 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 注意这里是物理删除
         /// </summary>
-        protected async virtual void Delete()
+        protected async virtual Task<bool> Delete()
         {
+            bool rs = false;
             if (MessageBox.Show("系统不建议删除基本资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 T loc = (T)this.bindingSourceList.Current;
                 string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
                 object PKValue = this.bindingSourceList.Current.GetPropertyValue(PKColName);
                 this.bindingSourceList.Remove(loc);
-                bool rs = await ctr.BaseDeleteAsync(loc);
+                 rs = await ctr.BaseDeleteAsync(loc);
                 if (rs)
                 {
                     if (MainForm.Instance.AppContext.SysConfig.IsDebug)
@@ -973,8 +975,10 @@ namespace RUINORERP.UI.BaseForm
                         MainForm.Instance.ecs.client.Send(buffer);
 
                     }
+                   
                 }
             }
+            return rs;
         }
 
         protected virtual void Modify()

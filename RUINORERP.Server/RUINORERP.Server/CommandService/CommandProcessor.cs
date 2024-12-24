@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TransInstruction.CommandService
+namespace RUINORERP.Server.CommandService
 {
     public class CommandProcessor
     {

@@ -15,6 +15,7 @@ using AutoUpdate;
 using System.Net.NetworkInformation;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace AutoUpdate
 {
@@ -395,6 +396,7 @@ namespace AutoUpdate
             {
                 //从本地读取更新配置文件信息
                 updaterXmlFiles = new XmlFiles(localXmlFile);
+           
             }
             catch (Exception ex)
             {
@@ -487,6 +489,11 @@ namespace AutoUpdate
                 btnNext.Enabled = false;
                 try
                 {
+                    //保存一份旧的
+
+                    XDocument doc = XDocument.Load(localXmlFile);
+                    doc.Save(Application.StartupPath + "\\AutoUpdaterList_back.xml");
+
                     Thread threadDown = new Thread(new ThreadStart(DownUpdateFile));
                     threadDown.IsBackground = true;
                     threadDown.Start();

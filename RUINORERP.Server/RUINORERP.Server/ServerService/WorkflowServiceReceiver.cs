@@ -178,23 +178,12 @@ namespace RUINORERP.Server.ServerService
 
                 // 将item转换为JObject
                 JObject obj = JObject.Parse(json);
-                ClientReminderRequest request = obj.ToObject<ClientReminderRequest>();
+                ReminderData reminderBizData = obj.ToObject<ReminderData>();
 
-                ServerReminderData reminderBizData = new ServerReminderData();
-                reminderBizData.BizPrimaryKey = request.BizPrimaryKey;
-                reminderBizData.BizType = request.BizType;
-                List<long> receiverIDs = new List<long>();
-                receiverIDs.Add(request.RemindTargetID);
-                reminderBizData.ReceiverEmployeeIDs = receiverIDs.ToArray();
-                //  reminderBizData.ReceiverName = request.RemindTargetName;
-                reminderBizData.RemindSubject = request.ReminderSubject;
-                reminderBizData.ReminderContent = request.ReminderContent;
-                reminderBizData.StartTime = request.StartTime;
-                reminderBizData.EndTime = request.EndTime;
                 //将来再加上提醒配置规则
                 //将来的才提醒。过去了就不管一
                 //三分钟后的事情才提醒
-                if (reminderBizData.StartTime > System.DateTime.Now.AddMinutes(3) && reminderBizData.EndTime >= System.DateTime.Now && reminderBizData.ReceiverEmployeeIDs.Length > 0)
+                if (reminderBizData.StartTime > System.DateTime.Now.AddMinutes(3) && reminderBizData.EndTime >= System.DateTime.Now && reminderBizData.ReceiverEmployeeIDs.Count > 0)
                 {
                     frmMain.Instance.ReminderBizDataList.AddOrUpdate(reminderBizData.BizPrimaryKey, reminderBizData, (key, value) => value);
                     if (!frmMain.Instance.frmWF.WFInfos.Contains(reminderBizData))
@@ -204,7 +193,7 @@ namespace RUINORERP.Server.ServerService
                     else
                     {
                         var wfinfo = frmMain.Instance.frmWF.WFInfos.FirstOrDefault(c => c.BizPrimaryKey == reminderBizData.BizPrimaryKey);
-                        wfinfo=reminderBizData;
+                        wfinfo = reminderBizData;
                     }
                     if (frmMain.Instance.IsDebug)
                     {
@@ -250,7 +239,7 @@ namespace RUINORERP.Server.ServerService
                 JObject obj = JObject.Parse(json);
                 ClientResponseData response = obj.ToObject<ClientResponseData>();
 
-                ServerReminderData reminderBizData = new ServerReminderData();
+                ReminderData reminderBizData = new ReminderData();
                 //将来再加上提醒配置规则
 
                 //两种方式 一种更新这个状态，另一种 根据workflowid去用事件回应。
@@ -280,7 +269,7 @@ namespace RUINORERP.Server.ServerService
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public static OriginalData 发送工作流提醒(ClientReminderRequest request)
+        public static OriginalData 发送工作流提醒(ReminderData request)
         {
             OriginalData gd = new OriginalData();
             try

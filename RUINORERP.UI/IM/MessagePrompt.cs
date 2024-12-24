@@ -35,7 +35,7 @@ namespace RUINORERP.UI.IM
         private FlowLayoutPanel messageFlowLayoutPanel;
         private Timer messageTimer;
 
-        public ServerReminderData ReminderData { get; set; }
+        public ReminderData ReminderData { get; set; }
         public MessagePrompt()
         {
             InitializeComponent();

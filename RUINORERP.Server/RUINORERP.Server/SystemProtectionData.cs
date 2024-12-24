@@ -16,7 +16,7 @@ namespace RUINORERP.Server
         {
 
 
-            UserOnlineCount = 0;
+            UserOnlineCount = 1;
             ExpirationDate = DateTime.MinValue;
 
         }

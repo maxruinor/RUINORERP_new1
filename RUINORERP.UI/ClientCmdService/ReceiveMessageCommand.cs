@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.UI.WebControls;
 using System.Windows;
 using TransInstruction;
 using TransInstruction.DataPortal;
@@ -42,10 +43,7 @@ namespace RUINORERP.UI.ClientCmdService
         }
 
 
-        public void Execute(object parameters = null)
-        {
-            ReceiveMessage(od);
-        }
+  
 
         //public async Task ExecuteAsync(CancellationToken cancellationToken)
         //{
@@ -74,7 +72,7 @@ namespace RUINORERP.UI.ClientCmdService
             {
                 await Task.Run(() =>
                 {
-                    ReceiveMessage(originalData);
+                    AnalyzeDataPacket(originalData);
                 }, cancellationToken);
             }
             else
@@ -84,7 +82,7 @@ namespace RUINORERP.UI.ClientCmdService
         }
 
 
-        public string ReceiveMessage(OriginalData gd)
+        public bool AnalyzeDataPacket(OriginalData gd)
         {
             string Message = "";
             try
@@ -92,38 +90,54 @@ namespace RUINORERP.UI.ClientCmdService
                 int index = 0;
                 ByteBuff bg = new ByteBuff(gd.Two);
                 string sendTime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                switch (messageType)
-                {
-                    case MessageType.Text:
-                        Message = ByteDataAnalysis.GetString(gd.Two, ref index);
-                        break;
-                    case MessageType.BusinessData:
-                        break;
-                    case MessageType.Event:
-                        break;
-
-                    default:
-                        MessagePrompt messager = new MessagePrompt();
-                        messager.Content = string.Empty;
-                        messager.Show();
-                        messager.TopMost = true;
-                        break;
-                }
                 string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                PromptType promptType =(PromptType) ByteDataAnalysis.GetInt(gd.Two, ref index);
+
                 // 将item转换为JObject
                 var obj = JObject.Parse(json);
-                //if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
-                //{
-                //    MainForm.Instance.PrintInfoLog($"接收转发更新缓存{tableName}成功！");
-                //}
+                switch (promptType)
+                {
+                
+                    case PromptType.提示窗口:
+                        break;
+                    case PromptType.通知窗口:
+                        break;
+                    case PromptType.确认窗口:
+                        MessageBox.Show(obj["Content"].ToString(), "提示");
+                        break;
+                    case PromptType.日志消息:
+                        break;
+                    default:
+                        break;
+                }
+
+                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                {
+                    MainForm.Instance.PrintInfoLog($"接收复合型消息：{obj}成功！");
+                }
                 MainForm.Instance.PrintInfoLog(Message);
             }
             catch (Exception ex)
             {
                 MainForm.Instance.PrintInfoLog("接收服务器提示消息:" + ex.Message);
             }
-            return Message;
+            return true;
 
+        }
+
+        Task IClientCommand.ExecuteAsync(CancellationToken cancellationToken, object parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        OriginalData IClientCommand.BuildDataPacket(object request)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IClientCommand.AnalyzeDataPacket(OriginalData gd)
+        {
+            throw new NotImplementedException();
         }
     }
 }

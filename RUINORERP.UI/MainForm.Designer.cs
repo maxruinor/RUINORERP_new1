@@ -83,6 +83,7 @@ namespace RUINORERP.UI
             this.kryptonContextMenuItem1 = new Krypton.Toolkit.KryptonContextMenuItem();
             this.kryptonPanelBigg = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSeparator1 = new Krypton.Toolkit.KryptonSeparator();
+            this.tsbtnloginFileServer = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).BeginInit();
@@ -423,7 +424,8 @@ namespace RUINORERP.UI
             this.toolStripBtnUpdate,
             this.toolBtnlogOff,
             this.toolBtnExit,
-            this.btntsbRefresh});
+            this.btntsbRefresh,
+            this.tsbtnloginFileServer});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1044, 25);
@@ -591,6 +593,16 @@ namespace RUINORERP.UI
             this.kryptonSeparator1.Size = new System.Drawing.Size(10, 578);
             this.kryptonSeparator1.TabIndex = 3;
             // 
+            // tsbtnloginFileServer
+            // 
+            this.tsbtnloginFileServer.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.tsbtnloginFileServer.Image = ((System.Drawing.Image)(resources.GetObject("tsbtnloginFileServer.Image")));
+            this.tsbtnloginFileServer.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbtnloginFileServer.Name = "tsbtnloginFileServer";
+            this.tsbtnloginFileServer.Size = new System.Drawing.Size(76, 22);
+            this.tsbtnloginFileServer.Text = "文件服务器";
+            this.tsbtnloginFileServer.Click += new System.EventHandler(this.tsbtnloginFileServer_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -683,6 +695,7 @@ namespace RUINORERP.UI
         private KryptonContextMenuItem kryptonContextMenuItem1;
         private KryptonPanel kryptonPanelBigg;
         private KryptonSeparator kryptonSeparator1;
+        private System.Windows.Forms.ToolStripButton tsbtnloginFileServer;
     }
 }
 

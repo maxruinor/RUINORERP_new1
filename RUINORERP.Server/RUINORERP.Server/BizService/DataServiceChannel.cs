@@ -38,7 +38,7 @@ namespace RUINORERP.Server.BizService
 
         }
 
-        public async void LoadCRMFollowUpPlansData(ConcurrentDictionary<long, ServerReminderData> dictionary)
+        public async void LoadCRMFollowUpPlansData(ConcurrentDictionary<long, ReminderData> dictionary)
         {
             //只要是未开始 并且结束时间还没有到。就要加载
             var Plans = await _appContext.Db.Queryable<tb_CRM_FollowUpPlans>()
@@ -49,12 +49,12 @@ namespace RUINORERP.Server.BizService
 
             foreach (var item in Plans)
             {
-                ServerReminderData reminderBizData = new ServerReminderData();
+                ReminderData reminderBizData = new ReminderData();
                 reminderBizData.BizPrimaryKey = item.PlanID;
                 reminderBizData.BizType = Global.BizType.CRM跟进计划;
                 List<long> receiverIDs = new List<long>();
                 receiverIDs.Add(item.Employee_ID);
-                reminderBizData.ReceiverEmployeeIDs = receiverIDs.ToArray();
+                reminderBizData.ReceiverEmployeeIDs = receiverIDs;
                 //reminderBizData.SenderName = item.;
                 reminderBizData.RemindSubject = item.PlanSubject;
                 reminderBizData.ReminderContent = item.PlanContent;
@@ -73,7 +73,7 @@ namespace RUINORERP.Server.BizService
         /// 如果有超时提醒（即将超时，已经超时），这里可以延后几天来处理。 超时天数 由全局通用配置模块来完成
         /// </summary>
         /// <param name="reminderData"></param>
-        public async void ProcessCRMFollowUpPlansData(ServerReminderData reminderData, MessageStatus messageStatu)
+        public async void ProcessCRMFollowUpPlansData(ReminderData reminderData, MessageStatus messageStatu)
         {
             if (reminderData.BizType == Global.BizType.CRM跟进计划)
             {

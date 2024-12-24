@@ -125,12 +125,13 @@ namespace RUINORERP.UI.BI
         //因为tb_P4FieldInfo中引用了字段表中的信息，所以要使用导航删除。但是一定要细心
 
         tb_RoleInfoController<tb_RoleInfo> childctr = Startup.GetFromFac<tb_RoleInfoController<tb_RoleInfo>>();
-        protected async override void Delete()
+        protected async override Task<bool> Delete()
         {
+            bool rs = false;
             foreach (DataGridViewRow dr in this.dataGridView1.SelectedRows)
             {
                 tb_RoleInfo Info = dr.DataBoundItem as tb_RoleInfo;
-                bool rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_RoleInfo);
+                 rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_RoleInfo);
                 if (rs)
                 {
                     //提示
@@ -138,6 +139,7 @@ namespace RUINORERP.UI.BI
                 }
             }
             Query();
+            return rs;
         }
 
     }

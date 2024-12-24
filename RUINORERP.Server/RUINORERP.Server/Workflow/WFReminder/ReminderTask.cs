@@ -38,7 +38,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
         /// </summary>
         public DateTime RemindTime { get; set; } = System.DateTime.Now;
 
-        public ServerReminderData BizData { get; set; }
+        public ReminderData BizData { get; set; }
         /// <summary>
         /// 接收人ID
         /// </summary>
@@ -59,9 +59,25 @@ namespace RUINORERP.Server.Workflow.WFReminder
             //服务器收到客户端基础信息变更分布
             //回推
             //WorkflowServiceSender.通知工作流启动成功(UserSession, workflowid);
-            ServerReminderData exData = null;
+            ReminderData exData = null;
             //检测收到的信息
             frmMain.Instance.ReminderBizDataList.TryGetValue(BizData.BizPrimaryKey, out exData);
+            if (context.CancellationToken.IsCancellationRequested)
+            {
+                Status = MessageStatus.Cancel;
+                //直接清除停止
+                frmMain.Instance.ReminderBizDataList.TryRemove(exData.BizPrimaryKey, out exData);
+                return ExecutionResult.Next();
+            }
+            var data = context.Workflow.Data as ReminderData;
+            if (data.IsCancelled)
+            {
+                Status = MessageStatus.Cancel;
+                //直接清除停止
+                frmMain.Instance.ReminderBizDataList.TryRemove(exData.BizPrimaryKey, out exData);
+                return ExecutionResult.Next();
+            }
+
             //时间到了就不再提醒了。
             if (exData.EndTime < System.DateTime.Now)
             {

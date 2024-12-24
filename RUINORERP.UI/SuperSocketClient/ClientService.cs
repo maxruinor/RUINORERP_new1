@@ -314,7 +314,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 }
                 else
                 {
-                    ServerReminderData MessageInfo = new ServerReminderData();
+                    ReminderData MessageInfo = new ReminderData();
                     MessageInfo.SendTime = sendtime;
                     //  MessageInfo.SenderID = SessionID;
                     MessageInfo.SenderEmployeeName = 发送者姓名;
@@ -346,7 +346,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 string ExCode = ByteDataAnalysis.GetString(gd.Two, ref index);
                 bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
 
-                ServerReminderData MessageInfo = new ServerReminderData();
+                ReminderData MessageInfo = new ReminderData();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;
                 MessageInfo.SenderEmployeeName = 发送者姓名;
@@ -375,7 +375,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 string BillType = ByteDataAnalysis.GetString(gd.Two, ref index);
                 string BillData = ByteDataAnalysis.GetString(gd.Two, ref index);
                 var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == RequestUserID);
-                ServerReminderData MessageInfo = new ServerReminderData();
+                ReminderData MessageInfo = new ReminderData();
                 MessageInfo.SendTime = sendtime;
                 //  MessageInfo.Id = SessionID;
                 MessageInfo.SenderEmployeeName = userinfo.姓名;
@@ -625,7 +625,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 }
                 else
                 {
-                    ServerReminderData reminderData = obj.ToObject<ServerReminderData>();
+                    ReminderData reminderData = obj.ToObject<ReminderData>();
                     MainForm.Instance.MessageList.Enqueue(reminderData);
                 }
             }

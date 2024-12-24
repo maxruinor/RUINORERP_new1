@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="CommandService\CommandDispatcher.cs" />
     <Compile Remove="CommandService\CommandPublisher.cs" />
   </ItemGroup>
 

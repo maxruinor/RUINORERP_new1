@@ -31,7 +31,8 @@ namespace RUINORERP.Server.Workflow.WFApproval
         public void Build(IWorkflowBuilder<ApprovalWFData> builder)
         {
             builder
-             .StartWith(context => Console.WriteLine("Hello")).Schedule(data => TimeSpan.FromSeconds(5)).Do(schedule => schedule
+             .StartWith(context => Console.WriteLine("Hello"))
+             .Schedule(data => TimeSpan.FromSeconds(5)).Do(schedule => schedule
             .StartWith(
                  context => Console.WriteLine("Doing scheduled tasks"))
             )

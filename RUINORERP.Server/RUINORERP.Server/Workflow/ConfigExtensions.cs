@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Autofac.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Debug;
 using RUINORERP.Model;
@@ -95,8 +96,9 @@ namespace RUINORERP.Server.Workflow
             host.RegisterWorkflow<ScheduledlWorkflow, ApprovalWFData>();
             host.RegisterWorkflow<NightlyWorkflow, GlobalScheduledData>();
             host.RegisterWorkflow<ApprovalWorkflow, ApprovalWFData>();
-
-            host.RegisterWorkflow<ReminderWorkflow, ServerReminderData>();
+            // 注册工作流
+            host.RegisterWorkflow<DailyTaskWorkflow>();
+            host.RegisterWorkflow<ReminderWorkflow, ReminderData>();
 
             host.RegisterWorkflow<WFPush.PushBaseInfoWorkflow, PushData>();
 

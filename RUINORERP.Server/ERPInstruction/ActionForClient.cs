@@ -20,7 +20,7 @@ namespace TransInstruction
             tx.PushString(lockName);
             tx.PushInt64(billid);
             tx.PushInt((int)BizType);//加一个其他东西？比方随便时间，或当前时间的到分钟
-        
+
             OriginalData gd = new OriginalData();
             gd.cmd = (byte)ClientCmdEnum.单据锁定释放;
             gd.One = new byte[] { (byte)ClientSubCmdEnum.反审 };
@@ -28,7 +28,7 @@ namespace TransInstruction
 
             return gd;
         }
-        public static OriginalData 单据锁定(long billid, long lockUserID, 
+        public static OriginalData 单据锁定(long billid, long lockUserID,
             string lockName, int BizType, long MenuID)
         {
             var tx = new ByteBuff(2 + 4);
@@ -124,7 +124,7 @@ namespace TransInstruction
             return gd;
         }
 
- 
+
 
         /// <summary>
         /// 表名为空则是所有表
@@ -199,12 +199,19 @@ namespace TransInstruction
         /// </summary>
         /// <param name="TableName"></param>
         /// <returns></returns>
-        public static OriginalData 请求协助处理(long RequestUserID, string RequestEmpName, string RequestContent, string BillData, string EntityType)
+        public static OriginalData 请求协助处理(long? RequestEmpID, string RequestEmpName, string RequestContent, string BillData, string EntityType)
         {
             var tx = new ByteBuff(2 + 4);
 
             tx.PushString(System.DateTime.Now.ToString());
-            tx.PushInt64(RequestUserID);//请示的人姓名。后面单据数据要保存时要名称开头
+            if (RequestEmpID.HasValue)
+            {
+                tx.PushInt64(RequestEmpID.Value);//请示的ID。后面单据数据要保存时要名称开头
+            }
+            else
+            {
+                tx.PushInt64(0);
+            }
             tx.PushString(RequestEmpName);//请示的人姓名
             tx.PushString(RequestContent);
             tx.PushString(EntityType);

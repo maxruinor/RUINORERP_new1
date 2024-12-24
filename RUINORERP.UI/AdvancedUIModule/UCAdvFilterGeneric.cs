@@ -234,6 +234,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             }
         }
 
+        /*
         /// <summary>
         /// esc退出窗体
         /// </summary>
@@ -264,7 +265,9 @@ namespace RUINORERP.UI.AdvancedUIModule
             }
             return false;
         }
+        */
 
+        
 
         protected async virtual void Query(BaseEntity dto)
         {

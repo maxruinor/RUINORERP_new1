@@ -31,6 +31,10 @@ using TransInstruction;
 using AutoUpdateTools;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Business.CommService;
+using FastReport.DevComponents.DotNetBar;
+using RUINORERP.UI.ClientCmdService;
+using TransInstruction.CommandService;
+using System.Threading;
 
 namespace RUINORERP.UI.CRM
 {
@@ -45,25 +49,39 @@ namespace RUINORERP.UI.CRM
             System.Linq.Expressions.Expression<Func<tb_CRM_FollowUpPlans, int?>> expPlanStatus;
             expPlanStatus = (p) => p.PlanStatus;
             base.ColNameDataDictionary.TryAdd(expPlanStatus.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(FollowUpPlanStatus)));
-
-
         }
-        protected override void Delete()
+        protected override async Task<bool> Delete()
         {
+            bool rs = false;
             tb_CRM_FollowUpPlans rowInfo = (tb_CRM_FollowUpPlans)this.bindingSourceList.Current;
             if (rowInfo.Employee_ID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID && !MainForm.Instance.AppContext.IsSuperUser)
             {
                 //只能删除自己的收款信息。
                 MessageBox.Show("只能删除自己的计划信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                return rs;
             }
             if (rowInfo.PlanStatus != (int)FollowUpPlanStatus.未开始)
             {
                 //只能删除自己的收款信息。
                 MessageBox.Show("只有【未开始】的计划才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                return rs;
+                //return Task.FromResult(false);
             }
-            base.Delete();
+            string PKColName = UIHelper.GetPrimaryKeyColName(typeof(tb_CRM_FollowUpPlans));
+            object PKValue = this.bindingSourceList.Current.GetPropertyValue(PKColName);
+            rs = await base.Delete();
+            if (rs)
+            {
+                //如果删除了。服务器上的工作流就可以删除了。
+                RequestReminderCommand request = new RequestReminderCommand();
+                request.requestType = RequestReminderType.删除提醒;
+                ReminderData reminderRequest = new ReminderData();
+                reminderRequest.BizPrimaryKey = PKValue.ToLong();
+                reminderRequest.BizType = BizType.CRM跟进计划;
+                request.requestInfo = reminderRequest;
+                MainForm.Instance._dispatcher.DispatchAsync(request, CancellationToken.None);
+            }
+            return rs;
         }
 
         /// <summary>
@@ -162,6 +180,14 @@ namespace RUINORERP.UI.CRM
                     {
                         toolStripMenuItem1.Visible = false;
                     }
+                    if (plan.PlanStatus == (int)FollowUpPlanStatus.已取消)//|| plan.PlanStatus == (int)FollowUpPlanStatus.已完成
+                    {
+                        添加跟进记录ToolStripMenuItem.Visible = false;
+                    }
+                    else
+                    {
+                        添加跟进记录ToolStripMenuItem.Visible = true;
+                    }
                 }
                 else
                 {
@@ -181,15 +207,21 @@ namespace RUINORERP.UI.CRM
                     //向服务器推送工作流提醒的列表 typeof(T).Name
                     if (item.PlanStatus == (int)FollowUpPlanStatus.未开始)
                     {
-                        ClientReminderRequest request = new ClientReminderRequest();
+                        ReminderData request = new ReminderData();
                         request.BizPrimaryKey = item.PlanID;
                         request.BizType = BizType.CRM跟进计划;
                         request.StartTime = item.PlanStartDate;
                         request.EndTime = item.PlanEndDate;
-                        request.ReminderSubject = item.PlanSubject;
+                        request.RemindSubject = item.PlanSubject;
                         request.ReminderContent = item.PlanContent;
-                        request.RemindTargetID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                        request.RemindTargetName = MainForm.Instance.AppContext.CurUserInfo.Name;
+                        request.ReceiverEmployeeIDs = new List<long>();
+                        if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.HasValue)
+                        {
+                            request.ReceiverEmployeeIDs.Add(MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value);
+
+                        }
+
+                        //request.SenderEmployeeName = MainForm.Instance.AppContext.CurUserInfo.Name;
 
                         OriginalData beatDataDel = ClientDataBuilder.工作流提醒请求(request);
                         MainForm.Instance.ecs.AddSendData(beatDataDel);

@@ -58,22 +58,22 @@ namespace RUINORERP.UI.CRM
 
         }
 
-        protected override void Delete()
+        protected override Task<bool> Delete()
         {
             tb_CRM_Customer rowInfo = (tb_CRM_Customer)this.bindingSourceList.Current;
             if (rowInfo.Employee_ID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID && !MainForm.Instance.AppContext.IsSuperUser)
             {
                 //只能删除自己的收款信息。
                 MessageBox.Show("只能删除自己的目标客户信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                return Task.FromResult(false);
             }
             if (rowInfo.tb_CRM_FollowUpPlanses != null || rowInfo.tb_CRM_FollowUpRecordses != null || rowInfo.CustomerStatus != (int)CustomerStatus.新增客户)
             {
                 //只能删除自己的收款信息。
                 MessageBox.Show("只有【新增客户】的线索,并且没有任何跟进信息时才能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                return Task.FromResult(false);
             }
-            base.Delete();
+           return base.Delete();
         }
 
 

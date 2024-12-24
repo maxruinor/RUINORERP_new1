@@ -161,8 +161,9 @@ namespace RUINORERP.UI.ProductEAV
 
 
 
-        protected async override void Delete()
+        protected async override Task<bool> Delete()
         {
+            bool rs = false;
             if (MessageBox.Show("系统不建议删除基本资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
                 tb_Prod loc = (tb_Prod)this.bindingSourceList.Current;
@@ -173,7 +174,7 @@ namespace RUINORERP.UI.ProductEAV
                 else
                 {
                     this.bindingSourceList.Remove(loc);
-                    bool rs = await pctr.DeleteByNavAsync(loc);
+                     rs = await pctr.DeleteByNavAsync(loc);
                     if (rs)
                     {
                          //缓存只是显示用，所以删除后，并不影响。等待服务器的更新机制更新即可。
@@ -181,6 +182,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
 
             }
+            return rs;
         }
 
         /// <summary>

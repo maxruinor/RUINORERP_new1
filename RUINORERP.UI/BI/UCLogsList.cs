@@ -64,7 +64,7 @@ namespace RUINORERP.UI.BI
 
 
         LogsController<Logs> pctr = Startup.GetFromFac<LogsController<Logs>>();
-        protected async override void Delete()
+        protected async override Task<bool> Delete()
         {
             List<Logs> list = new List<Logs>();
             //如果是选择了多行。则批量删除
@@ -77,7 +77,7 @@ namespace RUINORERP.UI.BI
             {
                 Query();
             }
-            //await pctr.BaseDeleteAsync(list);
+            return rs;
         }
 
 

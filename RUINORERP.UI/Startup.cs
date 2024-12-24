@@ -569,7 +569,7 @@ namespace RUINORERP.UI
             services.AddScoped(typeof(BaseListWithTree));
 
             services.AddScoped(typeof(Model.CacheInfo));
-            services.AddScoped(typeof(ServerReminderData));
+            services.AddScoped(typeof(ReminderData));
             services.AddScoped(typeof(Model.LastCacheFetchInfo));
             services.AddScoped(typeof(Model.CacheFetchManager));
             // services.AddSingleton(new AppSettings(WebHostEnvironment));

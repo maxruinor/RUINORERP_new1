@@ -25,7 +25,7 @@ namespace RUINORERP.Server
         {
             InitializeComponent();
         }
-        public ObservableCollection<ServerReminderData> WFInfos = new ObservableCollection<ServerReminderData>();
+        public ObservableCollection<ReminderData> WFInfos = new ObservableCollection<ReminderData>();
         private void frmUserManage_Load(object sender, EventArgs e)
         {
             dataGridView1.VirtualMode = false;
@@ -70,7 +70,7 @@ namespace RUINORERP.Server
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
                         if (e.NewItems.Count == 1)
                         {
-                            ServerReminderData newItem = e.NewItems[0] as ServerReminderData;
+                            ReminderData newItem = e.NewItems[0] as ReminderData;
                             if (!WFInfos.Contains(newItem))
                             {
                                 WFInfos.Add(newItem);                 // 处理删除元素的逻辑
@@ -93,7 +93,7 @@ namespace RUINORERP.Server
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
                         if (e.OldItems.Count == 1)
                         {
-                            ServerReminderData old = e.OldItems[0] as ServerReminderData;
+                            ReminderData old = e.OldItems[0] as ReminderData;
                             if (WFInfos.Contains(old))
                             {
                                 WFInfos.Remove(old);                 // 处理删除元素的逻辑
@@ -160,15 +160,15 @@ namespace RUINORERP.Server
 
             try
             {
-                if (sender != null && sender is ServerReminderData info)
+                if (sender != null && sender is ReminderData info)
                 {
                     // 当用户信息发生变化时，刷新数据
                     if (frmMain.Instance.ReminderBizDataList.ContainsKey(info.BizPrimaryKey))
                     {
-                        ServerReminderData biz = frmMain.Instance.ReminderBizDataList[info.BizPrimaryKey];
+                        ReminderData biz = frmMain.Instance.ReminderBizDataList[info.BizPrimaryKey];
                         for (int i = 0; i < dataGridView1.Rows.Count; i++)
                         {
-                            if (dataGridView1.Rows[i].DataBoundItem is ServerReminderData ServerReminderData)
+                            if (dataGridView1.Rows[i].DataBoundItem is ReminderData ServerReminderData)
                             {
                                 if (ServerReminderData.BizPrimaryKey == biz.BizPrimaryKey)
                                 {

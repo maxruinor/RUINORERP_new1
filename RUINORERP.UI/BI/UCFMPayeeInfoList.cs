@@ -60,16 +60,16 @@ namespace RUINORERP.UI.BI
 
         }
 
-        protected override void Delete()
+        protected override Task<bool> Delete()
         {
             tb_FM_PayeeInfo payinfo = (tb_FM_PayeeInfo)this.bindingSourceList.Current;
             if (payinfo.Employee_ID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
             {
                 //只能删除自己的收款信息。
                 MessageBox.Show("只能删除自己的收款信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                return Task.FromResult(false);
             }
-            base.Delete();
+            return base.Delete();
         }
 
         private void frm_Load(object sender, EventArgs e)

@@ -169,7 +169,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
                             });
-                        OriginalData odforCache = ActionForClient.请求协助处理(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
+                        OriginalData odforCache = ActionForClient.请求协助处理(MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID,
                           MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name, frm.Content, json, typeof(T).Name);
                         byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
                         MainForm.Instance.ecs.client.Send(buffer);

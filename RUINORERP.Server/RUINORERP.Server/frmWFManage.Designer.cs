@@ -89,7 +89,7 @@
             // 
             // ServerBizDataBindingSource
             // 
-            ServerBizDataBindingSource.DataSource = typeof(Model.TransModel.ServerReminderData);
+            ServerBizDataBindingSource.DataSource = typeof(Model.TransModel.ReminderData);
             // 
             // statusDataGridViewTextBoxColumn
             // 

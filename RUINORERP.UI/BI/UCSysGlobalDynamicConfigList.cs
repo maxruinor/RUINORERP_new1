@@ -55,10 +55,10 @@ namespace RUINORERP.UI.BI
 
 
         tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig> pctr = Startup.GetFromFac<tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig>>();
-        protected async override void Delete()
+        protected async override Task<bool> Delete()
         {
             //动态参数不能轻易删除。需要提示，谨慎操作
-
+            bool rs = false;
             if (MessageBox.Show("动态参数不能轻易删除。你确认要删除吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.OK)
             {
                 List<tb_SysGlobalDynamicConfig> list = new List<tb_SysGlobalDynamicConfig>();
@@ -67,14 +67,14 @@ namespace RUINORERP.UI.BI
                 {
                     list.Add(dr.DataBoundItem as tb_SysGlobalDynamicConfig);
                 }
-                bool rs = await pctr.DeleteAsync(list.Select(c => c.ConfigID).ToArray());
+                 rs = await pctr.DeleteAsync(list.Select(c => c.ConfigID).ToArray());
                 if (rs)
                 {
                     Query();
                 }
                 //await pctr.BaseDeleteAsync(list);
             }
-
+            return rs;
         }
       
         public override async Task<List<tb_SysGlobalDynamicConfig>> Save()

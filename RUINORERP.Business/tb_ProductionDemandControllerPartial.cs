@@ -1051,7 +1051,7 @@ namespace RUINORERP.Business
 
         IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
 
-   
+
 
         /// <summary>
         /// 初始化制令单的数据，由制令单这边生成时候调用
@@ -1093,13 +1093,13 @@ namespace RUINORERP.Business
                         .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail)
                         .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_Inventories)
                     .Where(c => _bomIDs.Contains(c.BOM_ID)).ToListAsync();
+
             }
             //上面全查出后。找到中间件时，只会有一行数据。如果是上层式，则多行找到的是最上层。
             tb_BOM_S MakingItemBom = MediumBomInfoList.FirstOrDefault(c => c.BOM_ID == MakingItem.BOM_ID);
 
             //制令单的BOM依据也传过去
             ManufacturingOrder.tb_bom_s = MakingItemBom;
-
 
             BaseController<tb_ManufacturingOrder> ctrMaking = _appContext.GetRequiredServiceByName<BaseController<tb_ManufacturingOrder>>(typeof(tb_ManufacturingOrder).Name + "Controller");
             ManufacturingOrder.BOM_ID = MakingItemBom.BOM_ID;
@@ -1132,7 +1132,8 @@ namespace RUINORERP.Business
             ManufacturingOrder.PDNO = demand.PDNo;
             ManufacturingOrder.Location_ID = MakingItem.Location_ID;
             ManufacturingOrder.QuantityDelivered = 0;
-
+            //标记是不是上层驱动
+            ManufacturingOrder.IncludeSubBOM = needLoop;
             //暂时认为一定有计划
             if (demand.tb_productionplan != null)
             {
@@ -1265,80 +1266,12 @@ namespace RUINORERP.Business
             return ManufacturingOrder;
         }
 
-        /*
-        /// <summary>
-        /// 生成制令单明细
-        /// </summary>
-        /// <param name="ProduceDetails"></param>
-        /// <param name="CurrentPID"></param>
-        /// <param name="Pbom"></param>
-        /// <returns></returns>
-
-        private async Task<List<tb_ManufacturingOrderDetail>> GetSubItemsForManufacturingOrderDetail(List<tb_ProduceGoodsRecommendDetail> ProduceDetails, long CurrentPID, tb_BOM_S Pbom)
-        {
-            List<tb_ManufacturingOrderDetail> AllMakingGoods = new List<tb_ManufacturingOrderDetail>();
-            //找到成品的次级
-            List<tb_ProduceGoodsRecommendDetail> NextItems = ProduceDetails.Where(c => c.ParentId == CurrentPID).ToList();
-
-            //先查出所有中单节点的BOM信息。
-            long[] _bomIDs = ProduceDetails.Select(c => c.BOM_ID.Value).ToArray();
-            List<tb_BOM_S> MediumBomInfoList = await _appContext.Db.CopyNew().Queryable<tb_BOM_S>()
-                .Includes(a => a.tb_proddetail, b => b.tb_Inventories)
-                 .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
-                .Where(c => _bomIDs.Contains(c.BOM_ID)).ToListAsync();
-
-            foreach (var mItem in NextItems)
-            {
-                tb_ManufacturingOrderDetail mItemGoods = mapper.Map<tb_ManufacturingOrderDetail>(mItem);
-                tb_BOM_S MediumBomInfo = MediumBomInfoList.FirstOrDefault(c => c.BOM_ID == mItem.BOM_ID);
-                int cureentQty = 0;
-                if (MediumBomInfo != null)
-                {
-                    cureentQty = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == mItem.Location_ID).Sum(i => i.Quantity);
-                    //找下一级
-                    List<tb_ManufacturingOrderDetail> nextList = await GetSubItemsForManufacturingOrderDetail(ProduceDetails, mItem.ID.Value, MediumBomInfo);
-                    AllMakingGoods.AddRange(nextList);
-                }
-                else
-                {
-                    cureentQty = mItem.RecommendQty;
-                }
-                if (mItemGoods.ParentId == 0)
-                {
-                    continue;
-                }
-
-                tb_BOM_SDetail child_bomDetail = Pbom.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == mItem.ProdDetailID);
-
-                mItemGoods.ShouldSendQty = mItem.RequirementQty * child_bomDetail.UsedQty;
-
-                //库存有的才发？要回写，这个时间无法知道实发。从领料中审核时写回?
-                mItemGoods.ActualSentQty = 0;
-                //损耗量，影响领料数量？
-
-                mItemGoods.WastageQty = mItemGoods.ShouldSendQty * child_bomDetail.LossRate;
-
-                mItemGoods.CurrentIinventory = cureentQty;
-                // 没有bom就为空。反之 要么自制，要么外发
-                mItemGoods.IsExternalProduce = null;
-
-                //这里重点！！重要 ，因为是中间件。如果自制数量小于需求数量 ，则少的就要当物料一样发出。才会出现在制令单明细中
-                if (mItemGoods.ShouldSendQty <= 0)
-                {
-                    continue;
-                }
-
-                AllMakingGoods.Add(mItemGoods);
-            }
-
-            return AllMakingGoods;
-        }
-        */
-
-
+   
 
         /// <summary>
         /// 生成制令单明细
+        /// 如果是上层驱动时。比方裸机中会用到一个型号的线。成品中也配一条相同的线。这时应该数量合并
+        /// 实际发料时不会分开发。会一起发。数量也好算
         /// </summary>
         /// <param name="MediumBomInfoList">一个BOM集合，如果是中间件。则只有一级，如果是上层驱动则多级</param>
         /// <param name="MakingItem">这个是自制品表中的，选择中的一行。多行，则是最顶级的那一行</param>

@@ -14,11 +14,8 @@ namespace RUINORERP.Server
 
         public SystemProtectionData()
         {
-
-
             UserOnlineCount = 1;
             ExpirationDate = DateTime.MinValue;
-
         }
 
         //取电脑的CPUID
@@ -45,16 +42,11 @@ namespace RUINORERP.Server
         }
 
 
+        /// <summary>
+        /// 默认不启用保护
+        /// </summary>
+        public bool IsProtectionEnabled { get; set; } = false;
 
-
-
-        public static bool IsSystemProtectionEnabled
-        {
-            get
-            {
-                return false;
-            }
-        }
 
         public static bool IsSystemProtectionEnabledForUser(string userName)
         {
@@ -69,7 +61,7 @@ namespace RUINORERP.Server
         public DateTime ExpirationDate { get; set; } = DateTime.MinValue;
 
         //获取当前电脑的时间
-        public static DateTime GetLocalTime()
+        public DateTime GetLocalTime()
         {
             return DateTime.Now;
         }

@@ -58,10 +58,28 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
+                //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案
+                tb_ManufacturingOrder manufacturingOrder = null;
+                if (entity.MOID > 0)
+                {
+                    manufacturingOrder =await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                    .Includes(b => b.tb_proddetail, c => c.tb_prod)
+                    .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
+                    .Includes(b => b.tb_productiondemand, c => c.tb_productionplan, d => d.tb_ProductionPlanDetails)
+                    //  .Includes(b => b.tb_productiondemand, c => c.tb_ManufacturingOrders, d => d.tb_ManufacturingOrderDetails)
+                    .Includes(b => b.tb_MaterialRequisitions)
+                   .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails) //找到他名下的所有的缴库信息
+                    .Where(c => c.MOID == entity.MOID)
+                    .SingleAsync();
+                }
+
 
                 #region 由缴库更新库存
+
                 foreach (var child in entity.tb_FinishedGoodsInvDetails)
                 {
+
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     bool Opening = false;
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
@@ -166,22 +184,7 @@ namespace RUINORERP.Business
                 }
                 #endregion
 
-
-
-                //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案
-                tb_ManufacturingOrder manufacturingOrder = null;
-                if (entity.MOID > 0)
-                {
-                    manufacturingOrder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
-                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
-                    .Includes(b => b.tb_proddetail, c => c.tb_prod)
-                    .Includes(b => b.tb_productiondemand, c => c.tb_productionplan, d => d.tb_ProductionPlanDetails)
-                    //  .Includes(b => b.tb_productiondemand, c => c.tb_ManufacturingOrders, d => d.tb_ManufacturingOrderDetails)
-                    .Includes(b => b.tb_MaterialRequisitions)
-                   .Includes(a => a.tb_FinishedGoodsInvs, b => b.tb_FinishedGoodsInvDetails) //找到他名下的所有的缴库信息
-                    .Where(c => c.MOID == entity.MOID)
-                    .Single();
-                }
+                
 
                 //如果缴库明细中的品不是来自制令单，则报错
                 if (!entity.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID))
@@ -192,8 +195,10 @@ namespace RUINORERP.Business
                     return rs;
                 }
 
+
+
                 #region 由缴库单更新制令单
-                //先找到所有入库明细,再找按订单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
+                //先找到所有缴库明细,再找按制令单明细去循环比较。如果入库总数量大于订单数量，则不允许入库。
                 List<tb_FinishedGoodsInvDetail> detailList = new List<tb_FinishedGoodsInvDetail>();
                 foreach (var item in manufacturingOrder.tb_FinishedGoodsInvs)
                 {
@@ -203,6 +208,30 @@ namespace RUINORERP.Business
                 string prodName = manufacturingOrder.tb_proddetail.tb_prod.CNName + manufacturingOrder.tb_proddetail.tb_prod.Specifications;
                 //找出所有这个制令单的对应 缴库的数量加总
                 var inQty = detailList.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
+
+                #region 缴库数量按制令单实发数根据BOM计算得到最多能入库的数量，如果超过则提示后退回
+                int CanManufactureQtyBybom = 0;
+                //按制令单中所有要发出的物料中数量为整数的最小值为算 ，小数可能是 胶水 纸箱这种耗材。暂时排除
+
+                //if (manufacturingOrder.tb_ManufacturingOrderDetails)
+                //{
+                //    CanManufactureQtyBybom = manufacturingOrder.ManufacturingQty / manufacturingOrder.tb_proddetail.Qty;
+                //}
+
+
+                if (inQty > CanManufactureQtyBybom)
+                {
+                    string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中实际发货数量，审核失败！";
+                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _unitOfWorkManage.RollbackTran();
+                    _logger.LogInformation(msg);
+                    return rs;
+                }
+                #endregion
+
+
+
+
                 if (inQty > manufacturingOrder.ManufacturingQty)
                 {
                     string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量，审核失败！";
@@ -257,7 +286,7 @@ namespace RUINORERP.Business
                 //更新计划单已交数量，制令单会引用需求分析，需求分析引用计划单
                 if (manufacturingOrder.PDID > 0)
                 {
-                    //2024-6-26修改为强引用了。是不是可以优化？
+                    //2024-6-26修改为强引用了
                     //因为没有强引用 这里主动去查询
                     tb_ProductionDemand productionDemand = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionDemand>()
                        .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
@@ -286,7 +315,7 @@ namespace RUINORERP.Business
                             {
                                 _unitOfWorkManage.RollbackTran();
                                 rs.Succeeded = false;
-                                rs.ErrorMsg = $"缴库明细中有完成数量大于计划数量的产品!请检查数据后重试！";
+                                rs.ErrorMsg = $"缴库明细中有完成数量大于计划数量的产品1.5倍，系统认为异常数量!请检查后重试！";
                                 return rs;
                             }
                             PlanDetailHasChanged = true;
@@ -339,9 +368,6 @@ namespace RUINORERP.Business
 
 
                 }
-
-
-
 
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;

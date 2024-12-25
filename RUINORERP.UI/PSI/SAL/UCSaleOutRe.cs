@@ -250,7 +250,6 @@ namespace RUINORERP.UI.PSI.SAL
         SourceGridDefine sgd2 = null;
 
         SourceGridHelper sgh = new SourceGridHelper();
-
         SourceGridHelper sgh2 = new SourceGridHelper();
         //设计关联列和目标列
         View_ProdDetailController<View_ProdDetail> dc = Startup.GetFromFac<View_ProdDetailController<View_ProdDetail>>();

@@ -65,26 +65,36 @@ namespace RUINORERP.Server.CommandService
                                 {
                                     UserService.回复用户重复登陆(RequestSession, ExistSession);
                                 }
-                                
-                                //登陆成功时。
-                                if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.protectionData.UserOnlineCount)
+                                else
                                 {
-                                    //超出人数时：提示一下再T掉第一个人
-                                    //优先T重复的人。
-                                    //提示被T的人。发送一个弹窗信息后，断开连接
-                                    foreach (var item in frmMain.Instance.sessionListBiz)
+                                    //登陆成功时。
+                                    if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.protectionData.UserOnlineCount)
                                     {
-                                        // 创建一个命令实例 
-                                        var message = new SendMessageCmd(item.Value);
-                                        message.MessageContent = "因超出在线人数限制，你被强制下线。";
-                                        message.promptType = PromptType.确认窗口;
-                                        await message.ExecuteAsync(CancellationToken.None);
-                                        UserService.强制用户退出(item.Value);
-                                        break;
-                                    }
-                                    
+                                        //超出人数时：提示一下再T掉第一个人
+                                        //优先T重复的人。
+                                        //提示被T的人。发送一个弹窗信息后，断开连接
 
+                                        //按登陆时间算
+                                        List<SessionforBiz> sessionList = frmMain.Instance.sessionListBiz.Values.ToList().OrderBy(c => c.StartTime).ToList();
+                                        foreach (var item in sessionList)
+                                        {
+                                            // 创建一个命令实例 
+                                            var message = new SendMessageCmd(item);
+                                            message.MessageContent = "因超出在线人数限制，您即将被强制下线。";
+                                            message.promptType = PromptType.确认窗口;
+                                            message.ToSession = item;
+                                            await message.ExecuteAsync(CancellationToken.None);
+                                            // 等待 5 秒
+                                            await Task.Delay(5000);
+
+                                            UserService.强制用户退出(item);
+                                            break;
+                                        }
+
+
+                                    }
                                 }
+
                             }
                             else
                             {

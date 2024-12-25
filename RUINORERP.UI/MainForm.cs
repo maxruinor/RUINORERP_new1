@@ -390,6 +390,7 @@ namespace RUINORERP.UI
                 this.Text = company[0].CNName + "企业数字化集成ERP v2.0" + "_" + AppContext.OnlineUser.客户端版本;
             }
 
+            InitRemind();
             // logger.LogInformation("打开主窗体准备进入系统");
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {
@@ -421,7 +422,6 @@ namespace RUINORERP.UI
             else
             {
 
-                InitRemind();
 
                 UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
                 UIBizSrvice.RequestCache(typeof(tb_ProductType));

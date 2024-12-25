@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：12/25/2024 20:53:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,13 +53,19 @@ namespace RUINORERP.Business
  RuleFor(tb_BOM_S =>tb_BOM_S.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("制造部门:下拉选择值不正确。");
  RuleFor(tb_BOM_S =>tb_BOM_S.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
+ RuleFor(tb_BOM_S =>tb_BOM_S.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("报销人:下拉选择值不正确。");
+ RuleFor(tb_BOM_S =>tb_BOM_S.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
+
  RuleFor(tb_BOM_S =>tb_BOM_S.Doc_ID).Must(CheckForeignKeyValueCanNull).WithMessage("工艺文件:下拉选择值不正确。");
  RuleFor(tb_BOM_S =>tb_BOM_S.Doc_ID).NotEmpty().When(x => x.Doc_ID.HasValue);
 
  RuleFor(tb_BOM_S =>tb_BOM_S.BOM_S_VERID).Must(CheckForeignKeyValueCanNull).WithMessage("版本号:下拉选择值不正确。");
  RuleFor(tb_BOM_S =>tb_BOM_S.BOM_S_VERID).NotEmpty().When(x => x.BOM_S_VERID.HasValue);
 
- 
+
+//有默认值
+
+//有默认值
 
  RuleFor(x => x.OutApportionedCost).PrecisionScale(19,4,true).WithMessage("处发分摊费用:小数位不能超过4。");
 
@@ -163,17 +169,6 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetailSecondary> details)
-        {
-            bool rs = true;
-            if (details == null || details.Count == 0)
-            {
-                return false;
-            }
-            return rs;
-        }
-        
-
         private bool DetailedRecordsNotEmpty(List<tb_ProductionDemandDetail> details)
         {
             bool rs = true;
@@ -185,7 +180,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetailSecondary> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -197,6 +192,17 @@ namespace RUINORERP.Business
         
 
         private bool DetailedRecordsNotEmpty(List<tb_ProductionDemandTargetDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

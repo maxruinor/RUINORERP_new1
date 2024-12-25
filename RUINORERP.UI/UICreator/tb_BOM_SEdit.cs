@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:34
+// 时间：12/25/2024 20:53:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -70,6 +70,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -83,13 +86,16 @@ namespace RUINORERP.UI
                        entity.SKU = txtSKU.Text ;
                        entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
+                        entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.Doc_ID = Int64.Parse(txtDoc_ID.Text);
                         entity.BOM_S_VERID = Int64.Parse(txtBOM_S_VERID.Text);
                         entity.Effective_at = DateTime.Parse(txtEffective_at.Text);
                         entity.is_enabled = Boolean.Parse(txtis_enabled.Text);
                         entity.is_available = Boolean.Parse(txtis_available.Text);
-                        entity.ManufacturingCost = Decimal.Parse(txtManufacturingCost.Text);
-                        entity.OutManuCost = Decimal.Parse(txtOutManuCost.Text);
+                        entity.OutApportionedCost = Decimal.Parse(txtOutApportionedCost.Text);
+                        entity.SelfApportionedCost = Decimal.Parse(txtSelfApportionedCost.Text);
+                        entity.TotalSelfManuCost = Decimal.Parse(txtTotalSelfManuCost.Text);
+                        entity.TotalOutManuCost = Decimal.Parse(txtTotalOutManuCost.Text);
                         entity.TotalMaterialCost = Decimal.Parse(txtTotalMaterialCost.Text);
                         entity.TotalMaterialQty = Decimal.Parse(txtTotalMaterialQty.Text);
                         entity.OutputQty = Decimal.Parse(txtOutputQty.Text);
@@ -129,15 +135,18 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.SKU, txtSKU, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
+          // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.BindData4Cmb<tb_Files>(entity, k => k.Doc_ID, v=>v.XXNAME, cmbDoc_ID);
           // DataBindingHelper.BindData4Cmb<tb_BOMConfigHistory>(entity, k => k.BOM_S_VERID, v=>v.XXNAME, cmbBOM_S_VERID);
            DataBindingHelper.BindData4DataTime<tb_BOM_S>(entity, t => t.Effective_at, dtpEffective_at,false);
-           DataBindingHelper.BindData4CehckBox<tb_BOM_S>(entity, t => t.is_enabled, chkis_enabled, false);
+           DataBindingHelper.BindData4CheckBox<tb_BOM_S>(entity, t => t.is_enabled, chkis_enabled, false);
 //有默认值
-           DataBindingHelper.BindData4CehckBox<tb_BOM_S>(entity, t => t.is_available, chkis_available, false);
+           DataBindingHelper.BindData4CheckBox<tb_BOM_S>(entity, t => t.is_available, chkis_available, false);
 //有默认值
-           DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.ManufacturingCost.ToString(), txtManufacturingCost, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.OutManuCost.ToString(), txtOutManuCost, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.OutApportionedCost.ToString(), txtOutApportionedCost, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.SelfApportionedCost.ToString(), txtSelfApportionedCost, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.TotalSelfManuCost.ToString(), txtTotalSelfManuCost, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.TotalOutManuCost.ToString(), txtTotalOutManuCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.TotalMaterialCost.ToString(), txtTotalMaterialCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.TotalMaterialQty.ToString(), txtTotalMaterialQty, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.OutputQty.ToString(), txtOutputQty, BindDataType4TextBox.Money,false);
@@ -154,13 +163,13 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_BOM_S>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_BOM_S>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_BOM_S>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_BOM_S>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_BOM_S>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_BOM_S>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4CheckBox<tb_BOM_S>(entity, t => t.ApprovalResults, chkApprovalResults, false);
 }
 
 

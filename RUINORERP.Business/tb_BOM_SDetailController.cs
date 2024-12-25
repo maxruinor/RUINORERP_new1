@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:00
+// 时间：12/25/2024 20:07:11
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -246,16 +246,14 @@ namespace RUINORERP.Business
             if (entity.SubID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_BOM_SDetail>(entity as tb_BOM_SDetail)
-                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                        .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_BOM_SDetail>(entity as tb_BOM_SDetail)
-                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
                                 .ExecuteCommandAsync();
         }
         
@@ -286,9 +284,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .Includes(m => m.tb_BOM_SDetailSubstituteMaterials)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -297,9 +294,8 @@ namespace RUINORERP.Business
         {
             tb_BOM_SDetail entity = model as tb_BOM_SDetail;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_BOM_SDetail>(m => m.SubID== entity.SubID)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -465,7 +461,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_unit_conversion )
                                .Includes(t => t.tb_bom_s )
                                .Includes(t => t.tb_proddetail )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -488,7 +485,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_unit_conversion )
                                .Includes(t => t.tb_bom_s )
                                .Includes(t => t.tb_proddetail )
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -511,7 +509,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_unit_conversion )
                             .Includes(t => t.tb_bom_s )
                             .Includes(t => t.tb_proddetail )
-                                    .ToList();
+                                        .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
+                        .ToList();
             
             foreach (var item in list)
             {
@@ -551,7 +550,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_unit_conversion )
                             .Includes(t => t.tb_bom_s )
                             .Includes(t => t.tb_proddetail )
-                                    .FirstAsync();
+                                        .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

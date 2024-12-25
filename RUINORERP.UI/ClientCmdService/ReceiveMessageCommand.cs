@@ -43,31 +43,53 @@ namespace RUINORERP.UI.ClientCmdService
         }
 
 
-  
 
-        //public async Task ExecuteAsync(CancellationToken cancellationToken)
-        //{
-        //    // 添加逻辑
-        //    await Task.Run(
-        //        () =>
-        //        //只是一行做对。为了编译通过
 
-        //        //ProductService.AddProduct(productName, price)
-        //        {
-        //            MessagePrompt messager = new MessagePrompt();
-        //            messager.Content = message;
-        //            messager.Show();
-        //            messager.TopMost = true;
-        //        }
-
-        //        ,
-
-        //        cancellationToken
-        //        );
-        //}
-        public async Task ExecuteAsync(CancellationToken cancellationToken, object parameters = null)
+        public bool AnalyzeDataPacket(OriginalData gd)
         {
+            try
+            {
+                int index = 0;
+                ByteBuff bg = new ByteBuff(gd.Two);
+                string sendTime = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                PromptType promptType = (PromptType)ByteDataAnalysis.GetInt(gd.Two, ref index);
 
+                // 将item转换为JObject
+                var obj = JObject.Parse(json);
+                switch (promptType)
+                {
+
+                    case PromptType.提示窗口:
+                        break;
+                    case PromptType.通知窗口:
+                        break;
+                    case PromptType.确认窗口:
+                        MessageBox.Show(obj["Content"].ToString(), "提示");
+                        break;
+                    case PromptType.日志消息:
+                        MainForm.Instance.PrintInfoLog(obj["Content"].ToString());
+                        break;
+                    default:
+                        break;
+                }
+
+                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
+                {
+                    MainForm.Instance.PrintInfoLog($"接收复合型消息：{obj.ToString()}成功！");
+                }
+             
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收服务器提示消息:" + ex.Message);
+            }
+            return true;
+
+        }
+
+        public async Task ExecuteAsync(CancellationToken cancellationToken, object parameters)
+        {
             if (parameters is OriginalData originalData)
             {
                 await Task.Run(() =>
@@ -81,63 +103,11 @@ namespace RUINORERP.UI.ClientCmdService
             }
         }
 
-
-        public bool AnalyzeDataPacket(OriginalData gd)
-        {
-            string Message = "";
-            try
-            {
-                int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string sendTime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
-                PromptType promptType =(PromptType) ByteDataAnalysis.GetInt(gd.Two, ref index);
-
-                // 将item转换为JObject
-                var obj = JObject.Parse(json);
-                switch (promptType)
-                {
-                
-                    case PromptType.提示窗口:
-                        break;
-                    case PromptType.通知窗口:
-                        break;
-                    case PromptType.确认窗口:
-                        MessageBox.Show(obj["Content"].ToString(), "提示");
-                        break;
-                    case PromptType.日志消息:
-                        break;
-                    default:
-                        break;
-                }
-
-                if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
-                {
-                    MainForm.Instance.PrintInfoLog($"接收复合型消息：{obj}成功！");
-                }
-                MainForm.Instance.PrintInfoLog(Message);
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.PrintInfoLog("接收服务器提示消息:" + ex.Message);
-            }
-            return true;
-
-        }
-
-        Task IClientCommand.ExecuteAsync(CancellationToken cancellationToken, object parameters)
+        public OriginalData BuildDataPacket(object request)
         {
             throw new NotImplementedException();
         }
 
-        OriginalData IClientCommand.BuildDataPacket(object request)
-        {
-            throw new NotImplementedException();
-        }
 
-        bool IClientCommand.AnalyzeDataPacket(OriginalData gd)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

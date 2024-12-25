@@ -59,6 +59,21 @@ namespace RUINORERP.Business
                 }
             });
 
+
+            RuleFor(x => x.TotalSelfManuCost).
+            Custom((contact, context) =>
+            {
+                var bom = context.InstanceToValidate as tb_BOM_S; // 假设你的实体类名为Customer
+                bool isout = bom.TotalOutManuCost > 0;
+                bool isselt = bom.TotalSelfManuCost > 0;
+                if (!isout && !isselt)
+                {
+                    context.AddFailure("外发费用、自产制造费用、至少填写一个。");
+                }
+            });
+
+
+
             RuleFor(x => x.OutProductionAllCosts).
           Custom((contact, context) =>
           {
@@ -76,25 +91,13 @@ namespace RUINORERP.Business
             Custom((contact, context) =>
             {
                 var bom = context.InstanceToValidate as tb_BOM_S; // 假设你的实体类名为Customer
-                bool isout = bom.TotalOutManuCost > 0;
+                bool isout = bom.OutProductionAllCosts > 0;
                 bool isselt = bom.SelfProductionAllCosts > 0;
                 if (!isout && !isselt)
                 {
-                    context.AddFailure("外发总成本、自产总成本、至少填写一个。");
+                    context.AddFailure("外发总成本、自产制造费用、至少填写一个。");
                 }
             });
-
-            RuleFor(x => x.TotalSelfManuCost).
-          Custom((contact, context) =>
-          {
-              var bom = context.InstanceToValidate as tb_BOM_S; // 假设你的实体类名为Customer
-              bool isout = bom.TotalSelfManuCost > 0;
-              bool isselt = bom.TotalSelfManuCost > 0;
-              if (!isout && !isselt)
-              {
-                  context.AddFailure("外发总成本、自产总成本、至少填写一个。");
-              }
-          });
 
 
         }

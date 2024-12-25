@@ -158,7 +158,7 @@
             this.kp库存不足量需求,
             this.kryptonPage3,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 0;
+            this.kryptonNavigator1.SelectedIndex = 3;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1118, 485);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -464,7 +464,7 @@
             this.rdb上层驱动.Name = "rdb上层驱动";
             this.rdb上层驱动.Size = new System.Drawing.Size(74, 20);
             this.rdb上层驱动.TabIndex = 3;
-            this.rdb上层驱动.ToolTipValues.Description = "生产计划从最终产品或关键半成品的BOM顶级节点开始，然后向下展开以确定所需的所有子组件和原材料。即“上层驱动”";
+            this.rdb上层驱动.ToolTipValues.Description = "生产计划从最终产品或关键半成品的BOM顶级节点开始，然后向下展开以确定所需的所有子组件和原材料。即“上层驱动”。加载选中节点的所有子级都要参与制作的材料";
             this.rdb上层驱动.ToolTipValues.EnableToolTips = true;
             this.rdb上层驱动.Values.Text = "上层驱动";
             // 
@@ -474,7 +474,7 @@
             this.rdb中间件式.Name = "rdb中间件式";
             this.rdb中间件式.Size = new System.Drawing.Size(74, 20);
             this.rdb中间件式.TabIndex = 2;
-            this.rdb中间件式.ToolTipValues.Description = "生产计划从中间产品或组件开始，然后向上追溯到原材料和向下到最终产品，即“逐步生产”";
+            this.rdb中间件式.ToolTipValues.Description = "生产计划从中间产品或组件开始，然后向上追溯到原材料和向下到最终产品，即“逐步生产”,加载选中的单个组件制作材料。";
             this.rdb中间件式.ToolTipValues.EnableToolTips = true;
             this.rdb中间件式.Values.Text = "中间件式";
             // 

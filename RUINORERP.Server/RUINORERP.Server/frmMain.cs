@@ -29,6 +29,7 @@ using RUINORERP.Server.Commands;
 using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
 using RUINORERP.Server.Workflow.WFReminder;
+using SharpYaml.Tokens;
 using SuperSocket;
 using SuperSocket.Command;
 using SuperSocket.ProtoBase;
@@ -66,6 +67,9 @@ namespace RUINORERP.Server
     public partial class frmMain : Form
     {
 
+        /// <summary>
+        /// 系统保护数据
+        /// </summary>
         public SystemProtectionData protectionData = new SystemProtectionData();
 
         /// <summary>
@@ -152,7 +156,7 @@ namespace RUINORERP.Server
             Application.DoEvents();
             // timerServerInfo.Start();
             //btnStartServer.Enabled = false;
-            toolStripButton4.Enabled = false;
+            tsBtnStartServer.Enabled = false;
             ServerStart = true;
             try
             {
@@ -251,7 +255,7 @@ namespace RUINORERP.Server
             _logger.LogError("启动了服务器123");
             this.IsMdiContainer = true; // 设置父窗体为MDI容器
             menuStrip1.MdiWindowListItem = 窗口ToolStripMenuItem;
-            InitAll();
+            //InitAll();
 
             //手动初始化
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
@@ -264,8 +268,6 @@ namespace RUINORERP.Server
             MyCacheManager.Instance.CacheInfoList.OnAdd += CacheInfoList_OnAdd;
             MyCacheManager.Instance.CacheInfoList.OnClear += CacheInfoList_OnClear;
             MyCacheManager.Instance.CacheInfoList.OnUpdate += CacheInfoList_OnUpdate;
-
-
             MyCacheManager.Instance.CacheEntityList.OnRemove += CacheEntityList_OnRemove;
             //1分钟检查一次
             timer = new System.Timers.Timer(60000);
@@ -273,49 +275,46 @@ namespace RUINORERP.Server
             {
                 if (this.InvokeRequired)
                 {
-                    this.Invoke(new MethodInvoker(() => CheckCacheList()));
+                    this.Invoke(new MethodInvoker(() =>
+
+                    {
+                        CheckSystemProtection();
+                        CheckCacheList();
+                        CheckReminderBizDataList();
+                    }
+
+
+
+                    ));
                 }
                 else
                 {
+                    CheckSystemProtection();
                     CheckCacheList();
+                    CheckReminderBizDataList();
                 }
             });
             timer.Enabled = true;
-            timer.Start();
+
 
 
 
             //1分钟检查一次
-            ReminderTimer = new System.Timers.Timer(60000);
-            ReminderTimer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
-            {
-                if (this.InvokeRequired)
-                {
-                    this.Invoke(new MethodInvoker(() => CheckReminderBizDataList()));
-                }
-                else
-                {
-                    CheckReminderBizDataList();
-                }
-            });
-            ReminderTimer.Enabled = true;
-            ReminderTimer.Start();
+            //ReminderTimer = new System.Timers.Timer(60000);
+            //ReminderTimer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
+            //{
+            //    if (this.InvokeRequired)
+            //    {
+            //        this.Invoke(new MethodInvoker(() => CheckReminderBizDataList()));
+            //    }
+            //    else
+            //    {
+            //        CheckReminderBizDataList();
+            //    }
+            //});
+            //ReminderTimer.Enabled = true;
+            //ReminderTimer.Start();
 
-
-            // 每120秒（120000毫秒）执行一次检查
-            System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1200);
-
-
-            //加载提醒数据
-
-            DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
-            loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
-
-            //启动每天要执行的定时任务
-            //启动
-            var DailyworkflowId = await host.StartWorkflow("DailyTaskWorkflow", 1, null);
-
-            frmMain.Instance.PrintInfoLog($"每日任务启动{DailyworkflowId}。");
 
         }
 
@@ -349,6 +348,39 @@ namespace RUINORERP.Server
             {
                 BizService.UserService.发送缓存信息列表(PlayerSession);
             }
+        }
+
+
+        private bool CheckSystemProtection()
+        {
+            bool result = false;
+            try
+            {
+                if (protectionData != null)
+                {
+                    if (!protectionData.IsProtectionEnabled)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        //如果当前时间小于限制时间。就退出
+                        if (protectionData.ExpirationDate.Date <= protectionData.GetLocalTime().Date)
+                        {
+                            result= true;
+                            //断开所有链接
+                            Shutdown();
+                            Application.Exit();
+
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                frmMain.Instance.PrintInfoLog($"CheckSystemProtection：{ex.Message} ");
+            }
+            return result;
         }
 
         private async void CheckReminderBizDataList()
@@ -467,7 +499,9 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
-                frmMain.Instance.PrintInfoLog($"CheckAndRemoveExpiredSessions{ex.Message}。");
+                //线程
+                //frmMain.Instance.PrintInfoLog($"CheckAndRemoveExpiredSessions{ex.Message}。");
+                Console.WriteLine($"CheckAndRemoveExpiredSessions: {ex.Message}");
             }
         }
 
@@ -481,7 +515,7 @@ namespace RUINORERP.Server
             await Task.Delay(0);
         }
 
-        private void InitAll()
+        private async void InitAll()
         {
             if (!ServerStart)
             {
@@ -494,6 +528,20 @@ namespace RUINORERP.Server
                 frmMain.Instance.PrintInfoLog("服务器已经启动");
             }
 
+
+            // 每120秒（120000毫秒）执行一次检查
+            System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1000);
+
+            //加载提醒数据
+
+            DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
+            loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
+
+            //启动每天要执行的定时任务
+            //启动
+            var DailyworkflowId = await host.StartWorkflow("DailyTaskWorkflow", 1, null);
+
+            frmMain.Instance.PrintInfoLog($"每日任务启动{DailyworkflowId}。");
         }
 
         IHost _host = null;
@@ -708,6 +756,7 @@ namespace RUINORERP.Server
                 await DrainAllServers();
                 // 记得在程序结束时清理定时器资源
                 timer.Dispose();
+                ReminderTimer.Dispose();
             }
             catch (Exception e)
             {
@@ -842,10 +891,9 @@ namespace RUINORERP.Server
 
         public void PrintInfoLog(string msg)
         {
-            Console.WriteLine(msg);
+            // Console.WriteLine(msg);
             if (!System.Diagnostics.Process.GetCurrentProcess().MainModule.ToString().ToLower().Contains("iis"))
             {
-#pragma warning disable CS0168 // 声明了变量，但从未使用过
                 try
                 {
                     if (IsDisposed || !frmMain.Instance.IsHandleCreated) return;
@@ -873,7 +921,7 @@ namespace RUINORERP.Server
                 {
                     Console.WriteLine("PrintInfoLog时出错" + ex.Message);
                 }
-#pragma warning restore CS0168 // 声明了变量，但从未使用过
+
             }
 
 
@@ -917,7 +965,8 @@ namespace RUINORERP.Server
             }
             if (e.ClickedItem.Text == "启动服务")
             {
-                InitAll();
+                //Load时就启动了。不重复启动了。
+                // InitAll();
             }
 
             if (e.ClickedItem.Text == "在线用户管理")
@@ -1019,6 +1068,18 @@ namespace RUINORERP.Server
             frm.MdiParent = this;
             frm.Show();
             frm.Activate();
+        }
+
+        private void tsBtnStartServer_Click(object sender, EventArgs e)
+        {
+            InitAll();
+            timer.Start();
+            tsBtnStartServer.Enabled = false;
+        }
+
+        private void 系统注册ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //注册成功后。才可能启动服务器
         }
     }
 }

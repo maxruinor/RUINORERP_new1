@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:53:11
+// 时间：12/25/2024 20:07:13
 // **************************************
 using AutoMapper;
 using RUINORERP.IRepository.Base;
@@ -20,12 +20,12 @@ using System.Collections.Generic;
 namespace RUINORERP.Services
 {
     /// <summary>
-    /// 标准物料表BOM_BillOfMateria_S-要适当冗余? 生产是从0开始的。先有下级才有上级。
+    /// 标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定
     /// </summary>
-    public partial class tb_BOM_SServices : BaseServices<tb_BOM_S>, Itb_BOM_SServices
+    public partial class tb_BOM_SDetailSubstituteMaterialServices : BaseServices<tb_BOM_SDetailSubstituteMaterial>, Itb_BOM_SDetailSubstituteMaterialServices
     {
         IMapper _mapper;
-        public tb_BOM_SServices(IMapper mapper, IBaseRepository<tb_BOM_S> dal)
+        public tb_BOM_SDetailSubstituteMaterialServices(IMapper mapper, IBaseRepository<tb_BOM_SDetailSubstituteMaterial> dal)
         {
             this._mapper = mapper;
             base.BaseDal = dal;

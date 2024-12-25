@@ -1956,6 +1956,7 @@ protected async override Task<ApprovalEntity> ReReview()
         /// <summary>
         /// 生成制令单,如果为中间件式，意思是：没有生成过的所有行，只能选择一个。
         /// 如果为上层驱动模式，意思是：没有生成过的所有行，可以选择一个后，他的子项全选中
+        /// 即：中间式是指  加载选中的单个组件制作材料。 加载上层驱动是将他所有子级都要参与制作的材料
         /// </summary>
         ///<param name="MiddlewareType">中间件式:true，上层驱动模式:false</param>
         private async void CreateProductionNew2024(bool MiddlewareType = false)

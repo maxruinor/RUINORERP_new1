@@ -307,20 +307,6 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _AlternativeProducts;
-        /// <summary>
-        /// 替代品
-        /// </summary>
-        [AdvQueryAttribute(ColName = "AlternativeProducts",ColDesc = "替代品")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "AlternativeProducts" ,Length=10,IsNullable = true,ColumnDescription = "替代品" )]
-        public string AlternativeProducts
-        { 
-            get{return _AlternativeProducts;}
-            set{
-            SetProperty(ref _AlternativeProducts, value);
-            }
-        }
-
         private string _Prelevel_BOM_Desc;
         /// <summary>
         /// 上级配方

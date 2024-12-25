@@ -45,6 +45,7 @@ using OfficeOpenXml.Style;
 using log4net.Core;
 using Netron.GraphLib;
 using FileInfo = System.IO.FileInfo;
+using System.Windows.Documents;
 
 
 namespace RUINORERP.UI.MRP.BOM
@@ -789,6 +790,7 @@ namespace RUINORERP.UI.MRP.BOM
             }
             sgh.LoadItemDataToGrid<tb_BOM_SDetail>(grid1, sgd, EditEntity.tb_BOM_SDetails, c => c.ProdDetailID);
 
+
             //先绑定这个。InitFilterForControl 这个才生效, 一共三个来控制，这里分别是绑定ID和SKU。下面InitFilterForControlByExp 是生成快捷按钮
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, k => k.SKU, txtProdDetailID, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBoxWithTagQuery<tb_BOM_S>(EditEntity, v => v.ProdDetailID, txtProdDetailID, true);
@@ -883,7 +885,7 @@ namespace RUINORERP.UI.MRP.BOM
             //这样在新增加和修改时才会触发添加母件的快捷按钮
             if ((EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改))
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_BOM_SValidator> (), kryptonSplitContainer1.Panel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_BOM_SValidator>(), kryptonSplitContainer1.Panel1.Controls);
                 //  base.InitEditItemToControl(EditEntity, kryptonPanel1.Controls);
                 //  base.InitFilterForControl<View_ProdDetail, View_ProdDetailQueryDto>(EditEntity, txtProdDetailID, c => c.CNName);
 
@@ -1033,12 +1035,16 @@ namespace RUINORERP.UI.MRP.BOM
 
 
         SourceGridDefine sgd = null;
-        SourceGridHelper sgh = new SourceGridHelper();
+        SourceGridDefine sgd2 = null;
 
+        SourceGridHelper sgh = new SourceGridHelper();
+        SourceGridHelper sgh2 = new SourceGridHelper();
+
+        List<View_ProdDetail> list = new List<View_ProdDetail>();
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             LoadGrid1();
-
+            LoadgridSubstituteMaterial();
             //不能放在构造函数里
             ToolStripMenuItem exportExcel = new ToolStripMenuItem("导出Excel");
             exportExcel.Name = "导出Excel";
@@ -1132,6 +1138,80 @@ namespace RUINORERP.UI.MRP.BOM
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
         }
 
+        //加载替代品明细
+        private void LoadgridSubstituteMaterial()
+        {
+            InitDataTocmbbox();
+            base.ToolBarEnabledControl(MenuItemEnums.刷新);
+            gridSubstituteMaterial.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            gridSubstituteMaterial.Selection.EnableMultiSelection = false;
+
+            List<SourceGridDefineColumnItem> listCols = sgh2.GetGridColumns<ProductSharePart, tb_BOM_SDetail>(c => c.ProdDetailID, true);
+
+            listCols.SetCol_NeverVisible<tb_BOM_SDetail>(c => c.ProdDetailID);
+            listCols.SetCol_NeverVisible<tb_BOM_SDetail>(c => c.SubID);
+            listCols.SetCol_NeverVisible<tb_BOM_SDetail>(c => c.BOM_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+
+            //实际在中间实体定义时加了只读属性，功能相同
+            listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
+            listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
+            listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
+            listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
+            if (!AppContext.SysConfig.UseBarCode)
+            {
+                listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
+            }
+
+            listCols.SetCol_Format<tb_BOM_SDetail>(c => c.OutputRate, CustomFormatType.PercentFormat);
+            listCols.SetCol_Format<tb_BOM_SDetail>(c => c.LossRate, CustomFormatType.PercentFormat);
+            //排除指定列不在相关列内
+            //listCols.SetCol_Exclude<ProductSharePart>(c => c.Location_ID);
+
+            //具体审核权限的人才显示
+            /*
+            if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
+            {
+                //  listCols.SetCol_NeverVisible<tb_BOM_S_Detail>(c => c.Cost);
+            }
+            */
+            sgd2 = new SourceGridDefine(gridSubstituteMaterial, listCols, true);
+            sgd2.GridMasterData = EditEntity;
+            //要放到初始化sgd2后面
+            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.UsedQty);
+            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalUnitCost);
+            listCols.SetCol_Formula<tb_BOM_SDetail>((a, b) => a.UnitCost * b.UsedQty, c => c.SubtotalUnitCost);
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.Inv_Cost, t => t.UnitCost);
+
+            //冗余名称和规格
+            //  sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.CNName, t => t.SubItemName);
+            //  sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.Specifications, t => t.SubItemSpec);
+            //sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.prop, t => t.property);
+            //sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.Type_ID, t => t.Type_ID);
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.Unit_ID, t => t.Unit_ID);
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.SKU, t => t.SKU);
+
+            //由单位来决定转换率.!!!注意底层代码写死了
+            //Unit_ID 是单位表主键，在换算表中是指向 Source_unit_id,但是保存到BOM详情T表中字段是换算表主键，作为外键
+            sgh2.SetCol_LimitedConditionsForSelectionRange<tb_BOM_SDetail>(sgd2, t => t.Unit_ID, f => f.UnitConversion_ID);
+
+            sgh2.SetQueryItemToColumnPairs<View_ProdDetail, tb_BOM_SDetail>(sgd2, f => f.BOM_ID, t => t.Child_BOM_Node_ID);
+
+            //应该只提供一个结构
+            List<tb_BOM_SDetail> lines = new List<tb_BOM_SDetail>();
+            bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
+            sgd2.BindingSourceLines = bindingSourceSub;
+
+
+
+            sgd2.SetDependencyObject<ProductSharePart, tb_BOM_SDetail>(MainForm.Instance.list);
+            sgd2.HasRowHeader = true;
+            sgh2.InitGrid(gridSubstituteMaterial, sgd2, true, nameof(tb_BOM_SDetail));
+
+        }
         private void Sgh_OnLoadRelevantFields(object _View_ProdDetail, object rowObj, SourceGridDefine griddefine, Position Position)
         {
             View_ProdDetail vp = (View_ProdDetail)_View_ProdDetail;
@@ -1258,10 +1338,16 @@ namespace RUINORERP.UI.MRP.BOM
             var eer = errorProviderForAllInput.GetError(txtBOM_Name);
             bindingSourceSub.EndEdit();
             List<tb_BOM_SDetail> detailentity = bindingSourceSub.DataSource as List<tb_BOM_SDetail>;
+
+
+
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
+
+
+
 
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0 && NeedValidated)
@@ -1269,6 +1355,8 @@ namespace RUINORERP.UI.MRP.BOM
                     MessageBox.Show("请录入有效明细记录！");
                     return false;
                 }
+
+
 
                 //副产出暂时不做。为了不验证给一行空值，验证后清除掉
                 EditEntity.tb_BOM_SDetailSecondaries = new List<tb_BOM_SDetailSecondary>();
@@ -1456,6 +1544,42 @@ namespace RUINORERP.UI.MRP.BOM
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
 
 
+
+        }
+
+        private void grid1_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (sender is SourceGrid.Grid BomDetailGrid)
+            {
+                if (bindingSourceSub.Current != null)
+                {
+                    if (bindingSourceSub.Current is tb_BOM_SDetail detail)
+                    {
+                        if (detail.ProdDetailID > 0)
+                        {
+
+                        }
+                    }
+                }
+            }
+            // gridSubstituteMaterial.LoadItemDataToGrid<tb_BOM_SDetailSubstituteMaterial>(grid2, sgd2, EditEntity.tb_BOM_SDetailSubstituteMaterials, c => c.ProdDetailID);
+        }
+
+        private void grid1_Validated(object sender, EventArgs e)
+        {
+            //List<tb_BOM_SDetailSubstituteMaterial> SubstituteMaterial = BsSubstituteMaterial.DataSource as List<tb_BOM_SDetailSubstituteMaterial>;
+            //List<tb_BOM_SDetailSubstituteMaterial> LastSubstituteMaterial = new List<tb_BOM_SDetailSubstituteMaterial>();
+
+            ////产品ID有值才算有效值
+            //LastSubstituteMaterial = SubstituteMaterial.Where(t => t.ProdDetailID > 0).ToList();
+            //var bb = LastSubstituteMaterial.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+            //if (NeedValidated && bb.Count > 1)
+            //{
+            //    System.Windows.Forms.MessageBox.Show("物料明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //    return false;
+            //}
+
+            //EditEntity.tb_SaleOutReRefurbishedMaterialsDetails = LastRefurbishedMaterials;
 
         }
     }

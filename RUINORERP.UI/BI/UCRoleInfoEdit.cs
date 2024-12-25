@@ -112,8 +112,6 @@ namespace RUINORERP.UI.BI
             kryptonGroupBox角色属性.Visible = chk创建角色属性.Checked;
         }
 
-
-
         public void BindDataForProperty(tb_RolePropertyConfig propertyConfig)
         {
             DataBindingHelper.BindData4TextBox<tb_RolePropertyConfig>(propertyConfig, t => t.QtyDataPrecision, txtQtyDataPrecision, BindDataType4TextBox.Qty, false);

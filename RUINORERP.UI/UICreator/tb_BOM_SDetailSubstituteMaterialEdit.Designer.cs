@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:07:10
+// 时间：12/25/2024 20:07:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -14,9 +14,9 @@ using FluentValidation;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 标准物料表BOM明细-要适当冗余
+    /// 标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定
     /// </summary>
-    partial class tb_BOM_SDetailEdit
+    partial class tb_BOM_SDetailSubstituteMaterialEdit
     {
     
     
@@ -52,17 +52,18 @@ namespace RUINORERP.UI
      // this.btnCancel = new ComponentFactory.Krypton.Toolkit.KryptonButton();
       //this.kryptonPanel1 = new ComponentFactory.Krypton.Toolkit.KryptonPanel();
       //for definition
-     this.lblProdDetailID = new Krypton.Toolkit.KryptonLabel();
+     this.lblSubID = new Krypton.Toolkit.KryptonLabel();
+this.cmbSubID = new Krypton.Toolkit.KryptonComboBox();
+
+this.lblProdDetailID = new Krypton.Toolkit.KryptonLabel();
 this.cmbProdDetailID = new Krypton.Toolkit.KryptonComboBox();
 
 this.lblSKU = new Krypton.Toolkit.KryptonLabel();
 this.txtSKU = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblBOM_ID = new Krypton.Toolkit.KryptonLabel();
-this.cmbBOM_ID = new Krypton.Toolkit.KryptonComboBox();
-
-this.lblSummary = new Krypton.Toolkit.KryptonLabel();
-this.txtSummary = new Krypton.Toolkit.KryptonTextBox();
+this.lblproperty = new Krypton.Toolkit.KryptonLabel();
+this.txtproperty = new Krypton.Toolkit.KryptonTextBox();
+this.txtproperty.Multiline = true;
 
 this.lblUnit_ID = new Krypton.Toolkit.KryptonLabel();
 this.cmbUnit_ID = new Krypton.Toolkit.KryptonComboBox();
@@ -85,8 +86,8 @@ this.txtInstallPosition = new Krypton.Toolkit.KryptonTextBox();
 this.lblPositionNo = new Krypton.Toolkit.KryptonLabel();
 this.txtPositionNo = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblUnitCost = new Krypton.Toolkit.KryptonLabel();
-this.txtUnitCost = new Krypton.Toolkit.KryptonTextBox();
+this.lblUnitlCost = new Krypton.Toolkit.KryptonLabel();
+this.txtUnitlCost = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblSubtotalUnitCost = new Krypton.Toolkit.KryptonLabel();
 this.txtSubtotalUnitCost = new Krypton.Toolkit.KryptonTextBox();
@@ -97,17 +98,17 @@ this.txtPositionDesc = new Krypton.Toolkit.KryptonTextBox();
 this.lblManufacturingProcessID = new Krypton.Toolkit.KryptonLabel();
 this.txtManufacturingProcessID = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblChild_BOM_Node_ID = new Krypton.Toolkit.KryptonLabel();
-this.txtChild_BOM_Node_ID = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblSubstitute = new Krypton.Toolkit.KryptonLabel();
-this.txtSubstitute = new Krypton.Toolkit.KryptonTextBox();
-
 this.lblOutputRate = new Krypton.Toolkit.KryptonLabel();
 this.txtOutputRate = new Krypton.Toolkit.KryptonTextBox();
 
+this.lblPriorityUseType = new Krypton.Toolkit.KryptonLabel();
+this.txtPriorityUseType = new Krypton.Toolkit.KryptonTextBox();
+
 this.lblSort = new Krypton.Toolkit.KryptonLabel();
 this.txtSort = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblSummary = new Krypton.Toolkit.KryptonLabel();
+this.txtSummary = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -136,72 +137,71 @@ this.txtSort = new Krypton.Toolkit.KryptonTextBox();
             
          //for size
      
-            //#####ProdDetailID###Int64
-//属性测试25ProdDetailID
-//属性测试25ProdDetailID
-//属性测试25ProdDetailID
-//属性测试25ProdDetailID
+            //#####SubID###Int64
+//属性测试25SubID
+this.lblSubID.AutoSize = true;
+this.lblSubID.Location = new System.Drawing.Point(100,25);
+this.lblSubID.Name = "lblSubID";
+this.lblSubID.Size = new System.Drawing.Size(41, 12);
+this.lblSubID.TabIndex = 1;
+this.lblSubID.Text = "";
+//111======25
+this.cmbSubID.Location = new System.Drawing.Point(173,21);
+this.cmbSubID.Name ="cmbSubID";
+this.cmbSubID.Size = new System.Drawing.Size(100, 21);
+this.cmbSubID.TabIndex = 1;
+this.Controls.Add(this.lblSubID);
+this.Controls.Add(this.cmbSubID);
+
+           //#####ProdDetailID###Int64
+//属性测试50ProdDetailID
+//属性测试50ProdDetailID
+//属性测试50ProdDetailID
+//属性测试50ProdDetailID
 this.lblProdDetailID.AutoSize = true;
-this.lblProdDetailID.Location = new System.Drawing.Point(100,25);
+this.lblProdDetailID.Location = new System.Drawing.Point(100,50);
 this.lblProdDetailID.Name = "lblProdDetailID";
 this.lblProdDetailID.Size = new System.Drawing.Size(41, 12);
-this.lblProdDetailID.TabIndex = 1;
-this.lblProdDetailID.Text = "货品详情";
-//111======25
-this.cmbProdDetailID.Location = new System.Drawing.Point(173,21);
+this.lblProdDetailID.TabIndex = 2;
+this.lblProdDetailID.Text = "产品详情";
+//111======50
+this.cmbProdDetailID.Location = new System.Drawing.Point(173,46);
 this.cmbProdDetailID.Name ="cmbProdDetailID";
 this.cmbProdDetailID.Size = new System.Drawing.Size(100, 21);
-this.cmbProdDetailID.TabIndex = 1;
+this.cmbProdDetailID.TabIndex = 2;
 this.Controls.Add(this.lblProdDetailID);
 this.Controls.Add(this.cmbProdDetailID);
 
            //#####80SKU###String
 this.lblSKU.AutoSize = true;
-this.lblSKU.Location = new System.Drawing.Point(100,50);
+this.lblSKU.Location = new System.Drawing.Point(100,75);
 this.lblSKU.Name = "lblSKU";
 this.lblSKU.Size = new System.Drawing.Size(41, 12);
-this.lblSKU.TabIndex = 2;
-this.lblSKU.Text = "SKU码";
-this.txtSKU.Location = new System.Drawing.Point(173,46);
+this.lblSKU.TabIndex = 3;
+this.lblSKU.Text = "SKU";
+this.txtSKU.Location = new System.Drawing.Point(173,71);
 this.txtSKU.Name = "txtSKU";
 this.txtSKU.Size = new System.Drawing.Size(100, 21);
-this.txtSKU.TabIndex = 2;
+this.txtSKU.TabIndex = 3;
 this.Controls.Add(this.lblSKU);
 this.Controls.Add(this.txtSKU);
 
-           //#####BOM_ID###Int64
-//属性测试75BOM_ID
-//属性测试75BOM_ID
-//属性测试75BOM_ID
-this.lblBOM_ID.AutoSize = true;
-this.lblBOM_ID.Location = new System.Drawing.Point(100,75);
-this.lblBOM_ID.Name = "lblBOM_ID";
-this.lblBOM_ID.Size = new System.Drawing.Size(41, 12);
-this.lblBOM_ID.TabIndex = 3;
-this.lblBOM_ID.Text = "对应BOM";
-//111======75
-this.cmbBOM_ID.Location = new System.Drawing.Point(173,71);
-this.cmbBOM_ID.Name ="cmbBOM_ID";
-this.cmbBOM_ID.Size = new System.Drawing.Size(100, 21);
-this.cmbBOM_ID.TabIndex = 3;
-this.Controls.Add(this.lblBOM_ID);
-this.Controls.Add(this.cmbBOM_ID);
-
-           //#####200Summary###String
-this.lblSummary.AutoSize = true;
-this.lblSummary.Location = new System.Drawing.Point(100,100);
-this.lblSummary.Name = "lblSummary";
-this.lblSummary.Size = new System.Drawing.Size(41, 12);
-this.lblSummary.TabIndex = 4;
-this.lblSummary.Text = "备注说明";
-this.txtSummary.Location = new System.Drawing.Point(173,96);
-this.txtSummary.Name = "txtSummary";
-this.txtSummary.Size = new System.Drawing.Size(100, 21);
-this.txtSummary.TabIndex = 4;
-this.Controls.Add(this.lblSummary);
-this.Controls.Add(this.txtSummary);
+           //#####255property###String
+this.lblproperty.AutoSize = true;
+this.lblproperty.Location = new System.Drawing.Point(100,100);
+this.lblproperty.Name = "lblproperty";
+this.lblproperty.Size = new System.Drawing.Size(41, 12);
+this.lblproperty.TabIndex = 4;
+this.lblproperty.Text = "子件属性";
+this.txtproperty.Location = new System.Drawing.Point(173,96);
+this.txtproperty.Name = "txtproperty";
+this.txtproperty.Size = new System.Drawing.Size(100, 21);
+this.txtproperty.TabIndex = 4;
+this.Controls.Add(this.lblproperty);
+this.Controls.Add(this.txtproperty);
 
            //#####Unit_ID###Int64
+//属性测试125Unit_ID
 //属性测试125Unit_ID
 this.lblUnit_ID.AutoSize = true;
 this.lblUnit_ID.Location = new System.Drawing.Point(100,125);
@@ -218,6 +218,7 @@ this.Controls.Add(this.lblUnit_ID);
 this.Controls.Add(this.cmbUnit_ID);
 
            //#####UnitConversion_ID###Int64
+//属性测试150UnitConversion_ID
 //属性测试150UnitConversion_ID
 //属性测试150UnitConversion_ID
 this.lblUnitConversion_ID.AutoSize = true;
@@ -310,20 +311,20 @@ this.txtPositionNo.TabIndex = 11;
 this.Controls.Add(this.lblPositionNo);
 this.Controls.Add(this.txtPositionNo);
 
-           //#####UnitCost###Decimal
-this.lblUnitCost.AutoSize = true;
-this.lblUnitCost.Location = new System.Drawing.Point(100,300);
-this.lblUnitCost.Name = "lblUnitCost";
-this.lblUnitCost.Size = new System.Drawing.Size(41, 12);
-this.lblUnitCost.TabIndex = 12;
-this.lblUnitCost.Text = "单位成本";
+           //#####UnitlCost###Decimal
+this.lblUnitlCost.AutoSize = true;
+this.lblUnitlCost.Location = new System.Drawing.Point(100,300);
+this.lblUnitlCost.Name = "lblUnitlCost";
+this.lblUnitlCost.Size = new System.Drawing.Size(41, 12);
+this.lblUnitlCost.TabIndex = 12;
+this.lblUnitlCost.Text = "单位成本";
 //111======300
-this.txtUnitCost.Location = new System.Drawing.Point(173,296);
-this.txtUnitCost.Name ="txtUnitCost";
-this.txtUnitCost.Size = new System.Drawing.Size(100, 21);
-this.txtUnitCost.TabIndex = 12;
-this.Controls.Add(this.lblUnitCost);
-this.Controls.Add(this.txtUnitCost);
+this.txtUnitlCost.Location = new System.Drawing.Point(173,296);
+this.txtUnitlCost.Name ="txtUnitlCost";
+this.txtUnitlCost.Size = new System.Drawing.Size(100, 21);
+this.txtUnitlCost.TabIndex = 12;
+this.Controls.Add(this.lblUnitlCost);
+this.Controls.Add(this.txtUnitlCost);
 
            //#####SubtotalUnitCost###Decimal
 this.lblSubtotalUnitCost.AutoSize = true;
@@ -372,74 +373,70 @@ this.txtManufacturingProcessID.TabIndex = 15;
 this.Controls.Add(this.lblManufacturingProcessID);
 this.Controls.Add(this.txtManufacturingProcessID);
 
-           //#####Child_BOM_Node_ID###Int64
-//属性测试400Child_BOM_Node_ID
-//属性测试400Child_BOM_Node_ID
-//属性测试400Child_BOM_Node_ID
-//属性测试400Child_BOM_Node_ID
-this.lblChild_BOM_Node_ID.AutoSize = true;
-this.lblChild_BOM_Node_ID.Location = new System.Drawing.Point(100,400);
-this.lblChild_BOM_Node_ID.Name = "lblChild_BOM_Node_ID";
-this.lblChild_BOM_Node_ID.Size = new System.Drawing.Size(41, 12);
-this.lblChild_BOM_Node_ID.TabIndex = 16;
-this.lblChild_BOM_Node_ID.Text = "子件配方";
-this.txtChild_BOM_Node_ID.Location = new System.Drawing.Point(173,396);
-this.txtChild_BOM_Node_ID.Name = "txtChild_BOM_Node_ID";
-this.txtChild_BOM_Node_ID.Size = new System.Drawing.Size(100, 21);
-this.txtChild_BOM_Node_ID.TabIndex = 16;
-this.Controls.Add(this.lblChild_BOM_Node_ID);
-this.Controls.Add(this.txtChild_BOM_Node_ID);
-
-           //#####Substitute###Int64
-//属性测试425Substitute
-//属性测试425Substitute
-//属性测试425Substitute
-//属性测试425Substitute
-this.lblSubstitute.AutoSize = true;
-this.lblSubstitute.Location = new System.Drawing.Point(100,425);
-this.lblSubstitute.Name = "lblSubstitute";
-this.lblSubstitute.Size = new System.Drawing.Size(41, 12);
-this.lblSubstitute.TabIndex = 17;
-this.lblSubstitute.Text = "替代品";
-this.txtSubstitute.Location = new System.Drawing.Point(173,421);
-this.txtSubstitute.Name = "txtSubstitute";
-this.txtSubstitute.Size = new System.Drawing.Size(100, 21);
-this.txtSubstitute.TabIndex = 17;
-this.Controls.Add(this.lblSubstitute);
-this.Controls.Add(this.txtSubstitute);
-
            //#####OutputRate###Decimal
 this.lblOutputRate.AutoSize = true;
-this.lblOutputRate.Location = new System.Drawing.Point(100,450);
+this.lblOutputRate.Location = new System.Drawing.Point(100,400);
 this.lblOutputRate.Name = "lblOutputRate";
 this.lblOutputRate.Size = new System.Drawing.Size(41, 12);
-this.lblOutputRate.TabIndex = 18;
+this.lblOutputRate.TabIndex = 16;
 this.lblOutputRate.Text = "产出率";
-//111======450
-this.txtOutputRate.Location = new System.Drawing.Point(173,446);
+//111======400
+this.txtOutputRate.Location = new System.Drawing.Point(173,396);
 this.txtOutputRate.Name ="txtOutputRate";
 this.txtOutputRate.Size = new System.Drawing.Size(100, 21);
-this.txtOutputRate.TabIndex = 18;
+this.txtOutputRate.TabIndex = 16;
 this.Controls.Add(this.lblOutputRate);
 this.Controls.Add(this.txtOutputRate);
 
+           //#####PriorityUseType###Int32
+//属性测试425PriorityUseType
+//属性测试425PriorityUseType
+//属性测试425PriorityUseType
+//属性测试425PriorityUseType
+this.lblPriorityUseType.AutoSize = true;
+this.lblPriorityUseType.Location = new System.Drawing.Point(100,425);
+this.lblPriorityUseType.Name = "lblPriorityUseType";
+this.lblPriorityUseType.Size = new System.Drawing.Size(41, 12);
+this.lblPriorityUseType.TabIndex = 17;
+this.lblPriorityUseType.Text = "优先使用类型";
+this.txtPriorityUseType.Location = new System.Drawing.Point(173,421);
+this.txtPriorityUseType.Name = "txtPriorityUseType";
+this.txtPriorityUseType.Size = new System.Drawing.Size(100, 21);
+this.txtPriorityUseType.TabIndex = 17;
+this.Controls.Add(this.lblPriorityUseType);
+this.Controls.Add(this.txtPriorityUseType);
+
            //#####Sort###Int32
-//属性测试475Sort
-//属性测试475Sort
-//属性测试475Sort
-//属性测试475Sort
+//属性测试450Sort
+//属性测试450Sort
+//属性测试450Sort
+//属性测试450Sort
 this.lblSort.AutoSize = true;
-this.lblSort.Location = new System.Drawing.Point(100,475);
+this.lblSort.Location = new System.Drawing.Point(100,450);
 this.lblSort.Name = "lblSort";
 this.lblSort.Size = new System.Drawing.Size(41, 12);
-this.lblSort.TabIndex = 19;
+this.lblSort.TabIndex = 18;
 this.lblSort.Text = "排序";
-this.txtSort.Location = new System.Drawing.Point(173,471);
+this.txtSort.Location = new System.Drawing.Point(173,446);
 this.txtSort.Name = "txtSort";
 this.txtSort.Size = new System.Drawing.Size(100, 21);
-this.txtSort.TabIndex = 19;
+this.txtSort.TabIndex = 18;
 this.Controls.Add(this.lblSort);
 this.Controls.Add(this.txtSort);
+
+           //#####200Summary###String
+this.lblSummary.AutoSize = true;
+this.lblSummary.Location = new System.Drawing.Point(100,475);
+this.lblSummary.Name = "lblSummary";
+this.lblSummary.Size = new System.Drawing.Size(41, 12);
+this.lblSummary.TabIndex = 19;
+this.lblSummary.Text = "摘要";
+this.txtSummary.Location = new System.Drawing.Point(173,471);
+this.txtSummary.Name = "txtSummary";
+this.txtSummary.Size = new System.Drawing.Size(100, 21);
+this.txtSummary.TabIndex = 19;
+this.Controls.Add(this.lblSummary);
+this.Controls.Add(this.txtSummary);
 
         //for 加入到容器
             //components = new System.ComponentModel.Container();
@@ -459,17 +456,17 @@ this.Controls.Add(this.txtSort);
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+                this.Controls.Add(this.lblSubID );
+this.Controls.Add(this.cmbSubID );
+
                 this.Controls.Add(this.lblProdDetailID );
 this.Controls.Add(this.cmbProdDetailID );
 
                 this.Controls.Add(this.lblSKU );
 this.Controls.Add(this.txtSKU );
 
-                this.Controls.Add(this.lblBOM_ID );
-this.Controls.Add(this.cmbBOM_ID );
-
-                this.Controls.Add(this.lblSummary );
-this.Controls.Add(this.txtSummary );
+                this.Controls.Add(this.lblproperty );
+this.Controls.Add(this.txtproperty );
 
                 this.Controls.Add(this.lblUnit_ID );
 this.Controls.Add(this.cmbUnit_ID );
@@ -492,8 +489,8 @@ this.Controls.Add(this.txtInstallPosition );
                 this.Controls.Add(this.lblPositionNo );
 this.Controls.Add(this.txtPositionNo );
 
-                this.Controls.Add(this.lblUnitCost );
-this.Controls.Add(this.txtUnitCost );
+                this.Controls.Add(this.lblUnitlCost );
+this.Controls.Add(this.txtUnitlCost );
 
                 this.Controls.Add(this.lblSubtotalUnitCost );
 this.Controls.Add(this.txtSubtotalUnitCost );
@@ -504,27 +501,27 @@ this.Controls.Add(this.txtPositionDesc );
                 this.Controls.Add(this.lblManufacturingProcessID );
 this.Controls.Add(this.txtManufacturingProcessID );
 
-                this.Controls.Add(this.lblChild_BOM_Node_ID );
-this.Controls.Add(this.txtChild_BOM_Node_ID );
-
-                this.Controls.Add(this.lblSubstitute );
-this.Controls.Add(this.txtSubstitute );
-
                 this.Controls.Add(this.lblOutputRate );
 this.Controls.Add(this.txtOutputRate );
+
+                this.Controls.Add(this.lblPriorityUseType );
+this.Controls.Add(this.txtPriorityUseType );
 
                 this.Controls.Add(this.lblSort );
 this.Controls.Add(this.txtSort );
 
+                this.Controls.Add(this.lblSummary );
+this.Controls.Add(this.txtSummary );
+
                             // 
-            // "tb_BOM_SDetailEdit"
+            // "tb_BOM_SDetailSubstituteMaterialEdit"
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(404, 300);
             //this.Controls.Add(this.kryptonPanel1);
             
-            this.Name = "tb_BOM_SDetailEdit";
+            this.Name = "tb_BOM_SDetailSubstituteMaterialEdit";
             this.Size = new System.Drawing.Size(911, 490);
           
             
@@ -540,6 +537,11 @@ this.Controls.Add(this.txtSort );
      //for start
      
          
+              private Krypton.Toolkit.KryptonLabel lblSubID;
+private Krypton.Toolkit.KryptonComboBox cmbSubID;
+
+    
+        
               private Krypton.Toolkit.KryptonLabel lblProdDetailID;
 private Krypton.Toolkit.KryptonComboBox cmbProdDetailID;
 
@@ -550,13 +552,8 @@ private Krypton.Toolkit.KryptonTextBox txtSKU;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblBOM_ID;
-private Krypton.Toolkit.KryptonComboBox cmbBOM_ID;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblSummary;
-private Krypton.Toolkit.KryptonTextBox txtSummary;
+              private Krypton.Toolkit.KryptonLabel lblproperty;
+private Krypton.Toolkit.KryptonTextBox txtproperty;
 
     
         
@@ -595,8 +592,8 @@ private Krypton.Toolkit.KryptonTextBox txtPositionNo;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblUnitCost;
-private Krypton.Toolkit.KryptonTextBox txtUnitCost;
+              private Krypton.Toolkit.KryptonLabel lblUnitlCost;
+private Krypton.Toolkit.KryptonTextBox txtUnitlCost;
 
     
         
@@ -615,23 +612,23 @@ private Krypton.Toolkit.KryptonTextBox txtManufacturingProcessID;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblChild_BOM_Node_ID;
-private Krypton.Toolkit.KryptonTextBox txtChild_BOM_Node_ID;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblSubstitute;
-private Krypton.Toolkit.KryptonTextBox txtSubstitute;
-
-    
-        
               private Krypton.Toolkit.KryptonLabel lblOutputRate;
 private Krypton.Toolkit.KryptonTextBox txtOutputRate;
 
     
         
+              private Krypton.Toolkit.KryptonLabel lblPriorityUseType;
+private Krypton.Toolkit.KryptonTextBox txtPriorityUseType;
+
+    
+        
               private Krypton.Toolkit.KryptonLabel lblSort;
 private Krypton.Toolkit.KryptonTextBox txtSort;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblSummary;
+private Krypton.Toolkit.KryptonTextBox txtSummary;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

@@ -40,7 +40,7 @@ namespace RUINORERP.Server.CommandService
                 () =>
               {
 
-                  SendMessage();
+                  SendMessage(null,ToSession);
               }
 
                 ,

@@ -72,6 +72,10 @@ namespace RUINORERP.Business.Security
             return !_context.IsSuperUser && (_context.rolePropertyConfig?.ExclusiveLimited ?? false);
         }
 
+        /// <summary>
+        /// 或取金额的精度
+        /// </summary>
+        /// <returns></returns>
         public int GetMoneyDataPrecision()
         {
             return !_context.IsSuperUser ? (_context.rolePropertyConfig?.MoneyDataPrecision ?? _context.SysConfig.MoneyDataPrecision) : 4;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:07:11
+// 时间：12/25/2024 20:07:13
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,12 +30,12 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 标准物料表BOM明细-要适当冗余
+    /// 标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定
     /// </summary>
-    public partial class tb_BOM_SDetailProcessor:BaseProcessor 
+    public partial class tb_BOM_SDetailSubstituteMaterialProcessor:BaseProcessor 
     {
        
-        public tb_BOM_SDetailProcessor(ILogger<tb_BOM_SDetailProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_BOM_SDetailSubstituteMaterialProcessor(ILogger<tb_BOM_SDetailSubstituteMaterialProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;

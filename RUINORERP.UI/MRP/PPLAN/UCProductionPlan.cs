@@ -68,7 +68,7 @@ namespace RUINORERP.UI.MRP.MP
         DateTime RequirementDate = System.DateTime.Now;
         public override void BindData(tb_ProductionPlan entityPara, ActionStatus actionStatus = ActionStatus.无操作)
         {
-            if (actionStatus==ActionStatus.删除)
+            if (actionStatus == ActionStatus.删除)
             {
                 return;
             }
@@ -205,7 +205,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ProductionPlanValidator> (), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProductionPlanValidator>(), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
@@ -446,7 +446,16 @@ namespace RUINORERP.UI.MRP.MP
                     }
                     else
                     {
-                        MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                        if (SaveResult.ErrorMsg.Contains("插入重复键"))
+                        {
+                            MessageBox.Show("保存失败，计划单号不能重复，如果是销售订单拆分而成，建议在单号后手动添加序号。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return false;
+                        }
+                        else
+                        {
+                            MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
+                        }
+
                     }
                 }
                 return SaveResult.Succeeded;
@@ -849,7 +858,7 @@ namespace RUINORERP.UI.MRP.MP
                         if (aa.Count > 1)
                         {
                             var newdetail = NewDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
-                            if (newdetail!= null)
+                            if (newdetail != null)
                             {
                                 newdetail.Quantity += details[i].Quantity;
                                 continue;

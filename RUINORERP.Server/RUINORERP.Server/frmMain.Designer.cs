@@ -32,14 +32,14 @@
             splitter1 = new System.Windows.Forms.Splitter();
             richTextBox1 = new System.Windows.Forms.RichTextBox();
             menuStrip1 = new System.Windows.Forms.MenuStrip();
+            参数配置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             层叠排列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             水平平铺ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             垂直平铺ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             关闭ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            参数配置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStrip1 = new System.Windows.Forms.ToolStrip();
-            toolStripButton4 = new System.Windows.Forms.ToolStripButton();
+            tsBtnStartServer = new System.Windows.Forms.ToolStripButton();
             toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             toolStripButton5 = new System.Windows.Forms.ToolStripButton();
@@ -49,6 +49,7 @@
             tsbtnDataViewer = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+            系统注册ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             SuspendLayout();
@@ -74,13 +75,20 @@
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 参数配置ToolStripMenuItem, 窗口ToolStripMenuItem });
+            menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 参数配置ToolStripMenuItem, 窗口ToolStripMenuItem, 系统注册ToolStripMenuItem });
             menuStrip1.Location = new System.Drawing.Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new System.Drawing.Size(800, 25);
             menuStrip1.TabIndex = 3;
             menuStrip1.Text = "menuStrip1";
             menuStrip1.ItemClicked += menuStrip1_ItemClicked;
+            // 
+            // 参数配置ToolStripMenuItem
+            // 
+            参数配置ToolStripMenuItem.Name = "参数配置ToolStripMenuItem";
+            参数配置ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
+            参数配置ToolStripMenuItem.Text = "参数配置";
+            参数配置ToolStripMenuItem.Click += 参数配置ToolStripMenuItem_Click;
             // 
             // 窗口ToolStripMenuItem
             // 
@@ -117,16 +125,9 @@
             关闭ToolStripMenuItem.Text = "关闭";
             关闭ToolStripMenuItem.Click += 关闭ToolStripMenuItem_Click;
             // 
-            // 参数配置ToolStripMenuItem
-            // 
-            参数配置ToolStripMenuItem.Name = "参数配置ToolStripMenuItem";
-            参数配置ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
-            参数配置ToolStripMenuItem.Text = "参数配置";
-            参数配置ToolStripMenuItem.Click += 参数配置ToolStripMenuItem_Click;
-            // 
             // toolStrip1
             // 
-            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripButton4, toolStripButton1, toolStripButton3, toolStripButton5, toolStripddbtnDebug, tsbtnDataViewer });
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsBtnStartServer, toolStripButton1, toolStripButton3, toolStripButton5, toolStripddbtnDebug, tsbtnDataViewer });
             toolStrip1.Location = new System.Drawing.Point(0, 25);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(800, 25);
@@ -134,13 +135,14 @@
             toolStrip1.Text = "toolStrip1";
             toolStrip1.ItemClicked += toolStrip1_ItemClicked;
             // 
-            // toolStripButton4
+            // tsBtnStartServer
             // 
-            toolStripButton4.Image = (System.Drawing.Image)resources.GetObject("toolStripButton4.Image");
-            toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
-            toolStripButton4.Name = "toolStripButton4";
-            toolStripButton4.Size = new System.Drawing.Size(76, 22);
-            toolStripButton4.Text = "启动服务";
+            tsBtnStartServer.Image = Properties.Resources.foward2;
+            tsBtnStartServer.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsBtnStartServer.Name = "tsBtnStartServer";
+            tsBtnStartServer.Size = new System.Drawing.Size(88, 22);
+            tsBtnStartServer.Text = "启动服务器";
+            tsBtnStartServer.Click += tsBtnStartServer_Click;
             // 
             // toolStripButton1
             // 
@@ -220,6 +222,13 @@
             toolStripButton2.Size = new System.Drawing.Size(23, 22);
             toolStripButton2.Text = "toolStripButton2";
             // 
+            // 系统注册ToolStripMenuItem
+            // 
+            系统注册ToolStripMenuItem.Name = "系统注册ToolStripMenuItem";
+            系统注册ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
+            系统注册ToolStripMenuItem.Text = "系统注册";
+            系统注册ToolStripMenuItem.Click += 系统注册ToolStripMenuItem_Click;
+            // 
             // frmMain
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
@@ -253,7 +262,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripButton2;
         private System.Windows.Forms.ToolStripButton toolStripButton3;
-        private System.Windows.Forms.ToolStripButton toolStripButton4;
+        private System.Windows.Forms.ToolStripButton tsBtnStartServer;
         private System.Windows.Forms.ToolStripMenuItem 窗口ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 层叠排列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 水平平铺ToolStripMenuItem;
@@ -265,6 +274,7 @@
         private System.Windows.Forms.ToolStripMenuItem tsmNo;
         private System.Windows.Forms.ToolStripButton tsbtnDataViewer;
         private System.Windows.Forms.ToolStripMenuItem 参数配置ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 系统注册ToolStripMenuItem;
     }
 }
 

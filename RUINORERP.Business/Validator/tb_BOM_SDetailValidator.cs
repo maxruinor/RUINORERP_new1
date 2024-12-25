@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：12/25/2024 20:07:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -73,18 +73,37 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Child_BOM_Node_ID).NotEmpty().When(x => x.Child_BOM_Node_ID.HasValue);
 
- RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Substitute).NotEmpty().When(x => x.Substitute.HasValue);
+ 
 
  RuleFor(x => x.OutputRate).PrecisionScale(8,4,true).WithMessage("产出率:小数位不能超过4。");
 
 //***** 
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Sort).NotNull().WithMessage("排序:不能为空。");
 
-           	        Initialize();
+           	                //long
+                //SubID
+                //tb_BOM_SDetailSubstituteMaterial
+                //RuleFor(x => x.tb_BOM_SDetailSubstituteMaterials).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+               //视图不需要验证，目前认为无编辑新增操作
+                //RuleFor(c => c.tb_BOM_SDetailSubstituteMaterials).NotNull();
+                //RuleForEach(x => x.tb_BOM_SDetailSubstituteMaterials).NotNull();
+                //RuleFor(x => x.tb_BOM_SDetailSubstituteMaterials).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
+                    Initialize();
      }
 
 
 
+
+        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetailSubstituteMaterial> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
 
 
 

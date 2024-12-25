@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:07:10
+// 时间：12/25/2024 20:07:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,12 +24,12 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 标准物料表BOM明细-要适当冗余数据查询
+    /// 标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_BOM_SDetailQuery), "标准物料表BOM明细-要适当冗余数据查询", true)]
-    public partial class tb_BOM_SDetailQuery:UserControl
+     [MenuAttribute(typeof(tb_BOM_SDetailSubstituteMaterialQuery), "标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定数据查询", true)]
+    public partial class tb_BOM_SDetailSubstituteMaterialQuery:UserControl
     {
-     public tb_BOM_SDetailQuery() {
+     public tb_BOM_SDetailSubstituteMaterialQuery() {
      
          
                 
@@ -37,7 +37,7 @@ namespace RUINORERP.UI
 
             InitializeComponent();
 
-       // RuleFor(tb_BOM_SDetail => tb_BOM_SDetail.SubID).NotEmpty();
+       // RuleFor(tb_BOM_SDetailSubstituteMaterial => tb_BOM_SDetailSubstituteMaterial.SubstituteMaterialID).NotEmpty();
        
        
        //===============
@@ -92,9 +92,9 @@ namespace RUINORERP.UI
 
         public void LoadDroplistData()
         {
+          // DataBindingHelper.InitDataToCmb<tb_BOM_SDetail>(k => k.SubID, v=>v.XXNAME, cmbSubID);
           // DataBindingHelper.InitDataToCmb<tb_Unit>(k => k.Unit_ID, v=>v.XXNAME, cmbUnit_ID);
           // DataBindingHelper.InitDataToCmb<tb_Unit_Conversion>(k => k.UnitConversion_ID, v=>v.XXNAME, cmbUnitConversion_ID);
-          // DataBindingHelper.InitDataToCmb<tb_BOM_S>(k => k.BOM_ID, v=>v.XXNAME, cmbBOM_ID);
           // DataBindingHelper.InitDataToCmb<tb_ProdDetail>(k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
         }
         

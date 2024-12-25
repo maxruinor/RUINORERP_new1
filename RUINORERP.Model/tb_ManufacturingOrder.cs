@@ -585,6 +585,22 @@ namespace RUINORERP.Model
             }
         }
 
+        private bool? _IncludeSubBOM = false;
+        /// <summary>
+        /// 上层驱动
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IncludeSubBOM", ColDesc = "上层驱动")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IncludeSubBOM", IsNullable = true, ColumnDescription = "上层驱动")]
+        public bool? IncludeSubBOM
+        {
+            get { return _IncludeSubBOM; }
+            set
+            {
+                SetProperty(ref _IncludeSubBOM, value);
+            }
+        }
+
+
         private bool _IsOutSourced= false;
         /// <summary>
         /// 是否托工

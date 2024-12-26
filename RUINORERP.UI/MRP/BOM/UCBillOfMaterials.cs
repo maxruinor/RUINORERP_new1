@@ -46,6 +46,7 @@ using log4net.Core;
 using Netron.GraphLib;
 using FileInfo = System.IO.FileInfo;
 using System.Windows.Documents;
+using RUINORERP.Global.EnumExt;
 
 
 namespace RUINORERP.UI.MRP.BOM
@@ -702,8 +703,9 @@ namespace RUINORERP.UI.MRP.BOM
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
 
-        public override void BindData(tb_BOM_S entity, ActionStatus actionStatus)
+        public async override void BindData(tb_BOM_S entity, ActionStatus actionStatus)
         {
+
             if (entity == null)
             {
                 return;
@@ -713,6 +715,7 @@ namespace RUINORERP.UI.MRP.BOM
             {
                 EditEntity.PrimaryKeyID = EditEntity.BOM_ID;
                 EditEntity.ActionStatus = ActionStatus.加载;
+
                 if (EditEntity.ProdDetailID > 0)
                 {
                     if (EditEntity.view_ProdDetail == null)
@@ -726,10 +729,20 @@ namespace RUINORERP.UI.MRP.BOM
                     cmbType.SelectedValue = EditEntity.view_ProdDetail.Type_ID;
                     BindToTree(EditEntity);
                 }
+                if (EditEntity.tb_BOM_SDetails != null && EditEntity.tb_BOM_SDetails.Count > 0)
+                {
+                    foreach (var item in EditEntity.tb_BOM_SDetails)
+                    {
+                        //高级查询出来的就是这样。如果列表查询至少为0
+                        if (item.tb_BOM_SDetailSubstituteMaterials == null)
+                        {
+                            item.tb_BOM_SDetailSubstituteMaterials = await MainForm.Instance.AppContext.Db.Queryable<tb_BOM_SDetailSubstituteMaterial>().Where(c => c.SubID == item.SubID).ToListAsync();
+                        }
+                    }
+                }
             }
             else
             {
-
                 EditEntity.DataStatus = (int)DataStatus.草稿;
                 EditEntity.ActionStatus = ActionStatus.新增;
                 EditEntity.BOM_No = BizCodeGenerator.Instance.GetBizBillNo(BizType.BOM物料清单);
@@ -790,6 +803,45 @@ namespace RUINORERP.UI.MRP.BOM
             }
             sgh.LoadItemDataToGrid<tb_BOM_SDetail>(grid1, sgd, EditEntity.tb_BOM_SDetails, c => c.ProdDetailID);
 
+            SourceGrid.Cells.Controllers.ToolTipText toolTipController = new SourceGrid.Cells.Controllers.ToolTipText();
+            toolTipController.ToolTipTitle = "有替代料";
+            toolTipController.ToolTipIcon = ToolTipIcon.Info;
+            toolTipController.IsBalloon = true;
+
+            EditEntity.tb_BOM_SDetails.ForEach(x =>
+                {
+                    #region 如果有替换料的则标记出来
+                    if (x.tb_BOM_SDetailSubstituteMaterials.Count > 0)
+                    {
+                        //添加右键控制器？
+                        //grid[0, i].Controller.AddController(popupMenuForDelete);
+                        foreach (GridRow grow in grid1.Rows)
+                        {
+                            if (grow.RowData != null)
+                            {
+                                long subid = grow.RowData.GetPropertyValue<tb_BOM_SDetail>(x => x.SubID).ToLong();
+                                if (subid > 0 && x.SubID == subid)
+                                {
+                                    grid1[grow.Range.Start.Row, 0].View.ForeColor = Color.Red;
+                                    grid1[grow.Range.Start.Row, 0].View.Font = new Font("Arial", 10, FontStyle.Bold);
+                                    grid1[grow.Range.Start.Row, 0].AddController(toolTipController);
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    #endregion
+                }
+
+            );
+
+
+
+            //加载时清空
+            sgh2.LoadItemDataToGrid<tb_BOM_SDetailSubstituteMaterial>(gridSubstituteMaterial, sgd2, new List<tb_BOM_SDetailSubstituteMaterial>(), c => c.ProdDetailID);
 
             //先绑定这个。InitFilterForControl 这个才生效, 一共三个来控制，这里分别是绑定ID和SKU。下面InitFilterForControlByExp 是生成快捷按钮
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, k => k.SKU, txtProdDetailID, BindDataType4TextBox.Text, true);
@@ -867,6 +919,8 @@ namespace RUINORERP.UI.MRP.BOM
                 EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
                 EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
 
+
+
             };
             if (EditEntity.tb_BOM_SDetails == null)
             {
@@ -942,7 +996,7 @@ namespace RUINORERP.UI.MRP.BOM
              .Includes(b => b.tb_proddetail, c => c.tb_prod, d => d.tb_producttype)
              // .Includes(a => a.tb_producttype)
              .Includes(a => a.view_ProdDetail)
-            .Includes(a => a.tb_BOM_SDetails)
+            .Includes(a => a.tb_BOM_SDetails, b => b.tb_BOM_SDetailSubstituteMaterials)
             .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
             .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
             .Where(a => a.BOM_ID == _bom.BOM_ID)
@@ -988,7 +1042,6 @@ namespace RUINORERP.UI.MRP.BOM
                 listViewItem.ImageIndex = 1;//如果有配方，则图标不一样
                 foreach (var BOM_SDetail in bOM_S.tb_BOM_SDetails)
                 {
-
                     TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdDetail.CNName, 0);
                     itemSub.Tag = bOM_S;
                     itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.prop);//subitems只是从属于itemRow的子项。目前是四列
@@ -1004,8 +1057,8 @@ namespace RUINORERP.UI.MRP.BOM
                    //.RightJoin<tb_ProdDetail>((a, b) => a.ProdDetailID == b.ProdDetailID)
                    // .Includes(b => b.tb_proddetail, c => c.tb_prod, d => d.tb_producttype)
                    .Includes(a => a.view_ProdDetail)
-                   .Includes(a => a.tb_BOM_SDetails)  //查出他的子级是不是BOM并且带出他的子项
-                                                      //.Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
+                   .Includes(a => a.tb_BOM_SDetails, b => b.tb_BOM_SDetailSubstituteMaterials)  //查出他的子级是不是BOM并且带出他的子项
+                                                                                                //.Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
                     .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
                    .Where(a => a.ProdDetailID == BOM_SDetail.ProdDetailID)
                    .ToList();
@@ -1146,11 +1199,11 @@ namespace RUINORERP.UI.MRP.BOM
             gridSubstituteMaterial.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             gridSubstituteMaterial.Selection.EnableMultiSelection = false;
 
-            List<SourceGridDefineColumnItem> listCols = sgh2.GetGridColumns<ProductSharePart, tb_BOM_SDetail>(c => c.ProdDetailID, true);
+            List<SourceGridDefineColumnItem> listCols = sgh2.GetGridColumns<ProductSharePart, tb_BOM_SDetailSubstituteMaterial>(c => c.ProdDetailID, true);
 
-            listCols.SetCol_NeverVisible<tb_BOM_SDetail>(c => c.ProdDetailID);
-            listCols.SetCol_NeverVisible<tb_BOM_SDetail>(c => c.SubID);
-            listCols.SetCol_NeverVisible<tb_BOM_SDetail>(c => c.BOM_ID);
+            listCols.SetCol_NeverVisible<tb_BOM_SDetailSubstituteMaterial>(c => c.ProdDetailID);
+            listCols.SetCol_NeverVisible<tb_BOM_SDetailSubstituteMaterial>(c => c.SubID);
+            listCols.SetCol_NeverVisible<tb_BOM_SDetailSubstituteMaterial>(c => c.SubstituteMaterialID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
@@ -1166,8 +1219,9 @@ namespace RUINORERP.UI.MRP.BOM
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
 
-            listCols.SetCol_Format<tb_BOM_SDetail>(c => c.OutputRate, CustomFormatType.PercentFormat);
-            listCols.SetCol_Format<tb_BOM_SDetail>(c => c.LossRate, CustomFormatType.PercentFormat);
+            listCols.SetCol_Format<tb_BOM_SDetailSubstituteMaterial>(c => c.OutputRate, CustomFormatType.PercentFormat);
+            listCols.SetCol_Format<tb_BOM_SDetailSubstituteMaterial>(c => c.LossRate, CustomFormatType.PercentFormat);
+            listCols.SetCol_Format<tb_BOM_SDetailSubstituteMaterial>(c => c.PriorityUseType, CustomFormatType.EnumOptions, null, typeof(PriorityUseType));
             //排除指定列不在相关列内
             //listCols.SetCol_Exclude<ProductSharePart>(c => c.Location_ID);
 
@@ -1181,35 +1235,33 @@ namespace RUINORERP.UI.MRP.BOM
             sgd2 = new SourceGridDefine(gridSubstituteMaterial, listCols, true);
             sgd2.GridMasterData = EditEntity;
             //要放到初始化sgd2后面
-            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.UsedQty);
-            listCols.SetCol_Summary<tb_BOM_SDetail>(c => c.SubtotalUnitCost);
-            listCols.SetCol_Formula<tb_BOM_SDetail>((a, b) => a.UnitCost * b.UsedQty, c => c.SubtotalUnitCost);
-            sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.Inv_Cost, t => t.UnitCost);
+            listCols.SetCol_Summary<tb_BOM_SDetailSubstituteMaterial>(c => c.UsedQty);
+            listCols.SetCol_Summary<tb_BOM_SDetailSubstituteMaterial>(c => c.SubtotalUnitCost);
+            listCols.SetCol_Formula<tb_BOM_SDetailSubstituteMaterial>((a, b) => a.UnitCost * b.UsedQty, c => c.SubtotalUnitCost);
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetailSubstituteMaterial>(sgd2, f => f.Inv_Cost, t => t.UnitCost);
 
-            //冗余名称和规格
-            //  sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.CNName, t => t.SubItemName);
-            //  sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.Specifications, t => t.SubItemSpec);
-            //sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.prop, t => t.property);
-            //sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.Type_ID, t => t.Type_ID);
-            sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.Unit_ID, t => t.Unit_ID);
-            sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetail>(sgd2, f => f.SKU, t => t.SKU);
+
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetailSubstituteMaterial>(sgd2, f => f.Unit_ID, t => t.Unit_ID);
+            sgh2.SetPointToColumnPairs<ProductSharePart, tb_BOM_SDetailSubstituteMaterial>(sgd2, f => f.SKU, t => t.SKU);
 
             //由单位来决定转换率.!!!注意底层代码写死了
             //Unit_ID 是单位表主键，在换算表中是指向 Source_unit_id,但是保存到BOM详情T表中字段是换算表主键，作为外键
-            sgh2.SetCol_LimitedConditionsForSelectionRange<tb_BOM_SDetail>(sgd2, t => t.Unit_ID, f => f.UnitConversion_ID);
+            sgh2.SetCol_LimitedConditionsForSelectionRange<tb_BOM_SDetailSubstituteMaterial>(sgd2, t => t.Unit_ID, f => f.UnitConversion_ID);
 
-            sgh2.SetQueryItemToColumnPairs<View_ProdDetail, tb_BOM_SDetail>(sgd2, f => f.BOM_ID, t => t.Child_BOM_Node_ID);
+            sgh2.SetQueryItemToColumnPairs<View_ProdDetail, tb_BOM_SDetailSubstituteMaterial>(sgd2, f => f.BOM_ID, t => t.Child_BOM_Node_ID);
+
+
+
 
             //应该只提供一个结构
-            List<tb_BOM_SDetail> lines = new List<tb_BOM_SDetail>();
-            bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
-            sgd2.BindingSourceLines = bindingSourceSub;
+            List<tb_BOM_SDetailSubstituteMaterial> lines = new List<tb_BOM_SDetailSubstituteMaterial>();
+            BsSubstituteMaterial.DataSource = lines;
+            sgd2.BindingSourceLines = BsSubstituteMaterial;
 
 
-
-            sgd2.SetDependencyObject<ProductSharePart, tb_BOM_SDetail>(MainForm.Instance.list);
+            sgd2.SetDependencyObject<ProductSharePart, tb_BOM_SDetailSubstituteMaterial>(MainForm.Instance.list);
             sgd2.HasRowHeader = true;
-            sgh2.InitGrid(gridSubstituteMaterial, sgd2, true, nameof(tb_BOM_SDetail));
+            sgh2.InitGrid(gridSubstituteMaterial, sgd2, true, nameof(tb_BOM_SDetailSubstituteMaterial));
 
         }
         private void Sgh_OnLoadRelevantFields(object _View_ProdDetail, object rowObj, SourceGridDefine griddefine, Position Position)
@@ -1227,17 +1279,20 @@ namespace RUINORERP.UI.MRP.BOM
                 // int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.SelfManuCost)).ColIndex;
                 // griddefine.grid[Position.Row, ColIndex].Value = _BOM_SDetail.SelfManuCost;
 
-                MessageBox.Show("这里要调试确认成本来源方式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                /*
-                _BOM_SDetail.UnitCost = vp.tb_bom_s.SelfProductionAllCosts;
-                int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.MaterialCost)).ColIndex;
-                griddefine.grid[Position.Row, ColIndex].Value = _BOM_SDetail.MaterialCost;
+                // MessageBox.Show("这里要调试确认成本来源方式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //如果子件只是材料。就直接取材料的进货成本。如果他有配方则加上其它加工费。
+                //如果系统正常。带BOM配方的成本已经是加上了加工费的，缴库时算好的。所以这里不做处理了。
+                //这里只是修正错误。如果有配方的并且目前成本为0，则改为他的BOM的总价格 先自制再外发。
+                if (_BOM_SDetail.UnitCost == 0)
+                {
+                    // 如果 vp.tb_bom_s.SelfProductionAllCosts值为0时则用vp.OutProductionAllCosts.
+                    _BOM_SDetail.UnitCost = vp.tb_bom_s.SelfProductionAllCosts == 0 ? vp.tb_bom_s.OutProductionAllCosts : vp.tb_bom_s.SelfProductionAllCosts;
+                }
+
+                int ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.UnitCost)).ColIndex;
+                griddefine.grid[Position.Row, ColIndex].Value = _BOM_SDetail.UnitCost;
 
 
-                _BOM_SDetail.OutManuCost = vp.tb_bom_s.TotalSelfManuCost;
-                ColIndex = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.OutManuCost)).ColIndex;
-                griddefine.grid[Position.Row, ColIndex].Value = _BOM_SDetail.OutManuCost;
-                */
 
                 //Child_BOM_Node_ID 这个在明细中显示的是ID，没有使用外键关联显示，因为列名不一致。手动显示为配方名称
                 var cbni = griddefine.DefineColumns.FirstOrDefault(c => c.ColName == nameof(tb_BOM_SDetail.Child_BOM_Node_ID));
@@ -1340,13 +1395,11 @@ namespace RUINORERP.UI.MRP.BOM
             List<tb_BOM_SDetail> detailentity = bindingSourceSub.DataSource as List<tb_BOM_SDetail>;
 
 
-
+            //删除明细的机制应该是  ROM框架中 先全部删除明细再新增。说是性能好。
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
-
-
 
 
                 //如果没有有效的明细。直接提示
@@ -1528,7 +1581,6 @@ namespace RUINORERP.UI.MRP.BOM
                         e.Value = kv.Value;
                         return;
                     }
-
                 }
             }
 
@@ -1539,47 +1591,93 @@ namespace RUINORERP.UI.MRP.BOM
                 e.Value = colName;
             }
 
-
-
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
-
-
 
         }
 
-        private void grid1_MouseClick(object sender, MouseEventArgs e)
+
+        private void gridSubstituteMaterial_Validated(object sender, EventArgs e)
+        {
+            if (kryptonHeaderGroup1.Tag != null)
+            {
+                if (kryptonHeaderGroup1.Tag is tb_BOM_SDetail detail)
+                {
+
+                    List<tb_BOM_SDetailSubstituteMaterial> RefurbishedMaterials = BsSubstituteMaterial.DataSource as List<tb_BOM_SDetailSubstituteMaterial>;
+
+                    //产品ID有值才算有效值
+                    List<tb_BOM_SDetailSubstituteMaterial> LastRefurbishedMaterials = RefurbishedMaterials.Where(t => t.ProdDetailID > 0).ToList();
+                    var bb = LastRefurbishedMaterials.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+                    if (bb.Count > 1)
+                    {
+                        System.Windows.Forms.MessageBox.Show("替换料明细中，不能有相同重复的代替项!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        gridSubstituteMaterial.Focus(true);
+                    }
+                    //修改式添加替换料时
+                    if (detail.SubID > 0)
+                    {
+                        LastRefurbishedMaterials.ForEach(c => c.SubID = detail.SubID);
+                    }
+                    detail.tb_BOM_SDetailSubstituteMaterials = LastRefurbishedMaterials;
+                }
+            }
+
+        }
+
+
+        private void grid1_DoubleClick(object sender, EventArgs e)
         {
             if (sender is SourceGrid.Grid BomDetailGrid)
             {
-                if (bindingSourceSub.Current != null)
+                if (BomDetailGrid.Selection != null && BomDetailGrid.Selection.ActivePosition.Row != -1)
                 {
-                    if (bindingSourceSub.Current is tb_BOM_SDetail detail)
+                    if (grid1.Rows[BomDetailGrid.Selection.ActivePosition.Row].RowData != null)
                     {
-                        if (detail.ProdDetailID > 0)
+                        if (grid1.Rows[BomDetailGrid.Selection.ActivePosition.Row].RowData is tb_BOM_SDetail bOM_SDetail)
                         {
+                            kryptonHeaderGroup1.ValuesPrimary.Heading = bOM_SDetail.SKU + ":替代料明细";
+                            kryptonHeaderGroup1.Tag = bOM_SDetail;
+                            if (bOM_SDetail.tb_BOM_SDetailSubstituteMaterials == null)
+                            {
+                                bOM_SDetail.tb_BOM_SDetailSubstituteMaterials = new List<tb_BOM_SDetailSubstituteMaterial>();
+                            }
 
+                            BsSubstituteMaterial.Clear();
+                            //清空
+                            if (bOM_SDetail.tb_BOM_SDetailSubstituteMaterials.Count > 0)
+                            {
+                                SourceGrid.Cells.Controllers.ToolTipText toolTipController = new SourceGrid.Cells.Controllers.ToolTipText();
+                                toolTipController.ToolTipTitle = "有替代料";
+                                toolTipController.ToolTipIcon = ToolTipIcon.Info;
+                                toolTipController.IsBalloon = true;
+                                if (grid1[BomDetailGrid.Selection.ActivePosition.Row, 0].FindController(typeof(SourceGrid.Cells.Controllers.ToolTipText)) == null)
+                                {
+                                    grid1[BomDetailGrid.Selection.ActivePosition.Row, 0].Controller.AddController(toolTipController);
+                                    grid1[BomDetailGrid.Selection.ActivePosition.Row, 0].View.ForeColor = Color.Red;
+                                    grid1[BomDetailGrid.Selection.ActivePosition.Row, 0].View.Font = new Font("Arial", 10, FontStyle.Bold);
+                                }
+                            }
+                            else
+                            {
+                                grid1[BomDetailGrid.Selection.ActivePosition.Row, 0].View.ForeColor = Color.FromArgb(255, 0, 0, 0);
+                                grid1[BomDetailGrid.Selection.ActivePosition.Row, 0].View.Font = null;
+                            }
+                            sgh2.LoadItemDataToGrid<tb_BOM_SDetailSubstituteMaterial>(gridSubstituteMaterial, sgd2, bOM_SDetail.tb_BOM_SDetailSubstituteMaterials, c => c.ProdDetailID);
                         }
+
                     }
                 }
             }
-            // gridSubstituteMaterial.LoadItemDataToGrid<tb_BOM_SDetailSubstituteMaterial>(grid2, sgd2, EditEntity.tb_BOM_SDetailSubstituteMaterials, c => c.ProdDetailID);
+
         }
 
-        private void grid1_Validated(object sender, EventArgs e)
+        private void grid1_RangePaint(GridVirtual sender, RangePaintEventArgs e)
         {
-            //List<tb_BOM_SDetailSubstituteMaterial> SubstituteMaterial = BsSubstituteMaterial.DataSource as List<tb_BOM_SDetailSubstituteMaterial>;
-            //List<tb_BOM_SDetailSubstituteMaterial> LastSubstituteMaterial = new List<tb_BOM_SDetailSubstituteMaterial>();
 
-            ////产品ID有值才算有效值
-            //LastSubstituteMaterial = SubstituteMaterial.Where(t => t.ProdDetailID > 0).ToList();
-            //var bb = LastSubstituteMaterial.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-            //if (NeedValidated && bb.Count > 1)
-            //{
-            //    System.Windows.Forms.MessageBox.Show("物料明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            //    return false;
-            //}
+        }
 
-            //EditEntity.tb_SaleOutReRefurbishedMaterialsDetails = LastRefurbishedMaterials;
+        private void grid1_Paint(object sender, PaintEventArgs e)
+        {
 
         }
     }

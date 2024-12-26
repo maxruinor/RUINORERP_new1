@@ -609,16 +609,14 @@ namespace RUINORERP.UI.BaseForm
             if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
             {
                 //反审，要审核过，并且通过了，才能反审。
-                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.未审核
+                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核
                     && EditEntity.GetPropertyValue("ApprovalResults") != null
-                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == false
+                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )
                 {
 
-                }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("提示", "【未审核】且结果为否的单据才能审核。");
+
+                    MainForm.Instance.uclog.AddLog("提示", "【未审核】或【驳回】的单据才能审核。");
                     return ae;
                 }
             }
@@ -648,12 +646,35 @@ namespace RUINORERP.UI.BaseForm
                     //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
                     CloneHelper.SetValues<M>(EditEntity, oldobj);
                 };
+                if (ae.ApprovalResults == true)
+                {
+                    //审核了。数据状态要更新为
+                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+                }
+                else
+                {
+                    //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
+                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+                    if (ReflectionHelper.ExistPropertyName<M>("ApprovalOpinions"))
+                    {
+                        EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
+                    }
+                    if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus"))
+                    {
+                        EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.驳回);
+                    }
+                    if (ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
+                    {
+                        EditEntity.SetPropertyValue("ApprovalResults", false);
+                    }
+                    BusinessHelper.Instance.ApproverEntity(EditEntity);
+                    BaseController<M> ctrBase = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
+                    //因为只需要更新主表
+                    await ctrBase.BaseSaveOrUpdate(EditEntity as M);
+                    return ae;
+                }
 
-
-                //审核了。数据状态要更新为
-                EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
-
-                AuditLogHelper.Instance.CreateAuditLog<M>("审核", EditEntity, $"审核结果{ae.ApprovalResults}");
+                AuditLogHelper.Instance.CreateAuditLog<M>("审核", EditEntity, $"审核结果{ae.ApprovalResults}-{ae.ApprovalOpinions}");
 
                 //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
                 PropertyInfo[] array_property = ae.GetType().GetProperties();
@@ -1107,8 +1128,8 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public virtual void BuildQueryCondition()
         {
-             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(M).Name + "Processor");
-             QueryConditionFilter = baseProcessor.GetQueryFilter();
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(M).Name + "Processor");
+            QueryConditionFilter = baseProcessor.GetQueryFilter();
             //添加默认全局的
             // base.QueryConditions.Add(c => c.Created_by);
             // List<string> slist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);

@@ -43,7 +43,8 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_BOM>(c => c.BOM_Name);
             queryFilter.SetQueryField<View_BOM>(c => c.DepartmentID);
             queryFilter.SetQueryField<View_BOM>(c => c.Doc_ID);
-            //queryFilter.SetQueryField<View_BOM>(c => c.SKU);
+            queryFilter.SetQueryField<View_BOM>(c => c.Created_at);
+            queryFilter.SetQueryField<View_BOM>(c => c.Employee_ID);
             queryFilter.SetQueryField<View_BOM, View_ProdDetail>(c => c.ProdDetailID, c => c.SKU, r => r.SKU);
             queryFilter.SetQueryField<View_ProdBorrowing>(c => c.Type_ID, typeof(tb_ProductType));
             queryFilter.SetQueryField<View_BOM>(c => c.Notes);

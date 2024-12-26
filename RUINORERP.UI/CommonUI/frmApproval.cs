@@ -31,6 +31,9 @@ namespace RUINORERP.UI.CommonUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+            if (ValidationHelper.hasValidationErrors(this.Controls))
+                return;
             _entity.ApprovalStatus = (int)ApprovalStatus.已审核;
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -78,10 +81,12 @@ namespace RUINORERP.UI.CommonUI
             if (rdbis_Yes.Checked)
             {
                 txtOpinion.Text = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "【同意】";
+                _entity.ApprovalResults = true;
             }
             else
             {
                 txtOpinion.Text = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "【不同意】";
+                _entity.ApprovalResults = false;
             }
 
         }

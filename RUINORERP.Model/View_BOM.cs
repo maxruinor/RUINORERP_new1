@@ -170,6 +170,22 @@ namespace RUINORERP.Model
             get{return _Doc_ID;}            set{                SetProperty(ref _Doc_ID, value);                }
         }
 
+
+        private long? _Employee_ID;
+        /// <summary>
+        /// 创建人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Employee_ID", ColDesc = "创建人")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Employee_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "创建人")]
+        [FKRelationAttribute("tb_Employee", "Employee_ID")]
+        public long? Employee_ID
+        {
+            get { return _Employee_ID; }
+            set
+            {
+                SetProperty(ref _Employee_ID, value);
+            }
+        }
         private long? _BOM_S_VERID;
         
         

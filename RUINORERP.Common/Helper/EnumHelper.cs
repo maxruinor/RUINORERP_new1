@@ -177,7 +177,6 @@ namespace RUINORERP.Common.Helper
         /// <returns></returns>
         public static Dictionary<string, int> getEnumDic<T>()
         {
-
             Dictionary<string, int> resultList = new Dictionary<string, int>();
             Type type = typeof(T);
             var strList = GetNamesArr<T>().ToList();
@@ -202,7 +201,60 @@ namespace RUINORERP.Common.Helper
             {
                 dic.Add(item.ToString(), (int)item);
             }
+            return dic;
+        }
 
+        /// <summary>
+        /// 将枚举转换成字典
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <returns></returns>
+        public static Dictionary<int, string> GetDicKeyValue<TEnum>()
+        {
+            Dictionary<int, string> dic = new Dictionary<int, string>();
+            Type t = typeof(TEnum);
+            var arr = Enum.GetValues(t);
+            foreach (var item in arr)
+            {
+                dic.Add((int)item, item.ToString());
+            }
+            return dic;
+        }
+
+        /// <summary>
+        /// 将枚举转换成字典
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <returns></returns>
+        public static Dictionary<int, string> GetDicKeyValue(Type enumType)
+        {
+            Dictionary<int, string> dic = new Dictionary<int, string>();
+            // 确保传入的类型是枚举
+            if (!enumType.IsEnum)
+            {
+                throw new ArgumentException("提供的类型必须是枚举类型。", nameof(enumType));
+            }
+            Array enumValues = Enum.GetValues(enumType);
+            IEnumerator e = enumValues.GetEnumerator();
+            e.Reset();
+            int currentValue;
+            string currentName;
+            while (e.MoveNext())
+            {
+                //object eobj = Activator.CreateInstance(newType);
+                //currentValue = (int)e.Current;
+                //currentName = e.Current.ToString();
+                //eobj.SetPropertyValue(keyName, currentValue);
+                //eobj.SetPropertyValue("Name", currentName);
+                //list.Add(eobj);
+            }
+
+
+            var arr = Enum.GetValues(enumType);
+            foreach (var item in arr)
+            {
+                dic.Add((int)item, item.ToString());
+            }
             return dic;
         }
 

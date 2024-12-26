@@ -374,10 +374,10 @@ namespace RUINORERP.UI.BaseForm
                     case DataStatus.草稿:
                         toolStripbtnAdd.Enabled = false;
                         toolStripBtnCancel.Visible = true;
-                        toolStripbtnModify.Enabled = false;
+                        toolStripbtnModify.Enabled = true;
                         toolStripbtnSubmit.Enabled = true;
                         toolStripbtnReview.Enabled = false;
-                        toolStripButtonSave.Enabled = true;
+                        toolStripButtonSave.Enabled = false;
                         toolStripBtnReverseReview.Enabled = false;
                         toolStripbtnPrint.Enabled = false;
                         toolStripbtnDelete.Enabled = true;
@@ -1406,12 +1406,12 @@ namespace RUINORERP.UI.BaseForm
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
                 //审核过，并且通过了，不能再次审核
-                if ((EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核 || EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.结案)
+                if ((EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.已审核)
                     && EditEntity.GetPropertyValue("ApprovalResults") != null
                     && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
                     )
                 {
-                    MainForm.Instance.uclog.AddLog("未审核，或已审核且【未通过】的单据才能再次审核。");
+                    MainForm.Instance.uclog.AddLog("【未审核】或【驳回】的单据才能再次审核。");
                     return ae;
                 }
             }
@@ -1439,11 +1439,33 @@ namespace RUINORERP.UI.BaseForm
                     //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
                     CloneHelper.SetValues<T>(EditEntity, oldobj);
                 };
-
-                //审核了。数据状态要更新为
-                EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
-
-
+                if (ae.ApprovalResults == true)
+                {
+                    //审核了。数据状态要更新为
+                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+                }
+                else
+                {
+                    //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
+                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
+                    if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
+                    {
+                        EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
+                    }
+                    if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus"))
+                    {
+                        EditEntity.SetPropertyValue("ApprovalStatus",(int)ApprovalStatus.驳回);
+                    }
+                    if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+                    {
+                        EditEntity.SetPropertyValue("ApprovalResults", false);
+                    }
+                    BusinessHelper.Instance.ApproverEntity(EditEntity);
+                    BaseController<T> ctrBase = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+                    //因为只需要更新主表
+                   await ctrBase.BaseSaveOrUpdate(EditEntity);
+                    return ae;
+                }
 
 
                 //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
@@ -1507,12 +1529,9 @@ namespace RUINORERP.UI.BaseForm
                     {
                         toolStripbtnReview.Enabled = true;
                     }
-                    else
-                    {
-                        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核成功。");
-                    }
+                   
                     ae.ApprovalResults = true;
-                    AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{ae.ApprovalResults}");
+                    AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果：{ae.ApprovalResults}-{ae.ApprovalOpinions}");
                 }
                 else
                 {
@@ -1520,10 +1539,7 @@ namespace RUINORERP.UI.BaseForm
                     command.Undo();
                     ae.ApprovalResults = false;
                     ToolBarEnabledControl(EditEntity);
-
-
-
-
+                    ae.ApprovalStatus = (int)ApprovalStatus.未审核;
                     AuditLogHelper.Instance.CreateAuditLog<T>("审核", EditEntity, $"审核结果{ae.ApprovalResults},{rmr.ErrorMsg}");
                     MainForm.Instance.logger.LogError($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg}");
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败{rmr.ErrorMsg},请联系管理员！", Color.Red);

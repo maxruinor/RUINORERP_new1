@@ -200,6 +200,11 @@ namespace RUINORERP.UI.UCSourceGrid
         public string FormatText { get; set; }
 
         /// <summary>
+        ///枚举下拉选项时的类型
+        /// </summary>
+        public Type TypeForEnumOptions { get; set; }
+
+        /// <summary>
         /// 是否为小计列 用乘 目前只设计了一组小计及结果
         /// </summary>
         public bool SubtotalResult { get; set; } = false;

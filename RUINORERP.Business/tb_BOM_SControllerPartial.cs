@@ -58,10 +58,23 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_BOM_S>(entity as tb_BOM_S, new UpdateNavRootOptions() { IsInsertRoot = true })//IsInsertRoot=true表示不存在插入主表
-                        .Include(x => x.tb_BOM_SDetails)
+
+
+                //rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_BOM_S>(entity as tb_BOM_S, new UpdateNavRootOptions() { IsInsertRoot = true })//IsInsertRoot=true表示不存在插入主表1
+                //        .Include(b => b.tb_BOM_SDetails).ThenInclude(e => e.tb_BOM_SDetailSubstituteMaterials)
+                //        .Include(m => m.tb_BOM_SDetailSecondaries)
+                //        .ExecuteCommandAsync();
+
+                rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_BOM_S>(entity as tb_BOM_S,
+                     new UpdateNavRootOptions() { IsInsertRoot = true })
+                        .Include(b => b.tb_BOM_SDetails, new UpdateNavOptions()
+                        {
+                            OneToManyInsertOrUpdate = true
+                        }).ThenInclude(e => e.tb_BOM_SDetailSubstituteMaterials)
                         .Include(m => m.tb_BOM_SDetailSecondaries)
                         .ExecuteCommandAsync();
+
+
 
                 //if (entity.MainID > 0)
                 //{

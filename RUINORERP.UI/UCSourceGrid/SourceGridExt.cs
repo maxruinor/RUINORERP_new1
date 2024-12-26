@@ -1,4 +1,4 @@
-﻿ 
+﻿
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global.Model;
@@ -291,14 +291,17 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_Format<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, CustomFormatType CustomFormat, params string[] FormatText)
+        public static void SetCol_Format<T>(this List<SourceGridDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, CustomFormatType CustomFormat, string[] FormatText = null, Type TypeForEnumOptions = null)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {
-                item.SetCol_Format(minfo.Name, CustomFormat, FormatText);
+                item.SetCol_Format(minfo.Name, CustomFormat, FormatText, TypeForEnumOptions);
             }
         }
+
+
+
 
         /// <summary>
         /// 指定只读的列
@@ -390,17 +393,45 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        private static void SetCol_Format(this SourceGridDefineColumnItem col, string colName, CustomFormatType CustomFormat, params string[] FormatText)
+        private static void SetCol_Format(this SourceGridDefineColumnItem col, string colName, CustomFormatType CustomFormat, string[] FormatText = null, Type TypeForEnumOptions = null)
         {
-            if (col.ColName == colName && FormatText.Length > 0)
+            if (col.ColName == colName)
             {
+                switch (CustomFormat)
+                {
+                    case CustomFormatType.DefaultFormat:
+                        break;
+                    case CustomFormatType.PercentFormat:
+                    case CustomFormatType.CurrencyFormat:
+                        if (FormatText != null && FormatText.Length > 0)
+                        {
+                            col.FormatText = FormatText[0].ToString();
+                        }
+                        break;
+                    case CustomFormatType.EnumOptions:
+                        if (TypeForEnumOptions != null)
+                        {
+                            col.TypeForEnumOptions = TypeForEnumOptions;
+                        }
+                        break;
+                    case CustomFormatType.DecimalPrecision:
+                        break;
+                    case CustomFormatType.Bool:
+                        break;
+                    case CustomFormatType.Image:
+                        break;
+                    case CustomFormatType.WebPathImage:
+                        break;
+                    case CustomFormatType.DateTime:
+                        break;
+                    default:
+                        break;
+                }
                 col.CustomFormat = CustomFormat;
-                col.FormatText = FormatText[0];
             }
-            if (col.ColName == colName && FormatText.Length == 0)
-            {
-                col.CustomFormat = CustomFormat;
-            }
+
+
+
         }
 
         public static void SetCol_DefaultValue(this SourceGridDefineColumnItem col, string colName, object DefaultValue)

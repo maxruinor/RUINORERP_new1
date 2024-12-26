@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer1 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
+            System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer treeListViewItemCollectionComparer2 = new System.Windows.Forms.TreeListViewItemCollection.TreeListViewItemCollectionComparer();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCBillOfMaterials));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
@@ -755,7 +755,7 @@
             // 
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.kryptonHeaderGroup1);
             this.kryptonSplitContainer2.Size = new System.Drawing.Size(909, 480);
-            this.kryptonSplitContainer2.SplitterDistance = 245;
+            this.kryptonSplitContainer2.SplitterDistance = 305;
             this.kryptonSplitContainer2.TabIndex = 2;
             // 
             // kryptonDockableNavigator1
@@ -771,7 +771,7 @@
             this.kryptonPage1,
             this.kryptonPage2});
             this.kryptonDockableNavigator1.SelectedIndex = 0;
-            this.kryptonDockableNavigator1.Size = new System.Drawing.Size(909, 245);
+            this.kryptonDockableNavigator1.Size = new System.Drawing.Size(909, 305);
             this.kryptonDockableNavigator1.TabIndex = 0;
             this.kryptonDockableNavigator1.Text = "kryptonDockableNavigator1";
             // 
@@ -783,7 +783,7 @@
             this.kryptonPage1.LastVisibleSet = true;
             this.kryptonPage1.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPage1.Name = "kryptonPage1";
-            this.kryptonPage1.Size = new System.Drawing.Size(907, 218);
+            this.kryptonPage1.Size = new System.Drawing.Size(907, 278);
             this.kryptonPage1.Text = "子件明细";
             this.kryptonPage1.ToolTipTitle = "Page ToolTip";
             this.kryptonPage1.UniqueName = "72514CDBEB1F468791963DA7A173DEA5";
@@ -797,12 +797,13 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(907, 218);
+            this.grid1.Size = new System.Drawing.Size(907, 278);
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
-            this.grid1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.grid1_MouseClick);
-            this.grid1.Validated += new System.EventHandler(this.grid1_Validated);
+            this.grid1.RangePaint += new SourceGrid.RangePaintEventHandler(this.grid1_RangePaint);
+            this.grid1.Paint += new System.Windows.Forms.PaintEventHandler(this.grid1_Paint);
+            this.grid1.DoubleClick += new System.EventHandler(this.grid1_DoubleClick);
             // 
             // kryptonPage2
             // 
@@ -812,7 +813,7 @@
             this.kryptonPage2.LastVisibleSet = true;
             this.kryptonPage2.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPage2.Name = "kryptonPage2";
-            this.kryptonPage2.Size = new System.Drawing.Size(907, 100);
+            this.kryptonPage2.Size = new System.Drawing.Size(907, 278);
             this.kryptonPage2.Text = "副产品明细";
             this.kryptonPage2.ToolTipTitle = "Page ToolTip";
             this.kryptonPage2.UniqueName = "CDAB0FC01A604736F99DEC48EB4EA659";
@@ -826,7 +827,7 @@
             this.grid2.Name = "grid2";
             this.grid2.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid2.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid2.Size = new System.Drawing.Size(907, 100);
+            this.grid2.Size = new System.Drawing.Size(907, 278);
             this.grid2.TabIndex = 3;
             this.grid2.TabStop = true;
             this.grid2.ToolTipText = "";
@@ -841,7 +842,13 @@
             // kryptonHeaderGroup1.Panel
             // 
             this.kryptonHeaderGroup1.Panel.Controls.Add(this.gridSubstituteMaterial);
-            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(909, 230);
+            this.kryptonHeaderGroup1.Size = new System.Drawing.Size(909, 170);
+            this.kryptonHeaderGroup1.StateCommon.HeaderPrimary.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
+            | Krypton.Toolkit.PaletteDrawBorders.Left) 
+            | Krypton.Toolkit.PaletteDrawBorders.Right)));
+            this.kryptonHeaderGroup1.StateNormal.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
+            | Krypton.Toolkit.PaletteDrawBorders.Left) 
+            | Krypton.Toolkit.PaletteDrawBorders.Right)));
             this.kryptonHeaderGroup1.TabIndex = 110;
             this.kryptonHeaderGroup1.ToolTipValues.Description = "";
             this.kryptonHeaderGroup1.ValuesPrimary.Heading = "替代料明细";
@@ -862,10 +869,11 @@
             this.gridSubstituteMaterial.Name = "gridSubstituteMaterial";
             this.gridSubstituteMaterial.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.gridSubstituteMaterial.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.gridSubstituteMaterial.Size = new System.Drawing.Size(907, 177);
+            this.gridSubstituteMaterial.Size = new System.Drawing.Size(907, 117);
             this.gridSubstituteMaterial.TabIndex = 1;
             this.gridSubstituteMaterial.TabStop = true;
             this.gridSubstituteMaterial.ToolTipText = "";
+            this.gridSubstituteMaterial.Validated += new System.EventHandler(this.gridSubstituteMaterial_Validated);
             // 
             // kryptonSplitContainerLeft
             // 
@@ -919,9 +927,9 @@
             this.columnHeader3,
             this.columnHeader4,
             this.columnHeader5});
-            treeListViewItemCollectionComparer1.Column = 0;
-            treeListViewItemCollectionComparer1.SortOrder = System.Windows.Forms.SortOrder.Ascending;
-            this.treeListView1.Comparer = treeListViewItemCollectionComparer1;
+            treeListViewItemCollectionComparer2.Column = 0;
+            treeListViewItemCollectionComparer2.SortOrder = System.Windows.Forms.SortOrder.Ascending;
+            this.treeListView1.Comparer = treeListViewItemCollectionComparer2;
             this.treeListView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeListView1.GridLines = true;
             this.treeListView1.HideSelection = false;

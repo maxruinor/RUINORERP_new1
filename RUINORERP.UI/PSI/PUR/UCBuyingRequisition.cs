@@ -131,6 +131,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
+           
 
             DataBindingHelper.BindData4ControlByEnum<tb_BuyingRequisition>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_BuyingRequisition>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));

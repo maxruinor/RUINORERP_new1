@@ -1009,6 +1009,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
     }
 
+
     /// <summary>
     /// 自定义格式
     /// </summary>
@@ -1024,7 +1025,10 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         PercentFormat,
 
-
+        /// <summary>
+        /// 枚举值下拉选项
+        /// </summary>
+        EnumOptions,
         /// <summary>
         /// 货币
         /// </summary>

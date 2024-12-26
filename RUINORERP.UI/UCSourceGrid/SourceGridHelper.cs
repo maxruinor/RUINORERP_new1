@@ -1155,6 +1155,7 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 // AddRowIndex = 0;
                 //这行也不行。实际原因是表格加载会慢，所以会先加载，然后插入行，不然会报错
+
             }
 
             AddRows(AddRowIndex, grid, define, RowReadonly);
@@ -1939,6 +1940,12 @@ namespace RUINORERP.UI.UCSourceGrid
 
                     break;
                 case CustomFormatType.DecimalPrecision:
+                    break;
+                case CustomFormatType.EnumOptions:
+                    //SourceGrid.Cells.Editors.ComboBox l_EnumEditor = new SourceGrid.Cells.Editors.ComboBox(typeof(int));
+                    // l_EnumEditor.TypeConverter = new DevAge.ComponentModel.Converter.EnumTypeConverter(typeof(int));
+                    //_editor = l_EnumEditor;
+                    _editor = SetComboxEditor(dci);
                     break;
                 case CustomFormatType.WebPathImage:
                     SourceGrid.Cells.Editors.ImageWebPickEditor imageWebPicker = new SourceGrid.Cells.Editors.ImageWebPickEditor(typeof(string));
@@ -2746,226 +2753,309 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 设置下拉的数据源
         /// </summary>
         /// <param name="dci"></param>
+        /// <param name="TypeForEnumOptions">如果是枚举时，传入枚举类型用于创建下拉值</param>
         /// <returns></returns>
         private SourceGrid.Cells.Editors.ComboBox SetComboxEditor(SourceGridDefineColumnItem dci)
         {
-            string tableName = dci.FKRelationCol.FKTableName;
-            string typeName = "RUINORERP.Model." + tableName;
+
             var _editor = new SourceGrid.Cells.Editors.ComboBox(typeof(string));
-            //缓存下拉
-            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            if (dci.CustomFormat == CustomFormatType.EnumOptions && dci.TypeForEnumOptions != null)
             {
-                string ColID = BizCacheHelper.Manager.NewTableList[tableName].Key;
-                string ColName = BizCacheHelper.Manager.NewTableList[tableName].Value;
-                BindingSource bs = new BindingSource();
-                var objlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (objlist != null)
+                #region 绑定枚举值
+                List<string> ids = new List<string>();
+                ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
+
+                var dic = EnumHelper.GetDicKeyValue(dci.TypeForEnumOptions);
+                dic.Keys.ForEach(x => ids.Add(x.ToString()));
+
+                dic.ForEach(x =>
                 {
-                    var tlist = ((IEnumerable<dynamic>)objlist).ToList();
-                    List<string> ids = new List<string>();
-                    ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
-                    foreach (var item in tlist)
+                    OutNames.TryAdd(x.Key.ToString(), x.Value.ToString());
+                }
+                );
+
+                SourceGrid.Cells.Editors.ComboBox ec = new SourceGrid.Cells.Editors.ComboBox(typeof(List<int>), ids.ToArray(), true);
+                ec.Control.FormattingEnabled = true;
+
+                DevAge.ComponentModel.Validator.ComboxValueMapping comboMapping = new DevAge.ComponentModel.Validator.ComboxValueMapping(true);
+                comboMapping.ValueList = OutNames;
+                comboMapping.DisplayStringList = ids;
+                comboMapping.BindValidator(ec);
+
+                #region  添加自动完成功能 智能提示功能
+
+                AutoCompleteStringCollection autoscList = new AutoCompleteStringCollection();
+                foreach (var item in OutNames)
+                {
+                    autoscList.Add(item.Value);
+                }
+                DevAge.Windows.Forms.DevAgeComboBox cmb = (DevAge.Windows.Forms.DevAgeComboBox)ec.Control;
+                //cmb.BeginUpdate();
+                //cmb.DisplayMember = DisplayMember;
+                //cmb.ValueMember = ValueMember;
+                //cmb.DataSource = OutNames;
+                cmb.DropDownStyle = ComboBoxStyle.DropDown;
+                cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+                cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
+                cmb.AutoCompleteCustomSource = autoscList;
+                //cmb.EndUpdate();
+                #endregion
+
+
+                #region  多级联动？
+                //没有触发。是因为绑定数据源？
+                ec.Control.DrawItem += delegate (object sender, DrawItemEventArgs e)
+                {
+
+                };
+
+                ec.Control.DropDown += delegate (object sender, EventArgs e)
+                {
+
+                };
+
+                ec.Control.SelectedIndexChanged += delegate (object sender, EventArgs e)
+                {
+
+                    Position position = _editor.EditPosition;
+                    //这里是可以知道条件的下拉及其值，控制目标的下拉显示
+                    SourceGridDefineColumnItem targetCol = null;
+                    dci.ParentGridDefine.LimitedConditionsForSelectionRange.TryGetValue(dci, out targetCol);
+                    if (targetCol != null)
                     {
-                        if (item is JObject)
+                        if (targetCol.SugarCol != null && targetCol.SugarCol.ColumnDataType != null)
                         {
-                            //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
-                            //这里要不要利用process中设置的条件来判断呢？
-                            string id = item[ColID].ToString();
-                            ids.Add(id.ToString());//设置一个主键集合 
-                            OutNames.TryAdd(id, item[ColName].ToString());//设置一个显示名称的集合
+
+                        }
+                    }
+
+
+
+
+                };
+
+                #endregion
+                _editor = ec;
+
+                #endregion
+            }
+            else
+            {
+                string tableName = dci.FKRelationCol.FKTableName;
+                string typeName = "RUINORERP.Model." + tableName;
+                //缓存下拉
+                if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+                {
+                    string ColID = BizCacheHelper.Manager.NewTableList[tableName].Key;
+                    string ColName = BizCacheHelper.Manager.NewTableList[tableName].Value;
+                    BindingSource bs = new BindingSource();
+                    var objlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    if (objlist != null)
+                    {
+                        var tlist = ((IEnumerable<dynamic>)objlist).ToList();
+                        List<string> ids = new List<string>();
+                        ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
+                        foreach (var item in tlist)
+                        {
+                            if (item is JObject)
+                            {
+                                //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
+                                //这里要不要利用process中设置的条件来判断呢？
+                                string id = item[ColID].ToString();
+                                ids.Add(id.ToString());//设置一个主键集合 
+                                OutNames.TryAdd(id, item[ColName].ToString());//设置一个显示名称的集合
+                            }
+                            else
+                            {
+                                //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
+                                //这里要不要利用process中设置的条件来判断呢？
+                                string id = ReflectionHelper.GetPropertyValue(item, ColID).ToString();
+                                ids.Add(id.ToString());//设置一个主键集合 
+                                OutNames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());//设置一个显示名称的集合
+                            }
+
+                        }
+                        if (tlist == null || tlist.Count == 0)
+                        {
+                            Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+                            var list = bdc.GetBindSourceList(tableName);
                         }
                         else
                         {
-                            //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
-                            //这里要不要利用process中设置的条件来判断呢？
-                            string id = ReflectionHelper.GetPropertyValue(item, ColID).ToString();
-                            ids.Add(id.ToString());//设置一个主键集合 
-                            OutNames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());//设置一个显示名称的集合
-                        }
+                            SourceGrid.Cells.Editors.ComboBox ec = new SourceGrid.Cells.Editors.ComboBox(typeof(List<long>), ids.ToArray(), true);
+                            ec.Control.FormattingEnabled = true;
 
-                    }
-                    if (tlist == null || tlist.Count == 0)
-                    {
-                        Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
-                        var list = bdc.GetBindSourceList(tableName);
-                    }
-                    else
-                    {
-                        SourceGrid.Cells.Editors.ComboBox ec = new SourceGrid.Cells.Editors.ComboBox(typeof(List<long>), ids.ToArray(), true);
-                        ec.Control.FormattingEnabled = true;
+                            DevAge.ComponentModel.Validator.ComboxValueMapping comboMapping = new DevAge.ComponentModel.Validator.ComboxValueMapping(true);
+                            comboMapping.ValueList = OutNames;
+                            comboMapping.DisplayStringList = ids;
+                            comboMapping.BindValidator(ec);
 
-                        DevAge.ComponentModel.Validator.ComboxValueMapping comboMapping = new DevAge.ComponentModel.Validator.ComboxValueMapping(true);
-                        comboMapping.ValueList = OutNames;
-                        comboMapping.DisplayStringList = ids;
-                        comboMapping.BindValidator(ec);
+                            #region  添加自动完成功能 智能提示功能
 
-                        #region  添加自动完成功能 智能提示功能
-
-                        AutoCompleteStringCollection autoscList = new AutoCompleteStringCollection();
-                        foreach (var item in OutNames)
-                        {
-                            autoscList.Add(item.Value);
-                        }
-                        DevAge.Windows.Forms.DevAgeComboBox cmb = (DevAge.Windows.Forms.DevAgeComboBox)ec.Control;
-                        //cmb.BeginUpdate();
-                        //cmb.DisplayMember = DisplayMember;
-                        //cmb.ValueMember = ValueMember;
-                        //cmb.DataSource = OutNames;
-                        cmb.DropDownStyle = ComboBoxStyle.DropDown;
-                        cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-                        cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-                        cmb.AutoCompleteCustomSource = autoscList;
-                        //cmb.EndUpdate();
-                        #endregion
-
-
-                        #region  多级联动？
-                        //没有触发。是因为绑定数据源？
-                        ec.Control.DrawItem += delegate (object sender, DrawItemEventArgs e)
-                        {
-
-                        };
-
-                        ec.Control.DropDown += delegate (object sender, EventArgs e)
-                        {
-                            int a = 1;
-                        };
-
-                        ec.Control.SelectedIndexChanged += delegate (object sender, EventArgs e)
-                        {
-
-                            Position position = _editor.EditPosition;
-                            //这里是可以知道条件的下拉及其值，控制目标的下拉显示
-                            SourceGridDefineColumnItem targetCol = null;
-                            dci.ParentGridDefine.LimitedConditionsForSelectionRange.TryGetValue(dci, out targetCol);
-                            if (targetCol != null)
+                            AutoCompleteStringCollection autoscList = new AutoCompleteStringCollection();
+                            foreach (var item in OutNames)
                             {
-                                if (targetCol.SugarCol != null && targetCol.SugarCol.ColumnDataType != null)
+                                autoscList.Add(item.Value);
+                            }
+                            DevAge.Windows.Forms.DevAgeComboBox cmb = (DevAge.Windows.Forms.DevAgeComboBox)ec.Control;
+                            //cmb.BeginUpdate();
+                            //cmb.DisplayMember = DisplayMember;
+                            //cmb.ValueMember = ValueMember;
+                            //cmb.DataSource = OutNames;
+                            cmb.DropDownStyle = ComboBoxStyle.DropDown;
+                            cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+                            cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
+                            cmb.AutoCompleteCustomSource = autoscList;
+                            //cmb.EndUpdate();
+                            #endregion
+
+
+                            #region  多级联动？
+                            //没有触发。是因为绑定数据源？
+                            ec.Control.DrawItem += delegate (object sender, DrawItemEventArgs e)
+                            {
+
+                            };
+
+                            ec.Control.DropDown += delegate (object sender, EventArgs e)
+                            {
+                                int a = 1;
+                            };
+
+                            ec.Control.SelectedIndexChanged += delegate (object sender, EventArgs e)
+                            {
+
+                                Position position = _editor.EditPosition;
+                                //这里是可以知道条件的下拉及其值，控制目标的下拉显示
+                                SourceGridDefineColumnItem targetCol = null;
+                                dci.ParentGridDefine.LimitedConditionsForSelectionRange.TryGetValue(dci, out targetCol);
+                                if (targetCol != null)
                                 {
-                                    if (targetCol.SugarCol.ColumnDataType == "bigint"
-                                    && targetCol.EditorForColumn is SourceGrid.Cells.Editors.ComboBox)
+                                    if (targetCol.SugarCol != null && targetCol.SugarCol.ColumnDataType != null)
                                     {
-                                        SourceGrid.Cells.Editors.ComboBox cmbList = targetCol.EditorForColumn as SourceGrid.Cells.Editors.ComboBox;
-                                        //如果有列的特殊设置。则将数据源重新设置
-                                        //手动构造
-                                        var limitedValue = ec.Control.SelectedItem;
-                                        #region  实时修改下拉列表的值
-                                        string MytableName = targetCol.FKRelationCol.FKTableName;
-                                        string MytypeName = "RUINORERP.Model." + MytableName;
-
-                                        if (BizCacheHelper.Manager.NewTableList.ContainsKey(MytableName))
+                                        if (targetCol.SugarCol.ColumnDataType == "bigint"
+                                        && targetCol.EditorForColumn is SourceGrid.Cells.Editors.ComboBox)
                                         {
-                                            string MColID = BizCacheHelper.Manager.NewTableList[MytableName].Key;
-                                            string MColName = BizCacheHelper.Manager.NewTableList[MytableName].Value;
-                                            BindingSource Mbs = new BindingSource();
-                                            var Mobjlist = BizCacheHelper.Manager.CacheEntityList.Get(MytableName);
-                                            if (Mobjlist != null)
+                                            SourceGrid.Cells.Editors.ComboBox cmbList = targetCol.EditorForColumn as SourceGrid.Cells.Editors.ComboBox;
+                                            //如果有列的特殊设置。则将数据源重新设置
+                                            //手动构造
+                                            var limitedValue = ec.Control.SelectedItem;
+                                            #region  实时修改下拉列表的值
+                                            string MytableName = targetCol.FKRelationCol.FKTableName;
+                                            string MytypeName = "RUINORERP.Model." + MytableName;
+
+                                            if (BizCacheHelper.Manager.NewTableList.ContainsKey(MytableName))
                                             {
-                                                var Oldlist = ((IEnumerable<dynamic>)Mobjlist).ToList();
-                                                //限制范围 https://www.cnblogs.com/zhanglb163/p/12839040.html
-
-                                                var otlist = Oldlist;
-
-                                                //下面是动态查询,但是硬编码才性能最好。并且代码可行。所以这种由
-                                                //一个列的内容决定另一个列的内容。但是条件中，注意对应字段是否存在另一个集合中，
-                                                //有时，外键字段可能不存在另一个集合中。因为名称改了。如 单位，与单位换算中的单位ID就不一样。
-                                                //条件是业务主键时
-                                                switch (targetCol.ColName)
+                                                string MColID = BizCacheHelper.Manager.NewTableList[MytableName].Key;
+                                                string MColName = BizCacheHelper.Manager.NewTableList[MytableName].Value;
+                                                BindingSource Mbs = new BindingSource();
+                                                var Mobjlist = BizCacheHelper.Manager.CacheEntityList.Get(MytableName);
+                                                if (Mobjlist != null)
                                                 {
-                                                    case "ProdDetailID":
-                                                        otlist = Oldlist.Where(m => m.ProdDetailID == limitedValue.ToLong()).ToList();
-                                                        break;
-                                                    case "UnitConversion_ID"://特别写列。反正这里是硬编码 Unit_ID 在换算表中是指向 Source_unit_id
-                                                        otlist = Oldlist.Where(m => m.Source_unit_id == limitedValue.ToLong()).ToList();
-                                                        break;
-                                                    default:
-                                                        throw new Exception("请实现限制时：" + targetCol.ColName + "的动态查询");
-                                                        break;
+                                                    var Oldlist = ((IEnumerable<dynamic>)Mobjlist).ToList();
+                                                    //限制范围 https://www.cnblogs.com/zhanglb163/p/12839040.html
+
+                                                    var otlist = Oldlist;
+
+                                                    //下面是动态查询,但是硬编码才性能最好。并且代码可行。所以这种由
+                                                    //一个列的内容决定另一个列的内容。但是条件中，注意对应字段是否存在另一个集合中，
+                                                    //有时，外键字段可能不存在另一个集合中。因为名称改了。如 单位，与单位换算中的单位ID就不一样。
+                                                    //条件是业务主键时
+                                                    switch (targetCol.ColName)
+                                                    {
+                                                        case "ProdDetailID":
+                                                            otlist = Oldlist.Where(m => m.ProdDetailID == limitedValue.ToLong()).ToList();
+                                                            break;
+                                                        case "UnitConversion_ID"://特别写列。反正这里是硬编码 Unit_ID 在换算表中是指向 Source_unit_id
+                                                            otlist = Oldlist.Where(m => m.Source_unit_id == limitedValue.ToLong()).ToList();
+                                                            break;
+                                                        default:
+                                                            throw new Exception("请实现限制时：" + targetCol.ColName + "的动态查询");
+
+                                                    }
+
+
+                                                    List<string> Myids = new List<string>();
+                                                    ConcurrentDictionary<string, string> Mynames = new ConcurrentDictionary<string, string>();
+                                                    foreach (var item in otlist)
+                                                    {
+                                                        string id = ReflectionHelper.GetPropertyValue(item, ColID).ToString();
+                                                        Myids.Add(id.ToString());
+                                                        Mynames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());
+                                                    }
+
+
+                                                    //这个要写在绑定验证的前面。这样会指定下拉列表的值
+                                                    cmbList.StandardValues = Myids.ToArray();
+
+                                                    DevAge.ComponentModel.Validator.ComboxValueMapping MycomboMapping = new DevAge.ComponentModel.Validator.ComboxValueMapping(true);
+                                                    MycomboMapping.ValueList = Mynames;
+                                                    MycomboMapping.DisplayStringList = Myids;
+
+                                                    //先解绑验证。不然会多次执行。因为开始就有绑定
+                                                    MycomboMapping.UnBindValidator(cmbList);
+                                                    MycomboMapping.BindValidator(cmbList);
+
+
+                                                    #region  添加自动完成功能 智能提示功能
+
+                                                    AutoCompleteStringCollection MyautoscList = new AutoCompleteStringCollection();
+                                                    foreach (var item in Mynames)
+                                                    {
+                                                        MyautoscList.Add(item.Value);
+                                                    }
+                                                    DevAge.Windows.Forms.DevAgeComboBox Mycmb = (DevAge.Windows.Forms.DevAgeComboBox)cmbList.Control;
+                                                    //cmb.BeginUpdate();
+                                                    //cmb.DisplayMember = DisplayMember;
+                                                    //cmb.ValueMember = ValueMember;
+                                                    //cmb.DataSource = Mynames;
+                                                    Mycmb.DropDownStyle = ComboBoxStyle.DropDown;
+                                                    Mycmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
+                                                    Mycmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
+                                                    Mycmb.AutoCompleteCustomSource = autoscList;
+                                                    //cmb.EndUpdate();
+                                                    #endregion
+
+
+
                                                 }
-
-
-                                                List<string> Myids = new List<string>();
-                                                ConcurrentDictionary<string, string> Mynames = new ConcurrentDictionary<string, string>();
-                                                foreach (var item in otlist)
-                                                {
-                                                    string id = ReflectionHelper.GetPropertyValue(item, ColID).ToString();
-                                                    Myids.Add(id.ToString());
-                                                    Mynames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());
-                                                }
-
-
-                                                //这个要写在绑定验证的前面。这样会指定下拉列表的值
-                                                cmbList.StandardValues = Myids.ToArray();
-
-                                                DevAge.ComponentModel.Validator.ComboxValueMapping MycomboMapping = new DevAge.ComponentModel.Validator.ComboxValueMapping(true);
-                                                MycomboMapping.ValueList = Mynames;
-                                                MycomboMapping.DisplayStringList = Myids;
-
-                                                //先解绑验证。不然会多次执行。因为开始就有绑定
-                                                MycomboMapping.UnBindValidator(cmbList);
-                                                MycomboMapping.BindValidator(cmbList);
-
-
-                                                #region  添加自动完成功能 智能提示功能
-
-                                                AutoCompleteStringCollection MyautoscList = new AutoCompleteStringCollection();
-                                                foreach (var item in Mynames)
-                                                {
-                                                    MyautoscList.Add(item.Value);
-                                                }
-                                                DevAge.Windows.Forms.DevAgeComboBox Mycmb = (DevAge.Windows.Forms.DevAgeComboBox)cmbList.Control;
-                                                //cmb.BeginUpdate();
-                                                //cmb.DisplayMember = DisplayMember;
-                                                //cmb.ValueMember = ValueMember;
-                                                //cmb.DataSource = Mynames;
-                                                Mycmb.DropDownStyle = ComboBoxStyle.DropDown;
-                                                Mycmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-                                                Mycmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-                                                Mycmb.AutoCompleteCustomSource = autoscList;
-                                                //cmb.EndUpdate();
-                                                #endregion
-
-
-
                                             }
-                                        }
 
-                                        #endregion
+                                            #endregion
+                                        }
                                     }
                                 }
-                            }
 
 
 
 
-                        };
+                            };
 
-                        #endregion
-                        _editor = ec;
-
-
+                            #endregion
+                            _editor = ec;
 
 
+                            /*
+                            int[] arrInt = new int[] { 0, 1, 2, 3, 4 };
+                            string[] arrStr = new string[] { "0 - Zero", "1 - One", "2 - Two", "3 - Three", "4- Four" };
+                            SourceGrid.Cells.Editors.ComboBox editorComboCustomDisplay = new SourceGrid.Cells.Editors.ComboBox(typeof(int), arrInt, true);
+                            editorComboCustomDisplay.Control.FormattingEnabled = true;
+                            DevAge.ComponentModel.Validator.ValueMapping comboMapping = new DevAge.ComponentModel.Validator.ValueMapping();
+                            comboMapping.DisplayStringList = arrStr;
+                            comboMapping.ValueList = arrInt;
+                            comboMapping.SpecialList = arrStr;
+                            comboMapping.SpecialType = typeof(string);
+                            comboMapping.BindValidator(editorComboCustomDisplay);
+                            editorComboCustomDisplay.SetEditValue(0);
+                            _editor = editorComboCustomDisplay;*/
 
-                        /*
-                        int[] arrInt = new int[] { 0, 1, 2, 3, 4 };
-                        string[] arrStr = new string[] { "0 - Zero", "1 - One", "2 - Two", "3 - Three", "4- Four" };
-                        SourceGrid.Cells.Editors.ComboBox editorComboCustomDisplay = new SourceGrid.Cells.Editors.ComboBox(typeof(int), arrInt, true);
-                        editorComboCustomDisplay.Control.FormattingEnabled = true;
-                        DevAge.ComponentModel.Validator.ValueMapping comboMapping = new DevAge.ComponentModel.Validator.ValueMapping();
-                        comboMapping.DisplayStringList = arrStr;
-                        comboMapping.ValueList = arrInt;
-                        comboMapping.SpecialList = arrStr;
-                        comboMapping.SpecialType = typeof(string);
-                        comboMapping.BindValidator(editorComboCustomDisplay);
-                        editorComboCustomDisplay.SetEditValue(0);
-                        _editor = editorComboCustomDisplay;*/
-
-                        // InsertSelectItem<T>(key, value, tlist);
-                        //bs.DataSource = tlist;
+                            // InsertSelectItem<T>(key, value, tlist);
+                            //bs.DataSource = tlist;
+                        }
                     }
                 }
             }
+
             return _editor;
         }
 

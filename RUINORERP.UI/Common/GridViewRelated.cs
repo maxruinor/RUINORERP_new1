@@ -462,7 +462,7 @@ namespace RUINORERP.UI.Common
             if (tableName == typeof(tb_BOM_S).Name)
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
-                    .Includes(c => c.tb_BOM_SDetails)
+                    .Includes(c => c.tb_BOM_SDetails, d => d.tb_BOM_SDetailSubstituteMaterials)
                     .Includes(c => c.view_ProdDetail)
                     .Includes(c => c.tb_BOM_SDetailSecondaries)
                     .WhereIF(billno.GetType() == typeof(long), c => c.BOM_ID == billno.ToLong())
@@ -500,7 +500,7 @@ namespace RUINORERP.UI.Common
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
-            
+
             if (tableName == typeof(tb_ManufacturingOrder).Name)
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()

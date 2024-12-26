@@ -62,7 +62,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.PositionNo).MaximumLength(25).WithMessage("位号:不能超过最大长度,25.");
 
- RuleFor(x => x.UnitlCost).PrecisionScale(19,4,true).WithMessage("单位成本:小数位不能超过4。");
+ RuleFor(x => x.UnitCost).PrecisionScale(19,4,true).WithMessage("单位成本:小数位不能超过4。");
 
  RuleFor(x => x.SubtotalUnitCost).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
 

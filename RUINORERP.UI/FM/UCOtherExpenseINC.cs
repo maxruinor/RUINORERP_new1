@@ -345,70 +345,7 @@ namespace RUINORERP.UI.FM
             return ae;
         }
 
-        /*
-
-        protected async override Task<ApprovalEntity> ReReview()
-        {
-            ApprovalEntity ae = new ApprovalEntity();
-            if (EditEntity == null)
-            {
-                return ae;
-            }
-
-            //反审，要审核过，并且通过了，才能反审。
-            if (EditEntity.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && !EditEntity.ApprovalResults.HasValue)
-            {
-                MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审核。");
-                return ae;
-            }
-
-
-            if (EditEntity.tb_FM_OtherExpenseDetails == null || EditEntity.tb_FM_OtherExpenseDetails.Count == 0)
-            {
-                MainForm.Instance.uclog.AddLog("单据中没有明细数据，请确认录入了完整金额。", UILogType.警告);
-                return ae;
-            }
-
-            RevertCommand command = new RevertCommand();
-            //缓存当前编辑的对象。如果撤销就回原来的值
-            tb_FM_OtherExpense oldobj = CloneHelper.DeepCloneObject<tb_FM_OtherExpense>(EditEntity);
-            command.UndoOperation = delegate ()
-            {
-                //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
-                CloneHelper.SetValues<tb_SaleOrder>(EditEntity, oldobj);
-            };
-
-            tb_FM_OtherExpenseController<tb_FM_OtherExpense> ctr = Startup.GetFromFac<tb_FM_OtherExpenseController<tb_FM_OtherExpense>>();
-            List<tb_FM_OtherExpense> list = new List<tb_FM_OtherExpense>();
-            list.Add(EditEntity);
-            ReturnResults<bool> rrs = await ctr.AntiApprovalAsync(list);
-            if (rrs.Succeeded)
-            {
-
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-
-                //审核成功
-                base.ToolBarEnabledControl(MenuItemEnums.反审);
-                toolStripbtnReview.Enabled = true;
-  
-            }
-            else
-            {
-                //审核失败 要恢复之前的值
-                command.Undo();
-                MainForm.Instance.PrintInfoLog($"{EditEntity.ExpenseNo}反审失败,请联系管理员！", Color.Red);
-            }
-            return ae;
-        }
-
-        */
+      
 
 
 

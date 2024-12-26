@@ -80,7 +80,20 @@ namespace RUINORERP.Model
             SetProperty(ref _ProdDetailID, value);
             }
         }
-
+        private int? _PriorityUseType = ((0));
+        /// <summary>
+        /// 优先使用类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PriorityUseType", ColDesc = "优先使用类型")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PriorityUseType", DecimalDigits = 0, IsNullable = true, ColumnDescription = "优先使用类型")]
+        public int? PriorityUseType
+        {
+            get { return _PriorityUseType; }
+            set
+            {
+                SetProperty(ref _PriorityUseType, value);
+            }
+        }
         private string _SKU;
         /// <summary>
         /// SKU
@@ -208,18 +221,31 @@ namespace RUINORERP.Model
             SetProperty(ref _PositionNo, value);
             }
         }
-
-        private decimal _UnitlCost= ((0));
+        private long? _Child_BOM_Node_ID;
+        /// <summary>
+        /// 子件配方
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Child_BOM_Node_ID", ColDesc = "子件配方")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Child_BOM_Node_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "子件配方")]
+        public long? Child_BOM_Node_ID
+        {
+            get { return _Child_BOM_Node_ID; }
+            set
+            {
+                SetProperty(ref _Child_BOM_Node_ID, value);
+            }
+        }
+        private decimal _UnitCost= ((0));
         /// <summary>
         /// 单位成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "UnitlCost",ColDesc = "单位成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitlCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
-        public decimal UnitlCost
+        [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost", DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
+        public decimal UnitCost
         { 
-            get{return _UnitlCost;}
+            get{return _UnitCost;}
             set{
-            SetProperty(ref _UnitlCost, value);
+            SetProperty(ref _UnitCost, value);
             }
         }
 
@@ -279,19 +305,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private int? _PriorityUseType= ((0));
-        /// <summary>
-        /// 优先使用类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PriorityUseType",ColDesc = "优先使用类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PriorityUseType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "优先使用类型" )]
-        public int? PriorityUseType
-        { 
-            get{return _PriorityUseType;}
-            set{
-            SetProperty(ref _PriorityUseType, value);
-            }
-        }
+
 
         private int _Sort= ((0));
         /// <summary>

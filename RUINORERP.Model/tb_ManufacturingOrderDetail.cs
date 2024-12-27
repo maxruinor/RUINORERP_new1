@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:51
+// 时间：12/27/2024 11:23:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 制令单的原料明细表 明细对应的是一个树，结构同BOM，先把BOM搞好再来实现这里的细节
     /// </summary>
     [Serializable()]
-    [Description("tb_ManufacturingOrderDetail")]
+    [Description("制令单的原料明细表 明细对应的是一个树，结构同BOM，先把BOM搞好再来实现这里的细节")]
     [SugarTable("tb_ManufacturingOrderDetail")]
     public partial class tb_ManufacturingOrderDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ManufacturingOrderDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("制令单的原料明细表 明细对应的是一个树，结构同BOM，先把BOM搞好再来实现这里的细节tb_ManufacturingOrderDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -70,14 +70,28 @@ namespace RUINORERP.Model
         /// <summary>
         /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long ProdDetailID
         { 
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
+            }
+        }
+
+        private bool? _IsKeyMaterial;
+        /// <summary>
+        /// 关键物料
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsKeyMaterial",ColDesc = "关键物料")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsKeyMaterial" ,IsNullable = true,ColumnDescription = "关键物料" )]
+        public bool? IsKeyMaterial
+        { 
+            get{return _IsKeyMaterial;}
+            set{
+            SetProperty(ref _IsKeyMaterial, value);
             }
         }
 
@@ -227,7 +241,7 @@ namespace RUINORERP.Model
         /// 单位成本
         /// </summary>
         [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单位成本")]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
         public decimal UnitCost
         { 
             get{return _UnitCost;}
@@ -236,18 +250,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _SubtotalUnitCost = ((0));
+        private decimal _SubtotalUnitCost= ((0));
         /// <summary>
         /// 成本小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalUnitCost", ColDesc = "成本小计")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "SubtotalUnitCost", DecimalDigits = 6, IsNullable = false, ColumnDescription = "成本小计")]
+        [AdvQueryAttribute(ColName = "SubtotalUnitCost",ColDesc = "成本小计")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal SubtotalUnitCost
-        {
-            get { return _SubtotalUnitCost; }
-            set
-            {
-                SetProperty(ref _SubtotalUnitCost, value);
+        { 
+            get{return _SubtotalUnitCost;}
+            set{
+            SetProperty(ref _SubtotalUnitCost, value);
             }
         }
 
@@ -307,17 +320,45 @@ namespace RUINORERP.Model
             }
         }
 
+        private string _AlternativeProducts;
+        /// <summary>
+        /// 替代品
+        /// </summary>
+        [AdvQueryAttribute(ColName = "AlternativeProducts",ColDesc = "替代品")] 
+        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "AlternativeProducts" ,Length=10,IsNullable = true,ColumnDescription = "替代品" )]
+        public string AlternativeProducts
+        { 
+            get{return _AlternativeProducts;}
+            set{
+            SetProperty(ref _AlternativeProducts, value);
+            }
+        }
+
         private string _Prelevel_BOM_Desc;
         /// <summary>
-        /// 上级配方
+        /// 上级配方名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "Prelevel_BOM_Desc",ColDesc = "上级配方")] 
-        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "Prelevel_BOM_Desc" ,Length=100,IsNullable = true,ColumnDescription = "上级配方" )]
+        [AdvQueryAttribute(ColName = "Prelevel_BOM_Desc",ColDesc = "上级配方名称")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "Prelevel_BOM_Desc" ,Length=100,IsNullable = true,ColumnDescription = "上级配方名称" )]
         public string Prelevel_BOM_Desc
         { 
             get{return _Prelevel_BOM_Desc;}
             set{
             SetProperty(ref _Prelevel_BOM_Desc, value);
+            }
+        }
+
+        private long? _Prelevel_BOM_ID;
+        /// <summary>
+        /// 上级配方
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Prelevel_BOM_ID",ColDesc = "上级配方")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Prelevel_BOM_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "上级配方" )]
+        public long? Prelevel_BOM_ID
+        { 
+            get{return _Prelevel_BOM_ID;}
+            set{
+            SetProperty(ref _Prelevel_BOM_ID, value);
             }
         }
 
@@ -338,7 +379,6 @@ namespace RUINORERP.Model
         //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(MOID))]
         public virtual tb_ManufacturingOrder tb_manufacturingorder { get; set; }
-
 
 
         #endregion

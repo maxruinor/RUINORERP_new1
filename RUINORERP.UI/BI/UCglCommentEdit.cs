@@ -34,9 +34,7 @@ namespace RUINORERP.UI.BI
         public override void BindData(BaseEntity entity)
         {
             EditEntity=entity as tb_gl_Comment;
-           // DataBindingHelper.BindData4TextBox<tb_gl_Comment>(entity, t => t.BizTypeID, txtBizTypeID, BindDataType4TextBox.Qty, false);
-           // DataBindingHelper.BindData4TextBox<tb_gl_Comment>(entity, t => t.BusinessID, txtBusinessID, BindDataType4TextBox.Qty, false);
-          //  DataBindingHelper.BindData4TextBox<tb_gl_Comment>(entity, t => t.CommentContent, txtCommentContent, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_gl_Comment>(entity, t => t.CommentContent, txtCommentContent, BindDataType4TextBox.Text, false);
             base.errorProviderForAllInput.DataSource = entity;
             base.BindData(entity);
         }
@@ -48,9 +46,6 @@ namespace RUINORERP.UI.BI
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
-
-
-
         private void btnOk_Click(object sender, EventArgs e)
         {
             if (base.Validator())

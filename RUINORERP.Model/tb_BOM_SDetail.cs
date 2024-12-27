@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:07:12
+// 时间：12/27/2024 11:23:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -63,6 +63,20 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
+            }
+        }
+
+        private bool? _IsKeyMaterial;
+        /// <summary>
+        /// 关键物料
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsKeyMaterial",ColDesc = "关键物料")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsKeyMaterial" ,IsNullable = true,ColumnDescription = "关键物料" )]
+        public bool? IsKeyMaterial
+        { 
+            get{return _IsKeyMaterial;}
+            set{
+            SetProperty(ref _IsKeyMaterial, value);
             }
         }
 
@@ -279,7 +293,19 @@ namespace RUINORERP.Model
             }
         }
 
-       
+        private long? _Substitute;
+        /// <summary>
+        /// 替代品
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Substitute",ColDesc = "替代品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Substitute" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "替代品" )]
+        public long? Substitute
+        { 
+            get{return _Substitute;}
+            set{
+            SetProperty(ref _Substitute, value);
+            }
+        }
 
         private decimal? _OutputRate= ((1));
         /// <summary>
@@ -314,10 +340,6 @@ namespace RUINORERP.Model
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
-        public virtual View_ProdDetail view_ProdDetail { get; set; }
-
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 

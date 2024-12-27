@@ -1129,7 +1129,7 @@ namespace RUINORERP.UI.MRP.BOM
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
-
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             //实际在中间实体定义时加了只读属性，功能相同
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
@@ -1144,6 +1144,7 @@ namespace RUINORERP.UI.MRP.BOM
 
             listCols.SetCol_Format<tb_BOM_SDetail>(c => c.OutputRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_BOM_SDetail>(c => c.LossRate, CustomFormatType.PercentFormat);
+            listCols.SetCol_DefaultValue<tb_BOM_SDetail>(c => c.IsKeyMaterial, true);
             //排除指定列不在相关列内
             //listCols.SetCol_Exclude<ProductSharePart>(c => c.Location_ID);
 
@@ -1208,12 +1209,13 @@ namespace RUINORERP.UI.MRP.BOM
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
-
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             //实际在中间实体定义时加了只读属性，功能相同
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
+            listCols.SetCol_DefaultValue<tb_BOM_SDetailSubstituteMaterial>(c => c.IsKeyMaterial, true);
             if (!AppContext.SysConfig.UseBarCode)
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
@@ -1664,8 +1666,22 @@ namespace RUINORERP.UI.MRP.BOM
                             }
                             sgh2.LoadItemDataToGrid<tb_BOM_SDetailSubstituteMaterial>(gridSubstituteMaterial, sgd2, bOM_SDetail.tb_BOM_SDetailSubstituteMaterials, c => c.ProdDetailID);
                         }
-
+                        else
+                        {
+                            kryptonHeaderGroup1.Tag = null;
+                            kryptonHeaderGroup1.ValuesPrimary.Heading = "替代料明细";
+                        }
                     }
+                    else
+                    {
+                        kryptonHeaderGroup1.Tag = null;
+                        kryptonHeaderGroup1.ValuesPrimary.Heading = "替代料明细";
+                    }
+                }
+                else
+                {
+                    kryptonHeaderGroup1.Tag = null;
+                    kryptonHeaderGroup1.ValuesPrimary.Heading = "替代料明细";
                 }
             }
 
@@ -1679,6 +1695,16 @@ namespace RUINORERP.UI.MRP.BOM
         private void grid1_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void gridSubstituteMaterial_Enter(object sender, EventArgs e)
+        {
+            if (kryptonHeaderGroup1.Tag == null)
+            {
+                //  请选择要添加替代料的配方明细
+                MessageBox.Show("请选择要添加替代料的配方明细", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                grid1.Focus();
+            }
         }
     }
 }

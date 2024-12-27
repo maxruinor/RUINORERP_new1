@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:07:12
+// 时间：12/27/2024 11:23:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,6 +40,7 @@ namespace RUINORERP.Business
      
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
 
+
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.SKU).MaximumLength(40).WithMessage("SKU码:不能超过最大长度,40.");
 
 //***** 
@@ -73,7 +74,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Child_BOM_Node_ID).NotEmpty().When(x => x.Child_BOM_Node_ID.HasValue);
 
- 
+ RuleFor(tb_BOM_SDetail =>tb_BOM_SDetail.Substitute).NotEmpty().When(x => x.Substitute.HasValue);
 
  RuleFor(x => x.OutputRate).PrecisionScale(8,4,true).WithMessage("产出率:小数位不能超过4。");
 

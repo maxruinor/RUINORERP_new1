@@ -20,17 +20,19 @@ using RUINORERP.Global;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo("批注", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.行政资料)]
+    [MenuAttrAssemblyInfo("批注管理", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.行政资料)]
     public partial class UCglCommentList : BaseForm.BaseListGeneric<tb_gl_Comment>
     {
-
         public UCglCommentList()
         {
             InitializeComponent();
             base.EditForm = typeof(UCglCommentEdit);
-
         }
 
 
+        public override void BuildInvisibleCols()
+        {
+            base.InvisibleColsExp.Add(c => c.DbTableName);
+        }
     }
 }

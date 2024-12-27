@@ -317,6 +317,9 @@ namespace RUINORERP.UI.MRP.MP
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
+            toolStripbtnAdd.Enabled = false;
+            toolStripbtnAdd.ToolTipText = "制令单由需求分析中生成。";
+            toolStripbtnAdd.AutoToolTip = false;
         }
 
 
@@ -327,6 +330,8 @@ namespace RUINORERP.UI.MRP.MP
         List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
+
+            
             //InitDataTocmbbox();
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
@@ -338,12 +343,12 @@ namespace RUINORERP.UI.MRP.MP
             grid1.Selection.EnableMultiSelection = false;
 
 
-
             //指定了关键字段ProdDetailID
             listCols = sgh.GetGridColumns<ProductSharePart, tb_ManufacturingOrderDetail>(c => c.ProdDetailID, true);
 
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_NeverVisible<tb_ManufacturingOrderDetail>(c => c.ProdDetailID);
             //listCols.SetCol_NeverVisible<tb_ManufacturingOrderDetail>(c => c.BOM_ID);

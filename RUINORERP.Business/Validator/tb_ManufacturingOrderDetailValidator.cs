@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：12/27/2024 11:23:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,6 +43,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
 
+
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
 
 //***** 
@@ -77,7 +78,9 @@ namespace RUINORERP.Business
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.AssemblyPosition).MaximumLength(250).WithMessage("组装位置:不能超过最大长度,250.");
 
 
- RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Prelevel_BOM_Desc).MaximumLength(100).WithMessage("上级配方:不能超过最大长度,100.");
+ RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Prelevel_BOM_Desc).MaximumLength(100).WithMessage("上级配方名称:不能超过最大长度,100.");
+
+ RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Prelevel_BOM_ID).NotEmpty().When(x => x.Prelevel_BOM_ID.HasValue);
 
            	        Initialize();
      }

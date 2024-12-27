@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/17/2024 18:34:20
+// 时间：12/27/2024 14:41:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,6 +41,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -50,7 +51,8 @@ namespace RUINORERP.UI
         tb_gl_Comment entity = new tb_gl_Comment();
                      entity.BizTypeID = Int32.Parse(txtBizTypeID.Text);
                         entity.BusinessID = Int64.Parse(txtBusinessID.Text);
-                        entity.CommentContent = txtCommentContent.Text ;
+                        entity.DbTableName = txtDbTableName.Text ;
+                       entity.CommentContent = txtCommentContent.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
@@ -67,6 +69,7 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_gl_Comment>(entity, t => t.BizTypeID, txtBizTypeID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_gl_Comment>(entity, t => t.BusinessID, txtBusinessID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_gl_Comment>(entity, t => t.DbTableName, txtDbTableName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_gl_Comment>(entity, t => t.CommentContent, txtCommentContent, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_gl_Comment>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_gl_Comment>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);

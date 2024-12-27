@@ -257,6 +257,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
 
             if (!AppContext.SysConfig.UseBarCode)
             {

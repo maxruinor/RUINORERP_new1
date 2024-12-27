@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:07:13
+// 时间：12/27/2024 11:23:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,6 +53,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -61,6 +63,7 @@ namespace RUINORERP.UI
         {
         tb_BOM_SDetailSubstituteMaterial entity = new tb_BOM_SDetailSubstituteMaterial();
                      entity.SubID = Int64.Parse(txtSubID.Text);
+                        entity.IsKeyMaterial = Boolean.Parse(txtIsKeyMaterial.Text);
                         entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.SKU = txtSKU.Text ;
                        entity.property = txtproperty.Text ;
@@ -71,11 +74,12 @@ namespace RUINORERP.UI
                         entity.LossRate = Decimal.Parse(txtLossRate.Text);
                         entity.InstallPosition = txtInstallPosition.Text ;
                        entity.PositionNo = txtPositionNo.Text ;
-                       entity.UnitlCost = Decimal.Parse(txtUnitlCost.Text);
+                       entity.UnitCost = Decimal.Parse(txtUnitCost.Text);
                         entity.SubtotalUnitCost = Decimal.Parse(txtSubtotalUnitCost.Text);
                         entity.PositionDesc = txtPositionDesc.Text ;
                        entity.ManufacturingProcessID = Int64.Parse(txtManufacturingProcessID.Text);
                         entity.OutputRate = Decimal.Parse(txtOutputRate.Text);
+                        entity.Child_BOM_Node_ID = Int64.Parse(txtChild_BOM_Node_ID.Text);
                         entity.PriorityUseType = Int32.Parse(txtPriorityUseType.Text);
                         entity.Sort = Int32.Parse(txtSort.Text);
                         entity.Summary = txtSummary.Text ;
@@ -90,6 +94,7 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_BOM_SDetail>(entity, k => k.SubID, v=>v.XXNAME, cmbSubID);
+           DataBindingHelper.BindData4CheckBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.IsKeyMaterial, chkIsKeyMaterial, false);
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.SKU, txtSKU, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
@@ -100,11 +105,12 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.LossRate.ToString(), txtLossRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.InstallPosition, txtInstallPosition, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.PositionNo, txtPositionNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.UnitlCost.ToString(), txtUnitlCost, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.UnitCost.ToString(), txtUnitCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.SubtotalUnitCost.ToString(), txtSubtotalUnitCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.PositionDesc, txtPositionDesc, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.ManufacturingProcessID, txtManufacturingProcessID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.OutputRate.ToString(), txtOutputRate, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.Child_BOM_Node_ID, txtChild_BOM_Node_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.PriorityUseType, txtPriorityUseType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.Sort, txtSort, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetailSubstituteMaterial>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);

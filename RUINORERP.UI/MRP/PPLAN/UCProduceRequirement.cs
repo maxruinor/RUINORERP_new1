@@ -433,6 +433,7 @@ namespace RUINORERP.UI.MRP.MP
             listColsTarget.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listColsTarget.SetCol_NeverVisible<tb_ProductionDemandTargetDetail>(c => c.ProdDetailID);
             listColsTarget.SetCol_NeverVisible<tb_ProductionDemandTargetDetail>(c => c.AvailableStock);
+            listColsTarget.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             //listCols.SetCol_NeverVisible<tb_ProductionDemandDetail>(c => c.BOM_ID);
             if (!AppContext.SysConfig.UseBarCode)
             {
@@ -546,7 +547,7 @@ namespace RUINORERP.UI.MRP.MP
             listColsPur.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listColsPur.SetCol_NeverVisible<tb_PurGoodsRecommendDetail>(c => c.ProdDetailID);
             listColsPur.SetCol_ReadOnly<tb_PurGoodsRecommendDetail>(c => c.RecommendQty);
-
+            listColsPur.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             //listCols.SetCol_NeverVisible<tb_ProductionDemandDetail>(c => c.BOM_ID);
             if (!AppContext.SysConfig.UseBarCode)
             {
@@ -1961,7 +1962,6 @@ protected async override Task<ApprovalEntity> ReReview()
         ///<param name="MiddlewareType">中间件式:true，上层驱动模式:false</param>
         private async void CreateProductionNew2024(bool MiddlewareType = false)
         {
-
             if (EditEntity == null)
             {
                 return;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:07:13
+// 时间：12/27/2024 11:23:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,6 +41,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.SubID).NotNull().WithMessage(":不能为空。");
 
+
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品详情:下拉选择值不正确。");
 
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.SKU).MaximumLength(40).WithMessage("SKU:不能超过最大长度,40.");
@@ -71,6 +72,8 @@ namespace RUINORERP.Business
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.ManufacturingProcessID).NotEmpty().When(x => x.ManufacturingProcessID.HasValue);
 
  RuleFor(x => x.OutputRate).PrecisionScale(8,4,true).WithMessage("产出率:小数位不能超过4。");
+
+ RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.Child_BOM_Node_ID).NotEmpty().When(x => x.Child_BOM_Node_ID.HasValue);
 
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.PriorityUseType).NotEmpty().When(x => x.PriorityUseType.HasValue);
 

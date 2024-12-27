@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:07:13
+// 时间：12/27/2024 11:23:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,6 +66,20 @@ namespace RUINORERP.Model
             }
         }
 
+        private bool? _IsKeyMaterial;
+        /// <summary>
+        /// 关键物料
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsKeyMaterial",ColDesc = "关键物料")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsKeyMaterial" ,IsNullable = true,ColumnDescription = "关键物料" )]
+        public bool? IsKeyMaterial
+        { 
+            get{return _IsKeyMaterial;}
+            set{
+            SetProperty(ref _IsKeyMaterial, value);
+            }
+        }
+
         private long _ProdDetailID;
         /// <summary>
         /// 产品详情
@@ -80,20 +94,7 @@ namespace RUINORERP.Model
             SetProperty(ref _ProdDetailID, value);
             }
         }
-        private int? _PriorityUseType = ((0));
-        /// <summary>
-        /// 优先使用类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PriorityUseType", ColDesc = "优先使用类型")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PriorityUseType", DecimalDigits = 0, IsNullable = true, ColumnDescription = "优先使用类型")]
-        public int? PriorityUseType
-        {
-            get { return _PriorityUseType; }
-            set
-            {
-                SetProperty(ref _PriorityUseType, value);
-            }
-        }
+
         private string _SKU;
         /// <summary>
         /// SKU
@@ -221,26 +222,13 @@ namespace RUINORERP.Model
             SetProperty(ref _PositionNo, value);
             }
         }
-        private long? _Child_BOM_Node_ID;
-        /// <summary>
-        /// 子件配方
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Child_BOM_Node_ID", ColDesc = "子件配方")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Child_BOM_Node_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "子件配方")]
-        public long? Child_BOM_Node_ID
-        {
-            get { return _Child_BOM_Node_ID; }
-            set
-            {
-                SetProperty(ref _Child_BOM_Node_ID, value);
-            }
-        }
+
         private decimal _UnitCost= ((0));
         /// <summary>
         /// 单位成本
         /// </summary>
         [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost", DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
         public decimal UnitCost
         { 
             get{return _UnitCost;}
@@ -305,7 +293,33 @@ namespace RUINORERP.Model
             }
         }
 
+        private long? _Child_BOM_Node_ID;
+        /// <summary>
+        /// 子件配方
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Child_BOM_Node_ID",ColDesc = "子件配方")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Child_BOM_Node_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "子件配方" )]
+        public long? Child_BOM_Node_ID
+        { 
+            get{return _Child_BOM_Node_ID;}
+            set{
+            SetProperty(ref _Child_BOM_Node_ID, value);
+            }
+        }
 
+        private int? _PriorityUseType= ((0));
+        /// <summary>
+        /// 优先使用类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PriorityUseType",ColDesc = "优先使用类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PriorityUseType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "优先使用类型" )]
+        public int? PriorityUseType
+        { 
+            get{return _PriorityUseType;}
+            set{
+            SetProperty(ref _PriorityUseType, value);
+            }
+        }
 
         private int _Sort= ((0));
         /// <summary>

@@ -58,7 +58,6 @@ namespace RUINORERP.Business
             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
             if (BizCacheHelper.Manager.NewTableList.TryGetValue(tableName, out pair))
             {
-
                 if (BizCacheHelper.Manager.CacheEntityList.Exists(tableName))
                 {
                     var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);

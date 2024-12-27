@@ -62,10 +62,12 @@ namespace RUINORERP.Business
                 tb_ManufacturingOrder manufacturingOrder = null;
                 if (entity.MOID > 0)
                 {
-                    manufacturingOrder =await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
-                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                    manufacturingOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
+
                     .Includes(b => b.tb_proddetail, c => c.tb_prod)
                     .Includes(b => b.tb_bom_s, c => c.tb_BOM_SDetails)
+                    .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                    .Includes(d => d.tb_ManufacturingOrderDetails, e => e.tb_bom_s, c => c.tb_BOM_SDetails, f => f.tb_BOM_SDetailSubstituteMaterials)
                     .Includes(b => b.tb_productiondemand, c => c.tb_productionplan, d => d.tb_ProductionPlanDetails)
                     //  .Includes(b => b.tb_productiondemand, c => c.tb_ManufacturingOrders, d => d.tb_ManufacturingOrderDetails)
                     .Includes(b => b.tb_MaterialRequisitions)
@@ -87,14 +89,14 @@ namespace RUINORERP.Business
                     {
                         Opening = true;
                         inv = new tb_Inventory();
-                        
+
                         inv.InitInventory = (int)inv.Quantity;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
                     }
                     else
                     {
-                       
+
                         BusinessHelper.Instance.EditEntity(inv);
                     }
                     inv.ProdDetailID = child.ProdDetailID;
@@ -137,11 +139,11 @@ namespace RUINORERP.Business
                             await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
                         }
                     }
-                    if (bomDetails.Count>0)
+                    if (bomDetails.Count > 0)
                     {
                         await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
                     }
-                    
+
 
                     #endregion
                     inv.Quantity = inv.Quantity + child.Qty;
@@ -184,7 +186,7 @@ namespace RUINORERP.Business
                 }
                 #endregion
 
-                
+
 
                 //如果缴库明细中的品不是来自制令单，则报错
                 if (!entity.tb_FinishedGoodsInvDetails.Any(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID))
@@ -207,32 +209,75 @@ namespace RUINORERP.Business
                 //这里与采购订单不一样。采购订单是用明细去比较，这里是回写的是制令单，是主表。
                 string prodName = manufacturingOrder.tb_proddetail.tb_prod.CNName + manufacturingOrder.tb_proddetail.tb_prod.Specifications;
                 //找出所有这个制令单的对应 缴库的数量加总
-                var inQty = detailList.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
+                var PaidQuantity = detailList.Where(c => c.ProdDetailID == manufacturingOrder.ProdDetailID && c.Location_ID == manufacturingOrder.Location_ID).Sum(c => c.Qty);
 
                 #region 缴库数量按制令单实发数根据BOM计算得到最多能入库的数量，如果超过则提示后退回
-                int CanManufactureQtyBybom = 0;
+                decimal CanManufactureQtyBybom = 0;
                 //按制令单中所有要发出的物料中数量为整数的最小值为算 ，小数可能是 胶水 纸箱这种耗材。暂时排除
+                //最小可能产出量,关键物料且大于1的数量，根据BOM配方去计划
+                var CanManufactureQtyBybomList = manufacturingOrder.tb_ManufacturingOrderDetails.Where(c => c.ActualSentQty >= 1 && c.IsKeyMaterial.HasValue && c.IsKeyMaterial.Value == true).OrderByDescending(c => c.ActualSentQty).ToList();
 
-                //if (manufacturingOrder.tb_ManufacturingOrderDetails)
-                //{
-                //    CanManufactureQtyBybom = manufacturingOrder.ManufacturingQty / manufacturingOrder.tb_proddetail.Qty;
-                //}
-
-
-                if (inQty > CanManufactureQtyBybom)
+                //注意如果制令单生成时手动或程序指定了替换料，这时也要把替换料对应 的BOM记录到制令单明细中。用于后面判断生成最小量成品
+                if (CanManufactureQtyBybomList.Count > 0)
                 {
-                    string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中实际发货数量，审核失败！";
-                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    _unitOfWorkManage.RollbackTran();
-                    _logger.LogInformation(msg);
-                    return rs;
+                    tb_ManufacturingOrderDetail MinQtyDetail = CanManufactureQtyBybomList[0];
+                    if (MinQtyDetail.ActualSentQty > 0)
+                    {
+                        //先找到对应的所属配方。再找到他在配方明细中的基数。
+                        tb_BOM_S minbom = MinQtyDetail.tb_bom_s;
+                        if (minbom != null)
+                        {
+                            tb_BOM_SDetail miniBomDetail = minbom.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == MinQtyDetail.ProdDetailID);
+                            if (miniBomDetail != null)
+                            {
+                                //实发数量/bom配方明细中的基准数量*BOM产出量=可以做的成品数量
+                                CanManufactureQtyBybom = MinQtyDetail.ActualSentQty / miniBomDetail.UsedQty.ToDecimal() * minbom.OutputQty;
+                            }
+                            else
+                            {
+                                //找不到就可能是替换料或自己手动添加的铺料。
+                                throw new Exception("制令单明细没有指定所属配方，请修改数据后再试，或联系管理员。");
+                            }
+                        }
+                        else
+                        {
+                            //没有找到配方说明在生成制令单时。没有指定。注意如果制令单生成时手动或程序指定了替换料，这时也要把替换料对应 的BOM记录到制令单明细中。用于后面判断生成最小量成品
+                            throw new Exception("制令单明细没有指定所属配方，请修改数据后再试，或联系管理员。");
+                        }
+
+                    }
+                    //如果总缴库数量大于最小制成数量则审核出错。
+                    if (PaidQuantity > CanManufactureQtyBybom)
+                    {
+                        string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量，审核失败！";
+                        try
+                        {
+                            object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
+                            if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
+                            {
+                                //提示哪个关键物料实发数不够生产。
+                                msg += $"\r\n{prodDetail.SKU}:{prodDetail.CNName}实发数量不够生产{CanManufactureQtyBybom}";
+                            }
+                        }
+                        catch (Exception tipEx)
+                        {
+                           
+                        }
+
+                        MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        _unitOfWorkManage.RollbackTran();
+                        _logger.LogInformation(msg);
+                        return rs;
+                    }
                 }
+
+
                 #endregion
 
 
 
 
-                if (inQty > manufacturingOrder.ManufacturingQty)
+                if (PaidQuantity > manufacturingOrder.ManufacturingQty)
                 {
                     string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量，审核失败！";
                     MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -432,7 +477,7 @@ namespace RUINORERP.Business
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //实际 反审时 期初已经有数据
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                  
+
                     BusinessHelper.Instance.EditEntity(inv);
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Location_ID = child.Location_ID;

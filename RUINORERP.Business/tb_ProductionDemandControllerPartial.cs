@@ -1299,18 +1299,25 @@ namespace RUINORERP.Business
                 }
                 //===
                 mItemGoods.ActualSentQty = 0;
-                //不管是中间件还是原料都有上级BOM
-                mItemGoods.Prelevel_BOM_Desc = MakingItemBom.BOM_Name;
+                //不管是中间件还是原料都有上级BOM。
+                //因为可以选择上层驱动。这时物料明细中就要保存他自己的上级。这样才能计划出产出量这些数据。
+                //所属配方,制令单表中也有。是因为给了一个默认。如果是上层驱动则从裸机机取到明细。这时就是自己对应该自己的。
+                mItemGoods.Prelevel_BOM_Desc = MakingItemBom.BOM_Name;//TODO要删除
+                mItemGoods.Prelevel_BOM_ID = MakingItemBom.BOM_ID;//TODO要删除
+                mItemGoods.BOM_NO = MakingItemBom.BOM_No;
+                mItemGoods.BOM_ID = MakingItemBom.BOM_ID;
 
                 //找次级中间件 在所有BOM中去找，通过目标BOM（成品）的明细对应的产品的BOMID,即下级BOM
                 tb_BOM_S MediumBomInfo = MediumBomInfoList.FirstOrDefault(c => c.BOM_ID == mItem.tb_proddetail.BOM_ID);
                 //中间件
                 if (MediumBomInfo != null)
                 {
+                    //次级中间件一定是关键的必需的。
+                    mItemGoods.IsKeyMaterial = true;
                     //中间有BOM的制成品,只在子循环中引用
                     mItemGoods.CurrentIinventory = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Quantity);
                     mItemGoods.UnitCost = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Inv_Cost);
-
+             
                     //找下一级的材料。当前级就不需要。否则将当前级认为是中间半成品。要提供数量
                     if (needLoop)
                     {
@@ -1325,6 +1332,7 @@ namespace RUINORERP.Business
                     {
                         //直接发，不存在处发还是自制
                         mItemGoods.IsExternalProduce = null;
+                        mItemGoods.IsKeyMaterial = true;
                         #region  中间件时,下级材料不发，直接认为中间件能提供，发半成品，如果制成品数量小于建议量则要发料
                         //中间件也当原，料发应该发的数量，用量*他上级的需求量
                         tb_BOM_SDetail child_bomDetail = MakingItemBom.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == mItem.ProdDetailID);
@@ -1337,6 +1345,15 @@ namespace RUINORERP.Business
                         mItemGoods.ShouldSendQty = MakingItem.RequirementQty * child_bomDetail.UsedQty;
                         // 没有bom就为空。反之 要么自制，要么外发
                         mItemGoods.IsExternalProduce = null;
+                        //IncludeSubBOM ==true 制令单主表中应该是上层驱动 
+                        mItemGoods.BOM_ID = MediumBomInfo.BOM_ID;
+                        mItemGoods.BOM_NO = MediumBomInfo.BOM_No;
+
+                        mItemGoods.Prelevel_BOM_Desc = MediumBomInfo.BOM_Name;//TODO要删除
+                        mItemGoods.Prelevel_BOM_ID = MediumBomInfo.BOM_ID;//TODO要删除
+                        mItemGoods.BOM_NO = MediumBomInfo.BOM_No;
+                        mItemGoods.BOM_ID = MediumBomInfo.BOM_ID;
+
                         AllMakingGoods.Add(mItemGoods);
                         #endregion
                     }
@@ -1345,12 +1362,16 @@ namespace RUINORERP.Business
                 {
                     //直接就是下级的原料
                     //损耗量，影响领料数量？
-
+                    mItemGoods.IsKeyMaterial = mItem.IsKeyMaterial;
                     mItemGoods.WastageQty = mItemGoods.ShouldSendQty * mItem.LossRate;
                     //中间件，直接就是上级的请制量作为标准*用量
                     mItemGoods.ShouldSendQty = MakingItem.RequirementQty * mItem.UsedQty;
                     mItemGoods.CurrentIinventory = mItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Quantity);
                     mItemGoods.UnitCost = mItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Inv_Cost);
+                    //IncludeSubBOM ==true 制令单主表中应该是上层驱动 
+
+                    mItemGoods.BOM_ID = MakingItemBom.BOM_ID;
+                    mItemGoods.BOM_NO = MakingItemBom.BOM_No;
 
                     // 没有bom就为空。反之 要么自制，要么外发
                     mItemGoods.IsExternalProduce = null;

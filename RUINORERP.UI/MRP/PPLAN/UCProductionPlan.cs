@@ -237,6 +237,7 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice); listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             listCols.SetCol_NeverVisible<tb_ProductionPlanDetail>(c => c.ProdDetailID);
             //listCols.SetCol_NeverVisible<tb_ProductionPlanDetail>(c => c.BOM_ID);
 

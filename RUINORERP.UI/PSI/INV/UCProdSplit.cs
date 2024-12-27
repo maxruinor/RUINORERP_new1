@@ -340,7 +340,7 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
-
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             ControlChildColumnsInvisible(listCols);
             //实际在中间实体定义时加了只读属性，功能相同
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Unit_ID);

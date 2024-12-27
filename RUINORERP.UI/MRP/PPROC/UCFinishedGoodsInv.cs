@@ -229,6 +229,7 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_NeverVisible<tb_FinishedGoodsInvDetail>(c => c.FG_ID);
             listCols.SetCol_NeverVisible<tb_FinishedGoodsInvDetail>(c => c.Sub_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             //这个小计可以删除。全是单个的。不用小计了。
             listCols.SetCol_NeverVisible<tb_FinishedGoodsInvDetail>(c => c.SubtotalMaterialCost);

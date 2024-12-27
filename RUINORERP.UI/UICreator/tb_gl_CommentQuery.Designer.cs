@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/17/2024 18:34:21
+// 时间：12/27/2024 14:41:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,6 +52,9 @@ namespace RUINORERP.UI
      
      
 
+this.lblDbTableName = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtDbTableName = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
 this.lblCommentContent = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtCommentContent = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
@@ -71,33 +74,47 @@ this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker
 
            //#####BusinessID###Int64
 
+           //#####100DbTableName###String
+this.lblDbTableName.AutoSize = true;
+this.lblDbTableName.Location = new System.Drawing.Point(100,75);
+this.lblDbTableName.Name = "lblDbTableName";
+this.lblDbTableName.Size = new System.Drawing.Size(41, 12);
+this.lblDbTableName.TabIndex = 3;
+this.lblDbTableName.Text = "关联表名";
+this.txtDbTableName.Location = new System.Drawing.Point(173,71);
+this.txtDbTableName.Name = "txtDbTableName";
+this.txtDbTableName.Size = new System.Drawing.Size(100, 21);
+this.txtDbTableName.TabIndex = 3;
+this.Controls.Add(this.lblDbTableName);
+this.Controls.Add(this.txtDbTableName);
+
            //#####200CommentContent###String
 this.lblCommentContent.AutoSize = true;
-this.lblCommentContent.Location = new System.Drawing.Point(100,75);
+this.lblCommentContent.Location = new System.Drawing.Point(100,100);
 this.lblCommentContent.Name = "lblCommentContent";
 this.lblCommentContent.Size = new System.Drawing.Size(41, 12);
-this.lblCommentContent.TabIndex = 3;
+this.lblCommentContent.TabIndex = 4;
 this.lblCommentContent.Text = "批注内容";
-this.txtCommentContent.Location = new System.Drawing.Point(173,71);
+this.txtCommentContent.Location = new System.Drawing.Point(173,96);
 this.txtCommentContent.Name = "txtCommentContent";
 this.txtCommentContent.Size = new System.Drawing.Size(100, 21);
-this.txtCommentContent.TabIndex = 3;
+this.txtCommentContent.TabIndex = 4;
 this.Controls.Add(this.lblCommentContent);
 this.Controls.Add(this.txtCommentContent);
 
            //#####Created_at###DateTime
 this.lblCreated_at.AutoSize = true;
-this.lblCreated_at.Location = new System.Drawing.Point(100,100);
+this.lblCreated_at.Location = new System.Drawing.Point(100,125);
 this.lblCreated_at.Name = "lblCreated_at";
 this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_at.TabIndex = 4;
+this.lblCreated_at.TabIndex = 5;
 this.lblCreated_at.Text = "创建时间";
-//111======100
-this.dtpCreated_at.Location = new System.Drawing.Point(173,96);
+//111======125
+this.dtpCreated_at.Location = new System.Drawing.Point(173,121);
 this.dtpCreated_at.Name ="dtpCreated_at";
 this.dtpCreated_at.ShowCheckBox =true;
 this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-this.dtpCreated_at.TabIndex = 4;
+this.dtpCreated_at.TabIndex = 5;
 this.Controls.Add(this.lblCreated_at);
 this.Controls.Add(this.dtpCreated_at);
 
@@ -105,17 +122,17 @@ this.Controls.Add(this.dtpCreated_at);
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
-this.lblModified_at.Location = new System.Drawing.Point(100,150);
+this.lblModified_at.Location = new System.Drawing.Point(100,175);
 this.lblModified_at.Name = "lblModified_at";
 this.lblModified_at.Size = new System.Drawing.Size(41, 12);
-this.lblModified_at.TabIndex = 6;
+this.lblModified_at.TabIndex = 7;
 this.lblModified_at.Text = "修改时间";
-//111======150
-this.dtpModified_at.Location = new System.Drawing.Point(173,146);
+//111======175
+this.dtpModified_at.Location = new System.Drawing.Point(173,171);
 this.dtpModified_at.Name ="dtpModified_at";
 this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-this.dtpModified_at.TabIndex = 6;
+this.dtpModified_at.TabIndex = 7;
 this.Controls.Add(this.lblModified_at);
 this.Controls.Add(this.dtpModified_at);
 
@@ -131,6 +148,9 @@ this.Controls.Add(this.dtpModified_at);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
                 
                 
+                this.Controls.Add(this.lblDbTableName );
+this.Controls.Add(this.txtDbTableName );
+
                 this.Controls.Add(this.lblCommentContent );
 this.Controls.Add(this.txtCommentContent );
 
@@ -158,6 +178,11 @@ this.Controls.Add(this.dtpModified_at );
     
         
               
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDbTableName;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtDbTableName;
+
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCommentContent;

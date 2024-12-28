@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:04:28
+// 时间：12/27/2024 18:30:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -141,10 +141,10 @@ namespace RUINORERP.Model
 
         private decimal _TotalReworkFee= ((0));
         /// <summary>
-        /// 返工费用
+        /// 预估费用
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalReworkFee",ColDesc = "返工费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalReworkFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "返工费用" )]
+        [AdvQueryAttribute(ColName = "TotalReworkFee",ColDesc = "预估费用")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalReworkFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "预估费用" )]
         public decimal TotalReworkFee
         { 
             get{return _TotalReworkFee;}

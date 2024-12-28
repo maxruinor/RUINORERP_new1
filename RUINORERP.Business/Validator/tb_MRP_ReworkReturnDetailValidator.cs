@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:04:32
+// 时间：12/27/2024 18:30:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,11 +53,13 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_MRP_ReworkReturnDetail =>tb_MRP_ReworkReturnDetail.DeliveredQuantity).NotNull().WithMessage("已交数量:不能为空。");
 
+ RuleFor(x => x.ReworkFee).PrecisionScale(19,4,true).WithMessage("预估费用:小数位不能超过4。");
+
+ RuleFor(x => x.SubtotalReworkFee).PrecisionScale(19,4,true).WithMessage("预估费用小计:小数位不能超过4。");
+
  RuleFor(x => x.UnitCost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
 
- RuleFor(x => x.ReworkFee).PrecisionScale(19,4,true).WithMessage("返工费用:小数位不能超过4。");
-
- RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("小计:小数位不能超过4。");
+ RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
 
  RuleFor(tb_MRP_ReworkReturnDetail =>tb_MRP_ReworkReturnDetail.CustomertModel).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
 

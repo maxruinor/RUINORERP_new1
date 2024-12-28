@@ -64,7 +64,7 @@ namespace RUINORERP.UI.BI
                             else
                             {
                                 //新增
-                                entity.tb_rolepropertyconfig = MainForm.Instance.AppContext.Db.Insertable<tb_RolePropertyConfig>(entity.tb_rolepropertyconfig).ExecuteReturnEntity(); //都是参数化实现
+                                entity.tb_rolepropertyconfig = await MainForm.Instance.AppContext.Db.Insertable<tb_RolePropertyConfig>(entity.tb_rolepropertyconfig).ExecuteReturnEntityAsync(); //都是参数化实现
                             }
                             entity.RolePropertyID = entity.tb_rolepropertyconfig.RolePropertyID;
                             rr.Succeeded = MainForm.Instance.AppContext.Db.Updateable<tb_RoleInfo>(entity).ExecuteCommand() > 0 ? true : false;
@@ -73,9 +73,9 @@ namespace RUINORERP.UI.BI
                         else
                         {
                             //完全新增
-                            rr.Succeeded = MainForm.Instance.AppContext.Db.InsertNav<tb_RoleInfo>(entity)
+                            await MainForm.Instance.AppContext.Db.InsertNav<tb_RoleInfo>(entity)
                             .Include(z1 => z1.tb_rolepropertyconfig)//插入1层 Root->Books
-                            .ExecuteCommand();
+                            .ExecuteReturnEntityAsync();
                         }
                         if (rr.Succeeded)
                         {

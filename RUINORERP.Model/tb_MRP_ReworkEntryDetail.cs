@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:04:30
+// 时间：12/27/2024 18:30:49
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -167,6 +167,20 @@ namespace RUINORERP.Model
             }
         }
 
+        private decimal _SubtotalReworkFee= ((0));
+        /// <summary>
+        /// 返工费用小计
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SubtotalReworkFee",ColDesc = "返工费用小计")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalReworkFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "返工费用小计" )]
+        public decimal SubtotalReworkFee
+        { 
+            get{return _SubtotalReworkFee;}
+            set{
+            SetProperty(ref _SubtotalReworkFee, value);
+            }
+        }
+
         private decimal _UnitCost= ((0));
         /// <summary>
         /// 成本
@@ -183,10 +197,10 @@ namespace RUINORERP.Model
 
         private decimal _SubtotalCostAmount= ((0));
         /// <summary>
-        /// 小计
+        /// 成本小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "小计" )]
+        [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "成本小计")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal SubtotalCostAmount
         { 
             get{return _SubtotalCostAmount;}

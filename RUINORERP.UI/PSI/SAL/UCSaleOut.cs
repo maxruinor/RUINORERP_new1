@@ -557,6 +557,14 @@ namespace RUINORERP.UI.PSI.SAL
                 ReturnMainSubResults<tb_SaleOut> SaveResult = new ReturnMainSubResults<tb_SaleOut>();
                 if (NeedValidated)
                 {
+                     //await MainForm.Instance.AppContext.Db.UpdateNav<tb_SaleOut>(EditEntity,
+                     //new UpdateNavRootOptions() { IsInsertRoot = true })
+                     //   .Include(b => b.tb_SaleOutDetails, new UpdateNavOptions()
+                     //   {
+                     //       OneToManyInsertOrUpdate = true
+                     //   })
+                     //   .ExecuteCommandAsync();
+
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {

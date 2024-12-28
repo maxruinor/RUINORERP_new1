@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:04:30
+// 时间：12/27/2024 18:30:49
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -246,16 +246,16 @@ namespace RUINORERP.Business
             if (entity.ReworkReturnID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_MRP_ReworkReturn>(entity as tb_MRP_ReworkReturn)
-                        .Include(m => m.tb_MRP_ReworkReturnDetails)
-                    .Include(m => m.tb_MRP_ReworkEntries)
+                        .Include(m => m.tb_MRP_ReworkEntries)
+                    .Include(m => m.tb_MRP_ReworkReturnDetails)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_MRP_ReworkReturn>(entity as tb_MRP_ReworkReturn)
-                .Include(m => m.tb_MRP_ReworkReturnDetails)
                 .Include(m => m.tb_MRP_ReworkEntries)
+                .Include(m => m.tb_MRP_ReworkReturnDetails)
                                 .ExecuteCommandAsync();
         }
         
@@ -286,8 +286,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_MRP_ReworkReturn>()
-                                .Includes(m => m.tb_MRP_ReworkReturnDetails)
-                        .Includes(m => m.tb_MRP_ReworkEntries)
+                                .Includes(m => m.tb_MRP_ReworkEntries)
+                        .Includes(m => m.tb_MRP_ReworkReturnDetails)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -297,8 +297,8 @@ namespace RUINORERP.Business
         {
             tb_MRP_ReworkReturn entity = model as tb_MRP_ReworkReturn;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_MRP_ReworkReturn>(m => m.ReworkReturnID== entity.ReworkReturnID)
-                                .Include(m => m.tb_MRP_ReworkReturnDetails)
-                        .Include(m => m.tb_MRP_ReworkEntries)
+                                .Include(m => m.tb_MRP_ReworkEntries)
+                        .Include(m => m.tb_MRP_ReworkReturnDetails)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -465,8 +465,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_manufacturingorder )
                                .Includes(t => t.tb_department )
-                                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                                .Includes(t => t.tb_MRP_ReworkEntries )
+                                            .Includes(t => t.tb_MRP_ReworkEntries )
+                                .Includes(t => t.tb_MRP_ReworkReturnDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -490,8 +490,8 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_employee )
                                .Includes(t => t.tb_manufacturingorder )
                                .Includes(t => t.tb_department )
-                                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                                .Includes(t => t.tb_MRP_ReworkEntries )
+                                            .Includes(t => t.tb_MRP_ReworkEntries )
+                                .Includes(t => t.tb_MRP_ReworkReturnDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -515,8 +515,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_manufacturingorder )
                             .Includes(t => t.tb_department )
-                                        .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                            .Includes(t => t.tb_MRP_ReworkEntries )
+                                        .Includes(t => t.tb_MRP_ReworkEntries )
+                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
                         .ToList();
             
             foreach (var item in list)
@@ -557,8 +557,8 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_manufacturingorder )
                             .Includes(t => t.tb_department )
-                                        .Includes(t => t.tb_MRP_ReworkReturnDetails )
-                            .Includes(t => t.tb_MRP_ReworkEntries )
+                                        .Includes(t => t.tb_MRP_ReworkEntries )
+                            .Includes(t => t.tb_MRP_ReworkReturnDetails )
                         .FirstAsync();
             if(entity!=null)
             {

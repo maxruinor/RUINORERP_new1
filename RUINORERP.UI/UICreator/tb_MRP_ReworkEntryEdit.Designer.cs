@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:04:26
+// 时间：12/27/2024 18:30:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -268,7 +268,7 @@ this.lblTotalReworkFee.Location = new System.Drawing.Point(100,175);
 this.lblTotalReworkFee.Name = "lblTotalReworkFee";
 this.lblTotalReworkFee.Size = new System.Drawing.Size(41, 12);
 this.lblTotalReworkFee.TabIndex = 7;
-this.lblTotalReworkFee.Text = "返工费用";
+this.lblTotalReworkFee.Text = "预估费用";
 //111======175
 this.txtTotalReworkFee.Location = new System.Drawing.Point(173,171);
 this.txtTotalReworkFee.Name ="txtTotalReworkFee";

@@ -1168,7 +1168,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        protected virtual void Exit(object thisform)
+        protected virtual async void Exit(object thisform)
         {
             try
             {
@@ -1198,11 +1198,8 @@ namespace RUINORERP.UI.BaseForm
                     //字符串转XML
                     //xmldoc.LoadXml(xmlStr);
                     CurMenuInfo.DefaultLayout = xmlStr;
-                    int affcet = MainForm.Instance.AppContext.Db.Storageable<tb_MenuInfo>(CurMenuInfo).ExecuteCommand();
-                    if (affcet > 0)
-                    {
-
-                    }
+                    await MainForm.Instance.AppContext.Db.Storageable<tb_MenuInfo>(CurMenuInfo).ExecuteReturnEntityAsync();
+                     
                 }
 
             }

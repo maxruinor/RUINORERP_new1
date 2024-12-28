@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 14:41:02
+// 时间：12/28/2024 15:53:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,6 +38,8 @@ namespace RUINORERP.Business
  
         
      
+ RuleFor(tb_gl_Comment =>tb_gl_Comment.Employee_ID).Must(CheckForeignKeyValue).WithMessage("批注人:下拉选择值不正确。");
+
 //***** 
  RuleFor(tb_gl_Comment =>tb_gl_Comment.BizTypeID).NotNull().WithMessage("业务类型:不能为空。");
 

@@ -292,6 +292,12 @@ namespace RUINORERP.Business
                 case BizType.调拨单://Production Requisition Document
                     rule = "{S:DB}{D:yyMMdd}{redis:{S:DB}{D:yyMM}/000}";
                     break;
+                case BizType.返工退库:
+                    rule = "{S:RW}{D:yyMMdd}{redis:{S:RW}{D:yyMM}/00}";
+                    break;
+                case BizType.返工入库:
+                    rule = "{S:RE}{D:yyMMdd}{redis:{S:RE}{D:yyMM}/00}";
+                    break;
                 default:
 
                     break;

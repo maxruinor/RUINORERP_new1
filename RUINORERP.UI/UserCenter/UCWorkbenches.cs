@@ -386,8 +386,8 @@ namespace RUINORERP.UI.UserCenter
                     //字符串转XML
                     //xmldoc.LoadXml(xmlStr);
                     MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout = xmlStr;
-                    int affcet = await MainForm.Instance.AppContext.Db.Storageable<tb_UserPersonalized>(MainForm.Instance.AppContext.CurrentUser_Role_Personalized).ExecuteCommandAsync();
-                    if (affcet > 0)
+                    var affcet = await MainForm.Instance.AppContext.Db.Storageable<tb_UserPersonalized>(MainForm.Instance.AppContext.CurrentUser_Role_Personalized).ExecuteReturnEntityAsync();
+                    if (affcet.UserPersonalizedID > 0)
                     {
                         MainForm.Instance.PrintInfoLog("工作台布局保存成功");
                     }

@@ -49,11 +49,10 @@ namespace RUINORERP.UI.BaseForm
         //为了区别是不是重写了这个方法来标记在基类中如何调用。只是为了不想改46个引用BindData(BaseEntity entity)
         public bool usedActionStatus = false;
 
-
         //[MustOverride]
         public virtual void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
-        {
-
+        {   
+             
         }
         public virtual void BindData(BaseEntity entity)
         {

@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:04:31
+// 时间：12/27/2024 18:30:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,11 +71,14 @@ this.txtQuantity = new Krypton.Toolkit.KryptonTextBox();
 this.lblDeliveredQuantity = new Krypton.Toolkit.KryptonLabel();
 this.txtDeliveredQuantity = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblUnitCost = new Krypton.Toolkit.KryptonLabel();
-this.txtUnitCost = new Krypton.Toolkit.KryptonTextBox();
-
 this.lblReworkFee = new Krypton.Toolkit.KryptonLabel();
 this.txtReworkFee = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblSubtotalReworkFee = new Krypton.Toolkit.KryptonLabel();
+this.txtSubtotalReworkFee = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblUnitCost = new Krypton.Toolkit.KryptonLabel();
+this.txtUnitCost = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblSubtotalCostAmount = new Krypton.Toolkit.KryptonLabel();
 this.txtSubtotalCostAmount = new Krypton.Toolkit.KryptonTextBox();
@@ -213,76 +216,91 @@ this.txtDeliveredQuantity.TabIndex = 6;
 this.Controls.Add(this.lblDeliveredQuantity);
 this.Controls.Add(this.txtDeliveredQuantity);
 
-           //#####UnitCost###Decimal
-this.lblUnitCost.AutoSize = true;
-this.lblUnitCost.Location = new System.Drawing.Point(100,175);
-this.lblUnitCost.Name = "lblUnitCost";
-this.lblUnitCost.Size = new System.Drawing.Size(41, 12);
-this.lblUnitCost.TabIndex = 7;
-this.lblUnitCost.Text = "成本";
-//111======175
-this.txtUnitCost.Location = new System.Drawing.Point(173,171);
-this.txtUnitCost.Name ="txtUnitCost";
-this.txtUnitCost.Size = new System.Drawing.Size(100, 21);
-this.txtUnitCost.TabIndex = 7;
-this.Controls.Add(this.lblUnitCost);
-this.Controls.Add(this.txtUnitCost);
-
            //#####ReworkFee###Decimal
 this.lblReworkFee.AutoSize = true;
-this.lblReworkFee.Location = new System.Drawing.Point(100,200);
+this.lblReworkFee.Location = new System.Drawing.Point(100,175);
 this.lblReworkFee.Name = "lblReworkFee";
 this.lblReworkFee.Size = new System.Drawing.Size(41, 12);
-this.lblReworkFee.TabIndex = 8;
-this.lblReworkFee.Text = "返工费用";
-//111======200
-this.txtReworkFee.Location = new System.Drawing.Point(173,196);
+this.lblReworkFee.TabIndex = 7;
+this.lblReworkFee.Text = "预估费用";
+//111======175
+this.txtReworkFee.Location = new System.Drawing.Point(173,171);
 this.txtReworkFee.Name ="txtReworkFee";
 this.txtReworkFee.Size = new System.Drawing.Size(100, 21);
-this.txtReworkFee.TabIndex = 8;
+this.txtReworkFee.TabIndex = 7;
 this.Controls.Add(this.lblReworkFee);
 this.Controls.Add(this.txtReworkFee);
 
+           //#####SubtotalReworkFee###Decimal
+this.lblSubtotalReworkFee.AutoSize = true;
+this.lblSubtotalReworkFee.Location = new System.Drawing.Point(100,200);
+this.lblSubtotalReworkFee.Name = "lblSubtotalReworkFee";
+this.lblSubtotalReworkFee.Size = new System.Drawing.Size(41, 12);
+this.lblSubtotalReworkFee.TabIndex = 8;
+this.lblSubtotalReworkFee.Text = "预估费用小计";
+//111======200
+this.txtSubtotalReworkFee.Location = new System.Drawing.Point(173,196);
+this.txtSubtotalReworkFee.Name ="txtSubtotalReworkFee";
+this.txtSubtotalReworkFee.Size = new System.Drawing.Size(100, 21);
+this.txtSubtotalReworkFee.TabIndex = 8;
+this.Controls.Add(this.lblSubtotalReworkFee);
+this.Controls.Add(this.txtSubtotalReworkFee);
+
+           //#####UnitCost###Decimal
+this.lblUnitCost.AutoSize = true;
+this.lblUnitCost.Location = new System.Drawing.Point(100,225);
+this.lblUnitCost.Name = "lblUnitCost";
+this.lblUnitCost.Size = new System.Drawing.Size(41, 12);
+this.lblUnitCost.TabIndex = 9;
+this.lblUnitCost.Text = "成本";
+//111======225
+this.txtUnitCost.Location = new System.Drawing.Point(173,221);
+this.txtUnitCost.Name ="txtUnitCost";
+this.txtUnitCost.Size = new System.Drawing.Size(100, 21);
+this.txtUnitCost.TabIndex = 9;
+this.Controls.Add(this.lblUnitCost);
+this.Controls.Add(this.txtUnitCost);
+
            //#####SubtotalCostAmount###Decimal
 this.lblSubtotalCostAmount.AutoSize = true;
-this.lblSubtotalCostAmount.Location = new System.Drawing.Point(100,225);
+this.lblSubtotalCostAmount.Location = new System.Drawing.Point(100,250);
 this.lblSubtotalCostAmount.Name = "lblSubtotalCostAmount";
 this.lblSubtotalCostAmount.Size = new System.Drawing.Size(41, 12);
-this.lblSubtotalCostAmount.TabIndex = 9;
-this.lblSubtotalCostAmount.Text = "小计";
-//111======225
-this.txtSubtotalCostAmount.Location = new System.Drawing.Point(173,221);
+this.lblSubtotalCostAmount.TabIndex = 10;
+this.lblSubtotalCostAmount.Text = "成本小计";
+//111======250
+this.txtSubtotalCostAmount.Location = new System.Drawing.Point(173,246);
 this.txtSubtotalCostAmount.Name ="txtSubtotalCostAmount";
 this.txtSubtotalCostAmount.Size = new System.Drawing.Size(100, 21);
-this.txtSubtotalCostAmount.TabIndex = 9;
+this.txtSubtotalCostAmount.TabIndex = 10;
 this.Controls.Add(this.lblSubtotalCostAmount);
 this.Controls.Add(this.txtSubtotalCostAmount);
 
            //#####50CustomertModel###String
 this.lblCustomertModel.AutoSize = true;
-this.lblCustomertModel.Location = new System.Drawing.Point(100,250);
+this.lblCustomertModel.Location = new System.Drawing.Point(100,275);
 this.lblCustomertModel.Name = "lblCustomertModel";
 this.lblCustomertModel.Size = new System.Drawing.Size(41, 12);
-this.lblCustomertModel.TabIndex = 10;
+this.lblCustomertModel.TabIndex = 11;
 this.lblCustomertModel.Text = "客户型号";
-this.txtCustomertModel.Location = new System.Drawing.Point(173,246);
+this.txtCustomertModel.Location = new System.Drawing.Point(173,271);
 this.txtCustomertModel.Name = "txtCustomertModel";
 this.txtCustomertModel.Size = new System.Drawing.Size(100, 21);
-this.txtCustomertModel.TabIndex = 10;
+this.txtCustomertModel.TabIndex = 11;
 this.Controls.Add(this.lblCustomertModel);
 this.Controls.Add(this.txtCustomertModel);
 
            //#####1000Summary###String
 this.lblSummary.AutoSize = true;
-this.lblSummary.Location = new System.Drawing.Point(100,275);
+this.lblSummary.Location = new System.Drawing.Point(100,300);
 this.lblSummary.Name = "lblSummary";
 this.lblSummary.Size = new System.Drawing.Size(41, 12);
-this.lblSummary.TabIndex = 11;
+this.lblSummary.TabIndex = 12;
 this.lblSummary.Text = "摘要";
-this.txtSummary.Location = new System.Drawing.Point(173,271);
+this.txtSummary.Location = new System.Drawing.Point(173,296);
 this.txtSummary.Name = "txtSummary";
 this.txtSummary.Size = new System.Drawing.Size(100, 21);
-this.txtSummary.TabIndex = 11;
+this.txtSummary.TabIndex = 12;
 this.Controls.Add(this.lblSummary);
 this.Controls.Add(this.txtSummary);
 
@@ -300,7 +318,7 @@ this.Controls.Add(this.txtSummary);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 11;
+           // this.kryptonPanel1.TabIndex = 12;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -322,11 +340,14 @@ this.Controls.Add(this.txtQuantity );
                 this.Controls.Add(this.lblDeliveredQuantity );
 this.Controls.Add(this.txtDeliveredQuantity );
 
-                this.Controls.Add(this.lblUnitCost );
-this.Controls.Add(this.txtUnitCost );
-
                 this.Controls.Add(this.lblReworkFee );
 this.Controls.Add(this.txtReworkFee );
+
+                this.Controls.Add(this.lblSubtotalReworkFee );
+this.Controls.Add(this.txtSubtotalReworkFee );
+
+                this.Controls.Add(this.lblUnitCost );
+this.Controls.Add(this.txtUnitCost );
 
                 this.Controls.Add(this.lblSubtotalCostAmount );
 this.Controls.Add(this.txtSubtotalCostAmount );
@@ -391,13 +412,18 @@ private Krypton.Toolkit.KryptonTextBox txtDeliveredQuantity;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblUnitCost;
-private Krypton.Toolkit.KryptonTextBox txtUnitCost;
+              private Krypton.Toolkit.KryptonLabel lblReworkFee;
+private Krypton.Toolkit.KryptonTextBox txtReworkFee;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblReworkFee;
-private Krypton.Toolkit.KryptonTextBox txtReworkFee;
+              private Krypton.Toolkit.KryptonLabel lblSubtotalReworkFee;
+private Krypton.Toolkit.KryptonTextBox txtSubtotalReworkFee;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblUnitCost;
+private Krypton.Toolkit.KryptonTextBox txtUnitCost;
 
     
         

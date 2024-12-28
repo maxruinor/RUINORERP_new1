@@ -370,7 +370,7 @@ namespace RUINORERP.UI.Report
                 printTemplate.ID = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
                 printTemplate.ActionStatus = ActionStatus.新增;
                 bindingSourcePrintTemplate.Add(printTemplate);
-                MainForm.Instance.AppContext.Db.Storageable<tb_PrintTemplate>(printTemplate).ExecuteCommand();
+                MainForm.Instance.AppContext.Db.Storageable<tb_PrintTemplate>(printTemplate).ExecuteReturnEntityAsync();
                 newSumDataGridView1.ReadOnly = false;
                 newSumDataGridView1.Columns["Template_Name"].ReadOnly = false;
             }

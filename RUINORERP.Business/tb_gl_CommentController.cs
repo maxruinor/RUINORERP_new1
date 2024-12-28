@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 14:41:01
+// 时间：12/28/2024 15:53:19
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -461,6 +461,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_gl_Comment>> QueryByNavAsync()
         {
             List<tb_gl_Comment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_gl_Comment>()
+                               .Includes(t => t.tb_employee )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -480,6 +481,7 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_gl_Comment>> QueryByNavAsync(Expression<Func<tb_gl_Comment, bool>> exp)
         {
             List<tb_gl_Comment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_gl_Comment>().Where(exp)
+                               .Includes(t => t.tb_employee )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -499,6 +501,7 @@ namespace RUINORERP.Business
          public virtual List<tb_gl_Comment> QueryByNav(Expression<Func<tb_gl_Comment, bool>> exp)
         {
             List<tb_gl_Comment> list = _unitOfWorkManage.GetDbClient().Queryable<tb_gl_Comment>().Where(exp)
+                            .Includes(t => t.tb_employee )
                                     .ToList();
             
             foreach (var item in list)
@@ -535,7 +538,8 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_gl_Comment entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_gl_Comment>().Where(w => w.CommentID == (long)id)
-                                     .FirstAsync();
+                             .Includes(t => t.tb_employee )
+                                    .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

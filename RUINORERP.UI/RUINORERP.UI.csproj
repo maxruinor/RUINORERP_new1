@@ -1500,6 +1500,12 @@
     <Compile Include="MRP\PPROC\UCMaterialRequisitionStatistics.Designer.cs">
       <DependentUpon>UCMaterialRequisitionStatistics.cs</DependentUpon>
     </Compile>
+    <Compile Include="MRP\PPROC\UCMRPReworkReturn.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PPROC\UCMRPReworkReturn.designer.cs">
+      <DependentUpon>UCMRPReworkReturn.cs</DependentUpon>
+    </Compile>
     <Compile Include="MRP\UCProdWorkbench.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2955,6 +2961,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MRP\PPROC\UCMaterialRequisitionStatistics.resx">
       <DependentUpon>UCMaterialRequisitionStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PPROC\UCMRPReworkReturn.resx">
+      <DependentUpon>UCMRPReworkReturn.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MRP\UCProdWorkbench.resx">
       <DependentUpon>UCProdWorkbench.cs</DependentUpon>

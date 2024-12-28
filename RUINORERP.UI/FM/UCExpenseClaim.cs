@@ -168,7 +168,7 @@ namespace RUINORERP.UI.FM
 
 
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
-                {
+                    {
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     EditEntity.Employee_ID = entity.Employee_ID;
                     /*
@@ -219,7 +219,7 @@ namespace RUINORERP.UI.FM
             if (entity.tb_FM_ExpenseClaimDetails != null && entity.tb_FM_ExpenseClaimDetails.Count > 0)
             {
                 //新建和草稿时子表编辑也可以保存。
-                foreach (var item in entity.tb_FM_ExpenseClaimDetails)
+                foreach (   var item in entity.tb_FM_ExpenseClaimDetails)
                 {
                     item.PropertyChanged += (sender, s1) =>
                     {

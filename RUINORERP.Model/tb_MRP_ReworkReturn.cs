@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:04:31
+// 时间：12/27/2024 18:30:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -474,18 +474,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturnDetail.ReworkReturnID))]
-        public virtual List<tb_MRP_ReworkReturnDetail> tb_MRP_ReworkReturnDetails { get; set; }
-        //tb_MRP_ReworkReturnDetail.ReworkReturnID)
-        //ReworkReturnID.FK_MRP_ReworkRetrun_REF_MRP_ReworkRetrunDetail)
-        //tb_MRP_ReworkReturn.ReworkReturnID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntry.ReworkReturnID))]
         public virtual List<tb_MRP_ReworkEntry> tb_MRP_ReworkEntries { get; set; }
         //tb_MRP_ReworkEntry.ReworkReturnID)
         //ReworkReturnID.FK_TB_MRP_ReworkEntry_REF_TB_MRP_ReworkRetrun)
+        //tb_MRP_ReworkReturn.ReworkReturnID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturnDetail.ReworkReturnID))]
+        public virtual List<tb_MRP_ReworkReturnDetail> tb_MRP_ReworkReturnDetails { get; set; }
+        //tb_MRP_ReworkReturnDetail.ReworkReturnID)
+        //ReworkReturnID.FK_MRP_ReworkRetrun_REF_MRP_ReworkRetrunDetail)
         //tb_MRP_ReworkReturn.ReworkReturnID)
 
 

@@ -16,6 +16,8 @@ using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business;
 using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Common.Extensions;
 
 namespace RUINORERP.UI.BI
 {
@@ -26,13 +28,18 @@ namespace RUINORERP.UI.BI
         public UCglCommentList()
         {
             InitializeComponent();
+    
             base.EditForm = typeof(UCglCommentEdit);
-        }
 
+            System.Linq.Expressions.Expression<Func<tb_gl_Comment, int?>> exp;
+            exp = (p) => p.BizTypeID;
+            base.ColNameDataDictionary.TryAdd(exp.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType)));
+        }
 
         public override void BuildInvisibleCols()
         {
             base.InvisibleColsExp.Add(c => c.DbTableName);
+            base.InvisibleColsExp.Add(c => c.BusinessID);
         }
     }
 }

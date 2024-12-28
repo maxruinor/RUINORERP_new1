@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 14:41:01
+// 时间：12/28/2024 15:53:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,7 +50,10 @@ namespace RUINORERP.UI
         
      //for start
      
-     
+     this.lblEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.cmbEmployee_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
+
+
 
 this.lblDbTableName = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtDbTableName = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -70,73 +73,93 @@ this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker
     this.SuspendLayout();
     
          //for start
-                 //#####BizTypeID###Int32
+                 //#####Employee_ID###Int64
+//属性测试25Employee_ID
+this.lblEmployee_ID.AutoSize = true;
+this.lblEmployee_ID.Location = new System.Drawing.Point(100,25);
+this.lblEmployee_ID.Name = "lblEmployee_ID";
+this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
+this.lblEmployee_ID.TabIndex = 1;
+this.lblEmployee_ID.Text = "批注人";
+//111======25
+this.cmbEmployee_ID.Location = new System.Drawing.Point(173,21);
+this.cmbEmployee_ID.Name ="cmbEmployee_ID";
+this.cmbEmployee_ID.Size = new System.Drawing.Size(100, 21);
+this.cmbEmployee_ID.TabIndex = 1;
+this.Controls.Add(this.lblEmployee_ID);
+this.Controls.Add(this.cmbEmployee_ID);
+
+           //#####BizTypeID###Int32
+//属性测试50BizTypeID
 
            //#####BusinessID###Int64
+//属性测试75BusinessID
 
            //#####100DbTableName###String
 this.lblDbTableName.AutoSize = true;
-this.lblDbTableName.Location = new System.Drawing.Point(100,75);
+this.lblDbTableName.Location = new System.Drawing.Point(100,100);
 this.lblDbTableName.Name = "lblDbTableName";
 this.lblDbTableName.Size = new System.Drawing.Size(41, 12);
-this.lblDbTableName.TabIndex = 3;
+this.lblDbTableName.TabIndex = 4;
 this.lblDbTableName.Text = "关联表名";
-this.txtDbTableName.Location = new System.Drawing.Point(173,71);
+this.txtDbTableName.Location = new System.Drawing.Point(173,96);
 this.txtDbTableName.Name = "txtDbTableName";
 this.txtDbTableName.Size = new System.Drawing.Size(100, 21);
-this.txtDbTableName.TabIndex = 3;
+this.txtDbTableName.TabIndex = 4;
 this.Controls.Add(this.lblDbTableName);
 this.Controls.Add(this.txtDbTableName);
 
            //#####200CommentContent###String
 this.lblCommentContent.AutoSize = true;
-this.lblCommentContent.Location = new System.Drawing.Point(100,100);
+this.lblCommentContent.Location = new System.Drawing.Point(100,125);
 this.lblCommentContent.Name = "lblCommentContent";
 this.lblCommentContent.Size = new System.Drawing.Size(41, 12);
-this.lblCommentContent.TabIndex = 4;
+this.lblCommentContent.TabIndex = 5;
 this.lblCommentContent.Text = "批注内容";
-this.txtCommentContent.Location = new System.Drawing.Point(173,96);
+this.txtCommentContent.Location = new System.Drawing.Point(173,121);
 this.txtCommentContent.Name = "txtCommentContent";
 this.txtCommentContent.Size = new System.Drawing.Size(100, 21);
-this.txtCommentContent.TabIndex = 4;
+this.txtCommentContent.TabIndex = 5;
 this.Controls.Add(this.lblCommentContent);
 this.Controls.Add(this.txtCommentContent);
 
            //#####Created_at###DateTime
 this.lblCreated_at.AutoSize = true;
-this.lblCreated_at.Location = new System.Drawing.Point(100,125);
+this.lblCreated_at.Location = new System.Drawing.Point(100,150);
 this.lblCreated_at.Name = "lblCreated_at";
 this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_at.TabIndex = 5;
+this.lblCreated_at.TabIndex = 6;
 this.lblCreated_at.Text = "创建时间";
-//111======125
-this.dtpCreated_at.Location = new System.Drawing.Point(173,121);
+//111======150
+this.dtpCreated_at.Location = new System.Drawing.Point(173,146);
 this.dtpCreated_at.Name ="dtpCreated_at";
 this.dtpCreated_at.ShowCheckBox =true;
 this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-this.dtpCreated_at.TabIndex = 5;
+this.dtpCreated_at.TabIndex = 6;
 this.Controls.Add(this.lblCreated_at);
 this.Controls.Add(this.dtpCreated_at);
 
            //#####Created_by###Int64
+//属性测试175Created_by
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
-this.lblModified_at.Location = new System.Drawing.Point(100,175);
+this.lblModified_at.Location = new System.Drawing.Point(100,200);
 this.lblModified_at.Name = "lblModified_at";
 this.lblModified_at.Size = new System.Drawing.Size(41, 12);
-this.lblModified_at.TabIndex = 7;
+this.lblModified_at.TabIndex = 8;
 this.lblModified_at.Text = "修改时间";
-//111======175
-this.dtpModified_at.Location = new System.Drawing.Point(173,171);
+//111======200
+this.dtpModified_at.Location = new System.Drawing.Point(173,196);
 this.dtpModified_at.Name ="dtpModified_at";
 this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-this.dtpModified_at.TabIndex = 7;
+this.dtpModified_at.TabIndex = 8;
 this.Controls.Add(this.lblModified_at);
 this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
+//属性测试225Modified_by
 
           
     //for end
@@ -146,6 +169,9 @@ this.Controls.Add(this.dtpModified_at);
             
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+                this.Controls.Add(this.lblEmployee_ID );
+this.Controls.Add(this.cmbEmployee_ID );
+
                 
                 
                 this.Controls.Add(this.lblDbTableName );
@@ -174,6 +200,11 @@ this.Controls.Add(this.dtpModified_at );
      //for start
      
          
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblEmployee_ID;
+private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
+
+    
+        
               
     
         

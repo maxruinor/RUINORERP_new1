@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:06
+// 时间：12/27/2024 18:05:11
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -249,6 +249,7 @@ namespace RUINORERP.Business
                         .Include(m => m.tb_MaterialRequisitions)
                     .Include(m => m.tb_FinishedGoodsInvs)
                     .Include(m => m.tb_ManufacturingOrderDetails)
+                    .Include(m => m.tb_MRP_ReworkReturns)
                             .ExecuteCommandAsync();
          
         }
@@ -258,6 +259,7 @@ namespace RUINORERP.Business
                 .Include(m => m.tb_MaterialRequisitions)
                 .Include(m => m.tb_FinishedGoodsInvs)
                 .Include(m => m.tb_ManufacturingOrderDetails)
+                .Include(m => m.tb_MRP_ReworkReturns)
                                 .ExecuteCommandAsync();
         }
         
@@ -291,6 +293,7 @@ namespace RUINORERP.Business
                                 .Includes(m => m.tb_MaterialRequisitions)
                         .Includes(m => m.tb_FinishedGoodsInvs)
                         .Includes(m => m.tb_ManufacturingOrderDetails)
+                        .Includes(m => m.tb_MRP_ReworkReturns)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -303,6 +306,7 @@ namespace RUINORERP.Business
                                 .Include(m => m.tb_MaterialRequisitions)
                         .Include(m => m.tb_FinishedGoodsInvs)
                         .Include(m => m.tb_ManufacturingOrderDetails)
+                        .Include(m => m.tb_MRP_ReworkReturns)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -479,6 +483,7 @@ namespace RUINORERP.Business
                                             .Includes(t => t.tb_MaterialRequisitions )
                                 .Includes(t => t.tb_FinishedGoodsInvs )
                                 .Includes(t => t.tb_ManufacturingOrderDetails )
+                                .Includes(t => t.tb_MRP_ReworkReturns )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -512,6 +517,7 @@ namespace RUINORERP.Business
                                             .Includes(t => t.tb_MaterialRequisitions )
                                 .Includes(t => t.tb_FinishedGoodsInvs )
                                 .Includes(t => t.tb_ManufacturingOrderDetails )
+                                .Includes(t => t.tb_MRP_ReworkReturns )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -545,6 +551,7 @@ namespace RUINORERP.Business
                                         .Includes(t => t.tb_MaterialRequisitions )
                             .Includes(t => t.tb_FinishedGoodsInvs )
                             .Includes(t => t.tb_ManufacturingOrderDetails )
+                            .Includes(t => t.tb_MRP_ReworkReturns )
                         .ToList();
             
             foreach (var item in list)
@@ -595,6 +602,7 @@ namespace RUINORERP.Business
                                         .Includes(t => t.tb_MaterialRequisitions )
                             .Includes(t => t.tb_FinishedGoodsInvs )
                             .Includes(t => t.tb_ManufacturingOrderDetails )
+                            .Includes(t => t.tb_MRP_ReworkReturns )
                         .FirstAsync();
             if(entity!=null)
             {

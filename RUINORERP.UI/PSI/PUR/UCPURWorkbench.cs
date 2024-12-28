@@ -26,13 +26,17 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.AdvancedQuery;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.BI;
 using RUINORERP.UI.Common;
+using RUINORERP.UI.CRM;
 using RUINORERP.UI.FormProperty;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
@@ -51,15 +55,18 @@ using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls;
+using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using TransInstruction;
 using XmlDocument = System.Xml.XmlDocument;
 
 namespace RUINORERP.UI.PUR
@@ -592,15 +599,26 @@ namespace RUINORERP.UI.PUR
             }
             return false;
         }
+
+        private ToolStripMenuItem tsmenuItemAddAnnotations;
+        ContextMenuStrip newContextMenuStrip;
         UCPUR uCPur = new UCPUR();
         private void UCProdWorkbench_Load(object sender, EventArgs e)
         {
+
             if (this.DesignMode)
             {
                 return;
             }
             else
             {
+                newContextMenuStrip = new();
+                tsmenuItemAddAnnotations = new ToolStripMenuItem("添加批注");
+                tsmenuItemAddAnnotations.Click += new System.EventHandler(this.tsmenuItemAddAnnotations_Click);
+                //插到前面
+                newContextMenuStrip.Items.Insert(0, tsmenuItemAddAnnotations);
+
+
                 // Setup docking functionality
                 ws = kryptonDockingManagerQuery.ManageWorkspace(kryptonDockableWorkspaceQuery);
                 kryptonDockingManagerQuery.ManageControl(kryptonPanelMainBig, ws);
@@ -705,11 +723,68 @@ namespace RUINORERP.UI.PUR
             }
         }
 
+        private async void tsmenuItemAddAnnotations_Click(object sender, EventArgs e)
+        {
+            if (uCPur.kryptonTreeGridView1.CurrentRow != null)
+            {
+                if (uCPur.kryptonTreeGridView1.CurrentRow.Tag.GetType().BaseType.Name == "BaseEntity")
+                {
+                    Type rowOjbType = uCPur.kryptonTreeGridView1.CurrentRow.Tag.GetType();
+                    BizTypeMapper mapper = new BizTypeMapper();
+
+                    object PKValue = uCPur.kryptonTreeGridView1.CurrentRow.Tag.GetPropertyValue(UIHelper.GetPrimaryKeyColName(rowOjbType));
+
+
+                    object frm = Activator.CreateInstance(typeof(UCglCommentEdit));
+                    if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+                    {
+                        BaseEditGeneric<tb_gl_Comment> frmaddg = frm as BaseEditGeneric<tb_gl_Comment>;
+                        frmaddg.Text = "添加批注";
+                        frmaddg.bindingSourceEdit.DataSource = new List<tb_gl_Comment>();
+                        object obj = frmaddg.bindingSourceEdit.AddNew();
+                        tb_gl_Comment EntityInfo = obj as tb_gl_Comment;
+                        EntityInfo.BusinessID = PKValue.ToLong();
+                        EntityInfo.BizTypeID = (int)mapper.GetBizType(rowOjbType);
+                        EntityInfo.DbTableName = rowOjbType.Name;
+                        BusinessHelper.Instance.InitEntity(EntityInfo);
+                        BaseEntity bty = EntityInfo as BaseEntity;
+                        bty.ActionStatus = ActionStatus.加载;
+                        frmaddg.BindData(bty, ActionStatus.新增);
+                        if (frmaddg.ShowDialog() == DialogResult.OK)
+                        {
+                            var entiry = await MainForm.Instance.AppContext.Db.Storageable(EntityInfo).DefaultAddElseUpdate().ExecuteReturnEntityAsync();
+                            if (entiry.CommentID > 0)
+                            {
+
+                            }
+                            else
+                            {
+
+                            }
+
+                            //BaseController<tb_gl_Comment> ctrRecords = Startup.GetFromFacByName<BaseController<tb_gl_Comment>>(typeof(tb_gl_Comment).Name + "Controller");
+                            //ReturnResults<tb_gl_Comment> result = await ctrRecords.BaseSaveOrUpdate(EntityInfo);
+                            //if (result.Succeeded)
+                            //{
+
+                            //    MainForm.Instance.ShowStatusText("添加成功!");
+                            //}
+                            //else
+                            //{
+                            //    MainForm.Instance.ShowStatusText("添加失败!");
+                            //}
+                        }
+                    }
+                }
+            }
+        }
+
         private KryptonPage CreateCell()
         {
             uCPur.Name = "uCSale";
             uCPur.Dock = DockStyle.Fill;
             uCPur.kryptonTreeGridView1.RowHeadersVisible = true;
+            uCPur.ContextMenuStrip = newContextMenuStrip;
             KryptonPage page = UIForKryptonHelper.NewPage("采购", 1, uCPur);
             page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
             return page;

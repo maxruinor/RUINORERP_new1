@@ -212,7 +212,7 @@ namespace RUINORERP.Business
 
                         #region 更新销售价格
                         //注意这里的人应该是业务员的ID。销售订单的录入人，不是审核人。也不是出库单的人。
-                        tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
+                        // tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
                         tb_PriceRecord priceRecord = _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
                         .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID.Value && c.ProdDetailID == child.ProdDetailID).First();
                         //如果存在则更新，否则插入
@@ -226,20 +226,22 @@ namespace RUINORERP.Business
                             priceRecord.SalePrice = child.TransactionPrice;
                             priceRecord.SaleDate = System.DateTime.Now;
                             priceRecord.ProdDetailID = child.ProdDetailID;
-                            ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
+
+                            await _unitOfWorkManage.GetDbClient().Storageable(priceRecord).DefaultAddElseUpdate().ExecuteReturnEntityAsync();
+                            //ReturnResults<tb_PriceRecord> rrpr = await ctrPriceRecord.SaveOrUpdate(priceRecord);
                         }
 
                         #endregion
+                        await _unitOfWorkManage.GetDbClient().Storageable(inv).DefaultAddElseUpdate().ExecuteReturnEntityAsync();
+                        //ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                        //if (rr.Succeeded)
+                        //{
 
-                        ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                        if (rr.Succeeded)
-                        {
-
-                        }
-                        else
-                        {
-                            return rrs;
-                        }
+                        //}
+                        //else
+                        //{
+                        //    return rrs;
+                        //}
 
                     }
 
@@ -428,7 +430,6 @@ namespace RUINORERP.Business
                     }
                 }
 
-
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rrs.ReturnObject = entity as T;
@@ -438,7 +439,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-
+                rrs.Succeeded = false;
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 _logger.Error(ex, "事务回滚");
                 return rrs;
@@ -460,7 +461,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
+                //  tb_OpeningInventoryController<tb_OpeningInventory> ctrOPinv = _appContext.GetRequiredService<tb_OpeningInventoryController<tb_OpeningInventory>>();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -507,11 +508,13 @@ namespace RUINORERP.Business
                     //inv.LatestStorageTime
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
-                    if (rr.Succeeded)
-                    {
 
-                    }
+                    await _unitOfWorkManage.GetDbClient().Storageable(inv).ExecuteReturnEntityAsync();
+                    // ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
+                    // if (rr.Succeeded)
+                    // {
+
+                    // }
                 }
                 if (entity.tb_saleorder != null)
                 {
@@ -653,7 +656,6 @@ namespace RUINORERP.Business
                 //只更新指定列
                 // var result = _unitOfWorkManage.GetDbClient().Updateable<tb_Stocktake>(entity).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommand();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity).ExecuteCommandAsync();
-
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();

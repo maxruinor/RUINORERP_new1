@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 14:41:02
+// 时间：12/28/2024 15:53:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,6 +48,21 @@ namespace RUINORERP.Model
             set{
             base.PrimaryKeyID = _CommentID;
             SetProperty(ref _CommentID, value);
+            }
+        }
+
+        private long _Employee_ID;
+        /// <summary>
+        /// 批注人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "批注人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "批注人" )]
+        [FKRelationAttribute("tb_Employee","Employee_ID")]
+        public long Employee_ID
+        { 
+            get{return _Employee_ID;}
+            set{
+            SetProperty(ref _Employee_ID, value);
             }
         }
 
@@ -166,6 +181,11 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
+        public virtual tb_Employee tb_employee { get; set; }
+
 
 
         #endregion

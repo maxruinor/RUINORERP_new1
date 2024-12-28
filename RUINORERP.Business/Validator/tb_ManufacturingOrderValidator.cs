@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：12/27/2024 18:05:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -118,6 +118,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.WorkingHour).PrecisionScale(15,5,true).WithMessage("工时:小数位不能超过5。");
 
  RuleFor(x => x.MachineHour).PrecisionScale(15,5,true).WithMessage("机时:小数位不能超过5。");
+
 
 
 

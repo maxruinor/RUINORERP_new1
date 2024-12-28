@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:04:29
+// 时间：12/27/2024 18:30:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,6 +45,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -60,6 +61,7 @@ namespace RUINORERP.UI
                         entity.property = txtproperty.Text ;
                        entity.Quantity = Int32.Parse(txtQuantity.Text);
                         entity.ReworkFee = Decimal.Parse(txtReworkFee.Text);
+                        entity.SubtotalReworkFee = Decimal.Parse(txtSubtotalReworkFee.Text);
                         entity.UnitCost = Decimal.Parse(txtUnitCost.Text);
                         entity.SubtotalCostAmount = Decimal.Parse(txtSubtotalCostAmount.Text);
                         entity.Summary = txtSummary.Text ;
@@ -81,6 +83,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntryDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntryDetail>(entity, t => t.Quantity, txtQuantity, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntryDetail>(entity, t => t.ReworkFee.ToString(), txtReworkFee, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntryDetail>(entity, t => t.SubtotalReworkFee.ToString(), txtSubtotalReworkFee, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntryDetail>(entity, t => t.UnitCost.ToString(), txtUnitCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntryDetail>(entity, t => t.SubtotalCostAmount.ToString(), txtSubtotalCostAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntryDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);

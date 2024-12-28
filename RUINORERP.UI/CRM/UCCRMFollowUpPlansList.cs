@@ -109,8 +109,6 @@ namespace RUINORERP.UI.CRM
         {
             ContextMenuStrip newContextMenuStrip = base.dataGridView1.GetContextMenu(contextMenuStrip1);
 
-
-
             // 初始化ContextMenuStrip 中的一项 如果未开始 可以设置为已取消
             toolStripMenuItem1 = new ToolStripMenuItem("取消跟进计划");
             toolStripMenuItem1.Click += new System.EventHandler(this.toolStripButton取消跟进计划_Click);

@@ -8,6 +8,7 @@ namespace HLH.Lib.Security
     /// <summary>
     /// 注册码生成器
     /// </summary>
+    [Obsolete("引用了ystem.Web.Security，暂时放弃使用")]
     public class CreateRegisterCode
     {
 

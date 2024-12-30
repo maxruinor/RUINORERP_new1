@@ -31,6 +31,8 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.AdvancedQuery;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.BI;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FormProperty;
 using RUINORERP.UI.Report;
@@ -106,7 +108,8 @@ namespace RUINORERP.UI.MRP
         public Type ChildRelatedEntityType;
 
 
-
+        private ToolStripMenuItem tsmenuItemAddAnnotations;
+        ContextMenuStrip newContextMenuStrip;
 
         public UCProdWorkbench()
         {
@@ -115,6 +118,12 @@ namespace RUINORERP.UI.MRP
             {
                 if (!this.DesignMode)
                 {
+                    newContextMenuStrip = new();
+                    tsmenuItemAddAnnotations = new ToolStripMenuItem("添加批注");
+                    tsmenuItemAddAnnotations.Click += new System.EventHandler(this.tsmenuItemAddAnnotations_Click);
+                    //插到前面
+                    newContextMenuStrip.Items.Insert(0, tsmenuItemAddAnnotations);
+
                     foreach (var item in BaseToolStrip.Items)
                     {
                         if (item is ToolStripButton)
@@ -165,6 +174,51 @@ namespace RUINORERP.UI.MRP
                 }
             }
 
+        }
+        
+        private async void tsmenuItemAddAnnotations_Click(object sender, EventArgs e)
+        {
+            if (uCMRP.kryptonTreeGridView1.CurrentRow != null)
+            {
+                if (uCMRP.kryptonTreeGridView1.CurrentRow.Tag.GetType().BaseType.Name == "BaseEntity")
+                {
+                    Type rowOjbType = uCMRP.kryptonTreeGridView1.CurrentRow.Tag.GetType();
+                    BizTypeMapper mapper = new BizTypeMapper();
+
+                    object PKValue = uCMRP.kryptonTreeGridView1.CurrentRow.Tag.GetPropertyValue(UIHelper.GetPrimaryKeyColName(rowOjbType));
+
+
+                    object frm = Activator.CreateInstance(typeof(UCglCommentEdit));
+                    if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
+                    {
+                        BaseEditGeneric<tb_gl_Comment> frmaddg = frm as BaseEditGeneric<tb_gl_Comment>;
+                        frmaddg.Text = "添加批注";
+                        frmaddg.bindingSourceEdit.DataSource = new List<tb_gl_Comment>();
+                        object obj = frmaddg.bindingSourceEdit.AddNew();
+                        tb_gl_Comment EntityInfo = obj as tb_gl_Comment;
+                        EntityInfo.BusinessID = PKValue.ToLong();
+                        EntityInfo.BizTypeID = (int)mapper.GetBizType(rowOjbType);
+                        EntityInfo.DbTableName = rowOjbType.Name;
+                        BusinessHelper.Instance.InitEntity(EntityInfo);
+                        BaseEntity bty = EntityInfo as BaseEntity;
+                        bty.ActionStatus = ActionStatus.加载;
+                        frmaddg.BindData(bty, ActionStatus.新增);
+                        if (frmaddg.ShowDialog() == DialogResult.OK)
+                        {
+                            var entiry = await MainForm.Instance.AppContext.Db.Storageable(EntityInfo).DefaultAddElseUpdate().ExecuteReturnEntityAsync();
+                            if (entiry.CommentID > 0)
+                            {
+
+                            }
+                            else
+                            {
+
+                            }
+                            
+                        }
+                    }
+                }
+            }
         }
         private void button设置查询条件_Click(object sender, EventArgs e)
         {
@@ -722,6 +776,7 @@ namespace RUINORERP.UI.MRP
             uCMRP.Name = "uCMRP";
             uCMRP.Dock = DockStyle.Fill;
             uCMRP.kryptonTreeGridView1.RowHeadersVisible = true;
+            uCMRP.ContextMenuStrip = newContextMenuStrip;
             KryptonPage page = UIForKryptonHelper.NewPage("生产", 1, uCMRP);
             page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
             return page;

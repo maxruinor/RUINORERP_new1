@@ -208,7 +208,7 @@ namespace RUINORERP.UI.MRP.MP
                     {
                         if (entity.IsOutSourced)
                         {
-                            entity.ApportionedCost = entity.tb_bom_s.OutApportionedCost/ entity.tb_bom_s.OutputQty * entity.ManufacturingQty;
+                            entity.ApportionedCost = entity.tb_bom_s.OutApportionedCost / entity.tb_bom_s.OutputQty * entity.ManufacturingQty;
                             entity.TotalManuFee = entity.tb_bom_s.TotalOutManuCost / entity.tb_bom_s.OutputQty * entity.ManufacturingQty;
                         }
                         else
@@ -313,7 +313,7 @@ namespace RUINORERP.UI.MRP.MP
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_ManufacturingOrderValidator> (), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ManufacturingOrderValidator>(), kryptonPanelMainInfo.Controls);
                 // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
@@ -326,12 +326,12 @@ namespace RUINORERP.UI.MRP.MP
         SourceGridDefine sgd = null;
         //        SourceGridHelper<View_ProdDetail, tb_ManufacturingOrderDetail> sgh = new SourceGridHelper<View_ProdDetail, tb_ManufacturingOrderDetail>();
         SourceGridHelper sgh = new SourceGridHelper();
-        
+
         List<SourceGridDefineColumnItem> listCols = new List<SourceGridDefineColumnItem>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
 
-            
+
             //InitDataTocmbbox();
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
@@ -416,7 +416,7 @@ namespace RUINORERP.UI.MRP.MP
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
 
-     
+
             sgd.SetDependencyObject<ProductSharePart, tb_ManufacturingOrderDetail>(MainForm.Instance.list);
 
             sgd.HasRowHeader = true;
@@ -889,27 +889,8 @@ protected override void Print()
                 MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
                 return false;
             }
-
-            tb_ManufacturingOrderController<tb_ManufacturingOrder> ctr = Startup.GetFromFac<tb_ManufacturingOrderController<tb_ManufacturingOrder>>();
-            ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
-            if (rs.Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-                base.Query();
-            }
-            else
-            {
-                MainForm.Instance.PrintInfoLog($"{EditEntity.MONO}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
-            }
-
-            return true;
+            bool baseRs = await base.CloseCaseAsync();
+            return baseRs;
         }
 
         BizTypeMapper mapper = new BizTypeMapper();

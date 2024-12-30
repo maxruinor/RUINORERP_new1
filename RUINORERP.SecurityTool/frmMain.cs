@@ -29,5 +29,17 @@ namespace RUINORERP.SecurityTool
             frmCreateKey frmCreateKey = new frmCreateKey();
             frmCreateKey.Show();
         }
+
+        private void btnEnDE_Click(object sender, EventArgs e)
+        {
+            frmEncryptionDecryption frmCreateKey = new frmEncryptionDecryption();
+            frmCreateKey.Show();
+        }
+
+        private void 注册码生成器ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            frmRUINORERPSecurity frmCreateKey = new frmRUINORERPSecurity();
+            frmCreateKey.Show();
+        }
     }
 }

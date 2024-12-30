@@ -53,7 +53,6 @@ namespace RUINORERP.Server
             return false;
         }
 
-
         //限制在线的人数
         public int UserOnlineCount { get; set; } = 0;
 

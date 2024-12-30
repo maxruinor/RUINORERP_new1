@@ -242,11 +242,16 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="RegexExpress\RegexTools.cs" />
+    <Compile Include="Security\AesEncryption.cs" />
+    <Compile Include="Security\CreateRegisterCodeWin.cs" />
     <Compile Include="Security\CreateRegisterCode.cs" />
     <Compile Include="Security\CryptoBase.cs" />
     <Compile Include="Security\CryptoUtil.cs" />
+    <Compile Include="Security\EncryptionHelper.cs" />
+    <Compile Include="Security\HardwareInfo.cs" />
     <Compile Include="Security\MD5.cs" />
     <Compile Include="Security\RC4.cs" />
+    <Compile Include="Security\RegistrationCodeGenerator.cs" />
     <Compile Include="Security\Security.cs" />
     <Compile Include="Security\UrlSecurity.cs" />
     <Compile Include="SerialPort\CRC.cs" />

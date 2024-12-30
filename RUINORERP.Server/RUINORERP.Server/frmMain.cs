@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using Microsoft.Extensions.Options;
+using Microsoft.VisualBasic.ApplicationServices;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Helper;
@@ -53,6 +54,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows.Forms;
 using TransInstruction;
 using TransInstruction.CommandService;
@@ -246,6 +248,39 @@ namespace RUINORERP.Server
         private async void frmMain_Load(object sender, EventArgs e)
         {
             protectionData = new SystemProtectionData();
+          
+            #region 检查是否注册
+            ////没有返回Null，如果结果大于1条会抛出错误
+            tb_sys_RegistrationInfo registrationInfo = await Program.AppContextData.Db.CopyNew().Queryable<tb_sys_RegistrationInfo>().SingleAsync();
+            if (registrationInfo == null)
+            {
+                registrationInfo = new tb_sys_RegistrationInfo();
+                registrationInfo.Created_at = DateTime.Now;
+                //如果没有注册信息。直接跳到注册？ 或 没有任何菜单？
+                frmRegister frm = Startup.GetFromFac<frmRegister>();
+                frm.EditEntity = registrationInfo;
+                frm.MdiParent = this;
+                frm.Show();
+                frm.Activate();
+                //如果注册成功后。重新打开软件
+                toolStrip1.Visible = false;
+                menuStrip1.Visible = false;
+                return;
+            }
+            else
+            {
+                //验证基础的注册信息
+                if (CheckRegistered(registrationInfo) == false)
+                {
+                    //如果注册成功后。重新打开软件
+                    toolStrip1.Visible = false;
+                    menuStrip1.Visible = false;
+                    return;
+                }
+            }
+
+            #endregion
+         
             _logger.Error("ErrorError2233");
             _logger.LogError("LogErrorLogError2233");
 
@@ -317,7 +352,24 @@ namespace RUINORERP.Server
 
 
         }
+ 
+        private bool CheckRegistered(tb_sys_RegistrationInfo regInfo)
+        {
+            string key = "YourSecretKeyHere"; // 这应该是一个保密的密钥
+            string machineCode = "UniqueMachineIdentifier"; // 这可以是机器的硬件信息或其他唯一标识
+      
+            // 假设用户输入的注册码
+             string userProvidedCode = regInfo.RegistrationCode;
+             bool isValid = ValidateRegistrationCode(userProvidedCode, key, machineCode);
+             Console.WriteLine($"Is the provided registration code valid? {isValid}");
+            return isValid;
+        }
 
+        public static bool ValidateRegistrationCode(string providedCode, string key, string machineCode)
+        {
+            string generatedCode = RUINORERP.Business.Security.SecurityService.GenerateRegistrationCode(key, machineCode);
+            return generatedCode == providedCode;
+        }
         private void CacheInfoList_OnUpdate(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
         {
             foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
@@ -367,7 +419,7 @@ namespace RUINORERP.Server
                         //如果当前时间小于限制时间。就退出
                         if (protectionData.ExpirationDate.Date <= protectionData.GetLocalTime().Date)
                         {
-                            result= true;
+                            result = true;
                             //断开所有链接
                             Shutdown();
                             Application.Exit();
@@ -755,8 +807,15 @@ namespace RUINORERP.Server
             {
                 await DrainAllServers();
                 // 记得在程序结束时清理定时器资源
-                timer.Dispose();
-                ReminderTimer.Dispose();
+                if (timer != null)
+                {
+                    timer.Dispose();
+                }
+                if (ReminderTimer != null)
+                {
+                    ReminderTimer.Dispose();
+                }
+
             }
             catch (Exception e)
             {
@@ -764,8 +823,12 @@ namespace RUINORERP.Server
             }
             finally
             {
-                _host.Dispose();
-                //关闭Socket服务器时，如果不对IHost对象调用Dispose方法，SuperSocket不会真正关闭，导致WPF进程无法正常退出。
+                if (_host != null)
+                {
+                    _host.Dispose();
+                    //关闭Socket服务器时，如果不对IHost对象调用Dispose方法，SuperSocket不会真正关闭，导致WPF进程无法正常退出。
+                }
+
             }
         }
 
@@ -1080,6 +1143,10 @@ namespace RUINORERP.Server
         private void 系统注册ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //注册成功后。才可能启动服务器
+            frmRegister frm = Startup.GetFromFac<frmRegister>();
+            frm.MdiParent = this;
+            frm.Show();
+            frm.Activate();
         }
     }
 }

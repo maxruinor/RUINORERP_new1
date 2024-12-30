@@ -6,6 +6,9 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Security.Cryptography;
+using HLH.Lib.Helper;
+using HLH.Lib.Security;
+using HLH.Lib.Security.HLH.Lib.Security;
 
 
 namespace SecurityCore
@@ -19,7 +22,10 @@ namespace SecurityCore
 
         private void btnEncrypt_Click(object sender, EventArgs e)
         {
-             txtNewData.Text = DataProtection.Encrypt(txtOldData.Text.Trim(), DataProtection.Store.Machine);
+            
+
+             
+           txtNewData.Text = DataProtection.Encrypt(txtOldData.Text.Trim(), DataProtection.Store.Machine);
 
         }
 

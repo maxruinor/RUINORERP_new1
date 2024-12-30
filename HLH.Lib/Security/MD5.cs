@@ -4,7 +4,7 @@ namespace HLH.Lib.Security
     /**//// <summary>
         /// Summary description for MD5.
         /// </summary>
-    class MD5
+   public class MD5
     {
         const int BITS_TO_A_BYTE = 8;
         const int BYTES_TO_A_WORD = 4;

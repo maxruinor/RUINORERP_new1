@@ -43,6 +43,7 @@ namespace RUINORERP.Business
         /// <summary>
         /// 批量结案
         /// 结案时 如果没有完全完成的。则未发量这些数量要减去。结案后不需要计算未发量了
+        /// 如果是结案了。上层业务据是不是 将这级视为通过?加入自动结案？还是全部要手动结果。目前是没有加入。要手动。
         /// </summary>
         /// <param name="entitys"></param>
         /// <returns></returns>

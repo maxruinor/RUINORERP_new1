@@ -49,9 +49,11 @@
             tsbtnDataViewer = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+            menuStrip2 = new System.Windows.Forms.MenuStrip();
             系统注册ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
+            menuStrip2.SuspendLayout();
             SuspendLayout();
             // 
             // splitter1
@@ -75,8 +77,8 @@
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 参数配置ToolStripMenuItem, 窗口ToolStripMenuItem, 系统注册ToolStripMenuItem });
-            menuStrip1.Location = new System.Drawing.Point(0, 0);
+            menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 参数配置ToolStripMenuItem, 窗口ToolStripMenuItem });
+            menuStrip1.Location = new System.Drawing.Point(0, 25);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new System.Drawing.Size(800, 25);
             menuStrip1.TabIndex = 3;
@@ -128,7 +130,7 @@
             // toolStrip1
             // 
             toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsBtnStartServer, toolStripButton1, toolStripButton3, toolStripButton5, toolStripddbtnDebug, tsbtnDataViewer });
-            toolStrip1.Location = new System.Drawing.Point(0, 25);
+            toolStrip1.Location = new System.Drawing.Point(0, 50);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new System.Drawing.Size(800, 25);
             toolStrip1.TabIndex = 5;
@@ -222,12 +224,21 @@
             toolStripButton2.Size = new System.Drawing.Size(23, 22);
             toolStripButton2.Text = "toolStripButton2";
             // 
+            // menuStrip2
+            // 
+            menuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 系统注册ToolStripMenuItem });
+            menuStrip2.Location = new System.Drawing.Point(0, 0);
+            menuStrip2.Name = "menuStrip2";
+            menuStrip2.Size = new System.Drawing.Size(800, 25);
+            menuStrip2.TabIndex = 7;
+            menuStrip2.Text = "menuStrip2";
+            // 
             // 系统注册ToolStripMenuItem
             // 
             系统注册ToolStripMenuItem.Name = "系统注册ToolStripMenuItem";
             系统注册ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
             系统注册ToolStripMenuItem.Text = "系统注册";
-            系统注册ToolStripMenuItem.Click += 系统注册ToolStripMenuItem_Click;
+            系统注册ToolStripMenuItem.Click += this.系统注册ToolStripMenuItem_Click;
             // 
             // frmMain
             // 
@@ -238,8 +249,10 @@
             Controls.Add(splitter1);
             Controls.Add(richTextBox1);
             Controls.Add(menuStrip1);
+            Controls.Add(menuStrip2);
             Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
             IsMdiContainer = true;
+            MainMenuStrip = menuStrip2;
             Name = "frmMain";
             Text = "服务管理端2.0";
             FormClosing += frmMain_FormClosing;
@@ -248,6 +261,8 @@
             menuStrip1.PerformLayout();
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
+            menuStrip2.ResumeLayout(false);
+            menuStrip2.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -275,6 +290,8 @@
         private System.Windows.Forms.ToolStripButton tsbtnDataViewer;
         private System.Windows.Forms.ToolStripMenuItem 参数配置ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 系统注册ToolStripMenuItem;
+        private System.Windows.Forms.MenuStrip menuStrip2;
+        
     }
 }
 

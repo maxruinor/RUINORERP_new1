@@ -30,7 +30,7 @@ namespace SecurityCore
         private class Consts
         {
             // specify an entropy so other DPAPI applications can't see the data
-            public readonly static byte[] EntropyData = ASCIIEncoding.ASCII.GetBytes("B0D125B7-967E-4f94-9305-A6F9AF56A19A");
+            public readonly static byte[] EntropyData = ASCIIEncoding.ASCII.GetBytes("B0D125B7-967E-4f94-9305-A6F9AF56A19B");
         }
 
         // static class

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:30:48
+// 时间：01/04/2025 19:45:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,9 +41,10 @@ namespace RUINORERP.Business
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkEntryNo).MaximumLength(25).WithMessage("返工入库单号:不能超过最大长度,25.");
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkEntryNo).NotEmpty().WithMessage("返工入库单号:不能为空。");
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("供应商:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("生产单位:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("需求部门:下拉选择值不正确。");
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
@@ -55,7 +56,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.TotalReworkFee).PrecisionScale(19,4,true).WithMessage("预估费用:小数位不能超过4。");
 
- RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("合计金额:小数位不能超过4。");
+ RuleFor(x => x.TotalCost).PrecisionScale(19,4,true).WithMessage("合计成本:小数位不能超过4。");
 
 
 

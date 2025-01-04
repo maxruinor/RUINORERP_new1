@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:30:50
+// 时间：01/04/2025 19:45:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,6 +42,7 @@ namespace RUINORERP.Business
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ReworkReturnNo).NotEmpty().WithMessage("退回单号:不能为空。");
 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("生产单位:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("需求部门:下拉选择值不正确。");
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
@@ -74,6 +75,8 @@ namespace RUINORERP.Business
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
 
 
+
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CloseCaseOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
 

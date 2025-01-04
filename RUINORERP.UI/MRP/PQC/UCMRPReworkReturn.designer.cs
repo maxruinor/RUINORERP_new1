@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.MRP.PPROC
+﻿namespace RUINORERP.UI.MRP.PQC
 {
     partial class UCMRPReworkReturn
     {

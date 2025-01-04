@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:30:50
+// 时间：01/04/2025 19:45:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,14 +66,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Location_ID;
+        private long _Location_ID;
         /// <summary>
         /// 所在仓位
         /// </summary>
         [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "所在仓位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "所在仓位" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "所在仓位" )]
         [FKRelationAttribute("tb_Location","Location_ID")]
-        public long? Location_ID
+        public long Location_ID
         { 
             get{return _Location_ID;}
             set{

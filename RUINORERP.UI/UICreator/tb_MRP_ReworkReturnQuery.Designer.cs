@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:30:49
+// 时间：01/04/2025 19:45:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -106,6 +106,9 @@ this.lblApprovalResults = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.chkApprovalResults = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
 this.chkApprovalResults.Values.Text ="";
 
+this.lblCloseCaseOpinions = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtCloseCaseOpinions = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
 
 this.lblReceiptInvoiceClosed = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.chkReceiptInvoiceClosed = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
@@ -166,7 +169,7 @@ this.lblDepartmentID.Location = new System.Drawing.Point(100,75);
 this.lblDepartmentID.Name = "lblDepartmentID";
 this.lblDepartmentID.Size = new System.Drawing.Size(41, 12);
 this.lblDepartmentID.TabIndex = 3;
-this.lblDepartmentID.Text = "部门";
+this.lblDepartmentID.Text = "需求部门";
 //111======75
 this.cmbDepartmentID.Location = new System.Drawing.Point(173,71);
 this.cmbDepartmentID.Name ="cmbDepartmentID";
@@ -393,79 +396,93 @@ this.chkApprovalResults.TabIndex = 20;
 this.Controls.Add(this.lblApprovalResults);
 this.Controls.Add(this.chkApprovalResults);
 
+           //#####200CloseCaseOpinions###String
+this.lblCloseCaseOpinions.AutoSize = true;
+this.lblCloseCaseOpinions.Location = new System.Drawing.Point(100,525);
+this.lblCloseCaseOpinions.Name = "lblCloseCaseOpinions";
+this.lblCloseCaseOpinions.Size = new System.Drawing.Size(41, 12);
+this.lblCloseCaseOpinions.TabIndex = 21;
+this.lblCloseCaseOpinions.Text = "审批意见";
+this.txtCloseCaseOpinions.Location = new System.Drawing.Point(173,521);
+this.txtCloseCaseOpinions.Name = "txtCloseCaseOpinions";
+this.txtCloseCaseOpinions.Size = new System.Drawing.Size(100, 21);
+this.txtCloseCaseOpinions.TabIndex = 21;
+this.Controls.Add(this.lblCloseCaseOpinions);
+this.Controls.Add(this.txtCloseCaseOpinions);
+
            //#####KeepAccountsType###Int32
-//属性测试525KeepAccountsType
-//属性测试525KeepAccountsType
-//属性测试525KeepAccountsType
-//属性测试525KeepAccountsType
+//属性测试550KeepAccountsType
+//属性测试550KeepAccountsType
+//属性测试550KeepAccountsType
+//属性测试550KeepAccountsType
 
            //#####ReceiptInvoiceClosed###Boolean
 this.lblReceiptInvoiceClosed.AutoSize = true;
-this.lblReceiptInvoiceClosed.Location = new System.Drawing.Point(100,550);
+this.lblReceiptInvoiceClosed.Location = new System.Drawing.Point(100,575);
 this.lblReceiptInvoiceClosed.Name = "lblReceiptInvoiceClosed";
 this.lblReceiptInvoiceClosed.Size = new System.Drawing.Size(41, 12);
-this.lblReceiptInvoiceClosed.TabIndex = 22;
+this.lblReceiptInvoiceClosed.TabIndex = 23;
 this.lblReceiptInvoiceClosed.Text = "立帐结案";
-this.chkReceiptInvoiceClosed.Location = new System.Drawing.Point(173,546);
+this.chkReceiptInvoiceClosed.Location = new System.Drawing.Point(173,571);
 this.chkReceiptInvoiceClosed.Name = "chkReceiptInvoiceClosed";
 this.chkReceiptInvoiceClosed.Size = new System.Drawing.Size(100, 21);
-this.chkReceiptInvoiceClosed.TabIndex = 22;
+this.chkReceiptInvoiceClosed.TabIndex = 23;
 this.Controls.Add(this.lblReceiptInvoiceClosed);
 this.Controls.Add(this.chkReceiptInvoiceClosed);
 
            //#####DataStatus###Int32
-//属性测试575DataStatus
-//属性测试575DataStatus
-//属性测试575DataStatus
-//属性测试575DataStatus
+//属性测试600DataStatus
+//属性测试600DataStatus
+//属性测试600DataStatus
+//属性测试600DataStatus
 
            //#####Approver_by###Int64
-//属性测试600Approver_by
-//属性测试600Approver_by
-//属性测试600Approver_by
-//属性测试600Approver_by
+//属性测试625Approver_by
+//属性测试625Approver_by
+//属性测试625Approver_by
+//属性测试625Approver_by
 
            //#####Approver_at###DateTime
 this.lblApprover_at.AutoSize = true;
-this.lblApprover_at.Location = new System.Drawing.Point(100,625);
+this.lblApprover_at.Location = new System.Drawing.Point(100,650);
 this.lblApprover_at.Name = "lblApprover_at";
 this.lblApprover_at.Size = new System.Drawing.Size(41, 12);
-this.lblApprover_at.TabIndex = 25;
+this.lblApprover_at.TabIndex = 26;
 this.lblApprover_at.Text = "审批时间";
-//111======625
-this.dtpApprover_at.Location = new System.Drawing.Point(173,621);
+//111======650
+this.dtpApprover_at.Location = new System.Drawing.Point(173,646);
 this.dtpApprover_at.Name ="dtpApprover_at";
 this.dtpApprover_at.ShowCheckBox =true;
 this.dtpApprover_at.Size = new System.Drawing.Size(100, 21);
-this.dtpApprover_at.TabIndex = 25;
+this.dtpApprover_at.TabIndex = 26;
 this.Controls.Add(this.lblApprover_at);
 this.Controls.Add(this.dtpApprover_at);
 
            //#####PrintStatus###Int32
-//属性测试650PrintStatus
-//属性测试650PrintStatus
-//属性测试650PrintStatus
-//属性测试650PrintStatus
+//属性测试675PrintStatus
+//属性测试675PrintStatus
+//属性测试675PrintStatus
+//属性测试675PrintStatus
 
            //#####GenerateVouchers###Boolean
 this.lblGenerateVouchers.AutoSize = true;
-this.lblGenerateVouchers.Location = new System.Drawing.Point(100,675);
+this.lblGenerateVouchers.Location = new System.Drawing.Point(100,700);
 this.lblGenerateVouchers.Name = "lblGenerateVouchers";
 this.lblGenerateVouchers.Size = new System.Drawing.Size(41, 12);
-this.lblGenerateVouchers.TabIndex = 27;
+this.lblGenerateVouchers.TabIndex = 28;
 this.lblGenerateVouchers.Text = "生成凭证";
-this.chkGenerateVouchers.Location = new System.Drawing.Point(173,671);
+this.chkGenerateVouchers.Location = new System.Drawing.Point(173,696);
 this.chkGenerateVouchers.Name = "chkGenerateVouchers";
 this.chkGenerateVouchers.Size = new System.Drawing.Size(100, 21);
-this.chkGenerateVouchers.TabIndex = 27;
+this.chkGenerateVouchers.TabIndex = 28;
 this.Controls.Add(this.lblGenerateVouchers);
 this.Controls.Add(this.chkGenerateVouchers);
 
            //#####VoucherID###Int64
-//属性测试700VoucherID
-//属性测试700VoucherID
-//属性测试700VoucherID
-//属性测试700VoucherID
+//属性测试725VoucherID
+//属性测试725VoucherID
+//属性测试725VoucherID
+//属性测试725VoucherID
 
           
     //for end
@@ -526,6 +543,9 @@ this.Controls.Add(this.txtApprovalOpinions );
                 
                 this.Controls.Add(this.lblApprovalResults );
 this.Controls.Add(this.chkApprovalResults );
+
+                this.Controls.Add(this.lblCloseCaseOpinions );
+this.Controls.Add(this.txtCloseCaseOpinions );
 
                 
                 this.Controls.Add(this.lblReceiptInvoiceClosed );
@@ -642,6 +662,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtApprovalOpinions;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblApprovalResults;
 private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkApprovalResults;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCloseCaseOpinions;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtCloseCaseOpinions;
 
     
         

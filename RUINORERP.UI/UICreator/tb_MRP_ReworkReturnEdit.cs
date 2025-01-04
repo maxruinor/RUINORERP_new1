@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:30:49
+// 时间：01/04/2025 19:45:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -62,6 +62,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -89,7 +90,8 @@ namespace RUINORERP.UI
                        entity.ApprovalOpinions = txtApprovalOpinions.Text ;
                        entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
                         entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
-                        entity.KeepAccountsType = Int32.Parse(txtKeepAccountsType.Text);
+                        entity.CloseCaseOpinions = txtCloseCaseOpinions.Text ;
+                       entity.KeepAccountsType = Int32.Parse(txtKeepAccountsType.Text);
                         entity.ReceiptInvoiceClosed = Boolean.Parse(txtReceiptInvoiceClosed.Text);
                         entity.DataStatus = Int32.Parse(txtDataStatus.Text);
                         entity.Approver_by = Int64.Parse(txtApprover_by.Text);
@@ -127,6 +129,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            //default  DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4CheckBox<tb_MRP_ReworkReturn>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.KeepAccountsType, txtKeepAccountsType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CheckBox<tb_MRP_ReworkReturn>(entity, t => t.ReceiptInvoiceClosed, chkReceiptInvoiceClosed, false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);

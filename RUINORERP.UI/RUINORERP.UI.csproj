@@ -1500,11 +1500,29 @@
     <Compile Include="MRP\PPROC\UCMaterialRequisitionStatistics.Designer.cs">
       <DependentUpon>UCMaterialRequisitionStatistics.cs</DependentUpon>
     </Compile>
-    <Compile Include="MRP\PPROC\UCMRPReworkReturn.cs">
+    <Compile Include="MRP\PQC\UCMRPReworkEntry.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="MRP\PPROC\UCMRPReworkReturn.designer.cs">
+    <Compile Include="MRP\PQC\UCMRPReworkEntry.designer.cs">
+      <DependentUpon>UCMRPReworkEntry.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkReturn.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkReturn.designer.cs">
       <DependentUpon>UCMRPReworkReturn.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkEntryQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkEntryQuery.Designer.cs">
+      <DependentUpon>UCMRPReworkEntryQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkReturnQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkReturnQuery.Designer.cs">
+      <DependentUpon>UCMRPReworkReturnQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="MRP\UCProdWorkbench.cs">
       <SubType>UserControl</SubType>
@@ -2957,8 +2975,17 @@
     <EmbeddedResource Include="MRP\PPROC\UCMaterialRequisitionStatistics.resx">
       <DependentUpon>UCMaterialRequisitionStatistics.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MRP\PPROC\UCMRPReworkReturn.resx">
+    <EmbeddedResource Include="MRP\PQC\UCMRPReworkEntry.resx">
+      <DependentUpon>UCMRPReworkEntry.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PQC\UCMRPReworkReturn.resx">
       <DependentUpon>UCMRPReworkReturn.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PQC\UCMRPReworkEntryQuery.resx">
+      <DependentUpon>UCMRPReworkEntryQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PQC\UCMRPReworkReturnQuery.resx">
+      <DependentUpon>UCMRPReworkReturnQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MRP\UCProdWorkbench.resx">
       <DependentUpon>UCProdWorkbench.cs</DependentUpon>

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:30:50
+// 时间：01/04/2025 19:45:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -82,10 +82,10 @@ namespace RUINORERP.Model
 
         private long? _DepartmentID;
         /// <summary>
-        /// 部门
+        /// 需求部门
         /// </summary>
-        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "部门")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "部门" )]
+        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "需求部门")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "需求部门" )]
         [FKRelationAttribute("tb_Department","DepartmentID")]
         public long? DepartmentID
         { 
@@ -333,6 +333,20 @@ namespace RUINORERP.Model
             get{return _ApprovalResults;}
             set{
             SetProperty(ref _ApprovalResults, value);
+            }
+        }
+
+        private string _CloseCaseOpinions;
+        /// <summary>
+        /// 审批意见
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "审批意见")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        public string CloseCaseOpinions
+        { 
+            get{return _CloseCaseOpinions;}
+            set{
+            SetProperty(ref _CloseCaseOpinions, value);
             }
         }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:30:48
+// 时间：01/04/2025 19:45:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,14 +65,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long _CustomerVendor_ID;
+        private long? _CustomerVendor_ID;
         /// <summary>
-        /// 供应商
+        /// 生产单位
         /// </summary>
-        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "供应商")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "供应商" )]
+        [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "生产单位")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "生产单位" )]
         [FKRelationAttribute("tb_CustomerVendor","CustomerVendor_ID")]
-        public long CustomerVendor_ID
+        public long? CustomerVendor_ID
         { 
             get{return _CustomerVendor_ID;}
             set{
@@ -82,10 +82,10 @@ namespace RUINORERP.Model
 
         private long? _DepartmentID;
         /// <summary>
-        /// 部门
+        /// 需求部门
         /// </summary>
-        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "部门")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "部门" )]
+        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "需求部门")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DepartmentID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "需求部门" )]
         [FKRelationAttribute("tb_Department","DepartmentID")]
         public long? DepartmentID
         { 
@@ -155,10 +155,10 @@ namespace RUINORERP.Model
 
         private decimal _TotalCost= ((0));
         /// <summary>
-        /// 合计金额
+        /// 合计成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "合计金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "合计金额" )]
+        [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "合计成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "合计成本" )]
         public decimal TotalCost
         { 
             get{return _TotalCost;}

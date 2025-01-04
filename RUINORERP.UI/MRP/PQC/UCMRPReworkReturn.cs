@@ -41,7 +41,7 @@ using RUINORERP.UI.PSI.SAL;
 using EnumsNET;
 using RUINORERP.UI.ToolForm;
 
-namespace RUINORERP.UI.MRP.PPROC
+namespace RUINORERP.UI.MRP.PQC
 {
     [MenuAttrAssemblyInfo("返工退库", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.返工退库)]
     public partial class UCMRPReworkReturn : BaseBillEditGeneric<tb_MRP_ReworkReturn, tb_MRP_ReworkReturnDetail>

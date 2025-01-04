@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:30:46
+// 时间：01/04/2025 19:45:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -181,7 +181,7 @@ this.lblCustomerVendor_ID.Location = new System.Drawing.Point(100,50);
 this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
 this.lblCustomerVendor_ID.Size = new System.Drawing.Size(41, 12);
 this.lblCustomerVendor_ID.TabIndex = 2;
-this.lblCustomerVendor_ID.Text = "供应商";
+this.lblCustomerVendor_ID.Text = "生产单位";
 //111======50
 this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(173,46);
 this.cmbCustomerVendor_ID.Name ="cmbCustomerVendor_ID";
@@ -198,7 +198,7 @@ this.lblDepartmentID.Location = new System.Drawing.Point(100,75);
 this.lblDepartmentID.Name = "lblDepartmentID";
 this.lblDepartmentID.Size = new System.Drawing.Size(41, 12);
 this.lblDepartmentID.TabIndex = 3;
-this.lblDepartmentID.Text = "部门";
+this.lblDepartmentID.Text = "需求部门";
 //111======75
 this.cmbDepartmentID.Location = new System.Drawing.Point(173,71);
 this.cmbDepartmentID.Name ="cmbDepartmentID";
@@ -283,7 +283,7 @@ this.lblTotalCost.Location = new System.Drawing.Point(100,200);
 this.lblTotalCost.Name = "lblTotalCost";
 this.lblTotalCost.Size = new System.Drawing.Size(41, 12);
 this.lblTotalCost.TabIndex = 8;
-this.lblTotalCost.Text = "合计金额";
+this.lblTotalCost.Text = "合计成本";
 //111======200
 this.txtTotalCost.Location = new System.Drawing.Point(173,196);
 this.txtTotalCost.Name ="txtTotalCost";

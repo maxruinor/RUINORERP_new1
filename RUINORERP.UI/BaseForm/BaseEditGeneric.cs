@@ -40,6 +40,12 @@ namespace RUINORERP.UI.BaseForm
             //this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BaseEdit_KeyPress);
         }
 
+        /// <summary>
+        /// 关联的菜单信息 实际是可以从点击时传入
+        /// </summary>
+        public tb_MenuInfo CurMenuInfo { get; set; }
+
+
         public delegate void CancelHandler();
 
         [Browsable(true), Description("引发外部查询事件")]
@@ -87,6 +93,44 @@ namespace RUINORERP.UI.BaseForm
         //[System.ComponentModel.Description("提示帮助事件")]
         //public event ShowHelp OnShowHelp;
 
+        /// <summary>
+        /// 设置主表字段是否显示
+        /// </summary>
+        /// <param name="kryptonPanelMainInfo"></param>
+        public void ControlMasterColumnsInvisible()
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if (CurMenuInfo.tb_P4Fields != null)
+                {
+                    foreach (var item in CurMenuInfo.tb_P4Fields)
+                    {
+                        if (item != null)
+                        {
+                            if (item.tb_fieldinfo != null)
+                            {
+                                //设置不可见
+                                if (!item.IsVisble && !item.tb_fieldinfo.IsChild)
+                                {
+                                    KryptonTextBox txtTextBox = UIHelper.FindTextBox(this, item.tb_fieldinfo.FieldName);
+                                    if (txtTextBox != null)
+                                    {
+                                        txtTextBox.Visible = false;
+                                    }
+                                    KryptonLabel lbl = UIHelper.FindLabel(this, item.tb_fieldinfo.FieldText, item.tb_fieldinfo.FieldName);
+                                    if (lbl != null)
+                                    {
+                                        lbl.Visible = false;
+                                    }
+                                }
+
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         public bool ShowInvalidMessage(ValidationResult results)
         {
@@ -587,7 +631,11 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public virtual void UIShown()
         {
-
+            if (!this.DesignMode)
+            {
+                ControlMasterColumnsInvisible();
+            }
+            
         }
 
         private void BaseEditGeneric_Shown(object sender, EventArgs e)

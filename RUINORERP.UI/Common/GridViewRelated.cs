@@ -656,6 +656,26 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+
+            if (tableName == typeof(tb_MRP_ReworkEntry).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_MRP_ReworkEntry>()
+                    .Includes(c => c.tb_MRP_ReworkEntryDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.ReworkEntryID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.ReworkEntryNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
+            if (tableName == typeof(tb_MRP_ReworkReturn).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_MRP_ReworkReturn>()
+                    .Includes(c => c.tb_MRP_ReworkReturnDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.ReworkReturnID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.ReworkReturnNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
         }
 
 

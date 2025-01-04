@@ -20,6 +20,10 @@ namespace RUINORERP.Business.AutoMapper
         /// </summary>
         public CustomProfile()
         {
+            //制令单引用到返工主单和明细中
+            CreateMap<tb_ManufacturingOrder, tb_MRP_ReworkReturn>();
+            CreateMap<tb_ManufacturingOrder, tb_MRP_ReworkReturnDetail>();
+
             CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInv>();
             CreateMap<tb_ManufacturingOrder, tb_FinishedGoodsInvDetail>();
             //测试了订单转成入库单列表集合不用单设置也可以成功,List<T>  这种转。反而有问题？

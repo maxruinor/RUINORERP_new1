@@ -33,6 +33,7 @@ namespace RUINORERP.Business.Processor
         }
 
 
+
         public List<string> GetQueryConditions()
         {
             HashSet<string> queryConditions = new HashSet<string>();

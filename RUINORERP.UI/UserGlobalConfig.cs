@@ -36,18 +36,6 @@ namespace RUINORERP.UI
             set { matchColumnsConfigDir = value; }
         }
 
-        private string dbConnectionStrings = string.Empty;
-
-        /// <summary>
-        /// 数据库连接字符串
-        /// </summary>
-        public string DbConnectionStrings
-        {
-            get { return dbConnectionStrings; }
-            set { dbConnectionStrings = value; }
-        }
-
-
         private string useName;
         private string passWord;
 

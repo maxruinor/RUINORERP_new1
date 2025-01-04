@@ -32,11 +32,11 @@ namespace RUINORERP.Extensions
         public static event CheckHandler CheckEvent;
       
         public static void AddSqlsugarSetup(this IServiceCollection services,
-        ApplicationContext AppContextData, IConfiguration configuration,
+        ApplicationContext AppContextData, string connectString,
             string dbName = "ConnectString")
         {
             
-            var logProvider = new Log4NetProviderByCustomeDb("Log4net_db.config", configuration.GetSection("ConnectString").Value, AppContextData);
+            var logProvider = new Log4NetProviderByCustomeDb("Log4net_db.config", connectString, AppContextData);
             var logger = logProvider.CreateLogger("SqlsugarSetup");
 
             StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
@@ -44,7 +44,7 @@ namespace RUINORERP.Extensions
             SqlSugarScope sqlSugar = new SqlSugarScope(new ConnectionConfig()
             {
                 DbType = SqlSugar.DbType.SqlServer,
-                ConnectionString = configuration[dbName],
+                ConnectionString = connectString,
                 IsAutoCloseConnection = true,
                 InitKeyType = InitKeyType.Attribute,//就改这一行
 

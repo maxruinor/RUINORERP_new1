@@ -22,11 +22,7 @@ namespace SecurityCore
 
         private void btnEncrypt_Click(object sender, EventArgs e)
         {
-            
-
-             
            txtNewData.Text = DataProtection.Encrypt(txtOldData.Text.Trim(), DataProtection.Store.Machine);
-
         }
 
         private void btnDecrypt_Click(object sender, EventArgs e)

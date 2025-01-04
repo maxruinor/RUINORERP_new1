@@ -253,6 +253,7 @@
     <Compile Include="Security\RC4.cs" />
     <Compile Include="Security\RegistrationCodeGenerator.cs" />
     <Compile Include="Security\Security.cs" />
+    <Compile Include="Security\SecurityService.cs" />
     <Compile Include="Security\UrlSecurity.cs" />
     <Compile Include="SerialPort\CRC.cs" />
     <Compile Include="Helper\DataProtection.cs" />

@@ -609,8 +609,12 @@
             // 
             this.txtManufacturingQty.Location = new System.Drawing.Point(91, 163);
             this.txtManufacturingQty.Name = "txtManufacturingQty";
+            this.txtManufacturingQty.ReadOnly = true;
             this.txtManufacturingQty.Size = new System.Drawing.Size(153, 23);
             this.txtManufacturingQty.TabIndex = 156;
+            this.txtManufacturingQty.ToolTipValues.Description = "生产数量要与计划数量一致";
+            this.txtManufacturingQty.ToolTipValues.EnableToolTips = true;
+            this.txtManufacturingQty.ToolTipValues.Heading = "";
             // 
             // lblEmployee_ID
             // 

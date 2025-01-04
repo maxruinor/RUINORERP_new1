@@ -26,7 +26,7 @@ namespace RUINORERP.Model
             MRP基本资料,
             制造规划,
             制程生产,
-            外发加工,
+            生产品控,
             BOM分析报表,
             成本管理,
         }

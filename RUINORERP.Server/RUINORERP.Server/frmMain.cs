@@ -2,6 +2,8 @@
 using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
 using Dm.Config;
+using HLH.Lib.Helper;
+using HLH.Lib.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Distributed;
@@ -13,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.EventLog;
 using Microsoft.Extensions.Options;
 using Microsoft.VisualBasic.ApplicationServices;
+using Newtonsoft.Json;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Helper;
@@ -30,6 +33,7 @@ using RUINORERP.Server.Commands;
 using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
 using RUINORERP.Server.Workflow.WFReminder;
+using RUINORERP.Server.Workflow.WFScheduled;
 using SharpYaml.Tokens;
 using SuperSocket;
 using SuperSocket.Command;
@@ -72,7 +76,7 @@ namespace RUINORERP.Server
         /// <summary>
         /// 系统保护数据
         /// </summary>
-        public SystemProtectionData protectionData = new SystemProtectionData();
+        public tb_sys_RegistrationInfo registrationInfo = new tb_sys_RegistrationInfo();
 
         /// <summary>
         /// 可配置性全局参数
@@ -245,131 +249,187 @@ namespace RUINORERP.Server
 
         frmUserManage frmusermange = Startup.GetFromFac<frmUserManage>();
 
+        /// <summary>
+        /// 唯一硬件信息
+        /// </summary>
+        public string UniqueHarewareInfo { get; set; }
+
         private async void frmMain_Load(object sender, EventArgs e)
         {
-            protectionData = new SystemProtectionData();
-          
-            #region 检查是否注册
-            ////没有返回Null，如果结果大于1条会抛出错误
-            tb_sys_RegistrationInfo registrationInfo = await Program.AppContextData.Db.CopyNew().Queryable<tb_sys_RegistrationInfo>().SingleAsync();
-            if (registrationInfo == null)
+            try
             {
-                registrationInfo = new tb_sys_RegistrationInfo();
-                registrationInfo.Created_at = DateTime.Now;
-                //如果没有注册信息。直接跳到注册？ 或 没有任何菜单？
-                frmRegister frm = Startup.GetFromFac<frmRegister>();
-                frm.EditEntity = registrationInfo;
-                frm.MdiParent = this;
-                frm.Show();
-                frm.Activate();
-                //如果注册成功后。重新打开软件
-                toolStrip1.Visible = false;
-                menuStrip1.Visible = false;
-                return;
-            }
-            else
-            {
-                //验证基础的注册信息
-                if (CheckRegistered(registrationInfo) == false)
+                HardwareInfoService infoService = new HardwareInfoService();
+                UniqueHarewareInfo = infoService.GetHardDiskId() + infoService.GetMacAddress();
+                #region 检查是否注册
+                ////没有返回Null，如果结果大于1条会抛出错误
+                registrationInfo = await Program.AppContextData.Db.CopyNew().Queryable<tb_sys_RegistrationInfo>().SingleAsync();
+                if (registrationInfo == null)
                 {
+                    registrationInfo = new tb_sys_RegistrationInfo();
+                    registrationInfo.PurchaseDate = DateTime.Now;
+                    registrationInfo.RegistrationDate = DateTime.Now;
+                    registrationInfo.Created_at = DateTime.Now;
+                    registrationInfo.IsRegistered = false;
+                    registrationInfo.ExpirationDate = DateTime.Now.AddDays(30);
+
+                    //如果没有注册信息。直接跳到注册？ 或 没有任何菜单？
+                    frmRegister frm = Startup.GetFromFac<frmRegister>();
+                    frm.EditEntity = registrationInfo;
+                    frm.MdiParent = this;
+                    frm.Show();
+                    frm.Activate();
                     //如果注册成功后。重新打开软件
                     toolStrip1.Visible = false;
                     menuStrip1.Visible = false;
                     return;
                 }
-            }
-
-            #endregion
-         
-            _logger.Error("ErrorError2233");
-            _logger.LogError("LogErrorLogError2233");
-
-            // var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
-            //logger.LogError($"{DateTime.Now} LogError 日志");
-
-            _logger.LogError("启动了服务器123");
-            this.IsMdiContainer = true; // 设置父窗体为MDI容器
-            menuStrip1.MdiWindowListItem = 窗口ToolStripMenuItem;
-            //InitAll();
-
-            //手动初始化
-            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
-            BizCacheHelper.InitManager();
-
-            IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
-            cache.Set("test1", "test123");
-            await InitConfig(false);
-
-            MyCacheManager.Instance.CacheInfoList.OnAdd += CacheInfoList_OnAdd;
-            MyCacheManager.Instance.CacheInfoList.OnClear += CacheInfoList_OnClear;
-            MyCacheManager.Instance.CacheInfoList.OnUpdate += CacheInfoList_OnUpdate;
-            MyCacheManager.Instance.CacheEntityList.OnRemove += CacheEntityList_OnRemove;
-            //1分钟检查一次
-            timer = new System.Timers.Timer(60000);
-            timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
-            {
-                if (this.InvokeRequired)
+                else
                 {
-                    this.Invoke(new MethodInvoker(() =>
+                    if (registrationInfo.IsRegistered)
+                    {
+                        //验证基础的注册信息
+                        if (CheckRegistered(registrationInfo) == false)
+                        {
+                            //如果注册成功后。重新打开软件
+                            toolStrip1.Visible = false;
+                            menuStrip1.Visible = false;
+                            return;
+                        }
+                        else
+                        {
+                            //注册成功！！！
+                            //后面会循环检测
+                        }
+                    }
+                    else
+                    {
+                        //如果没有注册直接隐藏
+                        toolStrip1.Visible = false;
+                        menuStrip1.Visible = false;
+                        return;
+                    }
+                }
 
+                #endregion
+
+                _logger.Error("ErrorError2233");
+                _logger.LogError("LogErrorLogError2233");
+
+                // var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
+                //logger.LogError($"{DateTime.Now} LogError 日志");
+
+                _logger.LogError("启动了服务器123");
+                this.IsMdiContainer = true; // 设置父窗体为MDI容器
+                menuStrip1.MdiWindowListItem = 窗口ToolStripMenuItem;
+                //InitAll();
+
+                //手动初始化
+                BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
+                BizCacheHelper.InitManager();
+
+                IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
+                cache.Set("test1", "test123");
+                await InitConfig(false);
+
+                MyCacheManager.Instance.CacheInfoList.OnAdd += CacheInfoList_OnAdd;
+                MyCacheManager.Instance.CacheInfoList.OnClear += CacheInfoList_OnClear;
+                MyCacheManager.Instance.CacheInfoList.OnUpdate += CacheInfoList_OnUpdate;
+                MyCacheManager.Instance.CacheEntityList.OnRemove += CacheEntityList_OnRemove;
+                //1分钟检查一次
+                timer = new System.Timers.Timer(60000);
+                timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
+                {
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new MethodInvoker(() =>
+                        {
+                            CheckSystemProtection();
+                            CheckCacheList();
+                            CheckReminderBizDataList();
+                        }
+                        ));
+                    }
+                    else
                     {
                         CheckSystemProtection();
                         CheckCacheList();
                         CheckReminderBizDataList();
                     }
+                });
+                timer.Enabled = true;
+
+                //1分钟检查一次
+                //ReminderTimer = new System.Timers.Timer(60000);
+                //ReminderTimer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
+                //{
+                //    if (this.InvokeRequired)
+                //    {
+                //        this.Invoke(new MethodInvoker(() => CheckReminderBizDataList()));
+                //    }
+                //    else
+                //    {
+                //        CheckReminderBizDataList();
+                //    }
+                //});
+                //ReminderTimer.Enabled = true;
+                //ReminderTimer.Start();
+
+            }
+            catch (Exception loadex)
+            {
 
 
-
-                    ));
-                }
-                else
-                {
-                    CheckSystemProtection();
-                    CheckCacheList();
-                    CheckReminderBizDataList();
-                }
-            });
-            timer.Enabled = true;
-
-
-
-
-            //1分钟检查一次
-            //ReminderTimer = new System.Timers.Timer(60000);
-            //ReminderTimer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
-            //{
-            //    if (this.InvokeRequired)
-            //    {
-            //        this.Invoke(new MethodInvoker(() => CheckReminderBizDataList()));
-            //    }
-            //    else
-            //    {
-            //        CheckReminderBizDataList();
-            //    }
-            //});
-            //ReminderTimer.Enabled = true;
-            //ReminderTimer.Start();
-
+            }
 
         }
- 
+
         private bool CheckRegistered(tb_sys_RegistrationInfo regInfo)
         {
-            string key = "YourSecretKeyHere"; // 这应该是一个保密的密钥
-            string machineCode = "UniqueMachineIdentifier"; // 这可以是机器的硬件信息或其他唯一标识
-      
+            string key = "ruinor1234567890"; // 这应该是一个保密的密钥
+            string machineCode = regInfo.MachineCode; // 这可以是机器的硬件信息或其他唯一标识
             // 假设用户输入的注册码
-             string userProvidedCode = regInfo.RegistrationCode;
-             bool isValid = ValidateRegistrationCode(userProvidedCode, key, machineCode);
-             Console.WriteLine($"Is the provided registration code valid? {isValid}");
+            string userProvidedCode = regInfo.RegistrationCode;
+            bool isValid = SecurityService.ValidateRegistrationCode(userProvidedCode, key, machineCode);
+            Console.WriteLine($"Is the provided registration code valid? {isValid}");
             return isValid;
         }
 
-        public static bool ValidateRegistrationCode(string providedCode, string key, string machineCode)
+        /// <summary>
+        /// 注册时会用到。启动程序时用到。 每次检测时用到
+        /// </summary>
+        /// <param name="regInfo"></param>
+        /// <returns></returns>
+        public string CreateMachineCode(tb_sys_RegistrationInfo regInfo)
         {
-            string generatedCode = RUINORERP.Business.Security.SecurityService.GenerateRegistrationCode(key, machineCode);
-            return generatedCode == providedCode;
+            //指定关键字段
+            List<string> cols = new List<string>();
+            cols.Add("CompanyName");
+            cols.Add("ContactName");
+            cols.Add("PhoneNumber");
+            cols.Add("ConcurrentUsers");
+            cols.Add("ExpirationDate");
+            cols.Add("ProductVersion");
+            cols.Add("LicenseType");
+
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                ContractResolver = new SelectiveContractResolver(cols),
+                //ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver
+                //{
+                //    NamingStrategy = new Newtonsoft.Json.Serialization.CamelCaseNamingStrategy()
+                //},
+                // 指定只序列化Id, Name, 和 Age字段
+                Converters = new List<JsonConverter> { new Newtonsoft.Json.Converters.IsoDateTimeConverter { DateTimeFormat = "yyyy-MM-dd HH:mm:ss" } }
+            };
+
+            // 序列化对象
+            string jsonString = JsonConvert.SerializeObject(regInfo, settings);
+            string originalInfo = frmMain.Instance.UniqueHarewareInfo + jsonString;
+            string key = "ruinor1234567890";
+            string reginfo = HLH.Lib.Security.EncryptionHelper.AesEncrypt(originalInfo, key);
+            return reginfo;
         }
+
         private void CacheInfoList_OnUpdate(object sender, CacheManager.Core.Internal.CacheActionEventArgs e)
         {
             foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
@@ -408,16 +468,21 @@ namespace RUINORERP.Server
             bool result = false;
             try
             {
-                if (protectionData != null)
+                if (registrationInfo != null)
                 {
-                    if (!protectionData.IsProtectionEnabled)
+                    if (!registrationInfo.IsRegistered)
                     {
+                        result = true;
+                        //断开所有链接
+                        Shutdown();
+                        Application.Exit();
                         return false;
                     }
                     else
                     {
-                        //如果当前时间小于限制时间。就退出
-                        if (protectionData.ExpirationDate.Date <= protectionData.GetLocalTime().Date)
+
+                        //如果验证不通过 或当前时间小于限制时间。就退出
+                        if (!CheckRegistered(registrationInfo) || registrationInfo.ExpirationDate.Date <= DateTime.Now.Date)
                         {
                             result = true;
                             //断开所有链接
@@ -591,9 +656,10 @@ namespace RUINORERP.Server
 
             //启动每天要执行的定时任务
             //启动
-            var DailyworkflowId = await host.StartWorkflow("DailyTaskWorkflow", 1, null);
-
-            frmMain.Instance.PrintInfoLog($"每日任务启动{DailyworkflowId}。");
+            //var DailyworkflowId = await host.StartWorkflow("DailyTaskWorkflow", 1, null);
+            GlobalScheduledData globalScheduled = new GlobalScheduledData();
+            var DailyworkflowId = await host.StartWorkflow("NightlyWorkflow", 1, globalScheduled);
+            frmMain.Instance.PrintInfoLog($"NightlyWorkflow每日任务启动{DailyworkflowId}。");
         }
 
         IHost _host = null;

@@ -1182,7 +1182,8 @@ namespace RUINORERP.UI.MRP.BOM
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
 
-
+            //要在初始化添加前
+            sgh.OnAddRightClick += Sgh_OnAddRightClick;
 
             sgd.SetDependencyObject<ProductSharePart, tb_BOM_SDetail>(MainForm.Instance.list);
             sgd.HasRowHeader = true;
@@ -1190,7 +1191,73 @@ namespace RUINORERP.UI.MRP.BOM
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             sgh.OnLoadRelevantFields += Sgh_OnLoadRelevantFields;
+
         }
+
+        private void Sgh_OnAddRightClick(PopupMenuCustomize pmc, Position position)
+        {
+            if (pmc != null)
+            {
+                //如果没有要的右键菜单。就在这里添加。AddReplaceMaterial
+                if (!pmc.MyMenu.Items.ContainsKey("AddReplaceMaterial"))
+                {
+                    ToolStripMenuItem toolStrip = new ToolStripMenuItem($"添加替代料【" + position.Row + "】");
+                    toolStrip.Tag = position.Row;
+                    toolStrip.Name = "AddReplaceMaterial";
+                    toolStrip.Size = new System.Drawing.Size(153, 26);
+                    toolStrip.Click += toolStrip_Click;
+                    pmc.MyMenu.Items.Add(toolStrip);
+                }
+            }
+        }
+
+        private void toolStrip_Click(object sender, EventArgs e)
+        {
+            int row = (int)((sender as ToolStripMenuItem).Tag);
+            if (grid1.Rows[row].RowData != null)
+            {
+                if (grid1.Rows[row].RowData is tb_BOM_SDetail bOM_SDetail)
+                {
+                    kryptonHeaderGroup1.ValuesPrimary.Heading = bOM_SDetail.SKU + ":替代料明细";
+                    kryptonHeaderGroup1.Tag = bOM_SDetail;
+                    if (bOM_SDetail.tb_BOM_SDetailSubstituteMaterials == null)
+                    {
+                        bOM_SDetail.tb_BOM_SDetailSubstituteMaterials = new List<tb_BOM_SDetailSubstituteMaterial>();
+                    }
+
+                    BsSubstituteMaterial.Clear();
+                    //清空
+                    if (bOM_SDetail.tb_BOM_SDetailSubstituteMaterials.Count > 0)
+                    {
+                        SourceGrid.Cells.Controllers.ToolTipText toolTipController = new SourceGrid.Cells.Controllers.ToolTipText();
+                        toolTipController.ToolTipTitle = "有替代料";
+                        toolTipController.ToolTipIcon = ToolTipIcon.Info;
+                        toolTipController.IsBalloon = true;
+                        if (grid1[row, 0].FindController(typeof(SourceGrid.Cells.Controllers.ToolTipText)) == null)
+                        {
+                            grid1[row, 0].Controller.AddController(toolTipController);
+                            grid1[row, 0].View.ForeColor = Color.Red;
+                            grid1[row, 0].View.Font = new Font("Arial", 10, FontStyle.Bold);
+                        }
+                    }
+                    else
+                    {
+                        grid1[row, 0].View.ForeColor = Color.FromArgb(255, 0, 0, 0);
+                        grid1[row, 0].View.Font = null;
+                    }
+                    sgh2.LoadItemDataToGrid<tb_BOM_SDetailSubstituteMaterial>(gridSubstituteMaterial, sgd2, bOM_SDetail.tb_BOM_SDetailSubstituteMaterials, c => c.ProdDetailID);
+                }
+                else
+                {
+                    kryptonHeaderGroup1.Tag = null;
+                    kryptonHeaderGroup1.ValuesPrimary.Heading = "替代料明细";
+                }
+            }
+
+
+
+        }
+
 
         //加载替代品明细
         private void LoadgridSubstituteMaterial()
@@ -1684,16 +1751,6 @@ namespace RUINORERP.UI.MRP.BOM
                     kryptonHeaderGroup1.ValuesPrimary.Heading = "替代料明细";
                 }
             }
-
-        }
-
-        private void grid1_RangePaint(GridVirtual sender, RangePaintEventArgs e)
-        {
-
-        }
-
-        private void grid1_Paint(object sender, PaintEventArgs e)
-        {
 
         }
 

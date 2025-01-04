@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/28/2024 18:55:32
+// 时间：12/30/2024 18:08:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -73,6 +73,8 @@ this.dtpExpirationDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePic
 this.lblProductVersion = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtProductVersion = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
+this.lblLicenseType = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtLicenseType = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblPurchaseDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpPurchaseDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
@@ -200,7 +202,19 @@ this.txtProductVersion.TabIndex = 8;
 this.Controls.Add(this.lblProductVersion);
 this.Controls.Add(this.txtProductVersion);
 
-           //#####LicenseType###Int32
+           //#####20LicenseType###String
+this.lblLicenseType.AutoSize = true;
+this.lblLicenseType.Location = new System.Drawing.Point(100,225);
+this.lblLicenseType.Name = "lblLicenseType";
+this.lblLicenseType.Size = new System.Drawing.Size(41, 12);
+this.lblLicenseType.TabIndex = 9;
+this.lblLicenseType.Text = "授权类型";
+this.txtLicenseType.Location = new System.Drawing.Point(173,221);
+this.txtLicenseType.Name = "txtLicenseType";
+this.txtLicenseType.Size = new System.Drawing.Size(100, 21);
+this.txtLicenseType.TabIndex = 9;
+this.Controls.Add(this.lblLicenseType);
+this.Controls.Add(this.txtLicenseType);
 
            //#####PurchaseDate###DateTime
 this.lblPurchaseDate.AutoSize = true;
@@ -326,7 +340,9 @@ this.Controls.Add(this.dtpExpirationDate );
                 this.Controls.Add(this.lblProductVersion );
 this.Controls.Add(this.txtProductVersion );
 
-                
+                this.Controls.Add(this.lblLicenseType );
+this.Controls.Add(this.txtLicenseType );
+
                 this.Controls.Add(this.lblPurchaseDate );
 this.Controls.Add(this.dtpPurchaseDate );
 
@@ -397,7 +413,9 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtProductVersion;
 
     
         
-              
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblLicenseType;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtLicenseType;
+
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblPurchaseDate;

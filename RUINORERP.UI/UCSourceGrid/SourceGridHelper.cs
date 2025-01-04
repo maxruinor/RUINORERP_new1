@@ -17,6 +17,7 @@ using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.UCSourceGrid;
+using RUINORERP.UI.WorkFlowDesigner;
 using SourceGrid;
 using SourceGrid.Cells;
 using SourceGrid.Cells.Controllers;
@@ -37,8 +38,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Media.Media3D;
 using Winista.Text.HtmlParser.Data;
 using WorkflowCore.Primitives;
+using ZXing.Common;
+
 //using ZXing.Common;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
@@ -84,13 +88,23 @@ namespace RUINORERP.UI.UCSourceGrid
         public event CalculateColumnValue OnCalculateColumnValue;
 
 
-
         public delegate void LoadMultiRowData(object rows, Position position);
 
         /// <summary>
         /// 选数据时多行选择
         /// </summary>
         public event LoadMultiRowData OnLoadMultiRowData;
+
+
+        #region  添加右键事件
+
+        public delegate void AddRightClick(PopupMenuCustomize pmc, Position position);
+
+        /// <summary>
+        /// 添加右键事件
+        /// </summary>
+        public event AddRightClick OnAddRightClick;
+        #endregion
 
 
         #region 应用于转换单时的数据提供
@@ -465,6 +479,16 @@ namespace RUINORERP.UI.UCSourceGrid
                             }
 
                         }
+                        #region 自定义右键事件
+                       
+                        if (OnAddRightClick != null)
+                        {
+                            PopupMenuCustomize pmc = new PopupMenuCustomize(pt.Row, dc.ParentGridDefine.grid, sgdefine);
+                            OnAddRightClick(pmc, new Position(pt.Row, i));
+                            currContext.Cell.Controller.AddController(pmc);
+                        }
+
+                        #endregion
                     }
                     else
                     {
@@ -1179,6 +1203,9 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 if (define.HasRowHeader && i == 0)
                 {
+
+                   
+
                     //右键删除行的菜单
                     //PopupMenuForRowHeader menuController = new PopupMenuForRowHeader(addRowIndex, grid, define);
                     //行号
@@ -1194,6 +1221,17 @@ namespace RUINORERP.UI.UCSourceGrid
                     rowHelderCellView.Background = new DevAge.Drawing.VisualElements.BackgroundLinearGradient(Color.ForestGreen, Color.White, 45);
                     //rh.View = rowHelderCellView;
                     //rh.AddController(menuController);
+                    #region 自定义右键事件
+                   
+                    if (OnAddRightClick != null)
+                    {
+                        PopupMenuCustomize pmc = new PopupMenuCustomize(addRowIndex, grid, define);
+                        OnAddRightClick(pmc, new Position(addRowIndex, i));
+                        rh.AddController(pmc);
+                    }
+
+                    #endregion
+
                     grid[addRowIndex, i] = rh;
 
                     continue;
@@ -1242,7 +1280,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
                     //目前认为是目标列才计算，并且 类型要为数字型
-                    if (define[i].Summary || define[i].CustomFormat == CustomFormatType.PercentFormat)
+                    if (define[i].Summary || define[i].CustomFormat == CustomFormatType.CurrencyFormat)
                     {
                         billController.OnCalculateColumnValue += (rowdata, CurrGridDefine, rowIndex) =>
                         {
@@ -1779,6 +1817,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         _editor = new SourceGrid.Cells.Editors.TextBoxUITypeEditor(typeof(DateTime));
                         break;
                     case "money":
+                        dci.CustomFormat = CustomFormatType.CurrencyFormat;
                         _editor = new SourceGrid.Cells.Editors.TextBoxCurrency(typeof(System.Decimal));
                         //SourceGrid.Cells.Editors.TextBox l_CurrencyEditor = new SourceGrid.Cells.Editors.TextBox(typeof(decimal));
                         //货币格式 默认使用区域设置，如果单独设置了才生效。

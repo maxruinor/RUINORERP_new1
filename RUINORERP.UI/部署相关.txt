@@ -1,0 +1,11 @@
+﻿  "RedisServer": "192.168.0.254:6379"
+
+  6379是默认端口：修改为其它 
+
+  "ConnectString": "Server=192.168.0.254;Database=erpnew;UID=sa;Password=SA!@#123sa;Max Pool Size=1000;MultipleActiveResultSets=True;Min Pool Size=0;Connection Lifetime=0;",
+  PKUB+H8X98F3tifl9di75Iv8BPRxoyFPRSdqZ/fdOZ+zNYeil4r0Cz+f+XUCAUJmLhEzoPtmC9CwP+tcS22oa6PH7qUiJKz/0v3fDAX/3nJPXma0j95UayZHzP2pzs4a5BIqU0ngXeZTRtNzxW4FmTb5bQE130DJAhXxB95IkrnfcIKyIxtppJ6k5EP6rPigN/5DMWiGgZq02sxMKBHjDA==
+  
+  Log4net_db.config
+  <connectionString value="data source=192.168.0.254;initial catalog=erpnew;persist security info=True;user id=sa;password=SA!@#123sa;MultipleActiveResultSets=True;" />
+
+  d8ZwIL2mV+UGMvqOMiIk4W/0mvrg8N6V7OijnojUimbn29VfgwwAJ5/G8Kj5nJGSKm0Uaiuf/Zl3TEXPs3oPuqx7zZtyYIfq8/fhAQhOYvKqDtalzr/bWf/atKb7YKbzfcpvgGfsUi82qEt4p54VQPg1csG3hdwTkgaHTTZt4mZLnXiqD+mK+WT2PQ8OnCnf

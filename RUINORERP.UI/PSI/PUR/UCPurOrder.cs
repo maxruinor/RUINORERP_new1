@@ -269,6 +269,8 @@ namespace RUINORERP.UI.PSI.PUR
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
             listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.IncludingTax);
+            listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.DeliveredQuantity);
+            listCols.SetCol_ReadOnly<tb_PurOrderDetail>(c => c.TotalReturnedQty);
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
 
 

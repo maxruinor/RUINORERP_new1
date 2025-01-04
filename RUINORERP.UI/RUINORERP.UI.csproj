@@ -1672,12 +1672,6 @@
     <Compile Include="PSI\INV\UCInventoryQuery.Designer.cs">
       <DependentUpon>UCInventoryQuery.cs</DependentUpon>
     </Compile>
-    <Compile Include="PSI\INV\UCInventoryQueryByBOM.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PSI\INV\UCInventoryQueryByBOM.Designer.cs">
-      <DependentUpon>UCInventoryQueryByBOM.cs</DependentUpon>
-    </Compile>
     <Compile Include="PSI\INV\UCInventoryTracking.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2507,6 +2501,7 @@
     <Compile Include="WorkFlowTester\worker.cs" />
     <Compile Include="WorkFlowTester\WorkWorkflow.cs" />
     <Compile Include="WorkFlowTester\WorkWorkflow2.cs" />
+    <Content Include="部署相关.txt" />
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </EmbeddedResource>
@@ -3047,9 +3042,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCInventoryQuery.resx">
       <DependentUpon>UCInventoryQuery.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PSI\INV\UCInventoryQueryByBOM.resx">
-      <DependentUpon>UCInventoryQueryByBOM.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCInventoryTracking.resx">
       <DependentUpon>UCInventoryTracking.cs</DependentUpon>

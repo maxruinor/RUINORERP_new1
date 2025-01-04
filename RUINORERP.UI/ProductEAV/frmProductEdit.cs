@@ -2386,7 +2386,13 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         EditEntity.Category_ID = prodCategorie.Category_ID;
                         txtcategory_ID.Text = prodCategorie.Category_name;
-                        txtcategory_ID.TreeView.SelectedNode.Tag = prodCategorie;
+                        TreeNode node = txtcategory_ID.TreeView.Nodes.Find(prodCategorie.Category_ID.ToString(), true).FirstOrDefault();
+                        if (node!=null)
+                        {
+                            txtcategory_ID.TreeView.SelectedNode = node;
+                            txtcategory_ID.TreeView.SelectedNode.Tag = prodCategorie;
+                        }
+                        
                     }
                 }
             }

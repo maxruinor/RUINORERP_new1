@@ -51,10 +51,6 @@ namespace RUINORERP.UI.BaseForm
             Refreshs();
         }
 
-        public virtual void Query(object QueryDto, bool UseNavQuery = false)
-        {
-
-        }
 
         public virtual void Query(bool UseNavQuery = false)
         {

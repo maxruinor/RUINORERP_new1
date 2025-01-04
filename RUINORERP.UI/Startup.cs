@@ -53,6 +53,7 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.IM;
 using System.Net.Mail;
+using StackExchange.Redis;
 
 
 namespace RUINORERP.UI
@@ -187,6 +188,8 @@ namespace RUINORERP.UI
             /// AppSettings.Configuration = configuration;
             /// 
             string conn = AppSettings.GetValue("ConnectString");
+            string key = "ruinor1234567890";
+            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
 
             Program.InitAppcontextValue(Program.AppContextData);
             Services.AddLogging(logBuilder =>
@@ -194,7 +197,7 @@ namespace RUINORERP.UI
                 logBuilder.ClearProviders();
                 //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
                 //引用的long4net.dll要版本一样。
-                logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", conn, Program.AppContextData));
+                logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", newconn, Program.AppContextData));
             });
 
             // by watson 2024-6-28
@@ -650,7 +653,9 @@ namespace RUINORERP.UI
             IConfiguration configuration = cfgBuilder.Build();
             AppSettings.Configuration = configuration;
             string conn = AppSettings.GetValue("ConnectString");
-            services.AddSqlsugarSetup(Program.AppContextData, configuration);
+            string key = "ruinor1234567890";
+            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+            services.AddSqlsugarSetup(Program.AppContextData, newconn);
 
             //services.AddSingleton<ApplicationContext>(Program.AppContextData);
             //services.AddTransient<BaseController, AuthorizeController>();

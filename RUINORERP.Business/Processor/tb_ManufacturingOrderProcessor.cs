@@ -65,6 +65,11 @@ namespace RUINORERP.Business.Processor
             //queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.tb_location);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.Created_at);
+
+            //设置不可见的列，这里实现后。在列查查询时，应该可以不需要重复用BuildInvisibleCols()
+            queryFilter.SetInvisibleCol<tb_ManufacturingOrder>(c => c.PDCID);
+            queryFilter.SetInvisibleCol<tb_ManufacturingOrder>(c => c.PDID);
+
             return queryFilter;
         }
 

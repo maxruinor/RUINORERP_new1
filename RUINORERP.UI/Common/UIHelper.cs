@@ -32,7 +32,146 @@ namespace RUINORERP.UI.Common
 {
     public static class UIHelper
     {
+        #region 查找控件
 
+        public static KryptonTextBox FindTextBox(Control parentControl, string dataMember)
+        {
+            // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+            if (parentControl is KryptonTextBox textBox)
+            {
+                if (textBox.DataBindings.Count > 0)
+                {
+                    foreach (Binding binding in textBox.DataBindings)
+                    {
+                        if (binding.BindingMemberInfo.BindingMember == dataMember)
+                        {
+                            return textBox;
+                        }
+                    }
+                }
+                else
+                {
+                    //按名称来查找
+                    if (textBox.Name == "txt" + dataMember)
+                    {
+                        return textBox;
+                    }
+                }
+            }
+
+            // 递归检查所有子控件
+            KryptonTextBox foundTextBox = FindTextBoxInControls(parentControl.Controls, dataMember);
+            if (foundTextBox != null)
+            {
+                return foundTextBox;
+            }
+
+            return null;
+        }
+
+        public static KryptonTextBox FindTextBoxInControls(Control.ControlCollection controls, string dataMember)
+        {
+            foreach (Control control in controls)
+            {
+                // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+                if (control is KryptonTextBox textBox)
+                {
+                    if (textBox.DataBindings.Count > 0)
+                    {
+                        foreach (Binding binding in textBox.DataBindings)
+                        {
+                            if (binding.BindingMemberInfo.BindingMember == dataMember)
+                            {
+                                return textBox;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //按名称来查找
+                        if (textBox.Name == "txt" + dataMember)
+                        {
+                            return textBox;
+                        }
+                    }
+                }
+
+                // 如果当前控件有子控件，继续递归检查
+                if (control.HasChildren)
+                {
+                    KryptonTextBox foundTextBox = FindTextBoxInControls(control.Controls, dataMember);
+                    if (foundTextBox != null)
+                    {
+                        return foundTextBox;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 显示的文字找不到就按名称的规则查找
+        /// </summary>
+        /// <param name="parentControl"></param>
+        /// <param name="LabelText"></param>
+        /// <param name="LabelName"></param>
+        /// <returns></returns>
+        public static KryptonLabel FindLabel(Control parentControl, string LabelText, string LabelName)
+        {
+            // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+            if (parentControl is KryptonLabel lbl && lbl.Text.Length > 0)
+            {
+                if (lbl.Text == LabelText)
+                {
+                    return lbl;
+                }
+                if (lbl.Name == "lbl" + LabelName)
+                {
+                    return lbl;
+                }
+            }
+            // 递归检查所有子控件
+            KryptonLabel foundLabel = FindLabelInControls(parentControl.Controls, LabelText, LabelName);
+            if (foundLabel != null)
+            {
+                return foundLabel;
+            }
+
+            return null;
+        }
+
+        public static KryptonLabel FindLabelInControls(Control.ControlCollection controls, string LabelText, string LabelName)
+        {
+            foreach (Control control in controls)
+            {
+                // 检查当前控件是否为 KryptonTextBox 并且具有匹配的 dataMember
+                if (control is KryptonLabel lbl && lbl.Text.Length > 0)
+                {
+                    if (lbl.Text == LabelText)
+                    {
+                        return lbl;
+                    }
+                    if (lbl.Name == "lbl" + LabelName)
+                    {
+                        return lbl;
+                    }
+                }
+
+                // 如果当前控件有子控件，继续递归检查
+                if (control.HasChildren)
+                {
+                    KryptonLabel foundTextBox = FindLabelInControls(control.Controls, LabelText, LabelName);
+                    if (foundTextBox != null)
+                    {
+                        return foundTextBox;
+                    }
+                }
+            }
+            return null;
+        }
+
+
+        #endregion
         public static void ControlColumnsInvisible(tb_MenuInfo CurMenuInfo,
             List<string> InvisibleCols, List<string> DefaultHideCols = null)
         {

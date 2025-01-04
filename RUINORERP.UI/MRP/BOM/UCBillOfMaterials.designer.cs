@@ -801,8 +801,6 @@
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
-            this.grid1.RangePaint += new SourceGrid.RangePaintEventHandler(this.grid1_RangePaint);
-            this.grid1.Paint += new System.Windows.Forms.PaintEventHandler(this.grid1_Paint);
             this.grid1.DoubleClick += new System.EventHandler(this.grid1_DoubleClick);
             // 
             // kryptonPage2

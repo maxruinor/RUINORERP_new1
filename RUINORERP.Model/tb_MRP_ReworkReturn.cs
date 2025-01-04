@@ -65,14 +65,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long _CustomerVendor_ID;
+        private long? _CustomerVendor_ID;
         /// <summary>
         /// 生产单位
         /// </summary>
         [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "生产单位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "生产单位" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "生产单位" )]
         [FKRelationAttribute("tb_CustomerVendor","CustomerVendor_ID")]
-        public long CustomerVendor_ID
+        public long? CustomerVendor_ID
         { 
             get{return _CustomerVendor_ID;}
             set{

@@ -197,7 +197,7 @@ namespace RUINORERP.Server.Commands
                                 }
 
                                 //登陆成功时。
-                                if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.protectionData.UserOnlineCount)
+                                if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.registrationInfo.ConcurrentUsers)
                                 {
                                     //超出人数时：提示一下再T掉第一个人
                                     //优先T重复的人。

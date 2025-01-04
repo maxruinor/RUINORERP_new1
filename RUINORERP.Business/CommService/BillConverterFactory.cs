@@ -154,11 +154,7 @@ namespace RUINORERP.Business.CommService
                     cbd.BillNo = PurEntry.PurEntryNo;
                     cbd.BillID = PurEntry.PurEntryID;
                     break;
-                case BizType.返厂出库:
-                    var Return = Entity as tb_Return;
-                    cbd.BillID = Return.MainID;
-                    cbd.BillNo = Return.ReturnNo;
-                    break;
+              
                 case BizType.采购退货单:
                     var purEntryRe = Entity as tb_PurEntryRe;
                     cbd.BillID = purEntryRe.PurEntryRe_ID;
@@ -169,6 +165,16 @@ namespace RUINORERP.Business.CommService
                     var PurReturnEntry = Entity as tb_PurReturnEntry;
                     cbd.BillID = PurReturnEntry.PurReEntry_ID;
                     cbd.BillNo = PurReturnEntry.PurReEntryNo;
+                    break;
+                case BizType.返工退库:
+                    var Return = Entity as tb_MRP_ReworkReturn;
+                    cbd.BillID = Return.ReworkReturnID;
+                    cbd.BillNo = Return.ReworkReturnNo;
+                    break;
+                case BizType.返工入库:
+                    var ReworkEntry = Entity as tb_MRP_ReworkEntry;
+                    cbd.BillID = ReworkEntry.ReworkEntryID;
+                    cbd.BillNo = ReworkEntry.ReworkEntryNo;
                     break;
                 /*
             case BizType.返厂出库:
@@ -322,8 +328,8 @@ namespace RUINORERP.Business.CommService
                 break;*/
                 case BizType.采购入库统计:
                     var PurEntryStatistics = Entity as View_PurEntryItems;
-                    //cbd.BillID = PurEntryStatistics.MainID;
-                    //cbd.BillNo = PurEntryStatistics.BillNo;
+                     //cbd.BillID = PurEntryStatistics.id;
+                     //cbd.BillNo = PurEntryStatistics.BillNo;
                     break;
                 case BizType.无对应数据:
                 default:

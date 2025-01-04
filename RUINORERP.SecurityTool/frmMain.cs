@@ -32,13 +32,18 @@ namespace RUINORERP.SecurityTool
 
         private void btnEnDE_Click(object sender, EventArgs e)
         {
-            frmEncryptionDecryption frmCreateKey = new frmEncryptionDecryption();
-            frmCreateKey.Show();
+            
         }
 
         private void 注册码生成器ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             frmRUINORERPSecurity frmCreateKey = new frmRUINORERPSecurity();
+            frmCreateKey.Show();
+        }
+
+        private void 加密解密工具ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            frmEncryptionDecryption frmCreateKey = new frmEncryptionDecryption();
             frmCreateKey.Show();
         }
     }

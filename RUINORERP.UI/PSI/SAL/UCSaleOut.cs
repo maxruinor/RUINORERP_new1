@@ -37,7 +37,8 @@ using FastReport.Fonts;
 using RUINORERP.UI.PSI.PUR;
 using static StackExchange.Redis.Role;
 using RUINORERP.Business.CommService;
-
+using RUINORERP.Common.Extensions;
+using RUINORERP.Business.Security;
 namespace RUINORERP.UI.PSI.SAL
 {
     [MenuAttrAssemblyInfo("销售出库单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.销售管理, BizType.销售出库单)]
@@ -411,6 +412,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
+                EditEntity.TotalTaxAmount= EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
                 EditEntity.TotalUntaxedAmount = details.Sum(c => c.SubtotalUntaxedAmount);
                 EditEntity.CollectedMoney = EditEntity.TotalAmount;
                 EditEntity.TotalUntaxedAmount = EditEntity.TotalUntaxedAmount + EditEntity.ShipCost;
@@ -557,13 +559,13 @@ namespace RUINORERP.UI.PSI.SAL
                 ReturnMainSubResults<tb_SaleOut> SaveResult = new ReturnMainSubResults<tb_SaleOut>();
                 if (NeedValidated)
                 {
-                     //await MainForm.Instance.AppContext.Db.UpdateNav<tb_SaleOut>(EditEntity,
-                     //new UpdateNavRootOptions() { IsInsertRoot = true })
-                     //   .Include(b => b.tb_SaleOutDetails, new UpdateNavOptions()
-                     //   {
-                     //       OneToManyInsertOrUpdate = true
-                     //   })
-                     //   .ExecuteCommandAsync();
+                    //await MainForm.Instance.AppContext.Db.UpdateNav<tb_SaleOut>(EditEntity,
+                    //new UpdateNavRootOptions() { IsInsertRoot = true })
+                    //   .Include(b => b.tb_SaleOutDetails, new UpdateNavOptions()
+                    //   {
+                    //       OneToManyInsertOrUpdate = true
+                    //   })
+                    //   .ExecuteCommandAsync();
 
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)

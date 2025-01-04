@@ -36,9 +36,6 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtKey = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.btnGenerateAesKey256 = new System.Windows.Forms.Button();
-            this.label4 = new System.Windows.Forms.Label();
-            this.txtPassword = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnEncrypt
@@ -97,56 +94,27 @@
             // 
             // txtKey
             // 
-            this.txtKey.Location = new System.Drawing.Point(108, 294);
+            this.txtKey.Location = new System.Drawing.Point(108, 259);
             this.txtKey.Multiline = true;
             this.txtKey.Name = "txtKey";
             this.txtKey.Size = new System.Drawing.Size(555, 83);
             this.txtKey.TabIndex = 14;
+            this.txtKey.Text = "ruinor1234567890";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(73, 297);
+            this.label3.Location = new System.Drawing.Point(73, 262);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(29, 12);
             this.label3.TabIndex = 15;
             this.label3.Text = "Key:";
-            // 
-            // btnGenerateAesKey256
-            // 
-            this.btnGenerateAesKey256.Location = new System.Drawing.Point(682, 243);
-            this.btnGenerateAesKey256.Name = "btnGenerateAesKey256";
-            this.btnGenerateAesKey256.Size = new System.Drawing.Size(171, 23);
-            this.btnGenerateAesKey256.TabIndex = 16;
-            this.btnGenerateAesKey256.Text = "根据密码生成密钥";
-            this.btnGenerateAesKey256.UseVisualStyleBackColor = true;
-            this.btnGenerateAesKey256.Click += new System.EventHandler(this.btnGenerateAesKey256_Click);
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(73, 248);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(35, 12);
-            this.label4.TabIndex = 18;
-            this.label4.Text = "密码:";
-            // 
-            // txtPassword
-            // 
-            this.txtPassword.Location = new System.Drawing.Point(108, 245);
-            this.txtPassword.Multiline = true;
-            this.txtPassword.Name = "txtPassword";
-            this.txtPassword.Size = new System.Drawing.Size(555, 21);
-            this.txtPassword.TabIndex = 17;
             // 
             // frmEncryptionDecryption
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1059, 458);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.txtPassword);
-            this.Controls.Add(this.btnGenerateAesKey256);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.btnEncrypt);
             this.Controls.Add(this.btnDecrypt);
@@ -171,8 +139,5 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox txtKey;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button btnGenerateAesKey256;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox txtPassword;
     }
 }

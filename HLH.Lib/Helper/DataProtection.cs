@@ -41,7 +41,8 @@ namespace HLH.Lib.Helper
 
         // encrypt the data using DPAPI, returns a base64-encoded encrypted string
         /// <summary>
-        /// 使用了DPAPI(Data Protection API)来对数据进行加密和解密,加密函数返回一个用base64编码的字符串
+        /// 使用了DPAPI(Data Protection API)来对数据进行加密,
+        /// 加密函数返回一个用base64编码的字符串
         /// </summary>
         /// <param name="data"></param>
         /// <param name="store"></param>
@@ -94,6 +95,12 @@ namespace HLH.Lib.Helper
         }
 
         // decrypt the data using DPAPI, data is a base64-encoded encrypted string
+        /// <summary>
+        /// 给…解密
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="store"></param>
+        /// <returns></returns>
         public static string Decrypt(string data, Store store)
         {
             // holds the result string

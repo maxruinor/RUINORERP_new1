@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
+﻿using HLH.Lib.Security;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.VisualBasic;
 using Microsoft.VisualBasic.ApplicationServices;
 using RUINORERP.Model;
@@ -68,7 +69,7 @@ namespace RUINORERP.Server.CommandService
                                 else
                                 {
                                     //登陆成功时。
-                                    if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.protectionData.UserOnlineCount)
+                                    if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.registrationInfo.ConcurrentUsers)
                                     {
                                         //超出人数时：提示一下再T掉第一个人
                                         //优先T重复的人。
@@ -127,8 +128,12 @@ namespace RUINORERP.Server.CommandService
         private async Task<bool> Login(string UserName, string pwd)
         {
             bool rs = false;
+
+            //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
+            string EnPassword = EncryptionHelper.AesEncryptByHashKey(pwd, UserName);
+
             user = await Program.AppContextData.Db.CopyNew().Queryable<tb_UserInfo>()
-                   .Where(u => u.UserName == UserName && u.Password == pwd)
+                   .Where(u => u.UserName == UserName && u.Password == EnPassword)
              .Includes(x => x.tb_employee)
                    .Includes(x => x.tb_User_Roles)
                    .SingleAsync();

@@ -34,6 +34,7 @@
             this.btnEnDE = new System.Windows.Forms.Button();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.注册码生成器ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.加密解密工具ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -71,7 +72,8 @@
             // 
             this.menuStrip1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.注册码生成器ToolStripMenuItem});
+            this.注册码生成器ToolStripMenuItem,
+            this.加密解密工具ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(837, 24);
@@ -84,6 +86,13 @@
             this.注册码生成器ToolStripMenuItem.Size = new System.Drawing.Size(97, 20);
             this.注册码生成器ToolStripMenuItem.Text = "注册码生成器";
             this.注册码生成器ToolStripMenuItem.Click += new System.EventHandler(this.注册码生成器ToolStripMenuItem_Click);
+            // 
+            // 加密解密工具ToolStripMenuItem
+            // 
+            this.加密解密工具ToolStripMenuItem.Name = "加密解密工具ToolStripMenuItem";
+            this.加密解密工具ToolStripMenuItem.Size = new System.Drawing.Size(97, 20);
+            this.加密解密工具ToolStripMenuItem.Text = "加密解密工具";
+            this.加密解密工具ToolStripMenuItem.Click += new System.EventHandler(this.加密解密工具ToolStripMenuItem_Click);
             // 
             // frmMain
             // 
@@ -112,6 +121,7 @@
         private System.Windows.Forms.Button btnEnDE;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem 注册码生成器ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 加密解密工具ToolStripMenuItem;
     }
 }
 

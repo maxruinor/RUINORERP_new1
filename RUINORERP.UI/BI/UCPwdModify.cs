@@ -18,6 +18,7 @@ using RUINORERP.Business;
 using RUINORERP.Global;
 using Krypton.Workspace;
 using Krypton.Navigator;
+using HLH.Lib.Security;
 
 namespace RUINORERP.UI.BI
 {
@@ -31,20 +32,26 @@ namespace RUINORERP.UI.BI
 
         private async void btnOk_Click(object sender, EventArgs e)
         {
-            if (userInfo.Password != txtOldPwd.Text)
+
+            if (userInfo.Password != EncryptionHelper.AesEncryptByHashKey(txtOldPwd.Text, userInfo.UserName))
             {
                 MessageBox.Show("旧密码输入不正确，请重试！");
             }
             else
             {
-                if (txtNewPwd.Text != txtNewPwdConfirm.Text)
+                if (txtNewPwd.Text.Trim().Length == 0)
+                {
+                    MessageBox.Show("新密码不能为空，请重试！");
+                }
+                else if (txtNewPwd.Text != txtNewPwdConfirm.Text)
                 {
                     MessageBox.Show("新密码两次输入不一致，请重试！");
                 }
                 else
                 {
-                    //
-                    userInfo.Password = txtNewPwd.Text;
+
+                    string newpwd = EncryptionHelper.AesEncryptByHashKey(txtNewPwd.Text, userInfo.UserName);
+                    userInfo.Password = newpwd;
                     tb_UserInfoController<tb_UserInfo> ctrUser = MainForm.Instance.AppContext.GetRequiredService<tb_UserInfoController<tb_UserInfo>>();
                     bool rs = await ctrUser.UpdateAsync(userInfo);
                     if (rs)

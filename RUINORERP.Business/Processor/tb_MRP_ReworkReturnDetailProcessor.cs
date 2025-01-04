@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/30/2024 18:08:38
+// 时间：12/27/2024 18:30:50
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,18 +30,21 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 系统注册信息
+    /// 采购入库退回单明细
     /// </summary>
-    public partial class tb_sys_RegistrationInfoProcessor:BaseProcessor 
+    public partial class tb_MRP_ReworkReturnDetailProcessor:BaseProcessor 
     {
-       
-        public tb_sys_RegistrationInfoProcessor(ILogger<tb_sys_RegistrationInfoProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public override List<string> GetSummaryCols()
         {
-            _logger = logger;
-           _unitOfWorkManage = unitOfWorkManage;
-            _appContext = appContext;
+            List<Expression<Func<tb_MRP_ReworkReturnDetail, object>>> SummaryCols = new List<Expression<Func<tb_MRP_ReworkReturnDetail, object>>>();
+            SummaryCols.Add(c => c.Quantity);
+            SummaryCols.Add(c => c.SubtotalCostAmount);
+            SummaryCols.Add(c => c.SubtotalReworkFee);
+            SummaryCols.Add(c => c.DeliveredQuantity);
+            List<string> SummaryList = ExpressionHelper.ExpressionListToStringList<tb_MRP_ReworkReturnDetail>(SummaryCols);
+            return SummaryList;
         }
-        
+
     }
 }
 

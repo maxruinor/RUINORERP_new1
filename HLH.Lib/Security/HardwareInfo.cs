@@ -2,15 +2,46 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+ 
 
 namespace HLH.Lib.Security
 {
-    public class HardwareInfo
+    public class HardwareInfoService
     {
+        public  string GetMacAddress()
+        {
+            string macAddress = "";
+            try
+            {
+                // 获取所有网络接口
+                NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+                foreach (NetworkInterface ni in interfaces)
+                {
+                    // 确保网络接口是启用的，并且是局域网 (LAN) 接口
+                    if (ni.OperationalStatus == OperationalStatus.Up && ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+                    {
+                        // 获取并返回MAC地址
+                        PhysicalAddress physicalAddress = ni.GetPhysicalAddress();
+                        macAddress = physicalAddress.ToString();
+                        break; // 如果您只需要第一个找到的MAC地址，那么找到后就退出循环
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+            }
+            return macAddress;
+        }
 
+        /// <summary>
+        /// 卡一下
+        /// </summary>
+        /// <returns></returns>
         public string GetCpuId()
         {
             try

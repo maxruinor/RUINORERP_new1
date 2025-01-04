@@ -41,9 +41,9 @@ namespace RUINORERP.Business
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ReworkReturnNo).MaximumLength(25).WithMessage("退回单号:不能超过最大长度,25.");
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ReworkReturnNo).NotEmpty().WithMessage("退回单号:不能为空。");
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("生产单位:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("生产单位:下拉选择值不正确。");
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("需求部门:下拉选择值不正确。");
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");

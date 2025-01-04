@@ -1,33 +1,14 @@
-﻿using RUINORERP.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Business.Security
+namespace HLH.Lib.Security
 {
-    /// <summary>
-    /// 好像可以生成 暂时不有。用hlh.lib。因为要公共调用
-    /// </summary>
     public class SecurityService
     {
-        public static void RegisterMachine(tb_sys_RegistrationInfo regInfo, string key)
-        {
-            string generatedCode = SecurityService.GenerateRegistrationCode(key, regInfo.MachineCode);
-            if (SecurityService.ValidateRegistrationCode(generatedCode, key, regInfo.MachineCode))
-            {
-                regInfo.RegistrationCode = generatedCode;
-                regInfo.IsRegistered = true;
-                // 这里应该将注册信息保存到数据库
-                Console.WriteLine("Registration successful.");
-            }
-            else
-            {
-                Console.WriteLine("Registration failed.");
-            }
-        }
 
         public static string GenerateRegistrationCode(string key, string machineCode)
         {

@@ -501,10 +501,10 @@ namespace RUINORERP.Server
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
             IConfiguration configuration = cfgBuilder.Build();
             AppSettings.Configuration = configuration;
-            // string conn = AppSettings.GetValue("ConnectString");
-            ///services.AddSqlsugarSetup(configuration);
-            services.AddSqlsugarSetup(Program.AppContextData, configuration);
-
+            string conn = AppSettings.GetValue("ConnectString");
+            string key = "ruinor1234567890";
+            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+            services.AddSqlsugarSetup(Program.AppContextData, newconn);
             services.AddAppContext(Program.AppContextData);
             /* by watson 2023-12-26
             services.AddSingleton(typeof(AutoMapperConfig));

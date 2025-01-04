@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/28/2024 18:55:33
+// 时间：12/30/2024 18:08:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -98,7 +98,7 @@ namespace RUINORERP.Model
         /// 机器码
         /// </summary>
         [AdvQueryAttribute(ColName = "MachineCode",ColDesc = "机器码")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "MachineCode" ,Length=1000,IsNullable = true,ColumnDescription = "机器码" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "MachineCode" ,Length=3000,IsNullable = true,ColumnDescription = "机器码" )]
         public string MachineCode
         { 
             get{return _MachineCode;}
@@ -112,7 +112,7 @@ namespace RUINORERP.Model
         /// 注册码
         /// </summary>
         [AdvQueryAttribute(ColName = "RegistrationCode",ColDesc = "注册码")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "RegistrationCode" ,Length=100,IsNullable = false,ColumnDescription = "注册码" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "RegistrationCode" ,Length=3000,IsNullable = false,ColumnDescription = "注册码" )]
         public string RegistrationCode
         { 
             get{return _RegistrationCode;}
@@ -163,13 +163,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private int _LicenseType;
+        private string _LicenseType;
         /// <summary>
         /// 授权类型
         /// </summary>
         [AdvQueryAttribute(ColName = "LicenseType",ColDesc = "授权类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "LicenseType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "授权类型" )]
-        public int LicenseType
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "LicenseType" ,Length=20,IsNullable = false,ColumnDescription = "授权类型" )]
+        public string LicenseType
         { 
             get{return _LicenseType;}
             set{

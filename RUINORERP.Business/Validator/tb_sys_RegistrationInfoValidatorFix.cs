@@ -38,11 +38,11 @@ namespace RUINORERP.Business
             RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.PhoneNumber).MaximumLength(100).WithMessage("手机号:不能超过最大长度,100.");
             RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.PhoneNumber).NotEmpty().WithMessage("手机号:不能为空。");
             RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.PhoneNumber).MinimumLength(10).WithMessage("手机号:不能小于最小长度,10。");
-            RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.ConcurrentUsers).GreaterThan(3).WithMessage("同时在线用户数:要大于3。");
+            RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.ConcurrentUsers).GreaterThan(0).WithMessage("同时在线用户数:要大于0。");
 
             //***** 
             RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.ConcurrentUsers).NotNull().WithMessage("同时在线用户数:不能为空。");
-
+            RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.LicenseType).MinimumLength(3).WithMessage("授权类型:请选择正确的授权类型.");
 
             RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.ProductVersion).MaximumLength(100).WithMessage("版本信息:不能超过最大长度,100.");
             RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.ProductVersion).NotEmpty().WithMessage("版本信息:不能为空。");
@@ -56,6 +56,7 @@ namespace RUINORERP.Business
         {
             // 这里添加额外的初始化代码
             RuleFor(tb_StockTransfer => tb_StockTransfer.ExpirationDate).GreaterThan(System.DateTime.Now.AddDays(30)).WithMessage("截止时间:要大于30天。");
+            RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.LicenseType).MinimumLength(3).WithMessage("授权类型:请选择正确的授权类型.");
         }
     }
 

@@ -208,7 +208,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             {
                 case AdvQueryMenuItemEnums.查询:
                     toolStripBtnQuery.Select();
-                    Query(QueryDto);
+                    Query();
                     break;
                 case AdvQueryMenuItemEnums.关闭:
                     Exit(this);
@@ -267,9 +267,8 @@ namespace RUINORERP.UI.AdvancedUIModule
         }
         */
 
-        
 
-        protected async virtual void Query(BaseEntity dto)
+        public async override void Query(bool UseAutoNavQuery = false)
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;
@@ -423,14 +422,14 @@ namespace RUINORERP.UI.AdvancedUIModule
         {
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
- 
+
             PanelForQuery.GetType().GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance
 | System.Reflection.BindingFlags.NonPublic).SetValue(PanelForQuery, true, null);
             PanelForQuery.Visible = false;
             PanelForQuery.Controls.Clear();
             PanelForQuery.SuspendLayout();
 
- 
+
             QueryDto = UIGenerateHelper.CreateQueryUI(typeof(T), true, PanelForQuery, QueryConditionFilter, QueryConditionShowColQty);
 
             PanelForQuery.ResumeLayout();
@@ -580,7 +579,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                 e.Value = colName;
             }
 
-          
+
 
         }
         private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)

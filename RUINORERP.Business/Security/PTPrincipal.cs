@@ -8,6 +8,7 @@ using System.Security.Principal;
 using System.Collections.Generic;
 using System.Linq;
 using HLH.Lib.Net;
+using HLH.Lib.Security;
 
 
 namespace RUINORERP.Business.Security
@@ -66,10 +67,12 @@ namespace RUINORERP.Business.Security
             {
                 #region 正常用户验证  两套方式  正常是用P4表来控制的
 
+                //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
+                string EnPassword = EncryptionHelper.AesEncryptByHashKey(password, username);
 
                 tb_UserInfoController<tb_UserInfo> ctrUser = appcontext.GetRequiredService<tb_UserInfoController<tb_UserInfo>>();
                 List<tb_UserInfo> users = new List<tb_UserInfo>();
-                users = ctrUser.QueryByNavWithMoreInfo(u => u.UserName == username && u.Password == password && u.is_available && u.is_enabled);
+                users = ctrUser.QueryByNavWithMoreInfo(u => u.UserName == username && u.Password == EnPassword && u.is_available && u.is_enabled);
                 if (users == null || users.Count == 0)
                 {
                     loginSucceed = false;

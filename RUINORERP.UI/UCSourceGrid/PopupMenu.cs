@@ -539,7 +539,157 @@ namespace RUINORERP.UI.UCSourceGrid
 
     }
 
+    /// <summary>
+    /// 自定义右键菜单
+    /// </summary>
+    public class PopupMenuCustomize : SourceGrid.Cells.Controllers.ControllerBase
+    {
+        private Grid grid;
 
+        #region 应用于转换单
+
+        public delegate tb_ProdConversion GetTransferDataHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine);
+
+        /// <summary>
+        /// 针对特殊情况下的右键菜单，如替换出库。转换出库等
+        /// 
+        /// </summary>
+        public event GetTransferDataHandler OnGetTransferDataHandler;
+
+        public delegate void TransferMenuHandler(ToolStripItem sender, object rowObj, SourceGridDefine CurrGridDefine);
+
+        /// <summary>
+        /// 针对特殊情况下的右键菜单，如替换出库。转换出库等
+        /// 
+        /// </summary>
+        public event TransferMenuHandler OnTransferMenuHandler;
+
+        #endregion
+
+
+        MenuPowerHelper menuPowerHelper;
+
+        public delegate void ColumnsVisibleDelegate(KeyValuePair<string, SourceGridDefineColumnItem> kv);
+        /// <summary>
+        /// 验证行数据
+        /// </summary>
+        public event ColumnsVisibleDelegate OnColumnsVisible;
+
+
+        public ContextMenuStrip MyMenu = new ContextMenuStrip();
+
+        private List<KeyValuePair<string, SourceGridDefineColumnItem>> items = new List<KeyValuePair<string, SourceGridDefineColumnItem>>();
+
+        SourceGridDefine sgdefine;
+        public PopupMenuCustomize(int addRowIndex, Grid _grid, SourceGridDefine _sgdefine)
+        {
+            MyMenu.ShowCheckMargin = false;
+            MyMenu.ShowImageMargin = false;
+            MyMenu.MinimumSize = new Size(100, 0); // 设置最小宽度为 120，高度不限
+            //ToolStripSeparator ss = new ToolStripSeparator();
+            //MyMenu.Items.Add(ss);
+            ToolStripMenuItem siCustom = new ToolStripMenuItem("删除行【" + addRowIndex + "】");
+            siCustom.Tag = addRowIndex;
+            siCustom.Click += SiCustom_Click;
+            MyMenu.Items.Add(siCustom);
+
+
+            ToolStripMenuItem tsMiTransfer = new ToolStripMenuItem("转换出库【" + addRowIndex + "】");
+            tsMiTransfer.Tag = addRowIndex;
+            tsMiTransfer.Size = new System.Drawing.Size(153, 26);
+            tsMiTransfer.Click += tsMiTransfer_Click;
+            MyMenu.Items.Add(tsMiTransfer);
+
+            grid = _grid;
+            sgdefine = _sgdefine;
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+        }
+        private void tsMiTransfer_Click(object sender, EventArgs e)
+        {
+            //先得选择的行。再取当前选中的行数据，再传入到转换单UI
+            System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
+            int RowIndex = int.Parse(item.Tag.ToString());
+            var rowObj = grid.Rows[RowIndex].RowData;
+            tb_MenuInfo RelatedMenuInfo = null;
+            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_ProdConversion)
+            && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+            tb_ProdConversion prodConversion = new tb_ProdConversion();
+            prodConversion.tb_ProdConversionDetails = new List<tb_ProdConversionDetail>();
+            if (OnGetTransferDataHandler != null)
+            {
+                var result = OnGetTransferDataHandler(item, rowObj, sgdefine);
+                if (result != null)
+                {
+                    prodConversion = result;
+                }
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog("没有找到具体的转换单数据，只提供默认数据。");
+            }
+
+            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, prodConversion);
+        }
+
+        private void SiCustom_Click(object sender, EventArgs e)
+        {
+
+            //思路先把数据移掉一行，再重复设置一下右键删除行的菜单，并且重新设置行号,并且添加一行
+
+            System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
+            int addRowIndex = int.Parse(item.Tag.ToString());
+            SourceGridHelper sh = new SourceGridHelper();
+            sh.DeleteRow(sgdefine, addRowIndex);
+            return;
+
+            
+
+        }
+
+        public void AddItems(KeyValuePair<string, SourceGridDefineColumnItem> item)
+        {
+            items.Add(item);
+            ToolStripMenuItem si = new ToolStripMenuItem(item.Key);
+            si.Checked = item.Value.Visible;
+            si.CheckOnClick = true;
+            si.Click += Si_Click;
+            // MyMenu.Items.Add(si);
+            //初始时有几个，就减几
+            MyMenu.Items.Insert(MyMenu.Items.Count - 2, si);
+        }
+
+        private void Si_Click(object sender, EventArgs e)
+        {
+            KeyValuePair<string, SourceGridDefineColumnItem> item = items.Find(kv => kv.Key == sender.ToString());
+            item.Value.Visible = (sender as ToolStripMenuItem).Checked;
+            OnColumnsVisible(item);
+        }
+
+        public override void OnClick(CellContext sender, EventArgs e)
+        {
+            base.OnClick(sender, e);
+        }
+
+        public List<KeyValuePair<string, SourceGridDefineColumnItem>> Items { get => items; set => items = value; }
+
+        public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
+        {
+            base.OnMouseUp(sender, e);
+            //这里判断右键显示的情况
+            if (e.Button == MouseButtons.Right)
+            {
+                //默认不显示。只是要的时候业务UI处理显示
+                MyMenu.Items[1].Visible = false;
+                if (OnTransferMenuHandler != null)
+                {
+                    OnTransferMenuHandler(MyMenu.Items[1], sender.Tag, sgdefine);
+                }
+                MyMenu.Show(sender.Grid, new Point(e.X, e.Y));
+            }
+
+        }
+
+    }
 
     /// <summary>
     /// 用于显示全选 全不选 反选

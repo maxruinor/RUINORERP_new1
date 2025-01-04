@@ -84,6 +84,7 @@ using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.ClientCmdService;
 using RUINORERP.Global;
 using TransInstruction.CommandService;
+using HLH.Lib.Security;
 
 
 
@@ -121,7 +122,7 @@ namespace RUINORERP.UI
 
         public ClientCommandDispatcher _dispatcher;
 
-
+ 
         /// <summary>
         /// 保存服务器的一些缓存信息。让客户端可以根据一些机制来获取。得到最新的信息
         /// </summary>
@@ -491,6 +492,10 @@ namespace RUINORERP.UI
             timerStatus.Tick += (sender, e) => RefreshData();
             timerStatus.Start();
 
+            if (AppContext.IsSuperUser)
+            {
+                tsbtnSysTest.Visible = true;
+            }
 
 
         }
@@ -2491,7 +2496,18 @@ namespace RUINORERP.UI
             reminderRequest.BizPrimaryKey = 11231321;
             reminderRequest.BizType = BizType.CRM跟进计划;
             request.requestInfo = reminderRequest;
-            MainForm.Instance._dispatcher.DispatchAsync(request,CancellationToken.None);
+            MainForm.Instance._dispatcher.DispatchAsync(request, CancellationToken.None);
+        }
+
+        private void tsbtnSysTest_Click(object sender, EventArgs e)
+        {
+            // 确保密钥长度正确
+            // string key = EncryptionHelper.NormalizeKeyLength("黄利华", 32);
+
+            //一次性统计加密码一下密码：
+            string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", "张三");
+
+            string pwd = EncryptionHelper.AesDecryptByHashKey(enPwd, "张三");
         }
     }
 }

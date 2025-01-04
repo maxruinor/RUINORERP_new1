@@ -120,9 +120,9 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
             //图片特殊处理
-            if (kryptonDataGridView产品.Columns[e.ColumnIndex].Name == "Images")
+            if (kryptonDataGridView产品.Columns[e.ColumnIndex].Name == "Images" || e.Value.GetType().Name == "Byte[]")
             {
-                if (e.Value != null)
+                if (e.Value != null && !e.Value.GetType().Name.Equals("String"))
                 {
                     System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
                     Image image = Image.FromStream(buf, true);

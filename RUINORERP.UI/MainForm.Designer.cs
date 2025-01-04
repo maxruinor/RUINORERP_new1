@@ -67,6 +67,7 @@ namespace RUINORERP.UI
             this.toolBtnlogOff = new System.Windows.Forms.ToolStripButton();
             this.toolBtnExit = new System.Windows.Forms.ToolStripButton();
             this.btntsbRefresh = new System.Windows.Forms.ToolStripButton();
+            this.tsbtnloginFileServer = new System.Windows.Forms.ToolStripButton();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
             this.窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.关闭所有窗口ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,7 +84,7 @@ namespace RUINORERP.UI
             this.kryptonContextMenuItem1 = new Krypton.Toolkit.KryptonContextMenuItem();
             this.kryptonPanelBigg = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSeparator1 = new Krypton.Toolkit.KryptonSeparator();
-            this.tsbtnloginFileServer = new System.Windows.Forms.ToolStripButton();
+            this.tsbtnSysTest = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage5)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage2)).BeginInit();
@@ -425,7 +426,8 @@ namespace RUINORERP.UI
             this.toolBtnlogOff,
             this.toolBtnExit,
             this.btntsbRefresh,
-            this.tsbtnloginFileServer});
+            this.tsbtnloginFileServer,
+            this.tsbtnSysTest});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1044, 25);
@@ -470,6 +472,16 @@ namespace RUINORERP.UI
             this.btntsbRefresh.Size = new System.Drawing.Size(103, 22);
             this.btntsbRefresh.Text = "刷新";
             this.btntsbRefresh.Click += new System.EventHandler(this.btntsbRefresh_Click);
+            // 
+            // tsbtnloginFileServer
+            // 
+            this.tsbtnloginFileServer.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.tsbtnloginFileServer.Image = ((System.Drawing.Image)(resources.GetObject("tsbtnloginFileServer.Image")));
+            this.tsbtnloginFileServer.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbtnloginFileServer.Name = "tsbtnloginFileServer";
+            this.tsbtnloginFileServer.Size = new System.Drawing.Size(76, 22);
+            this.tsbtnloginFileServer.Text = "文件服务器";
+            this.tsbtnloginFileServer.Click += new System.EventHandler(this.tsbtnloginFileServer_Click);
             // 
             // menuStripMain
             // 
@@ -593,15 +605,16 @@ namespace RUINORERP.UI
             this.kryptonSeparator1.Size = new System.Drawing.Size(10, 578);
             this.kryptonSeparator1.TabIndex = 3;
             // 
-            // tsbtnloginFileServer
+            // tsbtnSysTest
             // 
-            this.tsbtnloginFileServer.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tsbtnloginFileServer.Image = ((System.Drawing.Image)(resources.GetObject("tsbtnloginFileServer.Image")));
-            this.tsbtnloginFileServer.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnloginFileServer.Name = "tsbtnloginFileServer";
-            this.tsbtnloginFileServer.Size = new System.Drawing.Size(76, 22);
-            this.tsbtnloginFileServer.Text = "文件服务器";
-            this.tsbtnloginFileServer.Click += new System.EventHandler(this.tsbtnloginFileServer_Click);
+            this.tsbtnSysTest.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.tsbtnSysTest.Image = ((System.Drawing.Image)(resources.GetObject("tsbtnSysTest.Image")));
+            this.tsbtnSysTest.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tsbtnSysTest.Name = "tsbtnSysTest";
+            this.tsbtnSysTest.Size = new System.Drawing.Size(76, 22);
+            this.tsbtnSysTest.Text = "系统测试用";
+            this.tsbtnSysTest.Visible = false;
+            this.tsbtnSysTest.Click += new System.EventHandler(this.tsbtnSysTest_Click);
             // 
             // MainForm
             // 
@@ -696,6 +709,7 @@ namespace RUINORERP.UI
         private KryptonPanel kryptonPanelBigg;
         private KryptonSeparator kryptonSeparator1;
         private System.Windows.Forms.ToolStripButton tsbtnloginFileServer;
+        private System.Windows.Forms.ToolStripButton tsbtnSysTest;
     }
 }
 

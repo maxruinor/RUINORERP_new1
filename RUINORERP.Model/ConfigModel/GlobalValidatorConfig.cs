@@ -35,6 +35,13 @@ namespace RUINORERP.Model.ConfigModel
         [Description("预完工日期必填设置为必须填写。")]
         public bool 预完工日期必填 { get; set; }
 
+
+
+        [JsonProperty("返工提醒天数")]
+        [Category("生产模块")]
+        [Description("超过这个天数系统自动提醒。")]
+        public int ReworkTipDays { get; set; } = 3;
+
         #endregion
 
         #region 客户关系
@@ -57,6 +64,7 @@ namespace RUINORERP.Model.ConfigModel
         public int MoneyDataPrecision { get; set; } = 4;
         #endregion
 
+       
 
         [JsonProperty("SomeSetting")]
         public string SomeSetting { get; set; }

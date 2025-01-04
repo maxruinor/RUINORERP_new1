@@ -209,6 +209,21 @@ namespace RUINORERP.Common.Extensions
             }
             return reval;
         }
+        /// <summary>
+        /// 将decimal值四舍五入到指定的小数位数。
+        /// </summary>
+        /// <param name="value">要四舍五入的decimal值</param>
+        /// <param name="decimalPlaces">小数位数</param>
+        /// <returns>四舍五入后的decimal值</returns>
+        public static decimal ToRoundDecimalPlaces(this decimal value, int decimalPlaces)
+        {
+            if (decimalPlaces < 0)
+                throw new ArgumentOutOfRangeException("decimalPlaces", "小数位数不能为负数");
+
+            var factor = Math.Pow(10, decimalPlaces);
+            var result = Math.Round(Convert.ToDouble(value) * factor) / factor;
+            return (decimal)result;
+        }
 
         public static long ToLong(this object thisValue)
         {

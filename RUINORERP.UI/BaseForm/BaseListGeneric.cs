@@ -49,7 +49,7 @@ using SixLabors.ImageSharp.Memory;
 using Netron.NetronLight;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.UI.UserCenter;
-using OfficeOpenXml.FormulaParsing.Excel.Functions;
+
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -349,6 +349,16 @@ namespace RUINORERP.UI.BaseForm
 
         public virtual void BuildInvisibleCols()
         {
+            //if (_UCBillChildQuery_Related.InvisibleCols == null)
+            //{
+            //    _UCBillChildQuery_Related.InvisibleCols = new List<string>();
+            //}
+            //_UCBillChildQuery_Related.InvisibleCols.AddRange(ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleCols));
+            //_UCBillChildQuery_Related.DefaultHideCols = new List<string>();
+
+            //UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
+
+
         }
 
 
@@ -891,6 +901,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 #region 泛型情况
                 BaseEditGeneric<T> frmadd = frm as BaseEditGeneric<T>;
+                frmadd.CurMenuInfo = this.CurMenuInfo;
                 frmadd.Text = this.CurMenuInfo.CaptionCN + "新增";
                 frmadd.bindingSourceEdit = bindingSourceList;
                 object obj = frmadd.bindingSourceEdit.AddNew();
@@ -952,7 +963,7 @@ namespace RUINORERP.UI.BaseForm
                 string PKColName = UIHelper.GetPrimaryKeyColName(typeof(T));
                 object PKValue = this.bindingSourceList.Current.GetPropertyValue(PKColName);
                 this.bindingSourceList.Remove(loc);
-                 rs = await ctr.BaseDeleteAsync(loc);
+                rs = await ctr.BaseDeleteAsync(loc);
                 if (rs)
                 {
                     if (MainForm.Instance.AppContext.SysConfig.IsDebug)
@@ -975,7 +986,7 @@ namespace RUINORERP.UI.BaseForm
                         MainForm.Instance.ecs.client.Send(buffer);
 
                     }
-                   
+
                 }
             }
             return rs;
@@ -992,6 +1003,7 @@ namespace RUINORERP.UI.BaseForm
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
             {
                 BaseEditGeneric<T> frmaddg = frm as BaseEditGeneric<T>;
+                frmaddg.CurMenuInfo = this.CurMenuInfo;
                 frmaddg.Text = this.CurMenuInfo.CaptionCN + "编辑";
                 Modify(frmaddg);
             }
@@ -1290,6 +1302,7 @@ namespace RUINORERP.UI.BaseForm
             // List<string> queryConditions = new List<string>();
             //queryConditions = new List<string>(QueryConditionFilter.QueryFields.Select(t => t.FieldName).ToList());
             //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, QueryConditionFilter.GetFilterExpression<T>(), QueryDto, pageNum, pageSize) as List<T>;
+
             if (QueryConditionFilter.FilterLimitExpressions == null)
             {
                 QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
@@ -1335,7 +1348,12 @@ namespace RUINORERP.UI.BaseForm
 
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;
-            InvisibleCols = ExpressionHelper.ExpressionListToStringList(InvisibleColsExp);
+            if (InvisibleCols == null)
+            {
+                InvisibleCols = new List<string>();
+            }
+            List<string> expInvisibleCols = ExpressionHelper.ExpressionListToStringList(InvisibleColsExp);
+            InvisibleCols.AddRange(expInvisibleCols.ToArray());
             ControlMasterColumnsInvisible(InvisibleCols);
             foreach (var item in InvisibleCols)
             {
@@ -1343,6 +1361,17 @@ namespace RUINORERP.UI.BaseForm
                 dataGridView1.FieldNameList.TryRemove(item, out kv);
             }
 
+
+            /*
+              if (_UCBillChildQuery_Related.InvisibleCols == null)
+            {
+                _UCBillChildQuery_Related.InvisibleCols = new List<string>();
+            }
+            _UCBillChildQuery_Related.InvisibleCols.AddRange(ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleCols));
+            _UCBillChildQuery_Related.DefaultHideCols = new List<string>();
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
+             
+             */
 
             List<T> list = new List<T>();
             bindingSourceList.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
@@ -1379,8 +1408,8 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 //nodeParameter参数中包含了这个实体的KEY主键是可以通过主键来查询到准确的一行数据
-               // QueryConditionFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.Customer_id, true);
-             
+                // QueryConditionFilter.SetQueryField<tb_CRM_FollowUpPlans>(c => c.Customer_id, true);
+
                 #region  因为时间不会去掉选择，这里特殊处理
                 foreach (var item in nodeParameter.queryFilter.QueryFields)
                 {

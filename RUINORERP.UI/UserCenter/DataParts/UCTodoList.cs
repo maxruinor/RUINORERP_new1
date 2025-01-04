@@ -127,13 +127,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 if (menuItem.Owner is ContextMenuStrip contextMenu)
                 {
-                    if (contextMenu.SourceControl.Parent == kryptonTreeViewJobList)
-                    {
-                        if (kryptonTreeViewJobList.Nodes[0].Tag is tb_WorkCenterConfig config)
+                  
+                        if (kryptonTreeViewJobList.Tag is tb_WorkCenterConfig config)
                         {
                             BuilderToDoListTreeView(config);
                         }
-                    }
+                 
                 }
             }
         }
@@ -481,7 +480,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
             BuilderToDoListTreeView(centerConfig);
-
+            kryptonTreeViewJobList.ContextMenuStrip = contextMenuStrip1;
+            kryptonTreeViewJobList.Tag = centerConfig;
         }
     }
 }

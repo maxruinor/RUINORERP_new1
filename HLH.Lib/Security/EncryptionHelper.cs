@@ -10,12 +10,56 @@ namespace HLH.Lib.Security
 
     public static class EncryptionHelper
     {
+        /// <summary>
+        ///加密 传入的KEY可以随意一些。
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static string AesEncryptByHashKey(string str, string key)
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+            try
+            {
+                Byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+                // 确保key长度为16、24或32字节
+                string normalizedKey = NormalizeKeyLength(key, 256); // 假设使用256位密钥
+                byte[] keyBytes = GetHash(key, 32); // 对于AES-256位密钥
+                RijndaelManaged rm = new RijndaelManaged
+                {
+                    Key = keyBytes,
+                    Mode = CipherMode.ECB,
+                    Padding = PaddingMode.PKCS7
+                };
 
+                ICryptoTransform cTransform = rm.CreateEncryptor();
+                Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+                return Convert.ToBase64String(resultArray);
+            }
+            catch (Exception ex)
+            {
+                string s = ex.Message;
+                return null;
+            }
+        }
+        public static byte[] GetHash(string input, int outputBytes)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+                byte[] hashBytes = sha256.ComputeHash(inputBytes);
+                return Enumerable.Repeat(hashBytes, outputBytes / hashBytes.Length + 1)
+                                 .SelectMany(b => b)
+                                 .Take(outputBytes)
+                                 .ToArray();
+            }
+        }
+        /*
         /// <summary>
         ///  AES 加密
         /// </summary>
         /// <param name="str">明文（待加密）</param>
-        /// <param name="key">密文 注意：密文长度有 16，24，32，不能用其它长度的密文</param>
+        /// <param name="key">符合AES密钥的要求（128位、192位或256位，即16字节、24字节或32字节 密文 注意：密文长度有 16，24，32，不能用其它长度的密文</param>
         /// <returns></returns>
         public static string AesEncrypt(string str, string key)
         {
@@ -40,14 +84,70 @@ namespace HLH.Lib.Security
                 return null;
             }
         }
+        */
 
-        /// <summary>
-        ///  AES 解密
-        /// </summary>
-        /// <param name="str">明文（待解密）</param>
-        /// <param name="key">密文 注意：密文长度有 16，24，32，不能用其它长度的密文</param>
-        /// <returns></returns>
-        public static string AesDecrypt(string str, string key)
+        public static string AesEncrypt(string str, string key)
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+            try
+            {
+                Byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+                RijndaelManaged rm = new RijndaelManaged
+                {
+                    Key = Encoding.UTF8.GetBytes(key),
+                    Mode = CipherMode.ECB,
+                    Padding = PaddingMode.PKCS7
+                };
+
+                ICryptoTransform cTransform = rm.CreateEncryptor();
+                Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+                return Convert.ToBase64String(resultArray);
+            }
+            catch (Exception ex)
+            {
+                string s = ex.Message;
+                return null;
+            }
+        }
+
+        private static string NormalizeKeyLength(string key, int keySizeInBits)
+        {
+            int keyLength = keySizeInBits / 8; // 将位转换为字节
+            if (key.Length > keyLength)
+            {
+                // 如果用户名太长，截断它
+                return key.Substring(0, keyLength);
+            }
+            else
+            {
+                // 如果用户名太短，用'0'填充它
+                return key.PadRight(keyLength, '0');
+            }
+        }
+
+
+        //public static string NormalizeKeyLength(string key, int keySize)
+        //{
+        //    int keyLength = keySize;/// 8; // 将位转换为字节
+        //    if (key.Length > keyLength)
+        //    {
+        //        // 如果用户名太长，截断它
+        //        return key.Substring(0, keyLength);
+        //    }
+        //    else
+        //    {
+        //        // 如果用户名太短，用'0'填充它
+        //        return key.PadRight(keyLength, '0');
+        //    }
+        //}
+
+            /// <summary>
+            ///  AES 解密 已经在使用。注意引用的地方
+            /// </summary>
+            /// <param name="str">明文（待解密）</param>
+            /// <param name="key">密文 注意：密文长度有 16，24，32，不能用其它长度的密文</param>
+            /// <returns></returns>
+            public static string AesDecrypt(string str, string key)
         {
             if (string.IsNullOrEmpty(str)) return null;
             try
@@ -74,6 +174,40 @@ namespace HLH.Lib.Security
 
         }
 
+        /// <summary>
+        ///  AES 解密
+        /// </summary>
+        /// <param name="str">明文（待解密）</param>
+        /// <param name="key">密文 注意：密文长度有 16，24，32，不能用其它长度的密文</param>
+        /// <returns></returns>
+        public static string AesDecryptByHashKey(string str, string key)
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+            try
+            {
+                Byte[] toEncryptArray = Convert.FromBase64String(str);
+                // 确保key长度为16、24或32字节
+                string normalizedKey = NormalizeKeyLength(key, 256); // 假设使用256位密钥
+                byte[] keyBytes = GetHash(key, 32); // 对于AES-256位密钥
+                RijndaelManaged rm = new RijndaelManaged
+                {
+                    Key = keyBytes,// Encoding.UTF8.GetBytes(key),
+                    Mode = CipherMode.ECB,
+                    Padding = PaddingMode.PKCS7
+                };
+
+                ICryptoTransform cTransform = rm.CreateDecryptor();
+                Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+
+                return Encoding.UTF8.GetString(resultArray);
+            }
+            catch (Exception ex)
+            {
+                string s = ex.Message;
+                return null;
+            }
+
+        }
 
         /*  下面是AI生成的。没有验证通过
 

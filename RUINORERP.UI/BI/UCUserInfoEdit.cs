@@ -16,6 +16,8 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.Business.LogicaService;
 using RUINORERP.Business;
 using RUINORERP.UI.Common;
+using Netron.GraphLib;
+using HLH.Lib.Security;
 
 namespace RUINORERP.UI.BI
 {
@@ -89,7 +91,7 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_UserInfoValidator> (), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_UserInfoValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             base.errorProviderForAllInput.DataSource = entity;
@@ -111,7 +113,7 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_UserInfoValidator> (), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_UserInfoValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             base.errorProviderForAllInput.DataSource = entity;
@@ -126,9 +128,6 @@ namespace RUINORERP.UI.BI
             this.Close();
         }
 
-
-
-
         private void btnOk_Click(object sender, EventArgs e)
         {
             if (base.Validator())
@@ -139,10 +138,20 @@ namespace RUINORERP.UI.BI
                     {
                         return;
                     }
+
                 }
 
-
                 bindingSourceEdit.EndEdit();
+
+                var _EditEntity = bindingSourceEdit.Current as tb_UserInfo;
+                if (_EditEntity.User_ID == 0)
+                {
+                    //默认密码为123456
+                    string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", _EditEntity.UserName);
+                    _EditEntity.Password = enPwd;
+                    MessageBox.Show("当前用户【" + txtUserName.Text + "】" + "默认密码为:123456,请新用户登陆系统后修改密码！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }

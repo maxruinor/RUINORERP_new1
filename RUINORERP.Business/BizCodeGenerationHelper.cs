@@ -232,12 +232,7 @@ namespace RUINORERP.Business
                 case BizType.其他出库单:
                     rule = "{S:OQD}{D:yyMMdd}{redis:{S:OQD}{D:yyMM}/000}";
                     break;
-                case BizType.返厂入库:
-                    rule = "{S:RIR}{D:yyMMdd}{redis:{S:RIR}{D:yyMM}/000}";
-                    break;
-                case BizType.返厂出库:
-                    rule = "{S:RQD}{D:yyMMdd}{redis:{S:RQD}{D:yyMM}/000}";
-                    break;
+              
                 case BizType.盘点单:
                     rule = "{S:CS}{D:yyMMdd}{redis:{S:CS}{D:yyMM}/000}";
                     break;
@@ -299,7 +294,6 @@ namespace RUINORERP.Business
                     rule = "{S:RE}{D:yyMMdd}{redis:{S:RE}{D:yyMM}/00}";
                     break;
                 default:
-
                     break;
             }
             //序号时，如果开多个端。是否会生成重复呢？

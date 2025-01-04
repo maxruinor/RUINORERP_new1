@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using RUINORERP.Model;
+using RUINORERP.Server.Workflow.WFReminder;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,16 +24,60 @@ namespace RUINORERP.Server.Workflow.WFScheduled
 
 
 
-       
+
         public void Build(IWorkflowBuilder<GlobalScheduledData> builder)
         {
             builder
                 .StartWith(context => Console.WriteLine("任务开始时间: " + DateTime.Now))
-               // .Schedule(() => DateTime.Now.AddSeconds(10)).Do(x => x
-                ///    .StartWith(context => Console.WriteLine("定时任务执行: " + DateTime.Now)))
-                //.OnError(onError => onError
-                //    .Execute(context => Console.WriteLine("任务出错: " + context.Workflow.Exception.Message)))
+              .Recur(data => TimeSpan.FromMinutes(3), data => System.DateTime.Now.Date.Hour > 18 && data.ExecutionFrequency > 1)
+                  .Do(recur => recur
+                  .StartWith<NightlyTaskStep>
+                  (
+                  context =>
+                  {
+                      Console.WriteLine("执行提醒");
+                      //MessageBox.Show("执行提醒" + System.DateTime.Now);
+
+                  }
+                  )
+                  )
                 .Then(context => Console.WriteLine("任务结束时间: " + DateTime.Now));
+        }
+
+
+
+        public class NightlyTaskStep : StepBodyAsync
+        {
+            private readonly ILogger<NightlyTaskStep> logger;
+
+            public string subtext;
+
+            public NightlyTaskStep(ILogger<NightlyTaskStep> _logger)
+            {
+                logger = _logger;
+            }
+
+            public override async Task<ExecutionResult> RunAsync(IStepExecutionContext context)
+            {
+                try
+                {
+
+                    logger.LogInformation("开始每日任务" + subtext + System.DateTime.Now);
+                    // 在这里编写你的耗时任务逻辑
+                    frmMain.Instance.PrintInfoLog($"开始每日任务~~~。DailyTaskStep");
+                    var data = context.Workflow.Data as GlobalScheduledData;
+                    data.ExecutionFrequency++;
+                    // 模拟耗时任务，例如等待 5 秒
+                    await Task.Delay(5000);
+                    frmMain.Instance.PrintInfoLog($"结束每日任务~~~。DailyTaskStep");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("开始每日任务出错", ex.Message);
+                }
+
+                return ExecutionResult.Next();
+            }
         }
 
 
@@ -60,5 +107,9 @@ namespace RUINORERP.Server.Workflow.WFScheduled
     public class GlobalScheduledData
     {
         // 您的数据定义
+        public DateTime FlagTime { get; set; }
+
+        public int ExecutionFrequency { get; set; } = 1;
+
     }
 }

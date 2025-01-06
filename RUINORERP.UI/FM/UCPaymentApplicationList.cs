@@ -31,6 +31,7 @@ using RUINORERP.UI.SuperSocketClient;
 using TransInstruction;
 using AutoUpdateTools;
 using RUINORERP.UI.BaseForm;
+using RUINORERP.Common.Extensions;
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("付款申请单查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收付账款, BizType.付款申请单)]
@@ -72,7 +73,39 @@ namespace RUINORERP.UI.FM
 
 
 
+        protected async override void Delete(List<tb_FM_PaymentApplication> Datas)
+        {
+            if (Datas == null || Datas.Count == 0)
+            {
+                //提示一下删除成功
+                MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
+                return;
+            }
 
+            if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+                int counter = 0;
+                foreach (var item in Datas)
+                {
+                    //https://www.runoob.com/w3cnote/csharp-enum.html
+                    var dataStatus = (DataStatus)(item.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                    if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                    {
+                        BaseController<tb_FM_PaymentApplication> ctr = Startup.GetFromFacByName<BaseController<tb_FM_PaymentApplication>>(typeof(tb_FM_PaymentApplication).Name + "Controller");
+                        bool rs = await ctr.BaseDeleteAsync(item);
+                        if (rs)
+                        {
+                            counter++;
+                        }
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
+                    }
+                }
+                MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
+            }
+        }
 
 
 

@@ -43,7 +43,7 @@ using RUINORERP.UI.ToolForm;
 
 namespace RUINORERP.UI.MRP.PQC
 {
-    [MenuAttrAssemblyInfo("返工退库", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.返工退库)]
+    [MenuAttrAssemblyInfo("返工退库单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.返工退库单)]
     public partial class UCMRPReworkReturn : BaseBillEditGeneric<tb_MRP_ReworkReturn, tb_MRP_ReworkReturnDetail>
     {
         public UCMRPReworkReturn()
@@ -91,7 +91,7 @@ namespace RUINORERP.UI.MRP.PQC
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ReturnDate = System.DateTime.Now;
-                entity.ReworkReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.返工退库);
+                entity.ReworkReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.返工退库单);
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_MRP_ReworkReturnDetails != null && entity.tb_MRP_ReworkReturnDetails.Count > 0)
                 {

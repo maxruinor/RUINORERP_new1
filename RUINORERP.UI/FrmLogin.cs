@@ -190,7 +190,7 @@ namespace RUINORERP.UI
                         }
 
 
-                        //传入帐号密码返回结果
+                        //传入账号密码返回结果
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData);
                         if (ok)
                         {
@@ -260,7 +260,7 @@ namespace RUINORERP.UI
                             Program.AppContextData.IsOnline = false;
                             this.txtUserName.Focus();
                             this.txtUserName.SelectAll();
-                            this.errorProvider1.SetError(this.txtUserName, "帐号密码有误");
+                            this.errorProvider1.SetError(this.txtUserName, "账号密码有误");
                             //base.Cursor = Cursors.Default;
                             this.Refresh();
                             return;

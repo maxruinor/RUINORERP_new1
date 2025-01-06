@@ -234,7 +234,7 @@
             this.lblKeepAccountsType.Name = "lblKeepAccountsType";
             this.lblKeepAccountsType.Size = new System.Drawing.Size(62, 20);
             this.lblKeepAccountsType.TabIndex = 170;
-            this.lblKeepAccountsType.Values.Text = "立帐类型";
+            this.lblKeepAccountsType.Values.Text = "立账类型";
             // 
             // txtKeepAccountsType
             // 
@@ -249,7 +249,7 @@
             this.lblReceiptInvoiceClosed.Name = "lblReceiptInvoiceClosed";
             this.lblReceiptInvoiceClosed.Size = new System.Drawing.Size(62, 20);
             this.lblReceiptInvoiceClosed.TabIndex = 172;
-            this.lblReceiptInvoiceClosed.Values.Text = "立帐结案";
+            this.lblReceiptInvoiceClosed.Values.Text = "立账结案";
             // 
             // chkReceiptInvoiceClosed
             // 

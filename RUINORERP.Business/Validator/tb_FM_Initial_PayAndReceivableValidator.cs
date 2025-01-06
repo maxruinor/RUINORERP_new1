@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 期初应收应付帐款表验证类
+    /// 期初应收应付账款表验证类
     /// </summary>
     /*public partial class tb_FM_Initial_PayAndReceivableValidator:AbstractValidator<tb_FM_Initial_PayAndReceivable>*/
     public partial class tb_FM_Initial_PayAndReceivableValidator:BaseValidatorGeneric<tb_FM_Initial_PayAndReceivable>

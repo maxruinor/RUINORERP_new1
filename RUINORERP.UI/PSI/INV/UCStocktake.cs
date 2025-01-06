@@ -698,7 +698,7 @@ namespace RUINORERP.UI.PSI.INV
             {
                 return;
             }
-            //如果选期初 ，则载帐日期需要是当前时间，调整方式 则不可能是减少，是增加。
+            //如果选期初 ，则载账日期需要是当前时间，调整方式 则不可能是减少，是增加。
             if (cmbCheckMode.SelectedValue.ToString() == ((int)CheckMode.期初盘点).ToString())
             {
                 //成本字段可以修改
@@ -734,7 +734,7 @@ namespace RUINORERP.UI.PSI.INV
         private void ControlCostByCheckModel(CheckMode checkMode)
         {
 
-            //如果选期初 ，则载帐日期需要是当前时间，调整方式 则不可能是减少，是增加。
+            //如果选期初 ，则载账日期需要是当前时间，调整方式 则不可能是减少，是增加。
             if (checkMode == CheckMode.期初盘点)
             {
                 //成本字段可以修改

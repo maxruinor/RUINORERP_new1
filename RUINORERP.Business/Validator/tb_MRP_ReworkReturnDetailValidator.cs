@@ -40,8 +40,7 @@ namespace RUINORERP.Business
      
  RuleFor(tb_MRP_ReworkReturnDetail =>tb_MRP_ReworkReturnDetail.ReworkReturnID).NotEmpty().When(x => x.ReworkReturnID.HasValue);
 
- RuleFor(tb_MRP_ReworkReturnDetail =>tb_MRP_ReworkReturnDetail.Location_ID).Must(CheckForeignKeyValueCanNull).WithMessage("所在仓位:下拉选择值不正确。");
- RuleFor(tb_MRP_ReworkReturnDetail =>tb_MRP_ReworkReturnDetail.Location_ID).NotEmpty().When(x => x.Location_ID.HasValue);
+ RuleFor(tb_MRP_ReworkReturnDetail =>tb_MRP_ReworkReturnDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("所在仓位:下拉选择值不正确。");
 
  RuleFor(tb_MRP_ReworkReturnDetail =>tb_MRP_ReworkReturnDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品:下拉选择值不正确。");
 

@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 期初应收应付帐款表
+    /// 期初应收应付账款表
     /// </summary>
     [Serializable()]
     [Description("tb_FM_Initial_PayAndReceivable")]

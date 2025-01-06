@@ -47,6 +47,25 @@ namespace RUINORERP.UI.BaseForm
             //如果打开单时。被其它人锁定。才显示锁定图标
             tslLocked.Visible = false;
         }
+        public virtual void ShowPrintStatus(KryptonLabel lblPrintStatus, BaseEntity entity)
+        {
+            //可以修改
+            if (entity.ContainsProperty(typeof(PrintStatus).Name))
+            {
+                PrintStatus printStatus = (PrintStatus)int.Parse(entity.GetPropertyValue(typeof(PrintStatus).Name).ToString());
+                switch (printStatus)
+                {
+                    case PrintStatus.未打印:
+                        lblPrintStatus.Text = "未打印";
+                        break;
+                    default:
+                        // lblPrintStatus.Text = "已打印";
+                        lblPrintStatus.Text = $"打印{entity.GetPropertyValue(typeof(PrintStatus).Name).ToString()}次";
+                        break;
+                }
+            }
+        }
+
 
         private void bwRemoting_progressChanged(object sender, ProgressChangedEventArgs e)
         {

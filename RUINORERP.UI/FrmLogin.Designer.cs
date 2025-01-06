@@ -67,7 +67,7 @@
             this.lblID.Name = "lblID";
             this.lblID.Size = new System.Drawing.Size(43, 14);
             this.lblID.TabIndex = 12;
-            this.lblID.Text = "帐 号:";
+            this.lblID.Text = "账 号:";
             // 
             // chksaveIDpwd
             // 
@@ -75,7 +75,7 @@
             this.chksaveIDpwd.Name = "chksaveIDpwd";
             this.chksaveIDpwd.Size = new System.Drawing.Size(144, 24);
             this.chksaveIDpwd.TabIndex = 9;
-            this.chksaveIDpwd.Text = "保存帐号密码";
+            this.chksaveIDpwd.Text = "保存账号密码";
             this.chksaveIDpwd.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.chksaveIDpwd_KeyPress);
             // 
             // btncancel

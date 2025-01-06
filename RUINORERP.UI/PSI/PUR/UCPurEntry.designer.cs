@@ -355,7 +355,7 @@
             this.lblReceiptInvoiceClosed.Name = "lblReceiptInvoiceClosed";
             this.lblReceiptInvoiceClosed.Size = new System.Drawing.Size(60, 20);
             this.lblReceiptInvoiceClosed.TabIndex = 107;
-            this.lblReceiptInvoiceClosed.Values.Text = "立帐结案";
+            this.lblReceiptInvoiceClosed.Values.Text = "立账结案";
             // 
             // chkReceiptInvoiceClosed
             // 

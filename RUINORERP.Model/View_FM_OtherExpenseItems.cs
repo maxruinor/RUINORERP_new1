@@ -324,12 +324,12 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 结帐日期
+        /// 结账日期
         /// </summary>
 
-        [AdvQueryAttribute(ColName = "CheckOutDate",ColDesc = "结帐日期")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "CheckOutDate" ,IsNullable = true,ColumnDescription = "结帐日期" )]
-        [Display(Name = "结帐日期")]
+        [AdvQueryAttribute(ColName = "CheckOutDate",ColDesc = "结账日期")]
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "CheckOutDate" ,IsNullable = true,ColumnDescription = "结账日期" )]
+        [Display(Name = "结账日期")]
         public DateTime? CheckOutDate 
         { 
             get{return _CheckOutDate;}            set{                SetProperty(ref _CheckOutDate, value);                }

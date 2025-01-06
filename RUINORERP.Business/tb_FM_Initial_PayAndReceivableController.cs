@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 期初应收应付帐款表
+    /// 期初应收应付账款表
     /// </summary>
     public partial class tb_FM_Initial_PayAndReceivableController<T>:BaseController<T> where T : class
     {

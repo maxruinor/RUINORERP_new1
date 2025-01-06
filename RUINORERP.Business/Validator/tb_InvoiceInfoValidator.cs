@@ -51,7 +51,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PIBankName).MaximumLength(75).WithMessage("开户行:不能超过最大长度,75.");
 
- RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PIBankNo).MaximumLength(25).WithMessage("银行帐号:不能超过最大长度,25.");
+ RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.PIBankNo).MaximumLength(25).WithMessage("银行账号:不能超过最大长度,25.");
 
  RuleFor(tb_InvoiceInfo =>tb_InvoiceInfo.Notes).MaximumLength(127).WithMessage(":不能超过最大长度,127.");
 

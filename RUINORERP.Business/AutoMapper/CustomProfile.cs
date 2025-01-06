@@ -20,6 +20,12 @@ namespace RUINORERP.Business.AutoMapper
         /// </summary>
         public CustomProfile()
         {
+
+            //制令单引用到返工主单和明细中
+            CreateMap<tb_MRP_ReworkReturn, tb_MRP_ReworkEntry>();
+            CreateMap<tb_MRP_ReworkReturnDetail, tb_MRP_ReworkEntryDetail>();
+
+
             //制令单引用到返工主单和明细中
             CreateMap<tb_ManufacturingOrder, tb_MRP_ReworkReturn>();
             CreateMap<tb_ManufacturingOrder, tb_MRP_ReworkReturnDetail>();

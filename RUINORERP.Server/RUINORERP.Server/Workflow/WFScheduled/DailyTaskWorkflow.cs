@@ -50,6 +50,8 @@ namespace RUINORERP.Server.Workflow.WFScheduled
 
         public string subtext;
 
+
+ 
         public DailyTaskStep(ILogger<DailyTaskStep> _logger)
         {
             logger = _logger;

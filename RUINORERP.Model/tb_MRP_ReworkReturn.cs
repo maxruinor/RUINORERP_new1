@@ -352,10 +352,10 @@ namespace RUINORERP.Model
 
         private int? _KeepAccountsType;
         /// <summary>
-        /// 立帐类型
+        /// 立账类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "KeepAccountsType",ColDesc = "立帐类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "KeepAccountsType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "立帐类型" )]
+        [AdvQueryAttribute(ColName = "KeepAccountsType",ColDesc = "立账类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "KeepAccountsType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "立账类型" )]
         public int? KeepAccountsType
         { 
             get{return _KeepAccountsType;}
@@ -366,10 +366,10 @@ namespace RUINORERP.Model
 
         private bool? _ReceiptInvoiceClosed;
         /// <summary>
-        /// 立帐结案
+        /// 立账结案
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReceiptInvoiceClosed",ColDesc = "立帐结案")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ReceiptInvoiceClosed" ,IsNullable = true,ColumnDescription = "立帐结案" )]
+        [AdvQueryAttribute(ColName = "ReceiptInvoiceClosed",ColDesc = "立账结案")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ReceiptInvoiceClosed" ,IsNullable = true,ColumnDescription = "立账结案" )]
         public bool? ReceiptInvoiceClosed
         { 
             get{return _ReceiptInvoiceClosed;}

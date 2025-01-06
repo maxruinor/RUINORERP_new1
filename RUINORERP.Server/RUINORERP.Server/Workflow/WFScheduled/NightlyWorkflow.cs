@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using WorkflowCore.Services;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RUINORERP.Server.Workflow.WFScheduled
 {
@@ -29,22 +30,43 @@ namespace RUINORERP.Server.Workflow.WFScheduled
         {
             builder
                 .StartWith(context => Console.WriteLine("任务开始时间: " + DateTime.Now))
-              .Recur(data => TimeSpan.FromMinutes(3), data => System.DateTime.Now.Date.Hour > 18 && data.ExecutionFrequency > 1)
+              .Recur(data => TimeSpan.FromMinutes(1), data => StopSondition(data))
                   .Do(recur => recur
                   .StartWith<NightlyTaskStep>
                   (
                   context =>
                   {
+
                       Console.WriteLine("执行提醒");
                       //MessageBox.Show("执行提醒" + System.DateTime.Now);
 
                   }
                   )
-                  )
+                  ).OnError(WorkflowErrorHandling.Retry, TimeSpan.FromMinutes(20))
                 .Then(context => Console.WriteLine("任务结束时间: " + DateTime.Now));
         }
 
+        /// <summary>
+        /// 返回为真是会取消循环
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public bool StopSondition(GlobalScheduledData data)
+        {
 
+            bool result = System.DateTime.Now.Date.Hour == 10 && data.ExecutionFrequency == 3;
+            if (data.ExecutionFrequency > 10)
+            {
+                data.ExecutionFrequency = 0;
+            }
+            frmMain.Instance.PrintInfoLog($"判断条件是否停止={result}:{data.ExecutionFrequency}");
+            return result;
+        }
+
+        //Func<GlobalScheduledData, bool> GetFunc(GlobalScheduledData data)
+        //{
+        //    return  System.DateTime.Now.Date.Millisecond == 30 && data.ExecutionFrequency > 2;
+        //}
 
         public class NightlyTaskStep : StepBodyAsync
         {
@@ -67,9 +89,19 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                     frmMain.Instance.PrintInfoLog($"开始每日任务~~~。DailyTaskStep");
                     var data = context.Workflow.Data as GlobalScheduledData;
                     data.ExecutionFrequency++;
-                    // 模拟耗时任务，例如等待 5 秒
-                    await Task.Delay(5000);
-                    frmMain.Instance.PrintInfoLog($"结束每日任务~~~。DailyTaskStep");
+                    //要把执行过的标记传出步骤，按时间重置。等第二天执行
+                    if (System.DateTime.Today.Hour == 2 && data.ExecutionFrequency == 0)
+                    {
+
+                    }
+                    else
+                    {
+                        // data.ExecutionFrequency = 0;
+                    }
+
+                    // 模拟耗时任务，例如等待 1 秒
+                    await Task.Delay(1000);
+                    frmMain.Instance.PrintInfoLog($"结束每日任务~~~。DailyTaskStep：GlobalScheduledData.ExecutionFrequency=> " + data.ExecutionFrequency.ToString());
                 }
                 catch (Exception ex)
                 {
@@ -109,7 +141,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
         // 您的数据定义
         public DateTime FlagTime { get; set; }
 
-        public int ExecutionFrequency { get; set; } = 1;
+        public int ExecutionFrequency { get; set; } = 0;
 
     }
 }

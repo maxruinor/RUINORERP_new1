@@ -44,7 +44,7 @@ namespace RUINORERP.Business.Processor
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
                        .And(t => t.Is_available == true)
-                       .And(t => t.IsVendor == true)
+                       .And(t => t.IsOther == true)
                        .And(t => t.Is_enabled == true)
                        //.AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                        .ToExpression();//注意 这一句 不能少
@@ -54,9 +54,7 @@ namespace RUINORERP.Business.Processor
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.ReworkEntryNo);
             queryFilter.SetQueryField<tb_MRP_ReworkEntry, tb_MRP_ReworkReturn>(c => c.ReworkReturnID, c => c.ReworkReturnID, t => t.ReworkReturnNo);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.EntryDate);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.CustomerVendor_ID);
             queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.DepartmentID);
             queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));

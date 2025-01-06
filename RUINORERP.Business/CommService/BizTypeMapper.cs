@@ -61,8 +61,8 @@ namespace RUINORERP.Business.CommService
             //Mapping.Add(BizType.返厂出库, typeof(tb_Return));
             Mapping.Add(BizType.CRM跟进计划, typeof(tb_CRM_FollowUpPlans)); 
             Mapping.Add(BizType.CRM跟进记录, typeof(tb_CRM_FollowUpRecords));
-            Mapping.Add(BizType.返工退库, typeof(tb_MRP_ReworkReturn));
-            Mapping.Add(BizType.返工入库, typeof(tb_MRP_ReworkEntry));
+            Mapping.Add(BizType.返工退库单, typeof(tb_MRP_ReworkReturn));
+            Mapping.Add(BizType.返工入库单, typeof(tb_MRP_ReworkEntry));
             //mapping.Add(BizType.退料单, typeof(tb_Return));
             // 省略其他枚举值与表名的对应关系
         }

@@ -166,12 +166,12 @@ namespace RUINORERP.Business.CommService
                     cbd.BillID = PurReturnEntry.PurReEntry_ID;
                     cbd.BillNo = PurReturnEntry.PurReEntryNo;
                     break;
-                case BizType.返工退库:
+                case BizType.返工退库单:
                     var Return = Entity as tb_MRP_ReworkReturn;
                     cbd.BillID = Return.ReworkReturnID;
                     cbd.BillNo = Return.ReworkReturnNo;
                     break;
-                case BizType.返工入库:
+                case BizType.返工入库单:
                     var ReworkEntry = Entity as tb_MRP_ReworkEntry;
                     cbd.BillID = ReworkEntry.ReworkEntryID;
                     cbd.BillNo = ReworkEntry.ReworkEntryNo;

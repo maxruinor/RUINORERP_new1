@@ -1324,7 +1324,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 //先取最外层的数据，下面通过 GetBOMNextNodeInventoryInfo 循环取所有子集合
                 //因为是通过 BOM树显示的。多个材料不需要合并。后面建议时再合。只是数量 需要特殊处理。
                 //比方 第一行 A  500，库存600，少0个A。  第二行A  要500，就少 400.因为上面用掉500，只有100了。
-                //上面逻辑只是外层实现。内层再理清。 解决办法 是 缓存已经用过的数量。即帐面数量累减
+                //上面逻辑只是外层实现。内层再理清。 解决办法 是 缓存已经用过的数量。即账面数量累减
                 ConcurrentDictionary<long, tb_ProductionDemandDetail> AlreadyReducedQtyList = new ConcurrentDictionary<long, tb_ProductionDemandDetail>();
                 var mlist = ctr.GetTopInventoryInfo(EditEntity, _targetDetails, ref AlreadyReducedQtyList);
 

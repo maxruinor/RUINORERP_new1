@@ -3475,7 +3475,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
                         //如果这个列属性的名称在查询结果中指定的集合中匹配。就设置一下目标
-                        //查询结果字段名，如盘点单中的 查出来的数量，（实际库存，认为是载帐数量），指定以明细中的载帐数量
+                        //查询结果字段名，如盘点单中的 查出来的数量，（实际库存，认为是载账数量），指定以明细中的载账数量
                         if (sgdefine.QueryItemToColumnPairList.Values.Contains(item))
                         {
                             if (sgdefine.grid.Rows[p.Row].RowData != null)

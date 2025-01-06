@@ -581,24 +581,7 @@ namespace RUINORERP.UI.BaseForm
 
    
 
-        public virtual void ShowPrintStatus(KryptonLabel lblPrintStatus, BaseEntity entity)
-        {
-            //可以修改
-            if (entity.ContainsProperty(typeof(PrintStatus).Name))
-            {
-                PrintStatus printStatus = (PrintStatus)int.Parse(entity.GetPropertyValue(typeof(PrintStatus).Name).ToString());
-                switch (printStatus)
-                {
-                    case PrintStatus.未打印:
-                        lblPrintStatus.Text = "未打印";
-                        break;
-                    default:
-                        // lblPrintStatus.Text = "已打印";
-                        lblPrintStatus.Text = $"打印{entity.GetPropertyValue(typeof(PrintStatus).Name).ToString()}次";
-                        break;
-                }
-            }
-        }
+    
 
 
 
@@ -766,6 +749,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
         #endregion
+
 
 
         #region 特殊显示必填项

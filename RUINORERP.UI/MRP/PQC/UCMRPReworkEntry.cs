@@ -40,10 +40,12 @@ using RUINORERP.Business.Processor;
 using RUINORERP.UI.PSI.SAL;
 using EnumsNET;
 using RUINORERP.UI.ToolForm;
+using RUINORERP.UI.PSI.PUR;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.UI.MRP.PQC
 {
-    [MenuAttrAssemblyInfo("返工入库", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.返工入库)]
+    [MenuAttrAssemblyInfo("返工入库单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.返工入库单)]
     public partial class UCMRPReworkEntry : BaseBillEditGeneric<tb_MRP_ReworkEntry, tb_MRP_ReworkEntryDetail>
     {
         public UCMRPReworkEntry()
@@ -91,7 +93,7 @@ namespace RUINORERP.UI.MRP.PQC
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.EntryDate = System.DateTime.Now;
-                entity.ReworkEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.返工入库);
+                entity.ReworkEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.返工入库单);
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_MRP_ReworkEntryDetails != null && entity.tb_MRP_ReworkEntryDetails.Count > 0)
                 {
@@ -102,26 +104,26 @@ namespace RUINORERP.UI.MRP.PQC
 
 
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.ReworkEntryNo, txtReworkEntryNo, BindDataType4TextBox.Text, false);
-         
+
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.TotalReworkFee.ToString(), txtTotalReworkFee, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4DataTime<tb_MRP_ReworkEntry>(entity, t => t.EntryDate, dtpEntryDate, false);
- 
+
             DataBindingHelper.BindData4CheckBox<tb_MRP_ReworkEntry>(entity, t => t.ApprovalResults, chkApprovalResults, false);
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.KeepAccountsType, txtKeepAccountsType, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4CheckBox<tb_MRP_ReworkEntry>(entity, t => t.ReceiptInvoiceClosed, chkReceiptInvoiceClosed, false);
-            
+
             DataBindingHelper.BindData4CheckBox<tb_MRP_ReworkEntry>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.VoucherNO, txtVoucherNO, BindDataType4TextBox.Text, false);
-    
+
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
 
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
-           
+
 
             DataBindingHelper.BindData4ControlByEnum<tb_MRP_ReworkEntry>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_MRP_ReworkEntry>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
@@ -164,11 +166,11 @@ namespace RUINORERP.UI.MRP.PQC
                 }
 
                 //如果是制令单引入变化则加载明细及相关数据
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && s2.PropertyName == entity.GetPropertyName<tb_MRP_ReworkEntry>(c => c.MOID))
+                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && s2.PropertyName == entity.GetPropertyName<tb_MRP_ReworkEntry>(c => c.ReworkReturnID))
                 {
-                    if (entity.MOID.HasValue && entity.MOID.Value > 0)
+                    if (entity.ReworkReturnID > 0)
                     {
-                        LoadRefBillData(entity.MOID);
+                        LoadRefBillData(entity.ReworkReturnID);
                     }
 
                 }
@@ -237,8 +239,8 @@ namespace RUINORERP.UI.MRP.PQC
             listCols = sgh.GetGridColumns<ProductSharePart, tb_MRP_ReworkEntryDetail>(c => c.ProdDetailID, false);
 
             listCols.SetCol_NeverVisible<tb_MRP_ReworkEntryDetail>(c => c.ProdDetailID);
-            listCols.SetCol_NeverVisible<tb_MRP_ReworkEntryDetail>(c => c.ReworkReturnCID);
-            listCols.SetCol_NeverVisible<tb_MRP_ReworkEntryDetail>(c => c.ReworkReturnID);
+            listCols.SetCol_NeverVisible<tb_MRP_ReworkEntryDetail>(c => c.ReworkEntryCID);
+            listCols.SetCol_NeverVisible<tb_MRP_ReworkEntryDetail>(c => c.ReworkEntryID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
@@ -252,7 +254,7 @@ namespace RUINORERP.UI.MRP.PQC
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Brand);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.prop);
             listCols.SetCol_ReadOnly<ProductSharePart>(c => c.CNName);
-            listCols.SetCol_ReadOnly<tb_MRP_ReworkEntryDetail>(c => c.DeliveredQuantity);
+            
 
             listCols.SetCol_Format<tb_MRP_ReworkEntryDetail>(c => c.ReworkFee, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_MRP_ReworkEntryDetail>(c => c.UnitCost, CustomFormatType.CurrencyFormat);
@@ -274,14 +276,14 @@ namespace RUINORERP.UI.MRP.PQC
             sgd.GridMasterData = EditEntity;
 
             listCols.SetCol_Summary<tb_MRP_ReworkEntryDetail>(c => c.Quantity);
-            listCols.SetCol_Summary<tb_MRP_ReworkEntryDetail>(c => c.DeliveredQuantity);
-
+            listCols.SetCol_Summary<tb_MRP_ReworkEntryDetail>(c => c.SubtotalCostAmount);
+            listCols.SetCol_Summary<tb_MRP_ReworkEntryDetail>(c => c.SubtotalReworkFee);
             listCols.SetCol_Formula<tb_MRP_ReworkEntryDetail>((a, b) => a.UnitCost * b.Quantity, c => c.SubtotalCostAmount);
             listCols.SetCol_Formula<tb_MRP_ReworkEntryDetail>((a, b) => a.ReworkFee * b.Quantity, c => c.SubtotalReworkFee);
 
             listCols.SetCol_FormulaReverse<tb_MRP_ReworkEntryDetail>(d => d.UnitCost == 0 && d.Quantity != 0 && d.SubtotalCostAmount != 0, (a, b) => a.SubtotalCostAmount / b.Quantity, c => c.UnitCost);
             listCols.SetCol_FormulaReverse<tb_MRP_ReworkEntryDetail>(d => d.ReworkFee == 0 && d.Quantity != 0 && d.SubtotalReworkFee != 0, (a, b) => a.SubtotalReworkFee / b.Quantity, c => c.ReworkFee);
- 
+
             sgh.SetPointToColumnPairs<ProductSharePart, tb_MRP_ReworkEntryDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_MRP_ReworkEntryDetail>(sgd, f => f.prop, t => t.property);
 
@@ -388,7 +390,7 @@ namespace RUINORERP.UI.MRP.PQC
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ReworkReturnNo}。");
+                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ReworkEntryNo}。");
                     }
                     else
                     {
@@ -409,46 +411,50 @@ namespace RUINORERP.UI.MRP.PQC
         /// <param name="e"></param>
         private async void LoadRefBillData(long? moid)
         {
-    
+
             //要加一个判断 值是否有变化
             //新增时才可以
 
-            ButtonSpecAny bsa = (txtMO as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
+            ButtonSpecAny bsa = (txtReworkReturnID as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
             if (bsa == null)
             {
                 return;
             }
-            var ManufacturingOrder = bsa.Tag as tb_ManufacturingOrder;
-            if (ManufacturingOrder == null)
+            var ReworkReturn = bsa.Tag as tb_MRP_ReworkReturn;
+            if (ReworkReturn == null)
             {
-                ManufacturingOrder = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>().Where(c => c.MOID == moid.Value)
-                .Includes(a => a.tb_ManufacturingOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
+                ReworkReturn = await MainForm.Instance.AppContext.Db.Queryable<tb_MRP_ReworkReturn>().Where(c => c.MOID == moid.Value)
+                .Includes(a => a.tb_MRP_ReworkReturnDetails, b => b.tb_proddetail, c => c.tb_prod)
                 .SingleAsync();
             }
-            if (ManufacturingOrder != null)
+            if (ReworkReturn != null)
             {
                 IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                tb_MRP_ReworkEntry entity = mapper.Map<tb_MRP_ReworkEntry>(ManufacturingOrder);
-
-      
+                tb_MRP_ReworkEntry entity = mapper.Map<tb_MRP_ReworkEntry>(ReworkReturn);
+                List<tb_MRP_ReworkEntryDetail> details = mapper.Map<List<tb_MRP_ReworkEntryDetail>>(ReworkReturn.tb_MRP_ReworkReturnDetails);
                 List<tb_MRP_ReworkEntryDetail> NewDetails = new List<tb_MRP_ReworkEntryDetail>();
+
                 List<string> tipsMsg = new List<string>();
-                tb_MRP_ReworkEntryDetail detail = mapper.Map<tb_MRP_ReworkEntryDetail>(ManufacturingOrder);
-                detail.Quantity = ManufacturingOrder.QuantityDelivered;
-                detail.SubtotalCostAmount = detail.UnitCost * detail.Quantity;
-                 if (detail.Quantity > 0)
-                 {
-                     NewDetails.Add(detail);
-                 }
-                 else
-                 {
-                     //tipsMsg.Add($"当前行的SKU:{detail.tb_proddetail.SKU}已退回数量为0，当前行数据将不会加载到明细！");
-                 }
-                 
+                for (int i = 0; i < details.Count; i++)
+                {
+                    var ReturnDetail = ReworkReturn.tb_MRP_ReworkReturnDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.Location_ID == details[i].Location_ID);
+                    if (ReturnDetail == null)
+                    {
+                        continue;
+                    }
+                    if (ReturnDetail.Quantity > ReturnDetail.DeliveredQuantity)
+                    {
+                        NewDetails.Add(details[i]);
+                    }
+                    else
+                    {
+                        tipsMsg.Add($"当前行的SKU:{details[i].tb_proddetail.SKU}可通过返工入库数量为0，当前行数据将不会加载到明细！");
+                    }
+                }
 
                 if (NewDetails.Count == 0)
                 {
-                    //tipsMsg.Add($"采购入库单:{entity.PurEntryNo}已全部退回，请检查是否正在重复操作！");
+                    tipsMsg.Add($"返工退库单:{ReworkReturn.ReworkReturnNo}已全部入库，请检查是否正在重复操作！");
                 }
                 StringBuilder msg = new StringBuilder();
                 foreach (var item in tipsMsg)
@@ -468,15 +474,12 @@ namespace RUINORERP.UI.MRP.PQC
                 entity.Approver_at = null;
                 entity.Approver_by = null;
                 entity.ActionStatus = ActionStatus.新增;
-                entity.ReturnDate = System.DateTime.Now;
-                if (ManufacturingOrder.IsOutSourced && ManufacturingOrder.CustomerVendor_ID_Out.HasValue)
+                entity.EntryDate = System.DateTime.Now;
+                if (ReworkReturn.CustomerVendor_ID.HasValue && ReworkReturn.CustomerVendor_ID.Value > 0)
                 {
-                    entity.CustomerVendor_ID = ManufacturingOrder.CustomerVendor_ID_Out.Value;
+                    entity.CustomerVendor_ID = ReworkReturn.CustomerVendor_ID.Value;
                 }
-                if (ManufacturingOrder.MOID > 0)
-                {
-                    entity.MOID = ManufacturingOrder.MOID;
-                }
+                entity.ReworkReturnID = ReworkReturn.ReworkReturnID;
                 BusinessHelper.Instance.InitEntity(entity);
                 BindData(entity as tb_MRP_ReworkEntry);
             }

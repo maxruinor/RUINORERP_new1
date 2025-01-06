@@ -510,10 +510,10 @@ namespace RUINORERP.Model
 
         private int? _KeepAccountsType;
         /// <summary>
-        /// 立帐类型
+        /// 立账类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "KeepAccountsType", ColDesc = "立帐类型")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "KeepAccountsType", DecimalDigits = 0, IsNullable = true, ColumnDescription = "立帐类型")]
+        [AdvQueryAttribute(ColName = "KeepAccountsType", ColDesc = "立账类型")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "KeepAccountsType", DecimalDigits = 0, IsNullable = true, ColumnDescription = "立账类型")]
         public int? KeepAccountsType
         {
             get { return _KeepAccountsType; }

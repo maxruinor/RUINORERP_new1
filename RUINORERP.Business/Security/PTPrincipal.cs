@@ -196,7 +196,7 @@ namespace RUINORERP.Business.Security
             appcontext.CurUserInfo.UserInfo = user;
             if (user.tb_employee == null)
             {
-                throw new Exception("您使用的帐号没有所属员工。");
+                throw new Exception("您使用的账号没有所属员工。");
             }
             appcontext.CurUserInfo.Id = user.tb_employee.Employee_ID;
             appcontext.CurUserInfo.Name = user.tb_employee.Employee_Name;

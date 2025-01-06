@@ -1252,6 +1252,18 @@
     <Compile Include="CRM\UCLeadsList.Designer.cs">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\UCPaymentApplicationEdit.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPaymentApplicationEdit.Designer.cs">
+      <DependentUpon>UCPaymentApplicationEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCPaymentApplicationList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCPaymentApplicationList.Designer.cs">
+      <DependentUpon>UCPaymentApplicationList.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\UCOtherExpenseStatistics.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2279,6 +2291,12 @@
     <Compile Include="UCToolBar\DataEdit.Designer.cs">
       <DependentUpon>DataEdit.cs</DependentUpon>
     </Compile>
+    <Compile Include="UICreator\tb_FM_PaymentApplicationEdit.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UICreator\tb_FM_PaymentApplicationEdit.Designer.cs">
+      <DependentUpon>tb_FM_PaymentApplicationEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\CentralConsole.cs" />
     <Compile Include="UserCenter\ControlCenterConfig.cs">
       <SubType>UserControl</SubType>
@@ -2878,6 +2896,12 @@
     <EmbeddedResource Include="CRM\UCLeadsList.resx">
       <DependentUpon>UCLeadsList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCPaymentApplicationEdit.resx">
+      <DependentUpon>UCPaymentApplicationEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCPaymentApplicationList.resx">
+      <DependentUpon>UCPaymentApplicationList.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\UCOtherExpenseStatistics.resx">
       <DependentUpon>UCOtherExpenseStatistics.cs</DependentUpon>
     </EmbeddedResource>
@@ -3321,6 +3345,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UCToolBar\DataEdit.resx">
       <DependentUpon>DataEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UICreator\tb_FM_PaymentApplicationEdit.resx">
+      <DependentUpon>tb_FM_PaymentApplicationEdit.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
@@ -3921,7 +3948,6 @@
     <Folder Include="RM\" />
     <Folder Include="UCForm\" />
     <Folder Include="UControls\TreeGridView\" />
-    <Folder Include="UICreator\" />
     <Folder Include="WorkFlowDesigner\Nodes\editor\" />
     <Folder Include="WorkFlowDesigner\UI\" />
   </ItemGroup>

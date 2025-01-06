@@ -7,7 +7,7 @@ namespace SecurityCore
 {
     /// 
     /// Security 的摘要说明。
-    /// 类中URL及帐号加密使用了不同的KEY。调用URL加密过程如下： 
+    /// 类中URL及账号加密使用了不同的KEY。调用URL加密过程如下： 
     ///EIP.Framework.Security objSecurity = new EIP.Framework.Security(); 
     ///objSecurity.EncryptQueryString(""待加密的字符串""); 
     ///解密:objSecurity.DecryptQueryString(""传递过来的参数);
@@ -41,14 +41,14 @@ namespace SecurityCore
         }
 
         /// 
-        /// 加密帐号口令 
+        /// 加密账号口令 
         /// 
         public string EncryptPassWord(string PassWord)
         {
             return Encrypt(PassWord, _PassWordKey);
         }
         /// 
-        /// 解密帐号口令 
+        /// 解密账号口令 
         /// 
         public string DecryptPassWord(string PassWord)
         {

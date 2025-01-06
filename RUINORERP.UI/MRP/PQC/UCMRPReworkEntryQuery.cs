@@ -27,7 +27,7 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.MRP.PQC
 {
 
-    [MenuAttrAssemblyInfo("返工入库查询", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.生产品控, BizType.返工入库)]
+    [MenuAttrAssemblyInfo("返工入库单查询", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.生产品控, BizType.返工入库单)]
     public partial class UCMRPReworkEntryQuery : BaseBillQueryMC<tb_MRP_ReworkEntry, tb_MRP_ReworkEntryDetail>
     {
         public UCMRPReworkEntryQuery()

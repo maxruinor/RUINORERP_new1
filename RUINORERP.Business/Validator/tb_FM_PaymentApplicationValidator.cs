@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 13:58:31
+// 时间：01/06/2025 18:23:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,19 +38,19 @@ namespace RUINORERP.Business
  
         
      
-//***** 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.ApplicationNo).NotNull().WithMessage("申请单号:不能为空。");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.ApplicationNo).MaximumLength(15).WithMessage("申请单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.ApplicationNo).NotEmpty().WithMessage("申请单号:不能为空。");
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Employee_ID).Must(CheckForeignKeyValue).WithMessage("申请人:下拉选择值不正确。");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Employee_ID).Must(CheckForeignKeyValue).WithMessage("制单人:下拉选择值不正确。");
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("收款单位:下拉选择值不正确。");
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeInfoID).Must(CheckForeignKeyValue).WithMessage("收款信息:下拉选择值不正确。");
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeAccountNo).MaximumLength(15).WithMessage("收款账号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeAccountNo).NotEmpty().WithMessage("收款账号:不能为空。");
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币别:下拉选择值不正确。");
@@ -65,10 +65,12 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayReasonItems).MaximumLength(500).WithMessage("付款项目:不能超过最大长度,500.");
 
 
-
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Notes).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
 
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("付款金额:小数位不能超过4。");
+
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PamountInWords).MaximumLength(50).WithMessage("大写金额:不能超过最大长度,50.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PamountInWords).NotEmpty().WithMessage("大写金额:不能为空。");
 
  RuleFor(x => x.OverpaymentAmount).PrecisionScale(19,4,true).WithMessage("超付金额:小数位不能超过4。");
 

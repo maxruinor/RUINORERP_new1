@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 13:58:30
+// 时间：01/06/2025 18:23:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,13 +51,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private long _ApplicationNo;
+        private string _ApplicationNo;
         /// <summary>
         /// 申请单号
         /// </summary>
         [AdvQueryAttribute(ColName = "ApplicationNo",ColDesc = "申请单号")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ApplicationNo" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "申请单号" )]
-        public long ApplicationNo
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ApplicationNo" ,Length=30,IsNullable = false,ColumnDescription = "申请单号" )]
+        public string ApplicationNo
         { 
             get{return _ApplicationNo;}
             set{
@@ -82,10 +82,10 @@ namespace RUINORERP.Model
 
         private long _Employee_ID;
         /// <summary>
-        /// 申请人
+        /// 制单人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "申请人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "申请人" )]
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "制单人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "制单人" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long Employee_ID
         { 
@@ -130,7 +130,7 @@ namespace RUINORERP.Model
         /// 收款账号
         /// </summary>
         [AdvQueryAttribute(ColName = "PayeeAccountNo",ColDesc = "收款账号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PayeeAccountNo" ,Length=30,IsNullable = false,ColumnDescription = "收款账号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PayeeAccountNo" ,Length=100,IsNullable = false,ColumnDescription = "收款账号" )]
         public string PayeeAccountNo
         { 
             get{return _PayeeAccountNo;}
@@ -213,29 +213,15 @@ namespace RUINORERP.Model
 
         private DateTime? _InvoiceDate;
         /// <summary>
-        /// 对账日期
+        /// 制单日期
         /// </summary>
-        [AdvQueryAttribute(ColName = "InvoiceDate",ColDesc = "对账日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "InvoiceDate" ,IsNullable = true,ColumnDescription = "对账日期" )]
+        [AdvQueryAttribute(ColName = "InvoiceDate",ColDesc = "制单日期")] 
+        [SugarColumn(ColumnDataType = "date", SqlParameterDbType ="DateTime",  ColumnName = "InvoiceDate" ,IsNullable = true,ColumnDescription = "制单日期" )]
         public DateTime? InvoiceDate
         { 
             get{return _InvoiceDate;}
             set{
             SetProperty(ref _InvoiceDate, value);
-            }
-        }
-
-        private DateTime? _PaymentDate;
-        /// <summary>
-        /// 付款日期
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PaymentDate",ColDesc = "付款日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PaymentDate" ,IsNullable = true,ColumnDescription = "付款日期" )]
-        public DateTime? PaymentDate
-        { 
-            get{return _PaymentDate;}
-            set{
-            SetProperty(ref _PaymentDate, value);
             }
         }
 
@@ -264,6 +250,20 @@ namespace RUINORERP.Model
             get{return _TotalAmount;}
             set{
             SetProperty(ref _TotalAmount, value);
+            }
+        }
+
+        private string _PamountInWords;
+        /// <summary>
+        /// 大写金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PamountInWords",ColDesc = "大写金额")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PamountInWords" ,Length=100,IsNullable = false,ColumnDescription = "大写金额" )]
+        public string PamountInWords
+        { 
+            get{return _PamountInWords;}
+            set{
+            SetProperty(ref _PamountInWords, value);
             }
         }
 

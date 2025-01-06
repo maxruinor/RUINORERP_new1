@@ -66,6 +66,11 @@ namespace RUINORERP.UI.BaseForm
     /// <typeparam name="C"></typeparam>
     public partial class BaseBillQueryMC<M, C> : BaseQuery where M : class where C : class
     {
+        /// <summary>
+        /// 判断是否需要加载子表明细。为了将这个基类适应于单表单据。如付款申请单
+        /// </summary>
+        public bool HasChildData { get; set; }=true;
+
 
         private QueryFilter _QueryConditionFilter = new QueryFilter();
 
@@ -1199,7 +1204,7 @@ namespace RUINORERP.UI.BaseForm
                     //xmldoc.LoadXml(xmlStr);
                     CurMenuInfo.DefaultLayout = xmlStr;
                     await MainForm.Instance.AppContext.Db.Storageable<tb_MenuInfo>(CurMenuInfo).ExecuteReturnEntityAsync();
-                     
+
                 }
 
             }
@@ -1278,7 +1283,6 @@ namespace RUINORERP.UI.BaseForm
         KryptonCheckBox cbbatch = new KryptonCheckBox();
         private void BaseBillQueryMC_Load(object sender, EventArgs e)
         {
-
             if (this.DesignMode)
             {
                 return;
@@ -1323,8 +1327,12 @@ namespace RUINORERP.UI.BaseForm
             KryptonPageCollection Kpages = new KryptonPageCollection();
             if (Kpages.Count == 0)
             {
-                Kpages.Add(ChildQuery());
                 Kpages.Add(MasterQuery());
+                if (HasChildData)
+                {
+                    Kpages.Add(ChildQuery());
+                }
+                
                 if (this.ChildRelatedEntityType != null)
                 {
                     Kpages.Add(Child_RelatedQuery());

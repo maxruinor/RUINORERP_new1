@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 13:58:28
+// 时间：01/06/2025 18:23:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,8 +71,8 @@ namespace RUINORERP.UI
         tb_FM_PaymentApplication UIToEntity()
         {
         tb_FM_PaymentApplication entity = new tb_FM_PaymentApplication();
-                     entity.ApplicationNo = Int64.Parse(txtApplicationNo.Text);
-                        entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
+                     entity.ApplicationNo = txtApplicationNo.Text ;
+                       entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
@@ -83,10 +83,10 @@ namespace RUINORERP.UI
                         entity.PrePaymentBill_id = Int64.Parse(txtPrePaymentBill_id.Text);
                         entity.PayReasonItems = txtPayReasonItems.Text ;
                        entity.InvoiceDate = DateTime.Parse(txtInvoiceDate.Text);
-                        entity.PaymentDate = DateTime.Parse(txtPaymentDate.Text);
                         entity.Notes = txtNotes.Text ;
                        entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
-                        entity.OverpaymentAmount = Decimal.Parse(txtOverpaymentAmount.Text);
+                        entity.PamountInWords = txtPamountInWords.Text ;
+                       entity.OverpaymentAmount = Decimal.Parse(txtOverpaymentAmount.Text);
                         entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
@@ -111,7 +111,7 @@ namespace RUINORERP.UI
         public void BindData(tb_FM_PaymentApplication entity)
         {
         _EditEntity = entity;
-                        DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.ApplicationNo, txtApplicationNo, BindDataType4TextBox.Qty,false);
+                        DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.ApplicationNo, txtApplicationNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
@@ -123,11 +123,15 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.PrePaymentBill_id, txtPrePaymentBill_id, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.PayReasonItems, txtPayReasonItems, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentApplication>(entity, t => t.InvoiceDate, dtpInvoiceDate,false);
-           DataBindingHelper.BindData4DataTime<tb_FM_PaymentApplication>(entity, t => t.PaymentDate, dtpPaymentDate,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.PamountInWords, txtPamountInWords, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.OverpaymentAmount.ToString(), txtOverpaymentAmount, BindDataType4TextBox.Money,false);
-          
+           DataBindingHelper.BindData4DataTime<tb_FM_PaymentApplication>(entity, t => t.Created_at, dtpCreated_at,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_FM_PaymentApplication>(entity, t => t.Modified_at, dtpModified_at,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_PaymentApplication>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentApplication>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentApplication>(entity, t => t.Approver_at, dtpApprover_at,false);

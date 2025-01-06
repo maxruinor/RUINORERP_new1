@@ -248,17 +248,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _银行账号;
+        private string _银行帐号;
         /// <summary>
         /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "银行账号",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "银行账号" ,Length=10,IsNullable = true,ColumnDescription = "" )]
-        public string 银行账号
+        [AdvQueryAttribute(ColName = "银行帐号", ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "银行帐号", Length=10,IsNullable = true,ColumnDescription = "" )]
+        public string 银行帐号
         { 
-            get{return _银行账号;}
+            get{return _银行帐号; }
             set{
-            SetProperty(ref _银行账号, value);
+            SetProperty(ref _银行帐号, value);
             }
         }
 

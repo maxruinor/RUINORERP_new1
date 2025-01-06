@@ -293,6 +293,9 @@ namespace RUINORERP.Business
                 case BizType.返工入库单:
                     rule = "{S:RE}{D:yyMMdd}{redis:{S:RE}{D:yyMM}/00}";
                     break;
+                case BizType.付款申请单:
+                    rule = "{S:PA}{D:yyMMdd}{redis:{S:RE}{D:yyMM}/00}";
+                    break;
                 default:
                     break;
             }

@@ -176,6 +176,11 @@ namespace RUINORERP.Business.CommService
                     cbd.BillID = ReworkEntry.ReworkEntryID;
                     cbd.BillNo = ReworkEntry.ReworkEntryNo;
                     break;
+                case BizType.付款申请单:
+                    var paymentapp = Entity as tb_FM_PaymentApplication;
+                    cbd.BillID = paymentapp.ApplicationID;
+                    cbd.BillNo = paymentapp.ApplicationNo;
+                    break;
                 /*
             case BizType.返厂出库:
                 var Return = Entity as tb_Return;

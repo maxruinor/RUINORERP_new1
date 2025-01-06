@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 12:06:57
+// 时间：01/06/2025 18:55:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,9 +65,6 @@ namespace RUINORERP.UI
         
         
         
-        
-        
-        
 
          }
 /*
@@ -94,9 +91,6 @@ namespace RUINORERP.UI
                        entity.Location_ID = Int64.Parse(txtLocation_ID.Text);
                         entity.Summary = txtSummary.Text ;
                        entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
-                        entity.TotalQty = Int32.Parse(txtTotalQty.Text);
-                        entity.TotalReworkFee = Decimal.Parse(txtTotalReworkFee.Text);
-                        entity.TotalCost = Decimal.Parse(txtTotalCost.Text);
                         entity.Approver_at = DateTime.Parse(txtApprover_at.Text);
                         entity.Approver_by = Int64.Parse(txtApprover_by.Text);
                         entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
@@ -141,9 +135,6 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.Location_ID, txtLocation_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.DepartmentID, txtDepartmentID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.TotalReworkFee.ToString(), txtTotalReworkFee, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<View_MRP_ReworkEntry>(entity, t => t.Approver_at, dtpApprover_at,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            //default  DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);

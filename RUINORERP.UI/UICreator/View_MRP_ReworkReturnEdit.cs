@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 12:07:02
+// 时间：01/06/2025 18:55:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -69,9 +69,6 @@ namespace RUINORERP.UI
         
         
         
-        
-        
-        
 
          }
 /*
@@ -87,9 +84,6 @@ namespace RUINORERP.UI
                         entity.CloseCaseOpinions = txtCloseCaseOpinions.Text ;
                        entity.ApprovalOpinions = txtApprovalOpinions.Text ;
                        entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
-                        entity.TotalQty = Int32.Parse(txtTotalQty.Text);
-                        entity.TotalReworkFee = Decimal.Parse(txtTotalReworkFee.Text);
-                        entity.TotalCost = Decimal.Parse(txtTotalCost.Text);
                         entity.ReturnDate = DateTime.Parse(txtReturnDate.Text);
                         entity.ExpectedReturnDate = DateTime.Parse(txtExpectedReturnDate.Text);
                         entity.ReasonForRework = txtReasonForRework.Text ;
@@ -138,9 +132,6 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.DepartmentID, txtDepartmentID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.TotalReworkFee.ToString(), txtTotalReworkFee, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<View_MRP_ReworkReturn>(entity, t => t.ReturnDate, dtpReturnDate,false);
            DataBindingHelper.BindData4DataTime<View_MRP_ReworkReturn>(entity, t => t.ExpectedReturnDate, dtpExpectedReturnDate,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.ReasonForRework, txtReasonForRework, BindDataType4TextBox.Text,false);

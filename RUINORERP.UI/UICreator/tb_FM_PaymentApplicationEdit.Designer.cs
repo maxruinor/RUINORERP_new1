@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 18:23:28
+// 时间：01/06/2025 19:18:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -266,7 +266,7 @@ this.cmbPayeeInfoID.TabIndex = 5;
 this.Controls.Add(this.lblPayeeInfoID);
 this.Controls.Add(this.cmbPayeeInfoID);
 
-           //#####30PayeeAccountNo###String
+           //#####100PayeeAccountNo###String
 this.lblPayeeAccountNo.AutoSize = true;
 this.lblPayeeAccountNo.Location = new System.Drawing.Point(100,150);
 this.lblPayeeAccountNo.Name = "lblPayeeAccountNo";
@@ -353,7 +353,7 @@ this.lblPayReasonItems.Location = new System.Drawing.Point(100,275);
 this.lblPayReasonItems.Name = "lblPayReasonItems";
 this.lblPayReasonItems.Size = new System.Drawing.Size(41, 12);
 this.lblPayReasonItems.TabIndex = 11;
-this.lblPayReasonItems.Text = "付款项目";
+this.lblPayReasonItems.Text = "付款项目/原因";
 this.txtPayReasonItems.Location = new System.Drawing.Point(173,271);
 this.txtPayReasonItems.Name = "txtPayReasonItems";
 this.txtPayReasonItems.Size = new System.Drawing.Size(100, 21);
@@ -371,7 +371,6 @@ this.lblInvoiceDate.Text = "制单日期";
 //111======300
 this.dtpInvoiceDate.Location = new System.Drawing.Point(173,296);
 this.dtpInvoiceDate.Name ="dtpInvoiceDate";
-this.dtpInvoiceDate.ShowCheckBox =true;
 this.dtpInvoiceDate.Size = new System.Drawing.Size(100, 21);
 this.dtpInvoiceDate.TabIndex = 12;
 this.Controls.Add(this.lblInvoiceDate);

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 12:07:03
+// 时间：01/06/2025 18:55:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -152,51 +152,6 @@ namespace RUINORERP.Model
         public long? DepartmentID 
         { 
             get{return _DepartmentID;}            set{                SetProperty(ref _DepartmentID, value);                }
-        }
-
-        private int? _TotalQty;
-        
-        
-        /// <summary>
-        /// 
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "TotalQty",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "TotalQty" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "" )]
-        [Display(Name = "")]
-        public int? TotalQty 
-        { 
-            get{return _TotalQty;}            set{                SetProperty(ref _TotalQty, value);                }
-        }
-
-        private decimal? _TotalReworkFee;
-        
-        
-        /// <summary>
-        /// 
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "TotalReworkFee",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalReworkFee" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
-        [Display(Name = "")]
-        public decimal? TotalReworkFee 
-        { 
-            get{return _TotalReworkFee;}            set{                SetProperty(ref _TotalReworkFee, value);                }
-        }
-
-        private decimal? _TotalCost;
-        
-        
-        /// <summary>
-        /// 
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "" )]
-        [Display(Name = "")]
-        public decimal? TotalCost 
-        { 
-            get{return _TotalCost;}            set{                SetProperty(ref _TotalCost, value);                }
         }
 
         private DateTime? _ReturnDate;

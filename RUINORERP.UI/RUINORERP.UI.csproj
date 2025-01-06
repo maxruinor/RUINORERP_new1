@@ -1518,6 +1518,12 @@
     <Compile Include="MRP\PQC\UCMRPReworkEntry.designer.cs">
       <DependentUpon>UCMRPReworkEntry.cs</DependentUpon>
     </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkReturnStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkReturnStatistics.Designer.cs">
+      <DependentUpon>UCMRPReworkReturnStatistics.cs</DependentUpon>
+    </Compile>
     <Compile Include="MRP\PQC\UCMRPReworkReturn.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1535,6 +1541,12 @@
     </Compile>
     <Compile Include="MRP\PQC\UCMRPReworkReturnQuery.Designer.cs">
       <DependentUpon>UCMRPReworkReturnQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkEntryStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PQC\UCMRPReworkEntryStatistics.Designer.cs">
+      <DependentUpon>UCMRPReworkEntryStatistics.cs</DependentUpon>
     </Compile>
     <Compile Include="MRP\UCProdWorkbench.cs">
       <SubType>UserControl</SubType>
@@ -3005,6 +3017,9 @@
     <EmbeddedResource Include="MRP\PQC\UCMRPReworkEntry.resx">
       <DependentUpon>UCMRPReworkEntry.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PQC\UCMRPReworkReturnStatistics.resx">
+      <DependentUpon>UCMRPReworkReturnStatistics.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MRP\PQC\UCMRPReworkReturn.resx">
       <DependentUpon>UCMRPReworkReturn.cs</DependentUpon>
     </EmbeddedResource>
@@ -3013,6 +3028,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MRP\PQC\UCMRPReworkReturnQuery.resx">
       <DependentUpon>UCMRPReworkReturnQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PQC\UCMRPReworkEntryStatistics.resx">
+      <DependentUpon>UCMRPReworkEntryStatistics.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MRP\UCProdWorkbench.resx">
       <DependentUpon>UCProdWorkbench.cs</DependentUpon>

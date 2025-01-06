@@ -49,7 +49,8 @@ namespace RUINORERP.UI.FM
             {
                 return;
             }
-
+            txtApprovalOpinions.ReadOnly = true;
+            txtCloseCaseOpinions.ReadOnly = true;
             if (entity.ApplicationID > 0)
             {
                 entity.PrimaryKeyID = entity.ApplicationID;

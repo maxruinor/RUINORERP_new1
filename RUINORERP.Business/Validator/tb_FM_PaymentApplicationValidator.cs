@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 18:23:31
+// 时间：01/06/2025 19:19:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,8 +53,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeAccountNo).NotEmpty().WithMessage("收款账号:不能为空。");
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Currency_ID).Must(CheckForeignKeyValueCanNull).WithMessage("币别:下拉选择值不正确。");
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("付款账户:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
@@ -62,7 +61,8 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PrePaymentBill_id).NotEmpty().When(x => x.PrePaymentBill_id.HasValue);
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayReasonItems).MaximumLength(500).WithMessage("付款项目:不能超过最大长度,500.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayReasonItems).MaximumLength(500).WithMessage("付款项目/原因:不能超过最大长度,500.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayReasonItems).NotEmpty().WithMessage("付款项目/原因:不能为空。");
 
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Notes).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 12:07:03
+// 时间：01/06/2025 18:55:23
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -55,10 +55,10 @@ namespace RUINORERP.Business
          public ValidationResult Validator(View_MRP_ReworkReturn info)
         {
 
-            // View_MRP_ReworkReturnValidator validator = new View_MRP_ReworkReturnValidator();
-            //View_MRP_ReworkReturnValidator validator = _appContext.GetRequiredService<View_MRP_ReworkReturnValidator>();
-            // ValidationResult results = validator.Validate(info);
-                    return new ValidationResult(); 
+           // View_MRP_ReworkReturnValidator validator = new View_MRP_ReworkReturnValidator();
+           View_MRP_ReworkReturnValidator validator = _appContext.GetRequiredService<View_MRP_ReworkReturnValidator>();
+            ValidationResult results = validator.Validate(info);
+            return results;
         }
         
         #region 扩展方法

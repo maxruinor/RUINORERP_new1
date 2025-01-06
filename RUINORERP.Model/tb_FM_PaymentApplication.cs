@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 18:23:30
+// 时间：01/06/2025 19:19:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -139,14 +139,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _Currency_ID;
+        private long _Currency_ID;
         /// <summary>
         /// 币别
         /// </summary>
         [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "币别")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Currency_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "币别" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Currency_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "币别" )]
         [FKRelationAttribute("tb_Currency","Currency_ID")]
-        public long? Currency_ID
+        public long Currency_ID
         { 
             get{return _Currency_ID;}
             set{
@@ -199,10 +199,10 @@ namespace RUINORERP.Model
 
         private string _PayReasonItems;
         /// <summary>
-        /// 付款项目
+        /// 付款项目/原因
         /// </summary>
-        [AdvQueryAttribute(ColName = "PayReasonItems",ColDesc = "付款项目")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PayReasonItems" ,Length=1000,IsNullable = true,ColumnDescription = "付款项目" )]
+        [AdvQueryAttribute(ColName = "PayReasonItems",ColDesc = "付款项目/原因")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PayReasonItems" ,Length=1000,IsNullable = false,ColumnDescription = "付款项目/原因" )]
         public string PayReasonItems
         { 
             get{return _PayReasonItems;}
@@ -211,13 +211,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime? _InvoiceDate;
+        private DateTime _InvoiceDate;
         /// <summary>
         /// 制单日期
         /// </summary>
         [AdvQueryAttribute(ColName = "InvoiceDate",ColDesc = "制单日期")] 
-        [SugarColumn(ColumnDataType = "date", SqlParameterDbType ="DateTime",  ColumnName = "InvoiceDate" ,IsNullable = true,ColumnDescription = "制单日期" )]
-        public DateTime? InvoiceDate
+        [SugarColumn(ColumnDataType = "date", SqlParameterDbType ="DateTime",  ColumnName = "InvoiceDate" ,IsNullable = false,ColumnDescription = "制单日期" )]
+        public DateTime InvoiceDate
         { 
             get{return _InvoiceDate;}
             set{

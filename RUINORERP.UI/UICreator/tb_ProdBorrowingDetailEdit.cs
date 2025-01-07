@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:37
+// 时间：01/07/2025 13:17:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,6 +44,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -56,6 +57,7 @@ namespace RUINORERP.UI
                         entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.property = txtproperty.Text ;
                        entity.Qty = Int32.Parse(txtQty.Text);
+                        entity.ReQty = Int32.Parse(txtReQty.Text);
                         entity.Price = Decimal.Parse(txtPrice.Text);
                         entity.Cost = Decimal.Parse(txtCost.Text);
                         entity.Summary = txtSummary.Text ;
@@ -76,6 +78,7 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowingDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowingDetail>(entity, t => t.Qty, txtQty, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_ProdBorrowingDetail>(entity, t => t.ReQty, txtReQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowingDetail>(entity, t => t.Price.ToString(), txtPrice, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowingDetail>(entity, t => t.Cost.ToString(), txtCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowingDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);

@@ -33,7 +33,7 @@ using RUINORERP.Global;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 销售订单统计分析
+    /// 转换统计分析
     /// </summary>
     public partial class View_ProdConversionItemsProcessor : BaseProcessor
     {
@@ -46,7 +46,10 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_ProdConversionItems>(c => c.ConversionDate);
             queryFilter.SetQueryField<View_ProdConversionItems>(c => c.ConversionNo);
             queryFilter.SetQueryField<View_ProdConversionItems>(c => c.Employee_ID, typeof(tb_Employee));
-            
+
+            queryFilter.SetQueryField<View_ProdConversionItems>(c => c.CNName_from);
+            queryFilter.SetQueryField<View_ProdConversionItems>(c => c.CNName_to);
+
             queryFilter.SetQueryField<View_ProdConversionItems>(c => c.SKU_from);
             queryFilter.SetQueryField<View_ProdConversionItems>(c => c.SKU_to);
             queryFilter.SetQueryField<View_ProdConversionItems>(c => c.Specifications_from);

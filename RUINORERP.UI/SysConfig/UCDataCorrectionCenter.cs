@@ -44,6 +44,8 @@ using Netron.GraphLib;
 using AutoMapper;
 using RUINORERP.Business.AutoMapper;
 using NPOI.SS.Formula.Functions;
+using RUINORERP.Global.EnumExt.CRM;
+using HLH.Lib.Security;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -608,10 +610,93 @@ namespace RUINORERP.UI.SysConfig
 
                 }
 
+                if (treeView1.SelectedNode.Text == "修复CRM跟进计划状态")
+                {
+                    #region 修复CRM跟进计划状态
+                    List<tb_CRM_FollowUpPlans> followUpPlans = await MainForm.Instance.AppContext.Db.Queryable<tb_CRM_FollowUpPlans>()
+              .Includes(c => c.tb_CRM_FollowUpRecordses)
+              .Where(c => c.PlanEndDate < System.DateTime.Today &&
+              (c.PlanStatus != (int)FollowUpPlanStatus.已完成 || c.PlanStatus == (int)FollowUpPlanStatus.未执行)
+              && c.PlanStatus != (int)FollowUpPlanStatus.已取消
+              )
+              .ToListAsync();
+
+                    // 假设配置的延期天数存储在 DelayDays 变量中
+                    int DelayDays = 3;
+
+                    for (int i = 0; i < followUpPlans.Count; i++)
+                    {
+                        if (followUpPlans[i].tb_CRM_FollowUpRecordses.Count > 0)
+                        {
+                            followUpPlans[i].PlanStatus = (int)FollowUpPlanStatus.已完成;
+                        }
+                        else
+                        {
+                            if (followUpPlans[i].PlanEndDate < System.DateTime.Today)
+                            {
+                                TimeSpan timeSinceEnd = System.DateTime.Today - followUpPlans[i].PlanEndDate;
+                                if (timeSinceEnd.TotalDays <= DelayDays)
+                                {
+                                    followUpPlans[i].PlanStatus = (int)FollowUpPlanStatus.延期中;
+                                }
+                                else
+                                {
+                                    followUpPlans[i].PlanStatus = (int)FollowUpPlanStatus.未执行;
+                                }
+
+                                //发送消息给执行人。
+                            }
+                        }
+
+
+                    }
+
+                    #endregion
+                    if (chkTestMode.Checked)
+                    {
+                        richTextBoxLog.AppendText($"要修复的行数为:{followUpPlans.Count}" + "\r\n");
+                    }
+                    else
+                    {
+                        int plancounter = await MainForm.Instance.AppContext.Db.Updateable<tb_CRM_FollowUpPlans>(followUpPlans).UpdateColumns(it => new { it.PlanStatus }).ExecuteCommandAsync();
+
+                        richTextBoxLog.AppendText($"修复CRM跟进计划状态成功：{plancounter} " + "\r\n");
+                    }
+
+                }
 
                 if (treeView1.SelectedNode.Text == "拟销在制在途修复")
                 {
 
+                }
+
+                if (treeView1.SelectedNode.Text == "用户密码加密")
+                {
+                    #region 用户密码加密
+                    List<tb_UserInfo> AllUsers = MainForm.Instance.AppContext.Db.Queryable<tb_UserInfo>()
+                        .Where(c => c.UserName== "梁淑文")
+                     .ToList();
+                    for (int i = 0; i < AllUsers.Count; i++)
+                    {
+                        AllUsers[i].Notes = AllUsers[i].Password;
+                        string enPwd = EncryptionHelper.AesEncryptByHashKey(AllUsers[i].Password, AllUsers[i].UserName);
+                        AllUsers[i].Password = enPwd;
+                        // string pwd = EncryptionHelper.AesDecryptByHashKey(enPwd, "张三");
+                    }
+
+                    #endregion
+                    //一次性统计加密码一下密码：
+
+                    if (chkTestMode.Checked)
+                    {
+                        richTextBoxLog.AppendText($"要修复的用户密码加密行数为:{AllUsers.Count}" + "\r\n");
+                    }
+                    else
+                    {
+                        int plancounter = await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(AllUsers).UpdateColumns(it => new { it.Password, it.Notes }).ExecuteCommandAsync();
+
+                        richTextBoxLog.AppendText($"要修复的用户密码加密状态成功：{plancounter} " + "\r\n");
+                    }
                 }
 
                 if (treeView1.SelectedNode.Text == "成本修复")
@@ -634,11 +719,11 @@ namespace RUINORERP.UI.SysConfig
                         {
                             //第笔的入库的数量*成交价/总数量
                             var transPrice = item.tb_proddetail.tb_PurEntryDetails
-                                .Where(c => c.TransactionPrice > 0 && c.Quantity>0)
+                                .Where(c => c.TransactionPrice > 0 && c.Quantity > 0)
                                 .Sum(c => c.TransactionPrice * c.Quantity) / item.tb_proddetail.tb_PurEntryDetails.Sum(c => c.Quantity);
                             if (transPrice > 0)
                             {
-                                transPrice=Math.Round(transPrice,3);
+                                transPrice = Math.Round(transPrice, 3);
                                 item.CostMovingWA = transPrice;
                                 item.Inv_AdvCost = item.CostMovingWA;
                                 item.Inv_Cost = item.CostMovingWA;
@@ -651,9 +736,9 @@ namespace RUINORERP.UI.SysConfig
                     {
                         richTextBoxLog.AppendText($"要修复的行数为:{Allitems.Count}" + "\r\n");
                     }
-                        if (!chkTestMode.Checked)
+                    if (!chkTestMode.Checked)
                     {
-                        int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updateList).UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost,   t.Inv_Cost }).ExecuteCommandAsync();
+                        int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(updateList).UpdateColumns(t => new { t.CostMovingWA, t.Inv_AdvCost, t.Inv_Cost }).ExecuteCommandAsync();
                         richTextBoxLog.AppendText($"修复成本价格成功：{totalamountCounter} " + "\r\n");
                     }
 

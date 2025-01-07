@@ -23,16 +23,16 @@ namespace RUINORERP.UI.BI
 {
 
     [MenuAttrAssemblyInfo("公司设置", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统参数)]
-    public partial class UCCompanyList : BaseForm.BaseListGeneric<tb_Company> 
+    public partial class UCCompanyList : BaseForm.BaseListGeneric<tb_Company>
     {
         public UCCompanyList()
         {
             InitializeComponent();
             base.EditForm = typeof(UCCompanyEdit);
-     
+
         }
 
-  
+
 
         private async Task<object> QueryData(string msg)
         {
@@ -50,7 +50,18 @@ namespace RUINORERP.UI.BI
         }
 
 
-
+        protected override void Add()
+        {
+            if (ListDataSoure.Count == 0)
+            {
+                base.Add();
+                base.toolStripButtonModify.Enabled = false;
+            }
+            else
+            {
+                toolStripButtonAdd.Visible = false;
+            }
+        }
 
         public async ValueTask<object> ExecuteAsync(CancellationToken token)
         {
@@ -85,7 +96,7 @@ namespace RUINORERP.UI.BI
         }
 
 
-  
+
 
 
 

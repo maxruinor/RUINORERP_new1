@@ -1414,6 +1414,8 @@ namespace RUINORERP.UI.BaseForm
                 {
                     MainForm.Instance.uclog.AddLog($"单据已被{bli.LockedName}锁定，请刷新后再试");
                     return ae;
+
+                    //分读写锁  保存后就只有读。释放 写？
                 }
             }
 

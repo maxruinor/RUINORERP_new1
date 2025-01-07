@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:34
+// 时间：01/07/2025 13:17:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -99,6 +99,10 @@ this.chkisdeleted.Values.Text ="";
 this.lblDataStatus = new Krypton.Toolkit.KryptonLabel();
 this.txtDataStatus = new Krypton.Toolkit.KryptonTextBox();
 
+this.lblReason = new Krypton.Toolkit.KryptonLabel();
+this.txtReason = new Krypton.Toolkit.KryptonTextBox();
+this.txtReason.Multiline = true;
+
 this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
 this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
 this.txtApprovalOpinions.Multiline = true;
@@ -117,14 +121,8 @@ this.chkApprovalResults.Values.Text ="";
 this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
 this.txtPrintStatus = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblRefBillID = new Krypton.Toolkit.KryptonLabel();
-this.txtRefBillID = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblRefNO = new Krypton.Toolkit.KryptonLabel();
-this.txtRefNO = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblRefBizType = new Krypton.Toolkit.KryptonLabel();
-this.txtRefBizType = new Krypton.Toolkit.KryptonTextBox();
+this.lblCloseCaseOpinions = new Krypton.Toolkit.KryptonLabel();
+this.txtCloseCaseOpinions = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -177,7 +175,7 @@ this.lblEmployee_ID.Location = new System.Drawing.Point(100,50);
 this.lblEmployee_ID.Name = "lblEmployee_ID";
 this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
 this.lblEmployee_ID.TabIndex = 2;
-this.lblEmployee_ID.Text = "经办人";
+this.lblEmployee_ID.Text = "借出人";
 //111======50
 this.cmbEmployee_ID.Location = new System.Drawing.Point(173,46);
 this.cmbEmployee_ID.Name ="cmbEmployee_ID";
@@ -385,49 +383,63 @@ this.txtDataStatus.TabIndex = 15;
 this.Controls.Add(this.lblDataStatus);
 this.Controls.Add(this.txtDataStatus);
 
+           //#####500Reason###String
+this.lblReason.AutoSize = true;
+this.lblReason.Location = new System.Drawing.Point(100,400);
+this.lblReason.Name = "lblReason";
+this.lblReason.Size = new System.Drawing.Size(41, 12);
+this.lblReason.TabIndex = 16;
+this.lblReason.Text = "借出原因";
+this.txtReason.Location = new System.Drawing.Point(173,396);
+this.txtReason.Name = "txtReason";
+this.txtReason.Size = new System.Drawing.Size(100, 21);
+this.txtReason.TabIndex = 16;
+this.Controls.Add(this.lblReason);
+this.Controls.Add(this.txtReason);
+
            //#####500ApprovalOpinions###String
 this.lblApprovalOpinions.AutoSize = true;
-this.lblApprovalOpinions.Location = new System.Drawing.Point(100,400);
+this.lblApprovalOpinions.Location = new System.Drawing.Point(100,425);
 this.lblApprovalOpinions.Name = "lblApprovalOpinions";
 this.lblApprovalOpinions.Size = new System.Drawing.Size(41, 12);
-this.lblApprovalOpinions.TabIndex = 16;
+this.lblApprovalOpinions.TabIndex = 17;
 this.lblApprovalOpinions.Text = "审批意见";
-this.txtApprovalOpinions.Location = new System.Drawing.Point(173,396);
+this.txtApprovalOpinions.Location = new System.Drawing.Point(173,421);
 this.txtApprovalOpinions.Name = "txtApprovalOpinions";
 this.txtApprovalOpinions.Size = new System.Drawing.Size(100, 21);
-this.txtApprovalOpinions.TabIndex = 16;
+this.txtApprovalOpinions.TabIndex = 17;
 this.Controls.Add(this.lblApprovalOpinions);
 this.Controls.Add(this.txtApprovalOpinions);
 
            //#####Approver_by###Int64
-//属性测试425Approver_by
-//属性测试425Approver_by
+//属性测试450Approver_by
+//属性测试450Approver_by
 this.lblApprover_by.AutoSize = true;
-this.lblApprover_by.Location = new System.Drawing.Point(100,425);
+this.lblApprover_by.Location = new System.Drawing.Point(100,450);
 this.lblApprover_by.Name = "lblApprover_by";
 this.lblApprover_by.Size = new System.Drawing.Size(41, 12);
-this.lblApprover_by.TabIndex = 17;
+this.lblApprover_by.TabIndex = 18;
 this.lblApprover_by.Text = "审批人";
-this.txtApprover_by.Location = new System.Drawing.Point(173,421);
+this.txtApprover_by.Location = new System.Drawing.Point(173,446);
 this.txtApprover_by.Name = "txtApprover_by";
 this.txtApprover_by.Size = new System.Drawing.Size(100, 21);
-this.txtApprover_by.TabIndex = 17;
+this.txtApprover_by.TabIndex = 18;
 this.Controls.Add(this.lblApprover_by);
 this.Controls.Add(this.txtApprover_by);
 
            //#####Approver_at###DateTime
 this.lblApprover_at.AutoSize = true;
-this.lblApprover_at.Location = new System.Drawing.Point(100,450);
+this.lblApprover_at.Location = new System.Drawing.Point(100,475);
 this.lblApprover_at.Name = "lblApprover_at";
 this.lblApprover_at.Size = new System.Drawing.Size(41, 12);
-this.lblApprover_at.TabIndex = 18;
+this.lblApprover_at.TabIndex = 19;
 this.lblApprover_at.Text = "审批时间";
-//111======450
-this.dtpApprover_at.Location = new System.Drawing.Point(173,446);
+//111======475
+this.dtpApprover_at.Location = new System.Drawing.Point(173,471);
 this.dtpApprover_at.Name ="dtpApprover_at";
 this.dtpApprover_at.ShowCheckBox =true;
 this.dtpApprover_at.Size = new System.Drawing.Size(100, 21);
-this.dtpApprover_at.TabIndex = 18;
+this.dtpApprover_at.TabIndex = 19;
 this.Controls.Add(this.lblApprover_at);
 this.Controls.Add(this.dtpApprover_at);
 
@@ -435,79 +447,47 @@ this.Controls.Add(this.dtpApprover_at);
 
            //#####ApprovalResults###Boolean
 this.lblApprovalResults.AutoSize = true;
-this.lblApprovalResults.Location = new System.Drawing.Point(100,500);
+this.lblApprovalResults.Location = new System.Drawing.Point(100,525);
 this.lblApprovalResults.Name = "lblApprovalResults";
 this.lblApprovalResults.Size = new System.Drawing.Size(41, 12);
-this.lblApprovalResults.TabIndex = 20;
+this.lblApprovalResults.TabIndex = 21;
 this.lblApprovalResults.Text = "审批结果";
-this.chkApprovalResults.Location = new System.Drawing.Point(173,496);
+this.chkApprovalResults.Location = new System.Drawing.Point(173,521);
 this.chkApprovalResults.Name = "chkApprovalResults";
 this.chkApprovalResults.Size = new System.Drawing.Size(100, 21);
-this.chkApprovalResults.TabIndex = 20;
+this.chkApprovalResults.TabIndex = 21;
 this.Controls.Add(this.lblApprovalResults);
 this.Controls.Add(this.chkApprovalResults);
 
            //#####PrintStatus###Int32
-//属性测试525PrintStatus
-//属性测试525PrintStatus
+//属性测试550PrintStatus
+//属性测试550PrintStatus
 this.lblPrintStatus.AutoSize = true;
-this.lblPrintStatus.Location = new System.Drawing.Point(100,525);
+this.lblPrintStatus.Location = new System.Drawing.Point(100,550);
 this.lblPrintStatus.Name = "lblPrintStatus";
 this.lblPrintStatus.Size = new System.Drawing.Size(41, 12);
-this.lblPrintStatus.TabIndex = 21;
+this.lblPrintStatus.TabIndex = 22;
 this.lblPrintStatus.Text = "打印状态";
-this.txtPrintStatus.Location = new System.Drawing.Point(173,521);
+this.txtPrintStatus.Location = new System.Drawing.Point(173,546);
 this.txtPrintStatus.Name = "txtPrintStatus";
 this.txtPrintStatus.Size = new System.Drawing.Size(100, 21);
-this.txtPrintStatus.TabIndex = 21;
+this.txtPrintStatus.TabIndex = 22;
 this.Controls.Add(this.lblPrintStatus);
 this.Controls.Add(this.txtPrintStatus);
 
-           //#####RefBillID###Int64
-//属性测试550RefBillID
-//属性测试550RefBillID
-this.lblRefBillID.AutoSize = true;
-this.lblRefBillID.Location = new System.Drawing.Point(100,550);
-this.lblRefBillID.Name = "lblRefBillID";
-this.lblRefBillID.Size = new System.Drawing.Size(41, 12);
-this.lblRefBillID.TabIndex = 22;
-this.lblRefBillID.Text = "引用单据";
-this.txtRefBillID.Location = new System.Drawing.Point(173,546);
-this.txtRefBillID.Name = "txtRefBillID";
-this.txtRefBillID.Size = new System.Drawing.Size(100, 21);
-this.txtRefBillID.TabIndex = 22;
-this.Controls.Add(this.lblRefBillID);
-this.Controls.Add(this.txtRefBillID);
-
-           //#####50RefNO###String
-this.lblRefNO.AutoSize = true;
-this.lblRefNO.Location = new System.Drawing.Point(100,575);
-this.lblRefNO.Name = "lblRefNO";
-this.lblRefNO.Size = new System.Drawing.Size(41, 12);
-this.lblRefNO.TabIndex = 23;
-this.lblRefNO.Text = "引用单号";
-this.txtRefNO.Location = new System.Drawing.Point(173,571);
-this.txtRefNO.Name = "txtRefNO";
-this.txtRefNO.Size = new System.Drawing.Size(100, 21);
-this.txtRefNO.TabIndex = 23;
-this.Controls.Add(this.lblRefNO);
-this.Controls.Add(this.txtRefNO);
-
-           //#####RefBizType###Int32
-//属性测试600RefBizType
-//属性测试600RefBizType
-this.lblRefBizType.AutoSize = true;
-this.lblRefBizType.Location = new System.Drawing.Point(100,600);
-this.lblRefBizType.Name = "lblRefBizType";
-this.lblRefBizType.Size = new System.Drawing.Size(41, 12);
-this.lblRefBizType.TabIndex = 24;
-this.lblRefBizType.Text = "引用单据类型";
-this.txtRefBizType.Location = new System.Drawing.Point(173,596);
-this.txtRefBizType.Name = "txtRefBizType";
-this.txtRefBizType.Size = new System.Drawing.Size(100, 21);
-this.txtRefBizType.TabIndex = 24;
-this.Controls.Add(this.lblRefBizType);
-this.Controls.Add(this.txtRefBizType);
+           //#####200CloseCaseOpinions###String
+this.lblCloseCaseOpinions.AutoSize = true;
+this.lblCloseCaseOpinions.Location = new System.Drawing.Point(100,575);
+this.lblCloseCaseOpinions.Name = "lblCloseCaseOpinions";
+this.lblCloseCaseOpinions.Size = new System.Drawing.Size(41, 12);
+this.lblCloseCaseOpinions.TabIndex = 23;
+this.lblCloseCaseOpinions.Text = "审批意见";
+this.txtCloseCaseOpinions.Location = new System.Drawing.Point(173,571);
+this.txtCloseCaseOpinions.Name = "txtCloseCaseOpinions";
+this.txtCloseCaseOpinions.Size = new System.Drawing.Size(100, 21);
+this.txtCloseCaseOpinions.TabIndex = 23;
+this.Controls.Add(this.lblCloseCaseOpinions);
+this.Controls.Add(this.txtCloseCaseOpinions);
 
         //for 加入到容器
             //components = new System.ComponentModel.Container();
@@ -523,7 +503,7 @@ this.Controls.Add(this.txtRefBizType);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 24;
+           // this.kryptonPanel1.TabIndex = 23;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -572,6 +552,9 @@ this.Controls.Add(this.chkisdeleted );
                 this.Controls.Add(this.lblDataStatus );
 this.Controls.Add(this.txtDataStatus );
 
+                this.Controls.Add(this.lblReason );
+this.Controls.Add(this.txtReason );
+
                 this.Controls.Add(this.lblApprovalOpinions );
 this.Controls.Add(this.txtApprovalOpinions );
 
@@ -588,14 +571,8 @@ this.Controls.Add(this.chkApprovalResults );
                 this.Controls.Add(this.lblPrintStatus );
 this.Controls.Add(this.txtPrintStatus );
 
-                this.Controls.Add(this.lblRefBillID );
-this.Controls.Add(this.txtRefBillID );
-
-                this.Controls.Add(this.lblRefNO );
-this.Controls.Add(this.txtRefNO );
-
-                this.Controls.Add(this.lblRefBizType );
-this.Controls.Add(this.txtRefBizType );
+                this.Controls.Add(this.lblCloseCaseOpinions );
+this.Controls.Add(this.txtCloseCaseOpinions );
 
                             // 
             // "tb_ProdBorrowingEdit"
@@ -696,6 +673,11 @@ private Krypton.Toolkit.KryptonTextBox txtDataStatus;
 
     
         
+              private Krypton.Toolkit.KryptonLabel lblReason;
+private Krypton.Toolkit.KryptonTextBox txtReason;
+
+    
+        
               private Krypton.Toolkit.KryptonLabel lblApprovalOpinions;
 private Krypton.Toolkit.KryptonTextBox txtApprovalOpinions;
 
@@ -724,18 +706,8 @@ private Krypton.Toolkit.KryptonTextBox txtPrintStatus;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblRefBillID;
-private Krypton.Toolkit.KryptonTextBox txtRefBillID;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblRefNO;
-private Krypton.Toolkit.KryptonTextBox txtRefNO;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblRefBizType;
-private Krypton.Toolkit.KryptonTextBox txtRefBizType;
+              private Krypton.Toolkit.KryptonLabel lblCloseCaseOpinions;
+private Krypton.Toolkit.KryptonTextBox txtCloseCaseOpinions;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

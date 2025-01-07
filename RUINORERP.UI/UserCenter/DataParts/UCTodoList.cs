@@ -227,6 +227,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
 
+            //返工退库没有回来的数据是 审核通过未结案 数量
+            var conModel返工待完成 = new List<IConditionalModel>();
+            conModel返工待完成.Add(new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" });
+            conModel返工待完成.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "4", CSharpTypeName = "int" });
+             
+            conModel返工待完成.Add(new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" });
+
+
             List<BizType> bizTypes = new List<BizType>();
             if (centerConfig != null)
             {
@@ -290,6 +298,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             break;
                         case 待办事项.归还单:
                             bizTypes.Add(BizType.归还单);
+                            break;
+                        case 待办事项.返工退库:
+                            bizTypes.Add(BizType.返工退库单);
                             break;
                         default:
                             break;
@@ -360,6 +371,25 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     }
                 }
 
+                //下面是特殊情况。上面是所有单据的情况
+                if (item == BizType.返工退库单)
+                {
+                    QueryParameter parameter = new QueryParameter();
+                    parameter.conditionals = conModel返工待完成;
+                    parameter.tableType = tableType;
+                    //未出库
+                    TreeNode SubNode返工待完成 = new TreeNode(item.ToString());
+                    DataTable queryList返工待完成 = MainForm.Instance.AppContext.Db.Queryable(tableType.Name, "TN").Where(conModel返工待完成).ToDataTable();
+                    if (queryList返工待完成.Rows.Count > 0)
+                    {
+                        SubNode返工待完成.Text = "待完成【" + queryList返工待完成.Rows.Count + "】";
+                        SubNode返工待完成.Tag = parameter;
+                        if (!node.Nodes.Contains(SubNode返工待完成))
+                        {
+                            node.Nodes.Add(SubNode返工待完成);
+                        }
+                    }
+                }
 
                 if (item == BizType.销售订单)
                 {

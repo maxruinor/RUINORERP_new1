@@ -207,7 +207,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             valueImageWeb.CellImageHashName = sender.Value.ToString();
                             HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
                             try
-                            {   
+                            {
                                 valueImageWeb.CellImageBytes = await httpWebService.DownloadImgFileAsync(valueImageWeb.GetNewRealfileName());
                             }
                             catch (Exception ex)
@@ -773,8 +773,12 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 if (sender.Value == null || string.IsNullOrEmpty(sender.Value.ToString()))
                 {
+
                     var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                    SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                    sender.Cell.Model.RemoveModel(model);
+                    sender.Cell.Model.AddModel(new ValueImageWeb());
+                    var NewModel = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)NewModel;
                     sender.Value = valueImageWeb.CellImageHashName;
                 }
                 //else

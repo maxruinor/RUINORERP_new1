@@ -57,5 +57,48 @@ namespace RUINORERP.UI.CRM
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
+        /// <summary>
+        /// 如果删除记录时判断是否有上属的计划。如果有则判断是否还有其它记录。如果没有看时间。如果到期了。状态是没有执行。如果没有到期，则是没有开始。
+        /// </summary>
+        /// <returns></returns>
+        protected override async Task<bool> Delete()
+        {
+            bool rs = false;
+            tb_CRM_FollowUpRecords record = (tb_CRM_FollowUpRecords)this.bindingSourceList.Current;
+            //只能自己删除 或超级用户来删除
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                if ((record.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID))
+                {
+                    //只能删除自己的收款信息。
+                    MessageBox.Show("只能删除自己名下的跟踪信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //rs = Task.FromResult(false);
+                    rs = false;
+                    return rs;
+                }
+            }
+            else
+            {
+                if ((record.Employee_ID != MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID))
+                {
+                    //只能删除自己的收款信息。
+                    if (MessageBox.Show("当前数据不属于您名下，您确定要删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                    {
+                        rs = false;
+                        return rs;
+                    }
+
+                }
+            }
+            rs = await base.Delete();
+            if (rs)
+            {
+                if (record.tb_crm_followupplans != null)
+                {
+
+                }
+            }
+            return rs;
+        }
     }
 }

@@ -384,11 +384,14 @@ namespace RUINORERP.UI
             }
 
 
-            tb_CompanyController<tb_Company> companyController = Startup.GetFromFac<tb_CompanyController<tb_Company>>();
-            List<tb_Company> company = await companyController.QueryAsync();
+            tb_Company company =await AppContext.Db.Queryable<tb_Company>().SingleAsync();
             if (company != null)
             {
-                this.Text = company[0].CNName + "企业数字化集成ERP v2.0" + "_" + AppContext.OnlineUser.客户端版本;
+                this.Text = company.ShortName + "企业数字化集成ERP v2.0" + "_" + AppContext.OnlineUser.客户端版本;
+            }
+            else
+            {
+                this.Text =   "企业数字化集成ERP v2.0" + "_" + AppContext.OnlineUser.客户端版本;
             }
 
             InitRemind();
@@ -2394,14 +2397,18 @@ namespace RUINORERP.UI
                             {
                                 list.Add(item as View_ProdDetail);
                             }
+                            #region  jsonlist
+                            if (myList.Count == 0 || myList.Count != info.CacheCount)
+                            {
+                                needRequestCache = true;
+                            }
+                            #endregion
                         }
-
-                        #region  jsonlist
-                        if (myList.Count == 0 || myList.Count != info.CacheCount)
+                        else
                         {
                             needRequestCache = true;
                         }
-                        #endregion
+                        
                     }
                 }
                 else

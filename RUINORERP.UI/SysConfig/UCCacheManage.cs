@@ -124,7 +124,7 @@ namespace RUINORERP.UI.SysConfig
 
                     // 使用 GetType 方法获取 PrintHelper<T> 的类型
                     Type type = assembly.GetType("RUINORERP.Model." + tableName);
-                    dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(type);
+                    dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(true, type);
                     dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
                     dataGridView1.XmlFileName = "UCCacheManage" + tableName;
                     dataGridView1.DataSource = null;
@@ -150,7 +150,7 @@ namespace RUINORERP.UI.SysConfig
                 lastCacheInfo.HasExpire = false;
                 //看是更新好。还是移除好。主要看后面的更新机制。
                 MyCacheManager.Instance.CacheInfoList.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
-          
+
 
             }
         }

@@ -36,7 +36,6 @@ namespace RUINORERP.UI.UserCenter
     {
         采购_采购订单,
         采购_退款退货处理,
-
         销售_销售订单,
         销售_退款退货处理,
         销售_销售出库单,
@@ -52,7 +51,7 @@ namespace RUINORERP.UI.UserCenter
         其他_出库单,
 
         财务_费用报销单,
-
+        返工退库,
         请购单,
         借出单,
         归还单,

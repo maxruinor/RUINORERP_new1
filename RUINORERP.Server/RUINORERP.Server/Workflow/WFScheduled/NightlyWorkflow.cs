@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using RUINORERP.Model;
+using RUINORERP.Server.BizService;
 using RUINORERP.Server.Workflow.WFReminder;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
         {
             builder
                 .StartWith(context => Console.WriteLine("任务开始时间: " + DateTime.Now))
-              .Recur(data => TimeSpan.FromMinutes(1), data => StopSondition(data))
+              .Recur(data => TimeSpan.FromMinutes(30), data => StopSondition(data))
                   .Do(recur => recur
                   .StartWith<NightlyTaskStep>
                   (
@@ -53,14 +54,14 @@ namespace RUINORERP.Server.Workflow.WFScheduled
         /// <returns></returns>
         public bool StopSondition(GlobalScheduledData data)
         {
-
             bool result = System.DateTime.Now.Date.Hour == 10 && data.ExecutionFrequency == 3;
             if (data.ExecutionFrequency > 10)
             {
                 data.ExecutionFrequency = 0;
             }
             frmMain.Instance.PrintInfoLog($"判断条件是否停止={result}:{data.ExecutionFrequency}");
-            return result;
+            //因为是一个每天都执行的。所以固定不会停止，只是在执行时算一下只执行一次
+            return false;
         }
 
         //Func<GlobalScheduledData, bool> GetFunc(GlobalScheduledData data)
@@ -90,9 +91,10 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                     var data = context.Workflow.Data as GlobalScheduledData;
                     data.ExecutionFrequency++;
                     //要把执行过的标记传出步骤，按时间重置。等第二天执行
-                    if (System.DateTime.Today.Hour == 2 && data.ExecutionFrequency == 0)
+                    if (System.DateTime.Now.Hour == 23 && data.ExecutionFrequency == 2)
                     {
-
+                        CRM_FollowUpPlansService followUpPlansService = Startup.GetFromFac<CRM_FollowUpPlansService>();
+                       // followUpPlansService.AutoUdateCRMPlanStatus();
                     }
                     else
                     {
@@ -101,6 +103,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
 
                     // 模拟耗时任务，例如等待 1 秒
                     await Task.Delay(1000);
+                    
                     frmMain.Instance.PrintInfoLog($"结束每日任务~~~。DailyTaskStep：GlobalScheduledData.ExecutionFrequency=> " + data.ExecutionFrequency.ToString());
                 }
                 catch (Exception ex)

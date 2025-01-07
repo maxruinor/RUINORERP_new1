@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:29
+// 时间：01/07/2025 17:51:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 系统使用者公司
     /// </summary>
     [Serializable()]
-    [Description("tb_Company")]
+    [Description("系统使用者公司")]
     [SugarTable("tb_Company")]
     public partial class tb_Company: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Company" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("系统使用者公司tb_Company" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -56,7 +56,7 @@ namespace RUINORERP.Model
         /// 公司代号
         /// </summary>
         [AdvQueryAttribute(ColName = "CompanyCode",ColDesc = "公司代号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CompanyCode" ,Length=10,IsNullable = true,ColumnDescription = "公司代号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CompanyCode" ,Length=30,IsNullable = true,ColumnDescription = "公司代号" )]
         public string CompanyCode
         { 
             get{return _CompanyCode;}

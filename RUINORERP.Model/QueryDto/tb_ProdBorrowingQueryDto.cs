@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:05
+// 时间：01/07/2025 13:17:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -232,10 +232,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _Reason;
         /// <summary>
-        /// 审批意见
+        /// 借出原因
         /// </summary>
-        [AdvQueryAttribute(ColName = "Reason",ColDesc = "审批意见")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Reason",Length=500,IsNullable = true,ColumnDescription = "审批意见" )]
+        [AdvQueryAttribute(ColName = "Reason",ColDesc = "借出原因")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Reason",Length=500,IsNullable = true,ColumnDescription = "借出原因" )]
         public string Reason 
         { 
             get{return _Reason;}
@@ -245,10 +245,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _ApprovalOpinions;
         /// <summary>
-        /// 借出原因
+        /// 审批意见
         /// </summary>
-        [AdvQueryAttribute(ColName = "ApprovalOpinions",ColDesc = "借出原因")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ApprovalOpinions",Length=500,IsNullable = true,ColumnDescription = "借出原因" )]
+        [AdvQueryAttribute(ColName = "ApprovalOpinions",ColDesc = "审批意见")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ApprovalOpinions",Length=500,IsNullable = true,ColumnDescription = "审批意见" )]
         public string ApprovalOpinions 
         { 
             get{return _ApprovalOpinions;}

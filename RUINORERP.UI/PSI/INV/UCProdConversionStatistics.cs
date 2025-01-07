@@ -101,6 +101,8 @@ namespace RUINORERP.UI.PSI.INV
         public override void BuildInvisibleCols()
         {
             base.MasterInvisibleCols.Add(c => c.PrimaryKeyID);
+            base.MasterInvisibleCols.Add(c => c.ProdDetailID_from);
+            base.MasterInvisibleCols.Add(c => c.ProdDetailID_to);
         }
 
      

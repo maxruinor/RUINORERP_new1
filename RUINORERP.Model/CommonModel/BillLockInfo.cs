@@ -9,6 +9,7 @@ namespace RUINORERP.Model
 {
     /// <summary>
     ///  单据锁定信息
+    ///  
     /// </summary>
     public class BillLockInfo
     {

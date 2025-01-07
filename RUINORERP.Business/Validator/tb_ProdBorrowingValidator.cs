@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:29
+// 时间：01/07/2025 13:17:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,9 +66,9 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Reason).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Reason).MaximumLength(250).WithMessage("借出原因:不能超过最大长度,250.");
 
- RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.ApprovalOpinions).MaximumLength(250).WithMessage("借出原因:不能超过最大长度,250.");
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
 
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

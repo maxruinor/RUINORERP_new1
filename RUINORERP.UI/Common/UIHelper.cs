@@ -27,6 +27,7 @@ using Krypton.Navigator;
 using FastReport.Table;
 using System.Drawing.Drawing2D;
 using System.Drawing;
+using StackExchange.Redis;
 
 namespace RUINORERP.UI.Common
 {
@@ -197,14 +198,14 @@ namespace RUINORERP.UI.Common
                                 {
                                     InvisibleCols.Add(item.tb_fieldinfo.FieldName);
                                 }
-                                if (DefaultHideCols!=null)
+                                if (DefaultHideCols != null)
                                 {
                                     if (item.HideValue && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
                                     {
                                         DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
                                     }
                                 }
-                                
+
                             }
                         }
                     }
@@ -828,14 +829,17 @@ namespace RUINORERP.UI.Common
             return fieldNameList;
         }
 
-
+        public static ConcurrentDictionary<string, KeyValuePair<string, bool>> GetFieldNameColList(params Type[] types)
+        {
+            return GetFieldNameColList(false, types);
+        }
 
         /// <summary>
         /// SugarColumn  依赖了这个特性来获取列名
         /// </summary>
         /// <param name="types"></param>
         /// <returns></returns>
-        public static ConcurrentDictionary<string, KeyValuePair<string, bool>> GetFieldNameColList(params Type[] types)
+        public static ConcurrentDictionary<string, KeyValuePair<string, bool>> GetFieldNameColList(bool IncludePK = false, params Type[] types)
         {
             ConcurrentDictionary<string, KeyValuePair<string, bool>> fieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
             SugarColumn entityAttr;
@@ -878,7 +882,15 @@ namespace RUINORERP.UI.Common
                             }
                             if (entityAttr.IsPrimaryKey)
                             {   //逻辑处理时可能要主键
-                                fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(entityAttr.ColumnDescription, false));
+                                if (IncludePK)
+                                {
+                                    fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(entityAttr.ColumnDescription, true));
+                                }
+                                else
+                                {
+                                    fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(entityAttr.ColumnDescription, false));
+                                }
+
                             }
                             if (entityAttr.ColumnDescription.Trim().Length > 0 && brow)
                             {

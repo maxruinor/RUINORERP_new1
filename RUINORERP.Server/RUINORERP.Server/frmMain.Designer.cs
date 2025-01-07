@@ -238,7 +238,7 @@
             系统注册ToolStripMenuItem.Name = "系统注册ToolStripMenuItem";
             系统注册ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
             系统注册ToolStripMenuItem.Text = "系统注册";
-            系统注册ToolStripMenuItem.Click += this.系统注册ToolStripMenuItem_Click;
+            系统注册ToolStripMenuItem.Click += 系统注册ToolStripMenuItem_Click;
             // 
             // frmMain
             // 
@@ -254,7 +254,7 @@
             IsMdiContainer = true;
             MainMenuStrip = menuStrip2;
             Name = "frmMain";
-            Text = "服务管理端2.0";
+            Text = "服务管理端2.1";
             FormClosing += frmMain_FormClosing;
             Load += frmMain_Load;
             menuStrip1.ResumeLayout(false);

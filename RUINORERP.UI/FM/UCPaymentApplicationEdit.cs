@@ -403,7 +403,7 @@ namespace RUINORERP.UI.FM
                     }
 
                     tb_FM_PaymentApplicationController<tb_FM_PaymentApplication> ctr = Startup.GetFromFac<tb_FM_PaymentApplicationController<tb_FM_PaymentApplication>>();
-                    bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_FM_PaymentApplication);
+                    bool rs = await ctr.BaseDeleteAsync(EditEntity as tb_FM_PaymentApplication);
                     if (rs)
                     {
                         //AuditLogHelper.Instance.CreateAuditLog<T>("删除", EditEntity);

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:34
+// 时间：01/07/2025 13:17:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -57,7 +57,6 @@ namespace RUINORERP.UI
         
         
         
-        
 
          }
 /*
@@ -80,16 +79,15 @@ namespace RUINORERP.UI
                         entity.Notes = txtNotes.Text ;
                        entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
                         entity.DataStatus = Int32.Parse(txtDataStatus.Text);
-                        entity.ApprovalOpinions = txtApprovalOpinions.Text ;
+                        entity.Reason = txtReason.Text ;
+                       entity.ApprovalOpinions = txtApprovalOpinions.Text ;
                        entity.Approver_by = Int64.Parse(txtApprover_by.Text);
                         entity.Approver_at = DateTime.Parse(txtApprover_at.Text);
                         entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
                         entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
                         entity.PrintStatus = Int32.Parse(txtPrintStatus.Text);
-                        entity.RefBillID = Int64.Parse(txtRefBillID.Text);
-                        entity.RefNO = txtRefNO.Text ;
-                       entity.RefBizType = Int32.Parse(txtRefBizType.Text);
-                                return entity;
+                        entity.CloseCaseOpinions = txtCloseCaseOpinions.Text ;
+                               return entity;
 }
         */
 
@@ -112,17 +110,16 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4DataTime<tb_ProdBorrowing>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdBorrowing>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdBorrowing>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.Reason, txtReason, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdBorrowing>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdBorrowing>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdBorrowing>(entity, t => t.ApprovalResults, chkApprovalResults, false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.RefBillID, txtRefBillID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.RefNO, txtRefNO, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.RefBizType, txtRefBizType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text,false);
 }
 
 

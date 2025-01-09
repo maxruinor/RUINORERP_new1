@@ -52,6 +52,11 @@ namespace RUINORERP.Server.CommandService
         public CmdOperation OperationType { get; set; }
         public OriginalData DataPacket { get; set; }
 
+        public ReceiveEntityTransferCmd(CmdOperation operation = CmdOperation.Receive)
+        {
+            OperationType = operation;
+        }
+
         public ReceiveEntityTransferCmd(OriginalData gd, SessionforBiz FromSession, CmdOperation operation = CmdOperation.Receive)
         {
             OperationType = operation;
@@ -194,12 +199,11 @@ namespace RUINORERP.Server.CommandService
                     {
                         continue;
                     }
-
                     //有指定目标时  其它人就不发了。
                     if (ToSession != null && item.Value.SessionID == ToSession.SessionID)
                     {
                         item.Value.AddSendData((byte)ServerCmdEnum.复合型实体处理, new byte[] { (byte)requestType }, tx.toByte());
-                        continue;
+                        break;
                     }
                     item.Value.AddSendData((byte)ServerCmdEnum.复合型实体处理, new byte[] { (byte)requestType }, tx.toByte());
                 }

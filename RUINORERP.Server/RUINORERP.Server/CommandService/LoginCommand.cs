@@ -52,78 +52,98 @@ namespace RUINORERP.Server.CommandService
             // 模拟登录逻辑，这里可以替换为实际的登录逻辑
             await Task.Run(async () =>
             {
+              
                 // 登录逻辑，例如验证用户名和密码
                 {
-                    switch (requestType)
+
+                    try
                     {
-                        case LoginProcessType.登陆:
-                            AnalyzeDataPacket(gd, RequestSession);
-                            bool success = await Login(Username, Password);
-                            if (success)
-                            {
-                                OnLoginSuccess?.Invoke(success, this);
-                                //优化判断相同用户
-                                //判断 是不是有相同的用户已经登陆了。有的话，则提示新登陆的人是不是T掉旧的用户。不是的话自己退出。
-                                var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(RequestSession.SessionID) && c.User.用户名 == user.UserName);
-                                if (ExistSession != null)
+                        switch (requestType)
+                        {
+                            case LoginProcessType.登陆:
+                                AnalyzeDataPacket(gd, RequestSession);
+                                bool success = await Login(Username, Password);
+                                if (success)
                                 {
-                                    UserService.回复用户重复登陆(RequestSession, ExistSession);
+                           
+                                    //优化判断相同用户
+                                    //判断 是不是有相同的用户已经登陆了。有的话，则提示新登陆的人是不是T掉旧的用户。不是的话自己退出。
+                                    var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(RequestSession.SessionID) && c.User.用户名 == user.UserName);
+                                    if (ExistSession != null)
+                                    {
+                                        UserService.回复用户重复登陆(RequestSession, ExistSession);
+                                    }
+                                    else
+                                    {
+                                        //登陆成功时。
+                                        if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.registrationInfo.ConcurrentUsers)
+                                        {
+                                            //超出人数时：提示一下再T掉第一个人
+                                            //优先T重复的人。
+                                            //提示被T的人。发送一个弹窗信息后，断开连接
+
+                                            //按登陆时间算
+                                            List<SessionforBiz> sessionList = frmMain.Instance.sessionListBiz.Values.ToList().OrderBy(c => c.StartTime).ToList();
+                                            foreach (var item in sessionList)
+                                            {
+                                                // 创建一个命令实例 
+                                                var message = new ReceiveResponseMessageCmd(CmdOperation.Send, null, item);
+                                                message.messageType = MessageType.Prompt;
+                                                message.MessageContent = "因超出在线人数限制，您即将被强制下线。";
+                                                message.promptType = PromptType.确认窗口;
+                                                message.ToSession = item;
+                                                await message.ExecuteAsync(CancellationToken.None);
+                                                // 等待 5 秒
+                                                await Task.Delay(5000);
+
+                                                UserService.强制用户退出(item);
+                                                break;
+                                            }
+
+
+                                        }
+
+                                        
+                                    }
+
+                                    //确定成功时统一分发加载配置
+                                    ReceiveEntityTransferCmd entityTransferCmd = new ReceiveEntityTransferCmd(CmdOperation.Send);
+                                    entityTransferCmd.ToSession = RequestSession;
+                                    entityTransferCmd.requestType = EntityTransferCmdType.处理动态配置;
+                                    entityTransferCmd.TransferObject = frmMain.Instance.Globalconfig;
+                                    await entityTransferCmd.ExecuteAsync(cancellationToken);
+
+                                    OnLoginSuccess?.Invoke(success, this);
                                 }
                                 else
                                 {
-                                    //登陆成功时。
-                                    if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.registrationInfo.ConcurrentUsers)
-                                    {
-                                        //超出人数时：提示一下再T掉第一个人
-                                        //优先T重复的人。
-                                        //提示被T的人。发送一个弹窗信息后，断开连接
-
-                                        //按登陆时间算
-                                        List<SessionforBiz> sessionList = frmMain.Instance.sessionListBiz.Values.ToList().OrderBy(c => c.StartTime).ToList();
-                                        foreach (var item in sessionList)
-                                        {
-                                            // 创建一个命令实例 
-                                            var message = new ReceiveResponseMessageCmd(CmdOperation.Send, null, item);
-                                            message.messageType = MessageType.Prompt;
-                                            message.MessageContent = "因超出在线人数限制，您即将被强制下线。";
-                                            message.promptType = PromptType.确认窗口;
-                                            message.ToSession = item;
-                                            await message.ExecuteAsync(CancellationToken.None);
-                                            // 等待 5 秒
-                                            await Task.Delay(5000);
-
-                                            UserService.强制用户退出(item);
-                                            break;
-                                        }
-
-
-                                    }
+                                    OnLoginFailure?.Invoke();
                                 }
 
-                            }
-                            else
-                            {
-                                OnLoginFailure?.Invoke();
-                            }
+
+                                //通知客户端登陆成功
+                                //if (success)
+                                //{
+                                //    new NotifyClientCommand().ExecuteAsync(cancellationToken);
+                                //}
 
 
-                            //通知客户端登陆成功
-                            //if (success)
-                            //{
-                            //    new NotifyClientCommand().ExecuteAsync(cancellationToken);
-                            //}
-
-
-                            break;
-                        case LoginProcessType.登陆回复:
-                            break;
-                        case LoginProcessType.已经在线:
-                            break;
-                        case LoginProcessType.超过限制:
-                            break;
-                        default:
-                            break;
+                                break;
+                            case LoginProcessType.登陆回复:
+                                break;
+                            case LoginProcessType.已经在线:
+                                break;
+                            case LoginProcessType.超过限制:
+                                break;
+                            default:
+                                break;
+                        }
                     }
+                    catch (Exception)
+                    {
+                       
+                    }
+                   
 
                 }
             }, cancellationToken);

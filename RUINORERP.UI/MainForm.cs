@@ -167,7 +167,6 @@ namespace RUINORERP.UI
         {
             InitializeComponent();
             lblStatusGlobal.Text = string.Empty;
-
             logger = _logger;
             _main = this;
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
@@ -703,6 +702,7 @@ namespace RUINORERP.UI
                 LoadUIPagesByLeft();
             }
         }
+
         #region  加载左边菜单
         private void LoadUIPagesByLeft()
         {
@@ -878,14 +878,12 @@ namespace RUINORERP.UI
         }
 
         #endregion
-
         private void SqlsugarSetup_CheckEvent(string sql)
         {
             if (AuthorizeController.GetShowDebugInfoAuthorization(AppContext))
             {
                 MainForm.Instance.uclog.AddLog(sql);
             }
-
         }
 
         #region ApplyAuthorizationRules

@@ -49,51 +49,53 @@ namespace RUINORERP.UI.IM
                     try
                     {
                         Thread.Sleep(1000);
-
-                        listboxForUsers.BeginUpdate();
-                        kryptonGroupBox1.Text = "用户列表【" + listboxForUsers.Items.Count + "】";
-                        if (MainForm.Instance.UserInfos.Count == 0)
+                        if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                         {
-                            listboxForUsers.Items.Clear();
-                        }
-                        if (MainForm.Instance.UserInfos.Count != 0 && MainForm.Instance.UserInfos.Count != listboxForUsers.Items.Count)
-                        {
-                            listboxForUsers.Items.Clear();
-                        }
-                        foreach (var item in MainForm.Instance.UserInfos)
-                        {
-
-                            bool exist = false;
-                            if (item != null && item.姓名 != null)
+                            listboxForUsers.BeginUpdate();
+                            kryptonGroupBox1.Text = "用户列表【" + listboxForUsers.Items.Count + "】";
+                            if (MainForm.Instance.UserInfos.Count == 0)
                             {
-                                foreach (KryptonListItem listItem in listboxForUsers.Items)
+                                listboxForUsers.Items.Clear();
+                            }
+                            if (MainForm.Instance.UserInfos.Count != 0 && MainForm.Instance.UserInfos.Count != listboxForUsers.Items.Count)
+                            {
+                                listboxForUsers.Items.Clear();
+                            }
+                            foreach (var item in MainForm.Instance.UserInfos)
+                            {
+
+                                bool exist = false;
+                                if (item != null && item.姓名 != null)
                                 {
-                                    if (listItem.Tag != null && listItem.Tag is UserInfo userInfo)
+                                    foreach (KryptonListItem listItem in listboxForUsers.Items)
                                     {
-                                        if (userInfo.姓名 == item.姓名)
+                                        if (listItem.Tag != null && listItem.Tag is UserInfo userInfo)
                                         {
-                                            exist = true;
+                                            if (userInfo.姓名 == item.姓名)
+                                            {
+                                                exist = true;
+                                            }
                                         }
                                     }
-                                }
 
-                                if (exist == true)
-                                {
-                                    //更新状态 ？
-                                    KryptonListItem listItem = listboxForUsers.Items.CastToList<KryptonListItem>().FirstOrDefault(x => x.Tag != null && x.Tag is UserInfo userInfo && userInfo.姓名 == item.姓名);
-                                    if (listItem != null)
+                                    if (exist == true)
                                     {
-                                        listItem.Tag = item;
-                                    }
+                                        //更新状态 ？
+                                        KryptonListItem listItem = listboxForUsers.Items.CastToList<KryptonListItem>().FirstOrDefault(x => x.Tag != null && x.Tag is UserInfo userInfo && userInfo.姓名 == item.姓名);
+                                        if (listItem != null)
+                                        {
+                                            listItem.Tag = item;
+                                        }
 
-                                }
-                                else
-                                {
-                                    listboxForUsers.Items.Add(CreateNewItem(item));
+                                    }
+                                    else
+                                    {
+                                        listboxForUsers.Items.Add(CreateNewItem(item));
+                                    }
                                 }
                             }
+                            listboxForUsers.EndUpdate();
                         }
-                        listboxForUsers.EndUpdate();
                     }
                     catch (Exception ex)
                     {

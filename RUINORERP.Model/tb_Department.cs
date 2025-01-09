@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:16:34
+// 时间：01/07/2025 21:48:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,6 +48,21 @@ namespace RUINORERP.Model
             set{
             base.PrimaryKeyID = _DepartmentID;
             SetProperty(ref _DepartmentID, value);
+            }
+        }
+
+        private long? _ID;
+        /// <summary>
+        /// 公司
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ID",ColDesc = "公司")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "公司" )]
+        [FKRelationAttribute("tb_Company","ID")]
+        public long? ID
+        { 
+            get{return _ID;}
+            set{
+            SetProperty(ref _ID, value);
             }
         }
 
@@ -124,6 +139,19 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(ID))]
+        public virtual tb_Company tb_company { get; set; }
+
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntry.DepartmentID))]
+        public virtual List<tb_MRP_ReworkEntry> tb_MRP_ReworkEntries { get; set; }
+        //tb_MRP_ReworkEntry.DepartmentID)
+        //DepartmentID.FK_MRP_ReworkEntry_REF_Department)
+        //tb_Department.DepartmentID)
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -131,6 +159,14 @@ namespace RUINORERP.Model
         public virtual List<tb_PurOrder> tb_PurOrders { get; set; }
         //tb_PurOrder.DepartmentID)
         //DepartmentID.FK_TB_PUROR_REFERENCE_TB_DEPAR)
+        //tb_Department.DepartmentID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_BOM_S.DepartmentID))]
+        public virtual List<tb_BOM_S> tb_BOM_Ss { get; set; }
+        //tb_BOM_S.DepartmentID)
+        //DepartmentID.FK_TB_BILLO_REF_TB_DEPAR1)
         //tb_Department.DepartmentID)
 
         //[Browsable(false)]
@@ -147,6 +183,14 @@ namespace RUINORERP.Model
         public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
         //tb_MaterialRequisition.DepartmentID)
         //DepartmentID.FK_MATERREQUI_REF_DEPAR)
+        //tb_Department.DepartmentID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturn.DepartmentID))]
+        public virtual List<tb_MRP_ReworkReturn> tb_MRP_ReworkReturns { get; set; }
+        //tb_MRP_ReworkReturn.DepartmentID)
+        //DepartmentID.FK_MRP_Reworkreturnl_REF_Department)
         //tb_Department.DepartmentID)
 
         //[Browsable(false)]
@@ -187,6 +231,14 @@ namespace RUINORERP.Model
         public virtual List<tb_FinishedGoodsInv> tb_FinishedGoodsInvs { get; set; }
         //tb_FinishedGoodsInv.DepartmentID)
         //DepartmentID.FK_TB_FINISINV_REF_TB_DEPAR)
+        //tb_Department.DepartmentID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.DepartmentID))]
+        public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
+        //tb_FM_PaymentApplication.DepartmentID)
+        //DepartmentID.FK_PAYMENTAPPLICATION_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
         //[Browsable(false)]
@@ -247,14 +299,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.DepartmentID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.DepartmentID)
-        //DepartmentID.FK_MANUFACTURINGORDER_REF_DEPARTMENT)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.DepartmentID))]
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
         //tb_FM_PaymentBill.DepartmentID)
@@ -271,14 +315,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_BOM_S.DepartmentID))]
-        public virtual List<tb_BOM_S> tb_BOM_Ss { get; set; }
-        //tb_BOM_S.DepartmentID)
-        //DepartmentID.FK_TB_BILLO_REF_TB_DEPAR1)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBill.DepartmentID))]
         public virtual List<tb_FM_PrePaymentBill> tb_FM_PrePaymentBills { get; set; }
         //tb_FM_PrePaymentBill.DepartmentID)
@@ -291,6 +327,14 @@ namespace RUINORERP.Model
         public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
         //tb_PurEntryRe.DepartmentID)
         //DepartmentID.FK_TB_PURENTRYRE__DEPARTMENT)
+        //tb_Department.DepartmentID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.DepartmentID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.DepartmentID)
+        //DepartmentID.FK_MANUFACTURINGORDER_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
 

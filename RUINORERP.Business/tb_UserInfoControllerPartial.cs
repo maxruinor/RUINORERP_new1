@@ -35,7 +35,7 @@ namespace RUINORERP.Business
         {
 
             List<tb_UserInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
-                            .Includes(t => t.tb_employee, e => e.tb_department)
+                            .Includes(t => t.tb_employee, e => e.tb_department, d => d.tb_company)
                             .AsNavQueryable()
                             .Includes(t => t.tb_User_Roles, ur => ur.tb_UserPersonalizeds,
                             r => r.tb_UIMenuPersonalizations, m => m.tb_UIQueryConditions)

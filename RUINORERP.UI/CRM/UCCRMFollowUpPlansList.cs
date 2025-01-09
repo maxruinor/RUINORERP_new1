@@ -79,7 +79,7 @@ namespace RUINORERP.UI.CRM
                 reminderRequest.BizPrimaryKey = PKValue.ToLong();
                 reminderRequest.BizType = BizType.CRM跟进计划;
                 request.requestInfo = reminderRequest;
-                MainForm.Instance._dispatcher.DispatchAsync(request, CancellationToken.None);
+                MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
             }
             return rs;
         }

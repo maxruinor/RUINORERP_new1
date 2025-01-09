@@ -6,6 +6,7 @@ using System.Threading;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using RUINORERP.Server.ServerSession;
 using TransInstruction;
+using TransInstruction.CommandService;
 
 namespace RUINORERP.Server.CommandService
 {
@@ -18,17 +19,33 @@ namespace RUINORERP.Server.CommandService
     /// </summary>
     public interface IServerCommand
     {
-        // void Execute();
-
-
+        public CmdOperation OperationType { get; set; }
         /// <summary>
         /// cancellationToken.IsCancellationRequested时不会执行
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task ExecuteAsync(CancellationToken cancellationToken);
+
+
+        /// <summary>
+        /// 解析相关数据给到指令的属性
+        /// </summary>
+        /// <param name="gd"></param>
+        /// <param name="FromSession"></param>
+        /// <returns></returns>
         bool AnalyzeDataPacket(OriginalData gd, SessionforBiz FromSession);
+
+        //构建请求的数据包，转发时,或主动发送时
+        void BuildDataPacket(object request = null);
+
+        /// <summary>
+        /// 不管是发送还是接收都有对应要操作的对象：数据包
+        /// </summary>
+        OriginalData DataPacket { get; set; }
     }
+
+
     //public abstract class Command
     //{
     //    public abstract void Execute();

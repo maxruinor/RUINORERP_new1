@@ -252,19 +252,6 @@ namespace RUINORERP.UI
             string configValue = configuration.GetSection("AllowedHosts").Value;
         }
 
-        ///// <summary>
-        ///// var obj = await App.GetDataPortal<personedit>.FetchAsync(42);
-        ///// </summary>
-        ///// <typeparam name="t"></typeparam>
-        ///// <returns></returns>
-        //public static IDataPortal<t> DataPortal<t>()
-        //{
-        //    return AppContext.GetRequiredService<IDataPortal<t>>();
-        //}
-
-
-
-
 
         /// <summary>
         /// 应用程序的主入口点。
@@ -289,9 +276,7 @@ namespace RUINORERP.UI
                     Console.WriteLine("接收到的命令行参数如下：");
                     foreach (var arg in args)
                     {
-                        AppContextData.OnlineUser.客户端版本 = arg;
-                        // Console.WriteLine(arg);
-                        //MessageBox.Show(arg);
+                        AppContextData.CurrentUser.客户端版本 = arg;
                     }
                 }
 
@@ -502,12 +487,12 @@ namespace RUINORERP.UI
                         #endregion
 
 
-                        var form1 = Startup.ServiceProvider.GetService<MainForm>();
+                          var form1 = Startup.ServiceProvider.GetService<MainForm>();
                         Application.Run(form1);
 
-                        //ILogger<MainForm> logger = null;
-                        // MainForm form1 = new MainForm(logger,null);
-                        //Application.Run(form1);
+                          //ILogger<MainForm> logger = null;
+                          // MainForm form1 = new MainForm(logger,null);
+                          //Application.Run(form1);
 
                     }
                     catch (Exception ex)

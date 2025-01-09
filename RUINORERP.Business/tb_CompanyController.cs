@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 17:51:58
+// 时间：01/07/2025 21:48:20
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -246,16 +246,14 @@ namespace RUINORERP.Business
             if (entity.ID > 0)
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Company>(entity as tb_Company)
-                    //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                        .Include(m => m.tb_Departments)
                             .ExecuteCommandAsync();
          
         }
         else    
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Company>(entity as tb_Company)
-                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                .Include(m => m.tb_Departments)
                                 .ExecuteCommandAsync();
         }
         
@@ -286,9 +284,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Company>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .Where(useLike, dto);
+                                .Includes(m => m.tb_Departments)
+                                        .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -297,9 +294,8 @@ namespace RUINORERP.Business
         {
             tb_Company entity = model as tb_Company;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Company>(m => m.ID== entity.ID)
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                                .ExecuteCommandAsync();
+                                .Include(m => m.tb_Departments)
+                                        .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -461,7 +457,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Company>> QueryByNavAsync()
         {
             List<tb_Company> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Company>()
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_Departments )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -480,7 +477,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Company>> QueryByNavAsync(Expression<Func<tb_Company, bool>> exp)
         {
             List<tb_Company> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Company>().Where(exp)
-                                    .ToListAsync();
+                                            .Includes(t => t.tb_Departments )
+                        .ToListAsync();
             
             foreach (var item in list)
             {
@@ -499,7 +497,8 @@ namespace RUINORERP.Business
          public virtual List<tb_Company> QueryByNav(Expression<Func<tb_Company, bool>> exp)
         {
             List<tb_Company> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Company>().Where(exp)
-                                    .ToList();
+                                        .Includes(t => t.tb_Departments )
+                        .ToList();
             
             foreach (var item in list)
             {
@@ -535,7 +534,8 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Company entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Company>().Where(w => w.ID == (long)id)
-                                     .FirstAsync();
+                                         .Includes(t => t.tb_Departments )
+                        .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

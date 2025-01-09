@@ -9,8 +9,6 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.IM
 {
-   
-
     public partial class PromptMessager : Office2007Form
     {
         [DllImport("user32.dll")]

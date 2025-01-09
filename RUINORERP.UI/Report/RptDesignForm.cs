@@ -19,7 +19,9 @@ using FastReport.Web;
 
 namespace RUINORERP.UI.Report
 {
-
+    /// <summary>
+    /// 报表设计窗体
+    /// </summary>
     public partial class RptDesignForm : KryptonForm
     {
         //https://blog.csdn.net/c_10086_/article/details/126271447  添加图片
@@ -32,6 +34,9 @@ namespace RUINORERP.UI.Report
         public List<object> PrintDataSources { get; set; }
 
 
+        public List<tb_Company> companyInfos { get; set; }
+
+        public List<ICurrentUserInfo> currUserInfos { get; set; }
 
 
         string reportTemplateFile = string.Empty;
@@ -452,13 +457,16 @@ namespace RUINORERP.UI.Report
                 printTemplate.ActionStatus = ActionStatus.新增;
             }
             TargetReport.RegisterData(PrintDataSources, "rd");
+            //报表控件注册数据
+            TargetReport.RegisterData(currUserInfos, "currUserInfo");
+            TargetReport.RegisterData(companyInfos, "companyInfo");
 
             designerControl1.Report = TargetReport;
             designerControl1.ShowMainMenu = true;
             // restore the design layout. Without this code, the designer tool windows will be unavailable
             designerControl1.UIStyle = FastReport.Utils.UIStyle.Office2010Blue;
             designerControl1.RefreshLayout();
-            this.Text = "贝思特系统-打印设计器----------" + printTemplate.Template_Name;// + string.Format("ReportTemplate\\{0}", ReportTemplateFile);
+            this.Text = "ERP系统-打印设计器----------" + printTemplate.Template_Name;// + string.Format("ReportTemplate\\{0}", ReportTemplateFile);
 
 
 

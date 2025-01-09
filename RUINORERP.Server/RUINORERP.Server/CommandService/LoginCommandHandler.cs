@@ -2,6 +2,7 @@
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.ServerSession;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -19,7 +20,7 @@ namespace RUINORERP.Server.CommandService
     [CommandHandler]
     public class LoginCommandHandler : ICommandHandler
     {
-        public bool CanHandle(IServerCommand command) => command is LoginCommand;
+        public bool CanHandle(IServerCommand command, BlockingCollection<IServerCommand> queue = null) => command is LoginCommand;
 
         public async Task HandleCommandAsync(IServerCommand command, CancellationToken cancellationToken)
         {
@@ -58,7 +59,7 @@ namespace RUINORERP.Server.CommandService
             }
             catch (Exception ex)
             {
-               
+
             }
         }
 

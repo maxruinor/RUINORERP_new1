@@ -5,19 +5,22 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TransInstruction;
+using TransInstruction.CommandService;
 
 namespace RUINORERP.UI.ClientCmdService
 {
     public class ReceiveCacheCommand : IClientCommand
     {
         public string productName { get; set; }
+        public CmdOperation OperationType { get ; set; }
+        public OriginalData DataPacket { get; set; }
 
         public bool AnalyzeDataPacket(OriginalData gd)
         {
             throw new NotImplementedException();
         }
 
-        public OriginalData BuildDataPacket(object request = null)
+        public void BuildDataPacket(object request = null)
         {
             throw new NotImplementedException();
         }

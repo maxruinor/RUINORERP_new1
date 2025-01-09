@@ -21,8 +21,7 @@ using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.BI
 {
-
-    [MenuAttrAssemblyInfo("账号管理", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.财务资料)]
+    [MenuAttrAssemblyInfo("付款账号", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.财务资料)]
     public partial class UCFMAccountList : BaseForm.BaseListGeneric<tb_FM_Account>
     {
         public UCFMAccountList()

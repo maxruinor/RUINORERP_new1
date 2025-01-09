@@ -386,12 +386,13 @@ namespace RUINORERP.Server
             // 注册 ICommandHandler 实现
             services.AddTransient<ICommandHandler, LoginCommandHandler>();
             services.AddTransient<ICommandHandler, ReceiveReminderCmdHandler>();
-            services.AddTransient<ICommandHandler, SendMessageCmdHandler>();
+            services.AddTransient<ICommandHandler, ReceiveResponseMessageCmdHandler>();
+            services.AddTransient<ICommandHandler, ReceiveEntityTransferCmdHandler>();
             // 注册 Command 实现
             services.AddTransient<IServerCommand, LoginCommand>();
             services.AddTransient<IServerCommand, ReceiveReminderCmd>();
-            services.AddTransient<IServerCommand, SendMessageCmd>();
-
+            services.AddTransient<IServerCommand, ReceiveResponseMessageCmd>();
+            services.AddTransient<IServerCommand, ReceiveEntityTransferCmd>();
 
             // 注册 CommandDispatcher 和其他相关服务
             ///services.AddSingleton<ICommandHandler<LoginCommand>, LoginCommandHandler>();
@@ -427,8 +428,6 @@ namespace RUINORERP.Server
                 .SetBasePath(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles"))
                 .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
                 .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
-                //客户端才用。验证是UI添加实体时用
-                //.AddJsonFile("GlobalValidator.json", optional: false, reloadOnChange: true)
                 .Build();
 
             //services.Configure<SystemGlobalconfig>(builder.GetSection("SystemGlobalConfig"));
@@ -629,7 +628,11 @@ namespace RUINORERP.Server
                         Type type = Assembly.LoadFrom("RUINORERP.Model.dll").GetType(tempModelTypes[i].FullName);
                         builder.Register(c => Activator.CreateInstance(type)).Named<BaseEntity>(tempModelTypes[i].Name);
                     }
-
+                    if (tempModelTypes[i].BaseType == typeof(BaseConfig))
+                    {
+                        Type type = Assembly.LoadFrom("RUINORERP.Model.dll").GetType(tempModelTypes[i].FullName);
+                        builder.Register(c => Activator.CreateInstance(type)).Named<BaseConfig>(tempModelTypes[i].Name);
+                    }
                 }
                 // ModelTypes.Add(tempModelTypes[i]);
             }

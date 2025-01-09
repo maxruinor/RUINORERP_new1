@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/29/2024 23:20:18
+// 时间：01/07/2025 21:48:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -31,6 +31,20 @@ namespace RUINORERP.Model.QueryDto
         }
 
     
+     
+
+        private long? _ID;
+        /// <summary>
+        /// 公司
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ID",ColDesc = "公司")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ID",IsNullable = true,ColumnDescription = "公司" )]
+        [FKRelationAttribute("tb_Company","ID")]
+        public long? ID 
+        { 
+            get{return _ID;}
+            set{SetProperty(ref _ID, value);}
+        }
      
 
         private string _DepartmentCode;

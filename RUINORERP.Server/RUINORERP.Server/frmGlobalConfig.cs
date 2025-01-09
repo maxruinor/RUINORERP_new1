@@ -48,11 +48,10 @@ namespace RUINORERP.Server
             if (configObject != null)
             {
                 // 将configObject转换为JObject
-                JObject configJson = JObject.FromObject(configObject);
+                //JObject configJson = JObject.FromObject(configObject);
 
                 // 创建一个新的JObject，并将SystemGlobalConfig作为根节点
                 JObject LastConfigJson = new JObject(new JProperty("SystemGlobalConfig", JObject.FromObject(configObject)));
-
 
                 //JObject newConfig = ParseConfigFromUI(); // 从UI解析新的配置
                 EditConfigCommand command = new EditConfigCommand(_configFileReceiver, LastConfigJson);
@@ -105,10 +104,13 @@ namespace RUINORERP.Server
 
             // 解析JSON，首先获取SystemGlobalConfig节点
             JObject configJson = JObject.Parse(json);
-            JObject systemGlobalConfigJson = configJson["SystemGlobalConfig"] as JObject;
+            JObject systemGlobalConfigJson = null;
+            if (configJson.TryGetValue(nameof(SystemGlobalconfig), out JToken token))
+            {
+                systemGlobalConfigJson = token as JObject;
 
-            // 将SystemGlobalConfig节点转换为SystemGlobalConfig对象
-            SystemGlobalconfig configObject = systemGlobalConfigJson.ToObject<SystemGlobalconfig>();
+                // 将SystemGlobalConfig节点转换为SystemGlobalConfig对象
+                SystemGlobalconfig configObject = systemGlobalConfigJson.ToObject<SystemGlobalconfig>();
 
 
             // 假设config.json已经被反序列化为Config对象
@@ -119,7 +121,7 @@ namespace RUINORERP.Server
             // 根据配置文件结构添加节点
             treeView1.Nodes.Add(root);
             propertyGrid1.SelectedObject = configObject;
-
+            }
         }
 
         private void RefreshData()

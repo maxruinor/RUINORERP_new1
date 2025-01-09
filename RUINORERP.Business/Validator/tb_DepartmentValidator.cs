@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：01/07/2025 21:48:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,6 +38,9 @@ namespace RUINORERP.Business
  
         
      
+ RuleFor(tb_Department =>tb_Department.ID).Must(CheckForeignKeyValueCanNull).WithMessage("公司:下拉选择值不正确。");
+ RuleFor(tb_Department =>tb_Department.ID).NotEmpty().When(x => x.ID.HasValue);
+
  RuleFor(tb_Department =>tb_Department.DepartmentCode).NotEmpty().WithMessage("部门代号:不能为空。");
 
  RuleFor(tb_Department =>tb_Department.DepartmentName).MaximumLength(127).WithMessage("部门名称:不能超过最大长度,127.");

@@ -65,7 +65,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     onlineuser.用户名 = userName;
                     onlineuser.姓名 = empName;
 
-                    MainForm.Instance.AppContext.OnlineUser = onlineuser;
+                    MainForm.Instance.AppContext.CurrentUser = onlineuser;
                 }
             }
             catch (Exception ex)
@@ -95,7 +95,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     rs = alreadyLogged;
                     string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
                     //如果正好是自己登陆的。不算已经登陆
-                    if (MainForm.Instance.AppContext.OnlineUser.SessionId == SessionID)
+                    if (MainForm.Instance.AppContext.CurrentUser.SessionId == SessionID)
                     {
                         return false;
                     }
@@ -122,7 +122,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 tx.PushString(System.DateTime.Now.ToString());
                 tx.PushString(UserName);
                 //排除自己当前的SessionId
-                tx.PushString(MainForm.Instance.AppContext.OnlineUser.SessionId);
+                tx.PushString(MainForm.Instance.AppContext.CurrentUser.SessionId);
                 OriginalData gd = new OriginalData();
                 gd.cmd = (byte)ClientCmdEnum.请求强制用户下线;
                 gd.One = null;
@@ -152,7 +152,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 tx.PushString(System.DateTime.Now.ToString());
                 tx.PushString(userName);
                 //排除自己当前的SessionId
-                tx.PushString(MainForm.Instance.AppContext.OnlineUser.SessionId);
+                tx.PushString(MainForm.Instance.AppContext.CurrentUser.SessionId);
                 OriginalData gd = new OriginalData();
                 gd.cmd = (byte)ClientCmdEnum.请求强制登陆上线;
                 gd.One = null;
@@ -291,6 +291,40 @@ namespace RUINORERP.UI.SuperSocketClient
             catch (Exception ex)
             {
                 MainForm.Instance.PrintInfoLog("接收服务器提示消息:" + ex.Message);
+            }
+            return Message;
+
+        }
+        public static string 接收服务器心跳回复(OriginalData gd)
+        {
+            string Message = "";
+            try
+            {
+                int index = 0;
+                ByteBuff bg = new ByteBuff(gd.Two);
+                 
+                //清空
+                MainForm.Instance.UserInfos = new List<UserInfo>();
+                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                if (!string.IsNullOrEmpty(json))
+                {
+                    if (json != "null")
+                    {
+                        UserInfo[] userInfoList = JsonConvert.DeserializeObject<UserInfo[]>(json);
+                        if (userInfoList != null)//(Newtonsoft.Json.Linq.JArray))
+                        {
+                            foreach (var item in userInfoList)
+                            {
+                                //上面已经清空了。
+                                MainForm.Instance.UserInfos.Add(item);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog("接收服务器心跳回复:" + ex.Message);
             }
             return Message;
 

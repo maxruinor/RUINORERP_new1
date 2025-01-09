@@ -22,6 +22,8 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using RUINORERP.Model.CommonModel;
 using System.Drawing;
 using RUINORERP.UI.ClientCmdService;
+using RUINORERP.Model.TransModel;
+using TransInstruction.CommandService;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -184,13 +186,13 @@ namespace RUINORERP.UI.SuperSocketClient
                 {
                     tx.PushString("");
                 }
-                tx.PushString(System.Environment.MachineName + ":" + MainForm.Instance.AppContext.OnlineUser.客户端版本);
-                MainForm.Instance.AppContext.OnlineUser.静止时间 = MainForm.GetLastInputTime();
-                tx.PushInt64(MainForm.Instance.AppContext.OnlineUser.静止时间);//电脑空闲时间
+                tx.PushString(System.Environment.MachineName + ":" + MainForm.Instance.AppContext.CurrentUser.客户端版本);
+                MainForm.Instance.AppContext.CurrentUser.静止时间 = MainForm.GetLastInputTime();
+                tx.PushInt64(MainForm.Instance.AppContext.CurrentUser.静止时间);//电脑空闲时间
                 tx.PushString(MainForm.Instance.AppContext.log.Path);
                 tx.PushString(MainForm.Instance.AppContext.log.ModName);
-                tx.PushBool(MainForm.Instance.AppContext.OnlineUser.在线状态);
-                tx.PushBool(MainForm.Instance.AppContext.OnlineUser.授权状态);
+                tx.PushBool(MainForm.Instance.AppContext.CurrentUser.在线状态);
+                tx.PushBool(MainForm.Instance.AppContext.CurrentUser.授权状态);
                 tx.PushString(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//客户端时间，用来对比服务器的时间，如果多个客户端时间与服务器不一样。则服务器有问题。相差一个小时以上。就直接断开客户端
                 gd.cmd = (byte)ClientCmdEnum.客户端心跳包;
                 gd.One = null;
@@ -493,11 +495,22 @@ namespace RUINORERP.UI.SuperSocketClient
                     string rs = string.Empty;
                     ServerCmdEnum msg = (ServerCmdEnum)e.Package.od.cmd;
                     OriginalData od = e.Package.od;
+                    if (ServerCmdEnum.心跳回复 != msg)
+                    {
+
+                    }
                     switch (msg)
                     {
-                        case ServerCmdEnum.复合型消息推送:
-                            var command = new ReceiveMessageCommand(od);
-                            MainForm.Instance._dispatcher.DispatchAsync(command, CancellationToken.None, od);
+                        case ServerCmdEnum.复合型实体处理:
+                            RequestReceiveEntityCmd ReceiverEntityCmd = new RequestReceiveEntityCmd(CmdOperation.Receive);
+                            ReceiverEntityCmd.DataPacket = od;
+                            MainForm.Instance.dispatcher.DispatchAsync(ReceiverEntityCmd, CancellationToken.None);
+                            break;
+
+                        case ServerCmdEnum.复合型消息处理:
+                            var MsgCommand = new RequestReceiveMessageCmd(CmdOperation.Receive);
+                            MsgCommand.DataPacket = od;
+                            MainForm.Instance.dispatcher.DispatchAsync(MsgCommand, CancellationToken.None);
                             break;
 
                         case ServerCmdEnum.工作流提醒推送:
@@ -635,6 +648,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
                             break;
                         case ServerCmdEnum.心跳回复:
+                            ClientService.接收服务器心跳回复(od);
                             break;
                         default:
                             break;

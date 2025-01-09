@@ -19,6 +19,8 @@ namespace RUINORERP.UI.ClientCmdService
     /// </summary>
     public class RequestLoginCommand : IClientCommand
     {
+        public CmdOperation OperationType { get; set; }
+        public OriginalData DataPacket { get; set; }
         public LoginProcessType requestType { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
@@ -35,7 +37,18 @@ namespace RUINORERP.UI.ClientCmdService
                () =>
             {
                 #region 执行方法
-                MainForm.Instance.ecs.AddSendData(BuildDataPacket(null));
+
+                switch (OperationType)
+                {
+                    case CmdOperation.Send:
+                        BuildDataPacket();
+                        break;
+                    case CmdOperation.Receive:
+                        AnalyzeDataPacket(DataPacket);
+                        break;
+                    default:
+                        break;
+                }
                 #endregion
             }
                ,
@@ -46,7 +59,7 @@ namespace RUINORERP.UI.ClientCmdService
         }
 
 
-        public OriginalData BuildDataPacket(object request = null)
+        public void BuildDataPacket(object request = null)
         {
             OriginalData gd = new OriginalData();
             try
@@ -57,7 +70,8 @@ namespace RUINORERP.UI.ClientCmdService
                {
                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
                });
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString(Username);
                 tx.PushString(Password);
                 tx.PushInt((int)requestType);
@@ -70,7 +84,8 @@ namespace RUINORERP.UI.ClientCmdService
             {
 
             }
-            return gd;
+            MainForm.Instance.ecs.AddSendData(gd);
+
         }
 
         public bool AnalyzeDataPacket(OriginalData gd)

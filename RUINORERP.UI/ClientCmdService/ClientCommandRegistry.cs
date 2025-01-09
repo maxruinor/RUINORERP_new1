@@ -31,9 +31,20 @@ namespace RUINORERP.UI.ClientCmdService
                 //{
                 if (type != null)
                 {
-                    var handler = (IClientCommand)Activator.CreateInstance(type);
-                    // Activator.CreateInstance(type) as IClientCommand;
-                    handlers.Add(handler);
+                    var instance = CreateInstance(type);
+                    if (instance != null)
+                    {
+                        handlers.Add(instance);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to create instance.");
+                    }
+
+                    //var handler = (IClientCommand)Activator.CreateInstance(type);
+                    //// Activator.CreateInstance(type) as IClientCommand;
+                    //handlers.Add(handler);
+
                 }
                 //}
             }
@@ -46,6 +57,54 @@ namespace RUINORERP.UI.ClientCmdService
             //    _handlers.Add(commandType, handler);
             //}
         }
+
+
+        public static IClientCommand CreateInstance(Type type)
+        {
+            // 首先尝试获取无参数的构造函数
+            ConstructorInfo defaultConstructor = type.GetConstructor(Type.EmptyTypes);
+            if (defaultConstructor != null)
+            {
+                return Activator.CreateInstance(type) as IClientCommand;
+            }
+            else
+            {
+                // 获取所有的构造函数
+                ConstructorInfo[] constructors = type.GetConstructors();
+                foreach (ConstructorInfo constructor in constructors)
+                {
+                    ParameterInfo[] parameters = constructor.GetParameters();
+                    object[] parameterValues = new object[parameters.Length];
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        // 这里可以根据参数的类型提供相应的值，以下是简单的示例，你可以根据具体情况修改
+                        if (parameters[i].ParameterType == typeof(CmdOperation))
+                        {
+                            parameterValues[i] = 1; //设置为 1  send  ,暂时要处理到这里。后面的判断 根据不同情况来处理
+                        }
+                        else if (parameters[i].ParameterType == typeof(string))
+                        {
+                            parameterValues[i] = "Hello World"; // 假设这里是字符串参数，设置为 "Hello World"
+                        }
+                        else
+                        {
+                            // 对于其他类型，你可能需要更复杂的逻辑来创建相应的参数值
+                            parameterValues[i] = null;
+                        }
+                    }
+                    try
+                    {
+                        return constructor.Invoke(parameterValues) as IClientCommand;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to invoke constructor: {ex.Message}");
+                    }
+                }
+            }
+            return null;
+        }
+
 
         public IEnumerable<IClientCommand> GetAllCommandHandlers()
         {

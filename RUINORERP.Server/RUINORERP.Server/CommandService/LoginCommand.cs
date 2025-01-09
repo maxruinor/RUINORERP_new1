@@ -41,6 +41,9 @@ namespace RUINORERP.Server.CommandService
         public string Password { get; set; }
         public tb_UserInfo user { get; set; }
         public OriginalData gd { get; set; }
+        public CmdOperation OperationType { get; set; }
+        public OriginalData DataPacket { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             // 登录逻辑
@@ -80,7 +83,8 @@ namespace RUINORERP.Server.CommandService
                                         foreach (var item in sessionList)
                                         {
                                             // 创建一个命令实例 
-                                            var message = new SendMessageCmd(item);
+                                            var message = new ReceiveResponseMessageCmd(CmdOperation.Send, null, item);
+                                            message.messageType = MessageType.Prompt;
                                             message.MessageContent = "因超出在线人数限制，您即将被强制下线。";
                                             message.promptType = PromptType.确认窗口;
                                             message.ToSession = item;
@@ -185,12 +189,13 @@ namespace RUINORERP.Server.CommandService
             return rs;
         }
 
-        //public void Execute()
-        //{
-        //    // 执行登录逻辑
-        //    // 同步执行登录逻辑
-        //    ExecuteAsync(CancellationToken.None).Wait();
-        //}
+        public void BuildDataPacket(object request = null)
+        {
+            throw new NotImplementedException();
+        }
+
+
+
 
 
     }

@@ -674,7 +674,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     #region 用户密码加密
                     List<tb_UserInfo> AllUsers = MainForm.Instance.AppContext.Db.Queryable<tb_UserInfo>()
-                        .Where(c => c.UserName== "梁淑文")
+                        .Where(c => c.UserName== "黄利")
                      .ToList();
                     for (int i = 0; i < AllUsers.Count; i++)
                     {

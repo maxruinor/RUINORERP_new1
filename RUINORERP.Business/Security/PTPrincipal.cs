@@ -98,7 +98,7 @@ namespace RUINORERP.Business.Security
                         }
                         appcontext.log.User_ID = user.User_ID;
                         //获取本地计算机名+本地计算机登录名
-                        appcontext.log.MachineName = appcontext.OnlineUser.客户端版本 + "-" + System.Environment.MachineName + "-" + System.Environment.UserName;
+                        appcontext.log.MachineName = appcontext.CurrentUser.客户端版本 + "-" + System.Environment.MachineName + "-" + System.Environment.UserName;
 
                         //调用方法
                         MacAddressHelper macHelper = new MacAddressHelper();
@@ -200,8 +200,8 @@ namespace RUINORERP.Business.Security
             }
             appcontext.CurUserInfo.Id = user.tb_employee.Employee_ID;
             appcontext.CurUserInfo.Name = user.tb_employee.Employee_Name;
-            appcontext.OnlineUser.登陆时间 = System.DateTime.Now;
-
+            appcontext.CurrentUser.登陆时间 = System.DateTime.Now;
+            appcontext.CompanyInfo = user.tb_employee.tb_department.tb_company;
 
             //一个人能在不同的角色组。可以多个。但是需要为已授权
             List<tb_RoleInfo> roles = new List<tb_RoleInfo>();

@@ -241,7 +241,7 @@ namespace RUINORERP.UI.IM
         }
 
 
-        private void ResponseToServer(MessageStatus status = MessageStatus.Cancel, int interval = 20)
+        private void ResponseToServer(MessageStatus status = MessageStatus.Unprocessed, int interval = 20)
         {
             //回复服务器
             ClientResponseData response = new ClientResponseData();

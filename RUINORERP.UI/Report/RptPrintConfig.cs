@@ -36,6 +36,9 @@ namespace RUINORERP.UI.Report
         /// 要打印的数据
         /// </summary>
         public List<object> PrintDataSources { get; set; }
+        public List<tb_Company> companyInfos { get; set; }
+
+        public List<ICurrentUserInfo> currUserInfos { get; set; }
 
         public RptPrintConfig()
         {
@@ -79,6 +82,8 @@ namespace RUINORERP.UI.Report
                 printTemplate.ActionStatus = ActionStatus.加载;
                 frm.bindingSourceTemplateDesign = bindingSourcePrintTemplate;
                 frm.PrintDataSources = this.PrintDataSources;
+                frm.currUserInfos = currUserInfos;
+                frm.companyInfos = companyInfos;
                 frm.ShowDialog();
             }
         }
@@ -210,7 +215,12 @@ namespace RUINORERP.UI.Report
             TargetReport.RegisterData(PrintDataSources, "rd");
             List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
             currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
+
+            List<tb_Company> companyInfo = new List<tb_Company>();
+            companyInfo.Add(MainForm.Instance.AppContext.CompanyInfo);
+
             TargetReport.RegisterData(currUserInfo, "currUserInfo");
+            TargetReport.RegisterData(companyInfo, "companyInfo");
 
             if (printTemplate.TemplateFileStream != null)
             {

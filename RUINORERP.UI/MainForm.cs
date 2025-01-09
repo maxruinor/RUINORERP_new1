@@ -85,6 +85,7 @@ using RUINORERP.UI.ClientCmdService;
 using RUINORERP.Global;
 using TransInstruction.CommandService;
 using HLH.Lib.Security;
+using Netron.NetronLight;
 
 
 
@@ -95,7 +96,7 @@ namespace RUINORERP.UI
     public partial class MainForm : KryptonForm
     {
 
-        //        IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
+        //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
         //。
 
         //IOptionsMonitor<T> 是一个单例服务，但它可以监听配置文件的更改并自动更新其值。当文件发生更改时，它会自动重新加载配置，使得下一次访问 CurrentValue 属性时能够获取到最新的配置值。这种机制使得 IOptionsMonitor<T> 适用于那些需要实时反映配置更改的场景
@@ -104,9 +105,9 @@ namespace RUINORERP.UI
         //IOptionsSnapshot<T> 的生命周期是作用域（Scoped），这意味着对于每一次HTTP请求，都会提供一个新的实例。如果在请求过程中配置文件发生了更改，这个实例仍然保持旧的值，直到新的请求到达，才会获取到新的配置值。因此，IOptionsSnapshot<T> 适合用在那些需要每个请求都使用最新配置快照的场景
 
         /// <summary>
-        /// 可配置性全局参数
+        /// 可配置性全局参数 不能设置为只读
         /// </summary>
-        public readonly IOptionsMonitor<SystemGlobalconfig> Globalconfig;
+        public IOptionsMonitor<SystemGlobalconfig> Globalconfig;
 
         #region 当前系统中所有用户信息
         private List<UserInfo> userInfos = new List<UserInfo>();
@@ -119,10 +120,12 @@ namespace RUINORERP.UI
 
         #endregion
 
+        /// <summary>
+        /// 指令调度员
+        /// </summary>
+        public ClientCommandDispatcher dispatcher;
 
-        public ClientCommandDispatcher _dispatcher;
 
- 
         /// <summary>
         /// 保存服务器的一些缓存信息。让客户端可以根据一些机制来获取。得到最新的信息
         /// </summary>
@@ -171,16 +174,17 @@ namespace RUINORERP.UI
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;
             ecs.OnConnectClosed += Ecs_OnConnectClosed;
-
-            Globalconfig = config;
-            // 监听配置变化
-            Globalconfig.OnChange(updatedConfig =>
+            if (config != null)
             {
-                Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
-            });
+                Globalconfig = config;
+                // 监听配置变化
+                Globalconfig.OnChange(updatedConfig =>
+                {
+                    Console.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
+                });
+            }
 
             AppContext = Program.AppContextData;
-
 
             //var clientCommandHandlers = new List<IClientCommand>
             //{
@@ -191,7 +195,7 @@ namespace RUINORERP.UI
 
             var clientCommandRegistry = new ClientCommandRegistry();
             var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
-            _dispatcher = new ClientCommandDispatcher(clientCommandHandlers);
+            dispatcher = new ClientCommandDispatcher(clientCommandHandlers);
 
         }
 
@@ -308,7 +312,7 @@ namespace RUINORERP.UI
             pageLog.Height = 30;
             return pageLog;
         }
-        /*
+
         private KryptonPage NewIMMsg()
         {
             ucMsg.Height = 30;
@@ -318,7 +322,7 @@ namespace RUINORERP.UI
             pageMsg.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
             pageMsg.Height = 30;
             return pageMsg;
-        }*/
+        }
         private KryptonPage NewForm()
         {
             return NewPage("NewForm ", 1, new UserControl1());
@@ -349,9 +353,10 @@ namespace RUINORERP.UI
         }
 
         public UClog uclog = Startup.GetFromFac<UClog>();
-        //public IM.UCMessager ucMsg = new IM.UCMessager();
+        public IM.UCMessager ucMsg = new IM.UCMessager();
 
         private string version = string.Empty;
+
 
 
         /// <summary>
@@ -364,6 +369,9 @@ namespace RUINORERP.UI
         /// 锁单
         /// </summary>
         public IMemoryCache CacheTemp { get; set; }
+
+
+
         private async void MainForm_Load(object sender, EventArgs e)
         {
             CacheTemp = Startup.GetFromFac<IMemoryCache>();
@@ -384,15 +392,10 @@ namespace RUINORERP.UI
             }
 
 
-            tb_Company company =await AppContext.Db.Queryable<tb_Company>().SingleAsync();
-            if (company != null)
-            {
-                this.Text = company.ShortName + "企业数字化集成ERP v2.0" + "_" + AppContext.OnlineUser.客户端版本;
-            }
-            else
-            {
-                this.Text =   "企业数字化集成ERP v2.0" + "_" + AppContext.OnlineUser.客户端版本;
-            }
+            this.Text = "企业数字化集成ERP v2.0" + "_" + AppContext.CurrentUser.客户端版本;
+            //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
+
+
 
             InitRemind();
             // logger.LogInformation("打开主窗体准备进入系统");
@@ -667,7 +670,7 @@ namespace RUINORERP.UI
                 // kryptonDockingManager1.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { NewPropertyGrid(), NewInput(), NewPropertyGrid(), NewInput() });
 
 
-                //                KryptonPage[] myppages = new KryptonPage[] { NewLog(), NewIMMsg() };
+                // KryptonPage[] myppages = new KryptonPage[] { NewLog(), NewIMMsg() };
                 KryptonPage[] myppages = new KryptonPage[] { NewLog() };
                 if (kryptonDockingManager1.Pages.FirstOrDefault(p => p.Name == "系统日志") == null)
                 {
@@ -675,6 +678,13 @@ namespace RUINORERP.UI
                     kryptonDockingManager1.MakeAutoHiddenRequest(myppages[0].UniqueName);
                     //kryptonDockingManager1.MakeAutoHiddenRequest(myppages[1].UniqueName);   IMMMMMM
                 }
+
+                KryptonPage IMPage = NewIMMsg();
+                IMPage.AllowDrop = false;
+                IMPage.SetFlags(KryptonPageFlags.All);
+                kryptonDockingManager1.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { IMPage });
+                kryptonDockingManager1.MakeAutoHiddenRequest(IMPage.UniqueName);//默认加载时隐藏
+
                 InitCenterPages();
                 LoadDefaultSkinMenu();
             }
@@ -978,7 +988,14 @@ namespace RUINORERP.UI
                     }
 
                 }
-
+                if (MainForm.Instance.AppContext.CompanyInfo == null)
+                {
+                    MainForm.Instance.AppContext.CompanyInfo = MainForm.Instance.AppContext.Db.Queryable<tb_Company>().Single();
+                }
+                if (AppContext.CompanyInfo != null)
+                {
+                    this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v2.0" + "_" + AppContext.CurrentUser.客户端版本;
+                }
 
                 UIBizSrvice.RequestCache(nameof(tb_RoleInfo));
             }
@@ -1026,8 +1043,8 @@ namespace RUINORERP.UI
             {
                 this.SystemOperatorState.Text = "注销";
                 Program.AppContextData.IsOnline = false;
-                MainForm.Instance.AppContext.OnlineUser.授权状态 = false;
-                MainForm.Instance.AppContext.OnlineUser.在线状态 = false;
+                MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
+                MainForm.Instance.AppContext.CurrentUser.在线状态 = false;
                 ClearUI();
                 ClearRoles();
                 System.GC.Collect();
@@ -2408,7 +2425,7 @@ namespace RUINORERP.UI
                         {
                             needRequestCache = true;
                         }
-                        
+
                     }
                 }
                 else
@@ -2503,7 +2520,7 @@ namespace RUINORERP.UI
             reminderRequest.BizPrimaryKey = 11231321;
             reminderRequest.BizType = BizType.CRM跟进计划;
             request.requestInfo = reminderRequest;
-            MainForm.Instance._dispatcher.DispatchAsync(request, CancellationToken.None);
+            MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
         }
 
         private void tsbtnSysTest_Click(object sender, EventArgs e)

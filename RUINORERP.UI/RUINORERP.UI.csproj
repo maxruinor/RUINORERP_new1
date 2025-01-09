@@ -1112,8 +1112,9 @@
     <Compile Include="ClientCmdService\ClientCommandDispatcher.cs" />
     <Compile Include="ClientCmdService\ClientCommandRegistry.cs" />
     <Compile Include="ClientCmdService\IClientCommand.cs" />
+    <Compile Include="ClientCmdService\RequestReceiveEntityCmd.cs" />
     <Compile Include="ClientCmdService\ReceiveCacheCommand.cs" />
-    <Compile Include="ClientCmdService\ReceiveMessageCommand.cs" />
+    <Compile Include="ClientCmdService\RequestReceiveMessageCmd.cs" />
     <Compile Include="ClientCmdService\RequestLoginCommand.cs" />
     <Compile Include="ClientCmdService\RequestReminderCommand.cs" />
     <Compile Include="CommonUI\frmInputObject.cs">
@@ -1450,6 +1451,7 @@
       <DependentUpon>frmTest.cs</DependentUpon>
     </Compile>
     <Compile Include="IM\FormMoveState.cs" />
+    <Compile Include="IM\IMessage.cs" />
     <Compile Include="IM\MessagePrompt.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1463,6 +1465,18 @@
       <DependentUpon>NotificationBox.cs</DependentUpon>
     </Compile>
     <Compile Include="IM\NotificationService.cs" />
+    <Compile Include="IM\UCChatBox.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="IM\UCChatBox.Designer.cs">
+      <DependentUpon>UCChatBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="IM\UCMessager.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="IM\UCMessager.Designer.cs">
+      <DependentUpon>UCMessager.cs</DependentUpon>
+    </Compile>
     <Compile Include="IM\WidgetMessager.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2091,16 +2105,16 @@
     </Compile>
     <Compile Include="Startup.cs" />
     <Compile Include="StatusBusy.cs" />
-    <Compile Include="SuperSocketClient\BizPackageInfo.cs" />
-    <Compile Include="SuperSocketClient\BizPipelineFilter.cs" />
-    <Compile Include="SuperSocketClient\ClientDataBuilder.cs" />
-    <Compile Include="SuperSocketClient\ClientService.cs" />
-    <Compile Include="SuperSocketClient\EasyClientService.cs" />
-    <Compile Include="SuperSocketClient\ReceiveFilter.cs" />
-    <Compile Include="SuperSocketClient\SocketClientHelper.cs" />
-    <Compile Include="SuperSocketClient\SocketSession.cs" />
-    <Compile Include="SuperSocketClient\SystemOptimizerService.cs" />
-    <Compile Include="SuperSocketClient\WorkflowService.cs" />
+    <Compile Include="ClientSuperSocket\BizPackageInfo.cs" />
+    <Compile Include="ClientSuperSocket\BizPipelineFilter.cs" />
+    <Compile Include="ClientSuperSocket\ClientDataBuilder.cs" />
+    <Compile Include="ClientSuperSocket\ClientService.cs" />
+    <Compile Include="ClientSuperSocket\EasyClientService.cs" />
+    <Compile Include="ClientSuperSocket\ReceiveFilter.cs" />
+    <Compile Include="ClientSuperSocket\SocketClientHelper.cs" />
+    <Compile Include="ClientSuperSocket\SocketSession.cs" />
+    <Compile Include="ClientSuperSocket\SystemOptimizerService.cs" />
+    <Compile Include="ClientSuperSocket\WorkflowService.cs" />
     <Compile Include="SysConfig\ConfigHelper.cs" />
     <Compile Include="SysConfig\ConfigKeys.cs" />
     <Compile Include="SysConfig\ConfigManager.cs" />
@@ -2989,6 +3003,12 @@
     <EmbeddedResource Include="IM\NotificationBox.resx">
       <DependentUpon>NotificationBox.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="IM\UCChatBox.resx">
+      <DependentUpon>UCChatBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IM\UCMessager.resx">
+      <DependentUpon>UCMessager.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="IM\WidgetMessager.resx">
       <DependentUpon>WidgetMessager.cs</DependentUpon>
     </EmbeddedResource>
@@ -3602,6 +3622,14 @@
       <Project>{d9c7b9fb-8234-4c54-8a7a-4172878e3586}</Project>
       <Name>HLH.Lib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\LightTalkChatBox\LightTalkChatBox\LightTalkChatBox.csproj">
+      <Project>{2b53b023-f715-4ff0-ac73-33321f4de09c}</Project>
+      <Name>LightTalkChatBox</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LightTalkChatBubble\LightTalkChatBubble\LightTalkChatBubble.csproj">
+      <Project>{b247bd26-975d-4e7e-a1de-e4e8a5c70f8f}</Project>
+      <Name>LightTalkChatBubble</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Netron.Core\Netron.Core.csproj">
       <Project>{96aebbee-4203-45f3-bcf5-7b73bf256bda}</Project>
       <Name>Netron.Core</Name>
@@ -3701,8 +3729,12 @@
     <Content Include="ATechnologyStack\说明.txt" />
     <Content Include="AutoUpdaterList.xml" />
     <Content Include="FM\财务管理.txt" />
-    <Content Include="IMResources\Profiles\a.gif" />
-    <Content Include="IMResources\Profiles\face_default.jpg" />
+    <Content Include="IMResources\Profiles\a.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="IMResources\Profiles\face_default.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="InitData.Sql" />
     <Content Include="MRP\生产管理.txt" />
     <Content Include="ProductEAV\多属性产品库说明.txt" />
@@ -3804,7 +3836,7 @@
     <Content Include="SqlScript\死锁维护.sql" />
     <Content Include="SqlScript\维护.sql" />
     <Content Include="SqlScript\销售报表.sql" />
-    <Content Include="SuperSocketClient\通讯中心.txt" />
+    <Content Include="ClientSuperSocket\通讯中心.txt" />
     <EmbeddedResource Include="SysConfig\DynamicConfig\DynamicConfig.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>

@@ -80,7 +80,14 @@ namespace RUINORERP.Model.Context
         /// <summary>
         /// 内存中的业务级的用户信息
         /// </summary>
-        public UserInfo OnlineUser { get; set; } = new UserInfo();
+        public UserInfo CurrentUser { get; set; } = new UserInfo();
+
+
+        /// <summary>
+        /// 公司的信息
+        /// </summary>
+        public tb_Company CompanyInfo { get; set; }
+
 
         /// <summary>
         /// 数据库级的用户信息

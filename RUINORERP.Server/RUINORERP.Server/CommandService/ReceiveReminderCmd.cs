@@ -23,6 +23,7 @@ namespace RUINORERP.Server.CommandService
     /// </summary>
     public class ReceiveReminderCmd : IServerCommand
     {
+        public CmdOperation OperationType { get; set; }
         public RequestReminderType requestType { get; set; }
         private PromptType promptType { get; set; }
         public ReminderData requestInfo { get; set; }
@@ -30,6 +31,7 @@ namespace RUINORERP.Server.CommandService
         public SessionforBiz FromSession { get; set; }
 
         public OriginalData gd { get; set; }
+        public OriginalData DataPacket { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public ReceiveReminderCmd(OriginalData gd, SessionforBiz FromSession)
         {
@@ -94,11 +96,6 @@ namespace RUINORERP.Server.CommandService
                 );
         }
 
-        //public void Execute()
-        //{
-        //    SendMessage();
-        //}
-
 
         public void SendMessage(SessionforBiz FromSession = null, SessionforBiz ToSession = null)
         {
@@ -136,7 +133,7 @@ namespace RUINORERP.Server.CommandService
                     tx.PushString(item.Value.User.用户名);
                     tx.PushString(item.Value.User.姓名);
                 }
-                ToSession.AddSendData((byte)ServerCmdEnum.复合型消息推送, new byte[] { (byte)requestType }, tx.toByte());
+                ToSession.AddSendData((byte)ServerCmdEnum.复合型消息处理, new byte[] { (byte)requestType }, tx.toByte());
             }
             catch (Exception ex)
             {
@@ -147,6 +144,11 @@ namespace RUINORERP.Server.CommandService
         }
 
         public bool AnalyzeDataPacket(OriginalData gd, SessionforBiz FromSession)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void BuildDataPacket(object request = null)
         {
             throw new NotImplementedException();
         }

@@ -622,16 +622,35 @@ namespace RUINORERP.Server.BizService
 
 
 
-        public static void 回复心跳(SessionforBiz PlayerSession, ByteBuff tx)
+        public static void 回复心跳(SessionforBiz PlayerSession)
         {
             try
             {
+                ByteBuff tx = new ByteBuff(100); 
+                List<UserInfo> userInfos = new List<UserInfo>();
 
+                // tx.PushInt(frmMain.Instance.sessionListBiz.Count);
+                foreach (var item in frmMain.Instance.sessionListBiz)
+                {
+                    if (item.Value != null && item.Value.User != null)
+                    {
+                        userInfos.Add(item.Value.User);
+                    }
+                }
+                string json = JsonConvert.SerializeObject(userInfos,
+                      new JsonSerializerSettings
+                      {
+                          Converters = new List<JsonConverter> { new CustomCollectionJsonConverter() },
+                          ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                      });
+
+
+                tx.PushString(json);
                 PlayerSession.AddSendData((byte)ServerCmdEnum.心跳回复, null, tx.toByte());
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("用户登陆:" + ex.Message);
+                Comm.CommService.ShowExceptionMsg("心跳回复 to client:" + ex.Message);
             }
 
         }

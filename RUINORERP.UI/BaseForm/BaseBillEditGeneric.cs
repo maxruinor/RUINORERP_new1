@@ -1165,6 +1165,7 @@ namespace RUINORERP.UI.BaseForm
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
+            ae.CloseCaseOpinions = "完成结案";
             ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
             frm.BindData(ae);
             if (frm.ShowDialog() == DialogResult.OK)//审核了。不管是同意还是不同意
@@ -2511,7 +2512,7 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode)
                 {
                     //自动保存的时间秒数  30秒
-                    if (MainForm.Instance.AppContext.OnlineUser.静止时间 > 30 && MainForm.Instance.AppContext.IsOnline)
+                    if (MainForm.Instance.AppContext.CurrentUser.静止时间 > 30 && MainForm.Instance.AppContext.IsOnline)
                     {
                         bool result = await AutoSaveDataAsync();
                         if (!result)

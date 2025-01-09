@@ -208,8 +208,8 @@ namespace RUINORERP.UI
                                 }
                                 else
                                 {
-                                    MainForm.Instance.AppContext.OnlineUser.授权状态 = true;
-                                    MainForm.Instance.AppContext.OnlineUser.在线状态 = true;
+                                    MainForm.Instance.AppContext.CurrentUser.授权状态 = true;
+                                    MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
                                 }
                                 
                                 //如果已经登陆 ，则提示要不要T掉原来的。
@@ -238,9 +238,9 @@ namespace RUINORERP.UI
                             }
 
                             //只保存一次，注销不算 1990-1-1 不算
-                            if (Program.AppContextData.OnlineUser.登陆时间 < System.DateTime.Now.AddYears(-30))
+                            if (Program.AppContextData.CurrentUser.登陆时间 < System.DateTime.Now.AddYears(-30))
                             {
-                                Program.AppContextData.OnlineUser.登陆时间 = System.DateTime.Now;
+                                Program.AppContextData.CurrentUser.登陆时间 = System.DateTime.Now;
                             }
 
                             UserGlobalConfig.Instance.AutoSavePwd = chksaveIDpwd.Checked;

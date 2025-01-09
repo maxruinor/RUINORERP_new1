@@ -665,7 +665,8 @@ namespace RUINORERP.UI.CRM
                 object obj = frmaddg.bindingSourceEdit.AddNew();
                 tb_CRM_Collaborator ContactInfo = obj as tb_CRM_Collaborator;
                 ContactInfo.Customer_id = _EditEntity.Customer_id;
-
+                ContactInfo.Created_at = System.DateTime.Now;
+                ContactInfo.Created_by= MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 BaseEntity bty = ContactInfo as BaseEntity;
                 bty.ActionStatus = ActionStatus.加载;
                 BusinessHelper.Instance.EditEntity(bty);

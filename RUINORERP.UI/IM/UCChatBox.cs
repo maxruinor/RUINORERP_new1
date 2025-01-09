@@ -11,75 +11,73 @@ using System.Windows.Forms;
 using TransInstruction.DataPortal;
 using TransInstruction;
 using TransInstruction.DataModel;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.UI.ClientCmdService;
+using RUINORERP.Model.TransModel;
+using System.Threading;
+using TransInstruction.CommandService;
 
 namespace RUINORERP.UI.IM
 {
     public partial class UCChatBox : UserControl
     {
-
-        public OnlineUserInfo Sender { get; set; }
-        public OnlineUserInfo Receiver { get; set; }
-
+        public UserInfo Sender { get; set; }
+        public UserInfo Receiver { get; set; }
 
         public UCChatBox()
         {
             InitializeComponent();
         }
 
-
-        public bool 发送消息(OriginalData gd)
-        {
-            bool rs = false;
-            try
-            {
-                int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                TransInstruction.DataModel.OnlineUserInfo userinfo = new TransInstruction.DataModel.OnlineUserInfo();
-                string sender = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string Message = ByteDataAnalysis.GetString(gd.Two, ref index);
-                // OnlineUserInfo MainForm.Instance.ecs.UserInfos.FindLast(t => t.SessionId == sender);
-                //  UCMessager.Instance.txtMessageHistory.AppendText("@" + sender + "  " + Message);
-                chatBox.addChatBubble(ChatBox.BubbleSide.RIGHT, Message, sender, "110", @"temp\testProfile2.png");
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.PrintInfoLog("用户登陆:" + ex.Message);
-            }
-            return rs;
-
-        }
-
-
-
         private void btnSend_Click(object sender, EventArgs e)
         {
+
             SendMessger();
+
         }
 
         private void UCChatBox_Load(object sender, EventArgs e)
         {
-            Sender = MainForm.Instance.ecs.CurrentUser;
+            Sender = MainForm.Instance.AppContext.CurrentUser;
         }
-
 
         private void SendMessger()
         {
-            // MainForm.Instance.LoginServer();
+            if (this.txtSender.Text.Trim().Length == 0)
+            {
+                return;
+            }
+
+            Sender = MainForm.Instance.AppContext.CurrentUser;
             if (Receiver != null)
             {
-                OriginalData od = ActionForClient.SendMessage(txtSender.Text, Receiver.SessionId, Receiver.EmpName);
-                MainForm.Instance.ecs.AddSendData(od);
-                chatBox.addChatBubble(ChatBox.BubbleSide.RIGHT, txtSender.Text, Sender.EmpName, Sender.SessionId, @"IMResources\Profiles\face_default.jpg");
+                //如果删除了。服务器上的工作流就可以删除了。
+                RequestReceiveMessageCmd request = new RequestReceiveMessageCmd(CmdOperation.Send);
+                request.MessageType = MessageType.IM;
+                request.MessageContent = txtSender.Text;
+                request.nextProcesszStep = TransInstruction.CommandService.NextProcesszStep.转发;
+                request.ReceiverSessionID = Receiver.SessionId;
+                MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
+
+                // OriginalData od = ActionForClient.SendMessage(txtSender.Text, Receiver.SessionId, Receiver.EmpName);
+                // MainForm.Instance.ecs.AddSendData(od);
+                chatBox.addChatBubble(ChatBox.BubbleSide.RIGHT, txtSender.Text, Sender.姓名, Sender.SessionId, @"IMResources\Profiles\face_default.jpg");
                 txtSender.Text = "";
+                request.MessageReceived += (sender, e) =>
+                {
+                    // 处理或显示消息
+                    Console.WriteLine($"Message in other component: {e.Message}");
+
+                    chatBox.addChatBubble(ChatBox.BubbleSide.LEFT, e.Message, e.SenderName, e.SenderSessionID, @"IMResources\Profiles\face_default.jpg");
+                    //MainForm.Instance.uclog.AddLog($"收到消息了" + Message);
+
+                };
             }
             else
             {
                 MainForm.Instance.PrintInfoLog("请选择要发送的对象。");
             }
-            //OriginalData od1 = ActionForClient.SendMessage(txtSender.Text, "传到服务器的测试", "");
-            //MainForm.Instance.ecs.AddSendData(od1);
-            //return;
-            //
+
         }
 
         /// <summary>

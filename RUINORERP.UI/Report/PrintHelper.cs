@@ -19,7 +19,7 @@ namespace RUINORERP.UI.Report
     public class PrintHelper<M> where M : class
     {
 
-
+        /*
         public static async void Print_old(List<M> EditEntitys, RptMode rptMode)
         {
             if (EditEntitys == null || EditEntitys.Count == 0)
@@ -84,6 +84,10 @@ namespace RUINORERP.UI.Report
                     }
                     List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
                     currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
+
+                    List<tb_Company> companyInfo = new List<tb_Company>();
+                    companyInfo.Add(MainForm.Instance.CompanyInfo);
+
                     #endregion
 
                     if (printConfig.tb_PrintTemplates.Count == 0)
@@ -123,6 +127,7 @@ namespace RUINORERP.UI.Report
                     //报表控件注册数据
                     FReport.RegisterData(objlist, "rd");
                     FReport.RegisterData(currUserInfo, "currUserInfo");
+                    FReport.RegisterData(companyInfo, "companyInfo");
                     if (printTemplate.TemplateFileStream != null)
                     {
                         byte[] ReportBytes = (byte[])printTemplate.TemplateFileStream;
@@ -183,7 +188,7 @@ namespace RUINORERP.UI.Report
             }
 
         }
-
+        */
 
         /// <summary>
         /// 打印指定主表明细
@@ -198,8 +203,13 @@ namespace RUINORERP.UI.Report
             {
                 return rs;
             }
-            List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
-            currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
+            List<ICurrentUserInfo> currUserInfos = new List<ICurrentUserInfo>();
+            currUserInfos.Add(MainForm.Instance.AppContext.CurUserInfo);
+
+            List<tb_Company> companyInfos = new List<tb_Company>();
+            companyInfos.Add(MainForm.Instance.AppContext.CompanyInfo);
+
+
             BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
 
             #region 要打印的数据源
@@ -231,7 +241,7 @@ namespace RUINORERP.UI.Report
                 if (rptMode == RptMode.DESIGN)
                 {
                     objlist.Add(mlist[0]);
-                    DESIGN(printConfig, objlist);
+                    DESIGN(printConfig, objlist, companyInfos, currUserInfos);
                     ////释放资源
                     FReport.Dispose();
                     return rs;
@@ -241,7 +251,8 @@ namespace RUINORERP.UI.Report
 
                     //报表控件注册数据
                     FReport.RegisterData(mlist, "rd");
-                    FReport.RegisterData(currUserInfo, "currUserInfo");
+                    FReport.RegisterData(currUserInfos, "currUserInfo");
+                    FReport.RegisterData(companyInfos, "companyInfo");
 
                     var printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
                     if (printTemplate == null && printConfig != null && printConfig.tb_PrintTemplates.Count > 0)
@@ -320,7 +331,7 @@ namespace RUINORERP.UI.Report
             return rs;
         }
 
-
+        /*
 
         /// <summary>
         /// 设计时取了传入数据 源的第一个类型作为单号这些。所以这里master如果不是主要类型来标识业务的。就后面添加
@@ -337,6 +348,10 @@ namespace RUINORERP.UI.Report
             }
             List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
             currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
+
+            List<tb_Company> companyInfo = new List<tb_Company>();
+            companyInfo.Add(MainForm.Instance.CompanyInfo);
+
             BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
             #region 要打印的数据源
 
@@ -461,7 +476,7 @@ namespace RUINORERP.UI.Report
             return rs;
         }
 
-
+        */
 
 
         /// <summary>
@@ -478,6 +493,10 @@ namespace RUINORERP.UI.Report
             bool rs = false;
             List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
             currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
+
+            List<tb_Company> companyInfo = new List<tb_Company>();
+            companyInfo.Add(MainForm.Instance.AppContext.CompanyInfo);
+
             #region 要打印的数据源
 
             List<object> objlist = new List<object>();
@@ -489,7 +508,7 @@ namespace RUINORERP.UI.Report
             if (rptMode == RptMode.DESIGN)
             {
 
-                DESIGN(printConfig, objlist);
+                DESIGN(printConfig, objlist, companyInfo, currUserInfo);
                 ////释放资源
                 FReport.Dispose();
                 return rs;
@@ -499,7 +518,7 @@ namespace RUINORERP.UI.Report
                 //报表控件注册数据
                 FReport.RegisterData(objlist, "rd");
                 FReport.RegisterData(currUserInfo, "currUserInfo");
-
+                FReport.RegisterData(companyInfo, "companyInfo");
                 var printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
                 if (printTemplate == null && printConfig != null && printConfig.tb_PrintTemplates.Count > 0)
                 {
@@ -695,180 +714,18 @@ namespace RUINORERP.UI.Report
 
 
 
-        private static void DESIGN(tb_PrintConfig printConfig, List<object> objlist)
+        private static void DESIGN(tb_PrintConfig printConfig, List<object> objlist, List<tb_Company> companies = null, List<ICurrentUserInfo> currentUsers = null)
         {
             RptPrintConfig frmPrintConfig = new RptPrintConfig();
             frmPrintConfig.printConfig = printConfig;
             frmPrintConfig.PrintDataSources = objlist;
+            frmPrintConfig.companyInfos = companies;
+            frmPrintConfig.currUserInfos = currentUsers;
             frmPrintConfig.ShowDialog();
         }
 
 
-        /*
-        public static void PrintOperation(List<M> printDatas, RptMode rptMode)
-        {
-            if (printDatas == null || printDatas.Count == 0)
-            {
-                MessageBox.Show("没有要打印的数据！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
 
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
-            //这里只是取打印配置信息
-            CommBillData cbd = bcf.GetBillData<M>(printDatas[0]);
-            tb_PrintConfig printConfig = MainForm.Instance.AppContext.Db.Queryable<tb_PrintConfig>()
-                .Includes(t => t.tb_PrintTemplates)
-                .Where(c => c.BizName == cbd.BizName && c.BizType == (int)cbd.BizType)
-                .First();
-            if (printConfig == null || printConfig.tb_PrintTemplates == null)
-            {
-
-
-            }
-            else
-            {
-                FastReport.Report FReport;
-                FReport = new FastReport.Report();
-
-                List<object> objlist = new List<object>();
-                List<M> mlist = GetPrintDatas(printDatas);
-                if (mlist == null)
-                {
-                    MessageBox.Show(cbd.BizName + "没有提供完整的打印数据，请联系管理员");
-                    return;
-                }
-                foreach (var item in mlist)
-                {
-                    objlist.Add(item);
-                }
-                FReport.RegisterData(objlist, "rd");
-                List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
-                currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
-                FReport.RegisterData(currUserInfo, "currUserInfo");
-                if (printConfig.tb_PrintTemplates.Count == 0)
-                {
-                    MessageBox.Show("请先配置打印模板！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-                var printTemplate = printConfig.tb_PrintTemplates[0];
-                if (printTemplate.TemplateFileStream != null)
-                {
-                    byte[] ReportBytes = (byte[])printTemplate.TemplateFileStream;
-                    using (System.IO.MemoryStream Stream = new System.IO.MemoryStream(ReportBytes))
-                    {
-                        FReport.Load(Stream);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("请先配置正确的打印模板！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                switch (rptMode)
-                {
-                    case RptMode.DESIGN:
-                        break;
-                    case RptMode.PREVIEW:
-                        RptPreviewForm frm = new RptPreviewForm();
-                        frm.Text = cbd.BizName + "打印预览";
-                        frm.ReprotfileName = printTemplate.Template_Name;
-                        frm.MyReport = FReport;
-                        frm.ShowDialog();
-                        break;
-                    case RptMode.PRINT:
-
-                        ////////打印////////
-                        //设置默认打印机
-                        FReport.PrintPrepared();
-                        if (printConfig.PrinterSelected)
-                        {
-                            FReport.PrintSettings.ShowDialog = false;
-                            FReport.PrintSettings.Printer = printConfig.PrinterName;
-                        }
-
-                        FReport.Print();
-                        ////释放资源
-                        FReport.Dispose();
-                        打印状态更新
-                        if (editEntity.ContainsProperty("PrintStatus"))
-                        {
-                            int PrintStatus = (int)ReflectionHelper.GetPropertyValue(editEntity, "PrintStatus");
-                            PrintStatus++;
-                            editEntity.SetPropertyValue("PrintStatus", PrintStatus);
-                            //await AppContext.Db.Updateable<T>(EditEntity).UpdateColumns(t => new { t.PrintStatus }).ExecuteCommandAsync();
-                            var dt = new Dictionary<string, object>();
-                            dt.Add(PKCol, pkid);
-                            dt.Add("PrintStatus", PrintStatus);
-                            await MainForm.Instance.AppContext.Db.Updateable(dt).AS(typeof(M).Name).WhereColumns(PKCol).ExecuteCommandAsync();
-                        }
-                        break;
-                    default:
-                        break;
-                }
-
-            }
-
-
-
-
-
-        }
-
-
-
-        public static void PrintDesigned(List<M> printDatas)
-        {
-            if (printDatas == null || printDatas.Count == 0)
-            {
-                MessageBox.Show("请选要处理的数据");
-                return;
-            }
-
-            BillConverterFactory bcf = MainForm.Instance.AppContext.GetRequiredService<BillConverterFactory>();
-            CommBillData cbd = bcf.GetBillData<M>(printDatas[0]);
-            tb_PrintConfig printConfig = MainForm.Instance.AppContext.Db.Queryable<tb_PrintConfig>()
-                .Includes(t => t.tb_PrintTemplates)
-                .Where(c => c.BizName == cbd.BizName && c.BizType == (int)cbd.BizType)
-                .First();
-            if (printConfig == null)
-            {
-                printConfig = new tb_PrintConfig();
-                printConfig.Config_Name = "系统配置" + cbd.BizName;
-                printConfig.PrinterSelected = false;
-                printConfig.BizName = cbd.BizName;
-                printConfig.BizType = (int)cbd.BizType;
-                //新建一个配置
-                printConfig = MainForm.Instance.AppContext.Db.Insertable<tb_PrintConfig>(printConfig).ExecuteReturnEntity();
-            }
-            RptPrintConfig frmPrintConfig = new RptPrintConfig();
-            frmPrintConfig.printConfig = printConfig;
-            List<object> objlist = new List<object>();
-            List<M> mlist = GetPrintDatas(printDatas);
-            if (mlist == null)
-            {
-                MessageBox.Show(cbd.BizName + "没有提供完整的打印数据，请联系管理员");
-                return;
-            }
-            foreach (var item in mlist)
-            {
-                objlist.Add(item);
-            }
-            frmPrintConfig.PrintDataSources = objlist;
-            //frmPrintConfig.PrintDataSources = printDatas.Cast<object>().ToList(); 
-            frmPrintConfig.ShowDialog();
-            // RptDesignForm frm = new RptDesignForm();
-            // frm.reportPrint = rp;
-            // frm.ShowDialog();
-
-            //List<Category> FBusinessObject;
-            //FastReport.Report FReport;
-            //FReport = new FastReport.Report();
-
-            ////  FReport.RegisterData(FBusinessObject, "Categories");
-            //FReport.Design();
-        }
-        */
 
         public static bool CheckPrinter(string printerName1)
         {

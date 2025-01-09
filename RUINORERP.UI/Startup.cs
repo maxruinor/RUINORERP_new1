@@ -388,12 +388,20 @@ namespace RUINORERP.UI
         private static void RegisterForm(ContainerBuilder _builder)
         {
             System.Reflection.Assembly Assemblyobj = System.Reflection.Assembly.GetExecutingAssembly();
-            Type[]? types = Assemblyobj?.GetExportedTypes();
+            Type[]? AllTypes = Assemblyobj?.GetExportedTypes();
+
+            //主动排除指定接口的类
+            Type[] types = AllTypes.ToList().Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type)).ToArray();
+
             if (types != null)
             {
                 var descType = typeof(MenuAttrAssemblyInfo);
                 foreach (Type type in types)
                 {
+
+                    // .Where(x => x.GetConstructors().Length > 0) //没有构造函数的排除
+
+
                     if (type.Name.Contains("ButtonInfo"))
                     {
 
@@ -538,6 +546,11 @@ namespace RUINORERP.UI
 
 
         #endregion 注入窗体-结束
+
+
+
+
+
         /// <summary>
         /// 自带框架注入 2023-10-08
         /// </summary>

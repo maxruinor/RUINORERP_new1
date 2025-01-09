@@ -30,6 +30,10 @@ using RUINORERP.Extensions.ServiceExtensions;
 using static RUINORERP.Extensions.ServiceExtensions.EditConfigCommand;
 using NPOI.SS.Formula.Functions;
 using TransInstruction;
+using RUINORERP.UI.ClientCmdService;
+using TransInstruction.CommandService;
+using System.Threading;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -41,46 +45,46 @@ namespace RUINORERP.UI.SysConfig
     public partial class UCGlobalDynamicConfig : UserControl
     {
         private readonly CommandManager _commandManager;
+        private readonly string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.DynamicConfigFileDirectory);
         private ConfigFileReceiver _configFileReceiver;
-        private readonly string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
+
         public UCGlobalDynamicConfig()
         {
             InitializeComponent();
-
             _commandManager = new CommandManager();
         }
 
-        private void LoadData()
-        {
+        //private void LoadData()
+        //{
 
-            #region 系统配置
-            // 解析JSON，首先获取SystemGlobalConfig节点
-            JObject sGconfigJson = JObject.Parse(File.ReadAllText(File.ReadAllText(basePath + "/" + nameof(SystemGlobalconfig) + ".json")));
-            JObject sgConfigJson = sGconfigJson["SystemGlobalconfig"] as JObject;
+        //    #region 系统配置
+        //    // 解析JSON，首先获取SystemGlobalConfig节点
+        //    JObject sGconfigJson = JObject.Parse(File.ReadAllText(File.ReadAllText(basePath + "/" + nameof(SystemGlobalconfig) + ".json")));
+        //    JObject sgConfigJson = sGconfigJson["SystemGlobalconfig"] as JObject;
 
-            // 将SystemGlobalConfig节点转换为SystemGlobalConfig对象
-            SystemGlobalconfig SgconfigObject = sgConfigJson.ToObject<SystemGlobalconfig>();
-
-
-            //ThreeStateTreeNode nd = new ThreeStateTreeNode();
-            //nd.Text = "配置参数";
-            //treeView1.Nodes.Add(nd);
-
-            // 假设config.json已经被反序列化为Config对象
-            // SystemGlobalconfig configObject = JsonConvert.DeserializeObject<SystemGlobalconfig>(File.ReadAllText("config.json"));
-            // 绑定到TreeView
-            TreeNode sgConfigNode = new TreeNode("全局配置");
-            sgConfigNode.Tag = SgconfigObject;
-            // 根据配置文件结构添加节点
-            treeView1.Nodes.Add(sgConfigNode);
-
-            #endregion
+        //    // 将SystemGlobalConfig节点转换为SystemGlobalConfig对象
+        //    SystemGlobalconfig SgconfigObject = sgConfigJson.ToObject<SystemGlobalconfig>();
 
 
+        //    //ThreeStateTreeNode nd = new ThreeStateTreeNode();
+        //    //nd.Text = "配置参数";
+        //    //treeView1.Nodes.Add(nd);
+
+        //    // 假设config.json已经被反序列化为Config对象
+        //    // SystemGlobalconfig configObject = JsonConvert.DeserializeObject<SystemGlobalconfig>(File.ReadAllText("config.json"));
+        //    // 绑定到TreeView
+        //    TreeNode sgConfigNode = new TreeNode("全局配置");
+        //    sgConfigNode.Tag = SgconfigObject;
+        //    // 根据配置文件结构添加节点
+        //    treeView1.Nodes.Add(sgConfigNode);
+
+        //    #endregion
 
 
-            // treeView1.Nodes[0].Expand();
-        }
+
+
+        //    // treeView1.Nodes[0].Expand();
+        //}
 
 
 
@@ -98,7 +102,7 @@ namespace RUINORERP.UI.SysConfig
 
             // 读取文件内容
             // string json = File.ReadAllText("GlobalValidator.json");
-            string json = File.ReadAllText(basePath + "/" + className + ".json");
+            string json = File.ReadAllText(System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.DynamicConfigFileDirectory) + "/" + className + ".json");
 
             // 解析JSON，首先获取SystemGlobalConfig节点
             JObject configJson = JObject.Parse(json);
@@ -324,7 +328,7 @@ namespace RUINORERP.UI.SysConfig
             if (propertyGrid1.SelectedObject != null)
             {
                 // 将configObject转换为JObject
-                JObject configJson = JObject.FromObject(propertyGrid1.SelectedObject);
+                // JObject configJson = JObject.FromObject(propertyGrid1.SelectedObject);
 
                 // 创建一个新的JObject，并将GlobalValidatorConfig作为根节点
                 JObject LastConfigJson = new JObject(new JProperty(propertyGrid1.SelectedObject.GetType().Name, JObject.FromObject(propertyGrid1.SelectedObject)));
@@ -353,6 +357,14 @@ namespace RUINORERP.UI.SysConfig
             OriginalData odforCache = ActionForClient.更新动态配置<T>(propertyGrid1.SelectedObject);
             byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
             MainForm.Instance.ecs.client.Send(buffer);
+
+            RequestReceiveEntityCmd request = new RequestReceiveEntityCmd(CmdOperation.Send);
+            request.requestType = EntityTransferCmdType.处理动态配置;
+            request.nextProcesszStep = NextProcesszStep.转发;
+            request.SendObject = propertyGrid1.SelectedObject;
+            MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
+
+
             //// 保存到JSON或XML
             //File.WriteAllText("config.json", jsonConfig.ToString());
             ////xmlConfig.Save("config.xml");

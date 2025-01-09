@@ -1081,8 +1081,8 @@ namespace TransInstruction
                 byte[] model = new byte[1];
                 model = source.Skip(3).Take(1).ToArray();
                 byte mtype = model[0];
-                MessageType mt = new MessageType();
-                mt = (MessageType)mtype;
+                GameMessageType mt = new GameMessageType();
+                mt = (GameMessageType)mtype;
                 //1是说话，2，是呼喊  3是黄色警告，150 是提示右下角灰色文字
                 rs += mt.ToString() + "|";
                 int msglen = 0;
@@ -1116,8 +1116,8 @@ namespace TransInstruction
                 Int16 cmd = ByteDataAnalysis.GetInt16(source, ref index);
 
                 int mtype = ByteDataAnalysis.GetByte(source, ref index);
-                MessageType mt = new MessageType();
-                mt = (MessageType)mtype;
+                GameMessageType mt = new GameMessageType();
+                mt = (GameMessageType)mtype;
                 //1是说话，2，是呼喊  3是黄色警告，150 是提示右下角灰色文字
                 rs += mt.ToString() + "|";
 

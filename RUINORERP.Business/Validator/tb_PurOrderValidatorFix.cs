@@ -44,12 +44,16 @@ namespace RUINORERP.Business
            .Custom((value, context) =>
            {
                var purOrder = context.InstanceToValidate as tb_PurOrder;
-               if (purOrder != null && purOrder.DataStatus == (int)DataStatus.新建)
+               if (purOrder != null)
                {
                    //根据配置判断预交日期是不是必须填写
                    //实际情况是 保存时可能不清楚交期，保存后截图发给供应商后才知道。这时提交才要求
                    if (ValidatorConfig.CurrentValue.预交日期必填)
                    {
+                       if (purOrder.PreDeliveryDate==null || purOrder.PreDeliveryDate.HasValue)
+                       {
+                           context.AddFailure("预交日期：必须填写。");
+                       }
                        RuleFor(x => x.PreDeliveryDate).NotNull().WithMessage("预交日期：必须填写。");
                        RuleFor(x => x.PreDeliveryDate).NotEmpty().When(c => c.PreDeliveryDate.HasValue).WithMessage("预交日期：必须填写。");
                    }

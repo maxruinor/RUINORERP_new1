@@ -184,13 +184,11 @@ namespace RUINORERP.UI.Common
                 //_ecs.client.Send(buffer1);
 
                 RequestLoginCommand request = new RequestLoginCommand();
+                request.OperationType = CmdOperation.Send;
                 request.requestType = LoginProcessType.登陆;
                 request.Username = userName;
                 request.Password = password;
-                MainForm.Instance._dispatcher.DispatchAsync(request, cancellationToken);
-
-
-
+                MainForm.Instance.dispatcher.DispatchAsync(request, cancellationToken);
                 rs = _ecs.client.IsConnected;
                 UserGlobalConfig.Instance.Serialize();
             }

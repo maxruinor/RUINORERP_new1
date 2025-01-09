@@ -20,12 +20,14 @@ namespace RUINORERP.Model.TransModel
     {
         Text, // 文本消息
         BusinessData, // 业务数据
-        Event // 事件通知
+        Prompt, // 提示
+        Event,  // 事件通知
+        IM, // 即时通
     }
 
     public enum PromptType
     {
-        
+
         提示窗口,
 
 
@@ -69,7 +71,7 @@ namespace RUINORERP.Model.TransModel
     }
 
 
-     
+
 
 
 

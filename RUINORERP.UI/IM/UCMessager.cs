@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Data;
 using System.Linq;
+using Krypton.Toolkit;
+
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -13,9 +15,12 @@ using TransInstruction.DataPortal;
 using TransInstruction.DataModel;
 using LightTalkChatBox;
 using Krypton.Navigator;
-using Krypton.Toolkit;
 using SourceGrid2.Win32;
 using System.Web.UI.WebControls;
+using RUINORERP.Model.CommonModel;
+using System.Windows.Documents;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
+using RUINORERP.Common.Extensions;
 
 namespace RUINORERP.UI.IM
 {
@@ -47,35 +52,47 @@ namespace RUINORERP.UI.IM
 
                         listboxForUsers.BeginUpdate();
                         kryptonGroupBox1.Text = "用户列表【" + listboxForUsers.Items.Count + "】";
-                        if (MainForm.Instance.ecs.UserInfos.Count == 0)
+                        if (MainForm.Instance.UserInfos.Count == 0)
                         {
                             listboxForUsers.Items.Clear();
                         }
-                        foreach (var item in MainForm.Instance.ecs.UserInfos)
+                        if (MainForm.Instance.UserInfos.Count != 0 && MainForm.Instance.UserInfos.Count != listboxForUsers.Items.Count)
                         {
-                            //跳过自己
-                            if (item.SessionId == MainForm.Instance.ecs.CurrentUser.SessionId || item.EmpName == MainForm.Instance.ecs.CurrentUser.EmpName)
+                            listboxForUsers.Items.Clear();
+                        }
+                        foreach (var item in MainForm.Instance.UserInfos)
+                        {
+
+                            bool exist = false;
+                            if (item != null && item.姓名 != null)
                             {
-                                continue;
-                            }
-                            bool exist;
-                            if (item != null && item.EmpName != null)
-                            {
-                                if (listboxForUsers.Items.Contains(item))
+                                foreach (KryptonListItem listItem in listboxForUsers.Items)
                                 {
-                                    exist = true;
+                                    if (listItem.Tag != null && listItem.Tag is UserInfo userInfo)
+                                    {
+                                        if (userInfo.姓名 == item.姓名)
+                                        {
+                                            exist = true;
+                                        }
+                                    }
+                                }
+
+                                if (exist == true)
+                                {
                                     //更新状态 ？
+                                    KryptonListItem listItem = listboxForUsers.Items.CastToList<KryptonListItem>().FirstOrDefault(x => x.Tag != null && x.Tag is UserInfo userInfo && userInfo.姓名 == item.姓名);
+                                    if (listItem != null)
+                                    {
+                                        listItem.Tag = item;
+                                    }
+
                                 }
                                 else
                                 {
-                                    exist = false;
-                                    //add
-                                    listboxForUsers.Items.Add(item);
-
+                                    listboxForUsers.Items.Add(CreateNewItem(item));
                                 }
                             }
                         }
-
                         listboxForUsers.EndUpdate();
                     }
                     catch (Exception ex)
@@ -86,6 +103,28 @@ namespace RUINORERP.UI.IM
                 }
             });
         }
+
+
+        private object CreateNewItem(UserInfo user)
+        {
+            KryptonListItem item = new KryptonListItem();
+            item.ShortText = user.姓名;
+
+            // item.LongText = "(" + _rand.Next(Int32.MaxValue).ToString() + ")";
+
+            //跳过自己
+            if (user.姓名 == MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name)
+            {
+                item.Image = imageListBody.Images[0];
+            }
+            else
+            {
+                item.Image = imageListBody.Images[1];
+            }
+            item.Tag = user;
+            return item;
+        }
+
 
         private void UCMessager_Load(object sender, EventArgs e)
         {
@@ -134,13 +173,15 @@ namespace RUINORERP.UI.IM
                                                Color.FromArgb(213, 206, 219), Color.FromArgb(244, 232, 204),
                                                Color.FromArgb(250, 252, 183), Color.FromArgb(218, 207, 239) };
 
-        private KryptonPage AddTopPage(OnlineUserInfo userInfo)
+        //应该不是选一个人就创建一个。而已如果有则将数据更换一下就可以了。
+        //或是选中的显示。其它的隐藏？
+        public KryptonPage AddTopPage(UserInfo userInfo)
         {
             // Create a new krypton page to be added
             KryptonPage page = new KryptonPage();
 
             // Set the page title
-            page.Text = "与" + userInfo.EmpName + "的对话";
+            page.Text = "与" + userInfo.姓名 + "的对话";
 
             // Remove the default image for the page
             page.ImageSmall = null;
@@ -170,7 +211,7 @@ namespace RUINORERP.UI.IM
             chatBox.Receiver = userInfo;
             chatBox.Dock = DockStyle.Fill;
             page.Controls.Add(chatBox);
-            page.Name = userInfo.SessionId;
+            page.Name = userInfo.姓名;
             // Add page to end of the navigator collection
             kryptonNavigator1.Pages.Add(page);
 
@@ -231,60 +272,6 @@ namespace RUINORERP.UI.IM
         }
         */
 
-        public string 接收消息(OriginalData od)
-        {
-            string Message = string.Empty;
-            try
-            {
-                try
-                {
-                    MainForm.Instance.Invoke(new Action(() =>
-                    {
-                        int index = 0;
-                        ByteBuff bg = new ByteBuff(od.Two);
-                        TransInstruction.DataModel.OnlineUserInfo userinfo = new TransInstruction.DataModel.OnlineUserInfo();
-                        string sendtime = ByteDataAnalysis.GetString(od.Two, ref index);
-                        string sessinid = ByteDataAnalysis.GetString(od.Two, ref index);
-                        string MsgSender = ByteDataAnalysis.GetString(od.Two, ref index);
-                        Message = ByteDataAnalysis.GetString(od.Two, ref index);
-                        if (IM.UCMessager.Instance.kryptonNavigator1.Pages.Contains(sessinid))
-                        {
-                            if (IM.UCMessager.Instance.kryptonNavigator1.Pages[sessinid].Controls[0] is UCChatBox ucchatBox)
-                            {
-                                ucchatBox.chatBox.addChatBubble(ChatBox.BubbleSide.LEFT, Message, MsgSender, sessinid, @"IMResources\Profiles\face_default.jpg");
-                                //MainForm.Instance.uclog.AddLog($"收到消息了" + Message);
-                            }
-                        }
-                        else
-                        {
-                            //
-                            KryptonPage page = AddTopPage(userinfo);
-                            if (page.Controls[0] is UCChatBox ucchatBox)
-                            {
-                                ucchatBox.chatBox.addChatBubble(ChatBox.BubbleSide.LEFT, Message, MsgSender, sessinid, @"IMResources\Profiles\face_default.jpg");
-                            }
-                        }
-
-                    }));
-
-                }
-                catch (Exception ex)
-                {
-
-                }
-
-
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.PrintInfoLog("用户登陆:" + ex.Message);
-            }
-            return Message;
-
-        }
-
-
-
 
         private KryptonPage NewEmbeddedPage(string title)
         {
@@ -299,14 +286,31 @@ namespace RUINORERP.UI.IM
 
         private void listboxForUsers_DoubleClick(object sender, EventArgs e)
         {
-            KryptonPage page = kryptonNavigator1.Pages.Where(c => c.Name == (listboxForUsers.SelectedItem as OnlineUserInfo).SessionId).FirstOrDefault();
+            UserInfo clickUserinfo = (listboxForUsers.SelectedItem as KryptonListItem).Tag as UserInfo;
+            if (clickUserinfo.姓名 == MainForm.Instance.AppContext.CurrentUser.姓名)
+            {
+                //自己不能和自己说话
+                //后面说话内容。是不是缓存到本地？
+                return;
+            }
+            KryptonPage page = kryptonNavigator1.Pages.Where(c => c.Name == clickUserinfo.姓名).FirstOrDefault();
             if (page != null)
             {
+                page.Visible = true;
                 kryptonNavigator1.SelectedPage = page;
+                //其它的隐藏
+                kryptonNavigator1.Pages.Where(c => c.Name != clickUserinfo.姓名).ForEach(c => c.Visible = false);
             }
             else
             {
-                AddTopPage(listboxForUsers.SelectedItem as OnlineUserInfo);
+                if (listboxForUsers.SelectedItem is KryptonListItem item)
+                {
+                    if (item.Tag != null && item.Tag is UserInfo user)
+                    {
+                        AddTopPage(user);
+                    }
+                }
+
             }
 
         }

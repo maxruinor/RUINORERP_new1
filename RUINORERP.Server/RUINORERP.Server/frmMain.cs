@@ -79,9 +79,9 @@ namespace RUINORERP.Server
         public tb_sys_RegistrationInfo registrationInfo = new tb_sys_RegistrationInfo();
 
         /// <summary>
-        /// 可配置性全局参数
+        /// 可配置性全局参数 不要设置为只读 readonly
         /// </summary>
-        public readonly IOptionsMonitor<SystemGlobalconfig> Globalconfig;
+        public IOptionsMonitor<SystemGlobalconfig> Globalconfig;
 
 
         //保存要更新 分发的配置数据，（客户不在线时） 是不是 类似的情况。通知都是这样。比方管理员发布一个通知 在线吗上收到。没在线的 上线后收到

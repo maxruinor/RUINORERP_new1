@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Reflection;
+using System.Collections.Concurrent;
 namespace RUINORERP.Server.CommandService
 {
     //直接用接口来识别了
@@ -34,8 +35,19 @@ namespace RUINORERP.Server.CommandService
         /// 比较发送消息。如果对方不在线。就不能处理。要等下一次？
         /// </summary>
         /// <param name="command"></param>
+        /// <param name="queue">如果有队列。则是如果不在线就重新加入队列</param>
         /// <returns></returns>
-        bool CanHandle(IServerCommand command);
+        bool CanHandle(IServerCommand command, BlockingCollection<IServerCommand> queue = null);
+
+        /*
+          else
+                {
+                    //如果是因为不在线
+                    //重新放回队列或存储起来 ,当用户上线后再推送过去？
+                    queue.Add(command);
+                    // 或者存储在持久化存储中，直到用户上线
+                }
+         */
     }
 
 

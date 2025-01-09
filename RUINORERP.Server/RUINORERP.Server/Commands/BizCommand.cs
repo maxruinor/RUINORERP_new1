@@ -25,6 +25,7 @@ using Microsoft.VisualBasic.ApplicationServices;
 using System.Numerics;
 using TransInstruction.CommandService;
 using RUINORERP.Server.CommandService;
+using RUINORERP.Model.TransModel;
 
 namespace RUINORERP.Server.Commands
 {
@@ -60,7 +61,7 @@ namespace RUINORERP.Server.Commands
 
         public async ValueTask ExecuteAsync(IAppSession session, BizPackageInfo package, CancellationToken cancellationToken)
         {
-            SessionforBiz Player = session as SessionforBiz;
+            SessionforBiz fromPlayer = session as SessionforBiz;
             await Task.Delay(0);
 
             OriginalData gd = new OriginalData();
@@ -94,20 +95,28 @@ namespace RUINORERP.Server.Commands
                     {
                         if (frmMain.Instance.IsDebug)
                         {
-                            frmMain.Instance.PrintMsg($"收到客户端{Player.User.用户名}的指令:" + CleintCmd.ToString());
+                            frmMain.Instance.PrintMsg($"收到客户端{fromPlayer.User.用户名}的指令:" + CleintCmd.ToString());
                         }
                     }
                     switch (CleintCmd)
                     {
+
+                        case ClientCmdEnum.复合型消息处理:
+                            // 创建一个命令实例 
+                            var message = new ReceiveResponseMessageCmd(CmdOperation.Receive, fromPlayer);
+                            message.DataPacket = gd;
+                            await message.ExecuteAsync(CancellationToken.None);
+                            break;
+
                         case ClientCmdEnum.复合型登陆请求:
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(Player.User.用户名 + "复合型登陆请求");
+                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "复合型登陆请求");
                             }
                             // 创建一个命令实例 
                             var MixLoginCommand = new LoginCommand();
                             MixLoginCommand.gd = gd;
-                            MixLoginCommand.RequestSession = Player;
+                            MixLoginCommand.RequestSession = fromPlayer;
                             _commandScheduler.queue.Add(MixLoginCommand);
 
                             break;
@@ -115,47 +124,55 @@ namespace RUINORERP.Server.Commands
                         case ClientCmdEnum.复合型工作流请求:
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(Player.User.用户名 + "复合型工作流请求");
+                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "复合型工作流请求");
                             }
                             // 创建一个命令实例 
-                            var receiveReminderCmd = new ReceiveReminderCmd(gd, Player);
+                            var receiveReminderCmd = new ReceiveReminderCmd(gd, fromPlayer);
                             // _dispatcher.RegisterHandler<LoginCommand>(loginCommand); // 注册命令处理函数
                             _commandScheduler.queue.Add(receiveReminderCmd);
                             break;
-
+                        case ClientCmdEnum.复合型实体请求:
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "复合型实体请求");
+                            }
+                            // 创建一个命令实例 
+                            var receiveEntityTransferCmd = new ReceiveEntityTransferCmd(gd, fromPlayer, CmdOperation.Receive);
+                            _commandScheduler.queue.Add(receiveEntityTransferCmd);
+                            break;
                         case ClientCmdEnum.更新动态配置:
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(Player.User.用户名 + "更新动态配置");
+                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "更新动态配置");
                             }
-                            UserService.接收更新动态配置指令(Player, gd);
+                            UserService.接收更新动态配置指令(fromPlayer, gd);
                             break;
 
                         case ClientCmdEnum.工作流提醒回复:
 
-                            WorkflowServiceReceiver.接收工作流提醒回复(Player, gd);
+                            WorkflowServiceReceiver.接收工作流提醒回复(fromPlayer, gd);
                             break;
 
 
                         case ClientCmdEnum.工作流提醒请求:
 
-                            WorkflowServiceReceiver.接收工作流提醒请求(Player, gd);
+                            WorkflowServiceReceiver.接收工作流提醒请求(fromPlayer, gd);
                             break;
 
 
                         //按类型 工作流的 可以做子指令，暂时为了测试快。先不处理了
                         case ClientCmdEnum.工作流审批:
 
-                            WorkflowServiceReceiver.接收审批结果事件推送(Player, gd);
+                            WorkflowServiceReceiver.接收审批结果事件推送(fromPlayer, gd);
                             break;
                         case ClientCmdEnum.工作流启动:
 
-                            WorkflowServiceReceiver.启动工作流(Player, gd);
+                            WorkflowServiceReceiver.启动工作流(fromPlayer, gd);
                             //  WorkflowServiceReceiver.接收工作流提交(Player, gd);
                             break;
                         case ClientCmdEnum.工作流指令:
 
-                            WorkflowServiceReceiver.接收工作流审批(Player, gd);
+                            WorkflowServiceReceiver.接收工作流审批(fromPlayer, gd);
                             break;
                         case ClientCmdEnum.请求强制用户下线:
                             //T掉指定用户。
@@ -182,18 +199,18 @@ namespace RUINORERP.Server.Commands
                         case ClientCmdEnum.用户登陆:
                             _cache.Set("用户登陆", "用户登陆");
 
-                            tb_UserInfo user = await UserService.接收用户登陆指令(Player, gd);
-                            if (UserService.用户登陆回复(Player, user))
+                            tb_UserInfo user = await UserService.接收用户登陆指令(fromPlayer, gd);
+                            if (UserService.用户登陆回复(fromPlayer, user))
                             {
                                 //判断 是不是有相同的用户已经登陆了。有的话，则提示新登陆的人是不是T掉旧的用户。不是的话自己退出。
-                                var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(Player.SessionID) && c.User.用户名 == user.UserName);
+                                var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(fromPlayer.SessionID) && c.User.用户名 == user.UserName);
                                 if (ExistSession != null)
                                 {
-                                    UserService.回复用户重复登陆(Player, ExistSession);
+                                    UserService.回复用户重复登陆(fromPlayer, ExistSession);
                                 }
                                 else
                                 {
-                                    UserService.回复用户重复登陆(Player, ExistSession);
+                                    UserService.回复用户重复登陆(fromPlayer, ExistSession);
                                 }
 
                                 //登陆成功时。
@@ -212,8 +229,8 @@ namespace RUINORERP.Server.Commands
 
                                 }
 
-                                UserService.发送在线列表(Player);
-                                UserService.发送缓存信息列表(Player);
+                                UserService.发送在线列表(fromPlayer);
+                                UserService.发送缓存信息列表(fromPlayer);
 
 
                             }
@@ -228,7 +245,7 @@ namespace RUINORERP.Server.Commands
                                 //自己的不会上传。 只转给超级管理员。
                                 if (sessionforBiz.User.超级用户)
                                 {
-                                    SystemService.转发异常数据(Player, sessionforBiz, gd);
+                                    SystemService.转发异常数据(fromPlayer, sessionforBiz, gd);
                                 }
                             }
 
@@ -239,19 +256,19 @@ namespace RUINORERP.Server.Commands
                             string RequestTableName = ByteDataAnalysis.GetString(gd.Two, ref index);
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(Player.User.用户名 + "请求缓存表：" + RequestTableName);
+                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "请求缓存表：" + RequestTableName);
                             }
                             Stopwatch stopwatchSender = Stopwatch.StartNew();
                             stopwatchSender.Start();
                             //如果指定了表名，则只发送指定表的数据，否则全部发送
                             if (!string.IsNullOrEmpty(RequestTableName) && BizCacheHelper.Manager.NewTableList.Keys.Contains(RequestTableName))
                             {
-                                UserService.发送缓存数据列表(Player, RequestTableName);
+                                UserService.发送缓存数据列表(fromPlayer, RequestTableName);
                             }
                             stopwatchSender.Stop();
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintInfoLog($"发送缓存数据{RequestTableName}给{Player.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
+                                frmMain.Instance.PrintInfoLog($"发送缓存数据{RequestTableName}给{fromPlayer.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
                             }
 
                             break;
@@ -259,13 +276,13 @@ namespace RUINORERP.Server.Commands
                         case ClientCmdEnum.更新缓存:
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(Player.User.用户名 + "更新缓存");
+                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "更新缓存");
                             }
-                            UserService.接收更新缓存指令(Player, gd);
+                            UserService.接收更新缓存指令(fromPlayer, gd);
 
                             break;
                         case ClientCmdEnum.删除缓存:
-                            UserService.接收删除缓存指令(Player, gd);
+                            UserService.接收删除缓存指令(fromPlayer, gd);
                             break;
                         case ClientCmdEnum.请求协助处理:
                             SystemService.process请求协助处理(gd);
@@ -277,14 +294,14 @@ namespace RUINORERP.Server.Commands
                             //所有缓存到客户机。服务器不用缓存列表了？
                             //或者相同的一个单。A在编辑没有完成。B再接着编辑保存。这时B打开时就会看到锁定状态。B保存时就会提示
                             //退出后 解除锁定
-                            SystemService.process单据审核锁定(Player, gd);
+                            SystemService.process单据审核锁定(fromPlayer, gd);
                             break;
                         case ClientCmdEnum.单据锁定释放:
-                            SystemService.process单据审核锁定释放(Player, gd);
+                            SystemService.process单据审核锁定释放(fromPlayer, gd);
                             break;
                         case ClientCmdEnum.发送弹窗消息:
-                            UserService.转发弹窗消息(Player, gd);
-                            UserService.转发消息结果(Player);
+                            UserService.转发弹窗消息(fromPlayer, gd);
+                            UserService.转发消息结果(fromPlayer);
                             break;
 
                         case ClientCmdEnum.客户端心跳包:
@@ -450,8 +467,9 @@ namespace RUINORERP.Server.Commands
                     PlayerSession.User.在线状态 = 在线状态;
                     PlayerSession.User.授权状态 = 授权状态;
 
-                    //不用回复，如果规则不对，直接T出？
-                    // UserService.回复心跳(PlayerSession, tx);
+
+                    //回复是更新状态：包括在线用户列表
+                    UserService.回复心跳(PlayerSession);
 
                     #endregion
                 }

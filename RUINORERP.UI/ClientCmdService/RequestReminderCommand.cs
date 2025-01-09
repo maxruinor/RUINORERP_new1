@@ -18,6 +18,8 @@ namespace RUINORERP.UI.ClientCmdService
     /// </summary>
     public class RequestReminderCommand : IClientCommand
     {
+        public CmdOperation OperationType { get; set; }
+        public OriginalData DataPacket { get; set; }
         public RequestReminderType requestType { get; set; }
         public ReminderData requestInfo { get; set; }
 
@@ -26,42 +28,35 @@ namespace RUINORERP.UI.ClientCmdService
             throw new NotImplementedException();
         }
 
-        public OriginalData BuildDataPacket(object request = null)
+        public void BuildDataPacket(object request = null)
         {
             throw new NotImplementedException();
         }
-
-        //public void Execute(object parameters = null)
-        //{
-        //    ExecuteAsync(CancellationToken.None, parameters).GetAwaiter().GetResult();
-        //}
+ 
 
         public async Task ExecuteAsync(CancellationToken cancellationToken, object parameters)
         {
-            if (parameters != null)
-            {
-                await Task.Run(
-                   () =>
-                  (
-                   #region 执行方法
-
-                   #endregion
-                      //MainForm.Instance.ecs.AddSendData(beatDataDel)
-                      1 == 1
-                  )
-
-
+            await Task.Run(
+               () =>
+                    {
+                        #region 执行方法
+                        switch (OperationType)
+                        {
+                            case CmdOperation.Send:
+                                BuildDataPacket(null);
+                                break;
+                            case CmdOperation.Receive:
+                                AnalyzeDataPacket(DataPacket);
+                                break;
+                            default:
+                                break;
+                        }
+                        #endregion
+                    }
                    ,
                 cancellationToken
                    );
-            }
-            else
-            {
-                MainForm.Instance.ecs.AddSendData(工作流请求(requestInfo));
-            }
-
         }
-
 
         public OriginalData 工作流请求(ReminderData request)
         {
@@ -74,7 +69,8 @@ namespace RUINORERP.UI.ClientCmdService
            {
                ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
            });
-                tx.PushString(System.DateTime.Now.ToString());
+                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                tx.PushString(sendtime);
                 tx.PushString(json);
                 tx.PushInt((int)requestType);
                 //将来再加上提醒配置规则,或加在请求实体中

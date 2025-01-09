@@ -80,7 +80,7 @@
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(98, 27);
             this.btnSend.TabIndex = 0;
-            this.btnSend.Values.Text = "发送";
+            this.btnSend.Values.Text = "发送(&S)";
             this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
             // 
             // cMenuKey
@@ -96,11 +96,11 @@
             // 
             // kryptonContextMenuItem2
             // 
-            this.kryptonContextMenuItem2.Text = "Menu Item";
+            this.kryptonContextMenuItem2.Text = "回车发送";
             // 
             // kryptonContextMenuItem3
             // 
-            this.kryptonContextMenuItem3.Text = "Menu Item";
+            this.kryptonContextMenuItem3.Text = "回车换行";
             // 
             // chatBox
             // 

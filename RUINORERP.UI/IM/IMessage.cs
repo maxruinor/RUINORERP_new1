@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINORERP.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,14 +7,6 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.UI.IM
 {
-
-    public enum MessageStatus
-    {
-        Unread,
-        Read,
-        Unprocessed,
-        Processed
-    }
 
     public enum MessagePriority
     {

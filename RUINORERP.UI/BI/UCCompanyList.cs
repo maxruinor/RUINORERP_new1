@@ -29,9 +29,7 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             base.EditForm = typeof(UCCompanyEdit);
-
         }
-
 
 
         private async Task<object> QueryData(string msg)
@@ -49,7 +47,6 @@ namespace RUINORERP.UI.BI
             //tokenSource.Cancel();
         }
 
-
         protected override void Add()
         {
             if (ListDataSoure.Count == 0)
@@ -59,7 +56,11 @@ namespace RUINORERP.UI.BI
             }
             else
             {
-                toolStripButtonAdd.Visible = false;
+                if (MessageBox.Show("您确定多公司模式运营吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                {
+                    base.Add();
+                    base.toolStripButtonModify.Enabled = false;
+                }
             }
         }
 

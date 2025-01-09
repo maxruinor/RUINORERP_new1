@@ -8,6 +8,7 @@ using TransInstruction.DataModel;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using TransInstruction.CommandService;
+using System.Collections.Concurrent;
 
 namespace RUINORERP.Server.CommandService
 {
@@ -17,17 +18,13 @@ namespace RUINORERP.Server.CommandService
     public class CommandDispatcher
     {
         //handlers 是一个实现了 ICommandHandler 接口的实例集合，这个集合作为 CommandDispatcher 构造函数的参数传入。
-        private readonly Dictionary<Type, ICommandHandler> _handlers;
-
-        //public CommandDispatcher()
-        //{
-        //    _handlers = new Dictionary<Type, ICommandHandler>();
-        //}
-        private readonly ICommandHandlerFactory _factory;
-        public CommandDispatcher(ICommandHandlerFactory factory)
+        public readonly Dictionary<Type, ICommandHandler> handlers;
+ 
+        private readonly ICommandHandlerFactory factory;
+        public CommandDispatcher(ICommandHandlerFactory _factory)
         {
-            _factory = factory;
-            var handlers = new List<ICommandHandler>();
+            factory = _factory;
+            var _handlers = new List<ICommandHandler>();
             Type[] filter = new Type[] { typeof(ICommandHandler) };
             //查找实现接口ICommandHandler的类。
             //foreach (var type in Assembly.LoadFrom("TransInstruction.dll").GetTypes().Where(t => t.GetInterfaces().Any(i => filter.Contains(i))))
@@ -35,16 +32,12 @@ namespace RUINORERP.Server.CommandService
             {
                 if (Attribute.IsDefined(type, typeof(CommandHandlerAttribute)))
                 {
-                    var handler = factory.CreateHandler(type);
-                    handlers.Add(handler);
+                    var _handler = factory.CreateHandler(type);
+                    _handlers.Add(_handler);
                 }
             }
-            _handlers = handlers.ToDictionary(h => h.GetType(), h => h);
-            // 注册命令处理器
-            //foreach (var handler in factory.GetAllHandlers())
-            //{
-            //    _handlers[handler.GetType()] = handler;
-            //}
+            handlers = _handlers.ToDictionary(h => h.GetType(), h => h);
+      
         }
 
 
@@ -94,7 +87,7 @@ namespace RUINORERP.Server.CommandService
         public void Dispatch(IServerCommand command)
         {
             // 根据命令类型分发到具体的处理器
-            if (_handlers.TryGetValue(command.GetType(), out var handler))
+            if (handlers.TryGetValue(command.GetType(), out var handler))
             {
                 handler.HandleCommandAsync(command, CancellationToken.None).GetAwaiter().GetResult();
             }
@@ -117,13 +110,13 @@ namespace RUINORERP.Server.CommandService
         //{
         //    commandQueue.Add(command);
         //}
-        public async Task DispatchAsync(IServerCommand command, CancellationToken cancellationToken)
+        public async Task DispatchAsync(BlockingCollection<IServerCommand> queue,IServerCommand command, CancellationToken cancellationToken)
         {
-            foreach (var handler in _handlers)
+            foreach (var handler in handlers)
             {
-                if (handler.Value.CanHandle(command))
+                //判断符合这个对应类型的才处理。
+                if (handler.Value.CanHandle(command, queue))
                 {
-                    //handler.Handle(command);
                     await handler.Value.HandleCommandAsync(command, cancellationToken);
                     return;
                 }

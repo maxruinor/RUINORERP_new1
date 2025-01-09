@@ -19,7 +19,7 @@ using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.BI
 {
-    [MenuAttrAssemblyInfo("账号编辑", true, UIType.单表数据)]
+    [MenuAttrAssemblyInfo("付款账号编辑", true, UIType.单表数据)]
     public partial class UCFMAccountEdit : BaseEditGeneric<tb_FM_Account>
     {
         public UCFMAccountEdit()

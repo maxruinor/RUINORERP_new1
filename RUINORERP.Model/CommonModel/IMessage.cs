@@ -7,9 +7,6 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Model
 {
-
-
-
     public enum MessageStatus
     {
         /// <summary>

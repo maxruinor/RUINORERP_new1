@@ -60,6 +60,8 @@
             btnCreateRegInfo = new System.Windows.Forms.Button();
             label3 = new System.Windows.Forms.Label();
             txtRegInfo = new System.Windows.Forms.TextBox();
+            checkedListBoxMod = new System.Windows.Forms.CheckedListBox();
+            label9 = new System.Windows.Forms.Label();
             toolStrip1.SuspendLayout();
             groupBox1.SuspendLayout();
             SuspendLayout();
@@ -67,7 +69,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new System.Drawing.Point(55, 28);
+            label1.Location = new System.Drawing.Point(58, 28);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(68, 17);
             label1.TabIndex = 0;
@@ -75,14 +77,14 @@
             // 
             // txtCompanyName
             // 
-            txtCompanyName.Location = new System.Drawing.Point(134, 22);
+            txtCompanyName.Location = new System.Drawing.Point(137, 22);
             txtCompanyName.Name = "txtCompanyName";
             txtCompanyName.Size = new System.Drawing.Size(461, 23);
             txtCompanyName.TabIndex = 1;
             // 
             // txtPhoneNumber
             // 
-            txtPhoneNumber.Location = new System.Drawing.Point(435, 54);
+            txtPhoneNumber.Location = new System.Drawing.Point(435, 71);
             txtPhoneNumber.Name = "txtPhoneNumber";
             txtPhoneNumber.Size = new System.Drawing.Size(160, 23);
             txtPhoneNumber.TabIndex = 3;
@@ -90,7 +92,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new System.Drawing.Point(387, 55);
+            label2.Location = new System.Drawing.Point(387, 74);
             label2.Name = "label2";
             label2.Size = new System.Drawing.Size(44, 17);
             label2.TabIndex = 2;
@@ -98,7 +100,7 @@
             // 
             // txtRegistrationCode
             // 
-            txtRegistrationCode.Location = new System.Drawing.Point(242, 548);
+            txtRegistrationCode.Location = new System.Drawing.Point(156, 538);
             txtRegistrationCode.Name = "txtRegistrationCode";
             txtRegistrationCode.Size = new System.Drawing.Size(464, 23);
             txtRegistrationCode.TabIndex = 7;
@@ -106,7 +108,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new System.Drawing.Point(187, 551);
+            label4.Location = new System.Drawing.Point(101, 541);
             label4.Name = "label4";
             label4.Size = new System.Drawing.Size(44, 17);
             label4.TabIndex = 6;
@@ -114,15 +116,15 @@
             // 
             // txtConcurrentUsers
             // 
-            txtConcurrentUsers.Location = new System.Drawing.Point(134, 80);
+            txtConcurrentUsers.Location = new System.Drawing.Point(134, 115);
             txtConcurrentUsers.Name = "txtConcurrentUsers";
-            txtConcurrentUsers.Size = new System.Drawing.Size(100, 23);
+            txtConcurrentUsers.Size = new System.Drawing.Size(173, 23);
             txtConcurrentUsers.TabIndex = 9;
             // 
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new System.Drawing.Point(31, 83);
+            label5.Location = new System.Drawing.Point(31, 118);
             label5.Name = "label5";
             label5.Size = new System.Drawing.Size(92, 17);
             label5.TabIndex = 8;
@@ -131,7 +133,7 @@
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new System.Drawing.Point(375, 84);
+            label6.Location = new System.Drawing.Point(375, 118);
             label6.Name = "label6";
             label6.Size = new System.Drawing.Size(56, 17);
             label6.TabIndex = 10;
@@ -139,7 +141,7 @@
             // 
             // txtProductVersion
             // 
-            txtProductVersion.Location = new System.Drawing.Point(435, 114);
+            txtProductVersion.Location = new System.Drawing.Point(435, 154);
             txtProductVersion.Name = "txtProductVersion";
             txtProductVersion.Size = new System.Drawing.Size(160, 23);
             txtProductVersion.TabIndex = 13;
@@ -147,7 +149,7 @@
             // label7
             // 
             label7.AutoSize = true;
-            label7.Location = new System.Drawing.Point(375, 118);
+            label7.Location = new System.Drawing.Point(375, 157);
             label7.Name = "label7";
             label7.Size = new System.Drawing.Size(56, 17);
             label7.TabIndex = 12;
@@ -155,7 +157,7 @@
             // 
             // dtpExpirationDate
             // 
-            dtpExpirationDate.Location = new System.Drawing.Point(435, 80);
+            dtpExpirationDate.Location = new System.Drawing.Point(435, 115);
             dtpExpirationDate.Name = "dtpExpirationDate";
             dtpExpirationDate.Size = new System.Drawing.Size(160, 23);
             dtpExpirationDate.TabIndex = 14;
@@ -163,7 +165,7 @@
             // label8
             // 
             label8.AutoSize = true;
-            label8.Location = new System.Drawing.Point(67, 117);
+            label8.Location = new System.Drawing.Point(67, 157);
             label8.Name = "label8";
             label8.Size = new System.Drawing.Size(56, 17);
             label8.TabIndex = 15;
@@ -174,7 +176,7 @@
             cmbLicenseType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             cmbLicenseType.FormattingEnabled = true;
             cmbLicenseType.Items.AddRange(new object[] { "试用版", "正式版" });
-            cmbLicenseType.Location = new System.Drawing.Point(134, 113);
+            cmbLicenseType.Location = new System.Drawing.Point(134, 153);
             cmbLicenseType.Name = "cmbLicenseType";
             cmbLicenseType.Size = new System.Drawing.Size(173, 25);
             cmbLicenseType.TabIndex = 16;
@@ -182,7 +184,7 @@
             // 
             // dtpPurchaseDate
             // 
-            dtpPurchaseDate.Location = new System.Drawing.Point(134, 156);
+            dtpPurchaseDate.Location = new System.Drawing.Point(134, 193);
             dtpPurchaseDate.Name = "dtpPurchaseDate";
             dtpPurchaseDate.Size = new System.Drawing.Size(173, 23);
             dtpPurchaseDate.TabIndex = 18;
@@ -190,7 +192,7 @@
             // lblPurchaseDate
             // 
             lblPurchaseDate.AutoSize = true;
-            lblPurchaseDate.Location = new System.Drawing.Point(67, 159);
+            lblPurchaseDate.Location = new System.Drawing.Point(67, 196);
             lblPurchaseDate.Name = "lblPurchaseDate";
             lblPurchaseDate.Size = new System.Drawing.Size(56, 17);
             lblPurchaseDate.TabIndex = 17;
@@ -198,7 +200,7 @@
             // 
             // dtpRegistrationDate
             // 
-            dtpRegistrationDate.Location = new System.Drawing.Point(242, 519);
+            dtpRegistrationDate.Location = new System.Drawing.Point(156, 509);
             dtpRegistrationDate.Name = "dtpRegistrationDate";
             dtpRegistrationDate.Size = new System.Drawing.Size(160, 23);
             dtpRegistrationDate.TabIndex = 20;
@@ -206,7 +208,7 @@
             // lblRegistrationDate
             // 
             lblRegistrationDate.AutoSize = true;
-            lblRegistrationDate.Location = new System.Drawing.Point(182, 523);
+            lblRegistrationDate.Location = new System.Drawing.Point(96, 513);
             lblRegistrationDate.Name = "lblRegistrationDate";
             lblRegistrationDate.Size = new System.Drawing.Size(56, 17);
             lblRegistrationDate.TabIndex = 19;
@@ -215,7 +217,7 @@
             // label10
             // 
             label10.AutoSize = true;
-            label10.Location = new System.Drawing.Point(187, 580);
+            label10.Location = new System.Drawing.Point(101, 570);
             label10.Name = "label10";
             label10.Size = new System.Drawing.Size(44, 17);
             label10.TabIndex = 21;
@@ -225,7 +227,7 @@
             // 
             chkIsRegistered.AutoSize = true;
             chkIsRegistered.Enabled = false;
-            chkIsRegistered.Location = new System.Drawing.Point(242, 581);
+            chkIsRegistered.Location = new System.Drawing.Point(156, 571);
             chkIsRegistered.Name = "chkIsRegistered";
             chkIsRegistered.Size = new System.Drawing.Size(15, 14);
             chkIsRegistered.TabIndex = 22;
@@ -233,16 +235,16 @@
             // 
             // txtRemarks
             // 
-            txtRemarks.Location = new System.Drawing.Point(134, 195);
+            txtRemarks.Location = new System.Drawing.Point(137, 238);
             txtRemarks.Multiline = true;
             txtRemarks.Name = "txtRemarks";
-            txtRemarks.Size = new System.Drawing.Size(461, 49);
+            txtRemarks.Size = new System.Drawing.Size(461, 112);
             txtRemarks.TabIndex = 24;
             // 
             // label11
             // 
             label11.AutoSize = true;
-            label11.Location = new System.Drawing.Point(91, 198);
+            label11.Location = new System.Drawing.Point(94, 241);
             label11.Name = "label11";
             label11.Size = new System.Drawing.Size(32, 17);
             label11.TabIndex = 23;
@@ -250,7 +252,7 @@
             // 
             // txtContactName
             // 
-            txtContactName.Location = new System.Drawing.Point(134, 51);
+            txtContactName.Location = new System.Drawing.Point(134, 71);
             txtContactName.Name = "txtContactName";
             txtContactName.Size = new System.Drawing.Size(173, 23);
             txtContactName.TabIndex = 26;
@@ -258,7 +260,7 @@
             // label12
             // 
             label12.AutoSize = true;
-            label12.Location = new System.Drawing.Point(55, 57);
+            label12.Location = new System.Drawing.Point(55, 74);
             label12.Name = "label12";
             label12.Size = new System.Drawing.Size(68, 17);
             label12.TabIndex = 25;
@@ -266,7 +268,7 @@
             // 
             // btnRegister
             // 
-            btnRegister.Location = new System.Drawing.Point(267, 577);
+            btnRegister.Location = new System.Drawing.Point(181, 567);
             btnRegister.Name = "btnRegister";
             btnRegister.Size = new System.Drawing.Size(75, 23);
             btnRegister.TabIndex = 27;
@@ -295,14 +297,13 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(label9);
+            groupBox1.Controls.Add(checkedListBoxMod);
             groupBox1.Controls.Add(label1);
             groupBox1.Controls.Add(txtCompanyName);
-            groupBox1.Controls.Add(btnCreateRegInfo);
             groupBox1.Controls.Add(label2);
             groupBox1.Controls.Add(txtPhoneNumber);
-            groupBox1.Controls.Add(label3);
             groupBox1.Controls.Add(label11);
-            groupBox1.Controls.Add(txtRegInfo);
             groupBox1.Controls.Add(txtRemarks);
             groupBox1.Controls.Add(txtContactName);
             groupBox1.Controls.Add(label12);
@@ -316,16 +317,16 @@
             groupBox1.Controls.Add(label8);
             groupBox1.Controls.Add(lblPurchaseDate);
             groupBox1.Controls.Add(cmbLicenseType);
-            groupBox1.Location = new System.Drawing.Point(108, 65);
+            groupBox1.Location = new System.Drawing.Point(22, 28);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new System.Drawing.Size(816, 448);
+            groupBox1.Size = new System.Drawing.Size(942, 386);
             groupBox1.TabIndex = 30;
             groupBox1.TabStop = false;
             groupBox1.Text = "注册信息";
             // 
             // btnCreateRegInfo
             // 
-            btnCreateRegInfo.Location = new System.Drawing.Point(611, 276);
+            btnCreateRegInfo.Location = new System.Drawing.Point(875, 420);
             btnCreateRegInfo.Name = "btnCreateRegInfo";
             btnCreateRegInfo.Size = new System.Drawing.Size(89, 31);
             btnCreateRegInfo.TabIndex = 28;
@@ -336,7 +337,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new System.Drawing.Point(67, 273);
+            label3.Location = new System.Drawing.Point(96, 420);
             label3.Name = "label3";
             label3.Size = new System.Drawing.Size(56, 17);
             label3.TabIndex = 23;
@@ -344,11 +345,28 @@
             // 
             // txtRegInfo
             // 
-            txtRegInfo.Location = new System.Drawing.Point(134, 273);
+            txtRegInfo.Location = new System.Drawing.Point(156, 420);
             txtRegInfo.Multiline = true;
             txtRegInfo.Name = "txtRegInfo";
-            txtRegInfo.Size = new System.Drawing.Size(461, 169);
+            txtRegInfo.Size = new System.Drawing.Size(461, 81);
             txtRegInfo.TabIndex = 24;
+            // 
+            // checkedListBoxMod
+            // 
+            checkedListBoxMod.FormattingEnabled = true;
+            checkedListBoxMod.Location = new System.Drawing.Point(687, 22);
+            checkedListBoxMod.Name = "checkedListBoxMod";
+            checkedListBoxMod.Size = new System.Drawing.Size(210, 328);
+            checkedListBoxMod.TabIndex = 29;
+            // 
+            // label9
+            // 
+            label9.AutoSize = true;
+            label9.Location = new System.Drawing.Point(625, 22);
+            label9.Name = "label9";
+            label9.Size = new System.Drawing.Size(56, 17);
+            label9.TabIndex = 30;
+            label9.Text = "购买模块";
             // 
             // frmRegister
             // 
@@ -359,11 +377,14 @@
             Controls.Add(toolStrip1);
             Controls.Add(btnRegister);
             Controls.Add(chkIsRegistered);
+            Controls.Add(btnCreateRegInfo);
             Controls.Add(label10);
             Controls.Add(txtRegistrationCode);
             Controls.Add(label4);
+            Controls.Add(label3);
             Controls.Add(dtpRegistrationDate);
             Controls.Add(lblRegistrationDate);
+            Controls.Add(txtRegInfo);
             Name = "frmRegister";
             Text = "注册信息";
             Load += frmRegister_Load;
@@ -408,5 +429,7 @@
         private System.Windows.Forms.Button btnCreateRegInfo;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox txtRegInfo;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.CheckedListBox checkedListBoxMod;
     }
 }

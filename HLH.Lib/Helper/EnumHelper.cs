@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace HLH.Lib.Helper
@@ -10,6 +12,7 @@ namespace HLH.Lib.Helper
     public class EnumHelper
     {
 
+      
         //  public static Object Parse(Type enumType, string value)
         /*
          * 
@@ -61,6 +64,17 @@ namespace HLH.Lib.Helper
             str = Enum.GetName(type, enumValue);
             return str;
         }
+        
+
+        public static List<string> GetEnumDescriptionList(Type enumType)
+        {
+            List<string> descriptions = new List<string>();
+            foreach (var item in Enum.GetValues(enumType))
+            {
+                descriptions.Add(GetEnumDescription((Enum)item));
+            }
+            return descriptions;
+        }
 
 
         /// <summary>
@@ -76,6 +90,29 @@ namespace HLH.Lib.Helper
             if (objs == null || objs.Length == 0) return str;
             System.ComponentModel.DescriptionAttribute da = (System.ComponentModel.DescriptionAttribute)objs[0];
             return da.Description;
+        }
+
+        public static Dictionary<string, Enum> GetEnumDescriptionToValueMap(Type enumType)
+        {
+            Dictionary<string, Enum> map = new Dictionary<string, Enum>();
+            foreach (var item in Enum.GetValues(enumType))
+            {
+                string description = GetEnumDescription((Enum)item);
+                map[description] = (Enum)item;
+            }
+            return map;
+        }
+
+        public static Dictionary<string, string> GetEnumNameToDescriptionMap(Type enumType)
+        {
+            Dictionary<string, string> map = new Dictionary<string, string>();
+            foreach (var item in Enum.GetValues(enumType))
+            {
+                string name = item.ToString();
+                string description = GetEnumDescription((Enum)item);
+                map[name] = description;
+            }
+            return map;
         }
 
 

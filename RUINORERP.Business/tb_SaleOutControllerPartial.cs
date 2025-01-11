@@ -176,11 +176,8 @@ namespace RUINORERP.Business
                         }
                     }
 
-
                     foreach (var child in entity.tb_SaleOutDetails)
                     {
-
-
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                         if (inv != null)
@@ -344,9 +341,23 @@ namespace RUINORERP.Business
                         }
                     }
 
+                    #endregion
+
+
+
+
+                    //如果出库金额为0，但是订单中不是为0，则不允许出库,如果明细中注明了。都是赠品是可以的。
+                    if (entity.TotalAmount == 0 && entity.tb_saleorder.TotalAmount != 0 && !entity.tb_SaleOutDetails.Any(c => c.Gift))
+                    {
+                        string msg = $"出库单:{entity.tb_saleorder.SOrderNo}的总金额为0， 但是订单中不为0，审核失败！请检查数据!";
+                        _unitOfWorkManage.RollbackTran();
+                        _logger.LogInformation(msg);
+                        return rrs;
+                    }
+
+                    #region CRM
 
                     //如果是新客户或潜在客户。则转换为首单客户
-
                     if (entity.tb_saleorder.tb_customervendor.tb_crm_customer != null)
                     {
                         var crm_customer = entity.tb_saleorder.tb_customervendor.tb_crm_customer;
@@ -357,8 +368,16 @@ namespace RUINORERP.Business
                             crm_customer.FirstPurchaseDate = entity.OutDate;
                         }
 
-                        //更新采购金额
-                        crm_customer.PurchaseCount = crm_customer.PurchaseCount + 1;
+                        //更新采购金额  结案时才算次数。
+                        if (crm_customer.PurchaseCount == null)
+                        {
+                            crm_customer.PurchaseCount = 0;
+                        }
+
+                        if (crm_customer.TotalPurchaseAmount == null)
+                        {
+                            crm_customer.TotalPurchaseAmount = 0;
+                        }
                         crm_customer.TotalPurchaseAmount += entity.tb_SaleOutDetails.Sum(c => c.Quantity * c.TransactionPrice);
                         crm_customer.LastPurchaseDate = entity.OutDate;
                         if (crm_customer.FirstPurchaseDate.HasValue)
@@ -372,6 +391,13 @@ namespace RUINORERP.Business
                             crm_customer.FirstPurchaseDate = entity.OutDate;
                         }
 
+                        //这个是结案时才算次数
+                        if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) == entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity))
+                        {
+                            crm_customer.PurchaseCount = crm_customer.PurchaseCount + 1;
+                        }
+
+
                         await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer).UpdateColumns(t => new { t.CustomerStatus, t.PurchaseCount, t.TotalPurchaseAmount, t.LastPurchaseDate, t.DaysSinceLastPurchase, t.FirstPurchaseDate }).ExecuteCommandAsync();
 
                         //如果这个客户是由线索转过来的则线索转化成功
@@ -383,16 +409,6 @@ namespace RUINORERP.Business
                     }
 
                     #endregion
-
-                    //如果出库金额为0，但是订单中不是为0，则不允许出库,如果明细中注明了。都是赠品是可以的。
-                    if (entity.TotalAmount == 0 && entity.tb_saleorder.TotalAmount != 0 && !entity.tb_SaleOutDetails.Any(c => c.Gift))
-                    {
-                        string msg = $"出库单:{entity.tb_saleorder.SOrderNo}的总金额为0， 但是订单中不为0，审核失败！请检查数据!";
-                        _unitOfWorkManage.RollbackTran();
-                        _logger.LogInformation(msg);
-                        return rrs;
-                    }
-
 
                     //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
                     if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) == entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity))
@@ -633,17 +649,33 @@ namespace RUINORERP.Business
                     }
 
                     //更新采购金额
-                    crm_customer.PurchaseCount = crm_customer.PurchaseCount - 1;
+                    if (crm_customer.TotalPurchaseAmount == null)
+                    {
+                        crm_customer.TotalPurchaseAmount = 0;
+                    }
+                    if (crm_customer.PurchaseCount == null)
+                    {
+                        crm_customer.PurchaseCount = 0;
+                    }
+
                     crm_customer.TotalPurchaseAmount -= entity.tb_SaleOutDetails.Sum(c => c.Quantity * c.TransactionPrice);
-                    crm_customer.LastPurchaseDate = crm_customer.LastPurchaseDate.Value.AddDays(-crm_customer.DaysSinceLastPurchase.Value); //todo ??// 这个如何退回？
-                                                                                                                                            // crm_customer.DaysSinceLastPurchase = days
+                    if (crm_customer.DaysSinceLastPurchase.HasValue)
+                    {
+                        crm_customer.LastPurchaseDate = crm_customer.LastPurchaseDate.Value.AddDays(-crm_customer.DaysSinceLastPurchase.Value); //todo ??// 这个如何退回？
+                    }
+                    else
+                    {
+                        crm_customer.LastPurchaseDate = null; //没有采购过
+                    }
+
+                    //撤回完结时次数也减少1
+                    if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) != entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity))
+                    {
+                        crm_customer.PurchaseCount = crm_customer.PurchaseCount - 1;
+                    }
 
                     await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder.tb_customervendor.tb_crm_customer).UpdateColumns(t => new { t.CustomerStatus, t.PurchaseCount, t.TotalPurchaseAmount, t.LastPurchaseDate }).ExecuteCommandAsync();
-
-
                 }
-
-
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;

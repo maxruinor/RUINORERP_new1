@@ -22,6 +22,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Common.Log4Net;
 using RUINORERP.Extensions;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
@@ -72,6 +73,10 @@ namespace RUINORERP.Server
 {
     public partial class frmMain : Form
     {
+        /// <summary>
+        /// 注册时定义好了可以使用的功能模块
+        /// </summary>
+        public List<GlobalFunctionModule> CanUsefunctionModules = new List<GlobalFunctionModule>();
 
         /// <summary>
         /// 系统保护数据
@@ -298,7 +303,28 @@ namespace RUINORERP.Server
                         else
                         {
                             //注册成功！！！
-                            //后面会循环检测
+                            //注意这里并不是直接取字段值。因为这个值会放到加密串的。明码可能会修改
+                            //功能模块可以显示到UI。但是保存到DB中是加密了的。取出来到时也要解密
+                            if (!string.IsNullOrEmpty(registrationInfo.FunctionModule))
+                            {
+                                //解密
+                                registrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+
+                                if (registrationInfo.FunctionModule == null)
+                                {
+                                    //您没有购买任何模块功能或修改过授权数据，请联系管理员
+                                    MessageBox.Show("您没有购买任何模块功能或修改过授权数据，请联系管理员");
+                                    Application.Exit();
+                                    return;
+                                }
+                                //将,号隔开的枚举名称字符串变成List<GlobalFunctionModule>
+                                List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
+                                string[] enumNameArray = registrationInfo.FunctionModule.Split(',');
+                                foreach (var item in enumNameArray)
+                                {
+                                    CanUsefunctionModules.Add((GlobalFunctionModule)Enum.Parse(typeof(GlobalFunctionModule), item));
+                                }
+                            }
                         }
                     }
                     else
@@ -401,7 +427,7 @@ namespace RUINORERP.Server
         /// <returns></returns>
         public string CreateMachineCode(tb_sys_RegistrationInfo regInfo)
         {
-            //指定关键字段
+            //指定关键字段 这些字段生成加密的机器码
             List<string> cols = new List<string>();
             cols.Add("CompanyName");
             cols.Add("ContactName");
@@ -410,7 +436,7 @@ namespace RUINORERP.Server
             cols.Add("ExpirationDate");
             cols.Add("ProductVersion");
             cols.Add("LicenseType");
-
+            cols.Add("FunctionModule");
             JsonSerializerSettings settings = new JsonSerializerSettings
             {
                 ContractResolver = new SelectiveContractResolver(cols),

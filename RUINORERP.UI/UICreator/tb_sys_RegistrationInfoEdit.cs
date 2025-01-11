@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/30/2024 18:08:37
+// 时间：01/11/2025 12:08:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,6 +51,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -59,6 +60,7 @@ namespace RUINORERP.UI
         {
         tb_sys_RegistrationInfo entity = new tb_sys_RegistrationInfo();
                      entity.CompanyName = txtCompanyName.Text ;
+                       entity.FunctionModule = txtFunctionModule.Text ;
                        entity.ContactName = txtContactName.Text ;
                        entity.PhoneNumber = txtPhoneNumber.Text ;
                        entity.MachineCode = txtMachineCode.Text ;
@@ -86,6 +88,7 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_sys_RegistrationInfo>(entity, t => t.CompanyName, txtCompanyName, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_sys_RegistrationInfo>(entity, t => t.FunctionModule, txtFunctionModule, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_sys_RegistrationInfo>(entity, t => t.ContactName, txtContactName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_sys_RegistrationInfo>(entity, t => t.PhoneNumber, txtPhoneNumber, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_sys_RegistrationInfo>(entity, t => t.MachineCode, txtMachineCode, BindDataType4TextBox.Text,false);

@@ -440,9 +440,38 @@ namespace RUINORERP.UI
                     //var rslist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(tb_MenuInfo));
                     //if (rslist != null)
                     //{
-                    MainForm.Instance.AppContext.UserMenuList = menuList;// rslist as List<tb_MenuInfo>;
-                                                                         //}
-                                                                         //给一个默认值
+                    MainForm.Instance.AppContext.UserMenuList = menuList;
+                    #region 检查是否注册
+                    ////没有返回Null，如果结果大于1条会抛出错误
+                    tb_sys_RegistrationInfo registrationInfo = await Program.AppContextData.Db.CopyNew().Queryable<tb_sys_RegistrationInfo>().SingleAsync();
+                    if (registrationInfo == null)
+                    {
+                        MessageBox.Show("系统未注册，请在服务器端先完成注册", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        Application.Exit();
+                    }
+                    else
+                    {
+                        MainForm.Instance.AppContext.CanUsefunctionModules = new List<GlobalFunctionModule>();
+                        //注册成功！！！
+                        //注意这里并不是直接取字段值。因为这个值会放到加密串的。明码可能会修改
+                        //功能模块可以显示到UI。但是保存到DB中是加密了的。取出来到时也要解密
+                        if (!string.IsNullOrEmpty(registrationInfo.FunctionModule))
+                        {
+                            //解密
+                            registrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+
+                            //将,号隔开的枚举名称字符串变成List<GlobalFunctionModule>
+                            List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
+                            string[] enumNameArray = registrationInfo.FunctionModule.Split(',');
+                            foreach (var item in enumNameArray)
+                            {
+                                MainForm.Instance.AppContext.CanUsefunctionModules.Add((GlobalFunctionModule)Enum.Parse(typeof(GlobalFunctionModule), item));
+                            }
+                        }
+                    }
+
+                    #endregion
+
                     if (UserGlobalConfig.Instance.MenuPersonalizationlist == null)
                     {
                         UserGlobalConfig.Instance.MenuPersonalizationlist = new ConcurrentDictionary<string, MenuPersonalization>();
@@ -1014,7 +1043,6 @@ namespace RUINORERP.UI
         {
             try
             {
-
                 this.SystemOperatorState.Text = "登出";
                 AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
                 MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;

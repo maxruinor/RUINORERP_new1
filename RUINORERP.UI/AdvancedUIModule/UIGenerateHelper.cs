@@ -37,6 +37,7 @@ using RUINOR.WinFormsUI.ChkComboBox;
 using Netron.GraphLib;
 using System.Web.UI;
 using RUINORERP.Business.CommService;
+using FastReport.Editor.Dialogs;
 namespace RUINORERP.UI.AdvancedUIModule
 {
     public class UIGenerateHelper
@@ -46,6 +47,11 @@ namespace RUINORERP.UI.AdvancedUIModule
             return CreateQueryUI(typeof(Q), useLike, UcPanel, queryFilter, DefineColNum);
         }
 
+
+        public static BaseEntity CreateQueryUI(Type type, bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, decimal DefineColNum)
+        {
+            return CreateQueryUI(type, useLike, UcPanel, queryFilter, null);
+        }
         /// <summary>
         /// 创建查询界面
         /// </summary>
@@ -54,13 +60,47 @@ namespace RUINORERP.UI.AdvancedUIModule
         /// <param name="queryFilter"></param>
         /// <param name="DefineColNum">4</param>
         /// <returns></returns>
-        public static BaseEntity CreateQueryUI(Type type, bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, decimal DefineColNum)
+        public static BaseEntity CreateQueryUI(Type type, bool useLike, Krypton.Toolkit.KryptonPanel UcPanel, QueryFilter queryFilter, tb_UIMenuPersonalization menuPersonalization)
         {
+            //用户设置的查询条件个性化设置
+            List<tb_UIQueryCondition> queryConditions = new List<tb_UIQueryCondition>();
+            if (menuPersonalization != null && menuPersonalization.tb_UIQueryConditions != null)
+            {
+                queryConditions = menuPersonalization.tb_UIQueryConditions;
+            }
+
+
             List<QueryField> queryFields = queryFilter.QueryFields;
             if (queryFilter == null)
             {
                 throw new ArgumentNullException(nameof(queryFilter));
             }
+            if (queryConditions.Count > 0)
+            {
+                // 更新queryFields以反映queryConditions的设置
+                foreach (var queryField in queryFields)
+                {
+                    var condition = queryConditions.FirstOrDefault(c => c.FieldName == queryField.FieldName);
+                    if (condition != null)
+                    {
+                        queryField.IsVisible = condition.IsVisble;
+                        queryField.DisplayIndex = condition.Sort;
+                        queryField.Default1 = condition.Default1;
+                        queryField.Default2 = condition.Default2;
+                        queryField.EnableDefault1 = condition.EnableDefault1;
+                        queryField.EnableDefault2 = condition.EnableDefault2;
+                        queryField.DiffDays1 = condition.DiffDays1;
+                        queryField.DiffDays2 = condition.DiffDays2;
+                        queryField.Focused = condition.Focused;
+                    }
+                }
+            }
+            else
+            {
+                //如果没有设置则全部显示出来。
+                queryFields.ForEach(c => c.IsVisible = true);
+            }
+
 
             Type newtype = null;
             object newDto = null;
@@ -86,7 +126,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                 queryField.ExtendedAttribute = item.ExtendedAttribute;
                 queryField.FieldName = queryField.FieldName;
                 queryField.Caption = item.Caption;
-                queryField.Description = item.Description;
                 queryField.ColDataType = item.ColDataType.GetBaseType();
                 queryField.IsRelated = item.IsFKRelationAttribute;
                 if (queryField.IsRelated)
@@ -101,7 +140,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                     //如果上级指定了就不要覆盖
                     if (queryField.SubQueryTargetType == null)
                     {
-
                         queryField.SubQueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + queryField.FKTableName);
                     }
 
@@ -150,31 +188,38 @@ namespace RUINORERP.UI.AdvancedUIModule
                     #endregion
                 }
                 #endregion
-                // queryField.QueryTargetType = fkrattr.FKTableName;
             }
 
 
             #region 定义表格布局的行和列
             //把时间排后面
             queryFields = queryFields.OrderBy(d => d.ExtendedAttribute.Count).ToList();
+            if (queryConditions.Count > 0)
+            {
+                queryFields = queryFields.OrderBy(d => d.DisplayIndex).ToList();
+            }
+            queryFields = queryFields.Where(c => c.IsVisible).ToList();//去掉隐藏的
 
-
-            int row = 0;
             //定义每列放几组控件
-            int col = DefineColNum.ToInt();
-            //计算有多少列 cols没有使用
-            int cols = queryFields.Count % col;
+            int RowOfColNum = 4;
+            int row = 0;
+            if (menuPersonalization != null)
+            {
+                RowOfColNum = menuPersonalization.QueryConditionCols.ToInt();
+            }
 
+            //计算有多少列 cols没有使用 余数
+            int cols = queryFields.Count % RowOfColNum;
 
             #region 计算有多少行,再计算多少列，每列中的元素下标
             int TotalRows = 0;
             int rows = 0;
-            rows = queryFields.Count / col;
+            rows = queryFields.Count / RowOfColNum;
 
             //% 运算符在 C# 中表示取模运算，即返回除法的余数。
             //并且余数是计算后面宽的一个数据来源，比方 10个控件，4个一行，余数是2。第三行就是2个，第一列是3个，第二列也是3个，第三，第四就是2个
-            int remainder = queryFields.Count % col;
-            if (remainder % col > 0)
+            int remainder = queryFields.Count % RowOfColNum;
+            if (remainder % RowOfColNum > 0)
             {
                 TotalRows = rows + 1;
             }
@@ -192,34 +237,65 @@ namespace RUINORERP.UI.AdvancedUIModule
             int _x = 0, _y = 0, _Tabindex = 210;
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            int colFlag = 0;
+
+            //保存一起每一行第一列的X的起点
+            List<int> xList = new List<int>();
+
             for (int c = 0; c < queryFields.Count; c++)
             {
-                //  var coldata = newFieldlist[c] as BaseDtoField;
+
+
                 QueryField queryField = queryFields[c];
 
-                _x = 20 + c % col * 250;//计算控件在X轴位置
-                int maxtextLen = GetMaxTextLen(queryFields, col, colFlag);
+                //当前所在列
+                int currentColIndex = (c % RowOfColNum) + 1;
+
+
+                _x = 20 + c % RowOfColNum * 250;//计算控件在X轴位置
+
+                int maxtextLen = GetTargetColumnData(queryFields, RowOfColNum, currentColIndex).Max(t => t.Caption.Length);
+
                 if (queryField.Caption.Length < maxtextLen)
                 {
-                    _x = _x + (maxtextLen - queryField.Caption.Length) * 18;
+                    // 使用 PadLeft 方法将字符串左边补空格，达到 maxtextLen 的长度,使用全角空格进行填充
+                    queryField.Caption = queryField.Caption.PadLeft(maxtextLen, '　');
+                    //_x = _x + (maxtextLen - queryField.Caption.Length) * 18;
                 }
-                if (c % col == 0)
+                if (c % RowOfColNum == 0)
                 {
-                    _y = 20 + 32 * c / col;//计算控件在Y轴的位置
-                    colFlag++;
+                    _y = 20 + 32 * c / RowOfColNum;//计算控件在Y轴的位置
                 }
-                _Tabindex = c % col + c / col + _Tabindex;
+                _Tabindex = c % RowOfColNum + c / RowOfColNum + _Tabindex;
 
+                if (xList.Count > 0 && c % RowOfColNum == 0 && c > 0)
+                {
+                    //第二行起时
+                    _x = xList[0];
+                }
                 KryptonLabel lbl = new KryptonLabel();
                 lbl.Text = queryField.Caption;
+                // 获取Graphics对象
+                Graphics graphics = UcPanel.CreateGraphics();
+
+                // 计算文本宽度
+                float textWidth = CalculateTextWidth(lbl.Text, lbl.Font, graphics);
+                // 设置Label的宽度
+                lbl.Width = (int)textWidth + 10; // 加上一些额外的空间
+
+
                 //lbl.Dock = DockStyle.Right;
                 lbl.Size = new Size(100, 30);
                 lbl.Location = new System.Drawing.Point(_x, _y);
 
+                if (c % RowOfColNum == 0)
+                {
+                    xList.Add(_x);
+                }
+
                 //一行控件平行
                 //一个字算18px
-                _x = _x + 18 * queryField.Caption.Length;
+                //_x = _x + 18 * queryField.Caption.Length;
+                _x = _x + (textWidth / queryField.Caption.Length).ToInt() * queryField.Caption.Length + 7;
 
                 DataBindingHelper dbh = new DataBindingHelper();
                 KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
@@ -293,7 +369,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                         UCCmbMultiChoiceCanIgnore choiceCanIgnore = new UCCmbMultiChoiceCanIgnore();
                         choiceCanIgnore.Name = queryField.FieldName;
                         choiceCanIgnore.Text = "";
-                        choiceCanIgnore.Width = 200;
+                        choiceCanIgnore.Width = 150;
 
 
                         //只处理需要缓存的表
@@ -398,16 +474,24 @@ namespace RUINORERP.UI.AdvancedUIModule
                         DefaultCmb.Name = queryField.FieldName;
                         DefaultCmb.Text = "";
                         DefaultCmb.Width = 150;
+
+                        //如果个性化设置了默认值则这里加载
+                        if (queryField.EnableDefault1.HasValue)
+                        {
+                            if (queryField.EnableDefault1.Value)
+                            {
+                                newDto.SetPropertyValue(queryField.FieldName, queryField.Default1.ToLong());
+                            }
+                        }
+
                         //只处理需要缓存的表
                         pair = new KeyValuePair<string, string>();
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
                             if (BizCacheHelper.Manager.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
                             {
-
                                 //关联要绑定的类型
                                 Type mytype = queryField.SubQueryTargetType;
-
                                 if (queryField.SubFilter.FilterLimitExpressions.Count == 0)
                                 {
                                     #region 没有限制条件时
@@ -455,8 +539,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                                 MethodInfo mf22 = dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { mytype });
                                 object[] args22 = new object[7] { newDto, DefaultCmb, pair.Value, queryField.SubFilter, null, null, false };
                                 mf22.Invoke(dbh, args22);
-
-
                             }
                         }
 
@@ -509,21 +591,51 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                         #endregion
 
-
-
                         break;
                     case AdvQueryProcessType.datetimeRange:
                         UCAdvDateTimerPickerGroup dtpgroup = new UCAdvDateTimerPickerGroup();
                         dtpgroup.Name = queryField.FieldName;
-                        dtpgroup.dtp1.Name = queryField.ExtendedAttribute[0].ColName;
-                        object datetimeValue1 = ReflectionHelper.GetPropertyValue(newDto, queryField.ExtendedAttribute[0].ColName);
-                        DataBindingHelper.BindData4DataTime(newDto, datetimeValue1, queryField.ExtendedAttribute[0].ColName, dtpgroup.dtp1, true);
-                        dtpgroup.dtp1.Checked = true;
+                        string dtpKeyName1 = queryField.ExtendedAttribute[0].ColName;
+                        string dtpKeyName2 = queryField.ExtendedAttribute[1].ColName;
 
-                        dtpgroup.dtp2.Name = queryField.ExtendedAttribute[1].ColName;
-                        object datetimeValue2 = ReflectionHelper.GetPropertyValue(newDto, queryField.ExtendedAttribute[1].ColName);
-                        DataBindingHelper.BindData4DataTime(newDto, datetimeValue2, queryField.ExtendedAttribute[1].ColName, dtpgroup.dtp2, true);
-                        dtpgroup.dtp2.Checked = true;
+
+                        dtpgroup.dtp1.Name = dtpKeyName1;
+                        object datetimeValue1 = ReflectionHelper.GetPropertyValue(newDto, dtpKeyName1);
+                        if (datetimeValue1 != null && string.IsNullOrEmpty(datetimeValue1.ToString()) && queryField.DiffDays1.HasValue)
+                        {
+                            datetimeValue1 = System.DateTime.Now.AddDays(queryField.DiffDays1.Value);
+                            dtpgroup.dtp1.Value = System.DateTime.Now.AddDays(queryField.DiffDays1.Value);
+                            newDto.SetPropertyValue(dtpKeyName1, datetimeValue1);
+                        }
+                        DataBindingHelper.BindData4DataTime(newDto, datetimeValue1, dtpKeyName1, dtpgroup.dtp1, true);
+                        if (queryField.EnableDefault1.HasValue)
+                        {
+                            dtpgroup.dtp1.Checked = queryField.EnableDefault1.Value;
+                        }
+                        else
+                        {
+                            dtpgroup.dtp1.Checked = true;
+                        }
+
+
+
+                        dtpgroup.dtp2.Name = dtpKeyName2;
+                        object datetimeValue2 = ReflectionHelper.GetPropertyValue(newDto, dtpKeyName2);
+                        if (datetimeValue2 != null && string.IsNullOrEmpty(datetimeValue2.ToString()) && queryField.DiffDays2.HasValue)
+                        {
+                            datetimeValue2 = System.DateTime.Now.AddDays(queryField.DiffDays2.Value);
+                            newDto.SetPropertyValue(dtpKeyName2, datetimeValue2);
+                            dtpgroup.dtp2.Value = System.DateTime.Now.AddDays(queryField.DiffDays2.Value);
+                        }
+                        DataBindingHelper.BindData4DataTime(newDto, datetimeValue2, dtpKeyName2, dtpgroup.dtp2, true);
+                        if (queryField.EnableDefault2.HasValue)
+                        {
+                            dtpgroup.dtp2.Checked = queryField.EnableDefault2.Value;
+                        }
+                        else
+                        {
+                            dtpgroup.dtp2.Checked = true;
+                        }
                         //时间控件更长为260px，这里要特殊处理
                         dtpgroup.Location = new System.Drawing.Point(_x, _y);
                         _x = _x + 260;
@@ -607,44 +719,39 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                         break;
                 }
-
-
-                row++;
+                //比方每一行4列时，则第C个0起，相等时就是第二行了。
+                if (RowOfColNum == c + 1)
+                {
+                    row++;
+                }
 
             }
 
+            // 更新面板高度
             UcPanel.Parent.Height = _y + 30;
             UcPanel.Height = _y + 30;
 
             sw.Stop();
             TimeSpan dt = sw.Elapsed;
             MainForm.Instance.uclog.AddLog("性能", "加载控件耗时：" + dt.TotalMilliseconds.ToString());
-            /*
-               // 设置控件位置和大小 
-               for (int i = 0; i < rowCount; i++)
-               {
-                   for (int j = 0; j < columnCount; j++)
-                   {
-                       Control control = TableLayoutPanel.GetControlFromPosition(j, i);
-                       if (control != null)
-                       {
-                           if (control is KryptonLabel)
-                           {
-                               control.Dock = DockStyle.Right;
-                           }
-                           else
-                           {
-                               control.Dock = DockStyle.Left;
-                           }
-
-                       }
-                   }
-               }*/
 
             #endregion
 
             return Query;
         }
+
+
+        public static float CalculateTextWidth(string text, Font font, Graphics graphics)
+        {
+            if (string.IsNullOrEmpty(text) || font == null || graphics == null)
+            {
+                return 0;
+            }
+            // 使用Graphics.MeasureString方法计算文本的宽度
+            SizeF size = graphics.MeasureString(text, font);
+            return size.Width;
+        }
+
 
         /// <summary>
         /// 动态构建一些特性，针对不同的数据类型，比方日期等变动一个新的实体类型
@@ -972,48 +1079,30 @@ namespace RUINORERP.UI.AdvancedUIModule
         }
 
         /// <summary>
-        /// 取指定列的最大字段名称的长度
+        /// 从来源数组中按每个行存放列的个数，获取指定列序号下的数据
         /// </summary>
-        /// <param name="Fieldlist"></param>
-        /// <param name="colNum">每行放的控件列数(组）</param>
-        /// <returns></returns>
-        private static int GetMaxTextLen(List<QueryField> Fieldlist, int colNum, int targetCol)
+        /// <param name="targetList">来源数组</param>
+        /// <param name="RowOfColNum">每行存放列数</param>
+        /// <param name="TargetColIndex">指定的列序号（从1开始）</param>
+        /// <returns>指定列序号下的数据列表</returns>
+        public static List<QueryField> GetTargetColumnData(List<QueryField> targetList, int RowOfColNum, int TargetColIndex)
         {
-            int MaxTextLen = 0;
-            //计算有多少行,再计算多少列，每列中的元素下标
-            #region
-            int TotalRows = 0;
-            int rows = 0;
-            rows = Fieldlist.Count / colNum;
-
-            //% 运算符在 C# 中表示取模运算，即返回除法的余数。
-            //并且余数是计算后面宽的一个数据来源，比方 10个控件，4个一行，余数是2。第三行就是2个，第一列是3个，第二列也是3个，第三，第四就是2个
-            int remainder = Fieldlist.Count % colNum;
-            if (remainder % colNum > 0)
+            List<QueryField> columnData = new List<QueryField>();
+            if (targetList == null || targetList.Count == 0 || RowOfColNum <= 0 || TargetColIndex <= 0 || TargetColIndex > RowOfColNum)
             {
-                TotalRows = rows + 1;
-            }
-            else
-            {
-                TotalRows = rows;
+                return columnData; // 返回空列表
             }
 
-            //==
-            for (int i = 0; i < colNum; i++)
+            for (int i = 0; i < targetList.Count; i++)
             {
-                if (Fieldlist.Count > colNum)
+                // 计算当前数据项所在的列序号
+                int currentColIndex = (i % RowOfColNum) + 1;
+                if (currentColIndex == TargetColIndex)
                 {
-
+                    columnData.Add(targetList[i]);
                 }
             }
-            #endregion
-            List<QueryField> targetList = new List<QueryField>();
-            for (int i = targetCol; i < Fieldlist.Count; i = i + colNum)
-            {
-                targetList.Add(Fieldlist[i]);
-            }
-            MaxTextLen = targetList.Max(t => t.Caption.Length);
-            return MaxTextLen;
+            return columnData;
         }
 
 

@@ -2323,6 +2323,12 @@
     <Compile Include="UICreator\tb_FM_PaymentApplicationEdit.Designer.cs">
       <DependentUpon>tb_FM_PaymentApplicationEdit.cs</DependentUpon>
     </Compile>
+    <Compile Include="UICreator\tb_UIQueryConditionEdit.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UICreator\tb_UIQueryConditionEdit.Designer.cs">
+      <DependentUpon>tb_UIQueryConditionEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\CentralConsole.cs" />
     <Compile Include="UserCenter\ControlCenterConfig.cs">
       <SubType>UserControl</SubType>
@@ -2426,11 +2432,23 @@
     </Compile>
     <Compile Include="UserCenter\WorkCenterHelper.cs" />
     <Compile Include="UserGlobalConfig.cs" />
+    <Compile Include="UserPersonalized\frmGridViewColSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserPersonalized\frmGridViewColSetting.Designer.cs">
+      <DependentUpon>frmGridViewColSetting.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserPersonalized\frmQueryConditionSetting.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UserPersonalized\frmQueryConditionSetting.Designer.cs">
       <DependentUpon>frmQueryConditionSetting.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserPersonalized\UCQueryCondition.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserPersonalized\UCQueryCondition.Designer.cs">
+      <DependentUpon>UCQueryCondition.cs</DependentUpon>
     </Compile>
     <Compile Include="WorkFlowDesigner\CodonBase.cs" />
     <Compile Include="WorkFlowDesigner\Dialogs\GaugeForm.cs">
@@ -3390,6 +3408,9 @@
     <EmbeddedResource Include="UICreator\tb_FM_PaymentApplicationEdit.resx">
       <DependentUpon>tb_FM_PaymentApplicationEdit.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UICreator\tb_UIQueryConditionEdit.resx">
+      <DependentUpon>tb_UIQueryConditionEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UserCenter\ControlCenterConfig.resx">
       <DependentUpon>ControlCenterConfig.cs</DependentUpon>
     </EmbeddedResource>
@@ -3441,8 +3462,14 @@
     <EmbeddedResource Include="UserCenter\UCWorkbenches.resx">
       <DependentUpon>UCWorkbenches.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UserPersonalized\frmGridViewColSetting.resx">
+      <DependentUpon>frmGridViewColSetting.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UserPersonalized\frmQueryConditionSetting.resx">
       <DependentUpon>frmQueryConditionSetting.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserPersonalized\UCQueryCondition.resx">
+      <DependentUpon>UCQueryCondition.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="WorkFlowDesigner\Dialogs\GaugeForm.resx">
       <DependentUpon>GaugeForm.cs</DependentUpon>

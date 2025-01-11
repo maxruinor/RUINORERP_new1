@@ -1,5 +1,8 @@
-﻿using HLH.WinControl.MyTypeConverter;
-using Krypton.Toolkit;
+﻿using Krypton.Toolkit;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Business.Processor;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Model;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.UControls;
 using System;
@@ -25,9 +28,9 @@ namespace RUINORERP.UI.UserPersonalized
             this.StartPosition = FormStartPosition.CenterParent;
         }
 
-        public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
+        public List<tb_UIQueryCondition> Conditions { get; set; } = new List<tb_UIQueryCondition>();
 
-        public ColumnDisplayController[] oldColumnDisplays;
+        public tb_UIQueryCondition[] oldConditions;
 
 
         ContextMenuStrip contentMenu1;
@@ -48,20 +51,20 @@ namespace RUINORERP.UI.UserPersonalized
             shou = shou.TrimEnd(',');
             if (shou == "")
             {
-                MessageBox.Show("不能隐藏所有列！", "提醒", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("不能隐藏所有查询条件项！", "提醒", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             int sortindex = 0;
             //上面临时保存了一个之前的序列数组
             foreach (ListViewItem item in listView1.Items)
             {
-                if (item.Tag is ColumnDisplayController columnDisplays)
+                if (item.Tag is tb_UIQueryCondition Condition)
                 {
-                    if (columnDisplays != null)
+                    if (Condition != null)
                     {
-                        ColumnDisplayController cdc = ColumnDisplays.Where(c => c.ColName == columnDisplays.ColName).FirstOrDefault();
-                        cdc.Visible = item.Checked;
-                        cdc.ColDisplayIndex = sortindex;
+                        tb_UIQueryCondition cdc = Conditions.Where(c => c.FieldName == Condition.FieldName).FirstOrDefault();
+                        cdc.IsVisble = item.Checked;
+                        cdc.Sort = sortindex;
                     }
                 }
                 if (string.IsNullOrEmpty(item.Text))
@@ -82,38 +85,51 @@ namespace RUINORERP.UI.UserPersonalized
         }
 
         public string MenuPathKey { get; set; }
-        MenuPersonalization mp = new MenuPersonalization();
+
+
+        /// <summary>
+        /// 设置默认值时需要的对象
+        /// </summary>
+        public BaseEntity QueryDto { get; set; }
+
+
+        public tb_UIMenuPersonalization uIMenuPersonalization { get; set; }
+        /// <summary>
+        /// 查询条件 根据这个来生成绑定。选择默认值
+        /// </summary>
+        public List<QueryField> QueryFields { get; set; }
+
         private void frmMenuPersonalization_Load(object sender, EventArgs e)
         {
+
             listView1.AllowDrop = true;
             listView1.ItemDrag += ListView1_ItemDrag;
             listView1.DragEnter += listView1_DragEnter;
             listView1.DragOver += listView1_DragOver;
             listView1.DragDrop += listView1_DragDrop;
             listView1.DragLeave += listView1_DragLeave;
-             
 
-            listView1.Columns.Add("显示列名");
+
+            listView1.Columns.Add("查询条件");
             listView1.Columns[0].TextAlign = HorizontalAlignment.Center;
             listView1.Columns[0].Width = -2; //-1 -2 
-   
-            oldColumnDisplays = new ColumnDisplayController[ColumnDisplays.Count];
-            ColumnDisplays.CopyTo(oldColumnDisplays);
-            foreach (ColumnDisplayController keyValue in ColumnDisplays)
-            {
-                if (!keyValue.Disable)
-                {
-                    //listView1.Items.Insert(0, new ListViewItem(item.Key.ToString()));
-                    ListViewItem lvi = new ListViewItem();
-                    lvi.Checked = keyValue.Visible;
-                    lvi.Name = keyValue.ColName;
-                    lvi.Tag = keyValue;
-                    lvi.Text = keyValue.ColDisplayText;
-                    //用这个来保存
-                    lvi.ImageKey = keyValue.ColDisplayIndex.ToString();
-                    listView1.Items.Add(lvi);
 
-                }
+            oldConditions = new tb_UIQueryCondition[Conditions.Count];
+            Conditions.CopyTo(oldConditions);
+            foreach (tb_UIQueryCondition keyValue in Conditions)
+            {
+
+                //listView1.Items.Insert(0, new ListViewItem(item.Key.ToString()));
+                ListViewItem lvi = new ListViewItem();
+                lvi.Checked = keyValue.IsVisble;
+                lvi.Name = keyValue.FieldName;
+                lvi.Tag = keyValue;
+                lvi.Text = keyValue.Caption;
+                //用这个来保存
+                lvi.ImageKey = keyValue.Sort.ToString();
+                listView1.Items.Add(lvi);
+
+
             }
 
 
@@ -168,7 +184,7 @@ namespace RUINORERP.UI.UserPersonalized
             if (item != null)
                 item.Selected = true;
 
-      
+
         }
 
         //拖拽释放，移动行
@@ -184,7 +200,7 @@ namespace RUINORERP.UI.UserPersonalized
             }
             listView1.Items.Insert(TargetItem.Index, (ListViewItem)draggedItem.Clone());
             listView1.Items.Remove(draggedItem);
-            
+
         }
 
 
@@ -200,11 +216,6 @@ namespace RUINORERP.UI.UserPersonalized
             }
         }
 
-        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-
-        }
 
         private void contentMenu1_CheckAll(object sender, EventArgs e)
         {
@@ -250,6 +261,76 @@ namespace RUINORERP.UI.UserPersonalized
             foreach (ListViewItem item in listView1.Items)
             {
                 item.Checked = !item.Checked;
+            }
+        }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems != null && listView1.SelectedItems.Count > 0)
+            {
+                var entity = listView1.SelectedItems[0].Tag as tb_UIQueryCondition;
+                if (panelConditionEdit.Controls.ContainsKey(entity.UIQCID.ToString()))
+                {
+                    var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.UIQCID.ToString());
+                    if (uCQuery != null)
+                    {
+                        uCQuery.Visible = true;
+                    }
+                    //其它隐藏
+                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.UIQCID.ToString()).ToList().ForEach(c => c.Visible = false);
+                }
+                else
+                {
+                    //有些闪屏。后面优化是不是加载时就全部加进去 
+                    UCQueryCondition uCQuery = new UCQueryCondition();
+                    uCQuery.Name = entity.UIQCID.ToString();
+                    uCQuery.OnSynchronizeUI += UCQuery_OnSynchronizeUI;
+                    uCQuery.QueryFields = QueryFields;
+                    uCQuery.QueryDto = QueryDto;
+                    uCQuery.BindData(entity);
+
+                    uCQuery.Visible = true;
+                    uCQuery.TopLevel = false;
+                    uCQuery.Dock = DockStyle.Fill;
+                    panelConditionEdit.Controls.Add(uCQuery as Control);
+                    //其它隐藏
+                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.UIQCID.ToString()).ToList().ForEach(c => c.Visible = false);
+                }
+
+            }
+
+        }
+
+        private void UCQuery_OnSynchronizeUI(object sender, object e)
+        {
+            //其它就不能有焦点。只能设置一个。
+            //QueryFields.Where(c => !c.FieldName.Equals(EditEntity.FieldName)).ForEach(c => c.Focused = false);
+            if (e.ToString() == "Focused")
+            {
+                if (sender.GetPropertyValue(e.ToString()).ToBool())
+                {
+                    listView1.Items.CastToList<ListViewItem>().Where(c => c.Tag != sender).ToList().ForEach
+                        ((x) =>
+                        {
+                            if (x.Tag is tb_UIQueryCondition Condition)
+                            {
+                                Condition.Focused = false;
+                            }
+                        });
+                }
+            }
+            //上面临时保存了一个之前的序列数组
+            foreach (ListViewItem item in listView1.Items)
+            {
+                if (item.Tag is tb_UIQueryCondition Condition)
+                {
+                    if (Condition != null)
+                    {
+                        item.Checked = Condition.IsVisble;
+                        item.Text = Condition.Caption;
+
+                    }
+                }
             }
         }
     }

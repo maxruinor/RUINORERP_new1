@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using RUINORERP.Model.CommonModel;
 using System.Collections.Concurrent;
 using WorkflowCore.Interface;
+using RUINORERP.Global;
 
 namespace RUINORERP.Model.Context
 {
@@ -26,6 +27,10 @@ namespace RUINORERP.Model.Context
         #region 全局变量
         public Dictionary<string, string> _DynamicConfigCache { get; set; }
 
+        /// <summary>
+        /// 这里保存了可以使用的功能模块
+        /// </summary>
+        public List<GlobalFunctionModule> CanUsefunctionModules { get; set; }
 
         /// <summary>
         /// web服务器身份验证

@@ -56,10 +56,20 @@ namespace RUINORERP.UI.BI
             }
             else
             {
-                if (MessageBox.Show("您确定多公司模式运营吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                if (MainForm.Instance.AppContext.CanUsefunctionModules.Contains(GlobalFunctionModule.多公司经营功能))
                 {
-                    base.Add();
+                    if (MessageBox.Show("您确定多公司模式运营吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                    {
+                        base.Add();
+                        base.toolStripButtonModify.Enabled = false;
+                    }
+                }
+                else
+                {
+                    //您没有使用多公司模式运营的权限。请购买后使用
+                    MessageBox.Show("您没有使用多公司模式运营的权限。请购买后使用", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     base.toolStripButtonModify.Enabled = false;
+                    base.toolStripButtonAdd.Enabled = false;
                 }
             }
         }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Model.Models
 {
 
+    [Obsolete("作废，用tb_UIMenuPersonalization代替")]
     [Serializable]
     /// <summary>
     /// 用于保存个性化菜单中属性的配置实体

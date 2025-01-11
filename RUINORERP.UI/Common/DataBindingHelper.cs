@@ -1196,6 +1196,14 @@ namespace RUINORERP.UI.Common
             BindData4CheckBox<T>(entity, key, chkBox, SyncUI);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="datetimeValue">datetimeValue这个值没有起到作用</param>
+        /// <param name="key"></param>
+        /// <param name="dtp"></param>
+        /// <param name="SyncUI"></param>
         public static void BindData4DataTime(object entity, object datetimeValue, string key, KryptonDateTimePicker dtp, bool SyncUI)
         {
             dtp.DataBindings.Clear();

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:32
+// 时间：01/10/2025 18:41:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,11 +43,13 @@ namespace RUINORERP.Business
  RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.UserPersonalizedID).Must(CheckForeignKeyValueCanNull).WithMessage("用户角色设置:下拉选择值不正确。");
  RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.UserPersonalizedID).NotEmpty().When(x => x.UserPersonalizedID.HasValue);
 
- RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.QueryConditionCols).NotEmpty().When(x => x.QueryConditionCols.HasValue);
+//***** 
+ RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.QueryConditionCols).NotNull().WithMessage("条件显示列数量:不能为空。");
 
 
 
- RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.Sort).NotEmpty().When(x => x.Sort.HasValue);
+//***** 
+ RuleFor(tb_UIMenuPersonalization =>tb_UIMenuPersonalization.Sort).NotNull().WithMessage("排序:不能为空。");
 
 
 

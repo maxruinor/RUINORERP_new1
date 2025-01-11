@@ -47,7 +47,7 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(332, 212);
+            this.kryptonPanel1.Size = new System.Drawing.Size(335, 221);
             this.kryptonPanel1.TabIndex = 2;
             // 
             // lblCommentContent
@@ -91,7 +91,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(332, 212);
+            this.ClientSize = new System.Drawing.Size(335, 221);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCglCommentEdit";
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/05/2024 23:44:21
+// 时间：01/10/2025 18:41:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -81,13 +81,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private int? _QueryConditionCols;
+        private int _QueryConditionCols= ((4));
         /// <summary>
         /// 条件显示列数量
         /// </summary>
         [AdvQueryAttribute(ColName = "QueryConditionCols",ColDesc = "条件显示列数量")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "QueryConditionCols" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "条件显示列数量" )]
-        public int? QueryConditionCols
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "QueryConditionCols" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "条件显示列数量" )]
+        public int QueryConditionCols
         { 
             get{return _QueryConditionCols;}
             set{
@@ -123,15 +123,13 @@ namespace RUINORERP.Model
             }
         }
 
-       
-
-        private int? _Sort;
+        private int _Sort= ((0));
         /// <summary>
         /// 排序
         /// </summary>
         [AdvQueryAttribute(ColName = "Sort",ColDesc = "排序")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Sort" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "排序" )]
-        public int? Sort
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Sort" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "排序" )]
+        public int Sort
         { 
             get{return _Sort;}
             set{

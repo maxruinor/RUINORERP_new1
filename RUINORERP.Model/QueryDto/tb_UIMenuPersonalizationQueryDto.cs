@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/05/2024 23:44:21
+// 时间：01/10/2025 18:41:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,13 +61,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int? _QueryConditionCols;
+        private int _QueryConditionCols= ((4));
         /// <summary>
         /// 条件显示列数量
         /// </summary>
         [AdvQueryAttribute(ColName = "QueryConditionCols",ColDesc = "条件显示列数量")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "QueryConditionCols",IsNullable = true,ColumnDescription = "条件显示列数量" )]
-        public int? QueryConditionCols 
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "QueryConditionCols",IsNullable = false,ColumnDescription = "条件显示列数量" )]
+        public int QueryConditionCols 
         { 
             get{return _QueryConditionCols;}
             set{SetProperty(ref _QueryConditionCols, value);}
@@ -100,26 +100,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _MenuType;
-        /// <summary>
-        /// 菜单类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "MenuType",ColDesc = "菜单类型")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "MenuType",Length=20,IsNullable = false,ColumnDescription = "菜单类型" )]
-        public string MenuType 
-        { 
-            get{return _MenuType;}
-            set{SetProperty(ref _MenuType, value);}
-        }
-     
-
-        private int? _Sort;
+        private int _Sort= ((0));
         /// <summary>
         /// 排序
         /// </summary>
         [AdvQueryAttribute(ColName = "Sort",ColDesc = "排序")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Sort",IsNullable = true,ColumnDescription = "排序" )]
-        public int? Sort 
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Sort",IsNullable = false,ColumnDescription = "排序" )]
+        public int Sort 
         { 
             get{return _Sort;}
             set{SetProperty(ref _Sort, value);}

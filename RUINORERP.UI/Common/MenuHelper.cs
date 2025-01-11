@@ -206,62 +206,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        /*
-        private void LoadMenu(ToolStripItemCollection ms, List<tb_MenuAssemblyInfo> resourceList, int parentID, int roleID)
-        {
-
-            resourceList = resourceList.FindAll(delegate (PowerResource p) { return p.ParentID == parentID; });
-
-            foreach (PowerResource var in resourceList)
-            {
-                ToolStripMenuItem item = new ToolStripMenuItem();
-                //if (!string.IsNullOrEmpty(var.HotKey))
-                //{
-                //    item.Text = "" + var.ResourceName + "(&" + var.HotKey + ")";
-                //}
-                //else
-                //{
-                item.Text = "【" + var.ResourceName + "】";
-                //}
-                //将资源类型传入，可以对具体的菜单 进行特殊处理
-                item.Tag = var;
-                if (var.ResourceType == "操作")
-                {
-                    continue;
-                }
-
-
-                //如果在角色资源关系列表中找到对应的记录，
-                RoleResourceRelationEntity Relation = new RoleResourceRelationEntity();
-                if (RoleResourceList.Count == 0)
-                {
-
-                    RoleResourceList = Relation.GetAllByQuery(" RoleID =" + roleID);
-                }
-
-                Relation = RoleResourceList.Find(delegate (RoleResourceRelationEntity r) { return r.ResourceID == var.ResourceID && r.RoleID == roleID; });
-                if (Relation != null)
-                {
-                    if (var.ResourceType.Contains("菜单") && Relation.Authorized)
-                    {
-                        ms.Add(item);
-                    }
-                }
-
-
-                if (PowerGlobal.Instance.ResourceList.FindAll(delegate (PowerResource p) { return p.ParentID == var.ResourceID; }).Count > 0)
-                {
-                    resourceList = PowerGlobal.Instance.ResourceList.FindAll(delegate (PowerResource p) { return p.ParentID == var.ResourceID; });
-
-                    LoadMenu(item.DropDownItems, resourceList, var.ResourceID, roleID);
-                }
-            }
-        }
-
-        */
-
-
-
+    
 
 
         public delegate void OtherHandler(object obj);

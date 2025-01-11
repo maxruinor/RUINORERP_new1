@@ -145,6 +145,9 @@ namespace RUINORERP.Business.Security
                 modlist = appcontext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
                             .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
                             .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
+                            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_userpersonalized)
+                            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIQueryConditions)
+                            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIGridSettings)
                             .ToList();
 
                 //List<tb_MenuInfo> menulist = new List<tb_MenuInfo>();

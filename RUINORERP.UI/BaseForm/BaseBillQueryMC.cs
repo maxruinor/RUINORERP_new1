@@ -48,6 +48,7 @@ using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls;
@@ -69,7 +70,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 判断是否需要加载子表明细。为了将这个基类适应于单表单据。如付款申请单
         /// </summary>
-        public bool HasChildData { get; set; }=true;
+        public bool HasChildData { get; set; } = true;
 
 
         private QueryFilter _QueryConditionFilter = new QueryFilter();
@@ -186,40 +187,93 @@ namespace RUINORERP.UI.BaseForm
         private async void button设置查询条件_Click(object sender, EventArgs e)
         {
             tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
+
+            //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
-            tb_UIMenuPersonalization menuPersonalization = null;
             if (userPersonalized.tb_UIMenuPersonalizations == null)
             {
                 userPersonalized.tb_UIMenuPersonalizations = new();
-
             }
 
-            menuPersonalization = userPersonalized.tb_UIMenuPersonalizations.FirstOrDefault(t => t.MenuID == CurMenuInfo.MenuID && t.UserPersonalizedID == userPersonalized.UserPersonalizedID);
+            tb_UIMenuPersonalization menuPersonalization = userPersonalized.tb_UIMenuPersonalizations.FirstOrDefault(t => t.MenuID == CurMenuInfo.MenuID && t.UserPersonalizedID == userPersonalized.UserPersonalizedID);
             if (menuPersonalization == null)
             {
                 menuPersonalization = new tb_UIMenuPersonalization();
                 menuPersonalization.MenuID = CurMenuInfo.MenuID;
                 menuPersonalization.UserPersonalizedID = userPersonalized.UserPersonalizedID;
+                menuPersonalization.QueryConditionCols = 4;//查询条件显示的列数 默认值
                 userPersonalized.tb_UIMenuPersonalizations.Add(menuPersonalization);
-
                 //QueryConditionCols UI上设置
                 //MainForm.Instance.AppContext.Db.Insertable(MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.tb_uimenupersonalization).ExecuteReturnSnowflakeIdAsync();
+                ReturnResults<tb_UIMenuPersonalization> rs = await ctr.SaveOrUpdate(menuPersonalization);
+                if (!rs.Succeeded)
+                {
+                    return;
+                }
             }
 
-            ReturnResults<tb_UIMenuPersonalization> rs = await ctr.SaveOrUpdate(menuPersonalization);
-            if (!rs.Succeeded)
-            {
-                return;
-            }
-
+            //查询条件表
+            //tb_UIQueryCondition
             //MenuPersonalizedSettings();
             frmQueryConditionSetting set = new frmQueryConditionSetting();
             //为了显示传入带中文的集合
-            if (menuPersonalization.QueryConditionCols.HasValue)
-            {
-                set.QueryShowColQty.Value = menuPersonalization.QueryConditionCols.Value;
-            }
 
+            set.QueryShowColQty.Value = menuPersonalization.QueryConditionCols;
+            //这里是列的控制情况 
+            //但是这个是grid列的显示控制的。这里是处理查询条件的，默认值，是否显示参与查询
+            //应该要实体绑定，再与查询参数生成条件时都关联起来。
+
+            // 假设menuPersonalization.tb_UIQueryConditions已经存在
+            if (menuPersonalization.tb_UIQueryConditions == null)
+            {
+                menuPersonalization.tb_UIQueryConditions = new List<tb_UIQueryCondition>();
+            }
+            List<tb_UIQueryCondition> existingConditions = menuPersonalization.tb_UIQueryConditions;
+
+            //这里如果是初始化时以硬编码的过滤条件为标准生成一组条件。如果已经有了。则按数据库中与这个比较。硬编码条件为标准增量？
+            List<tb_UIQueryCondition> queryConditions = new List<tb_UIQueryCondition>();
+            if (QueryConditionFilter != null)
+            {
+                foreach (var item in QueryConditionFilter.QueryFields)
+                {
+                    tb_UIQueryCondition condition = new tb_UIQueryCondition();
+                    condition.FieldName = item.FieldName;
+                    condition.Sort = item.DisplayIndex;
+                    //时间区间排最后
+                    if (item.AdvQueryFieldType == AdvQueryProcessType.datetimeRange && condition.Sort == 0)
+                    {
+                        condition.Sort = 100;
+                    }
+                    condition.IsVisble = true;
+                    condition.Caption = item.Caption;
+                    condition.ValueType = item.ColDataType.Name;
+                    condition.UIMenuPID = menuPersonalization.UIMenuPID;
+                    queryConditions.Add(condition);
+                }
+            }
+            // 对queryConditions进行排序
+            var sortedQueryConditions = queryConditions.OrderBy(condition => condition.Sort).ToList();
+
+            // 检查并添加条件
+            foreach (var condition in sortedQueryConditions)
+            {
+                // 检查existingConditions中是否已经存在相同的条件
+                if (!existingConditions.Any(ec => ec.FieldName == condition.FieldName && ec.UIMenuPID == condition.UIMenuPID))
+                {
+                    // 如果不存在，则添加到existingConditions中
+                    existingConditions.Add(condition);
+                }
+            }
+            // 更新set.Conditions
+            set.Conditions = existingConditions.OrderBy(c => c.Sort).ToList();
+            set.QueryFields = QueryConditionFilter.QueryFields;
+            set.QueryDto = QueryDto;
+            //var conditions = from tb_UIQueryCondition condition in queryConditions
+            //                 orderby condition.Sort
+            //                 select condition;
+            //set.Conditions = conditions.ToList();
+
+            /*
             List<ColumnDisplayController> ColumnDisplays = new List<ColumnDisplayController>();
 
             if (QueryConditionFilter != null)
@@ -230,6 +284,7 @@ namespace RUINORERP.UI.BaseForm
                     col.ColName = item.FieldName;
                     col.ColDisplayText = item.Caption;
                     col.ColDisplayIndex = item.DisplayIndex;
+                    col.Visible = true;
                     ColumnDisplays.Add(col);
                 }
             }
@@ -238,38 +293,47 @@ namespace RUINORERP.UI.BaseForm
                        orderby col.ColDisplayIndex
                        select col;
 
-            set.ColumnDisplays = cols.ToList();
+            set.Conditions = cols.ToList();
+            */
+
             if (set.ShowDialog() == DialogResult.OK)
             {
-                // targetDataGridView.BindColumnStyle();
-                // SaveColumnsList(ColumnDisplays);
-            }
-        }
-
-
-
-        protected virtual void MenuPersonalizedSettings()
-        {
-            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
-            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
-            if (frmMenu.ShowDialog() == DialogResult.OK)
-            {
-                if (!this.DesignMode)
+                await MainForm.Instance.AppContext.Db.Insertable(set.Conditions.Where(c => c.UIQCID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
+                await MainForm.Instance.AppContext.Db.Updateable(set.Conditions.Where(c => c.UIQCID > 0).ToList()).ExecuteCommandAsync();
+                if (menuPersonalization.tb_UIQueryConditions.Count == 0)
                 {
-                    MenuPersonalization personalization = new MenuPersonalization();
-                    UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-                    if (personalization != null)
-                    {
-                        decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                        QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
-                    }
-                    else
-                    {
-                        QueryDtoProxy = LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
-                    }
+                    menuPersonalization.tb_UIQueryConditions = set.Conditions;
                 }
+                menuPersonalization.QueryConditionCols = set.QueryShowColQty.Value.ToInt();
+                await MainForm.Instance.AppContext.Db.Updateable(menuPersonalization).ExecuteCommandAsync();
+                QueryDtoProxy = LoadQueryConditionToUI();
             }
         }
+
+
+
+        //protected virtual void MenuPersonalizedSettings()
+        //{
+        //    UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
+        //    frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
+        //    if (frmMenu.ShowDialog() == DialogResult.OK)
+        //    {
+        //        if (!this.DesignMode)
+        //        {
+        //            MenuPersonalization personalization = new MenuPersonalization();
+        //            UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
+        //            if (personalization != null)
+        //            {
+        //                decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
+        //                QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
+        //            }
+        //            else
+        //            {
+        //                QueryDtoProxy = LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
+        //            }
+        //        }
+        //    }
+        //}
 
 
         /// <summary>
@@ -1226,12 +1290,12 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.kryptonDockableWorkspace1.Root.Children.Add(cell);
             }
             KryptonPage page = (thisform as Control).Parent as KryptonPage;
-            if (page!=null)
+            if (page != null)
             {
                 MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
                 page.Dispose();
             }
-      
+
             /*
             if (page == null)
             {
@@ -1307,19 +1371,7 @@ namespace RUINORERP.UI.BaseForm
                     MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                     return;
                 }
-
-                MenuPersonalization personalization = new MenuPersonalization();
-                UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-                if (personalization != null)
-                {
-                    decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                    QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
-                }
-                else
-                {
-                    QueryDtoProxy = LoadQueryConditionToUI(4);
-                }
-
+                QueryDtoProxy = LoadQueryConditionToUI();
             }
 
             // Setup docking functionality
@@ -1336,7 +1388,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     Kpages.Add(ChildQuery());
                 }
-                
+
                 if (this.ChildRelatedEntityType != null)
                 {
                     Kpages.Add(Child_RelatedQuery());
@@ -1477,14 +1529,40 @@ namespace RUINORERP.UI.BaseForm
             UIBizSrvice.RequestCache<C>();
             #endregion
 
+            //设置默认焦点
+            tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+            if (menuSetting != null)
+            {
+                var queryConditionFocused = menuSetting.tb_UIQueryConditions.FirstOrDefault(c => c.Focused == true);
+                if (queryConditionFocused != null)
+                {
+                    var controls = kryptonPanelQuery.Controls.Find(queryConditionFocused.FieldName, true);
+                    if (controls.Length > 0)
+                    {
+                        var control = controls[0];
+                        if (control is KryptonTextBox ktxt)
+                        {
+                            if (ktxt.CanFocus)
+                            {
+                                ktxt.Focus();
+                            }
+                        }
+                        if (control is KryptonComboBox kcb)
+                        {
+                            if (kcb.CanFocus)
+                            {
+                                kcb.Focus();
+                            }
+                        }
+                    }
+                }
+            }
         }
 
 
         private BaseEntity _queryDto = new BaseEntity();
 
         public BaseEntity QueryDto { get => _queryDto; set => _queryDto = value; }
-
-
 
 
         private async void _UCBillMasterQuery_OnSelectDataRow(object entity, object bizKey)
@@ -1587,46 +1665,11 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        // private UCQueryCondition _UCBillQueryCondition;
-
-        /// <summary>
-        /// 构建查询条件
-        /// </summary>
-        /// <returns></returns>
-        //private KryptonPage QueryCondition()
-        //{
-        //    _UCBillQueryCondition = new UCQueryCondition();
-        //    _UCBillQueryCondition.entityType = typeof(M);
-        //    if (!this.DesignMode)
-        //    {
-        //        MenuPersonalization personalization = new MenuPersonalization();
-        //        UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-        //        if (personalization != null)
-        //        {
-        //            decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-        //            QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
-        //        }
-        //        else
-        //        {
-        //            QueryDtoProxy = LoadQueryConditionToUI(4);
-        //        }
-        //    }
-        //    //QueryDtoProxy = LoadQueryConditionToUI(4);
-        //    KryptonPage page = NewPage("查询条件", 1, _UCBillQueryCondition);
-        //    // Document pages cannot be docked or auto hidden
-        //    page.ClearFlags(KryptonPageFlags.DockingAllowClose);
-        //    page.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
-        //    page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
-        //    return page;
-        //}
-
-
-
         /// <summary>
         /// 生成查询条件，并返回查询条件代理实体参数
         /// </summary>
         /// <param name="useLike">true：默认不是模糊查询</param>
-        internal override object LoadQueryConditionToUI(decimal QueryConditionShowColQty)
+        internal override object LoadQueryConditionToUI(decimal QueryConditionShowColQty = 4)
         {
             Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = kryptonPanelQuery;
             //为了验证设置的属性
@@ -1637,7 +1680,17 @@ namespace RUINORERP.UI.BaseForm
             kryptonPanel条件生成容器.Visible = false;
             kryptonPanel条件生成容器.Controls.Clear();
             kryptonPanel条件生成容器.SuspendLayout();
-            QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+
+            tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+            if (menuSetting != null)
+            {
+                QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, menuSetting);
+            }
+            else
+            {
+                QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+            }
+
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;
             return QueryDto;

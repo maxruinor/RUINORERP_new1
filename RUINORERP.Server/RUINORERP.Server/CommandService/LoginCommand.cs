@@ -110,7 +110,7 @@ namespace RUINORERP.Server.CommandService
                                     ReceiveEntityTransferCmd entityTransferCmd = new ReceiveEntityTransferCmd(CmdOperation.Send);
                                     entityTransferCmd.ToSession = RequestSession;
                                     entityTransferCmd.requestType = EntityTransferCmdType.处理动态配置;
-                                    entityTransferCmd.TransferObject = frmMain.Instance.Globalconfig;
+                                    entityTransferCmd.TransferObject = frmMain.Instance.Globalconfig.CurrentValue;
                                     await entityTransferCmd.ExecuteAsync(cancellationToken);
 
                                     OnLoginSuccess?.Invoke(success, this);

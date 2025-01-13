@@ -1966,6 +1966,10 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
+            if (dataGridView1.CurrentCell == null)
+            {
+                return;
+            }
             if (dataGridView1.CurrentCell.Value == null)
             {
                 return;

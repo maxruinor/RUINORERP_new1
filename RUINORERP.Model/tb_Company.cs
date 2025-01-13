@@ -293,7 +293,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Department.ID))]
         public virtual List<tb_Department> tb_Departments { get; set; }

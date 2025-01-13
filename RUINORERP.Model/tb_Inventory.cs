@@ -422,22 +422,22 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Inv_Alert_Attribute.Inventory_ID))]
         public virtual List<tb_Inv_Alert_Attribute> tb_Inv_Alert_Attributes { get; set; }
@@ -445,7 +445,7 @@ namespace RUINORERP.Model
         //Inventory_ID.FK_TB_INV_A_REFERENCE_TB_INVEN)
         //tb_Inventory.Inventory_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_OpeningInventory.Inventory_ID))]
         public virtual List<tb_OpeningInventory> tb_OpeningInventories { get; set; }

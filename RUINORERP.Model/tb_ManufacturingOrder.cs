@@ -739,62 +739,62 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID_Out))]
         public virtual tb_CustomerVendor tb_customervendor_out { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
         public virtual tb_BOM_S tb_bom_s { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PDCID))]
         public virtual tb_ProduceGoodsRecommendDetail tb_producegoodsrecommenddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PDID))]
         public virtual tb_ProductionDemand tb_productiondemand { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
         public virtual tb_ProductType tb_producttype { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.MOID))]
         public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
@@ -802,7 +802,7 @@ namespace RUINORERP.Model
         //MOID.FK_MATEREQUISTITIONS_REF_MANUFCTRUINGORDER)
         //tb_ManufacturingOrder.MOID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInv.MOID))]
         public virtual List<tb_FinishedGoodsInv> tb_FinishedGoodsInvs { get; set; }
@@ -810,7 +810,7 @@ namespace RUINORERP.Model
         //MOID.FK_FINIS_REF_MANUF)
         //tb_ManufacturingOrder.MOID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrderDetail.MOID))]
         public virtual List<tb_ManufacturingOrderDetail> tb_ManufacturingOrderDetails { get; set; }
@@ -818,7 +818,7 @@ namespace RUINORERP.Model
         //MOID.FK_TB_MANUFODER_REF_TB_MANUFORDERDE)
         //tb_ManufacturingOrder.MOID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturn.MOID))]
         public virtual List<tb_MRP_ReworkReturn> tb_MRP_ReworkReturns { get; set; }

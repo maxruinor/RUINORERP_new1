@@ -125,7 +125,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetail.UnitConversion_ID))]
         public virtual List<tb_BOM_SDetail> tb_BOM_SDetails { get; set; }

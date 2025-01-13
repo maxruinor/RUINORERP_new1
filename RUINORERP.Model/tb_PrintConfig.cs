@@ -210,7 +210,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PrintTemplate.PrintConfigID))]
         public virtual List<tb_PrintTemplate> tb_PrintTemplates { get; set; }

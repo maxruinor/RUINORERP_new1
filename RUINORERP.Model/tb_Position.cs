@@ -111,7 +111,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProcessStep.Position_Id))]
         public virtual List<tb_ProcessStep> tb_ProcessSteps { get; set; }

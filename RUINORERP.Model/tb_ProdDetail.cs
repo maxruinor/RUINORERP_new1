@@ -380,17 +380,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
         public virtual tb_BOM_S tb_bom_s { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdBaseID))]
         public virtual tb_Prod tb_prod { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdSplitDetail.ProdDetailID))]
         public virtual List<tb_ProdSplitDetail> tb_ProdSplitDetails { get; set; }
@@ -398,7 +398,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODSplitDetail_REF_PRODDEtail)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlanDetail.ProdDetailID))]
         public virtual List<tb_ProductionPlanDetail> tb_ProductionPlanDetails { get; set; }
@@ -406,7 +406,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODPLANDETAIL_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockOutDetail.ProdDetailID))]
         public virtual List<tb_StockOutDetail> tb_StockOutDetails { get; set; }
@@ -414,7 +414,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_STOCKOUTD_REF_TB_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProduceGoodsRecommendDetail.ProdDetailID))]
         public virtual List<tb_ProduceGoodsRecommendDetail> tb_ProduceGoodsRecommendDetails { get; set; }
@@ -422,7 +422,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_ProduceGoodsRecommendDetail_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutReDetail.ProdDetailID))]
         public virtual List<tb_SaleOutReDetail> tb_SaleOutReDetails { get; set; }
@@ -430,7 +430,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_SOREDETAIL_RE_TB_PRODDDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntryDetail.ProdDetailID))]
         public virtual List<tb_PurReturnEntryDetail> tb_PurReturnEntryDetails { get; set; }
@@ -438,7 +438,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PURRETRUNENTRYDETAIL_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturnDetail.ProdDetailID))]
         public virtual List<tb_MaterialReturnDetail> tb_MaterialReturnDetails { get; set; }
@@ -446,7 +446,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_MATERRETURNDETAIL_REB_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInvDetail.ProdDetailID))]
         public virtual List<tb_FinishedGoodsInvDetail> tb_FinishedGoodsInvDetails { get; set; }
@@ -454,7 +454,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_FINISde_REF_TB_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdMergeDetail.ProdDetailID))]
         public virtual List<tb_ProdMergeDetail> tb_ProdMergeDetails { get; set; }
@@ -462,7 +462,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODMergeDetail_REF_PRODDetail)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrderDetail.ProdDetailID))]
         public virtual List<tb_SaleOrderDetail> tb_SaleOrderDetails { get; set; }
@@ -470,7 +470,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_SALEODE_REF_TB_PRODDETail)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdReturningDetail.ProdDetailID))]
         public virtual List<tb_ProdReturningDetail> tb_ProdReturningDetails { get; set; }
@@ -478,7 +478,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODRetruningdetail_REF_PRODDe)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ReturnDetail.ProdDetailID))]
         public virtual List<tb_ReturnDetail> tb_ReturnDetails { get; set; }
@@ -486,7 +486,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_RETURNDETAIL_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PriceRecord.ProdDetailID))]
         public virtual List<tb_PriceRecord> tb_PriceRecords { get; set; }
@@ -494,7 +494,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_PRICE_REF_TB_PRODDetail)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StocktakeDetail.ProdDetailID))]
         public virtual List<tb_StocktakeDetail> tb_StocktakeDetails { get; set; }
@@ -502,7 +502,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_STOCK_REF_TB_PROD_11)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetailSecondary.ProdDetailID))]
         public virtual List<tb_BOM_SDetailSecondary> tb_BOM_SDetailSecondaries { get; set; }
@@ -510,7 +510,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_BOM_S_dede__TB_PROD_D)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryDetail.ProdDetailID))]
         public virtual List<tb_PurEntryDetail> tb_PurEntryDetails { get; set; }
@@ -518,7 +518,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_PUREN_REF_TB_PROD_DETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod_Attr_Relation.ProdDetailID))]
         public virtual List<tb_Prod_Attr_Relation> tb_Prod_Attr_Relations { get; set; }
@@ -526,7 +526,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_PROD_A_1_TB_PROD_D)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandDetail.ProdDetailID))]
         public virtual List<tb_ProductionDemandDetail> tb_ProductionDemandDetails { get; set; }
@@ -534,7 +534,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODDEMANDDETAIL_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutReRefurbishedMaterialsDetail.ProdDetailID))]
         public virtual List<tb_SaleOutReRefurbishedMaterialsDetail> tb_SaleOutReRefurbishedMaterialsDetails { get; set; }
@@ -542,7 +542,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_SALEOREREMATER_REF_PRODDEtail)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Packing.ProdDetailID))]
         public virtual List<tb_Packing> tb_Packings { get; set; }
@@ -550,7 +550,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_PACKINGSPEC_REF_PRODD_Detail)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetail.ProdDetailID))]
         public virtual List<tb_BOM_SDetail> tb_BOM_SDetails { get; set; }
@@ -558,7 +558,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_BOM_S_deta_TB_PROD_D)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdBorrowingDetail.ProdDetailID))]
         public virtual List<tb_ProdBorrowingDetail> tb_ProdBorrowingDetails { get; set; }
@@ -566,7 +566,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODBorrowingdetail_REF_PRODDetail)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdSplit.ProdDetailID))]
         public virtual List<tb_ProdSplit> tb_ProdSplits { get; set; }
@@ -574,7 +574,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_PRODSplit_REF_PRODDetail)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.ProdDetailID_from))]
         public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails_from { get; set; }
@@ -582,7 +582,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRO_REF_TB_PRO_fromID)
         //tb_ProdDetail.ProdDetailID_from)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.ProdDetailID_to))]
         public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails_to { get; set; }
@@ -590,7 +590,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_PRO_REF_TB_PRO_toID)
         //tb_ProdDetail.ProdDetailID_to)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrderDetail.ProdDetailID))]
         public virtual List<tb_ManufacturingOrderDetail> tb_ManufacturingOrderDetails { get; set; }
@@ -598,7 +598,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_MANUFODETAIL_RE_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutDetail.ProdDetailID))]
         public virtual List<tb_SaleOutDetail> tb_SaleOutDetails { get; set; }
@@ -606,7 +606,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_SALEO_REFERENCE_TB_PRODD)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderDetail.ProdDetailID))]
         public virtual List<tb_PurOrderDetail> tb_PurOrderDetails { get; set; }
@@ -614,7 +614,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PURORDE_TB_PROD_DE)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandTargetDetail.ProdDetailID))]
         public virtual List<tb_ProductionDemandTargetDetail> tb_ProductionDemandTargetDetails { get; set; }
@@ -622,7 +622,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODDEMANDTARGETDETAIL_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BuyingRequisitionDetail.ProdDetailID))]
         public virtual List<tb_BuyingRequisitionDetail> tb_BuyingRequisitionDetails { get; set; }
@@ -630,7 +630,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_BUYINGREQUISTIONDETAIL_REF_PRODDDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.ProdDetailID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
@@ -638,7 +638,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_MANUFCTURINGORDER_REF_PRODDDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdMerge.ProdDetailID))]
         public virtual List<tb_ProdMerge> tb_ProdMerges { get; set; }
@@ -646,7 +646,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODMerge_REF_PRODDetail)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryReDetail.ProdDetailID))]
         public virtual List<tb_PurEntryReDetail> tb_PurEntryReDetails { get; set; }
@@ -654,7 +654,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PURENREDETAIL_RE_PRODDDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Inventory.ProdDetailID))]
         public virtual List<tb_Inventory> tb_Inventories { get; set; }
@@ -662,7 +662,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_INVEN_REFERENCE_TB_PRODD)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderReDetail.ProdDetailID))]
         public virtual List<tb_PurOrderReDetail> tb_PurOrderReDetails { get; set; }
@@ -670,7 +670,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PUROREDETAIL_RE_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_S.ProdDetailID))]
         public virtual List<tb_BOM_S> tb_BOM_Ss { get; set; }
@@ -678,7 +678,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_BO_TB_PROD_BOM_S_1)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PackingDetail.ProdDetailID))]
         public virtual List<tb_PackingDetail> tb_PackingDetails { get; set; }
@@ -686,7 +686,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PACKINGdETAIL_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockInDetail.ProdDetailID))]
         public virtual List<tb_StockInDetail> tb_StockInDetails { get; set; }
@@ -694,7 +694,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_TB_STOCKINDETAIL_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisitionDetail.ProdDetailID))]
         public virtual List<tb_MaterialRequisitionDetail> tb_MaterialRequisitionDetails { get; set; }
@@ -702,7 +702,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_MATEREQUISITIONSDETAIL_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurGoodsRecommendDetail.ProdDetailID))]
         public virtual List<tb_PurGoodsRecommendDetail> tb_PurGoodsRecommendDetails { get; set; }
@@ -710,7 +710,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PURGOODSEWCOMMENDDETAIL_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdBundleDetail.ProdDetailID))]
         public virtual List<tb_ProdBundleDetail> tb_ProdBundleDetails { get; set; }
@@ -718,7 +718,7 @@ namespace RUINORERP.Model
         //ProdDetailID.FK_PRODBUNDLEDetail_REF_PRODDETAIL)
         //tb_ProdDetail.ProdDetailID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockTransferDetail.ProdDetailID))]
         public virtual List<tb_StockTransferDetail> tb_StockTransferDetails { get; set; }

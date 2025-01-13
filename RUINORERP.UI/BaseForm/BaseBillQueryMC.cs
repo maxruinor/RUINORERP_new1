@@ -180,132 +180,31 @@ namespace RUINORERP.UI.BaseForm
                     button设置查询条件.ToolTipValues.Heading = "提示";
                     button设置查询条件.Click += button设置查询条件_Click;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button设置查询条件);
+
+
+                    Krypton.Toolkit.KryptonButton button表格显示设置 = new Krypton.Toolkit.KryptonButton();
+                    button表格显示设置.Text = "表格显示设置";
+                    button表格显示设置.ToolTipValues.Description = "对表格显示设置进行个性化设置。";
+                    button表格显示设置.ToolTipValues.EnableToolTips = true;
+                    button表格显示设置.ToolTipValues.Heading = "提示";
+                    button表格显示设置.Click += button表格显示设置_Click;
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button表格显示设置);
+
                 }
             }
 
         }
+
+        private async void button表格显示设置_Click(object sender, EventArgs e)
+        {
+            await UIBizSrvice.SetGridViewAsync(typeof(M), _UCBillMasterQuery.newSumDataGridViewMaster, CurMenuInfo, true);
+        }
+
         private async void button设置查询条件_Click(object sender, EventArgs e)
         {
-            tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
-
-            //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
-            tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
-            if (userPersonalized.tb_UIMenuPersonalizations == null)
+            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto);
+            if (rs)
             {
-                userPersonalized.tb_UIMenuPersonalizations = new();
-            }
-
-            tb_UIMenuPersonalization menuPersonalization = userPersonalized.tb_UIMenuPersonalizations.FirstOrDefault(t => t.MenuID == CurMenuInfo.MenuID && t.UserPersonalizedID == userPersonalized.UserPersonalizedID);
-            if (menuPersonalization == null)
-            {
-                menuPersonalization = new tb_UIMenuPersonalization();
-                menuPersonalization.MenuID = CurMenuInfo.MenuID;
-                menuPersonalization.UserPersonalizedID = userPersonalized.UserPersonalizedID;
-                menuPersonalization.QueryConditionCols = 4;//查询条件显示的列数 默认值
-                userPersonalized.tb_UIMenuPersonalizations.Add(menuPersonalization);
-                //QueryConditionCols UI上设置
-                //MainForm.Instance.AppContext.Db.Insertable(MainForm.Instance.AppContext.CurrentUser_Role.tb_userpersonalized.tb_uimenupersonalization).ExecuteReturnSnowflakeIdAsync();
-                ReturnResults<tb_UIMenuPersonalization> rs = await ctr.SaveOrUpdate(menuPersonalization);
-                if (!rs.Succeeded)
-                {
-                    return;
-                }
-            }
-
-            //查询条件表
-            //tb_UIQueryCondition
-            //MenuPersonalizedSettings();
-            frmQueryConditionSetting set = new frmQueryConditionSetting();
-            //为了显示传入带中文的集合
-
-            set.QueryShowColQty.Value = menuPersonalization.QueryConditionCols;
-            //这里是列的控制情况 
-            //但是这个是grid列的显示控制的。这里是处理查询条件的，默认值，是否显示参与查询
-            //应该要实体绑定，再与查询参数生成条件时都关联起来。
-
-            // 假设menuPersonalization.tb_UIQueryConditions已经存在
-            if (menuPersonalization.tb_UIQueryConditions == null)
-            {
-                menuPersonalization.tb_UIQueryConditions = new List<tb_UIQueryCondition>();
-            }
-            List<tb_UIQueryCondition> existingConditions = menuPersonalization.tb_UIQueryConditions;
-
-            //这里如果是初始化时以硬编码的过滤条件为标准生成一组条件。如果已经有了。则按数据库中与这个比较。硬编码条件为标准增量？
-            List<tb_UIQueryCondition> queryConditions = new List<tb_UIQueryCondition>();
-            if (QueryConditionFilter != null)
-            {
-                foreach (var item in QueryConditionFilter.QueryFields)
-                {
-                    tb_UIQueryCondition condition = new tb_UIQueryCondition();
-                    condition.FieldName = item.FieldName;
-                    condition.Sort = item.DisplayIndex;
-                    //时间区间排最后
-                    if (item.AdvQueryFieldType == AdvQueryProcessType.datetimeRange && condition.Sort == 0)
-                    {
-                        condition.Sort = 100;
-                    }
-                    condition.IsVisble = true;
-                    condition.Caption = item.Caption;
-                    condition.ValueType = item.ColDataType.Name;
-                    condition.UIMenuPID = menuPersonalization.UIMenuPID;
-                    queryConditions.Add(condition);
-                }
-            }
-            // 对queryConditions进行排序
-            var sortedQueryConditions = queryConditions.OrderBy(condition => condition.Sort).ToList();
-
-            // 检查并添加条件
-            foreach (var condition in sortedQueryConditions)
-            {
-                // 检查existingConditions中是否已经存在相同的条件
-                if (!existingConditions.Any(ec => ec.FieldName == condition.FieldName && ec.UIMenuPID == condition.UIMenuPID))
-                {
-                    // 如果不存在，则添加到existingConditions中
-                    existingConditions.Add(condition);
-                }
-            }
-            // 更新set.Conditions
-            set.Conditions = existingConditions.OrderBy(c => c.Sort).ToList();
-            set.QueryFields = QueryConditionFilter.QueryFields;
-            set.QueryDto = QueryDto;
-            //var conditions = from tb_UIQueryCondition condition in queryConditions
-            //                 orderby condition.Sort
-            //                 select condition;
-            //set.Conditions = conditions.ToList();
-
-            /*
-            List<ColumnDisplayController> ColumnDisplays = new List<ColumnDisplayController>();
-
-            if (QueryConditionFilter != null)
-            {
-                foreach (var item in QueryConditionFilter.QueryFields)
-                {
-                    ColumnDisplayController col = new ColumnDisplayController();
-                    col.ColName = item.FieldName;
-                    col.ColDisplayText = item.Caption;
-                    col.ColDisplayIndex = item.DisplayIndex;
-                    col.Visible = true;
-                    ColumnDisplays.Add(col);
-                }
-            }
-
-            var cols = from ColumnDisplayController col in ColumnDisplays
-                       orderby col.ColDisplayIndex
-                       select col;
-
-            set.Conditions = cols.ToList();
-            */
-
-            if (set.ShowDialog() == DialogResult.OK)
-            {
-                await MainForm.Instance.AppContext.Db.Insertable(set.Conditions.Where(c => c.UIQCID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
-                await MainForm.Instance.AppContext.Db.Updateable(set.Conditions.Where(c => c.UIQCID > 0).ToList()).ExecuteCommandAsync();
-                if (menuPersonalization.tb_UIQueryConditions.Count == 0)
-                {
-                    menuPersonalization.tb_UIQueryConditions = set.Conditions;
-                }
-                menuPersonalization.QueryConditionCols = set.QueryShowColQty.Value.ToInt();
-                await MainForm.Instance.AppContext.Db.Updateable(menuPersonalization).ExecuteCommandAsync();
                 QueryDtoProxy = LoadQueryConditionToUI();
             }
         }
@@ -1349,7 +1248,7 @@ namespace RUINORERP.UI.BaseForm
 
         public KryptonDockingWorkspace ws;
         KryptonCheckBox cbbatch = new KryptonCheckBox();
-        private void BaseBillQueryMC_Load(object sender, EventArgs e)
+        private async void BaseBillQueryMC_Load(object sender, EventArgs e)
         {
             if (this.DesignMode)
             {
@@ -1372,6 +1271,7 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
                 QueryDtoProxy = LoadQueryConditionToUI();
+
             }
 
             // Setup docking functionality
@@ -1557,6 +1457,8 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
+
+            await UIBizSrvice.SetGridViewAsync(typeof(M), _UCBillMasterQuery.newSumDataGridViewMaster, CurMenuInfo);
         }
 
 

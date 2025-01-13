@@ -172,6 +172,11 @@ namespace RUINORERP.UI
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;
+            kryptonDockableWorkspace1.WorkspaceCellRemoved += KryptonDockableWorkspace1_WorkspaceCellRemoved;
+            kryptonDockableWorkspace1.ControlRemoved += KryptonDockableWorkspace1_ControlRemoved;
+            kryptonDockableWorkspace1.PageCloseClicked += KryptonDockableWorkspace1_PageCloseClicked;
+
+
             ecs.OnConnectClosed += Ecs_OnConnectClosed;
             if (config != null)
             {
@@ -185,12 +190,6 @@ namespace RUINORERP.UI
 
             AppContext = Program.AppContextData;
 
-            //var clientCommandHandlers = new List<IClientCommand>
-            //{
-            //    new ReceiveCacheCommand(),
-            //    new ReceiveMessageCommand(),
-            //    new RequestReminderCommand(),
-            //};
 
             var clientCommandRegistry = new ClientCommandRegistry();
             var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
@@ -198,6 +197,30 @@ namespace RUINORERP.UI
 
         }
 
+        private void KryptonDockableWorkspace1_PageCloseClicked(object sender, UniqueNameEventArgs e)
+        {
+            if (e.UniqueName == "控制中心" || e.UniqueName == "工作台")
+            {
+
+                return;
+            }
+            else
+            {
+
+            }
+
+            // UIBizSrvice.SaveGridSettingData()
+        }
+
+        private void KryptonDockableWorkspace1_ControlRemoved(object sender, ControlEventArgs e)
+        {
+
+        }
+
+        private void KryptonDockableWorkspace1_WorkspaceCellRemoved(object sender, WorkspaceCellEventArgs e)
+        {
+
+        }
 
         public EasyClientService ecs = new EasyClientService();
 
@@ -213,26 +236,6 @@ namespace RUINORERP.UI
 
         private byte[] _byteArray;
 
-
-        /*
-                public static MainForm Instance { get; private set; }
-
-       
-
-        private IServiceProvider ServiceProvider { get; }
-        private IDataPortal<tb_LocationTypeList> _portal;
-        public MainForm(Csla.ApplicationContext applicationContext,
-            IDataPortal<tb_LocationTypeList> portal)
-        {
-            Instance = this;
-            //ServiceProvider = serviceProvider;
-            ApplicationContext = applicationContext;
-            _portal = portal;
-            InitializeComponent();
-            System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
-            kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
-        }
-*/
 
 
         private void buttonSpecNavigator1_Click(object sender, EventArgs e)
@@ -459,7 +462,6 @@ namespace RUINORERP.UI
                         {
                             //解密
                             registrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
-
                             //将,号隔开的枚举名称字符串变成List<GlobalFunctionModule>
                             List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
                             string[] enumNameArray = registrationInfo.FunctionModule.Split(',');
@@ -531,6 +533,26 @@ namespace RUINORERP.UI
                 tsbtnSysTest.Visible = true;
             }
 
+            MainForm.Instance.kryptonDockingManager1.PageCloseRequest += KryptonDockingManager1_PageCloseRequest;
+
+            MainForm.Instance.kryptonDockingManager1.DockspaceCellRemoved += KryptonDockingManager1_DockspaceCellRemoved;
+
+            MainForm.Instance.kryptonDockingManager1.DockspaceRemoved += KryptonDockingManager1_DockspaceRemoved;
+
+        }
+
+        private void KryptonDockingManager1_DockspaceRemoved(object sender, DockspaceEventArgs e)
+        {
+
+        }
+
+        private void KryptonDockingManager1_DockspaceCellRemoved(object sender, DockspaceCellEventArgs e)
+        {
+
+        }
+
+        private void KryptonDockingManager1_PageCloseRequest(object sender, CloseRequestEventArgs e)
+        {
 
         }
 
@@ -808,6 +830,7 @@ namespace RUINORERP.UI
                     p.Name = item.ModuleID.ToString();
                     p.TextDescription = item.ModuleName;// + item.BizType.ToString();
                                                         // p.ImageSmall = imageListSmall.Images[image];
+
                     if (item.tb_P4Menus != null)
                     {
                         KryptonTreeView TreeView1 = new KryptonTreeView();
@@ -1108,6 +1131,8 @@ namespace RUINORERP.UI
                 cell = new KryptonWorkspaceCell();
                 kryptonDockableWorkspace1.Root.Children.Add(cell);
                 //cell.Button.CloseButtonDisplay = ButtonDisplay.Logic;
+                cell.ContextMenu = null;
+                cell.ContextMenuStrip = null;
                 cell.CloseAction += Cell_CloseAction;
                 cell.SelectedPageChanged += Cell_SelectedPageChanged;
                 cell.ShowContextMenu += Cell_ShowContextMenu;
@@ -1210,23 +1235,38 @@ namespace RUINORERP.UI
                 //不显示右键
                 e.Cancel = true;
             }
+            //都不显示显示右键
+            e.Cancel = true;
+            return;
 
-
-
-            /*
-             显示并自定义
+            //添加了自定义的，也同时还加载了默认的。暂时不使用了。
+            //显示并自定义
             // Yes we want to show a context menu
             e.Cancel = false;
 
-            // Provide the navigator specific menu
-            e.KryptonContextMenu = kcmNavigator;
 
-            // Only enable the appropriate options
-            kcmFirst.Enabled = (kryptonNavigator1.SelectedIndex > 0);
-            kcmPrevious.Enabled = (kryptonNavigator1.SelectedIndex > 0);
-            kcmNext.Enabled = (kryptonNavigator1.SelectedIndex < (kryptonNavigator1.Pages.Count - 1));
-            kcmLast.Enabled = (kryptonNavigator1.SelectedIndex < (kryptonNavigator1.Pages.Count - 1));
-             */
+            // Provide the navigator specific menu
+            e.KryptonContextMenu = new KryptonContextMenu();
+            
+            KryptonContextMenuItems customItems = new KryptonContextMenuItems();
+            KryptonContextMenuSeparator customSeparator = new KryptonContextMenuSeparator();
+            KryptonContextMenuItem customItem1 = new KryptonContextMenuItem("Custom Item 1", new EventHandler(OnCustomMenuItem));
+            KryptonContextMenuItem customItem2 = new KryptonContextMenuItem("Custom Item 2", new EventHandler(OnCustomMenuItem));
+            customItem1.Tag = kwc.SelectedPage;
+            customItem2.Tag = kwc.SelectedPage;
+            customItems.Items.AddRange(new KryptonContextMenuItemBase[] { customSeparator, customItem1, customItem2 });
+
+            // Add set of custom items into the provided menu
+            e.KryptonContextMenu.Items.Add(customItems);
+            
+
+        }
+
+        private void OnCustomMenuItem(object sender, EventArgs e)
+        {
+            KryptonContextMenuItem menuItem = (KryptonContextMenuItem)sender;
+            KryptonPage page = (KryptonPage)menuItem.Tag;
+            MessageBox.Show("Clicked menu option '" + menuItem.Text + "' for the page '" + page.Text + "'.", "Page Context Menu");
         }
 
         private void Cell_SelectedPageChanged(object sender, EventArgs e)
@@ -1257,7 +1297,7 @@ namespace RUINORERP.UI
         private void Cell_CloseAction(object sender, CloseActionEventArgs e)
         {
             //关闭事件
-            //e.Action = CloseButtonAction.RemovePage;
+            e.Action = CloseButtonAction.RemovePageAndDispose;
         }
 
 
@@ -1792,7 +1832,7 @@ namespace RUINORERP.UI
             Form2 frm = Startup.GetFromFac<Form2>();
             frm.Show();
             return;
-            LoadMenu();
+
             // RoleService rs = new RoleService();
 
             //Type t = System.Reflection.Assembly.GetExecutingAssembly().GetType("RUINORERP.UI.SS.MenuInit");
@@ -2011,24 +2051,6 @@ namespace RUINORERP.UI
                 cell = new KryptonWorkspaceCell();
                 MainForm.Instance.kryptonDockableWorkspace1.Root.Children.Add(cell);
             }
-            //List<string> pageNames = new List<string>();
-            //foreach (var item in cell.Pages)
-            //{
-            //    if (item is KryptonPage && item.Text != "控制中心")
-            //    {
-            //        pageNames.Add(item.Text);
-            //    }
-            //}
-
-            //foreach (string item in pageNames)
-            //{
-            //    KryptonPage page = cell.Pages.Where(f => f.Text == item).FirstOrDefault();
-            //    if (page != null)
-            //    {
-            //        MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
-            //        page.Dispose();
-            //    }
-            //}
 
             //cell.Pages.Clear();
             //清除日志

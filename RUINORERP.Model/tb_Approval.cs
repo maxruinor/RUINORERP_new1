@@ -139,7 +139,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ApprovalProcessDetail.ApprovalID))]
         public virtual List<tb_ApprovalProcessDetail> tb_ApprovalProcessDetails { get; set; }

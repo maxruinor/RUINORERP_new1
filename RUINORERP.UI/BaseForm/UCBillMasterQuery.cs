@@ -68,7 +68,8 @@ namespace RUINORERP.UI.BaseForm
             }
 
             newSumDataGridViewMaster.DataSource = bindingSourceMaster;
-
+            //newSumDataGridViewMaster.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
+            //newSumDataGridViewMaster.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
             bindingSourceMaster.CurrentItemChanged += BindingSourceMaster_CurrentItemChanged;
             //newSumDataGridViewMaster.ColumnDisplayControlToCaption(newSumDataGridViewMaster.FieldNameList);
 
@@ -151,7 +152,7 @@ namespace RUINORERP.UI.BaseForm
             if (newSumDataGridViewMaster.RowCount == 1 && OnSelectDataRow != null && newSumDataGridViewMaster.CurrentRow != null)
             {
                 OnSelectDataRow(bindingSourceMaster.Current);
-                 
+
                 return;
             }
         }
@@ -201,44 +202,47 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-
-            Type dataType = bindingSourceMaster.Current.GetType().GetProperty(newSumDataGridViewMaster.Columns[e.ColumnIndex].DataPropertyName).PropertyType;
-            // We need to check whether the property is NULLABLE
-            if (dataType.IsGenericType && dataType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            if (bindingSourceMaster.Current != null)
             {
-                // If it is NULLABLE, then get the underlying type. eg if "Nullable<int>" then this will return just "int"
-                dataType = dataType.GetGenericArguments()[0];
-            }
+                Type dataType = bindingSourceMaster.Current.GetType().GetProperty(newSumDataGridViewMaster.Columns[e.ColumnIndex].DataPropertyName).PropertyType;
+                // We need to check whether the property is NULLABLE
+                if (dataType.IsGenericType && dataType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    // If it is NULLABLE, then get the underlying type. eg if "Nullable<int>" then this will return just "int"
+                    dataType = dataType.GetGenericArguments()[0];
+                }
 
-            //下次优化时。要注释一下 什么类型的字段 数据 要特殊处理。实际可能又把另一个情况弄错。
-            switch (dataType.FullName)
-            {
-                case "System.Boolean":
-                    break;
-                case "System.DateTime":
-                    if (newSumDataGridViewMaster.Columns[e.ColumnIndex].HeaderText.Contains("日期"))
-                    {
-                        e.Value = DateTime.Parse(e.Value.ToString()).ToString("yyyy-MM-dd");
-                    }
-                    else
-                    {
-                        return;
-                    }
-                    break;
-                case "System.Int32":
-                case "System.String":
-                    if (dataType.FullName == "System.Int32"
-                        && newSumDataGridViewMaster.Columns[e.ColumnIndex].HeaderText.Contains("状态"))
-                    {
+                //下次优化时。要注释一下 什么类型的字段 数据 要特殊处理。实际可能又把另一个情况弄错。
+                switch (dataType.FullName)
+                {
+                    case "System.Boolean":
+                        break;
+                    case "System.DateTime":
+                        if (newSumDataGridViewMaster.Columns[e.ColumnIndex].HeaderText.Contains("日期"))
+                        {
+                            e.Value = DateTime.Parse(e.Value.ToString()).ToString("yyyy-MM-dd");
+                        }
+                        else
+                        {
+                            return;
+                        }
+                        break;
+                    case "System.Int32":
+                    case "System.String":
+                        if (dataType.FullName == "System.Int32"
+                            && newSumDataGridViewMaster.Columns[e.ColumnIndex].HeaderText.Contains("状态"))
+                        {
 
-                    }
-                    else
-                    {
-                        return;
-                    }
-                    break;
-                default:
-                    break;
+                        }
+                        else
+                        {
+                            return;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
             }
 
 
@@ -272,6 +276,6 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-       
+
     }
 }

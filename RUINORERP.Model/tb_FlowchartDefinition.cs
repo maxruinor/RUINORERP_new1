@@ -98,12 +98,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ModuleID))]
         public virtual tb_ModuleDefinition tb_moduledefinition { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FlowchartItem.ID))]
         public virtual List<tb_FlowchartItem> tb_FlowchartItems { get; set; }
@@ -111,7 +111,7 @@ namespace RUINORERP.Model
         //ID.FK_TB_FLOWC_REF_TB_FLOWCTION)
         //tb_FlowchartDefinition.ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FlowchartLine.ID))]
         public virtual List<tb_FlowchartLine> tb_FlowchartLines { get; set; }

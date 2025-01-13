@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2025 15:31:55
+// 时间：01/13/2025 18:30:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -70,6 +70,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _ColsSetting;}
             set{SetProperty(ref _ColsSetting, value);}
+        }
+     
+
+        private string _GridType;
+        /// <summary>
+        /// 表格类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "GridType",ColDesc = "表格类型")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "GridType",Length=50,IsNullable = true,ColumnDescription = "表格类型" )]
+        public string GridType 
+        { 
+            get{return _GridType;}
+            set{SetProperty(ref _GridType, value);}
+        }
+     
+
+        private int? _ColumnsMode= ((1));
+        /// <summary>
+        /// 列宽显示模式
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ColumnsMode",ColDesc = "列宽显示模式")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ColumnsMode",IsNullable = true,ColumnDescription = "列宽显示模式" )]
+        public int? ColumnsMode 
+        { 
+            get{return _ColumnsMode;}
+            set{SetProperty(ref _ColumnsMode, value);}
         }
 
 

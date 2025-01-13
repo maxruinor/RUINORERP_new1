@@ -92,6 +92,12 @@ namespace RUINORERP.UI.SysConfig
             .Includes(m => m.tb_MenuInfos)
             .ToListAsync();
 
+            //检测CRM如果没有购买则不会显示
+            if (!MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM))
+            {
+                Modules = Modules.Where(m => m.ModuleName != ModuleMenuDefine.模块定义.客户关系.ToString()).ToList();
+            }
+
             //MenuInfoList = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_MenuInfo>()
             //.ToListAsync();
 
@@ -735,7 +741,7 @@ namespace RUINORERP.UI.SysConfig
                 pb.HideValue = false;
                 pb.IsChild = item.IsChild;
                 BusinessHelper.Instance.InitEntity(pb);
-                bool isexist = ctrPField.IsExist(e => e.RoleID == pb.RoleID 
+                bool isexist = ctrPField.IsExist(e => e.RoleID == pb.RoleID
                 && e.FieldInfo_ID == pb.FieldInfo_ID
                 && e.MenuID == menuInfo.MenuID
                 && e.IsChild == pb.IsChild);
@@ -743,7 +749,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     pblist.Add(pb);
                 }
-            
+
             }
             if (pblist.Count == 0)
             {
@@ -1017,7 +1023,7 @@ namespace RUINORERP.UI.SysConfig
                 e.Value = colName;
             }
 
-           
+
 
         }
 
@@ -1085,7 +1091,7 @@ namespace RUINORERP.UI.SysConfig
                 e.Value = colName;
             }
 
-            
+
 
 
         }

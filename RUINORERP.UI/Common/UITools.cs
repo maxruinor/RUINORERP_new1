@@ -13,7 +13,16 @@ namespace RUINORERP.UI.Common
 {
     public class UITools
     {
-
+        public static float CalculateTextWidth(string text, Font font, Graphics graphics)
+        {
+            if (string.IsNullOrEmpty(text) || font == null || graphics == null)
+            {
+                return 0;
+            }
+            // 使用Graphics.MeasureString方法计算文本的宽度
+            SizeF size = graphics.MeasureString(text, font);
+            return size.Width;
+        }
         /// <summary>
         /// 缩小图片为缩略图
         /// </summary>

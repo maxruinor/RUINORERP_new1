@@ -98,12 +98,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(RolePropertyID))]
         public virtual tb_RolePropertyConfig tb_rolepropertyconfig { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_User_Role.RoleID))]
         public virtual List<tb_User_Role> tb_User_Roles { get; set; }
@@ -111,7 +111,7 @@ namespace RUINORERP.Model
         //RoleID.FKTB_USER_TB_ROLEI_Info)
         //tb_RoleInfo.RoleID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Field.RoleID))]
         public virtual List<tb_P4Field> tb_P4Fields { get; set; }
@@ -119,7 +119,7 @@ namespace RUINORERP.Model
         //RoleID.FK_TB_P4FIE_REFERENCE_TB_ROLEI)
         //tb_RoleInfo.RoleID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Button.RoleID))]
         public virtual List<tb_P4Button> tb_P4Buttons { get; set; }
@@ -127,7 +127,7 @@ namespace RUINORERP.Model
         //RoleID.FK_TB_P4BUT_REFERENCE_TB_ROLEI)
         //tb_RoleInfo.RoleID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Menu.RoleID))]
         public virtual List<tb_P4Menu> tb_P4Menus { get; set; }
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
         //RoleID.FK_TB_P4MEN_REFERENCE_TB_ROLEI)
         //tb_RoleInfo.RoleID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Module.RoleID))]
         public virtual List<tb_P4Module> tb_P4Modules { get; set; }

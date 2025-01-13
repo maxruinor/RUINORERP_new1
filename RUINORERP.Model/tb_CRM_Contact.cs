@@ -253,7 +253,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Customer_id))]
         public virtual tb_CRM_Customer tb_crm_customer { get; set; }
 

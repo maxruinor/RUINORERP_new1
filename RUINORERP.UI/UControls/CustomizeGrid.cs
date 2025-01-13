@@ -43,10 +43,6 @@ namespace RUINORERP.UI.UControls
                 this.FieldNameList = nsdg.FieldNameList;
                 ColumnDisplays = nsdg.ColumnDisplays;
             }
-            if (UseCustomColumnDisplay)
-            {
-                //ControlColumnsDisplay();
-            }
 
         }
 
@@ -55,26 +51,7 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
 
-        /*
-        /// <summary>
-        /// 思路是 中英语显示已经定义好。这里只是控制列-》enname的显示
-        /// </summary>
-        /// <returns></returns>
-        public SerializableDictionary<string, bool> ControlColumnsDisplay()
-        {
-            SerializableDictionary<string, bool> qr = new SerializableDictionary<string, bool>();
-            if (targetDataGridView != null && targetDataGridView.DataSource != null)
-            {
-                //如果之前配置了就加载
-                qr = LoadColumnsList();
-
-                ShowColumns(qr);
-                SaveColumnsList(qr);
-            }
-            return qr;
-        }
-        */
-
+    
 
         #region 配置持久化
 
@@ -122,7 +99,7 @@ namespace RUINORERP.UI.UControls
                 {
                     cdc.ColDisplayText = dc.HeaderText;
                     cdc.ColDisplayIndex = dc.DisplayIndex;
-                    cdc.ColWith = dc.Width;
+                    cdc.ColWidth = dc.Width;
                     cdc.ColEncryptedName = dc.Name;
                     cdc.ColName = dc.Name;
                     cdc.IsFixed = dc.Frozen;
@@ -137,6 +114,11 @@ namespace RUINORERP.UI.UControls
 
         }
 
+        /// <summary>
+        /// 是否保存列自定义设置
+        /// </summary>
+        public bool NeedSaveColumnsXml { get; set; } = false;
+
 
         /// <summary>
         /// 持久化只能这个格式，所以思路 只保存name->enname bool
@@ -144,6 +126,10 @@ namespace RUINORERP.UI.UControls
         /// <param name="qs"></param>
         public void SaveColumnsList(List<ColumnDisplayController> columnDisplays)
         {
+            if (!NeedSaveColumnsXml)
+            {
+                return;
+            }
             if (this.XmlFileNamecdc == null)
             {
                 this.XmlFileNamecdc = "defaultColfilecdc_1.xml";
@@ -189,23 +175,28 @@ namespace RUINORERP.UI.UControls
             {
                 ColumnDisplays = new List<ColumnDisplayController>();
             }
-            //如果没有值，则加载默认的全部？
-            if (ColumnDisplays.Count == 0)
+            if (NeedSaveColumnsXml)
             {
-                foreach (DataGridViewColumn dc in targetDataGridView.Columns)
+                //如果没有值，则加载默认的全部？
+                if (ColumnDisplays.Count == 0)
                 {
-                    ColumnDisplayController cdc = new ColumnDisplayController();
-                    cdc.ColDisplayText = dc.HeaderText;
-                    cdc.ColDisplayIndex = dc.DisplayIndex;
-                    cdc.ColWith = dc.Width;
-                    cdc.ColEncryptedName = dc.Name;
-                    cdc.ColName = dc.Name;
-                    cdc.IsFixed = dc.Frozen;
-                    cdc.Visible = dc.Visible;
-                    cdc.DataPropertyName = dc.DataPropertyName;
-                    ColumnDisplays.Add(cdc);
+                    foreach (DataGridViewColumn dc in targetDataGridView.Columns)
+                    {
+                        ColumnDisplayController cdc = new ColumnDisplayController();
+                        cdc.GridKeyName = XmlFileName;
+                        cdc.ColDisplayText = dc.HeaderText;
+                        cdc.ColDisplayIndex = dc.DisplayIndex;
+                        cdc.ColWidth = dc.Width;
+                        cdc.ColEncryptedName = dc.Name;
+                        cdc.ColName = dc.Name;
+                        cdc.IsFixed = dc.Frozen;
+                        cdc.Visible = dc.Visible;
+                        cdc.DataPropertyName = dc.DataPropertyName;
+                        ColumnDisplays.Add(cdc);
+                    }
                 }
             }
+       
             return ColumnDisplays;
         }
 
@@ -335,35 +326,7 @@ namespace RUINORERP.UI.UControls
                 XmlFileNamecdc = xmlFileName + "_cdcfile";
             }
         }
-
-
-        /*
-        public void SetColumns()
-        {
-            if (targetDataGridView != null && targetDataGridView.DataSource != null)
-            {
-                ForCustomizeGrid.frmColumnsSets set = new ForCustomizeGrid.frmColumnsSets();
-                set.FieldNameList = FieldNameList;
-                set.QueryResult = ControlColumnsDisplay();
-                if (set.ShowDialog() == DialogResult.OK)
-                {
-                    SaveColumnsList(set.QueryResult);
-                    for (int i = 0; i < targetDataGridView.ColumnCount; i++)
-                    {
-                        if (set.QueryResult.ContainsKey(targetDataGridView.Columns[i].HeaderText))
-                        {
-                            targetDataGridView.Columns[i].Visible = set.QueryResult[targetDataGridView.Columns[i].HeaderText];
-                        }
-                    }
-                }
-            }
-            else
-            {
-                MessageBox.Show("请先查询或设置目标表格及其数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-        */
-
+ 
         private ConcurrentDictionary<string, KeyValuePair<string, bool>> _FieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
         /// <summary>
         /// 列的显示，unitName,<单位,true>
@@ -409,7 +372,7 @@ namespace RUINORERP.UI.UControls
                 {
                     targetDataGridView.BindColumnStyle();
                     SaveColumnsList(ColumnDisplays);
-                    
+
                     //qr = set.QueryResult;
                     //ShowColumns(qr);
                     //SaveColumnsList(ColumnDisplays);

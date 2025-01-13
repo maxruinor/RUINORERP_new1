@@ -184,22 +184,22 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.Account_id))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
@@ -207,7 +207,7 @@ namespace RUINORERP.Model
         //Account_id.FK_TB_FM_OT_REFERENCE_TB_FM_AC)
         //tb_FM_Account.Account_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.account_id))]
         public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
@@ -215,7 +215,7 @@ namespace RUINORERP.Model
         //Account_id.FK_TB_FM_IN_REFERENCE_TB_FM_AC)
         //tb_FM_Account.account_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.account_id))]
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
@@ -223,7 +223,7 @@ namespace RUINORERP.Model
         //Account_id.FK_FM_PAYMENTBILL_REF_ACCOUNTS)
         //tb_FM_Account.account_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBillDetail.account_id))]
         public virtual List<tb_FM_PrePaymentBillDetail> tb_FM_PrePaymentBillDetails { get; set; }
@@ -231,7 +231,7 @@ namespace RUINORERP.Model
         //Account_id.FK_PREPAYMENTBILLDETAIL_R_ACCOUNTS)
         //tb_FM_Account.account_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.Account_id))]
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }

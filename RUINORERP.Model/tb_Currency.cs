@@ -265,7 +265,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Currency_ID))]
         public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
@@ -273,7 +273,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_ACCOUNTS_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.Currency_ID))]
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
@@ -281,7 +281,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_FM_PAYMENTBILL_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBillDetail.Currency_ID))]
         public virtual List<tb_FM_PrePaymentBillDetail> tb_FM_PrePaymentBillDetails { get; set; }
@@ -289,7 +289,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_FM_PREPAYMENTDETAIL_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpense.Currency_ID))]
         public virtual List<tb_FM_OtherExpense> tb_FM_OtherExpenses { get; set; }
@@ -297,7 +297,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_OTHEREXPENSE_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.Currency_ID))]
         public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }

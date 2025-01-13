@@ -97,7 +97,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_NextNodes.ConNodeConditions_Id))]
         public virtual List<tb_NextNodes> tb_NextNodeses { get; set; }

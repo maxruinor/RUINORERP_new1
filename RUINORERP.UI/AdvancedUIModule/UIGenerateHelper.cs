@@ -278,7 +278,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                 Graphics graphics = UcPanel.CreateGraphics();
 
                 // 计算文本宽度
-                float textWidth = CalculateTextWidth(lbl.Text, lbl.Font, graphics);
+                float textWidth = UITools.CalculateTextWidth(lbl.Text, lbl.Font, graphics);
                 // 设置Label的宽度
                 lbl.Width = (int)textWidth + 10; // 加上一些额外的空间
 
@@ -741,16 +741,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         }
 
 
-        public static float CalculateTextWidth(string text, Font font, Graphics graphics)
-        {
-            if (string.IsNullOrEmpty(text) || font == null || graphics == null)
-            {
-                return 0;
-            }
-            // 使用Graphics.MeasureString方法计算文本的宽度
-            SizeF size = graphics.MeasureString(text, font);
-            return size.Width;
-        }
+
 
 
         /// <summary>

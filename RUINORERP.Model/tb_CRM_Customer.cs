@@ -524,37 +524,37 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Region_ID))]
         public virtual tb_CRM_Region tb_crm_region { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CityID))]
         public virtual tb_Cities tb_cities { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(LeadID))]
         public virtual tb_CRM_Leads tb_crm_leads { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProvinceID))]
         public virtual tb_Provinces tb_provinces { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Contact.Customer_id))]
         public virtual List<tb_CRM_Contact> tb_CRM_Contacts { get; set; }
@@ -562,7 +562,7 @@ namespace RUINORERP.Model
         //Customer_id.FK_CONTACT_REF_CUSTOMER)
         //tb_CRM_Customer.Customer_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_FollowUpPlans.Customer_id))]
         public virtual List<tb_CRM_FollowUpPlans> tb_CRM_FollowUpPlanses { get; set; }
@@ -570,7 +570,7 @@ namespace RUINORERP.Model
         //Customer_id.FK_TB_CRM_F_REFERENCE_TB_CRM_C)
         //tb_CRM_Customer.Customer_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_FollowUpRecords.Customer_id))]
         public virtual List<tb_CRM_FollowUpRecords> tb_CRM_FollowUpRecordses { get; set; }
@@ -578,7 +578,7 @@ namespace RUINORERP.Model
         //Customer_id.FK_Followuprecoreds_REF_CRM_Customer)
         //tb_CRM_Customer.Customer_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Collaborator.Customer_id))]
         public virtual List<tb_CRM_Collaborator> tb_CRM_Collaborators { get; set; }

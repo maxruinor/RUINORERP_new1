@@ -125,7 +125,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Employee.BankAccount_id))]
         public virtual List<tb_Employee> tb_Employees { get; set; }
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
         //BankAccount_id.FK_EMPLOYEE_REF_BANKACCOUNT)
         //tb_BankAccount.BankAccount_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.BankAccount_id))]
         public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }

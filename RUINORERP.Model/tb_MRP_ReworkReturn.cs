@@ -466,27 +466,27 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(MOID))]
         public virtual tb_ManufacturingOrder tb_manufacturingorder { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntry.ReworkReturnID))]
         public virtual List<tb_MRP_ReworkEntry> tb_MRP_ReworkEntries { get; set; }
@@ -494,7 +494,7 @@ namespace RUINORERP.Model
         //ReworkReturnID.FK_TB_MRP_ReworkEntry_REF_TB_MRP_ReworkRetrun)
         //tb_MRP_ReworkReturn.ReworkReturnID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturnDetail.ReworkReturnID))]
         public virtual List<tb_MRP_ReworkReturnDetail> tb_MRP_ReworkReturnDetails { get; set; }

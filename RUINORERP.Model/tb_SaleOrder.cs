@@ -690,27 +690,27 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Paytype_ID))]
         public virtual tb_PaymentMethod tb_paymentmethod { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrder.SOrder_ID))]
         public virtual List<tb_PurOrder> tb_PurOrders { get; set; }
@@ -718,7 +718,7 @@ namespace RUINORERP.Model
         //SOrder_ID.FK_PO_REF_TB_SODER)
         //tb_SaleOrder.SOrder_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlan.SOrder_ID))]
         public virtual List<tb_ProductionPlan> tb_ProductionPlans { get; set; }
@@ -726,7 +726,7 @@ namespace RUINORERP.Model
         //SOrder_ID.FK_PRODPLAN_REF_SALEORDER)
         //tb_SaleOrder.SOrder_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOut.SOrder_ID))]
         public virtual List<tb_SaleOut> tb_SaleOuts { get; set; }
@@ -734,7 +734,7 @@ namespace RUINORERP.Model
         //SOrder_ID.FK_SALEOUT_RE_SALEORDER)
         //tb_SaleOrder.SOrder_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrderDetail.SOrder_ID))]
         public virtual List<tb_SaleOrderDetail> tb_SaleOrderDetails { get; set; }
@@ -742,7 +742,7 @@ namespace RUINORERP.Model
         //SOrder_ID.FKTB_SALES_TB_SALEO_detail)
         //tb_SaleOrder.SOrder_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_OrderPacking.SOrder_ID))]
         public virtual List<tb_OrderPacking> tb_OrderPackings { get; set; }

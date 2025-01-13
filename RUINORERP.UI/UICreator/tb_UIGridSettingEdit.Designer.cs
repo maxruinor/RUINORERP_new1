@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2025 15:31:54
+// 时间：01/13/2025 18:30:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -62,6 +62,12 @@ this.txtGridKeyName.Multiline = true;
 this.lblColsSetting = new Krypton.Toolkit.KryptonLabel();
 this.txtColsSetting = new Krypton.Toolkit.KryptonTextBox();
 this.txtColsSetting.Multiline = true;
+
+this.lblGridType = new Krypton.Toolkit.KryptonLabel();
+this.txtGridType = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblColumnsMode = new Krypton.Toolkit.KryptonLabel();
+this.txtColumnsMode = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -135,6 +141,35 @@ this.txtColsSetting.Multiline = true;
 this.Controls.Add(this.lblColsSetting);
 this.Controls.Add(this.txtColsSetting);
 
+           //#####50GridType###String
+this.lblGridType.AutoSize = true;
+this.lblGridType.Location = new System.Drawing.Point(100,100);
+this.lblGridType.Name = "lblGridType";
+this.lblGridType.Size = new System.Drawing.Size(41, 12);
+this.lblGridType.TabIndex = 4;
+this.lblGridType.Text = "表格类型";
+this.txtGridType.Location = new System.Drawing.Point(173,96);
+this.txtGridType.Name = "txtGridType";
+this.txtGridType.Size = new System.Drawing.Size(100, 21);
+this.txtGridType.TabIndex = 4;
+this.Controls.Add(this.lblGridType);
+this.Controls.Add(this.txtGridType);
+
+           //#####ColumnsMode###Int32
+//属性测试125ColumnsMode
+this.lblColumnsMode.AutoSize = true;
+this.lblColumnsMode.Location = new System.Drawing.Point(100,125);
+this.lblColumnsMode.Name = "lblColumnsMode";
+this.lblColumnsMode.Size = new System.Drawing.Size(41, 12);
+this.lblColumnsMode.TabIndex = 5;
+this.lblColumnsMode.Text = "列宽显示模式";
+this.txtColumnsMode.Location = new System.Drawing.Point(173,121);
+this.txtColumnsMode.Name = "txtColumnsMode";
+this.txtColumnsMode.Size = new System.Drawing.Size(100, 21);
+this.txtColumnsMode.TabIndex = 5;
+this.Controls.Add(this.lblColumnsMode);
+this.Controls.Add(this.txtColumnsMode);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -149,7 +184,7 @@ this.Controls.Add(this.txtColsSetting);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 3;
+           // this.kryptonPanel1.TabIndex = 5;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -161,6 +196,12 @@ this.Controls.Add(this.txtGridKeyName );
 
                 this.Controls.Add(this.lblColsSetting );
 this.Controls.Add(this.txtColsSetting );
+
+                this.Controls.Add(this.lblGridType );
+this.Controls.Add(this.txtGridType );
+
+                this.Controls.Add(this.lblColumnsMode );
+this.Controls.Add(this.txtColumnsMode );
 
                             // 
             // "tb_UIGridSettingEdit"
@@ -198,6 +239,16 @@ private Krypton.Toolkit.KryptonTextBox txtGridKeyName;
         
               private Krypton.Toolkit.KryptonLabel lblColsSetting;
 private Krypton.Toolkit.KryptonTextBox txtColsSetting;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblGridType;
+private Krypton.Toolkit.KryptonTextBox txtGridType;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblColumnsMode;
+private Krypton.Toolkit.KryptonTextBox txtColumnsMode;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

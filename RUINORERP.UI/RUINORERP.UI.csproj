@@ -2444,6 +2444,12 @@
     <Compile Include="UserPersonalized\frmQueryConditionSetting.Designer.cs">
       <DependentUpon>frmQueryConditionSetting.cs</DependentUpon>
     </Compile>
+    <Compile Include="UserPersonalized\UCGridColSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UserPersonalized\UCGridColSetting.Designer.cs">
+      <DependentUpon>UCGridColSetting.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserPersonalized\UCQueryCondition.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -3467,6 +3473,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UserPersonalized\frmQueryConditionSetting.resx">
       <DependentUpon>frmQueryConditionSetting.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserPersonalized\UCGridColSetting.resx">
+      <DependentUpon>UCGridColSetting.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UserPersonalized\UCQueryCondition.resx">
       <DependentUpon>UCQueryCondition.cs</DependentUpon>

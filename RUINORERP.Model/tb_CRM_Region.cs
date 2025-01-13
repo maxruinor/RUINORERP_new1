@@ -140,12 +140,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Parent_region_id))]
         public virtual tb_CRM_Region tb_crm_region { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Customer.Region_ID))]
         public virtual List<tb_CRM_Customer> tb_CRM_Customers { get; set; }
@@ -153,7 +153,7 @@ namespace RUINORERP.Model
         //Region_ID.FK_CRM_Customer_REF_CRM_Region)
         //tb_CRM_Region.Region_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Region.Parent_region_id))]
         public virtual List<tb_CRM_Region> tb_CRM_Regions { get; set; }

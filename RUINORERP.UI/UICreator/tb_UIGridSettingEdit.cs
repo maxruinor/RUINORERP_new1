@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2025 15:31:54
+// 时间：01/13/2025 18:30:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -37,6 +37,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -47,7 +49,9 @@ namespace RUINORERP.UI
                      entity.UIMenuPID = Int64.Parse(txtUIMenuPID.Text);
                         entity.GridKeyName = txtGridKeyName.Text ;
                        entity.ColsSetting = txtColsSetting.Text ;
-                               return entity;
+                       entity.GridType = txtGridType.Text ;
+                       entity.ColumnsMode = Int32.Parse(txtColumnsMode.Text);
+                                return entity;
 }
         */
 
@@ -60,6 +64,8 @@ namespace RUINORERP.UI
                        // DataBindingHelper.BindData4Cmb<tb_UIMenuPersonalization>(entity, k => k.UIMenuPID, v=>v.XXNAME, cmbUIMenuPID);
            DataBindingHelper.BindData4TextBox<tb_UIGridSetting>(entity, t => t.GridKeyName, txtGridKeyName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_UIGridSetting>(entity, t => t.ColsSetting, txtColsSetting, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_UIGridSetting>(entity, t => t.GridType, txtGridType, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_UIGridSetting>(entity, t => t.ColumnsMode, txtColumnsMode, BindDataType4TextBox.Qty,false);
 }
 
 

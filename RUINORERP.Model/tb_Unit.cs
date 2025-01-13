@@ -97,7 +97,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.Unit_ID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_MANUFACTURINGORDER_REF_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInvDetail.Unit_ID))]
         public virtual List<tb_FinishedGoodsInvDetail> tb_FinishedGoodsInvDetails { get; set; }
@@ -113,7 +113,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_TB_FINISDetail_REF_TB_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Unit_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_TB_PROD_REFERENCE_TB_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Packing.Unit_ID))]
         public virtual List<tb_Packing> tb_Packings { get; set; }
@@ -129,7 +129,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_PACKIING_REF_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetail.Unit_ID))]
         public virtual List<tb_BOM_SDetail> tb_BOM_SDetails { get; set; }
@@ -137,7 +137,7 @@ namespace RUINORERP.Model
         //Unit_ID.FK_BOM_SDetail_REF_UNIT)
         //tb_Unit.Unit_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdBundle.Unit_ID))]
         public virtual List<tb_ProdBundle> tb_ProdBundles { get; set; }

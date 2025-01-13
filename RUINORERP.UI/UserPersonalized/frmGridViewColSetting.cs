@@ -1,5 +1,7 @@
 ﻿using HLH.WinControl.MyTypeConverter;
 using Krypton.Toolkit;
+using RUINORERP.Business.Processor;
+using RUINORERP.Model;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.UControls;
 using System;
@@ -11,11 +13,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RUINORERP.Common.Extensions;
+using RUINORERP.UI.Common;
+using Netron.GraphLib;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Common;
+using FastReport.DevComponents.WinForms.Drawing;
 
 namespace RUINORERP.UI.UserPersonalized
 {
     /// <summary>
-    /// QueryConditionSettings  查询条件设置，可以设置显示行数。条件排序，条件的默认值。条件显示情况
+    /// 表格显示
     /// </summary>
     public partial class frmGridViewColSetting : KryptonForm
     {
@@ -29,9 +37,7 @@ namespace RUINORERP.UI.UserPersonalized
 
         public ColumnDisplayController[] oldColumnDisplays;
 
-
         ContextMenuStrip contentMenu1;
-
 
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -82,7 +88,7 @@ namespace RUINORERP.UI.UserPersonalized
         }
 
         public string MenuPathKey { get; set; }
-        MenuPersonalization mp = new MenuPersonalization();
+
         private void frmMenuPersonalization_Load(object sender, EventArgs e)
         {
             listView1.AllowDrop = true;
@@ -91,12 +97,73 @@ namespace RUINORERP.UI.UserPersonalized
             listView1.DragOver += listView1_DragOver;
             listView1.DragDrop += listView1_DragDrop;
             listView1.DragLeave += listView1_DragLeave;
-             
+
+            //添加列宽显示模式
+            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
+
+            //
+            // 摘要:
+            //     列宽不会自动调整。
+
+            //
+            // 摘要:
+            //     列宽调整到适合列标头单元格的内容。
+
+            //
+            // 摘要:
+            //     列宽调整到适合列中除标头单元格以外所有单元格的内容。
+
+            //
+            // 摘要:
+            //     列宽调整到适合列中所有单元格（包括标头单元格）的内容。
+
+            //
+            // 摘要:
+            //     列宽调整到适合位于屏幕上当前显示的行中的列的所有单元格（不包括标头单元格）的内容。
+
+            //
+            // 摘要:
+            //     列宽调整到适合位于屏幕上当前显示的行中的列的所有单元格（包括标头单元格）的内容。
+
+            //
+            // 摘要:
+            //     列宽调整到使所有列宽精确填充控件的显示区域，要求使用水平滚动的目的只是保持列宽大于 System.Windows.Forms.DataGridViewColumn.MinimumWidth
+            //     属性值。相对列宽由相对 System.Windows.Forms.DataGridViewColumn.FillWeight 属性值决定。
+            Dictionary<int, string> valuePairs = new Dictionary<int, string>();
+            valuePairs.Add(1, "无");
+            valuePairs.Add(2, "列头");
+            valuePairs.Add(4, "所有单元格内容(不含列头)");
+            valuePairs.Add(6, "所有单元格内容");
+            valuePairs.Add(8, "显示的单元格内容(不含列头)");
+            valuePairs.Add(10, "显示的单元格内容");
+            valuePairs.Add(16, "填充");
+
+            //AllCells = 6,
+            //AllCellsExceptHeader = 4,
+            //DisplayedCells = 10,
+            //DisplayedCellsExceptHeader = 8,
+            //None = 1,
+            //ColumnHeader = 2,
+            //Fill = 16
+
+            DataBindingHelper.BindData4CmbByDictionary<tb_UIGridSetting>(GridSetting, k => k.ColumnsMode, valuePairs, cmbColsDisplayModel, false);
+
+
+            LoadColumnDisplayList();
+
+        }
+
+
+        private void LoadColumnDisplayList()
+        {
+            listView1.Columns.Clear();
+            listView1.Items.Clear();
+
 
             listView1.Columns.Add("显示列名");
             listView1.Columns[0].TextAlign = HorizontalAlignment.Center;
             listView1.Columns[0].Width = -2; //-1 -2 
-   
+
             oldColumnDisplays = new ColumnDisplayController[ColumnDisplays.Count];
             ColumnDisplays.CopyTo(oldColumnDisplays);
             foreach (ColumnDisplayController keyValue in ColumnDisplays)
@@ -112,11 +179,8 @@ namespace RUINORERP.UI.UserPersonalized
                     //用这个来保存
                     lvi.ImageKey = keyValue.ColDisplayIndex.ToString();
                     listView1.Items.Add(lvi);
-
                 }
             }
-
-
 
 
             //添加悬浮提示  
@@ -139,12 +203,15 @@ namespace RUINORERP.UI.UserPersonalized
             contentMenu1.Items.Add("全选");
             contentMenu1.Items.Add("全不选");
             contentMenu1.Items.Add("反选");
+            contentMenu1.Items[0].Click -= new EventHandler(contentMenu1_CheckAll);
             contentMenu1.Items[0].Click += new EventHandler(contentMenu1_CheckAll);
+            contentMenu1.Items[1].Click -= new EventHandler(contentMenu1_CheckNo);
             contentMenu1.Items[1].Click += new EventHandler(contentMenu1_CheckNo);
+            contentMenu1.Items[2].Click -= new EventHandler(contentMenu1_Inverse);
             contentMenu1.Items[2].Click += new EventHandler(contentMenu1_Inverse);
-
             listView1.ContextMenuStrip = contentMenu1;
         }
+
 
         //启动拖拽，设置拖拽的数据和效果。
         private void ListView1_ItemDrag(object sender, ItemDragEventArgs e)
@@ -168,7 +235,7 @@ namespace RUINORERP.UI.UserPersonalized
             if (item != null)
                 item.Selected = true;
 
-      
+
         }
 
         //拖拽释放，移动行
@@ -184,7 +251,7 @@ namespace RUINORERP.UI.UserPersonalized
             }
             listView1.Items.Insert(TargetItem.Index, (ListViewItem)draggedItem.Clone());
             listView1.Items.Remove(draggedItem);
-            
+
         }
 
 
@@ -202,7 +269,36 @@ namespace RUINORERP.UI.UserPersonalized
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (listView1.SelectedItems != null && listView1.SelectedItems.Count > 0)
+            {
+                var entity = listView1.SelectedItems[0].Tag as ColumnDisplayController;
+                if (panelConditionEdit.Controls.ContainsKey(entity.ColName.ToString()))
+                {
+                    var uCQuery = panelConditionEdit.Controls.CastToList<Control>().FirstOrDefault(c => c.Name == entity.ColName.ToString());
+                    if (uCQuery != null)
+                    {
+                        uCQuery.Visible = true;
+                    }
+                    //其它隐藏
+                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.ColName.ToString()).ToList().ForEach(c => c.Visible = false);
+                }
+                else
+                {
+                    //有些闪屏。后面优化是不是加载时就全部加进去 
+                    UCGridColSetting uCGridColSet = new UCGridColSetting();
+                    uCGridColSet.Name = entity.ColName;
+                    uCGridColSet.dataGridView = dataGridView;
+                    uCGridColSet.OnSynchronizeUI += UCQuery_OnSynchronizeUI;
+                    uCGridColSet.BindData(entity);
+                    uCGridColSet.Visible = true;
+                    uCGridColSet.TopLevel = false;
+                    uCGridColSet.Dock = DockStyle.Fill;
+                    panelConditionEdit.Controls.Add(uCGridColSet as Control);
+                    //其它隐藏
+                    panelConditionEdit.Controls.CastToList<Control>().Where(c => c.Name != entity.ColName.ToString()).ToList().ForEach(c => c.Visible = false);
+                }
 
+            }
 
         }
 
@@ -251,6 +347,81 @@ namespace RUINORERP.UI.UserPersonalized
             {
                 item.Checked = !item.Checked;
             }
+        }
+
+
+
+        private void UCQuery_OnSynchronizeUI(object sender, object e)
+        {
+            if (sender is ColumnDisplayController target)
+            {
+                foreach (ListViewItem item in listView1.Items)
+                {
+                    if (item.Tag is ColumnDisplayController column)
+                    {
+                        if (column.ColName == target.ColName)
+                        {
+                            item.Tag = target;
+                            item.Checked = target.Visible;
+                            break;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        #region 初始化使用的属性
+        public Type gridviewType { get; set; }
+        public NewSumDataGridView dataGridView { get; set; }
+
+        public tb_UIGridSetting GridSetting { get; set; }
+
+        #endregion
+
+
+        private void btnInitCol_Click(object sender, EventArgs e)
+        {
+            ColumnDisplays = UIHelper.GetColumnDisplayList(gridviewType);
+            // 获取Graphics对象
+            Graphics graphics = dataGridView.CreateGraphics();
+            ColumnDisplays.ForEach(c =>
+            {
+                c.GridKeyName = gridviewType.Name;
+                //计算文本宽度
+                float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
+                c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
+            });
+
+
+            LoadColumnDisplayList();
+            dataGridView.BindColumnStyle();
+        }
+
+        private void cmbGridViewList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cmbColsDisplayModel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (sender is KryptonComboBox kcmb)
+            {
+                if (kcmb.SelectedValue != null)
+                {
+                    dataGridView.AutoSizeColumnsMode = (DataGridViewAutoSizeColumnsMode)GridSetting.ColumnsMode;
+                    if (dataGridView.AutoSizeColumnsMode == DataGridViewAutoSizeColumnsMode.None)
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
+                }
+
+            }
+
         }
     }
 }

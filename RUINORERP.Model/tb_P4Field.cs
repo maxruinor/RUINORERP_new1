@@ -226,17 +226,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(FieldInfo_ID))]
         public virtual tb_FieldInfo tb_fieldinfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(MenuID))]
         public virtual tb_MenuInfo tb_menuinfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(RoleID))]
         public virtual tb_RoleInfo tb_roleinfo { get; set; }
 

@@ -392,12 +392,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ModuleID))]
         public virtual tb_ModuleDefinition tb_moduledefinition { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ButtonInfo.MenuID))]
         public virtual List<tb_ButtonInfo> tb_ButtonInfos { get; set; }
@@ -405,7 +405,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_BUTTO_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Field.MenuID))]
         public virtual List<tb_P4Field> tb_P4Fields { get; set; }
@@ -413,7 +413,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_P4FIE_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_UIMenuPersonalization.MenuID))]
         public virtual List<tb_UIMenuPersonalization> tb_UIMenuPersonalizations { get; set; }
@@ -421,7 +421,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_UIMENPERSONALIZation_REF_MENUINFO)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FieldInfo.MenuID))]
         public virtual List<tb_FieldInfo> tb_FieldInfos { get; set; }
@@ -429,7 +429,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_FIELD_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Button.MenuID))]
         public virtual List<tb_P4Button> tb_P4Buttons { get; set; }
@@ -437,7 +437,7 @@ namespace RUINORERP.Model
         //MenuID.FK_TB_P4BUT_REFERENCE_TB_MENUI)
         //tb_MenuInfo.MenuID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_P4Menu.MenuID))]
         public virtual List<tb_P4Menu> tb_P4Menus { get; set; }

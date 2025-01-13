@@ -196,7 +196,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdPropertyValue.Property_ID))]
         public virtual List<tb_ProdPropertyValue> tb_ProdPropertyValues { get; set; }
@@ -204,7 +204,7 @@ namespace RUINORERP.Model
         //Property_ID.FK_TB_PROD_REF_TB_PRODP_1)
         //tb_ProdProperty.Property_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod_Attr_Relation.Property_ID))]
         public virtual List<tb_Prod_Attr_Relation> tb_Prod_Attr_Relations { get; set; }

@@ -39,6 +39,8 @@ using FastReport.DevComponents.DotNetBar;
 using System.Web.WebSockets;
 using RUINORERP.UI.SS;
 using System.Windows.Documents;
+using static Google.Protobuf.Reflection.FeatureSet.Types;
+using System.Windows.Media.Animation;
 
 
 namespace RUINORERP.UI.Common
@@ -542,8 +544,76 @@ namespace RUINORERP.UI.Common
         }
 
 
+        public static void BindData4CmbByDictionary<T>(object entity, Expression<Func<T, int?>> expkey, Dictionary<int,string> valuePairs, KryptonComboBox cmbBox, bool addSelect)
+        {
+            cmbBox.DataBindings.Clear();
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string keyName = minfo.Name;
+            cmbBox.Tag = keyName;
 
-        //产品表中日子好的例子。。参考 之前 华聪的文章。金额等分类型？
+            InitDataToCmbByDictionaryGeneratedDataSource(valuePairs, keyName, cmbBox, addSelect);
+
+            var depa = new Binding("SelectedValue", entity, keyName, true, DataSourceUpdateMode.OnPropertyChanged);
+            //数据源的数据类型转换为控件要求的数据类型。
+            depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(depa);
+        }
+        /// <summary>
+        /// 枚举名称要与DB表中的字段名相同
+        /// </summary>
+        /// <typeparam name="T">枚举的类型</typeparam>
+        /// <param name="enumTypeName"></param>
+        /// <param name="cmbBox"></param>
+        public static void InitDataToCmbByDictionaryGeneratedDataSource(Dictionary<int, string> valuePairs, string keyName, KryptonComboBox cmbBox, bool addSelect)
+        {
+
+            TypeConfig typeConfig = new TypeConfig();
+            typeConfig.FullName = "InitDataToCmbByDictionaryGeneratedDataSource";//只是一个名称而已
+
+            //要创建的属性
+            PropertyConfig propertyConfigKey = new PropertyConfig();
+            propertyConfigKey.PropertyName = keyName;// type.Name;默认枚举名改为可以指定名
+            propertyConfigKey.PropertyType = typeof(int);//枚举值为int 默认
+
+            PropertyConfig propertyConfigName = new PropertyConfig();
+            propertyConfigName.PropertyName = "Name";
+            propertyConfigName.PropertyType = typeof(string);
+
+            typeConfig.Properties.Add(propertyConfigKey);
+            typeConfig.Properties.Add(propertyConfigName);
+            Type newType = TypeBuilderHelper.BuildType(typeConfig);
+
+            List<object> list = new List<object>();
+         
+            int currentValue;
+            string currentName;
+            foreach (var item in valuePairs)
+            {
+                object eobj = Activator.CreateInstance(newType);
+                currentValue = item.Key;
+                currentName = item.Value;
+                eobj.SetPropertyValue(keyName, currentValue);
+                eobj.SetPropertyValue("Name", currentName);
+                list.Add(eobj);
+            }
+             
+            if (addSelect)
+            {
+                object sobj = Activator.CreateInstance(newType);
+                sobj.SetPropertyValue(keyName, -1);
+                sobj.SetPropertyValue("Name", "请选择");
+                list.Insert(0, sobj);
+            }
+
+            cmbBox.SelectedValue = -1;
+
+            BindingSource bs = new BindingSource();
+            bs.DataSource = list;
+            ComboBoxHelper.InitDropList(bs, cmbBox, keyName, "Name", ComboBoxStyle.DropDown, false);
+
+        }
 
 
         /// <summary>
@@ -1661,6 +1731,67 @@ namespace RUINORERP.UI.Common
             }
 
             txtBox.DataBindings.Add(depa);
+        }
+
+        
+
+             public static void BindData4NumericUpDown<T>(object entity, string textField, KryptonNumericUpDown numericUpDown, bool SyncUI)
+        {
+            Binding depa = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depa = new Binding("Value", entity, textField, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depa = new Binding("Value", entity, textField, true, DataSourceUpdateMode.OnValidation);
+            }
+
+            depa.Format += (s, args) =>
+            {
+                args.Value = args.Value == null ? 0 : args.Value;
+                numericUpDown.Value = args.Value.ToInt();
+            };
+
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) =>
+            {
+                args.Value = args.Value == null ? 0 : args.Value;
+            };
+
+            numericUpDown.DataBindings.Add(depa);
+        }
+
+
+        public static void BindData4TrackBar<T>(object entity, string textField, TrackBar trackBar,   bool SyncUI)
+        {
+            Binding depa = null;
+            if (SyncUI)
+            {
+                //双向绑定 应用于加载和编辑
+                depa = new Binding("Value", entity, textField, true, DataSourceUpdateMode.OnPropertyChanged);
+            }
+            else
+            {
+                //单向绑定 应用于加载
+                depa = new Binding("Value", entity, textField, true, DataSourceUpdateMode.OnValidation);
+            }
+
+            depa.Format += (s, args) =>
+            {
+                args.Value = args.Value == null ? 0 : args.Value;
+                trackBar.Value = args.Value.ToInt();
+            };
+
+            //将控件的数据类型转换为数据源要求的数据类型。
+            depa.Parse += (s, args) =>
+            {
+                args.Value = args.Value == null ? 0 : args.Value;
+            };
+
+            trackBar.DataBindings.Add(depa);
         }
 
 

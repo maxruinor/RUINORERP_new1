@@ -83,7 +83,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Location.LocationType_ID))]
         public virtual List<tb_Location> tb_Locations { get; set; }

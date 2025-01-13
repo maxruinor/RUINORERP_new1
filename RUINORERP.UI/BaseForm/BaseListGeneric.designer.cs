@@ -135,6 +135,7 @@ namespace RUINORERP.UI.BaseForm
             this.dataGridView1.IsShowSumRow = false;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.NeedSaveColumnsXml = false;
             this.dataGridView1.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.dataGridView1.RowTemplate.Height = 23;
             this.dataGridView1.Size = new System.Drawing.Size(925, 472);

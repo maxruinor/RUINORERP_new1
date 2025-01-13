@@ -238,12 +238,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_User_Role.User_ID))]
         public virtual List<tb_User_Role> tb_User_Roles { get; set; }
@@ -251,7 +251,7 @@ namespace RUINORERP.Model
         //User_ID.FK_TB_USER_REFERENCE_TB_USERI)
         //tb_UserInfo.User_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_UserPersonalization.User_ID))]
         public virtual List<tb_UserPersonalization> tb_UserPersonalizations { get; set; }
@@ -259,7 +259,7 @@ namespace RUINORERP.Model
         //User_ID.FK_TB_USERP_REFERENCE_TB_USERI)
         //tb_UserInfo.User_ID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(Logs.User_ID))]
         public virtual List<Logs> Logses { get; set; }

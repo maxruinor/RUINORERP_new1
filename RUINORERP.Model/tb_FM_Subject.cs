@@ -209,7 +209,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.Subject_id))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
@@ -217,7 +217,7 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_OT_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.Subject_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Subject_id))]
         public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
@@ -225,7 +225,7 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_AC_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.Subject_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseType.subject_id))]
         public virtual List<tb_FM_ExpenseType> tb_FM_ExpenseTypes { get; set; }
@@ -233,7 +233,7 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_EX_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.subject_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.subject_id))]
         public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
@@ -241,7 +241,7 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_IN_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.subject_id)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.Subject_id))]
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }

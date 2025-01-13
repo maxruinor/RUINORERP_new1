@@ -365,12 +365,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Packing.BundleID))]
         public virtual List<tb_Packing> tb_Packings { get; set; }
@@ -378,7 +378,7 @@ namespace RUINORERP.Model
         //BundleID.FK_PACKI_REF_TB_PRODBundle)
         //tb_ProdBundle.BundleID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdBundleDetail.BundleID))]
         public virtual List<tb_ProdBundleDetail> tb_ProdBundleDetails { get; set; }

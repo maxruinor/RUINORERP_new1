@@ -111,7 +111,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockOut.Type_ID))]
         public virtual List<tb_StockOut> tb_StockOuts { get; set; }

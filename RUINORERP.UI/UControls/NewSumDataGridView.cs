@@ -469,6 +469,14 @@ namespace RUINORERP.UI.UControls
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
         public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
 
+
+
+        /// <summary>
+        /// 是否保存列自定义设置
+        /// </summary>
+        public bool NeedSaveColumnsXml { get; set; } = false;
+
+
         public void SaveColumnStyle()
         {
             foreach (DataGridViewColumn dc in Columns)
@@ -480,7 +488,7 @@ namespace RUINORERP.UI.UControls
                     //因为使用了开源的UI框架 krypton 在关闭时还会执行ColumnDisplayIndexChanged，将顺序打乱了。所以这里有一些问题
                     //所以通过添加一个属性和一个方法来判断，并且拖放时立即保存到List中。保存时就不从dg中取显示顺序了
                     //cdc.ColDisplayIndex = dc.DisplayIndex; 这个特别处理
-                    cdc.ColWith = dc.Width;
+                    cdc.ColWidth = dc.Width;
                     cdc.ColEncryptedName = dc.Name;
                     cdc.ColName = dc.Name;
                     cdc.IsFixed = dc.Frozen;
@@ -492,6 +500,8 @@ namespace RUINORERP.UI.UControls
             var cols = from ColumnDisplayController col in ColumnDisplays
                        orderby col.ColDisplayIndex
                        select col;
+
+            customizeGrid.NeedSaveColumnsXml = NeedSaveColumnsXml;
             customizeGrid.SaveColumnsList(cols.ToList());
         }
 
@@ -528,7 +538,7 @@ namespace RUINORERP.UI.UControls
                     {
                         Columns[displayController.ColName].DisplayIndex = displayController.ColDisplayIndex;
                     }
-                    Columns[displayController.ColName].Width = displayController.ColWith;
+                    Columns[displayController.ColName].Width = displayController.ColWidth;
                     //Columns[displayController.ColName].DataPropertyName = displayController.DataPropertyName;
                     Columns[displayController.ColName].Visible = displayController.Visible;
 
@@ -593,7 +603,7 @@ namespace RUINORERP.UI.UControls
                         _dgvSumRow.Columns[displayController.ColName].DisplayIndex = displayController.ColDisplayIndex;
                     }
 
-                    _dgvSumRow.Columns[displayController.ColName].Width = displayController.ColWith;
+                    _dgvSumRow.Columns[displayController.ColName].Width = displayController.ColWidth;
                     //Columns[displayController.ColName].DataPropertyName = displayController.DataPropertyName;
                     _dgvSumRow.Columns[displayController.ColName].Visible = displayController.Visible;
                     //if (displayController.ColName != "Selected")
@@ -645,7 +655,11 @@ namespace RUINORERP.UI.UControls
                 if (ColumnDisplays.Count == 0)
                 {
                     this.AllowDrop = true;
-                    ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
+                    if (NeedSaveColumnsXml)
+                    {
+                        ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
+                    }
+        
 
                     #region 将没有中文字段 比方ID，或对象集合这种都不启动
 
@@ -2214,7 +2228,11 @@ namespace RUINORERP.UI.UControls
             if (UseCustomColumnDisplay)
             {
                 this.AllowDrop = true;
-                ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
+                if (NeedSaveColumnsXml)
+                {
+                    ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
+                }
+             
 
                 #region 将没有中文字段 比方ID，或对象集合这种都不启动
 
@@ -2267,6 +2285,7 @@ namespace RUINORERP.UI.UControls
                 // 加载列样式
                 BindColumnStyle();
             }
+         
         }
 
 

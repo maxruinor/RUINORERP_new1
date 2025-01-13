@@ -357,7 +357,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BoxRules.CartonID))]
         public virtual List<tb_BoxRules> tb_BoxRuleses { get; set; }

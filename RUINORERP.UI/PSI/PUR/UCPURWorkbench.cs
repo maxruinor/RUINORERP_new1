@@ -618,7 +618,7 @@ namespace RUINORERP.UI.PUR
                 //插到前面
                 newContextMenuStrip.Items.Insert(0, tsmenuItemAddAnnotations);
 
-
+                kryptonDockableWorkspaceQuery.ShowMaximizeButton = false;
                 // Setup docking functionality
                 ws = kryptonDockingManagerQuery.ManageWorkspace(kryptonDockableWorkspaceQuery);
                 kryptonDockingManagerQuery.ManageControl(kryptonPanelMainBig, ws);
@@ -720,6 +720,9 @@ namespace RUINORERP.UI.PUR
                         }
                     }
                 }
+
+                kryptonDockingManagerQuery.Cells.ForEach(c=>c.Button.CloseButtonDisplay= ButtonDisplay.Hide);
+
             }
         }
 
@@ -786,7 +789,8 @@ namespace RUINORERP.UI.PUR
             uCPur.kryptonTreeGridView1.RowHeadersVisible = true;
             uCPur.ContextMenuStrip = newContextMenuStrip;
             KryptonPage page = UIForKryptonHelper.NewPage("采购", 1, uCPur);
-            page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
+            //page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
+            page.ClearFlags(KryptonPageFlags.All);
             return page;
         }
 

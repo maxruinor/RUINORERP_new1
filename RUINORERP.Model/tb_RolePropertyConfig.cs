@@ -279,7 +279,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_RoleInfo.RolePropertyID))]
         public virtual List<tb_RoleInfo> tb_RoleInfos { get; set; }

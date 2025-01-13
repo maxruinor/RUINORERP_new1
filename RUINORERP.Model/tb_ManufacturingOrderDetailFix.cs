@@ -33,7 +33,7 @@ namespace RUINORERP.Model
         /// 物料明细所在配方
         /// </summary>
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
         public virtual tb_BOM_S tb_bom_s { get; set; }
 

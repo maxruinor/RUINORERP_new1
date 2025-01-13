@@ -338,17 +338,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PPID))]
         public virtual tb_ProductionPlan tb_productionplan { get; set; }
 
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrder.PDID))]
         public virtual List<tb_PurOrder> tb_PurOrders { get; set; }
@@ -356,7 +356,7 @@ namespace RUINORERP.Model
         //PDID.FK_PURORDER_REF_TB_PRODDEMAND)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.PDID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
@@ -364,7 +364,7 @@ namespace RUINORERP.Model
         //PDID.FK_MANUFACTURINGORDER_REF_PRODUCTIONDEMAND)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProduceGoodsRecommendDetail.PDID))]
         public virtual List<tb_ProduceGoodsRecommendDetail> tb_ProduceGoodsRecommendDetails { get; set; }
@@ -372,7 +372,7 @@ namespace RUINORERP.Model
         //PDID.FK_TB_PRODU_REFERENCE_TB_PRODU)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandDetail.PDID))]
         public virtual List<tb_ProductionDemandDetail> tb_ProductionDemandDetails { get; set; }
@@ -380,7 +380,7 @@ namespace RUINORERP.Model
         //PDID.FK_PRODUdemanddetail_REF_PRODUdemand)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandTargetDetail.PDID))]
         public virtual List<tb_ProductionDemandTargetDetail> tb_ProductionDemandTargetDetails { get; set; }
@@ -388,7 +388,7 @@ namespace RUINORERP.Model
         //PDID.FK_TB_PRODUDEMANDTARGETDETAIL_REF_TB_PRODUDEMAND)
         //tb_ProductionDemand.PDID)
 
-        //[Browsable(false)]
+        [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurGoodsRecommendDetail.PDID))]
         public virtual List<tb_PurGoodsRecommendDetail> tb_PurGoodsRecommendDetails { get; set; }

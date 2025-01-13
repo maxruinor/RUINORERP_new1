@@ -114,15 +114,23 @@ namespace RUINORERP.UI.IM
 
             // item.LongText = "(" + _rand.Next(Int32.MaxValue).ToString() + ")";
 
-            //跳过自己
-            if (user.姓名 == MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name)
+            try
             {
-                item.Image = imageListBody.Images[0];
+                //跳过自己
+                if (user.姓名 == MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name)
+                {
+                    item.Image = imageListBody.Images[0];
+                }
+                else
+                {
+                    item.Image = imageListBody.Images[1];
+                }
             }
-            else
+            catch (Exception ex)
             {
-                item.Image = imageListBody.Images[1];
+ 
             }
+            
             item.Tag = user;
             return item;
         }

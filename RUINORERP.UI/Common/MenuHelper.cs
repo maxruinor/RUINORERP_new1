@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Autofac;
 using Krypton.Navigator;
+using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
@@ -206,7 +207,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-    
+
 
 
         public delegate void OtherHandler(object obj);
@@ -532,6 +533,19 @@ namespace RUINORERP.UI.Common
                             ucbaseQuery.LoadQueryParametersToUI(LoadItems);
                         }
 
+                        ButtonSpecAny bs = new ButtonSpecAny();
+                        bs.Type = PaletteButtonSpecStyle.Close;
+                        bs.Click += Bs_Click;
+                        page.ButtonSpecs.Add(bs);
+                        //下面的代码没效果 哪里有问题？
+                        //page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
+                        //page.ClearFlags(KryptonPageFlags.All);
+                        //KryptonWorkspaceCell activeCcell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
+                        //if (activeCcell != null)
+                        //{
+                        //    activeCcell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
+                        //}
+                        //cell.Button.CloseButtonDisplay = ButtonDisplay.Hide;
                         cell.SelectedPage = page;
                     }
 
@@ -547,38 +561,7 @@ namespace RUINORERP.UI.Common
                     */
 
 
-                    #region 按类型处理不同的菜单
-                    /*
-                   Form frm = (Form)PowerGlobal.Instance.Assemblyobj.CreateInstance(pr.ClassPath);
 
-                   if (frm == null)
-                   {
-                       MessageBox.Show("类型" + pr.ClassPath + "不存在!");
-                       return;
-                   }
-                   foreach (Form var in PowerGlobal.Instance.Frmmain.MdiChildren)
-                   {
-                       var.TopMost = false;
-                   }
-
-                   //意思是主MDI中的子窗口列表中包含了点击的对象则返回，不处理。
-                   frm.Text = "【" + pr.ResourceName + "】";
-                   foreach (Form var in PowerGlobal.Instance.Frmmain.MdiChildren)
-                   {
-                       if (var.ToString() == frm.ToString())
-                       {
-                           var.TopMost = true;
-                           var.MdiParent = PowerGlobal.Instance.Frmmain;
-                           var.Focus();
-                           return;
-                       }
-
-                   }
-
-                   frm.MdiParent = PowerGlobal.Instance.Frmmain;
-                   frm.WindowState = FormWindowState.Maximized;
-                   frm.Show();*/
-                    #endregion
 
                     break;
                 case "导航菜单":
@@ -603,6 +586,42 @@ namespace RUINORERP.UI.Common
             }
 
 
+        }
+
+        private void Bs_Click(object sender, EventArgs e)
+        {
+            if (sender is ButtonSpecAny btn && btn.Owner is KryptonPage kpage)
+            {
+                if (kpage.Controls.Count == 1)
+                {
+                    var control = kpage.Controls[0];
+                    if (control.GetType() != null && control.GetType().BaseType.Name == "BaseListGeneric`1")
+                    {
+                        // 获取泛型参数类型
+                        Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
+                        if (genericArguments.Length > 0)
+                        {
+                            Type genericParameterType = genericArguments[0];
+                            var menu = Startup.GetFromFacByName<BaseUControl>(control.GetType().Name);
+                            if (menu is BaseUControl baseListGeneric)
+                            {
+                                UIBizSrvice.SaveGridSettingData(menu.CurMenuInfo, menu.BaseDataGridView1);
+                            }
+                                // 使用反射创建泛型类型的实例
+                              //  Type genericListType = typeof(BaseListGeneric<>).MakeGenericType(genericParameterType);
+                            //object listInstance = Activator.CreateInstance(genericListType);
+                        
+                        }
+                        //第二个参数 换为名称，第三个是不是 将他放到上层基类中保存。意思是窗体保存对应的这个列的个性化设置？
+                       ;
+                    }
+                }
+
+                MainForm.Instance.kryptonDockingManager1.RemovePage(kpage.UniqueName, true);
+                kpage.Dispose();
+            }
+
+            //UIBizSrvice.SaveGridSettingData()
         }
 
         private KryptonPage NewPage(string name, int image, Control content)

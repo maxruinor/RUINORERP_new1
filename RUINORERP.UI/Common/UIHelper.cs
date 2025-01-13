@@ -906,9 +906,6 @@ namespace RUINORERP.UI.Common
 
             }
 
-
-
-
             return fieldNameList;
         }
 
@@ -917,10 +914,13 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="types"></param>
         /// <returns></returns>
-        public static List<ColumnDisplayController> GetOutlookFieldNameDisColList(params Type[] types)
+        public static List<ColumnDisplayController> GetColumnDisplayList(params Type[] types)
         {
             List<ColumnDisplayController> columnDisplayControllers = new List<ColumnDisplayController>();
-            ConcurrentDictionary<string, KeyValuePair<string, bool>> fieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
+
+          
+
+
             SugarColumn entityAttr;
             foreach (var type in types)
             {
@@ -961,11 +961,21 @@ namespace RUINORERP.UI.Common
                             }
                             if (entityAttr.IsPrimaryKey)
                             {   //逻辑处理时可能要主键
-                                fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(entityAttr.ColumnDescription, false));
+                                ColumnDisplayController col = new ColumnDisplayController();
+                                col.ColDisplayText = entityAttr.ColumnDescription;
+                                col.ColDisplayIndex = columnDisplayControllers.Count;
+                                col.Visible = true;
+                                col.ColName = field.Name;
+                                columnDisplayControllers.Add(col);
                             }
                             if (entityAttr.ColumnDescription.Trim().Length > 0 && brow)
                             {
-                                fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(entityAttr.ColumnDescription, true));
+                                ColumnDisplayController col = new ColumnDisplayController();
+                                col.ColDisplayText = entityAttr.ColumnDescription;
+                                col.ColDisplayIndex = columnDisplayControllers.Count; 
+                                col.Visible = true;
+                                col.ColName = field.Name;
+                                columnDisplayControllers.Add(col);
                             }
                         }
 

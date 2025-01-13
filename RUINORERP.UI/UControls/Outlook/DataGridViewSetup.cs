@@ -282,7 +282,7 @@ namespace RUINORERP.UI.UControls.Outlook
                     {
                         Grid.Columns[displayController.ColName].DisplayIndex = displayController.ColDisplayIndex;
                     }
-                    Grid.Columns[displayController.ColName].Width = displayController.ColWith;
+                    Grid.Columns[displayController.ColName].Width = displayController.ColWidth;
 
                     Grid.Columns[displayController.ColName].Visible = displayController.Visible;
 

@@ -12,6 +12,9 @@ using Krypton.Workspace;
 using Krypton.Navigator;
 using RUINORERP.Business.Processor;
 using RUINORERP.UI.UserCenter;
+using RUINORERP.UI.UControls;
+using FastReport.DevComponents.DotNetBar.Controls;
+using RUINORERP.UI.Common;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -32,10 +35,10 @@ namespace RUINORERP.UI.BaseForm
         /// 从工作台点击过来的时候，这个保存初始化时的查询参数
         ///  这个可用可不用。
         /// </summary>
-        public object QueryDtoProxy { get; set; }
+        public BaseEntity QueryDtoProxy { get; set; }
 
 
-        
+
 
         protected virtual void Refreshs()
         {
@@ -46,7 +49,7 @@ namespace RUINORERP.UI.BaseForm
         /// 传查询参数对象，对象已经给了查询参数具体值，具体在窗体那边判断
         /// </summary>
         /// <param name="QueryParameters"></param>
-        internal virtual void LoadQueryParametersToUI(object QueryParameters, QueryParameter nodeParameter = null)
+        internal virtual void LoadQueryParametersToUI(BaseEntity QueryParameters, QueryParameter nodeParameter = null)
         {
             Refreshs();
         }
@@ -181,6 +184,7 @@ namespace RUINORERP.UI.BaseForm
         }
         protected virtual void Exit(object thisform)
         {
+            
             if (!Edited)
             {
                 //退出
@@ -204,7 +208,7 @@ namespace RUINORERP.UI.BaseForm
         /// 关联的菜单信息 实际是可以从点击时传入
         /// </summary>
         public tb_MenuInfo CurMenuInfo { get; set; }
-
+        public NewSumDataGridView BaseDataGridView1 { get; set; }
         /// <summary>
         /// 子类T的类型
         /// </summary>

@@ -49,6 +49,10 @@ using SixLabors.ImageSharp.Memory;
 using Netron.NetronLight;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.UI.UserCenter;
+using RUINORERP.UI.UserPersonalized;
+using RUINORERP.UI.UControls;
+using Newtonsoft.Json;
+using Fireasy.Common.Extensions;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -314,16 +318,31 @@ namespace RUINORERP.UI.BaseForm
                     button设置查询条件.ToolTipValues.Heading = "提示";
                     button设置查询条件.Click += button设置查询条件_Click;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button设置查询条件);
+
+                    Krypton.Toolkit.KryptonButton button表格显示设置 = new Krypton.Toolkit.KryptonButton();
+                    button表格显示设置.Text = "表格显示设置";
+                    button表格显示设置.ToolTipValues.Description = "对表格显示设置进行个性化设置。";
+                    button表格显示设置.ToolTipValues.EnableToolTips = true;
+                    button表格显示设置.ToolTipValues.Heading = "提示";
+                    button表格显示设置.Click += button表格显示设置_Click;
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button表格显示设置);
                 }
             }
 
-
-
         }
 
-        private void button设置查询条件_Click(object sender, EventArgs e)
+        private async void button表格显示设置_Click(object sender, EventArgs e)
         {
-            MenuPersonalizedSettings();
+            await UIBizSrvice.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo, true);
+        }
+
+        private async void button设置查询条件_Click(object sender, EventArgs e)
+        {
+            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDtoProxy);
+            if (rs)
+            {
+                QueryDtoProxy = LoadQueryConditionToUI();
+            }
         }
 
         public virtual void Builder()
@@ -1040,15 +1059,15 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        protected virtual void MenuPersonalizedSettings()
-        {
-            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
-            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
-            if (frmMenu.ShowDialog() == DialogResult.OK)
-            {
-                LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
-            }
-        }
+        //protected virtual void MenuPersonalizedSettings()
+        //{
+        //    UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
+        //    frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
+        //    if (frmMenu.ShowDialog() == DialogResult.OK)
+        //    {
+        //        LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
+        //    }
+        //}
         protected virtual void Modify(BaseEdit frmadd)
         {
             if (bindingSourceList.Current != null)
@@ -1332,7 +1351,7 @@ namespace RUINORERP.UI.BaseForm
         /// 默认不是模糊查询
         /// </summary>
         /// <param name="useLike"></param>
-        public object LoadQueryConditionToUI(decimal QueryConditionShowColQty)
+        public BaseEntity LoadQueryConditionToUI(decimal QueryConditionShowColQty = 4)
         {
             //为了验证设置的属性
             this.AutoValidate = AutoValidate.EnableAllowFocusChange;
@@ -1342,9 +1361,15 @@ namespace RUINORERP.UI.BaseForm
             kryptonPanel条件生成容器.Controls.Clear();
             kryptonPanel条件生成容器.SuspendLayout();
             //暂时默认了uselike
-
-            //            QueryDto = uIQueryHelper.SetQueryUI(true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
-            QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+            tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+            if (menuSetting != null)
+            {
+                QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, menuSetting);
+            }
+            else
+            {
+                QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+            }
 
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;
@@ -1362,16 +1387,6 @@ namespace RUINORERP.UI.BaseForm
             }
 
 
-            /*
-              if (_UCBillChildQuery_Related.InvisibleCols == null)
-            {
-                _UCBillChildQuery_Related.InvisibleCols = new List<string>();
-            }
-            _UCBillChildQuery_Related.InvisibleCols.AddRange(ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleCols));
-            _UCBillChildQuery_Related.DefaultHideCols = new List<string>();
-            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
-             
-             */
 
             List<T> list = new List<T>();
             bindingSourceList.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
@@ -1398,7 +1413,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="QueryParameters"></param>
         /// <param name="nodeParameter"></param>
-        internal override void LoadQueryParametersToUI(object QueryParameters, QueryParameter nodeParameter)
+        internal override void LoadQueryParametersToUI(BaseEntity QueryParameters, QueryParameter nodeParameter)
         {
             if (QueryParameters != null && nodeParameter != null)
             {
@@ -1692,7 +1707,6 @@ namespace RUINORERP.UI.BaseForm
                 frm.Close();
             }
 
-
             /*
            if (page == null)
            {
@@ -1710,8 +1724,11 @@ namespace RUINORERP.UI.BaseForm
            }
            */
         }
-        protected virtual void Exit(object thisform)
+
+        
+        protected override void Exit(object thisform)
         {
+            UIBizSrvice.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
             if (!Edited)
             {
                 //退出
@@ -1725,8 +1742,10 @@ namespace RUINORERP.UI.BaseForm
                     CloseTheForm(thisform);
                 }
             }
-        }
 
+            
+        }
+        
 
 
         protected override void Refreshs()
@@ -1804,8 +1823,9 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        private void BaseList_Load(object sender, EventArgs e)
+        private async void BaseList_Load(object sender, EventArgs e)
         {
+
             if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime || this.DesignMode)
             {
                 return;
@@ -1826,20 +1846,113 @@ namespace RUINORERP.UI.BaseForm
 
             if (!this.DesignMode)
             {
-                MenuPersonalization personalization = new MenuPersonalization();
-                UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-                if (personalization != null)
+                await UIBizSrvice.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo);
+                //dataGridView1.ColumnWidthChanged -= DataGridView_ColumnWidthChanged;
+                dataGridView1.ColumnWidthChanged += DataGridView_ColumnWidthChanged;
+
+                QueryDtoProxy = LoadQueryConditionToUI(4);
+                BaseDataGridView1 = dataGridView1;
+
+            }
+        }
+
+        private void DataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            //保存在内存中
+            #region 列有变化就保存到内存，关闭时保存到数据库设置中
+            tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
+            if (userPersonalized == null)
+            {
+                return;
+            }
+
+            tb_UIMenuPersonalization menuPersonalization = userPersonalized.tb_UIMenuPersonalizations.FirstOrDefault(t => t.MenuID == CurMenuInfo.MenuID && t.UserPersonalizedID == userPersonalized.UserPersonalizedID);
+            //这里是列的控制情况 
+            if (menuPersonalization.tb_UIGridSettings == null)
+            {
+                menuPersonalization.tb_UIGridSettings = new List<tb_UIGridSetting>();
+            }
+            tb_UIGridSetting GridSetting = menuPersonalization.tb_UIGridSettings.FirstOrDefault(c => c.GridKeyName == typeof(T).Name && c.UIMenuPID == menuPersonalization.UIMenuPID);
+            if (GridSetting == null)
+            {
+                GridSetting = new tb_UIGridSetting();
+                GridSetting.GridKeyName = typeof(T).Name;
+                GridSetting.GridType = dataGridView1.GetType().Name;
+                GridSetting.UIMenuPID = menuPersonalization.UIMenuPID;
+                menuPersonalization.tb_UIGridSettings.Add(GridSetting);
+            }
+            List<ColumnDisplayController> originalColumnDisplays = new List<ColumnDisplayController>();
+            //如果数据有则加载，无则加载默认的
+            if (!string.IsNullOrEmpty(GridSetting.ColsSetting))
+            {
+                object objList = JsonConvert.DeserializeObject(GridSetting.ColsSetting);
+                if (objList != null && objList.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
                 {
-                    decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                    QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
+                    var jsonlist = objList as Newtonsoft.Json.Linq.JArray;
+                    originalColumnDisplays = jsonlist.ToObject<List<ColumnDisplayController>>();
                 }
-                else
+            }
+            else
+            {
+                //找到最原始的数据来自于硬编码
+                originalColumnDisplays = UIHelper.GetColumnDisplayList(typeof(T));
+
+                // 获取Graphics对象
+                Graphics graphics = dataGridView1.CreateGraphics();
+                originalColumnDisplays.ForEach(c =>
                 {
-                    QueryDtoProxy = LoadQueryConditionToUI(4);
+                    c.GridKeyName = typeof(T).Name;
+                    // 计算文本宽度
+                    float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView1.Font, graphics);
+                    c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
+                });
+            }
+
+            if (dataGridView1.ColumnDisplays == null)
+            {
+                dataGridView1.ColumnDisplays = new List<ColumnDisplayController>();
+                foreach (DataGridViewColumn dc in dataGridView1.Columns)
+                {
+                    ColumnDisplayController cdc = new ColumnDisplayController();
+                    cdc.GridKeyName = typeof(T).Name;
+                    cdc.ColDisplayText = dc.HeaderText;
+                    cdc.ColDisplayIndex = dc.DisplayIndex;
+                    cdc.ColWidth = dc.Width;
+                    cdc.ColEncryptedName = dc.Name;
+                    cdc.ColName = dc.Name;
+                    cdc.IsFixed = dc.Frozen;
+                    cdc.Visible = dc.Visible;
+                    cdc.DataPropertyName = dc.DataPropertyName;
+                    originalColumnDisplays.Add(cdc);
                 }
             }
 
+            // 检查并添加条件
+            foreach (var oldCol in originalColumnDisplays)
+            {
+                // 检查existingConditions中是否已经存在相同的条件
+                if (!dataGridView1.ColumnDisplays.Any(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == typeof(T).Name))
+                {
+                    // 如果不存在 
+                    dataGridView1.ColumnDisplays.Add(oldCol);
+                }
+                else
+                {
+                    //更新一下标题
+                    var colset = dataGridView1.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == typeof(T).Name);
+                    colset = oldCol;
+                }
+            }
+
+            ColumnDisplayController columnDisplay = dataGridView1.ColumnDisplays.FirstOrDefault(c => c.ColName == e.Column.Name);
+            if (columnDisplay != null)
+            {
+                columnDisplay.ColWidth = e.Column.Width;
+            }
+
+            #endregion
         }
+
 
 
         private void kryptonHeaderGroupTop_CollapsedChanged(object sender, EventArgs e)

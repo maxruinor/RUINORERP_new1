@@ -6,14 +6,15 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global.EnumExt
 {
-  
+
 
     /// <summary>
     /// 账户类型
     /// </summary>
     public enum AccountType
     {
-        银行账户 = 1,
+        银行账户对公 = 0,
+        银行账户对私 = 1,
         现金账户 = 2,
         微信账户 = 3,
         支付宝账户 = 4,

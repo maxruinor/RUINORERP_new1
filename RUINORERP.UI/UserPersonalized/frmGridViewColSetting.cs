@@ -391,9 +391,13 @@ namespace RUINORERP.UI.UserPersonalized
                 //计算文本宽度
                 float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
                 c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
+                if (c.ColWidth < 100)
+                {
+                    c.ColWidth = 100;
+                }
             });
 
-
+            dataGridView.ColumnDisplays = ColumnDisplays;
             LoadColumnDisplayList();
             dataGridView.BindColumnStyle();
         }

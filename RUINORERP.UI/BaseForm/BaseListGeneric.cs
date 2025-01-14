@@ -1848,7 +1848,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 await UIBizSrvice.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo);
                 //dataGridView1.ColumnWidthChanged -= DataGridView_ColumnWidthChanged;
-                dataGridView1.ColumnWidthChanged += DataGridView_ColumnWidthChanged;
+                //dataGridView1.ColumnWidthChanged += DataGridView_ColumnWidthChanged;
 
                 QueryDtoProxy = LoadQueryConditionToUI(4);
                 BaseDataGridView1 = dataGridView1;
@@ -1856,6 +1856,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+        /*
         private void DataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             //保存在内存中
@@ -1952,7 +1953,7 @@ namespace RUINORERP.UI.BaseForm
 
             #endregion
         }
-
+        */
 
 
         private void kryptonHeaderGroupTop_CollapsedChanged(object sender, EventArgs e)

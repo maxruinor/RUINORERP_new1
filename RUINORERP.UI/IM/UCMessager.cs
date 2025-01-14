@@ -49,6 +49,10 @@ namespace RUINORERP.UI.IM
                     try
                     {
                         Thread.Sleep(1000);
+                        if (MainForm.Instance.AppContext.CurUserInfo == null)
+                        {
+                            return;
+                        }
                         if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                         {
                             listboxForUsers.BeginUpdate();
@@ -128,9 +132,9 @@ namespace RUINORERP.UI.IM
             }
             catch (Exception ex)
             {
- 
+
             }
-            
+
             item.Tag = user;
             return item;
         }

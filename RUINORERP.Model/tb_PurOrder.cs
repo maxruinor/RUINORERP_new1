@@ -367,10 +367,10 @@ namespace RUINORERP.Model
 
         private string _CloseCaseOpinions;
         /// <summary>
-        /// 审批意见
+        /// 结案意见
         /// </summary>
-        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "审批意见")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "结案意见")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "结案意见")]
         public string CloseCaseOpinions
         { 
             get{return _CloseCaseOpinions;}

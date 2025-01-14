@@ -198,6 +198,11 @@ namespace RUINORERP.UI.AdvancedUIModule
             {
                 queryFields = queryFields.OrderBy(d => d.DisplayIndex).ToList();
             }
+            else
+            {
+                //如果没有特殊设置系统将日期放到最后。因为最长 不好占位显示
+                queryFields = queryFields.OrderBy(d => d.AdvQueryFieldType).ToList();
+            }
             queryFields = queryFields.Where(c => c.IsVisible).ToList();//去掉隐藏的
 
             //定义每列放几组控件

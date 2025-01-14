@@ -272,6 +272,7 @@ namespace RUINORERP.Business.Processor
         /// <param name="queryFieldExp"></param>
         public QueryField SetQueryField<T>(Expression<Func<T, object>> queryFieldExp)
         {
+            //注意这里描述值Caption没有取出给到。
             return SetQueryField<T>(queryFieldExp, true);
         }
 

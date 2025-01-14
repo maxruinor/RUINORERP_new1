@@ -1,5 +1,6 @@
 ﻿using RUINORERP.Business.Processor;
 using RUINORERP.Model;
+using RUINORERP.UI.UControls;
 using RUINORERP.UI.UserCenter;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,13 @@ namespace RUINORERP.UI.BaseForm
             InitializeComponent();
         }
 
+        /// <summary>
+        /// 当前窗体的菜单信息
+        /// </summary>
+        public tb_MenuInfo CurMenuInfo { get; set; } = new tb_MenuInfo();
+
+        public NewSumDataGridView BaseMainDataGridView { get; set; }
+        public NewSumDataGridView BaseSubDataGridView { get; set; }
         /// <summary>
         /// 从工作台点击过来的时候，这个保存初始化时的查询参数
         ///  这个可用可不用。

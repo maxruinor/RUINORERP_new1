@@ -402,7 +402,7 @@ namespace RUINORERP.Business.CommService
         /// <summary>
         /// 缓存列表
         /// </summary>
-        string[] typeNames = {
+        public string[] typeNames = {
             "tb_Company",
             "tb_Currency",
             "tb_BOM_S",

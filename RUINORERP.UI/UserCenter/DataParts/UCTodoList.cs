@@ -59,7 +59,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
-
+        /// <summary>
+        /// 按查询条件  给 Dto对象给到查询条件的值
+        /// </summary>
+        /// <param name="QueryDto"></param>
+        /// <param name="nodeParameter"></param>
         private void MenuPowerHelper_OnSetQueryConditionsDelegate(object QueryDto, QueryParameter nodeParameter)
         {
             if (QueryDto == null)

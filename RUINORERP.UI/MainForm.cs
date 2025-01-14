@@ -204,12 +204,43 @@ namespace RUINORERP.UI
 
                 return;
             }
-            else
+            if(kryptonDockableWorkspace1.ActivePage!=null && kryptonDockableWorkspace1.ActivePage.UniqueName==e.UniqueName)
             {
+                 var control = kryptonDockableWorkspace1.ActivePage.Controls[0];
+                 if (control.GetType() != null && control.GetType().BaseType.Name == "BaseListGeneric`1")
+                 {
+                     // 获取泛型参数类型
+                     Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
+                     if (genericArguments.Length > 0)
+                     {
+                         Type genericParameterType = genericArguments[0];
+                         var baseUControl = (BaseUControl)control;
+                 
+                         UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo,  baseUControl.BaseDataGridView1, genericParameterType);
+                     }
+                 }
 
+                if (control.GetType() != null && control.GetType().BaseType.Name.Contains("BaseBillQueryMC"))
+                {
+                    // 获取泛型参数类型
+                    Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
+                    if (genericArguments.Length > 0)
+                    {
+                        Type genericParameterType = genericArguments[0];
+                        var baseUControl = (BaseQuery)control;
+
+                        UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
+
+                        if (genericArguments.Length == 2 && !genericArguments[0].Name.Equals(genericArguments[1].Name))
+                        {
+                            UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseSubDataGridView, genericArguments[1]);
+
+                        }
+
+                    }
+                }
             }
 
-            // UIBizSrvice.SaveGridSettingData()
         }
 
         private void KryptonDockableWorkspace1_ControlRemoved(object sender, ControlEventArgs e)
@@ -2384,12 +2415,10 @@ namespace RUINORERP.UI
                     TryRequestCache(nextTableName);
                 }
 
-
-
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.LogError(ex, "timer1_Tick");
+                
             }
         }
 

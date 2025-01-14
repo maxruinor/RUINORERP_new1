@@ -533,10 +533,14 @@ namespace RUINORERP.UI.Common
                             ucbaseQuery.LoadQueryParametersToUI(LoadItems);
                         }
 
-                        ButtonSpecAny bs = new ButtonSpecAny();
-                        bs.Type = PaletteButtonSpecStyle.Close;
-                        bs.Click += Bs_Click;
-                        page.ButtonSpecs.Add(bs);
+                        if (page.ButtonSpecs.Count == 0)
+                        {
+                            ButtonSpecAny bs = new ButtonSpecAny();
+                            bs.Type = PaletteButtonSpecStyle.Close;
+                            bs.Click += Bs_Click;
+                            page.ButtonSpecs.Add(bs);
+                        }
+
                         //下面的代码没效果 哪里有问题？
                         //page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
                         //page.ClearFlags(KryptonPageFlags.All);
@@ -595,6 +599,7 @@ namespace RUINORERP.UI.Common
                 if (kpage.Controls.Count == 1)
                 {
                     var control = kpage.Controls[0];
+
                     if (control.GetType() != null && control.GetType().BaseType.Name == "BaseListGeneric`1")
                     {
                         // 获取泛型参数类型
@@ -602,27 +607,44 @@ namespace RUINORERP.UI.Common
                         if (genericArguments.Length > 0)
                         {
                             Type genericParameterType = genericArguments[0];
-                            var menu = Startup.GetFromFacByName<BaseUControl>(control.GetType().Name);
-                            if (menu is BaseUControl baseListGeneric)
-                            {
-                                UIBizSrvice.SaveGridSettingData(menu.CurMenuInfo, menu.BaseDataGridView1);
-                            }
-                                // 使用反射创建泛型类型的实例
-                              //  Type genericListType = typeof(BaseListGeneric<>).MakeGenericType(genericParameterType);
+                            var baseUControl = (BaseUControl)control;
+
+                            UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseDataGridView1, genericParameterType);
+
+                            // 使用反射创建泛型类型的实例
+                            //  Type genericListType = typeof(BaseListGeneric<>).MakeGenericType(genericParameterType);
                             //object listInstance = Activator.CreateInstance(genericListType);
-                        
+                            //第二个参数 换为名称，第三个是不是 将他放到上层基类中保存。意思是窗体保存对应的这个列的个性化设置？
+                            ;
                         }
-                        //第二个参数 换为名称，第三个是不是 将他放到上层基类中保存。意思是窗体保存对应的这个列的个性化设置？
-                       ;
                     }
+
+                    if (control.GetType() != null && control.GetType().BaseType.Name.Contains("BaseBillQueryMC"))
+                    {
+                        // 获取泛型参数类型
+                        Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
+                        if (genericArguments.Length > 0)
+                        {
+                            Type genericParameterType = genericArguments[0];
+                            var baseUControl = (BaseQuery)control;
+
+                            UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
+
+                            if (genericArguments.Length == 2 && !genericArguments[0].Name.Equals(genericArguments[1].Name))
+                            {
+                                UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseSubDataGridView, genericArguments[1]);
+
+                            }
+
+                        }
+                    }
+
+                    MainForm.Instance.kryptonDockingManager1.RemovePage(kpage.UniqueName, true);
+                    kpage.Dispose();
                 }
-
-                MainForm.Instance.kryptonDockingManager1.RemovePage(kpage.UniqueName, true);
-                kpage.Dispose();
             }
-
-            //UIBizSrvice.SaveGridSettingData()
         }
+
 
         private KryptonPage NewPage(string name, int image, Control content)
         {
@@ -668,15 +690,6 @@ namespace RUINORERP.UI.Common
             Console.ReadKey();
          * 
          */
-
-
-
-
-
-
-
-
-
 
         #region  注册或者注销 菜单事件
 
@@ -735,8 +748,6 @@ namespace RUINORERP.UI.Common
         }
 
         #endregion
-
-
 
         private static List<tb_MenuInfo> roleResourceList = new List<tb_MenuInfo>();
 

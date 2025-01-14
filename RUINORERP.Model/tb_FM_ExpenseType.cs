@@ -38,10 +38,10 @@ namespace RUINORERP.Model
         #region 属性
         private long _ExpenseType_id;
         /// <summary>
-        /// 业务类型
+        /// 
         /// </summary>
  
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ExpenseType_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "业务类型" , IsPrimaryKey = true)]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ExpenseType_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" , IsPrimaryKey = true)]
         public long ExpenseType_id
         { 
             get{return _ExpenseType_id;}

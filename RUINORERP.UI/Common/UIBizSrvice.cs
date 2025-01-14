@@ -137,7 +137,6 @@ namespace RUINORERP.UI.Common
             }
 
 
-
             // 更新set.Conditions
             set.Conditions = existingConditions.OrderBy(c => c.Sort).ToList();
             set.QueryFields = QueryConditionFilter.QueryFields;
@@ -264,6 +263,10 @@ namespace RUINORERP.UI.Common
                     // 计算文本宽度
                     float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
                     c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
+                    if (c.ColWidth < 100)
+                    {
+                        c.ColWidth = 100;
+                    }
                 });
             }
 
@@ -328,8 +331,8 @@ namespace RUINORERP.UI.Common
         }
 
 
-        
-            public static async void SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
+
+        public static async void SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
         {
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
             if (userPersonalized.tb_UIMenuPersonalizations == null)
@@ -346,7 +349,7 @@ namespace RUINORERP.UI.Common
             {
                 menuPersonalization.tb_UIGridSettings = new List<tb_UIGridSetting>();
             }
-            
+
             tb_UIGridSetting GridSetting = menuPersonalization.tb_UIGridSettings.FirstOrDefault(c => c.GridKeyName == datasourceType.Name && c.UIMenuPID == menuPersonalization.UIMenuPID);
             if (GridSetting == null)
             {
@@ -369,12 +372,12 @@ namespace RUINORERP.UI.Common
             }
             else
             {
-                if (datasourceType==null)
+                if (datasourceType == null)
                 {
                     return;
                 }
                 //找到最原始的数据来自于硬编码
-                originalColumnDisplays = UIHelper.GetColumnDisplayList( datasourceType);
+                originalColumnDisplays = UIHelper.GetColumnDisplayList(datasourceType);
 
                 //newSumDataGridViewMaster.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
                 //newSumDataGridViewMaster.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
@@ -388,6 +391,10 @@ namespace RUINORERP.UI.Common
                     // 计算文本宽度
                     float textWidth = UITools.CalculateTextWidth(c.ColDisplayText, dataGridView.Font, graphics);
                     c.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
+                    if (c.ColWidth < 100)
+                    {
+                        c.ColWidth = 100;
+                    }
                 });
             }
 
@@ -421,7 +428,7 @@ namespace RUINORERP.UI.Common
                 }
                 else
                 {
-                    //更新一下标题
+                    //更新
                     var colset = dataGridView.ColumnDisplays.FirstOrDefault(ec => ec.ColName == oldCol.ColName && ec.GridKeyName == datasourceType.Name);
                     colset = oldCol;
                 }
@@ -700,7 +707,7 @@ namespace RUINORERP.UI.Common
             {
                 //请求本身
                 var rslist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (NeedRequesCache(rslist, tableName))
+                if (NeedRequesCache(rslist, tableName) && BizCacheHelper.Instance.typeNames.Contains(tableName))
                 {
                     ClientService.请求缓存(tableName);
                 }
@@ -727,7 +734,8 @@ namespace RUINORERP.UI.Common
                 foreach (var item in kvlist)
                 {
                     var rslist = BizCacheHelper.Manager.CacheEntityList.Get(item.Value);
-                    if (NeedRequesCache(rslist, item.Value))
+                    //并且要存在于缓存列表的表集合中才取。有些是没有缓存的业务单据表。不需要取缓存
+                    if (NeedRequesCache(rslist, item.Value) && BizCacheHelper.Instance.typeNames.Contains(item.Value))
                     {
                         ClientService.请求缓存(item.Value);
                     }
@@ -755,6 +763,10 @@ namespace RUINORERP.UI.Common
                     if (cacheInfo.CacheCount != jsonlist.Count)
                     {
                         return true;
+                    }
+                    else
+                    {
+                        return false;
                     }
                 }
                 else

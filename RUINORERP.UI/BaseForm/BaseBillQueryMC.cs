@@ -9,6 +9,7 @@ using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
 using OfficeOpenXml;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 using RUINOR.Core;
@@ -94,10 +95,7 @@ namespace RUINORERP.UI.BaseForm
         public event QueryRelatedRowHandler OnQueryRelatedChild;
 
 
-        /// <summary>
-        /// 当前窗体的菜单信息
-        /// </summary>
-        public tb_MenuInfo CurMenuInfo { get; set; } = new tb_MenuInfo();
+
 
         /// <summary>
         /// 比方采购入库，对应采购入库明细，
@@ -977,7 +975,8 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 
+        /// 这个方法是为了 打开这个菜单是来自不同的方式。他会传过来一些参数。
+        /// 比方todolist 但是标题没有传过来。用现有的标题
         /// </summary>
         /// <param name="QueryParameters"></param>
         /// <param name="nodeParameter"></param>
@@ -987,6 +986,21 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (nodeParameter.queryFilter != null)
                 {
+                    //比方todolist 但是标题没有传过来。用现有的标题
+                    if (QueryConditionFilter.QueryFields != null)
+                    {
+                        foreach (var item in QueryConditionFilter.QueryFields)
+                        {
+                            if (nodeParameter.queryFilter.QueryFields != null)
+                            {
+                                var qf = nodeParameter.queryFilter.QueryFields.FirstOrDefault(c => c.FieldName == item.FieldName);
+                                if (qf != null)
+                                {
+                                    qf.Caption = item.Caption;
+                                }
+                            }
+                        }
+                    }
                     QueryConditionFilter = nodeParameter.queryFilter;
                 }
                 //因为时间不会去掉选择，这里特殊处理
@@ -1140,6 +1154,16 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
+                if (_UCBillMasterQuery != null && _UCBillMasterQuery.newSumDataGridViewMaster != null)
+                {
+                    UIBizSrvice.SaveGridSettingData(CurMenuInfo, _UCBillMasterQuery.newSumDataGridViewMaster, typeof(M));
+                }
+                if (_UCBillChildQuery != null && _UCBillChildQuery.newSumDataGridViewChild != null)
+                {
+                    UIBizSrvice.SaveGridSettingData(CurMenuInfo, _UCBillChildQuery.newSumDataGridViewChild, typeof(C));
+                }
+
+
                 //保存配置
                 XmlWriterSettings settings = new XmlWriterSettings();
                 settings.Encoding = new UTF8Encoding(false);
@@ -1260,7 +1284,7 @@ namespace RUINORERP.UI.BaseForm
                 var tableNames = MainForm.Instance.CacheInfoList.Keys.ToList();
                 foreach (var nextTableName in tableNames)
                 {
-                    MainForm.Instance.TryRequestCache(nextTableName);
+                    //MainForm.Instance.TryRequestCache(nextTableName);
                 }
 
                 Builder();
@@ -1271,6 +1295,8 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
                 QueryDtoProxy = LoadQueryConditionToUI();
+               
+
 
             }
 
@@ -1458,7 +1484,14 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-            await UIBizSrvice.SetGridViewAsync(typeof(M), _UCBillMasterQuery.newSumDataGridViewMaster, CurMenuInfo);
+            BaseMainDataGridView = _UCBillMasterQuery.newSumDataGridViewMaster;
+
+            BaseSubDataGridView = _UCBillChildQuery.newSumDataGridViewChild;
+
+            await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo);
+
+            await UIBizSrvice.SetGridViewAsync(typeof(C), BaseSubDataGridView, CurMenuInfo);
+
         }
 
 

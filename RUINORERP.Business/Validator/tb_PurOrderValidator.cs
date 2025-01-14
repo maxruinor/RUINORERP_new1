@@ -89,7 +89,7 @@ namespace RUINORERP.Business
             //***** 
             RuleFor(tb_PurOrder => tb_PurOrder.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
-            RuleFor(tb_PurOrder => tb_PurOrder.CloseCaseOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+            RuleFor(tb_PurOrder => tb_PurOrder.CloseCaseOpinions).MaximumLength(100).WithMessage("结案意见:不能超过最大长度,100.");
 
             RuleFor(tb_PurOrder => tb_PurOrder.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
 

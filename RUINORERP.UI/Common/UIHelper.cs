@@ -28,6 +28,7 @@ using FastReport.Table;
 using System.Drawing.Drawing2D;
 using System.Drawing;
 using StackExchange.Redis;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.Common
 {
@@ -918,9 +919,6 @@ namespace RUINORERP.UI.Common
         {
             List<ColumnDisplayController> columnDisplayControllers = new List<ColumnDisplayController>();
 
-          
-
-
             SugarColumn entityAttr;
             foreach (var type in types)
             {
@@ -957,6 +955,13 @@ namespace RUINORERP.UI.Common
                             }
                             if (entityAttr.IsIdentity)
                             {
+                                ColumnDisplayController col = new ColumnDisplayController();
+                                col.ColDisplayText = entityAttr.ColumnDescription;
+                                col.ColDisplayIndex = columnDisplayControllers.Count;
+                                col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;
+                                col.ColName = field.Name;
+                                col.Disable = (entityAttr.ColumnDescription.Trim().Length > 0) ? false : true;
+                                columnDisplayControllers.Add(col);
                                 continue;
                             }
                             if (entityAttr.IsPrimaryKey)
@@ -964,17 +969,31 @@ namespace RUINORERP.UI.Common
                                 ColumnDisplayController col = new ColumnDisplayController();
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
-                                col.Visible = true;
+                                col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;
                                 col.ColName = field.Name;
+                                col.Disable = (entityAttr.ColumnDescription.Trim().Length > 0) ? false : true;
                                 columnDisplayControllers.Add(col);
+                                continue;
                             }
+
                             if (entityAttr.ColumnDescription.Trim().Length > 0 && brow)
                             {
                                 ColumnDisplayController col = new ColumnDisplayController();
                                 col.ColDisplayText = entityAttr.ColumnDescription;
-                                col.ColDisplayIndex = columnDisplayControllers.Count; 
+                                col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = true;
                                 col.ColName = field.Name;
+                                columnDisplayControllers.Add(col);
+                            }
+                            else
+                            {
+                                //逻辑处理时可能要主键
+                                ColumnDisplayController col = new ColumnDisplayController();
+                                col.ColDisplayText = entityAttr.ColumnDescription;
+                                col.ColDisplayIndex = columnDisplayControllers.Count;
+                                col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;
+                                col.ColName = field.Name;
+                                col.Disable = (entityAttr.ColumnDescription.Trim().Length > 0) ? false : true;
                                 columnDisplayControllers.Add(col);
                             }
                         }

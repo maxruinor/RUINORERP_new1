@@ -394,30 +394,39 @@ namespace RUINORERP.UI.BaseForm
 
         internal virtual void CloseTheForm(object thisform)
         {
-            KryptonWorkspaceCell cell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
-            if (cell == null)
+            try
             {
-                cell = new KryptonWorkspaceCell();
-                MainForm.Instance.kryptonDockableWorkspace1.Root.Children.Add(cell);
-            }
-            KryptonPage page = (thisform as Control).Parent as KryptonPage;
-            MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
-            /*
-            if (page == null)
-            {
-                //浮动
-
-            }
-            else
-            {
-                //活动内
-                if (cell.Pages.Contains(page))
+                KryptonWorkspaceCell cell = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell;
+                if (cell == null)
                 {
-                    cell.Pages.Remove(page);
-                    page.Dispose();
+                    cell = new KryptonWorkspaceCell();
+                    MainForm.Instance.kryptonDockableWorkspace1.Root.Children.Add(cell);
                 }
+                KryptonPage page = (thisform as Control).Parent as KryptonPage;
+                MainForm.Instance.kryptonDockingManager1.RemovePage(page.UniqueName, true);
+                /*
+                if (page == null)
+                {
+                    //浮动
+
+                }
+                else
+                {
+                    //活动内
+                    if (cell.Pages.Contains(page))
+                    {
+                        cell.Pages.Remove(page);
+                        page.Dispose();
+                    }
+                }
+                */
             }
-            */
+            catch (Exception)
+            {
+
+                
+            }
+            
         }
 
 

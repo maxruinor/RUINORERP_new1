@@ -1,8 +1,11 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
 using Krypton.Toolkit;
+using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
 using NPOI.Util;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using SqlSugar;
 using System;
@@ -347,6 +350,25 @@ namespace RUINORERP.UI.UControls
                 this.ContextMenuStrip = GetContextMenu();
             }
 
+             this.ColumnWidthChanged -= DataGridView_ColumnWidthChanged;
+            this.ColumnWidthChanged += DataGridView_ColumnWidthChanged;
+
+            
+        }
+
+ 
+        private void DataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            //保存在内存中
+            #region 列有变化就保存到内存，关闭时保存到数据库设置中
+     
+            ColumnDisplayController columnDisplay = this.ColumnDisplays.FirstOrDefault(c => c.ColName == e.Column.Name);
+            if (columnDisplay != null)
+            {
+                columnDisplay.ColWidth = e.Column.Width;
+            }
+
+            #endregion
         }
 
         private void NewSumDataGridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
@@ -418,6 +440,7 @@ namespace RUINORERP.UI.UControls
             }
         }
 
+        //标识只有点击标题才修改顺序
         private bool DisplayIndexChangedFlag = false;
 
         private void NewSumDataGridView_ColumnDisplayIndexChanged(object sender, DataGridViewColumnEventArgs e)
@@ -433,7 +456,7 @@ namespace RUINORERP.UI.UControls
                 Console.WriteLine("Changed");
             }
           */
-            Console.WriteLine("{0} 的位置改变到 {1} ", e.Column.Name, e.Column.DisplayIndex);
+            //Console.WriteLine("{0} 的位置改变到 {1} ", e.Column.Name, e.Column.DisplayIndex);
             if (DisplayIndexChangedFlag)
             {
                 //保存显示顺序

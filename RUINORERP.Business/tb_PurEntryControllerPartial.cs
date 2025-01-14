@@ -322,7 +322,7 @@ namespace RUINORERP.Business
                 {
                     if (AuthorizeController.GetShowDebugInfoAuthorization(_appContext))
                     {
-                        _logger.Info(entity.PurEntryNo + "==>" + "状态更新成功");
+                       // _logger.Info(entity.PurEntryNo + "==>" + "状态更新成功");
                     }
                 }
 

@@ -244,7 +244,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             OrderInvisibleCols.Clear();
             //将条件都认为不可见
-            OrderInvisibleCols.AddRange(conditions);
+            OrderInvisibleCols.AddRange(conditions.ToArray());
             //分组就要显示出来
             foreach (var item in GroupByFields)
             {
@@ -737,13 +737,13 @@ namespace RUINORERP.UI.PSI.SAL
         /// <summary>
         /// 保存不可见的列
         /// </summary>
-        public List<string> OrderInvisibleCols { get; set; } = new List<string>();
+        public HashSet<string> OrderInvisibleCols { get; set; } = new HashSet<string>();
 
 
         /// <summary>
         /// 保存不可见的列
         /// </summary>
-        public List<string> OutInvisibleCols { get; set; } = new List<string>();
+        public HashSet<string> OutInvisibleCols { get; set; } = new HashSet<string>();
 
 
         /// <summary>

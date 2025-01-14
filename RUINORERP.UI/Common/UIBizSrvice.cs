@@ -1,5 +1,6 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
+using Fireasy.Common.Extensions;
 using Netron.GraphLib;
 using Netron.Neon.HtmlHelp;
 using Newtonsoft.Json;
@@ -192,8 +193,10 @@ namespace RUINORERP.UI.Common
         /// <param name="dataGridView"></param>
         /// <param name="CurMenuInfo"></param>
         /// <param name="ShowSettingForm"></param>
+        /// <param name="InvisibleCols">系统硬编码不可见和权限设置的不可见</param>
+        /// <param name="DefaultHideCols">系统硬编码不可见和权限设置的不可见</param>
         /// <returns></returns>
-        public static async Task SetGridViewAsync(Type GridSourceType, NewSumDataGridView dataGridView, tb_MenuInfo CurMenuInfo, bool ShowSettingForm = false, bool SaveGridSetting = false)
+        public static async Task SetGridViewAsync(Type GridSourceType, NewSumDataGridView dataGridView, tb_MenuInfo CurMenuInfo, bool ShowSettingForm = false, HashSet<string> InvisibleCols = null, HashSet<string> DefaultHideCols = null, bool SaveGridSetting = false)
         {
 
             tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
@@ -252,7 +255,6 @@ namespace RUINORERP.UI.Common
                 originalColumnDisplays = UIHelper.GetColumnDisplayList(GridSourceType);
 
                 //newSumDataGridViewMaster.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.ColumnHeader;
-                //newSumDataGridViewMaster.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCells;
                 //不能设置上面这两个属性。因为设置了将不能自动调整宽度。这里计算一下按标题给个差不多的
 
                 // 获取Graphics对象
@@ -289,6 +291,33 @@ namespace RUINORERP.UI.Common
                 }
             }
 
+ 
+            //不管什么情况都处理系统和权限的限制列显示
+            originalColumnDisplays.ForEach(c =>
+            {
+                //系统指定不显示的
+                if (InvisibleCols != null)
+                {
+                    if(InvisibleCols.Any(ic => c.ColName.Equals(ic)))
+                    {
+                        c.Visible = false;
+                        c.Disable = true;
+                    }
+                    
+                }
+
+                //权限设置隐藏的
+                if (DefaultHideCols != null)
+                {
+                    if (DefaultHideCols.Any(ic => c.ColName.Equals(ic)))
+                    {
+                        c.Visible = false;
+                        c.Disable = false;
+                    }
+                   
+                }
+            });
+
             // 检查并添加条件
             foreach (var oldCol in originalColumnDisplays)
             {
@@ -323,10 +352,12 @@ namespace RUINORERP.UI.Common
                 {
                     SaveGridSettingData(CurMenuInfo, dataGridView, GridSourceType);
                 }
+
             }
 
             dataGridView.AutoSizeColumnsMode = (DataGridViewAutoSizeColumnsMode)GridSetting.ColumnsMode;
             dataGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
+
             dataGridView.BindColumnStyle();
         }
 

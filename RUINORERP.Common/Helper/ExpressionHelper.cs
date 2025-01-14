@@ -551,6 +551,46 @@ namespace RUINORERP.Common.Helper
 
 
         /// <summary>
+        /// 取成员名称,要带Expression，FUNC只是一个委托方法。试过了。取不到名称
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="QueryConditions"></param>
+        /// <returns></returns>
+        public static HashSet<string> ExpressionListToHashSet<T>(List<Expression<Func<T, object>>> QueryConditions)
+        {
+            HashSet<string> queryConditions = new HashSet<string>();
+            if (QueryConditions != null)
+            {
+                foreach (Expression<Func<T, object>> item in QueryConditions)
+                {
+                    queryConditions.Add(ExpressionToString(item));
+                    /*
+                   Expression newexp = item.Body;
+                   if (newexp.NodeType == ExpressionType.MemberAccess)
+                   {
+                       if (newexp is MemberExpression member)
+                       {
+                           queryConditions.Add(member.Member.Name);
+                       }
+                   }
+                   else
+                   {
+                       if (newexp.NodeType == ExpressionType.Convert)
+                       {
+                           var cexp = (newexp as UnaryExpression).Operand;
+                           if (cexp is MemberExpression member)
+                           {
+                               queryConditions.Add(member.Member.Name);
+                           }
+                       }
+                   }
+                        */
+                }
+
+            }
+            return queryConditions;
+        }
+        /// <summary>
         /// 取成员名称
         /// </summary>
         /// <typeparam name="T"></typeparam>

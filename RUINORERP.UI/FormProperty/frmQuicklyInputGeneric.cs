@@ -59,7 +59,7 @@ namespace RUINORERP.UI.FormProperty
         /// <summary>
         /// 保存不可见的列
         /// </summary>
-        public List<string> InvisibleCols { get; set; } = new List<string>();
+        public HashSet<string> InvisibleCols { get; set; } = new HashSet<string>();
         private void InitDataGridView()
         {
             bindingSourceData.DataSource = lines;

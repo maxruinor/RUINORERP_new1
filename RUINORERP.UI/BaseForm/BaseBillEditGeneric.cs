@@ -579,10 +579,6 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-   
-
-    
-
 
 
         #region 帮助信息提示

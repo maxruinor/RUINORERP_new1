@@ -1375,11 +1375,11 @@ namespace RUINORERP.UI.BaseForm
             kryptonPanel条件生成容器.Visible = true;
             if (InvisibleCols == null)
             {
-                InvisibleCols = new List<string>();
+                InvisibleCols = new HashSet<string>();
             }
             List<string> expInvisibleCols = ExpressionHelper.ExpressionListToStringList(InvisibleColsExp);
             InvisibleCols.AddRange(expInvisibleCols.ToArray());
-            ControlMasterColumnsInvisible(InvisibleCols);
+            ControlSingleTableColumnsInvisible(InvisibleCols);
             foreach (var item in InvisibleCols)
             {
                 KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
@@ -1405,7 +1405,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 保存不可见的列
         /// </summary>
-        public List<string> InvisibleCols { get; set; } = new List<string>();
+        public HashSet<string> InvisibleCols { get; set; } = new HashSet<string>();
 
 
         /// <summary>
@@ -1533,7 +1533,7 @@ namespace RUINORERP.UI.BaseForm
         /// 控制字段是否显示，添加到里面的是不显示的
         /// </summary>
         /// <param name="InvisibleCols"></param>
-        public void ControlMasterColumnsInvisible(List<string> InvisibleCols)
+        public void ControlSingleTableColumnsInvisible(HashSet<string> InvisibleCols, HashSet<string> DefaultHideCols = null)
         {
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
@@ -1548,6 +1548,14 @@ namespace RUINORERP.UI.BaseForm
                                 if (!item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
                                 {
                                     InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+                                }
+
+                                if (DefaultHideCols != null)
+                                {
+                                    if (item.HideValue && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                    {
+                                        DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
+                                    }
                                 }
                             }
                         }

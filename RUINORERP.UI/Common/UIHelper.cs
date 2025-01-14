@@ -175,8 +175,18 @@ namespace RUINORERP.UI.Common
 
         #endregion
         public static void ControlColumnsInvisible(tb_MenuInfo CurMenuInfo,
-            List<string> InvisibleCols, List<string> DefaultHideCols = null)
+            HashSet<string> InvisibleCols, HashSet<string> DefaultHideCols = null, bool isChild = false)
         {
+            if (InvisibleCols == null)
+            {
+                InvisibleCols = new HashSet<string>();
+            }
+
+            if (DefaultHideCols == null)
+            {
+                DefaultHideCols = new HashSet<string>();
+            }
+
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
                 if (CurMenuInfo.tb_P4Fields != null)
@@ -187,24 +197,31 @@ namespace RUINORERP.UI.Common
                         {
                             if (item.tb_fieldinfo != null)
                             {
-                                //设置不可见
-                                //if (!item.IsVisble && item.tb_fieldinfo.IsChild)
-                                //{
-                                //    if (!InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
-                                //    {
-                                //        InvisibleCols.Add(item.tb_fieldinfo.FieldName);
-                                //    }
-                                //}
-                                if (!item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                if (isChild)
                                 {
-                                    InvisibleCols.Add(item.tb_fieldinfo.FieldName);
-                                }
-                                if (DefaultHideCols != null)
-                                {
-                                    if (item.HideValue && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                    if (!item.IsVisble && item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                    {
+                                        InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+                                    }
+
+                                    if (item.HideValue && item.tb_fieldinfo.IsChild && !DefaultHideCols.Contains(item.tb_fieldinfo.FieldName))
                                     {
                                         DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
                                     }
+
+                                }
+                                else
+                                {
+                                    if (!item.IsVisble && !item.tb_fieldinfo.IsChild && !InvisibleCols.Contains(item.tb_fieldinfo.FieldName))
+                                    {
+                                        InvisibleCols.Add(item.tb_fieldinfo.FieldName);
+                                    }
+
+                                    if (item.HideValue && !item.tb_fieldinfo.IsChild && !DefaultHideCols.Contains(item.tb_fieldinfo.FieldName))
+                                    {
+                                        DefaultHideCols.Add(item.tb_fieldinfo.FieldName);
+                                    }
+
                                 }
 
                             }
@@ -969,7 +986,7 @@ namespace RUINORERP.UI.Common
                                 ColumnDisplayController col = new ColumnDisplayController();
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
-                                col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;
+                                col.Visible = false;//默认不显示主键
                                 col.ColName = field.Name;
                                 col.Disable = (entityAttr.ColumnDescription.Trim().Length > 0) ? false : true;
                                 columnDisplayControllers.Add(col);

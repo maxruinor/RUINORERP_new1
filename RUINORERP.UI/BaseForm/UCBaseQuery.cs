@@ -32,14 +32,15 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 保存不可见的列
         /// </summary>
-        public List<string> InvisibleCols { get; set; } = new List<string>();
-
+        public HashSet<string> InvisibleCols { get; set; } = new HashSet<string>();
 
 
         /// <summary>
-        /// 保存默认隐藏的列
+        /// 保存默认隐藏的列  
+        /// HashSet比List性能更好
+        /// 为了提高性能，特别是当 InvisibleCols 和 DefaultHideCols 列表较大时，可以使用 HashSet<string> 替代 List<string>。HashSet<string> 的查找性能更高（平均时间复杂度为 O(1)），而 List<string> 的查找性能为 O(n)。
         /// </summary>
-        public List<string> DefaultHideCols { get; set; } = new List<string>();
+        public HashSet<string> DefaultHideCols { get; set; } = new HashSet<string>();
 
 
 

@@ -463,7 +463,7 @@ namespace RUINORERP.Business
             List<tb_ProdConversionDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdConversionDetail>()
                                .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_prodconversion )
-                               .Includes(t => t.tb_proddetail )
+                               .Includes(t => t.tb_proddetail_to )
                                .Includes(t => t.tb_producttype_from )
                                .Includes(t => t.tb_producttype_to )
                                     .ToListAsync();

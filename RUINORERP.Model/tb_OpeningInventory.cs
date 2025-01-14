@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:57
+// 时间：01/14/2025 18:56:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 期初存货来自期初盘点或业务上首次库存入库
     /// </summary>
     [Serializable()]
-    [Description("tb_OpeningInventory")]
+    [Description("期初存货来自期初盘点或业务上首次库存入库")]
     [SugarTable("tb_OpeningInventory")]
     public partial class tb_OpeningInventory: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_OpeningInventory" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("期初存货来自期初盘点或业务上首次库存入库tb_OpeningInventory" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -85,7 +85,7 @@ namespace RUINORERP.Model
         /// 成本价格
         /// </summary>
         [AdvQueryAttribute(ColName = "Cost_price",ColDesc = "成本价格")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost_price" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本价格" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Cost_price" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本价格" )]
         public decimal Cost_price
         { 
             get{return _Cost_price;}
@@ -99,7 +99,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "Subtotal_Cost_Price",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Subtotal_Cost_Price" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Subtotal_Cost_Price" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal Subtotal_Cost_Price
         { 
             get{return _Subtotal_Cost_Price;}
@@ -182,7 +182,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Inventory_ID))]
         public virtual tb_Inventory tb_inventory { get; set; }
 

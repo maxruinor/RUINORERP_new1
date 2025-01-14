@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:16
+// 时间：01/14/2025 18:57:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 生产计划表 应该是分析来的。可能来自于生产需求单，比方系统根据库存情况分析销售情况等也也可以手动。也可以程序分析
     /// </summary>
     [Serializable()]
-    [Description("tb_ProductionPlan")]
+    [Description("生产计划表 应该是分析来的。可能来自于生产需求单，比方系统根据库存情况分析销售情况等也也可以手动。也可以程序分析")]
     [SugarTable("tb_ProductionPlan")]
     public partial class tb_ProductionPlan: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProductionPlan" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("生产计划表 应该是分析来的。可能来自于生产需求单，比方系统根据库存情况分析销售情况等也也可以手动。也可以程序分析tb_ProductionPlan" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -424,27 +424,27 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(SOrder_ID))]
         public virtual tb_SaleOrder tb_saleorder { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlanDetail.PPID))]
         public virtual List<tb_ProductionPlanDetail> tb_ProductionPlanDetails { get; set; }
@@ -452,7 +452,7 @@ namespace RUINORERP.Model
         //PPID.FK_PRODUPLANDETAIL_PRODUCTIONPLAN)
         //tb_ProductionPlan.PPID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemand.PPID))]
         public virtual List<tb_ProductionDemand> tb_ProductionDemands { get; set; }

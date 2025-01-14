@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:27
+// 时间：01/14/2025 18:56:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// BOM配置历史 数据保存在BOM中 只是多份一样，细微区别用版本号标识
     /// </summary>
     [Serializable()]
-    [Description("tb_BOMConfigHistory")]
+    [Description("BOM配置历史 数据保存在BOM中 只是多份一样，细微区别用版本号标识")]
     [SugarTable("tb_BOMConfigHistory")]
     public partial class tb_BOMConfigHistory: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_BOMConfigHistory" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("BOM配置历史 数据保存在BOM中 只是多份一样，细微区别用版本号标识tb_BOMConfigHistory" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -181,7 +181,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_S.BOM_S_VERID))]
         public virtual List<tb_BOM_S> tb_BOM_Ss { get; set; }

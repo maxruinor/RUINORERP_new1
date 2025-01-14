@@ -36,5 +36,14 @@ namespace RUINORERP.UI.BaseForm
         {
             InitializeComponent();
         }
+
+
+        /// <summary>
+        /// 当前窗体的菜单信息
+        /// </summary>
+        public tb_MenuInfo CurMenuInfo { get; set; } = new tb_MenuInfo();
+
+        public NewSumDataGridView BaseMainDataGridView { get; set; }
+ 
     }
 }

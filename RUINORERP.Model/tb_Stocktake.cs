@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:36
+// 时间：01/14/2025 18:57:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 盘点表
     /// </summary>
     [Serializable()]
-    [Description("tb_Stocktake")]
+    [Description("盘点表")]
     [SugarTable("tb_Stocktake")]
     public partial class tb_Stocktake: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Stocktake" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("盘点表tb_Stocktake" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -156,7 +156,7 @@ namespace RUINORERP.Model
         /// 载账总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CarryingTotalAmount",ColDesc = "载账总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CarryingTotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "载账总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CarryingTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "载账总成本" )]
         public decimal CarryingTotalAmount
         { 
             get{return _CarryingTotalAmount;}
@@ -282,7 +282,7 @@ namespace RUINORERP.Model
         /// 差异总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "DiffTotalAmount",ColDesc = "差异总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiffTotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "差异总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiffTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "差异总金额" )]
         public decimal DiffTotalAmount
         { 
             get{return _DiffTotalAmount;}
@@ -310,7 +310,7 @@ namespace RUINORERP.Model
         /// 盘点总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CheckTotalAmount",ColDesc = "盘点总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CheckTotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "盘点总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CheckTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "盘点总成本" )]
         public decimal CheckTotalAmount
         { 
             get{return _CheckTotalAmount;}
@@ -436,17 +436,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StocktakeDetail.MainID))]
         public virtual List<tb_StocktakeDetail> tb_StocktakeDetails { get; set; }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:47
+// 时间：01/14/2025 18:56:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 库存表
     /// </summary>
     [Serializable()]
-    [Description("tb_Inventory")]
+    [Description("库存表")]
     [SugarTable("tb_Inventory")]
     public partial class tb_Inventory: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Inventory" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("库存表tb_Inventory" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -227,7 +227,7 @@ namespace RUINORERP.Model
         /// 先进先出成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CostFIFO",ColDesc = "先进先出成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostFIFO" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "先进先出成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostFIFO" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "先进先出成本" )]
         public decimal CostFIFO
         { 
             get{return _CostFIFO;}
@@ -241,7 +241,7 @@ namespace RUINORERP.Model
         /// 月加权平均成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CostMonthlyWA",ColDesc = "月加权平均成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostMonthlyWA" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "月加权平均成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostMonthlyWA" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "月加权平均成本" )]
         public decimal CostMonthlyWA
         { 
             get{return _CostMonthlyWA;}
@@ -255,7 +255,7 @@ namespace RUINORERP.Model
         /// 移动加权平均成本
         /// </summary>
         [AdvQueryAttribute(ColName = "CostMovingWA",ColDesc = "移动加权平均成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostMovingWA" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "移动加权平均成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CostMovingWA" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "移动加权平均成本" )]
         public decimal CostMovingWA
         { 
             get{return _CostMovingWA;}
@@ -269,7 +269,7 @@ namespace RUINORERP.Model
         /// 成本
         /// </summary>
         [AdvQueryAttribute(ColName = "Inv_AdvCost",ColDesc = "成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_AdvCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_AdvCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本" )]
         public decimal Inv_AdvCost
         { 
             get{return _Inv_AdvCost;}
@@ -283,7 +283,7 @@ namespace RUINORERP.Model
         /// 货品成本
         /// </summary>
         [AdvQueryAttribute(ColName = "Inv_Cost",ColDesc = "货品成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_Cost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "货品成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_Cost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "货品成本" )]
         public decimal Inv_Cost
         { 
             get{return _Inv_Cost;}
@@ -297,7 +297,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "Inv_SubtotalCostMoney",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_SubtotalCostMoney" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Inv_SubtotalCostMoney" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal Inv_SubtotalCostMoney
         { 
             get{return _Inv_SubtotalCostMoney;}
@@ -422,22 +422,22 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Inv_Alert_Attribute.Inventory_ID))]
         public virtual List<tb_Inv_Alert_Attribute> tb_Inv_Alert_Attributes { get; set; }
@@ -445,7 +445,7 @@ namespace RUINORERP.Model
         //Inventory_ID.FK_TB_INV_A_REFERENCE_TB_INVEN)
         //tb_Inventory.Inventory_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_OpeningInventory.Inventory_ID))]
         public virtual List<tb_OpeningInventory> tb_OpeningInventories { get; set; }

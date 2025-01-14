@@ -452,7 +452,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_PO_CUSTOMv)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.CustomerVendor_ID))]
         public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
@@ -460,7 +460,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_PURENRE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.CustomerVendor_ID))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
@@ -468,7 +468,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_FM_OTHEREXPENSE_RE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.CustomerVendor_ID))]
         public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
@@ -476,7 +476,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_MATEREQUISTIONS_RE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Return.CustomerVendor_ID))]
         public virtual List<tb_Return> tb_Returns { get; set; }
@@ -484,7 +484,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_RETURN_RE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntry.CustomerVendor_ID))]
         public virtual List<tb_PurEntry> tb_PurEntries { get; set; }
@@ -492,7 +492,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_PUREN_REF_TB_CUSTOMER)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOut.CustomerVendor_ID))]
         public virtual List<tb_SaleOut> tb_SaleOuts { get; set; }
@@ -500,7 +500,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_SALEOUT_REF_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_InvoiceInfo.CustomerVendor_ID))]
         public virtual List<tb_InvoiceInfo> tb_InvoiceInfos { get; set; }
@@ -508,7 +508,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_INVOI_REFERENCE_TB_CUSTO)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.CustomerVendor_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
@@ -516,7 +516,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_PROD_B_TB_CUSTOME)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturn.CustomerVendor_ID))]
         public virtual List<tb_MaterialReturn> tb_MaterialReturns { get; set; }
@@ -524,7 +524,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_MATERIALRETURN_REF_CUSTOMERVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdReturning.CustomerVendor_ID))]
         public virtual List<tb_ProdReturning> tb_ProdReturnings { get; set; }
@@ -532,7 +532,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_PRODRetruning_REF_CUSTOmervendor)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendorFiles.CustomerVendor_ID))]
         public virtual List<tb_CustomerVendorFiles> tb_CustomerVendorFileses { get; set; }
@@ -540,7 +540,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_CUSTO_REF_TB_CUSTO_F)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntry.CustomerVendor_ID))]
         public virtual List<tb_PurReturnEntry> tb_PurReturnEntries { get; set; }
@@ -548,7 +548,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_PURReturn_REF_CUSTOMERVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockOut.CustomerVendor_ID))]
         public virtual List<tb_StockOut> tb_StockOuts { get; set; }
@@ -556,7 +556,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_STOCKOUT_REF_CUSTOVendor)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrder.CustomerVendor_ID))]
         public virtual List<tb_SaleOrder> tb_SaleOrders { get; set; }
@@ -564,7 +564,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_SALEO_REFERENCE_TB_CUSTO)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdBorrowing.CustomerVendor_ID))]
         public virtual List<tb_ProdBorrowing> tb_ProdBorrowings { get; set; }
@@ -572,7 +572,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_PRODBorrowing_REF_CUSTOmervendor)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutRe.CustomerVendor_ID))]
         public virtual List<tb_SaleOutRe> tb_SaleOutRes { get; set; }
@@ -580,7 +580,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_SOOUTRE_RE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.CustomerVendor_ID))]
         public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
@@ -588,7 +588,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_FM_INITPRBLE_RE_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.CustomerVendor_ID_Out))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders_Out { get; set; }
@@ -596,7 +596,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_MANUF_REF_CUSTOVENDOR_OUT)
         //tb_CustomerVendor.CustomerVendor_ID_Out)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.CustomerVendor_ID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
@@ -604,7 +604,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_MANUFCTRUINGORDER_REF_CUSTOMERVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.CustomerVendor_ID))]
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
@@ -612,7 +612,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_FM_PAYMENTBILL_REF_CUSTOMERVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_StockIn.CustomerVendor_ID))]
         public virtual List<tb_StockIn> tb_StockIns { get; set; }
@@ -620,7 +620,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_STOCKIN_RE_CUSTOMERVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBillDetail.CustomerVendor_ID))]
         public virtual List<tb_FM_PrePaymentBillDetail> tb_FM_PrePaymentBillDetails { get; set; }
@@ -628,7 +628,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_FM_PREPaymentBDEtail_CUSTOVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderRe.CustomerVendor_ID))]
         public virtual List<tb_PurOrderRe> tb_PurOrderRes { get; set; }
@@ -636,7 +636,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_TB_PUROR_REFERENCE_TB_CUSTO)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurGoodsRecommendDetail.CustomerVendor_ID))]
         public virtual List<tb_PurGoodsRecommendDetail> tb_PurGoodsRecommendDetails { get; set; }
@@ -644,7 +644,7 @@ namespace RUINORERP.Model
         //CustomerVendor_ID.FK_PURGOODSEWCOMMENDDETAIL_REF_CUSTOMERVENDOR)
         //tb_CustomerVendor.CustomerVendor_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PayeeInfo.CustomerVendor_ID))]
         public virtual List<tb_FM_PayeeInfo> tb_FM_PayeeInfos { get; set; }

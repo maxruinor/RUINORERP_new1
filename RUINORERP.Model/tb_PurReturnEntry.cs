@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/16/2024 20:05:37
+// 时间：01/14/2025 18:57:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 采购退货入库单
     /// </summary>
     [Serializable()]
-    [Description("tb_PurReturnEntry")]
+    [Description("采购退货入库单")]
     [SugarTable("tb_PurReturnEntry")]
     public partial class tb_PurReturnEntry: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_PurReturnEntry" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("采购退货入库单tb_PurReturnEntry" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -139,20 +139,21 @@ namespace RUINORERP.Model
             SetProperty(ref _PurEntryRe_ID, value);
             }
         }
+
         private string _PurEntryReNo;
         /// <summary>
         /// 采购退货单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "PurEntryReNo", ColDesc = "采购退货单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PurEntryReNo", Length = 50, IsNullable = true, ColumnDescription = "采购退货单号")]
+        [AdvQueryAttribute(ColName = "PurEntryReNo",ColDesc = "采购退货单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PurEntryReNo" ,Length=50,IsNullable = true,ColumnDescription = "采购退货单号" )]
         public string PurEntryReNo
-        {
-            get { return _PurEntryReNo; }
-            set
-            {
-                SetProperty(ref _PurEntryReNo, value);
+        { 
+            get{return _PurEntryReNo;}
+            set{
+            SetProperty(ref _PurEntryReNo, value);
             }
         }
+
         private int _TotalQty= ((0));
         /// <summary>
         /// 合计数量
@@ -172,7 +173,7 @@ namespace RUINORERP.Model
         /// 合计税额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalTaxAmount",ColDesc = "合计税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTaxAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "合计税额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTaxAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "合计税额" )]
         public decimal TotalTaxAmount
         { 
             get{return _TotalTaxAmount;}
@@ -186,7 +187,7 @@ namespace RUINORERP.Model
         /// 合计金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "合计金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "合计金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "合计金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -195,13 +196,13 @@ namespace RUINORERP.Model
             }
         }
 
-        private DateTime _BillDate;
+        private DateTime? _BillDate;
         /// <summary>
         /// 单据日期
         /// </summary>
         [AdvQueryAttribute(ColName = "BillDate",ColDesc = "单据日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BillDate" ,IsNullable = false,ColumnDescription = "单据日期" )]
-        public DateTime BillDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BillDate" ,IsNullable = true,ColumnDescription = "单据日期" )]
+        public DateTime? BillDate
         { 
             get{return _BillDate;}
             set{
@@ -380,10 +381,10 @@ namespace RUINORERP.Model
 
         private int? _KeepAccountsType;
         /// <summary>
-        /// 立账类型
+        /// 立帐类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "KeepAccountsType",ColDesc = "立账类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "KeepAccountsType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "立账类型" )]
+        [AdvQueryAttribute(ColName = "KeepAccountsType",ColDesc = "立帐类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "KeepAccountsType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "立帐类型" )]
         public int? KeepAccountsType
         { 
             get{return _KeepAccountsType;}
@@ -397,7 +398,7 @@ namespace RUINORERP.Model
         /// 订金
         /// </summary>
         [AdvQueryAttribute(ColName = "Deposit",ColDesc = "订金")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deposit" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "订金" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deposit" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "订金" )]
         public decimal? Deposit
         { 
             get{return _Deposit;}
@@ -425,7 +426,7 @@ namespace RUINORERP.Model
         /// 折扣金额总计
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalDiscountAmount",ColDesc = "折扣金额总计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalDiscountAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "折扣金额总计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalDiscountAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "折扣金额总计" )]
         public decimal? TotalDiscountAmount
         { 
             get{return _TotalDiscountAmount;}
@@ -436,10 +437,10 @@ namespace RUINORERP.Model
 
         private bool? _ReceiptInvoiceClosed;
         /// <summary>
-        /// 立账结案
+        /// 立帐结案
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReceiptInvoiceClosed",ColDesc = "立账结案")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ReceiptInvoiceClosed" ,IsNullable = true,ColumnDescription = "立账结案" )]
+        [AdvQueryAttribute(ColName = "ReceiptInvoiceClosed",ColDesc = "立帐结案")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ReceiptInvoiceClosed" ,IsNullable = true,ColumnDescription = "立帐结案" )]
         public bool? ReceiptInvoiceClosed
         { 
             get{return _ReceiptInvoiceClosed;}
@@ -536,32 +537,32 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PurEntryRe_ID))]
         public virtual tb_PurEntryRe tb_purentryre { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Paytype_ID))]
         public virtual tb_PaymentMethod tb_paymentmethod { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntryDetail.PurReEntry_ID))]
         public virtual List<tb_PurReturnEntryDetail> tb_PurReturnEntryDetails { get; set; }

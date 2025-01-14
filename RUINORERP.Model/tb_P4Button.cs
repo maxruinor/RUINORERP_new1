@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:58
+// 时间：01/14/2025 18:56:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 按钮权限表
     /// </summary>
     [Serializable()]
-    [Description("tb_P4Button")]
+    [Description("按钮权限表")]
     [SugarTable("tb_P4Button")]
     public partial class tb_P4Button: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_P4Button" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("按钮权限表tb_P4Button" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -184,17 +184,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ButtonInfo_ID))]
         public virtual tb_ButtonInfo tb_buttoninfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(MenuID))]
         public virtual tb_MenuInfo tb_menuinfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(RoleID))]
         public virtual tb_RoleInfo tb_roleinfo { get; set; }
 

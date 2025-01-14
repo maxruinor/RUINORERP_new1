@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:31
+// 时间：01/14/2025 18:56:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 成本单价表 参考天思货品基本资料中的价格部分
     /// </summary>
     [Serializable()]
-    [Description("tb_CostUnitPrice")]
+    [Description("成本单价表 参考天思货品基本资料中的价格部分")]
     [SugarTable("tb_CostUnitPrice")]
     public partial class tb_CostUnitPrice: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_CostUnitPrice" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("成本单价表 参考天思货品基本资料中的价格部分tb_CostUnitPrice" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

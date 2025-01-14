@@ -46,6 +46,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         public UCAdvFilterGeneric()
         {
             InitializeComponent();
+            dataGridView1.NeedSaveColumnsXml = true;
             this.BaseToolStrip.ItemClicked += ToolStrip1_ItemClicked;
             string tableName = typeof(T).Name;
             DtoEntityTalbeName = tableName;

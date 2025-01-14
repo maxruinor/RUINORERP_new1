@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:28
+// 时间：01/14/2025 18:56:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,11 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 请购单，可能来自销售订单,也可以来自其他日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表
+    /// 请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表
+   
     /// </summary>
     [Serializable()]
-    [Description("tb_BuyingRequisition")]
+    [Description("请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表")]
     [SugarTable("tb_BuyingRequisition")]
     public partial class tb_BuyingRequisition: BaseEntity, ICloneable
     {
@@ -30,7 +31,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_BuyingRequisition" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表tb_BuyingRequisition" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -395,22 +396,22 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BuyingRequisitionDetail.PuRequisition_ID))]
         public virtual List<tb_BuyingRequisitionDetail> tb_BuyingRequisitionDetails { get; set; }

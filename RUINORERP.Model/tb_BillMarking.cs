@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:24
+// 时间：01/14/2025 18:56:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 单据标识 保存在主单中一个字段，作用于各种单明细的搜索过滤 有必要吗？
     /// </summary>
     [Serializable()]
-    [Description("tb_BillMarking")]
+    [Description("单据标识 保存在主单中一个字段，作用于各种单明细的搜索过滤 有必要吗？")]
     [SugarTable("tb_BillMarking")]
     public partial class tb_BillMarking: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_BillMarking" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("单据标识 保存在主单中一个字段，作用于各种单明细的搜索过滤 有必要吗？tb_BillMarking" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

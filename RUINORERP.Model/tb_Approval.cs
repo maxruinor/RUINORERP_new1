@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:22
+// 时间：01/14/2025 18:56:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 审核配置表 对于所有单据审核，并且提供明细，每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html 
     /// </summary>
     [Serializable()]
-    [Description("tb_Approval")]
+    [Description("审核配置表 对于所有单据审核，并且提供明细，每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html ")]
     [SugarTable("tb_Approval")]
     public partial class tb_Approval: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Approval" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("审核配置表 对于所有单据审核，并且提供明细，每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html tb_Approval" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -139,7 +139,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ApprovalProcessDetail.ApprovalID))]
         public virtual List<tb_ApprovalProcessDetail> tb_ApprovalProcessDetails { get; set; }

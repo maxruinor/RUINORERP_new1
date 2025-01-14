@@ -49,11 +49,11 @@ namespace RUINORERP.UI.BaseForm
     /// <typeparam name="C">Child表类型-单表时可以传主表</typeparam>
     public partial class BaseNavigatorGeneric<M, C> : BaseNavigator where M : class
     {
-        /// <summary>
-        /// 从工作台点击过来的时候，这个保存初始化时的查询参数
-        ///  这个可用可不用。
-        /// </summary>
-        public object QueryDtoProxy { get; set; }
+        ///// <summary>
+        ///// 从工作台点击过来的时候，这个保存初始化时的查询参数
+        /////  这个可用可不用。
+        ///// </summary>
+        //public object QueryDtoProxy { get; set; }
         /// <summary>
         /// 传入的是M,即主表类型的实体数据 
         /// </summary>
@@ -193,10 +193,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         }
-        /// <summary>
-        /// 当前窗体的菜单信息
-        /// </summary>
-        public tb_MenuInfo CurMenuInfo { get; set; } = new tb_MenuInfo();
+
 
         public bool WithOutlook { get; set; }
         /// <summary>
@@ -274,6 +271,8 @@ namespace RUINORERP.UI.BaseForm
 
                     }
 
+
+
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
                     button设置查询条件.Text = "设置查询条件";
                     button设置查询条件.ToolTipValues.Description = "对查询条件进行个性化设置。";
@@ -281,15 +280,34 @@ namespace RUINORERP.UI.BaseForm
                     button设置查询条件.ToolTipValues.Heading = "提示";
                     button设置查询条件.Click += button设置查询条件_Click;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button设置查询条件);
+
+
+                    Krypton.Toolkit.KryptonButton button表格显示设置 = new Krypton.Toolkit.KryptonButton();
+                    button表格显示设置.Text = "表格显示设置";
+                    button表格显示设置.ToolTipValues.Description = "对表格显示设置进行个性化设置。";
+                    button表格显示设置.ToolTipValues.EnableToolTips = true;
+                    button表格显示设置.ToolTipValues.Heading = "提示";
+                    button表格显示设置.Click += button表格显示设置_Click;
+                    frm.flowLayoutPanelButtonsArea.Controls.Add(button表格显示设置);
+
                 }
             }
 
 
         }
 
-        private void button设置查询条件_Click(object sender, EventArgs e)
+        private async void button表格显示设置_Click(object sender, EventArgs e)
         {
-            MenuPersonalizedSettings();
+            await UIBizSrvice.SetGridViewAsync(typeof(M), _UCMasterQuery.newSumDataGridViewMaster, CurMenuInfo, true);
+        }
+
+        private async void button设置查询条件_Click(object sender, EventArgs e)
+        {
+            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryFilter, QueryDto);
+            if (rs)
+            {
+                  LoadQueryConditionToUI();
+            }
         }
 
 
@@ -434,7 +452,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-
+        //https://www.cnblogs.com/westsoft/p/8594379.html  三联单
         public virtual async void Print(RptMode rptMode)
         {
             List<M> selectlist = GetSelectResult();
@@ -495,21 +513,13 @@ namespace RUINORERP.UI.BaseForm
             return selectlist;
         }
 
-        protected virtual void AdvQuery()
-        {
 
-        }
 
         protected virtual void Submit()
         {
 
         }
-        protected virtual void Print()
-        {
-            //https://www.cnblogs.com/westsoft/p/8594379.html  三联单
-            //  RptPrintConfig config = new RptPrintConfig();
-            // config.ShowDialog();
-        }
+
 
         /// <summary>
         /// 暂时只支持一级审核，将来可以设计配置 可选多级审核。并且能看到每级的审核情况
@@ -536,28 +546,7 @@ namespace RUINORERP.UI.BaseForm
                 //AuditLogHelper.Instance.CreateAuditLog<T>("属性", EditEntity);
             }
         }
-        protected virtual void MenuPersonalizedSettings()
-        {
-            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
-            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
-            if (frmMenu.ShowDialog() == DialogResult.OK)
-            {
-                if (!this.DesignMode)
-                {
-                    MenuPersonalization personalization = new MenuPersonalization();
-                    UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-                    if (personalization != null)
-                    {
-                        decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                        QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
-                    }
-                    else
-                    {
-                        QueryDtoProxy = LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
-                    }
-                }
-            }
-        }
+
         public virtual void BuildLimitQueryConditions()
         {
 
@@ -633,6 +622,12 @@ namespace RUINORERP.UI.BaseForm
 
         protected virtual void Exit(object thisform)
         {
+
+            if (_UCMasterQuery != null && _UCMasterQuery.newSumDataGridViewMaster != null)
+            {
+                UIBizSrvice.SaveGridSettingData(CurMenuInfo, _UCMasterQuery.newSumDataGridViewMaster, typeof(M));
+            }
+
             //保存配置
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Encoding = new UTF8Encoding(false);
@@ -725,7 +720,7 @@ namespace RUINORERP.UI.BaseForm
 
         public KryptonPageCollection Kpages { get; set; } = new KryptonPageCollection();
 
-        private void BaseNavigatorGeneric_Load(object sender, EventArgs e)
+        private async void BaseNavigatorGeneric_Load(object sender, EventArgs e)
         {
             if (this.DesignMode)
             {
@@ -752,17 +747,9 @@ namespace RUINORERP.UI.BaseForm
                 MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                 return;
             }
-            MenuPersonalization personalization = new MenuPersonalization();
-            UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-            if (personalization != null)
-            {
-                decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
-            }
-            else
-            {
-                QueryDtoProxy = LoadQueryConditionToUI(4);
-            }
+
+            LoadQueryConditionToUI(4);
+
 
 
             //默认加一个一。不然不显示，加载时清除，以后完善
@@ -874,6 +861,10 @@ namespace RUINORERP.UI.BaseForm
             _UCMasterQuery.bindingSourceMaster.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             _UCMasterQuery.ShowSummaryCols();
 
+            BaseMainDataGridView = _UCMasterQuery.newSumDataGridViewMaster;
+
+            await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCMasterQuery.InvisibleCols, _UCMasterQuery.DefaultHideCols);
+
         }
 
         private KryptonWorkspaceCell CreateCell(KryptonPage[] kryptonPages)
@@ -930,7 +921,7 @@ namespace RUINORERP.UI.BaseForm
         /// 这个实际可以优化到基类统一起来。只要是有查询条件生成的情况下的都可以用
         /// </summary>
         /// <param name="useLike"></param>
-        public object LoadQueryConditionToUI(decimal QueryConditionShowColQty)
+        public void LoadQueryConditionToUI(decimal QueryConditionShowColQty = 4)
         {
             Krypton.Toolkit.KryptonPanel kryptonPanel条件生成容器 = kryptonPanelQuery;
             //为了验证设置的属性
@@ -941,10 +932,21 @@ namespace RUINORERP.UI.BaseForm
             kryptonPanel条件生成容器.Visible = false;
             kryptonPanel条件生成容器.Controls.Clear();
             kryptonPanel条件生成容器.SuspendLayout();
-            QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryFilter, QueryConditionShowColQty);
+
+            tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
+            if (menuSetting != null)
+            {
+                QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryFilter, menuSetting);
+            }
+            else
+            {
+                QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryFilter, QueryConditionShowColQty);
+            }
+
+
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;
-            return QueryDto;
+
         }
 
 

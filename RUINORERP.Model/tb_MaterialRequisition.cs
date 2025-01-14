@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:51
+// 时间：01/14/2025 18:56:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 领料单(包括生产和托工)
     /// </summary>
     [Serializable()]
-    [Description("tb_MaterialRequisition")]
+    [Description("领料单(包括生产和托工)")]
     [SugarTable("tb_MaterialRequisition")]
     public partial class tb_MaterialRequisition: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_MaterialRequisition" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("领料单(包括生产和托工)tb_MaterialRequisition" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -216,7 +216,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalPrice",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalPrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额" )]
         public decimal TotalPrice
         { 
             get{return _TotalPrice;}
@@ -230,7 +230,7 @@ namespace RUINORERP.Model
         /// 总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总成本" )]
         public decimal TotalCost
         { 
             get{return _TotalCost;}
@@ -238,20 +238,21 @@ namespace RUINORERP.Model
             SetProperty(ref _TotalCost, value);
             }
         }
-        private int? _ExpectedQuantity = 0;
+
+        private int? _ExpectedQuantity= ((0));
         /// <summary>
         /// 预计产量
         /// </summary>
-        [AdvQueryAttribute(ColName = "ExpectedQuantity", ColDesc = "预计产量")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "ExpectedQuantity", DecimalDigits = 0, IsNullable = true, ColumnDescription = "预计产量")]
+        [AdvQueryAttribute(ColName = "ExpectedQuantity",ColDesc = "预计产量")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ExpectedQuantity" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "预计产量" )]
         public int? ExpectedQuantity
-        {
-            get { return _ExpectedQuantity; }
-            set
-            {
-                SetProperty(ref _ExpectedQuantity, value);
+        { 
+            get{return _ExpectedQuantity;}
+            set{
+            SetProperty(ref _ExpectedQuantity, value);
             }
         }
+
         private int _TotalSendQty= ((0));
         /// <summary>
         /// 实发总数
@@ -299,7 +300,7 @@ namespace RUINORERP.Model
         /// 运费
         /// </summary>
         [AdvQueryAttribute(ColName = "ShipCost",ColDesc = "运费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "运费" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "运费" )]
         public decimal? ShipCost
         { 
             get{return _ShipCost;}
@@ -537,37 +538,37 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(MOID))]
         public virtual tb_ManufacturingOrder tb_manufacturingorder { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturn.MR_ID))]
         public virtual List<tb_MaterialReturn> tb_MaterialReturns { get; set; }
@@ -575,7 +576,7 @@ namespace RUINORERP.Model
         //MR_ID.FK_MATER_REF_MATERE)
         //tb_MaterialRequisition.MR_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisitionDetail.MR_ID))]
         public virtual List<tb_MaterialRequisitionDetail> tb_MaterialRequisitionDetails { get; set; }

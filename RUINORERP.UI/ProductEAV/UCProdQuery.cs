@@ -81,7 +81,9 @@ namespace RUINORERP.UI.ProductEAV
         public UCProdQuery()
         {
             InitializeComponent();
-
+            newSumDataGridView产品.NeedSaveColumnsXml = true;
+            newSumDataGridView产品组合.NeedSaveColumnsXml = true;
+            
             List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
             kvlist.Add(new KeyValuePair<object, string>(true, "男"));
             kvlist.Add(new KeyValuePair<object, string>(false, "女"));
@@ -111,6 +113,7 @@ namespace RUINORERP.UI.ProductEAV
             // 初始化Timer
             timer.Interval = 1000;
             timer.Tick += new EventHandler(timer_Tick);
+           
         }
 
         private bool isMouseOverHeader = false;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 13:17:56
+// 时间：01/14/2025 18:57:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -380,17 +380,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdReturning.BorrowID))]
         public virtual List<tb_ProdReturning> tb_ProdReturnings { get; set; }
@@ -398,7 +398,7 @@ namespace RUINORERP.Model
         //BorrowID.FK_TB_PRODR_REFERENCE_TB_PRODB)
         //tb_ProdBorrowing.BorrowID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdBorrowingDetail.BorrowID))]
         public virtual List<tb_ProdBorrowingDetail> tb_ProdBorrowingDetails { get; set; }

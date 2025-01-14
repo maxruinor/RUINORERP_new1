@@ -608,38 +608,38 @@ namespace RUINORERP.Model
         #region 扩展属性
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual View_ProdDetail view_ProdDetail { get; set; }
 
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Doc_ID))]
         public virtual tb_Files tb_files { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(BOM_S_VERID))]
         public virtual tb_BOMConfigHistory tb_bomconfighistory { get; set; }
 
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlanDetail.BOM_ID))]
         public virtual List<tb_ProductionPlanDetail> tb_ProductionPlanDetails { get; set; }
@@ -647,7 +647,7 @@ namespace RUINORERP.Model
         //BOM_ID.FK_TB_PRODUPLANDETAIL_REF_BOM_S)
         //tb_BOM_S.BOM_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProduceGoodsRecommendDetail.BOM_ID))]
         public virtual List<tb_ProduceGoodsRecommendDetail> tb_ProduceGoodsRecommendDetails { get; set; }
@@ -655,7 +655,7 @@ namespace RUINORERP.Model
         //BOM_ID.FK_PRODUceGOODSDETAIL_REF_TB_BOM_S)
         //tb_BOM_S.BOM_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdDetail.BOM_ID))]
         public virtual List<tb_ProdDetail> tb_ProdDetails { get; set; }
@@ -663,7 +663,7 @@ namespace RUINORERP.Model
         //BOM_ID.FK_PRODDETAIL_REF_BOM_S)
         //tb_BOM_S.BOM_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandDetail.BOM_ID))]
         public virtual List<tb_ProductionDemandDetail> tb_ProductionDemandDetails { get; set; }
@@ -671,7 +671,7 @@ namespace RUINORERP.Model
         //BOM_ID.FK_PRODUCTIONdEMANDDETAIL_REF_BOM_S)
         //tb_BOM_S.BOM_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetailSecondary.BOM_ID))]
         public virtual List<tb_BOM_SDetailSecondary> tb_BOM_SDetailSecondaries { get; set; }
@@ -679,7 +679,7 @@ namespace RUINORERP.Model
         //BOM_ID.FK_TB_BO_REF_TB_BOM_SEC)
         //tb_BOM_S.BOM_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandTargetDetail.BOM_ID))]
         public virtual List<tb_ProductionDemandTargetDetail> tb_ProductionDemandTargetDetails { get; set; }
@@ -687,7 +687,7 @@ namespace RUINORERP.Model
         //BOM_ID.FK_PRODDEMANDTARGETDETAIL_REF_BOM_S)
         //tb_BOM_S.BOM_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetail.BOM_ID))]
         public virtual List<tb_BOM_SDetail> tb_BOM_SDetails { get; set; }
@@ -695,7 +695,7 @@ namespace RUINORERP.Model
         //BOM_ID.FK_TB_BOM_S_DE_TB_BOM_S)
         //tb_BOM_S.BOM_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdSplit.BOM_ID))]
         public virtual List<tb_ProdSplit> tb_ProdSplits { get; set; }
@@ -703,7 +703,7 @@ namespace RUINORERP.Model
         //BOM_ID.FK_TB_PRODSplit_REF_BOM_S)
         //tb_BOM_S.BOM_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdMerge.BOM_ID))]
         public virtual List<tb_ProdMerge> tb_ProdMerges { get; set; }
@@ -711,7 +711,7 @@ namespace RUINORERP.Model
         //BOM_ID.FK_PRODMerge_REF_BOM_S)
         //tb_BOM_S.BOM_ID)
 
-        [Browsable(false)]
+        // [Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.BOM_ID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }

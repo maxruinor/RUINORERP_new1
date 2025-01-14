@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:22
+// 时间：01/14/2025 18:56:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 审核流程明细表
     /// </summary>
     [Serializable()]
-    [Description("tb_ApprovalProcessDetail")]
+    [Description("审核流程明细表")]
     [SugarTable("tb_ApprovalProcessDetail")]
     public partial class tb_ApprovalProcessDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ApprovalProcessDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("审核流程明细表tb_ApprovalProcessDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -98,7 +98,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ApprovalID))]
         public virtual tb_Approval tb_approval { get; set; }
 

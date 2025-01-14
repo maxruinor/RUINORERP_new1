@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:38
+// 时间：01/14/2025 18:56:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 流程图定义
     /// </summary>
     [Serializable()]
-    [Description("tb_FlowchartDefinition")]
+    [Description("流程图定义")]
     [SugarTable("tb_FlowchartDefinition")]
     public partial class tb_FlowchartDefinition: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FlowchartDefinition" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("流程图定义tb_FlowchartDefinition" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -98,12 +98,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ModuleID))]
         public virtual tb_ModuleDefinition tb_moduledefinition { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FlowchartItem.ID))]
         public virtual List<tb_FlowchartItem> tb_FlowchartItems { get; set; }
@@ -111,7 +111,7 @@ namespace RUINORERP.Model
         //ID.FK_TB_FLOWC_REF_TB_FLOWCTION)
         //tb_FlowchartDefinition.ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FlowchartLine.ID))]
         public virtual List<tb_FlowchartLine> tb_FlowchartLines { get; set; }

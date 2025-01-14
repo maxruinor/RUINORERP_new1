@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:29
+// 时间：01/14/2025 18:56:46
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -21,16 +21,16 @@ namespace RUINORERP.Model
     /// 卡通箱规格表
     /// </summary>
     [Serializable()]
-    [Description("tb_CartoonBox")]
+    [Description("卡通箱规格表")]
     [SugarTable("tb_CartoonBox")]
-    public partial class tb_CartoonBox : BaseEntity, ICloneable
+    public partial class tb_CartoonBox: BaseEntity, ICloneable
     {
         public tb_CartoonBox()
         {
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_CartoonBox" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("卡通箱规格表tb_CartoonBox" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -40,15 +40,14 @@ namespace RUINORERP.Model
         /// <summary>
         /// 纸箱规格
         /// </summary>
-
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "CartonID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "纸箱规格", IsPrimaryKey = true)]
+ 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CartonID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "纸箱规格" , IsPrimaryKey = true)]
         public long CartonID
-        {
-            get { return _CartonID; }
-            set
-            {
-                base.PrimaryKeyID = _CartonID;
-                SetProperty(ref _CartonID, value);
+        { 
+            get{return _CartonID;}
+            set{
+            base.PrimaryKeyID = _CartonID;
+            SetProperty(ref _CartonID, value);
             }
         }
 
@@ -56,14 +55,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 纸箱名称
         /// </summary>
-        [AdvQueryAttribute(ColName = "CartonName", ColDesc = "纸箱名称")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "CartonName", Length = 100, IsNullable = true, ColumnDescription = "纸箱名称")]
+        [AdvQueryAttribute(ColName = "CartonName",ColDesc = "纸箱名称")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CartonName" ,Length=100,IsNullable = true,ColumnDescription = "纸箱名称" )]
         public string CartonName
-        {
-            get { return _CartonName; }
-            set
-            {
-                SetProperty(ref _CartonName, value);
+        { 
+            get{return _CartonName;}
+            set{
+            SetProperty(ref _CartonName, value);
             }
         }
 
@@ -71,14 +69,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 颜色
         /// </summary>
-        [AdvQueryAttribute(ColName = "Color", ColDesc = "颜色")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Color", Length = 100, IsNullable = true, ColumnDescription = "颜色")]
+        [AdvQueryAttribute(ColName = "Color",ColDesc = "颜色")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Color" ,Length=100,IsNullable = true,ColumnDescription = "颜色" )]
         public string Color
-        {
-            get { return _Color; }
-            set
-            {
-                SetProperty(ref _Color, value);
+        { 
+            get{return _Color;}
+            set{
+            SetProperty(ref _Color, value);
             }
         }
 
@@ -86,119 +83,111 @@ namespace RUINORERP.Model
         /// <summary>
         /// 材质
         /// </summary>
-        [AdvQueryAttribute(ColName = "Material", ColDesc = "材质")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Material", Length = 100, IsNullable = true, ColumnDescription = "材质")]
+        [AdvQueryAttribute(ColName = "Material",ColDesc = "材质")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Material" ,Length=100,IsNullable = true,ColumnDescription = "材质" )]
         public string Material
-        {
-            get { return _Material; }
-            set
-            {
-                SetProperty(ref _Material, value);
+        { 
+            get{return _Material;}
+            set{
+            SetProperty(ref _Material, value);
             }
         }
 
-        private decimal _EmptyBoxWeight = ((0));
+        private decimal _EmptyBoxWeight= ((0));
         /// <summary>
         /// 空箱重(kg)
         /// </summary>
-        [AdvQueryAttribute(ColName = "EmptyBoxWeight", ColDesc = "空箱重(kg)")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "EmptyBoxWeight", DecimalDigits = 3, IsNullable = false, ColumnDescription = "空箱重(kg)")]
+        [AdvQueryAttribute(ColName = "EmptyBoxWeight",ColDesc = "空箱重(kg)")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "EmptyBoxWeight" , DecimalDigits = 3,IsNullable = false,ColumnDescription = "空箱重(kg)" )]
         public decimal EmptyBoxWeight
-        {
-            get { return _EmptyBoxWeight; }
-            set
-            {
-                SetProperty(ref _EmptyBoxWeight, value);
+        { 
+            get{return _EmptyBoxWeight;}
+            set{
+            SetProperty(ref _EmptyBoxWeight, value);
             }
         }
 
-        private decimal _MaxLoad = ((1));
+        private decimal _MaxLoad= ((1));
         /// <summary>
         /// 最大承重(kg)
         /// </summary>
-        [AdvQueryAttribute(ColName = "MaxLoad", ColDesc = "最大承重(kg)")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "MaxLoad", DecimalDigits = 3, IsNullable = false, ColumnDescription = "最大承重(kg)")]
+        [AdvQueryAttribute(ColName = "MaxLoad",ColDesc = "最大承重(kg)")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "MaxLoad" , DecimalDigits = 3,IsNullable = false,ColumnDescription = "最大承重(kg)" )]
         public decimal MaxLoad
-        {
-            get { return _MaxLoad; }
-            set
-            {
-                SetProperty(ref _MaxLoad, value);
+        { 
+            get{return _MaxLoad;}
+            set{
+            SetProperty(ref _MaxLoad, value);
             }
         }
 
-        private decimal _Thickness = 0.1M;
+        private decimal _Thickness= 0.1M;
         /// <summary>
         /// 纸板厚度(cm)
         /// </summary>
-        [AdvQueryAttribute(ColName = "Thickness", ColDesc = "纸板厚度(cm)")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "Thickness", DecimalDigits = 2, IsNullable = false, ColumnDescription = "纸板厚度(cm)")]
+        [AdvQueryAttribute(ColName = "Thickness",ColDesc = "纸板厚度(cm)")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Thickness" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "纸板厚度(cm)" )]
         public decimal Thickness
-        {
-            get { return _Thickness; }
-            set
-            {
-                SetProperty(ref _Thickness, value);
+        { 
+            get{return _Thickness;}
+            set{
+            SetProperty(ref _Thickness, value);
             }
         }
 
-        private decimal _Length = ((1));
+        private decimal _Length= ((1));
         /// <summary>
         /// 长度(cm)
         /// </summary>
-        [AdvQueryAttribute(ColName = "Length", ColDesc = "长度(cm)")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "Length", DecimalDigits = 2, IsNullable = false, ColumnDescription = "长度(cm)")]
+        [AdvQueryAttribute(ColName = "Length",ColDesc = "长度(cm)")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Length" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "长度(cm)" )]
         public decimal Length
-        {
-            get { return _Length; }
-            set
-            {
-                SetProperty(ref _Length, value);
+        { 
+            get{return _Length;}
+            set{
+            SetProperty(ref _Length, value);
             }
         }
 
-        private decimal _Width = ((1));
+        private decimal _Width= ((1));
         /// <summary>
         /// 宽度(cm)
         /// </summary>
-        [AdvQueryAttribute(ColName = "Width", ColDesc = "宽度(cm)")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "Width", DecimalDigits = 2, IsNullable = false, ColumnDescription = "宽度(cm)")]
+        [AdvQueryAttribute(ColName = "Width",ColDesc = "宽度(cm)")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Width" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "宽度(cm)" )]
         public decimal Width
-        {
-            get { return _Width; }
-            set
-            {
-                SetProperty(ref _Width, value);
+        { 
+            get{return _Width;}
+            set{
+            SetProperty(ref _Width, value);
             }
         }
 
-        private decimal _Height = ((1));
+        private decimal _Height= ((1));
         /// <summary>
         /// 高度(cm)
         /// </summary>
-        [AdvQueryAttribute(ColName = "Height", ColDesc = "高度(cm)")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "Height", DecimalDigits = 2, IsNullable = false, ColumnDescription = "高度(cm)")]
+        [AdvQueryAttribute(ColName = "Height",ColDesc = "高度(cm)")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Height" , DecimalDigits = 2,IsNullable = false,ColumnDescription = "高度(cm)" )]
         public decimal Height
-        {
-            get { return _Height; }
-            set
-            {
-                SetProperty(ref _Height, value);
+        { 
+            get{return _Height;}
+            set{
+            SetProperty(ref _Height, value);
             }
         }
 
-        private decimal _Volume = ((1));
+        private decimal _Volume= ((1));
         /// <summary>
         /// 体积Vol(cm³)
         /// </summary>
-        [AdvQueryAttribute(ColName = "Volume", ColDesc = "体积Vol(cm³)")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "Volume", DecimalDigits = 3, IsNullable = false, ColumnDescription = "体积Vol(cm³)")]
+        [AdvQueryAttribute(ColName = "Volume",ColDesc = "体积Vol(cm³)")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Volume" , DecimalDigits = 3,IsNullable = false,ColumnDescription = "体积Vol(cm³)" )]
         public decimal Volume
-        {
-            get { return _Volume; }
-            set
-            {
-                SetProperty(ref _Volume, value);
+        { 
+            get{return _Volume;}
+            set{
+            SetProperty(ref _Volume, value);
             }
         }
 
@@ -206,14 +195,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 瓦楞类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "FluteType", ColDesc = "瓦楞类型")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "FluteType", Length = 100, IsNullable = true, ColumnDescription = "瓦楞类型")]
+        [AdvQueryAttribute(ColName = "FluteType",ColDesc = "瓦楞类型")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FluteType" ,Length=100,IsNullable = true,ColumnDescription = "瓦楞类型" )]
         public string FluteType
-        {
-            get { return _FluteType; }
-            set
-            {
-                SetProperty(ref _FluteType, value);
+        { 
+            get{return _FluteType;}
+            set{
+            SetProperty(ref _FluteType, value);
             }
         }
 
@@ -221,14 +209,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 印刷类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "PrintType", ColDesc = "印刷类型")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PrintType", Length = 100, IsNullable = true, ColumnDescription = "印刷类型")]
+        [AdvQueryAttribute(ColName = "PrintType",ColDesc = "印刷类型")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PrintType" ,Length=100,IsNullable = true,ColumnDescription = "印刷类型" )]
         public string PrintType
-        {
-            get { return _PrintType; }
-            set
-            {
-                SetProperty(ref _PrintType, value);
+        { 
+            get{return _PrintType;}
+            set{
+            SetProperty(ref _PrintType, value);
             }
         }
 
@@ -236,14 +223,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 定制印刷
         /// </summary>
-        [AdvQueryAttribute(ColName = "CustomPrint", ColDesc = "定制印刷")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "CustomPrint", Length = 100, IsNullable = true, ColumnDescription = "定制印刷")]
+        [AdvQueryAttribute(ColName = "CustomPrint",ColDesc = "定制印刷")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CustomPrint" ,Length=100,IsNullable = true,ColumnDescription = "定制印刷" )]
         public string CustomPrint
-        {
-            get { return _CustomPrint; }
-            set
-            {
-                SetProperty(ref _CustomPrint, value);
+        { 
+            get{return _CustomPrint;}
+            set{
+            SetProperty(ref _CustomPrint, value);
             }
         }
 
@@ -251,14 +237,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 是否启用
         /// </summary>
-        [AdvQueryAttribute(ColName = "Is_enabled", ColDesc = "是否启用")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "Is_enabled", IsNullable = true, ColumnDescription = "是否启用")]
+        [AdvQueryAttribute(ColName = "Is_enabled",ColDesc = "是否启用")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "Is_enabled" ,IsNullable = true,ColumnDescription = "是否启用" )]
         public bool? Is_enabled
-        {
-            get { return _Is_enabled; }
-            set
-            {
-                SetProperty(ref _Is_enabled, value);
+        { 
+            get{return _Is_enabled;}
+            set{
+            SetProperty(ref _Is_enabled, value);
             }
         }
 
@@ -266,30 +251,28 @@ namespace RUINORERP.Model
         /// <summary>
         /// 备注
         /// </summary>
-        [AdvQueryAttribute(ColName = "Description", ColDesc = "备注")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Description", Length = 255, IsNullable = true, ColumnDescription = "备注")]
+        [AdvQueryAttribute(ColName = "Description",ColDesc = "备注")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Description" ,Length=255,IsNullable = true,ColumnDescription = "备注" )]
         public string Description
-        {
-            get { return _Description; }
-            set
-            {
-                SetProperty(ref _Description, value);
+        { 
+            get{return _Description;}
+            set{
+            SetProperty(ref _Description, value);
             }
         }
 
-        private bool _isdeleted = false;
+        private bool _isdeleted= false;
         /// <summary>
         /// 逻辑删除
         /// </summary>
-        [AdvQueryAttribute(ColName = "isdeleted", ColDesc = "逻辑删除")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "isdeleted", IsNullable = false, ColumnDescription = "逻辑删除")]
+        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "isdeleted" ,IsNullable = false,ColumnDescription = "逻辑删除" )]
         [Browsable(false)]
         public bool isdeleted
-        {
-            get { return _isdeleted; }
-            set
-            {
-                SetProperty(ref _isdeleted, value);
+        { 
+            get{return _isdeleted;}
+            set{
+            SetProperty(ref _isdeleted, value);
             }
         }
 
@@ -297,14 +280,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 创建时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "Created_at", ColDesc = "创建时间")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "Created_at", IsNullable = true, ColumnDescription = "创建时间")]
+        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = true,ColumnDescription = "创建时间" )]
         public DateTime? Created_at
-        {
-            get { return _Created_at; }
-            set
-            {
-                SetProperty(ref _Created_at, value);
+        { 
+            get{return _Created_at;}
+            set{
+            SetProperty(ref _Created_at, value);
             }
         }
 
@@ -312,14 +294,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 创建人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Created_by", ColDesc = "创建人")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Created_by", DecimalDigits = 0, IsNullable = true, ColumnDescription = "创建人")]
+        [AdvQueryAttribute(ColName = "Created_by",ColDesc = "创建人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Created_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "创建人" )]
         public long? Created_by
-        {
-            get { return _Created_by; }
-            set
-            {
-                SetProperty(ref _Created_by, value);
+        { 
+            get{return _Created_by;}
+            set{
+            SetProperty(ref _Created_by, value);
             }
         }
 
@@ -327,14 +308,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 修改时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "Modified_at", ColDesc = "修改时间")]
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "Modified_at", IsNullable = true, ColumnDescription = "修改时间")]
+        [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = true,ColumnDescription = "修改时间" )]
         public DateTime? Modified_at
-        {
-            get { return _Modified_at; }
-            set
-            {
-                SetProperty(ref _Modified_at, value);
+        { 
+            get{return _Modified_at;}
+            set{
+            SetProperty(ref _Modified_at, value);
             }
         }
 
@@ -342,14 +322,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 修改人
         /// </summary>
-        [AdvQueryAttribute(ColName = "Modified_by", ColDesc = "修改人")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Modified_by", DecimalDigits = 0, IsNullable = true, ColumnDescription = "修改人")]
+        [AdvQueryAttribute(ColName = "Modified_by",ColDesc = "修改人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Modified_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "修改人" )]
         public long? Modified_by
-        {
-            get { return _Modified_by; }
-            set
-            {
-                SetProperty(ref _Modified_by, value);
+        { 
+            get{return _Modified_by;}
+            set{
+            SetProperty(ref _Modified_by, value);
             }
         }
 
@@ -357,7 +336,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BoxRules.CartonID))]
         public virtual List<tb_BoxRules> tb_BoxRuleses { get; set; }
@@ -371,12 +350,12 @@ namespace RUINORERP.Model
 
 
 
-        //如果为false,则不可以。
-        private bool PK_FK_ID_Check()
-        {
-            bool rs = true;
-            return rs;
-        }
+//如果为false,则不可以。
+private bool PK_FK_ID_Check()
+{
+  bool rs=true;
+return rs;
+}
 
 
 
@@ -402,35 +381,35 @@ namespace RUINORERP.Model
                     fieldNameList = new ConcurrentDictionary<string, string>();
                     SugarColumn entityAttr;
                     Type type = typeof(tb_CartoonBox);
-
-                    foreach (PropertyInfo field in type.GetProperties())
-                    {
-                        foreach (Attribute attr in field.GetCustomAttributes(true))
-                        {
-                            entityAttr = attr as SugarColumn;
-                            if (null != entityAttr)
+                    
+                       foreach (PropertyInfo field in type.GetProperties())
                             {
-                                if (entityAttr.ColumnDescription == null)
+                                foreach (Attribute attr in field.GetCustomAttributes(true))
                                 {
-                                    continue;
-                                }
-                                if (entityAttr.IsIdentity)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.IsPrimaryKey)
-                                {
-                                    continue;
-                                }
-                                if (entityAttr.ColumnDescription.Trim().Length > 0)
-                                {
-                                    fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
+                                    entityAttr = attr as SugarColumn;
+                                    if (null != entityAttr)
+                                    {
+                                        if (entityAttr.ColumnDescription == null)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsIdentity)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.IsPrimaryKey)
+                                        {
+                                            continue;
+                                        }
+                                        if (entityAttr.ColumnDescription.Trim().Length > 0)
+                                        {
+                                            fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    }
                 }
-
+                
                 return fieldNameList;
             }
             set
@@ -440,7 +419,7 @@ namespace RUINORERP.Model
 
         }
         #endregion
-
+        
 
         public override object Clone()
         {

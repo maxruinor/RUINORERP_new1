@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/16/2024 20:05:38
+// 时间：01/14/2025 18:57:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 采购退货入库单明细
     /// </summary>
     [Serializable()]
-    [Description("tb_PurReturnEntryDetail")]
+    [Description("采购退货入库单明细")]
     [SugarTable("tb_PurReturnEntryDetail")]
     public partial class tb_PurReturnEntryDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_PurReturnEntryDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("采购退货入库单明细tb_PurReturnEntryDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -50,25 +50,6 @@ namespace RUINORERP.Model
             SetProperty(ref _PurReEntry_CID, value);
             }
         }
-
-
-        private long _PurEntryRe_CID;
-        /// <summary>
-        /// 采购入库退回单明细ID在这里是以行为标准去对比。
-        /// 一个退回单。从采购供应商回来后可以多次退回，按这个累计
-        /// </summary>
-
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "PurEntryRe_CID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "")]
-        public long PurEntryRe_CID
-        {
-            get { return _PurEntryRe_CID; }
-            set
-            {
-                base.PrimaryKeyID = _PurEntryRe_CID;
-                SetProperty(ref _PurEntryRe_CID, value);
-            }
-        }
-
 
         private long _PurReEntry_ID;
         /// <summary>
@@ -97,6 +78,20 @@ namespace RUINORERP.Model
             get{return _ProdDetailID;}
             set{
             SetProperty(ref _ProdDetailID, value);
+            }
+        }
+
+        private long _PurEntryRe_CID;
+        /// <summary>
+        /// 
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PurEntryRe_CID",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PurEntryRe_CID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
+        public long PurEntryRe_CID
+        { 
+            get{return _PurEntryRe_CID;}
+            set{
+            SetProperty(ref _PurEntryRe_CID, value);
             }
         }
 
@@ -177,7 +172,7 @@ namespace RUINORERP.Model
         /// 单价
         /// </summary>
         [AdvQueryAttribute(ColName = "UnitPrice",ColDesc = "单价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitPrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单价" )]
         public decimal UnitPrice
         { 
             get{return _UnitPrice;}
@@ -205,7 +200,7 @@ namespace RUINORERP.Model
         /// 成交单价
         /// </summary>
         [AdvQueryAttribute(ColName = "TransactionPrice",ColDesc = "成交单价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成交单价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TransactionPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成交单价" )]
         public decimal TransactionPrice
         { 
             get{return _TransactionPrice;}
@@ -247,7 +242,7 @@ namespace RUINORERP.Model
         /// 税额
         /// </summary>
         [AdvQueryAttribute(ColName = "TaxAmount",ColDesc = "税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "税额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TaxAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "税额" )]
         public decimal TaxAmount
         { 
             get{return _TaxAmount;}
@@ -261,7 +256,7 @@ namespace RUINORERP.Model
         /// 小计
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalTrPriceAmount",ColDesc = "小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalTrPriceAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalTrPriceAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "小计" )]
         public decimal SubtotalTrPriceAmount
         { 
             get{return _SubtotalTrPriceAmount;}
@@ -289,7 +284,7 @@ namespace RUINORERP.Model
         /// 优惠金额
         /// </summary>
         [AdvQueryAttribute(ColName = "DiscountAmount",ColDesc = "优惠金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiscountAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "优惠金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiscountAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "优惠金额" )]
         public decimal DiscountAmount
         { 
             get{return _DiscountAmount;}
@@ -316,22 +311,22 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PurReEntry_ID))]
         public virtual tb_PurReturnEntry tb_purreturnentry { get; set; }
 

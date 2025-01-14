@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:18
+// 时间：01/14/2025 18:57:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -105,6 +105,20 @@ namespace RUINORERP.Model
             get{return _ValueType;}
             set{
             SetProperty(ref _ValueType, value);
+            }
+        }
+
+        private int _ControlWidth= ((0));
+        /// <summary>
+        /// 控件宽度
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ControlWidth",ColDesc = "控件宽度")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ControlWidth" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "控件宽度" )]
+        public int ControlWidth
+        { 
+            get{return _ControlWidth;}
+            set{
+            SetProperty(ref _ControlWidth, value);
             }
         }
 
@@ -238,7 +252,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(UIMenuPID))]
         public virtual tb_UIMenuPersonalization tb_uimenupersonalization { get; set; }
 

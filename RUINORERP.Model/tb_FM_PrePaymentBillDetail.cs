@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:45
+// 时间：01/14/2025 18:56:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 预付款表明细
     /// </summary>
     [Serializable()]
-    [Description("tb_FM_PrePaymentBillDetail")]
+    [Description("预付款表明细")]
     [SugarTable("tb_FM_PrePaymentBillDetail")]
     public partial class tb_FM_PrePaymentBillDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FM_PrePaymentBillDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("预付款表明细tb_FM_PrePaymentBillDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -200,7 +200,7 @@ namespace RUINORERP.Model
         /// 金额
         /// </summary>
         [AdvQueryAttribute(ColName = "Amount",ColDesc = "金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Amount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Amount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "金额" )]
         public decimal? Amount
         { 
             get{return _Amount;}
@@ -214,7 +214,7 @@ namespace RUINORERP.Model
         /// 已转金额
         /// </summary>
         [AdvQueryAttribute(ColName = "PrepaidAmount",ColDesc = "已转金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrepaidAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "已转金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrepaidAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "已转金额" )]
         public decimal? PrepaidAmount
         { 
             get{return _PrepaidAmount;}
@@ -241,22 +241,22 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Currency_ID))]
         public virtual tb_Currency tb_currency { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(account_id))]
         public virtual tb_FM_Account tb_fm_account { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PrePaymentBill_id))]
         public virtual tb_FM_PrePaymentBill tb_fm_prepaymentbill { get; set; }
 
@@ -271,6 +271,10 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
+         if("Account_id"!="account_id")
+        {
+        // rs=false;
+        }
 return rs;
 }
 

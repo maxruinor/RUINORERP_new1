@@ -938,8 +938,6 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-
-
         protected frmFormProperty frm = new frmFormProperty();
         protected virtual void Property()
         {
@@ -1492,7 +1490,10 @@ namespace RUINORERP.UI.BaseForm
             await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols);
 
             await UIBizSrvice.SetGridViewAsync(typeof(C), BaseSubDataGridView, CurMenuInfo, false, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
-
+            if(_UCBillChildQuery_Related!=null && _UCBillChildQuery_Related.newSumDataGridViewChild!=null)
+            {
+                _UCBillChildQuery_Related.newSumDataGridViewChild.NeedSaveColumnsXml = true;
+            }
         }
 
 

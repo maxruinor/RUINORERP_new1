@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/04/2025 19:45:31
+// 时间：01/14/2025 20:57:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 采购入库退回单明细
+    /// 返工退库明细
     /// </summary>
     [Serializable()]
-    [Description("采购入库退回单明细")]
+    [Description("返工退库明细")]
     [SugarTable("tb_MRP_ReworkReturnDetail")]
     public partial class tb_MRP_ReworkReturnDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("采购入库退回单明细tb_MRP_ReworkReturnDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("返工退库明细tb_MRP_ReworkReturnDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -138,17 +138,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _ReworkFee= ((0));
+        private decimal _UnitCost= ((0));
         /// <summary>
-        /// 预估费用
+        /// 成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReworkFee",ColDesc = "预估费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ReworkFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "预估费用" )]
-        public decimal ReworkFee
+        [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本" )]
+        public decimal UnitCost
         { 
-            get{return _ReworkFee;}
+            get{return _UnitCost;}
             set{
-            SetProperty(ref _ReworkFee, value);
+            SetProperty(ref _UnitCost, value);
             }
         }
 
@@ -166,26 +166,26 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _UnitCost= ((0));
+        private decimal _ReworkFee= ((0));
         /// <summary>
-        /// 成本
+        /// 预估费用
         /// </summary>
-        [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本" )]
-        public decimal UnitCost
+        [AdvQueryAttribute(ColName = "ReworkFee",ColDesc = "预估费用")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ReworkFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "预估费用" )]
+        public decimal ReworkFee
         { 
-            get{return _UnitCost;}
+            get{return _ReworkFee;}
             set{
-            SetProperty(ref _UnitCost, value);
+            SetProperty(ref _ReworkFee, value);
             }
         }
 
         private decimal _SubtotalCostAmount= ((0));
         /// <summary>
-        /// 成本小计
+        /// 小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
+        [AdvQueryAttribute(ColName = "SubtotalCostAmount",ColDesc = "小计")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCostAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "小计" )]
         public decimal SubtotalCostAmount
         { 
             get{return _SubtotalCostAmount;}
@@ -226,17 +226,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ReworkReturnID))]
         public virtual tb_MRP_ReworkReturn tb_mrp_reworkreturn { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 

@@ -22,6 +22,7 @@ using RUINORERP.Model.Dto;
 using Krypton.Workspace;
 using Krypton.Navigator;
 using Krypton.Toolkit.Suite.Extended.TreeGridView;
+using FastReport.DevComponents.DotNetBar.Controls;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -124,6 +125,7 @@ namespace RUINORERP.UI.SysConfig
             ///显示列表对应的中文
             // FieldNameList = UIHelper.GetFieldNameList<tb_RoleInfo>();
             //重构？
+            dataGridView1.NeedSaveColumnsXml = true;
             dataGridView1.XmlFileName = "UCUserAuthorization";
             InitListData();
             /*

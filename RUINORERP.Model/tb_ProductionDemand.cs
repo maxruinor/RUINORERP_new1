@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:14
+// 时间：01/14/2025 18:57:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 生产需求分析表 是一个中间表，由计划生产单或销售订单带入数据来分析，产生采购订单再产生制令单，分析时有三步，库存不足项（包括有成品材料所有项），采购商品建议，自制品成品建议,中间表保存记录而已，操作UI上会有生成采购订单，或生产单等操作
     /// </summary>
     [Serializable()]
-    [Description("tb_ProductionDemand")]
+    [Description("生产需求分析表 是一个中间表，由计划生产单或销售订单带入数据来分析，产生采购订单再产生制令单，分析时有三步，库存不足项（包括有成品材料所有项），采购商品建议，自制品成品建议,中间表保存记录而已，操作UI上会有生成采购订单，或生产单等操作")]
     [SugarTable("tb_ProductionDemand")]
     public partial class tb_ProductionDemand: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProductionDemand" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("生产需求分析表 是一个中间表，由计划生产单或销售订单带入数据来分析，产生采购订单再产生制令单，分析时有三步，库存不足项（包括有成品材料所有项），采购商品建议，自制品成品建议,中间表保存记录而已，操作UI上会有生成采购订单，或生产单等操作tb_ProductionDemand" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -338,17 +338,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PPID))]
         public virtual tb_ProductionPlan tb_productionplan { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrder.PDID))]
         public virtual List<tb_PurOrder> tb_PurOrders { get; set; }
@@ -356,15 +356,7 @@ namespace RUINORERP.Model
         //PDID.FK_PURORDER_REF_TB_PRODDEMAND)
         //tb_ProductionDemand.PDID)
 
-        [Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.PDID))]
-        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
-        //tb_ManufacturingOrder.PDID)
-        //PDID.FK_MANUFACTURINGORDER_REF_PRODUCTIONDEMAND)
-        //tb_ProductionDemand.PDID)
-
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProduceGoodsRecommendDetail.PDID))]
         public virtual List<tb_ProduceGoodsRecommendDetail> tb_ProduceGoodsRecommendDetails { get; set; }
@@ -372,7 +364,7 @@ namespace RUINORERP.Model
         //PDID.FK_TB_PRODU_REFERENCE_TB_PRODU)
         //tb_ProductionDemand.PDID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandDetail.PDID))]
         public virtual List<tb_ProductionDemandDetail> tb_ProductionDemandDetails { get; set; }
@@ -380,7 +372,7 @@ namespace RUINORERP.Model
         //PDID.FK_PRODUdemanddetail_REF_PRODUdemand)
         //tb_ProductionDemand.PDID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionDemandTargetDetail.PDID))]
         public virtual List<tb_ProductionDemandTargetDetail> tb_ProductionDemandTargetDetails { get; set; }
@@ -388,12 +380,20 @@ namespace RUINORERP.Model
         //PDID.FK_TB_PRODUDEMANDTARGETDETAIL_REF_TB_PRODUDEMAND)
         //tb_ProductionDemand.PDID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurGoodsRecommendDetail.PDID))]
         public virtual List<tb_PurGoodsRecommendDetail> tb_PurGoodsRecommendDetails { get; set; }
         //tb_PurGoodsRecommendDetail.PDID)
         //PDID.FK_TB_PURGO_REFERENCE_TB_PRODU)
+        //tb_ProductionDemand.PDID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.PDID))]
+        public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
+        //tb_ManufacturingOrder.PDID)
+        //PDID.FK_MANUFACTURINGORDER_REF_PRODUCTIONDEMAND)
         //tb_ProductionDemand.PDID)
 
 

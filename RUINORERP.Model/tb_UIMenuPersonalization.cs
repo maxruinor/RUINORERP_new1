@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/13/2025 18:30:18
+// 时间：01/14/2025 18:57:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -123,12 +123,26 @@ namespace RUINORERP.Model
             }
         }
 
-        private int _Sort= ((0));
+        private int? _BaseWidth= ((0));
         /// <summary>
         /// 排序
         /// </summary>
-        [AdvQueryAttribute(ColName = "Sort",ColDesc = "排序")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Sort" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "排序" )]
+        [AdvQueryAttribute(ColName = "BaseWidth",ColDesc = "排序")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BaseWidth" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "排序" )]
+        public int? BaseWidth
+        { 
+            get{return _BaseWidth;}
+            set{
+            SetProperty(ref _BaseWidth, value);
+            }
+        }
+
+        private int _Sort= ((150));
+        /// <summary>
+        /// 基准宽度
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Sort",ColDesc = "基准宽度")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Sort" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "基准宽度" )]
         public int Sort
         { 
             get{return _Sort;}
@@ -169,30 +183,30 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(MenuID))]
         public virtual tb_MenuInfo tb_menuinfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(UserPersonalizedID))]
         public virtual tb_UserPersonalized tb_userpersonalized { get; set; }
 
 
-        [Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_UIQueryCondition.UIMenuPID))]
-        public virtual List<tb_UIQueryCondition> tb_UIQueryConditions { get; set; }
-        //tb_UIQueryCondition.UIMenuPID)
-        //UIMenuPID.FK_UIQUERYCONDITION_REF_UIMENUPERSONALIZATION)
-        //tb_UIMenuPersonalization.UIMenuPID)
-
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_UIGridSetting.UIMenuPID))]
         public virtual List<tb_UIGridSetting> tb_UIGridSettings { get; set; }
         //tb_UIGridSetting.UIMenuPID)
         //UIMenuPID.FK_UIGRIDSETTING_REF_UIMENUPERSONALIZATION)
+        //tb_UIMenuPersonalization.UIMenuPID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_UIQueryCondition.UIMenuPID))]
+        public virtual List<tb_UIQueryCondition> tb_UIQueryConditions { get; set; }
+        //tb_UIQueryCondition.UIMenuPID)
+        //UIMenuPID.FK_UIQUERYCONDITION_REF_UIMENUPERSONALIZATION)
         //tb_UIMenuPersonalization.UIMenuPID)
 
 

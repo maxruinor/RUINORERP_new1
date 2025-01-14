@@ -474,6 +474,7 @@ namespace RUINORERP.UI.MRP.PQC
                 if (ManufacturingOrder.MOID > 0)
                 {
                     entity.MOID = ManufacturingOrder.MOID;
+                    entity.MONO = ManufacturingOrder.MONO;
                 }
                 BusinessHelper.Instance.InitEntity(entity);
                 BindData(entity as tb_MRP_ReworkReturn);

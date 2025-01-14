@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/22/2024 16:24:10
+// 时间：01/14/2025 18:56:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 会计科目表，财务系统中使用
     /// </summary>
     [Serializable()]
-    [Description("tb_FM_Subject")]
+    [Description("会计科目表，财务系统中使用")]
     [SugarTable("tb_FM_Subject")]
     public partial class tb_FM_Subject: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FM_Subject" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("会计科目表，财务系统中使用tb_FM_Subject" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -209,7 +209,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.Subject_id))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
@@ -217,7 +217,15 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_OT_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.Subject_id)
 
-        [Browsable(false)]
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.Subject_id))]
+        public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
+        //tb_FM_ExpenseClaimDetail.subject_id)
+        //subject_id.FK_EXPENSECLAIMDETAIL_REF_SUBJECT)
+        //tb_FM_Subject.Subject_id)
+
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Subject_id))]
         public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
@@ -225,7 +233,7 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_AC_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.Subject_id)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseType.subject_id))]
         public virtual List<tb_FM_ExpenseType> tb_FM_ExpenseTypes { get; set; }
@@ -233,21 +241,13 @@ namespace RUINORERP.Model
         //subject_id.FK_TB_FM_EX_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.subject_id)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.subject_id))]
         public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
         //tb_FM_Initial_PayAndReceivable.subject_id)
         //subject_id.FK_TB_FM_IN_REFERENCE_TB_FM_SU)
         //tb_FM_Subject.subject_id)
-
-        [Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.Subject_id))]
-        public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
-        //tb_FM_ExpenseClaimDetail.subject_id)
-        //subject_id.FK_EXPENSECLAIMDETAIL_REF_SUBJECT)
-        //tb_FM_Subject.Subject_id)
 
 
         #endregion

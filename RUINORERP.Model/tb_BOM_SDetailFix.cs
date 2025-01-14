@@ -23,10 +23,6 @@ namespace RUINORERP.Model
     public partial class tb_BOM_SDetail: BaseEntity, ICloneable
     {
 
-
-
-     
-
         #region 扩展属性
          
          [SugarColumn(IsIgnore = true)]

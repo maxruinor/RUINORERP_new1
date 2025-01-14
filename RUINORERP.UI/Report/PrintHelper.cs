@@ -248,7 +248,7 @@ namespace RUINORERP.UI.Report
                 }
                 else
                 {
-
+                    //注意  数据源中的子对象 必须是   [Browsable(false)] 不能有这个特性。否则无法显示，
                     //报表控件注册数据
                     FReport.RegisterData(mlist, "rd");
                     FReport.RegisterData(currUserInfos, "currUserInfo");

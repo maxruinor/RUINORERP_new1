@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:44
+// 时间：01/14/2025 18:56:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 付款单明细
     /// </summary>
     [Serializable()]
-    [Description("tb_FM_PaymentBillDetail")]
+    [Description("付款单明细")]
     [SugarTable("tb_FM_PaymentBillDetail")]
     public partial class tb_FM_PaymentBillDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FM_PaymentBillDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("付款单明细tb_FM_PaymentBillDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -168,7 +168,7 @@ namespace RUINORERP.Model
         /// 付款总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "付款总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "付款总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "付款总金额" )]
         public decimal? TotalAmount
         { 
             get{return _TotalAmount;}
@@ -224,7 +224,7 @@ namespace RUINORERP.Model
         /// 超付金额
         /// </summary>
         [AdvQueryAttribute(ColName = "OverpaymentAmount",ColDesc = "超付金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OverpaymentAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "超付金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "OverpaymentAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "超付金额" )]
         public decimal? OverpaymentAmount
         { 
             get{return _OverpaymentAmount;}

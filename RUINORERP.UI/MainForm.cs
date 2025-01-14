@@ -239,6 +239,20 @@ namespace RUINORERP.UI
 
                     }
                 }
+
+
+                if (control.GetType() != null && control.GetType().BaseType.Name.Contains("BaseNavigatorGeneric"))
+                {
+                    // 获取泛型参数类型
+                    Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
+                    if (genericArguments.Length > 0)
+                    {
+                        Type genericParameterType = genericArguments[0];
+                        var baseUControl = (BaseNavigator)control;
+                        UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
+                    }
+                }
+
             }
 
         }

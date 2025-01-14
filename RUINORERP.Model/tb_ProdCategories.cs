@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:07
+// 时间：01/14/2025 18:57:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品类别表 与行业相关的产品分类
     /// </summary>
     [Serializable()]
-    [Description("tb_ProdCategories")]
+    [Description("产品类别表 与行业相关的产品分类")]
     [SugarTable("tb_ProdCategories")]
     public partial class tb_ProdCategories: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProdCategories" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("产品类别表 与行业相关的产品分类tb_ProdCategories" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -153,7 +153,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Category_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }

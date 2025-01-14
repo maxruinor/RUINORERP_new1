@@ -265,8 +265,6 @@ namespace RUINORERP.Business
                     .Include(m => m.tb_SaleOutRes)
                     .Include(m => m.tb_FM_Initial_PayAndReceivables)
                     .Include(m => m.tb_FM_PayeeInfos)
-                    .Include(m => m.tb_ManufacturingOrders)
-                    .Include(m => m.tb_ManufacturingOrders)
                     .Include(m => m.tb_FM_PaymentBills)
                     .Include(m => m.tb_StockIns)
                     .Include(m => m.tb_PurEntryRes)

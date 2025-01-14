@@ -78,9 +78,13 @@ namespace RUINORERP.UI.Common
                                 if (newSumDataGridViewMaster.Columns[i].Visible && !string.IsNullOrEmpty(newSumDataGridViewMaster.Columns[i].HeaderText)) //不导出隐藏的列
                                 {
                                     excelSheet.Cells[1, k + 1].Value = newSumDataGridViewMaster.Columns[i].HeaderText;
+                                    // 设置列宽
+                                    //一个字符的宽度大约是 7.5 像素（基于默认字体和字号）。
+                                    excelSheet.Column(k + 1).Width = newSumDataGridViewMaster.Columns[i].Width/7; // 第一列宽度设置为 20
                                     k++;
                                 }
                             }
+                             
 
                             //填充数据
 

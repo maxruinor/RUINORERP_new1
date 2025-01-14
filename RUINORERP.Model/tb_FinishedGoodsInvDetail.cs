@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:38
+// 时间：01/14/2025 18:56:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 成品入库单明细
     /// </summary>
     [Serializable()]
-    [Description("tb_FinishedGoodsInvDetail")]
+    [Description("成品入库单明细")]
     [SugarTable("tb_FinishedGoodsInvDetail")]
     public partial class tb_FinishedGoodsInvDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FinishedGoodsInvDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("成品入库单明细tb_FinishedGoodsInvDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -159,7 +159,7 @@ namespace RUINORERP.Model
         /// 单位成本
         /// </summary>
         [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单位成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
         public decimal UnitCost
         { 
             get{return _UnitCost;}
@@ -182,27 +182,26 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _NetMachineHours = ((0));
+        private decimal _NetMachineHours= ((0));
         /// <summary>
         /// 单位实际机时
         /// </summary>
-        [AdvQueryAttribute(ColName = "NetMachineHours", ColDesc = "单位实际机时")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "NetMachineHours", DecimalDigits = 5, IsNullable = false, ColumnDescription = "单位实际机时")]
+        [AdvQueryAttribute(ColName = "NetMachineHours",ColDesc = "单位实际机时")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "NetMachineHours" , DecimalDigits = 5,IsNullable = false,ColumnDescription = "单位实际机时" )]
         public decimal NetMachineHours
-        {
-            get { return _NetMachineHours; }
-            set
-            {
-                SetProperty(ref _NetMachineHours, value);
+        { 
+            get{return _NetMachineHours;}
+            set{
+            SetProperty(ref _NetMachineHours, value);
             }
         }
 
-        private decimal _NetWorkingHours = ((0));
+        private decimal _NetWorkingHours= ((0));
         /// <summary>
-        /// 单位实际机时
+        /// 单位实际工时
         /// </summary>
-        [AdvQueryAttribute(ColName = "NetWorkingHours",ColDesc = "单位实际机时")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal",  ColumnName = "NetWorkingHours" , DecimalDigits = 5,IsNullable = false,ColumnDescription = "单位实际机时" )]
+        [AdvQueryAttribute(ColName = "NetWorkingHours",ColDesc = "单位实际工时")] 
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "NetWorkingHours" , DecimalDigits = 5,IsNullable = false,ColumnDescription = "单位实际工时" )]
         public decimal NetWorkingHours
         { 
             get{return _NetWorkingHours;}
@@ -216,7 +215,7 @@ namespace RUINORERP.Model
         /// 单位分摊成本
         /// </summary>
         [AdvQueryAttribute(ColName = "ApportionedCost",ColDesc = "单位分摊成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ApportionedCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单位分摊成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ApportionedCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位分摊成本" )]
         public decimal ApportionedCost
         { 
             get{return _ApportionedCost;}
@@ -230,7 +229,7 @@ namespace RUINORERP.Model
         /// 单位制造费用
         /// </summary>
         [AdvQueryAttribute(ColName = "ManuFee",ColDesc = "单位制造费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ManuFee" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单位制造费用")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ManuFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位制造费用" )]
         public decimal ManuFee
         { 
             get{return _ManuFee;}
@@ -239,14 +238,12 @@ namespace RUINORERP.Model
             }
         }
 
-      
-
         private decimal _MaterialCost= ((0));
         /// <summary>
         /// 单位材料成本
         /// </summary>
         [AdvQueryAttribute(ColName = "MaterialCost",ColDesc = "单位材料成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "MaterialCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单位材料成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "MaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位材料成本" )]
         public decimal MaterialCost
         { 
             get{return _MaterialCost;}
@@ -255,18 +252,17 @@ namespace RUINORERP.Model
             }
         }
 
-        private decimal _SubtotalMaterialCost = 0;
+        private decimal _SubtotalMaterialCost= ((0));
         /// <summary>
         /// 材料小计
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalMaterialCost", ColDesc = "材料小计")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SubtotalMaterialCost", DecimalDigits = 6, IsNullable = false, ColumnDescription = "材料小计")]
+        [AdvQueryAttribute(ColName = "SubtotalMaterialCost",ColDesc = "材料小计")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalMaterialCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "材料小计" )]
         public decimal SubtotalMaterialCost
-        {
-            get { return _SubtotalMaterialCost; }
-            set
-            {
-                SetProperty(ref _SubtotalMaterialCost, value);
+        { 
+            get{return _SubtotalMaterialCost;}
+            set{
+            SetProperty(ref _SubtotalMaterialCost, value);
             }
         }
 
@@ -274,8 +270,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 单项总成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProductionAllCost", ColDesc = "单项总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ProductionAllCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单项总成本")]
+        [AdvQueryAttribute(ColName = "ProductionAllCost",ColDesc = "单项总成本")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ProductionAllCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单项总成本" )]
         public decimal ProductionAllCost
         { 
             get{return _ProductionAllCost;}
@@ -316,27 +312,27 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(FG_ID))]
         public virtual tb_FinishedGoodsInv tb_finishedgoodsinv { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 

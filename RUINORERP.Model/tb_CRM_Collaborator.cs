@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/16/2024 16:57:12
+// 时间：01/14/2025 18:56:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private long _Employee_ID;
         /// <summary>
-        /// 协作人
+        /// 协作员工
         /// </summary>
-        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "协作人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "协作人" )]
+        [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "协作员工")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "协作员工" )]
         [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long Employee_ID
         { 
@@ -170,12 +170,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Customer_id))]
         public virtual tb_CRM_Customer tb_crm_customer { get; set; }
 

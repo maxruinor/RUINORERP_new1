@@ -270,6 +270,21 @@ namespace RUINORERP.UI.Common
                         c.ColWidth = 100;
                     }
                 });
+
+                //第一次设置为默认隐藏，然后他自己可以设置是不是要显示
+                originalColumnDisplays.ForEach(c =>
+                {
+                    //权限设置隐藏的
+                    if (DefaultHideCols != null)
+                    {
+                        if (DefaultHideCols.Any(ic => c.ColName.Equals(ic)))
+                        {
+                            c.Visible = false;
+                            c.Disable = false;
+                        }
+                    }
+                });
+
             }
 
             if (dataGridView.ColumnDisplays == null)
@@ -306,16 +321,6 @@ namespace RUINORERP.UI.Common
                     
                 }
 
-                //权限设置隐藏的
-                if (DefaultHideCols != null)
-                {
-                    if (DefaultHideCols.Any(ic => c.ColName.Equals(ic)))
-                    {
-                        c.Visible = false;
-                        c.Disable = false;
-                    }
-                   
-                }
             });
 
             // 检查并添加条件

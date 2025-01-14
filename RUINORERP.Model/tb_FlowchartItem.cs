@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:39
+// 时间：01/14/2025 18:56:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 流程图子项
     /// </summary>
     [Serializable()]
-    [Description("tb_FlowchartItem")]
+    [Description("流程图子项")]
     [SugarTable("tb_FlowchartItem")]
     public partial class tb_FlowchartItem: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FlowchartItem" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("流程图子项tb_FlowchartItem" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -112,7 +112,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ID))]
         public virtual tb_FlowchartDefinition tb_flowchartdefinition { get; set; }
 

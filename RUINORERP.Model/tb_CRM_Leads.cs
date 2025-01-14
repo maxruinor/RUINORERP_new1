@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/11/2024 20:44:24
+// 时间：01/14/2025 18:56:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -351,25 +351,25 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        [Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Customer.LeadID))]
-        public virtual List<tb_CRM_Customer> tb_CRM_Customers { get; set; }
-        //tb_CRM_Customer.LeadID)
-        //LeadID.FK_TB_CRM_C_REFERENCE_TB_CRM_L)
-        //tb_CRM_Leads.LeadID)
-
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_FollowUpRecords.LeadID))]
         public virtual List<tb_CRM_FollowUpRecords> tb_CRM_FollowUpRecordses { get; set; }
         //tb_CRM_FollowUpRecords.LeadID)
         //LeadID.FK_TB_CRM_F_REFERENCE_TB_CRM_L)
+        //tb_CRM_Leads.LeadID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Customer.LeadID))]
+        public virtual List<tb_CRM_Customer> tb_CRM_Customers { get; set; }
+        //tb_CRM_Customer.LeadID)
+        //LeadID.FK_TB_CRM_C_REFERENCE_TB_CRM_L)
         //tb_CRM_Leads.LeadID)
 
 

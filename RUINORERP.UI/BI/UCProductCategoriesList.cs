@@ -183,7 +183,7 @@ namespace RUINORERP.UI.BI
             ///显示列表对应的中文
             base.FieldNameList = UIHelper.GetFieldNameColList(typeof(tb_ProdCategories)); // UIHelper.GetFieldNameList<tb_ProdCategories>();
             base.Refreshs();
-            //重构？
+            dataGridView1.NeedSaveColumnsXml = true;
             base.dataGridView1.XmlFileName = typeof(tb_ProdCategories).Name;
             //dataGridView1.CellFormatting += DataGridView1_CellFormatting;
         }

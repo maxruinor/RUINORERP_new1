@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using RUINORERP.Common.Extensions;
 using System.Linq.Expressions;
 using System.Reflection;
+using FastReport.DevComponents.DotNetBar.Controls;
 
 namespace RUINORERP.UI.BI
 {
@@ -182,7 +183,7 @@ namespace RUINORERP.UI.BI
             ///显示列表对应的中文
             base.FieldNameList = UIHelper.GetFieldNameColList(typeof(tb_FM_Subject)); // UIHelper.GetFieldNameList<tb_ProdCategories>();
             base.Refreshs();
-            //重构？
+            dataGridView1.NeedSaveColumnsXml = true;
             base.dataGridView1.XmlFileName = typeof(tb_FM_Subject).Name;
             //dataGridView1.CellFormatting += DataGridView1_CellFormatting;
         }

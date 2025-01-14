@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/04/2025 19:45:30
+// 时间：01/14/2025 20:57:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private string _ReworkReturnNo;
         /// <summary>
-        /// 退回单号
+        /// 退库单号
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReworkReturnNo",ColDesc = "退回单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReworkReturnNo" ,Length=50,IsNullable = false,ColumnDescription = "退回单号" )]
+        [AdvQueryAttribute(ColName = "ReworkReturnNo",ColDesc = "退库单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReworkReturnNo" ,Length=50,IsNullable = false,ColumnDescription = "退库单号" )]
         public string ReworkReturnNo
         { 
             get{return _ReworkReturnNo;}
@@ -115,13 +115,27 @@ namespace RUINORERP.Model
         /// 制令单
         /// </summary>
         [AdvQueryAttribute(ColName = "MOID",ColDesc = "制令单")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MOID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "制令单" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MOID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "制令单")]
         [FKRelationAttribute("tb_ManufacturingOrder","MOID")]
         public long? MOID
         { 
             get{return _MOID;}
             set{
             SetProperty(ref _MOID, value);
+            }
+        }
+
+        private string _MONO;
+        /// <summary>
+        /// 制令单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "MONO",ColDesc = "制令单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "MONO" ,Length=100,IsNullable = true,ColumnDescription = "制令单号" )]
+        public string MONO
+        { 
+            get{return _MONO;}
+            set{
+            SetProperty(ref _MONO, value);
             }
         }
 
@@ -141,10 +155,10 @@ namespace RUINORERP.Model
 
         private decimal _TotalReworkFee= ((0));
         /// <summary>
-        /// 返工费用
+        /// 预估费用
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalReworkFee",ColDesc = "返工费用")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalReworkFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "返工费用" )]
+        [AdvQueryAttribute(ColName = "TotalReworkFee",ColDesc = "预估费用")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalReworkFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "预估费用" )]
         public decimal TotalReworkFee
         { 
             get{return _TotalReworkFee;}
@@ -338,10 +352,10 @@ namespace RUINORERP.Model
 
         private string _CloseCaseOpinions;
         /// <summary>
-        /// 审批意见
+        /// 结案情况
         /// </summary>
-        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "审批意见")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "审批意见" )]
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "结案情况")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CloseCaseOpinions" ,Length=200,IsNullable = true,ColumnDescription = "结案情况" )]
         public string CloseCaseOpinions
         { 
             get{return _CloseCaseOpinions;}
@@ -352,10 +366,10 @@ namespace RUINORERP.Model
 
         private int? _KeepAccountsType;
         /// <summary>
-        /// 立账类型
+        /// 立帐类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "KeepAccountsType",ColDesc = "立账类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "KeepAccountsType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "立账类型" )]
+        [AdvQueryAttribute(ColName = "KeepAccountsType",ColDesc = "立帐类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "KeepAccountsType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "立帐类型" )]
         public int? KeepAccountsType
         { 
             get{return _KeepAccountsType;}
@@ -366,10 +380,10 @@ namespace RUINORERP.Model
 
         private bool? _ReceiptInvoiceClosed;
         /// <summary>
-        /// 立账结案
+        /// 立帐结案
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReceiptInvoiceClosed",ColDesc = "立账结案")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ReceiptInvoiceClosed" ,IsNullable = true,ColumnDescription = "立账结案" )]
+        [AdvQueryAttribute(ColName = "ReceiptInvoiceClosed",ColDesc = "立帐结案")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "ReceiptInvoiceClosed" ,IsNullable = true,ColumnDescription = "立帐结案" )]
         public bool? ReceiptInvoiceClosed
         { 
             get{return _ReceiptInvoiceClosed;}
@@ -466,27 +480,27 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(MOID))]
         public virtual tb_ManufacturingOrder tb_manufacturingorder { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntry.ReworkReturnID))]
         public virtual List<tb_MRP_ReworkEntry> tb_MRP_ReworkEntries { get; set; }
@@ -494,7 +508,7 @@ namespace RUINORERP.Model
         //ReworkReturnID.FK_TB_MRP_ReworkEntry_REF_TB_MRP_ReworkRetrun)
         //tb_MRP_ReworkReturn.ReworkReturnID)
 
-        [Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturnDetail.ReworkReturnID))]
         public virtual List<tb_MRP_ReworkReturnDetail> tb_MRP_ReworkReturnDetails { get; set; }

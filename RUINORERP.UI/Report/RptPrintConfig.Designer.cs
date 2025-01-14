@@ -119,9 +119,9 @@
             // 
             this.kryptonPanel2.Controls.Add(this.kryptonGroupBox2);
             this.kryptonPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanel2.Location = new System.Drawing.Point(201, 0);
+            this.kryptonPanel2.Location = new System.Drawing.Point(206, 0);
             this.kryptonPanel2.Name = "kryptonPanel2";
-            this.kryptonPanel2.Size = new System.Drawing.Size(373, 249);
+            this.kryptonPanel2.Size = new System.Drawing.Size(368, 249);
             this.kryptonPanel2.TabIndex = 2;
             // 
             // kryptonGroupBox2
@@ -133,7 +133,7 @@
             // kryptonGroupBox2.Panel
             // 
             this.kryptonGroupBox2.Panel.Controls.Add(this.newSumDataGridView1);
-            this.kryptonGroupBox2.Size = new System.Drawing.Size(373, 249);
+            this.kryptonGroupBox2.Size = new System.Drawing.Size(368, 249);
             this.kryptonGroupBox2.TabIndex = 0;
             this.kryptonGroupBox2.Values.Heading = "模板种类";
             // 
@@ -156,9 +156,10 @@
             this.newSumDataGridView1.IsShowSumRow = false;
             this.newSumDataGridView1.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridView1.Name = "newSumDataGridView1";
+            this.newSumDataGridView1.NeedSaveColumnsXml = false;
             this.newSumDataGridView1.RowTemplate.Height = 23;
             this.newSumDataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.newSumDataGridView1.Size = new System.Drawing.Size(369, 225);
+            this.newSumDataGridView1.Size = new System.Drawing.Size(364, 225);
             this.newSumDataGridView1.SumColumns = null;
             this.newSumDataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.newSumDataGridView1.SumRowCellFormat = "N2";

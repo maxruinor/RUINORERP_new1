@@ -47,7 +47,7 @@ namespace RUINORERP.UI.MRP.PQC
         public override void BuildInvisibleCols()
         {
             //引用的订单号ID不需要显示。因为有一个单号冗余显示了。
-            //base.MasterInvisibleCols.Add(c => c.id);
+            base.MasterInvisibleCols.Add(c => c.ReworkReturnID);
             // base.ChildInvisibleCols.Add(c => c.ProdDetailID);
         }
 

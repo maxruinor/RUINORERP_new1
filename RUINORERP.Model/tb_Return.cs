@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:25
+// 时间：01/14/2025 18:57:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 返厂售后单 tb_Return
+    /// 返厂售后单
     /// </summary>
     [Serializable()]
-    [Description("tb_Return")]
+    [Description("返厂售后单")]
     [SugarTable("tb_Return")]
     public partial class tb_Return: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Return" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("返厂售后单tb_Return" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -99,7 +99,7 @@ namespace RUINORERP.Model
         /// 总成本
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "总成本")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总成本" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总成本" )]
         public decimal TotalCost
         { 
             get{return _TotalCost;}
@@ -282,7 +282,7 @@ namespace RUINORERP.Model
         /// 已付运费
         /// </summary>
         [AdvQueryAttribute(ColName = "ShipCost",ColDesc = "已付运费")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "已付运费" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShipCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "已付运费" )]
         public decimal ShipCost
         { 
             get{return _ShipCost;}
@@ -421,12 +421,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ReturnDetail.MainID))]
         public virtual List<tb_ReturnDetail> tb_ReturnDetails { get; set; }

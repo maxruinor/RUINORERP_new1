@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:39
+// 时间：01/14/2025 18:57:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 单位换算表
     /// </summary>
     [Serializable()]
-    [Description("tb_Unit_Conversion")]
+    [Description("单位换算表")]
     [SugarTable("tb_Unit_Conversion")]
     public partial class tb_Unit_Conversion: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Unit_Conversion" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("单位换算表tb_Unit_Conversion" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -125,12 +125,20 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetail.UnitConversion_ID))]
         public virtual List<tb_BOM_SDetail> tb_BOM_SDetails { get; set; }
         //tb_BOM_SDetail.UnitConversion_ID)
         //UnitConversion_ID.FK_BOM_SDetail_REF_UNIT_Conversion)
+        //tb_Unit_Conversion.UnitConversion_ID)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetailSubstituteMaterial.UnitConversion_ID))]
+        public virtual List<tb_BOM_SDetailSubstituteMaterial> tb_BOM_SDetailSubstituteMaterials { get; set; }
+        //tb_BOM_SDetailSubstituteMaterial.UnitConversion_ID)
+        //UnitConversion_ID.FK_BOM_Substitute_REF_UNIT_Conversion)
         //tb_Unit_Conversion.UnitConversion_ID)
 
 

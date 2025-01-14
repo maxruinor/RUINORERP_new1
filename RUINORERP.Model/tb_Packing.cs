@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/14/2024 16:49:16
+// 时间：01/14/2025 18:56:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -368,27 +368,27 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(BundleID))]
         public virtual tb_ProdBundle tb_prodbundle { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdBaseID))]
         public virtual tb_Prod tb_prod { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BoxRules.Pack_ID))]
         public virtual List<tb_BoxRules> tb_BoxRuleses { get; set; }
@@ -396,7 +396,7 @@ namespace RUINORERP.Model
         //Pack_ID.FK_TB_BOXRU_REFERENCE_TB_PACKI)
         //tb_Packing.Pack_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PackingDetail.Pack_ID))]
         public virtual List<tb_PackingDetail> tb_PackingDetails { get; set; }

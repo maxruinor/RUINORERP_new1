@@ -350,18 +350,18 @@ namespace RUINORERP.UI.UControls
                 this.ContextMenuStrip = GetContextMenu();
             }
 
-             this.ColumnWidthChanged -= DataGridView_ColumnWidthChanged;
+            this.ColumnWidthChanged -= DataGridView_ColumnWidthChanged;
             this.ColumnWidthChanged += DataGridView_ColumnWidthChanged;
 
-            
+
         }
 
- 
+
         private void DataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             //保存在内存中
             #region 列有变化就保存到内存，关闭时保存到数据库设置中
-     
+
             ColumnDisplayController columnDisplay = this.ColumnDisplays.FirstOrDefault(c => c.ColName == e.Column.Name);
             if (columnDisplay != null)
             {
@@ -492,12 +492,21 @@ namespace RUINORERP.UI.UControls
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
         public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
 
-
+        private bool _NeedSaveColumnsXml = false;
 
         /// <summary>
         /// 是否保存列自定义设置
         /// </summary>
-        public bool NeedSaveColumnsXml { get; set; } = false;
+        public bool NeedSaveColumnsXml
+        {
+            get { return _NeedSaveColumnsXml; }
+            set
+            {
+                _NeedSaveColumnsXml = value;
+                customizeGrid.NeedSaveColumnsXml = value;
+            }
+
+        }
 
 
         public void SaveColumnStyle()
@@ -682,7 +691,7 @@ namespace RUINORERP.UI.UControls
                     {
                         ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
                     }
-        
+
 
                     #region 将没有中文字段 比方ID，或对象集合这种都不启动
 
@@ -991,9 +1000,9 @@ namespace RUINORERP.UI.UControls
 
                 internalMenu.Items.AddRange(ts);
 
-               
+
             }
-          
+
 
             //或者也可以指定内置哪些生效 合并外面的？
             if (Use是否使用内置右键功能)
@@ -1472,7 +1481,7 @@ namespace RUINORERP.UI.UControls
                     {
                         Clipboard.SetDataObject(dataobj);
                     }
-                    
+
                 }
                 catch (Exception MyEx)
                 {
@@ -2255,7 +2264,7 @@ namespace RUINORERP.UI.UControls
                 {
                     ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
                 }
-             
+
 
                 #region 将没有中文字段 比方ID，或对象集合这种都不启动
 
@@ -2308,7 +2317,7 @@ namespace RUINORERP.UI.UControls
                 // 加载列样式
                 BindColumnStyle();
             }
-         
+
         }
 
 

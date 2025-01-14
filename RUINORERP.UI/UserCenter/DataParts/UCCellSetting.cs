@@ -74,6 +74,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// </summary>
         private void BuilderCellListTreeView(tb_WorkCenterConfig centerConfig)
         {
+            if (centerConfig==null)
+            {
+                centerConfig = new tb_WorkCenterConfig();
+            }
             kryptonTreeViewCells.Nodes.Clear();
             TreeNode nd = new TreeNode();
             nd.Text = "工作单元设置";

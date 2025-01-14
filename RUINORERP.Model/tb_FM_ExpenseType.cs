@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:41
+// 时间：01/14/2025 18:56:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 业务类型 报销，员工借支还款，运费
     /// </summary>
     [Serializable()]
-    [Description("tb_FM_ExpenseType")]
+    [Description("业务类型 报销，员工借支还款，运费")]
     [SugarTable("tb_FM_ExpenseType")]
     public partial class tb_FM_ExpenseType: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FM_ExpenseType" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("业务类型 报销，员工借支还款，运费tb_FM_ExpenseType" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -112,12 +112,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(subject_id))]
         public virtual tb_FM_Subject tb_fm_subject { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.ExpenseType_id))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
@@ -125,20 +125,20 @@ namespace RUINORERP.Model
         //ExpenseType_id.FK_TB_FM_OT_REFERENCE_TB_FM_EX)
         //tb_FM_ExpenseType.ExpenseType_id)
 
-        [Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.ExpenseType_id))]
-        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
-        //tb_FM_Initial_PayAndReceivable.ExpenseType_id)
-        //ExpenseType_id.FK_TB_FM_IN_REFERENCE_TB_FM_EX)
-        //tb_FM_ExpenseType.ExpenseType_id)
-
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.ExpenseType_id))]
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
         //tb_FM_ExpenseClaimDetail.ExpenseType_id)
         //ExpenseType_id.FK_EXPENSECLAIMDETAIL_REF_EXPENSETYPE)
+        //tb_FM_ExpenseType.ExpenseType_id)
+
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.ExpenseType_id))]
+        public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
+        //tb_FM_Initial_PayAndReceivable.ExpenseType_id)
+        //ExpenseType_id.FK_TB_FM_IN_REFERENCE_TB_FM_EX)
         //tb_FM_ExpenseType.ExpenseType_id)
 
 

@@ -23,6 +23,7 @@ using Krypton.Workspace;
 using Krypton.Navigator;
 using RUINOR.WinFormsUI.TreeViewThreeState;
 using RUINORERP.UI.UControls;
+using FastReport.DevComponents.DotNetBar.Controls;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -48,7 +49,8 @@ namespace RUINORERP.UI.SysConfig
 
 
             InitListData();
-
+            dataGridView1.NeedSaveColumnsXml = true;
+            dataGridView2.NeedSaveColumnsXml = true;
             dataGridView1.Use是否使用内置右键功能 = false;
             dataGridView2.Use是否使用内置右键功能 = false;
             // dataGridView1.ContextMenuStrip = contextMenuStrip1;

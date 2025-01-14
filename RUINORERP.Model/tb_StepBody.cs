@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:33
+// 时间：01/14/2025 18:57:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 步骤定义
     /// </summary>
     [Serializable()]
-    [Description("tb_StepBody")]
+    [Description("步骤定义")]
     [SugarTable("tb_StepBody")]
     public partial class tb_StepBody: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_StepBody" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("步骤定义tb_StepBody" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -126,12 +126,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Para_Id))]
         public virtual tb_StepBodyPara tb_stepbodypara { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProcessStep.StepBodyld))]
         public virtual List<tb_ProcessStep> tb_ProcessSteps { get; set; }

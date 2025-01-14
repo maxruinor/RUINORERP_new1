@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:26
+// 时间：01/14/2025 18:56:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 标准物料表次级产出明细
     /// </summary>
     [Serializable()]
-    [Description("tb_BOM_SDetailSecondary")]
+    [Description("标准物料表次级产出明细")]
     [SugarTable("tb_BOM_SDetailSecondary")]
     public partial class tb_BOM_SDetailSecondary: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_BOM_SDetailSecondary" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("标准物料表次级产出明细tb_BOM_SDetailSecondary" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -115,7 +115,7 @@ namespace RUINORERP.Model
         /// 数量
         /// </summary>
         [AdvQueryAttribute(ColName = "Qty",ColDesc = "数量")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Qty" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "数量" )]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Qty" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "数量" )]
         public decimal Qty
         { 
             get{return _Qty;}
@@ -129,7 +129,7 @@ namespace RUINORERP.Model
         /// 比例
         /// </summary>
         [AdvQueryAttribute(ColName = "Scale",ColDesc = "比例")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Scale" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "比例" )]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Scale" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "比例" )]
         public decimal Scale
         { 
             get{return _Scale;}
@@ -143,7 +143,7 @@ namespace RUINORERP.Model
         /// 单位成本
         /// </summary>
         [AdvQueryAttribute(ColName = "UnitCost",ColDesc = "单位成本")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "单位成本" )]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "UnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单位成本" )]
         public decimal UnitCost
         { 
             get{return _UnitCost;}
@@ -157,7 +157,7 @@ namespace RUINORERP.Model
         /// 成本小计
         /// </summary>
         [AdvQueryAttribute(ColName = "SubtotalCost",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCost" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "成本小计" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
         public decimal SubtotalCost
         { 
             get{return _SubtotalCost;}
@@ -184,17 +184,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
         public virtual tb_BOM_S tb_bom_s { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 

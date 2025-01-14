@@ -1,6 +1,6 @@
 ﻿namespace RUINORERP.UI.MRP.PQC
 {
-    partial class UCSaleOrderStatistics
+    partial class UCMRPReworkEntryStatistics
     {
         /// <summary> 
         /// 必需的设计器变量。

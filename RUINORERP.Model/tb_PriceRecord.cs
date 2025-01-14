@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:02
+// 时间：01/14/2025 18:57:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 价格记录表
     /// </summary>
     [Serializable()]
-    [Description("tb_PriceRecord")]
+    [Description("价格记录表")]
     [SugarTable("tb_PriceRecord")]
     public partial class tb_PriceRecord: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_PriceRecord" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("价格记录表tb_PriceRecord" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -114,7 +114,7 @@ namespace RUINORERP.Model
         /// 采购价
         /// </summary>
         [AdvQueryAttribute(ColName = "PurPrice",ColDesc = "采购价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PurPrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "采购价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PurPrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "采购价" )]
         public decimal PurPrice
         { 
             get{return _PurPrice;}
@@ -128,7 +128,7 @@ namespace RUINORERP.Model
         /// 销售价
         /// </summary>
         [AdvQueryAttribute(ColName = "SalePrice",ColDesc = "销售价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SalePrice" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "销售价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SalePrice" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "销售价" )]
         public decimal SalePrice
         { 
             get{return _SalePrice;}
@@ -141,12 +141,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 

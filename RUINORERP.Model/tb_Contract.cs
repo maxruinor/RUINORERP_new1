@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:30
+// 时间：01/14/2025 18:56:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 先销售合同再订单,条款内容后面补充
     /// </summary>
     [Serializable()]
-    [Description("tb_Contract")]
+    [Description("先销售合同再订单,条款内容后面补充")]
     [SugarTable("tb_Contract")]
     public partial class tb_Contract: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Contract" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("先销售合同再订单,条款内容后面补充tb_Contract" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -155,7 +155,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalCost",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalCost" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "总金额" )]
         public decimal? TotalCost
         { 
             get{return _TotalCost;}
@@ -169,7 +169,7 @@ namespace RUINORERP.Model
         /// 总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "总金额" )]
         public decimal? TotalAmount
         { 
             get{return _TotalAmount;}
@@ -323,12 +323,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(InvoiceInfo_ID))]
         public virtual tb_InvoiceInfo tb_invoiceinfo { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ContractDetail.ContractID))]
         public virtual List<tb_ContractDetail> tb_ContractDetails { get; set; }

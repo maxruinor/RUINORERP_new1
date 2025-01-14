@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 12:06:59
+// 时间：01/14/2025 22:02:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -34,10 +34,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 返工入库单
         /// </summary>
-        [SugarColumn(ColumnName = "ReworkEntryID",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "ReworkEntryID",IsNullable = true,ColumnDescription = "返工入库单")]
+        [Display(Name = "返工入库单")]
         public long? ReworkEntryID 
         { 
             get{return _ReworkEntryID;}            set{                SetProperty(ref _ReworkEntryID, value);                }
@@ -47,10 +47,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 返工入库单号
         /// </summary>
-        [SugarColumn(ColumnName = "ReworkEntryNo",Length=50,IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "ReworkEntryNo",Length=50,IsNullable = true,ColumnDescription = "返工入库单号")]
+        [Display(Name = "返工入库单号")]
         public string ReworkEntryNo 
         { 
             get{return _ReworkEntryNo;}            set{                SetProperty(ref _ReworkEntryNo, value);                }
@@ -60,23 +60,36 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 返工退库单
         /// </summary>
-        [SugarColumn(ColumnName = "ReworkReturnID",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "ReworkReturnID",IsNullable = true,ColumnDescription = "返工退库单")]
+        [Display(Name = "返工退库单")]
         public long? ReworkReturnID 
         { 
             get{return _ReworkReturnID;}            set{                SetProperty(ref _ReworkReturnID, value);                }
+        }
+
+        private string _ReworkReturnNo;
+        
+        
+        /// <summary>
+        /// 退库单号
+        /// </summary>
+        [SugarColumn(ColumnName = "ReworkReturnNo",Length=50,IsNullable = true,ColumnDescription = "退库单号")]
+        [Display(Name = "退库单号")]
+        public string ReworkReturnNo 
+        { 
+            get{return _ReworkReturnNo;}            set{                SetProperty(ref _ReworkReturnNo, value);                }
         }
 
         private DateTime? _EntryDate;
         
         
         /// <summary>
-        /// 
+        /// 入库日期
         /// </summary>
-        [SugarColumn(ColumnName = "EntryDate",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "EntryDate",IsNullable = true,ColumnDescription = "入库日期")]
+        [Display(Name = "入库日期")]
         public DateTime? EntryDate 
         { 
             get{return _EntryDate;}            set{                SetProperty(ref _EntryDate, value);                }
@@ -86,10 +99,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 生产单位
         /// </summary>
-        [SugarColumn(ColumnName = "CustomerVendor_ID",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "CustomerVendor_ID",IsNullable = true,ColumnDescription = "生产单位")]
+        [Display(Name = "生产单位")]
         public long? CustomerVendor_ID 
         { 
             get{return _CustomerVendor_ID;}            set{                SetProperty(ref _CustomerVendor_ID, value);                }
@@ -99,10 +112,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 经办人
         /// </summary>
-        [SugarColumn(ColumnName = "Employee_ID",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Employee_ID",IsNullable = true,ColumnDescription = "经办人")]
+        [Display(Name = "经办人")]
         public long? Employee_ID 
         { 
             get{return _Employee_ID;}            set{                SetProperty(ref _Employee_ID, value);                }
@@ -112,10 +125,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 备注
         /// </summary>
-        [SugarColumn(ColumnName = "Notes",Length=1500,IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Notes",Length=1500,IsNullable = true,ColumnDescription = "备注")]
+        [Display(Name = "备注")]
         public string Notes 
         { 
             get{return _Notes;}            set{                SetProperty(ref _Notes, value);                }
@@ -125,10 +138,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 数据状态
         /// </summary>
-        [SugarColumn(ColumnName = "DataStatus",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "DataStatus",IsNullable = true,ColumnDescription = "数据状态")]
+        [Display(Name = "数据状态")]
         public int? DataStatus 
         { 
             get{return _DataStatus;}            set{                SetProperty(ref _DataStatus, value);                }
@@ -138,24 +151,24 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 审批意见
         /// </summary>
-        [SugarColumn(ColumnName = "ApprovalOpinions",Length=200,IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "ApprovalOpinions",Length=200,IsNullable = true,ColumnDescription = "审批意见")]
+        [Display(Name = "审批意见")]
         public string ApprovalOpinions 
         { 
             get{return _ApprovalOpinions;}            set{                SetProperty(ref _ApprovalOpinions, value);                }
         }
 
-        private long _ProdDetailID;
+        private long? _ProdDetailID;
         
         
         /// <summary>
-        /// 
+        /// 产品
         /// </summary>
-        [SugarColumn(ColumnName = "ProdDetailID",IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
-        public long ProdDetailID 
+        [SugarColumn(ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "产品")]
+        [Display(Name = "产品")]
+        public long? ProdDetailID 
         { 
             get{return _ProdDetailID;}            set{                SetProperty(ref _ProdDetailID, value);                }
         }
@@ -164,10 +177,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// SKU码
         /// </summary>
-        [SugarColumn(ColumnName = "SKU",Length=80,IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "SKU",Length=80,IsNullable = true,ColumnDescription = "SKU码")]
+        [Display(Name = "SKU码")]
         public string SKU 
         { 
             get{return _SKU;}            set{                SetProperty(ref _SKU, value);                }
@@ -177,10 +190,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 规格
         /// </summary>
-        [SugarColumn(ColumnName = "Specifications",Length=1000,IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Specifications",Length=1000,IsNullable = true,ColumnDescription = "规格")]
+        [Display(Name = "规格")]
         public string Specifications 
         { 
             get{return _Specifications;}            set{                SetProperty(ref _Specifications, value);                }
@@ -190,10 +203,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 品名
         /// </summary>
-        [SugarColumn(ColumnName = "CNName",Length=255,IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "CNName",Length=255,IsNullable = true,ColumnDescription = "品名")]
+        [Display(Name = "品名")]
         public string CNName 
         { 
             get{return _CNName;}            set{                SetProperty(ref _CNName, value);                }
@@ -203,24 +216,24 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 型号
         /// </summary>
-        [SugarColumn(ColumnName = "Model",Length=50,IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Model",Length=50,IsNullable = true,ColumnDescription = "型号")]
+        [Display(Name = "型号")]
         public string Model 
         { 
             get{return _Model;}            set{                SetProperty(ref _Model, value);                }
         }
 
-        private long _Type_ID;
+        private long? _Type_ID;
         
         
         /// <summary>
-        /// 
+        /// 产品类型
         /// </summary>
-        [SugarColumn(ColumnName = "Type_ID",IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
-        public long Type_ID 
+        [SugarColumn(ColumnName = "Type_ID",IsNullable = true,ColumnDescription = "产品类型")]
+        [Display(Name = "产品类型")]
+        public long? Type_ID 
         { 
             get{return _Type_ID;}            set{                SetProperty(ref _Type_ID, value);                }
         }
@@ -229,24 +242,24 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 属性
         /// </summary>
-        [SugarColumn(ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "属性")]
+        [Display(Name = "属性")]
         public string property 
         { 
             get{return _property;}            set{                SetProperty(ref _property, value);                }
         }
 
-        private long _Location_ID;
+        private long? _Location_ID;
         
         
         /// <summary>
-        /// 
+        /// 库位
         /// </summary>
-        [SugarColumn(ColumnName = "Location_ID",IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
-        public long Location_ID 
+        [SugarColumn(ColumnName = "Location_ID",IsNullable = true,ColumnDescription = "库位")]
+        [Display(Name = "库位")]
+        public long? Location_ID 
         { 
             get{return _Location_ID;}            set{                SetProperty(ref _Location_ID, value);                }
         }
@@ -255,10 +268,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 摘要
         /// </summary>
-        [SugarColumn(ColumnName = "Summary",Length=1000,IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Summary",Length=1000,IsNullable = true,ColumnDescription = "摘要")]
+        [Display(Name = "摘要")]
         public string Summary 
         { 
             get{return _Summary;}            set{                SetProperty(ref _Summary, value);                }
@@ -268,62 +281,23 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 部门
         /// </summary>
-        [SugarColumn(ColumnName = "DepartmentID",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "DepartmentID",IsNullable = true,ColumnDescription = "部门")]
+        [Display(Name = "部门")]
         public long? DepartmentID 
         { 
             get{return _DepartmentID;}            set{                SetProperty(ref _DepartmentID, value);                }
-        }
-
-        private int? _TotalQty;
-        
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        [SugarColumn(ColumnName = "TotalQty",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
-        public int? TotalQty 
-        { 
-            get{return _TotalQty;}            set{                SetProperty(ref _TotalQty, value);                }
-        }
-
-        private decimal? _TotalReworkFee;
-        
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        [SugarColumn(ColumnName = "TotalReworkFee",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
-        public decimal? TotalReworkFee 
-        { 
-            get{return _TotalReworkFee;}            set{                SetProperty(ref _TotalReworkFee, value);                }
-        }
-
-        private decimal? _TotalCost;
-        
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        [SugarColumn(ColumnName = "TotalCost",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
-        public decimal? TotalCost 
-        { 
-            get{return _TotalCost;}            set{                SetProperty(ref _TotalCost, value);                }
         }
 
         private DateTime? _Approver_at;
         
         
         /// <summary>
-        /// 
+        /// 审批时间
         /// </summary>
-        [SugarColumn(ColumnName = "Approver_at",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Approver_at",IsNullable = true,ColumnDescription = "审批时间")]
+        [Display(Name = "审批时间")]
         public DateTime? Approver_at 
         { 
             get{return _Approver_at;}            set{                SetProperty(ref _Approver_at, value);                }
@@ -333,10 +307,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 审批人
         /// </summary>
-        [SugarColumn(ColumnName = "Approver_by",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Approver_by",IsNullable = true,ColumnDescription = "审批人")]
+        [Display(Name = "审批人")]
         public long? Approver_by 
         { 
             get{return _Approver_by;}            set{                SetProperty(ref _Approver_by, value);                }
@@ -346,10 +320,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 审批状态
         /// </summary>
-        [SugarColumn(ColumnName = "ApprovalStatus",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "ApprovalStatus",IsNullable = true,ColumnDescription = "审批状态")]
+        [Display(Name = "审批状态")]
         public int? ApprovalStatus 
         { 
             get{return _ApprovalStatus;}            set{                SetProperty(ref _ApprovalStatus, value);                }
@@ -359,10 +333,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 审批结果
         /// </summary>
-        [SugarColumn(ColumnName = "ApprovalResults",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "ApprovalResults",IsNullable = true,ColumnDescription = "审批结果")]
+        [Display(Name = "审批结果")]
         public bool? ApprovalResults 
         { 
             get{return _ApprovalResults;}            set{                SetProperty(ref _ApprovalResults, value);                }
@@ -372,10 +346,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 创建时间
         /// </summary>
-        [SugarColumn(ColumnName = "Created_at",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Created_at",IsNullable = true,ColumnDescription = "创建时间")]
+        [Display(Name = "创建时间")]
         public DateTime? Created_at 
         { 
             get{return _Created_at;}            set{                SetProperty(ref _Created_at, value);                }
@@ -385,10 +359,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 创建人
         /// </summary>
-        [SugarColumn(ColumnName = "Created_by",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Created_by",IsNullable = true,ColumnDescription = "创建人")]
+        [Display(Name = "创建人")]
         public long? Created_by 
         { 
             get{return _Created_by;}            set{                SetProperty(ref _Created_by, value);                }
@@ -398,10 +372,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 修改时间
         /// </summary>
-        [SugarColumn(ColumnName = "Modified_at",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Modified_at",IsNullable = true,ColumnDescription = "修改时间")]
+        [Display(Name = "修改时间")]
         public DateTime? Modified_at 
         { 
             get{return _Modified_at;}            set{                SetProperty(ref _Modified_at, value);                }
@@ -411,76 +385,76 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 修改人
         /// </summary>
-        [SugarColumn(ColumnName = "Modified_by",IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "Modified_by",IsNullable = true,ColumnDescription = "修改人")]
+        [Display(Name = "修改人")]
         public long? Modified_by 
         { 
             get{return _Modified_by;}            set{                SetProperty(ref _Modified_by, value);                }
         }
 
-        private int _Quantity;
+        private int? _Quantity;
         
         
         /// <summary>
-        /// 
+        /// 数量
         /// </summary>
-        [SugarColumn(ColumnName = "Quantity",IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
-        public int Quantity 
+        [SugarColumn(ColumnName = "Quantity",IsNullable = true,ColumnDescription = "数量")]
+        [Display(Name = "数量")]
+        public int? Quantity 
         { 
             get{return _Quantity;}            set{                SetProperty(ref _Quantity, value);                }
         }
 
-        private decimal _ReworkFee;
+        private decimal? _ReworkFee;
         
         
         /// <summary>
-        /// 
+        /// 返工费用
         /// </summary>
-        [SugarColumn(ColumnName = "ReworkFee",IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
-        public decimal ReworkFee 
+        [SugarColumn(ColumnName = "ReworkFee",IsNullable = true,ColumnDescription = "返工费用")]
+        [Display(Name = "返工费用")]
+        public decimal? ReworkFee 
         { 
             get{return _ReworkFee;}            set{                SetProperty(ref _ReworkFee, value);                }
         }
 
-        private decimal _SubtotalReworkFee;
+        private decimal? _SubtotalReworkFee;
         
         
         /// <summary>
-        /// 
+        /// 预估费用小计
         /// </summary>
-        [SugarColumn(ColumnName = "SubtotalReworkFee",IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
-        public decimal SubtotalReworkFee 
+        [SugarColumn(ColumnName = "SubtotalReworkFee",IsNullable = true,ColumnDescription = "预估费用小计")]
+        [Display(Name = "预估费用小计")]
+        public decimal? SubtotalReworkFee 
         { 
             get{return _SubtotalReworkFee;}            set{                SetProperty(ref _SubtotalReworkFee, value);                }
         }
 
-        private decimal _UnitCost;
+        private decimal? _UnitCost;
         
         
         /// <summary>
-        /// 
+        /// 成本
         /// </summary>
-        [SugarColumn(ColumnName = "UnitCost",IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
-        public decimal UnitCost 
+        [SugarColumn(ColumnName = "UnitCost",IsNullable = true,ColumnDescription = "成本")]
+        [Display(Name = "成本")]
+        public decimal? UnitCost 
         { 
             get{return _UnitCost;}            set{                SetProperty(ref _UnitCost, value);                }
         }
 
-        private decimal _SubtotalCostAmount;
+        private decimal? _SubtotalCostAmount;
         
         
         /// <summary>
-        /// 
+        /// 小计
         /// </summary>
-        [SugarColumn(ColumnName = "SubtotalCostAmount",IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
-        public decimal SubtotalCostAmount 
+        [SugarColumn(ColumnName = "SubtotalCostAmount",IsNullable = true,ColumnDescription = "小计")]
+        [Display(Name = "小计")]
+        public decimal? SubtotalCostAmount 
         { 
             get{return _SubtotalCostAmount;}            set{                SetProperty(ref _SubtotalCostAmount, value);                }
         }
@@ -489,10 +463,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 客户型号
         /// </summary>
-        [SugarColumn(ColumnName = "CustomertModel",Length=50,IsNullable = true,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "CustomertModel",Length=50,IsNullable = true,ColumnDescription = "客户型号")]
+        [Display(Name = "客户型号")]
         public string CustomertModel 
         { 
             get{return _CustomertModel;}            set{                SetProperty(ref _CustomertModel, value);                }
@@ -502,10 +476,10 @@ namespace RUINORERP.Model
         
         
         /// <summary>
-        /// 
+        /// 品号
         /// </summary>
-        [SugarColumn(ColumnName = "ProductNo",Length=40,IsNullable = false,ColumnDescription = "")]
-        [Display(Name = "")]
+        [SugarColumn(ColumnName = "ProductNo",Length=40,IsNullable = true,ColumnDescription = "品号")]
+        [Display(Name = "品号")]
         public string ProductNo 
         { 
             get{return _ProductNo;}            set{                SetProperty(ref _ProductNo, value);                }

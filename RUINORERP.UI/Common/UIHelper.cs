@@ -203,6 +203,7 @@ namespace RUINORERP.UI.Common
                                     {
                                         InvisibleCols.Add(item.tb_fieldinfo.FieldName);
                                     }
+  
 
                                     if (item.HideValue && item.tb_fieldinfo.IsChild && !DefaultHideCols.Contains(item.tb_fieldinfo.FieldName))
                                     {
@@ -941,11 +942,11 @@ namespace RUINORERP.UI.Common
             {
                 foreach (PropertyInfo field in type.GetProperties())
                 {
-                    bool brow = true;
+                    bool Browsable = true;
                     var attributes = field.GetCustomAttributes(true);
                     if (attributes.Contains(new BrowsableAttribute(false)))
                     {
-                        brow = false;
+                        Browsable = false;
                         // Checks to see if the value of the BrowsableAttribute is Yes.
                         //if (attributes[typeof(BrowsableAttribute)].Equals(BrowsableAttribute.No))
                         //{
@@ -966,10 +967,29 @@ namespace RUINORERP.UI.Common
                         entityAttr = attr as SugarColumn;
                         if (null != entityAttr)
                         {
+                            //类型
                             if (entityAttr.ColumnDescription == null)
                             {
+                                ColumnDisplayController col = new ColumnDisplayController();
+                                col.ColDisplayIndex = 0;
+                                col.Visible = false;//默认不显示主键
+                                col.ColName = field.Name;
+                                col.Disable = true;
+                                columnDisplayControllers.Add(col);
                                 continue;
                             }
+                            if (entityAttr.IsIgnore)
+                            {
+                                ColumnDisplayController col = new ColumnDisplayController();
+                                col.ColDisplayText = entityAttr.ColumnDescription;
+                                col.ColDisplayIndex = columnDisplayControllers.Count;
+                                col.Visible = false;//默认不显示主键
+                                col.ColName = field.Name;
+                                col.Disable = true;
+                                columnDisplayControllers.Add(col);
+                                continue;
+                            }
+
                             if (entityAttr.IsIdentity)
                             {
                                 ColumnDisplayController col = new ColumnDisplayController();
@@ -993,7 +1013,7 @@ namespace RUINORERP.UI.Common
                                 continue;
                             }
 
-                            if (entityAttr.ColumnDescription.Trim().Length > 0 && brow)
+                            if (entityAttr.ColumnDescription.Trim().Length > 0 && Browsable)
                             {
                                 ColumnDisplayController col = new ColumnDisplayController();
                                 col.ColDisplayText = entityAttr.ColumnDescription;

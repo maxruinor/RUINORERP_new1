@@ -34,7 +34,7 @@ namespace RUINORERP.Business.Processor
     /// <summary>
     /// 返工入库
     /// </summary>
-    public partial class tb_MRP_ReworkEntryProcessor:BaseProcessor 
+    public partial class View_MRP_ReworkEntryProcessor : BaseProcessor 
     {
 
         public override QueryFilter GetQueryFilter()
@@ -49,17 +49,17 @@ namespace RUINORERP.Business.Processor
                        //.AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                        .ToExpression();//注意 这一句 不能少
 
-            queryFilter.SetQueryField<tb_MRP_ReworkReturn, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
+            queryFilter.SetQueryField<View_MRP_ReworkEntry, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
 
             //可以根据关联外键自动加载条件，条件用公共虚方法
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.ReworkEntryNo);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry, tb_MRP_ReworkReturn>(c => c.ReworkReturnID, c => c.ReworkReturnNo, t => t.ReworkReturnNo);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.EntryDate);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.DepartmentID);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.Notes);
+            queryFilter.SetQueryField<View_MRP_ReworkEntry>(c => c.ReworkEntryNo);
+            queryFilter.SetQueryField<View_MRP_ReworkEntry>(c => c.ReworkReturnNo);
+            //queryFilter.SetQueryField<View_MRP_ReworkEntry, tb_MRP_ReworkReturn>(c => c.ReworkReturnID, c => c.ReworkReturnNo, t => t.ReworkReturnNo);
+            queryFilter.SetQueryField<View_MRP_ReworkEntry>(c => c.EntryDate);
+            queryFilter.SetQueryField<View_MRP_ReworkEntry>(c => c.DepartmentID);
+            queryFilter.SetQueryField<View_MRP_ReworkEntry>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
+            queryFilter.SetQueryField<View_MRP_ReworkEntry>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
+            queryFilter.SetQueryField<View_MRP_ReworkEntry>(c => c.Notes);
             return queryFilter;
 
 

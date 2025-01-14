@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:16:35
+// 时间：01/14/2025 18:57:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -238,12 +238,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.ProjectGroup_ID))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
@@ -251,7 +251,7 @@ namespace RUINORERP.Model
         //ProjectGroup_ID.FK_OTHEREXPENSEDETAIL_REF_PROJEGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.ProjectGroup_ID))]
         public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
@@ -259,7 +259,7 @@ namespace RUINORERP.Model
         //ProjectGroup_ID.FK_MATEREQUISITIONS_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOut.ProjectGroup_ID))]
         public virtual List<tb_SaleOut> tb_SaleOuts { get; set; }
@@ -267,7 +267,7 @@ namespace RUINORERP.Model
         //ProjectGroup_ID.FK_TB_SALEOUT_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlan.ProjectGroup_ID))]
         public virtual List<tb_ProductionPlan> tb_ProductionPlans { get; set; }
@@ -275,7 +275,7 @@ namespace RUINORERP.Model
         //ProjectGroup_ID.FK_TB_PRODUPLAN_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.ProjectGroup_ID))]
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
@@ -283,7 +283,7 @@ namespace RUINORERP.Model
         //ProjectGroup_ID.FK_EXPENSECLAIMDETAIL_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrder.ProjectGroup_ID))]
         public virtual List<tb_SaleOrder> tb_SaleOrders { get; set; }
@@ -291,7 +291,7 @@ namespace RUINORERP.Model
         //ProjectGroup_ID.FK_SALEORDER_REF_PROJECTGROUP)
         //tb_ProjectGroup.ProjectGroup_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutRe.ProjectGroup_ID))]
         public virtual List<tb_SaleOutRe> tb_SaleOutRes { get; set; }

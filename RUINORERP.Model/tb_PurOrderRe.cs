@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:23
+// 时间：01/14/2025 18:57:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 采购退回单 当采购发生退回时，您可以将它记录在本系统的采购退回作业中。在实际业务中虽然发生了采购但实际货物却还未入库，采购退回作业可退回订金、退回数量处理。采购退回单可以由采购订单转入，也可以手动录入新增单据,一般没有金额变化的，可以直接作废采购单。有订单等才需要做退回
     /// </summary>
     [Serializable()]
-    [Description("tb_PurOrderRe")]
+    [Description("采购退回单 当采购发生退回时，您可以将它记录在本系统的采购退回作业中。在实际业务中虽然发生了采购但实际货物却还未入库，采购退回作业可退回订金、退回数量处理。采购退回单可以由采购订单转入，也可以手动录入新增单据,一般没有金额变化的，可以直接作废采购单。有订单等才需要做退回")]
     [SugarTable("tb_PurOrderRe")]
     public partial class tb_PurOrderRe: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_PurOrderRe" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("采购退回单 当采购发生退回时，您可以将它记录在本系统的采购退回作业中。在实际业务中虽然发生了采购但实际货物却还未入库，采购退回作业可退回订金、退回数量处理。采购退回单可以由采购订单转入，也可以手动录入新增单据,一般没有金额变化的，可以直接作废采购单。有订单等才需要做退回tb_PurOrderRe" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -128,7 +128,7 @@ namespace RUINORERP.Model
         /// 实际收回订金货款
         /// </summary>
         [AdvQueryAttribute(ColName = "GetPayment",ColDesc = "实际收回订金货款")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "GetPayment" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "实际收回订金货款" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "GetPayment" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实际收回订金货款" )]
         public decimal GetPayment
         { 
             get{return _GetPayment;}
@@ -142,7 +142,7 @@ namespace RUINORERP.Model
         /// 总计税额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalTaxAmount",ColDesc = "总计税额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTaxAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总计税额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalTaxAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总计税额" )]
         public decimal TotalTaxAmount
         { 
             get{return _TotalTaxAmount;}
@@ -156,7 +156,7 @@ namespace RUINORERP.Model
         /// 总计金额
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总计金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 6,IsNullable = false,ColumnDescription = "总计金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总计金额" )]
         public decimal TotalAmount
         { 
             get{return _TotalAmount;}
@@ -423,7 +423,7 @@ namespace RUINORERP.Model
         /// 合计数量
         /// </summary>
         [AdvQueryAttribute(ColName = "TotalQty",ColDesc = "合计数量")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalQty" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "合计数量" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalQty" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "合计数量" )]
         public decimal? TotalQty
         { 
             get{return _TotalQty;}
@@ -436,17 +436,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PurOrder_ID))]
         public virtual tb_PurOrder tb_purorder { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrderReDetail.PurRetrunID))]
         public virtual List<tb_PurOrderReDetail> tb_PurOrderReDetails { get; set; }

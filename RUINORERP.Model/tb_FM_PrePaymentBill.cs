@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:45
+// 时间：01/14/2025 18:56:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 预收预付单,冲销动作会在付款单和收款单中体现
     /// </summary>
     [Serializable()]
-    [Description("tb_FM_PrePaymentBill")]
+    [Description("预收预付单,冲销动作会在付款单和收款单中体现")]
     [SugarTable("tb_FM_PrePaymentBill")]
     public partial class tb_FM_PrePaymentBill: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_FM_PrePaymentBill" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("预收预付单,冲销动作会在付款单和收款单中体现tb_FM_PrePaymentBill" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -114,7 +114,7 @@ namespace RUINORERP.Model
         /// 预交易总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "PreTotalAmount",ColDesc = "预交易总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PreTotalAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "预交易总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PreTotalAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "预交易总金额" )]
         public decimal? PreTotalAmount
         { 
             get{return _PreTotalAmount;}
@@ -128,7 +128,7 @@ namespace RUINORERP.Model
         /// 已预交易总金额
         /// </summary>
         [AdvQueryAttribute(ColName = "PrePaidTotalAmount",ColDesc = "已预交易总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrePaidTotalAmount" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "已预交易总金额" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrePaidTotalAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "已预交易总金额" )]
         public decimal? PrePaidTotalAmount
         { 
             get{return _PrePaidTotalAmount;}
@@ -338,17 +338,17 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.PrePaymentBill_id))]
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
@@ -356,7 +356,7 @@ namespace RUINORERP.Model
         //PrePaymentBill_id.FK_FM_PAYMENT_RE_FM_PREPAYMENTBILL)
         //tb_FM_PrePaymentBill.PrePaymentBill_id)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBillDetail.PrePaymentBill_id))]
         public virtual List<tb_FM_PrePaymentBillDetail> tb_FM_PrePaymentBillDetails { get; set; }

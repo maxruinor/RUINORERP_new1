@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/04/2025 18:27:20
+// 时间：12/27/2024 18:30:49
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -32,15 +32,14 @@ using SqlSugar;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 返工入库
+    /// 返工退库
     /// </summary>
-    public partial class tb_MRP_ReworkEntryProcessor:BaseProcessor 
-    {
+    public partial class View_MRP_ReworkReturnProcessor : BaseProcessor 
+    { 
 
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
                        .And(t => t.Is_available == true)
@@ -48,26 +47,22 @@ namespace RUINORERP.Business.Processor
                        .And(t => t.Is_enabled == true)
                        //.AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                        .ToExpression();//注意 这一句 不能少
-
-            queryFilter.SetQueryField<tb_MRP_ReworkReturn, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
-
+            queryFilter.SetQueryField<View_MRP_ReworkReturn, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
             //可以根据关联外键自动加载条件，条件用公共虚方法
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.ReworkEntryNo);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry, tb_MRP_ReworkReturn>(c => c.ReworkReturnID, c => c.ReworkReturnNo, t => t.ReworkReturnNo);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.EntryDate);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.DepartmentID);
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
-            queryFilter.SetQueryField<tb_MRP_ReworkEntry>(c => c.Notes);
+            queryFilter.SetQueryField<View_MRP_ReworkReturn>(c => c.ReworkReturnNo);
+            queryFilter.SetQueryField<View_MRP_ReworkReturn>(c => c.MONO);
+            //queryFilter.SetQueryField<View_MRP_ReworkReturn, tb_ManufacturingOrder>(c => c.MOID, c => c.MONO, t => t.MONO);
+            queryFilter.SetQueryField<View_MRP_ReworkReturn>(c => c.ReturnDate);
+            queryFilter.SetQueryField<View_MRP_ReworkReturn>(c => c.DepartmentID);
+            queryFilter.SetQueryField<View_MRP_ReworkReturn>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
+            queryFilter.SetQueryField<View_MRP_ReworkReturn>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
+            queryFilter.SetQueryField<View_MRP_ReworkReturn>(c => c.ReasonForRework);
+            queryFilter.SetQueryField<View_MRP_ReworkReturn>(c => c.Notes);
             return queryFilter;
-
-
-
         }
-
     }
 }
+
 
 
 

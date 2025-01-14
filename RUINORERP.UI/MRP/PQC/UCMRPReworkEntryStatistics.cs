@@ -23,9 +23,9 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.MRP.PQC
 {
     [MenuAttrAssemblyInfo("返工入库统计", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.供应链管理.库存管理, BizType.返工入库统计)]
-    public partial class UCSaleOrderStatistics : BaseNavigatorGeneric<View_MRP_ReworkEntry, View_MRP_ReworkEntry>
+    public partial class UCMRPReworkEntryStatistics : BaseNavigatorGeneric<View_MRP_ReworkEntry, View_MRP_ReworkEntry>
     {
-        public UCSaleOrderStatistics()
+        public UCMRPReworkEntryStatistics()
         {
             InitializeComponent();
             //生成查询条件的相关实体 是不是也一个组，主子表呢？
@@ -45,8 +45,8 @@ namespace RUINORERP.UI.MRP.PQC
             //是否能通过一两个主表，通过 外键去找多级关联的表？
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOrder));
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOrderDetail));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_MRP_ReworkEntry));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_MRP_ReworkEntryDetail));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProdCategories));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Unit));
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;

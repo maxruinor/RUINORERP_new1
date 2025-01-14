@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/04/2025 19:45:31
+// 时间：01/14/2025 20:57:18
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 采购入库退回单明细
+    /// 返工退库明细
     /// </summary>
     public partial class tb_MRP_ReworkReturnDetailController<T>:BaseController<T> where T : class
     {

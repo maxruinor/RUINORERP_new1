@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/04/2025 19:45:29
+// 时间：01/14/2025 20:57:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,7 +49,10 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkReturnID).Must(CheckForeignKeyValue).WithMessage("返工退库单:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkReturnID).Must(CheckForeignKeyValue).WithMessage(":下拉选择值不正确。");
+
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkReturnNo).MaximumLength(25).WithMessage("退库单号:不能超过最大长度,25.");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkReturnNo).NotEmpty().WithMessage("退库单号:不能为空。");
 
 //***** 
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.TotalQty).NotNull().WithMessage("合计数量:不能为空。");

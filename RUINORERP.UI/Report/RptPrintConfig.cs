@@ -308,7 +308,7 @@ namespace RUINORERP.UI.Report
 
 
 
-
+            newSumDataGridView1.NeedSaveColumnsXml = true;
             newSumDataGridView1.XmlFileName = typeof(tb_PrintTemplate).Name;
             newSumDataGridView1.FieldNameList = Common.UIHelper.GetFieldNameColList(typeof(tb_PrintTemplate));
 

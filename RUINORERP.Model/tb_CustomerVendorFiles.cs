@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:34
+// 时间：01/14/2025 18:56:49
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 客户厂商认证文件表
     /// </summary>
     [Serializable()]
-    [Description("tb_CustomerVendorFiles")]
+    [Description("客户厂商认证文件表")]
     [SugarTable("tb_CustomerVendorFiles")]
     public partial class tb_CustomerVendorFiles: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_CustomerVendorFiles" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("客户厂商认证文件表tb_CustomerVendorFiles" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -98,7 +98,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 

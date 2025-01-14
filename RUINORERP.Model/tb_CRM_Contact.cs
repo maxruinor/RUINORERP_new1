@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:12
+// 时间：01/14/2025 18:56:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,10 +68,10 @@ namespace RUINORERP.Model
 
         private string _SocialTools;
         /// <summary>
-        /// 社交工具
+        /// 社交账号
         /// </summary>
-        [AdvQueryAttribute(ColName = "SocialTools",ColDesc = "社交工具")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SocialTools" ,Length=200,IsNullable = true,ColumnDescription = "社交工具" )]
+        [AdvQueryAttribute(ColName = "SocialTools",ColDesc = "社交账号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "SocialTools" ,Length=200,IsNullable = true,ColumnDescription = "社交账号" )]
         public string SocialTools
         { 
             get{return _SocialTools;}
@@ -253,7 +253,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Customer_id))]
         public virtual tb_CRM_Customer tb_crm_customer { get; set; }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:13:26
+// 时间：01/14/2025 18:57:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -97,7 +97,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrder.Paytype_ID))]
         public virtual List<tb_PurOrder> tb_PurOrders { get; set; }
@@ -105,7 +105,7 @@ namespace RUINORERP.Model
         //Paytype_ID.FK_PO_REF_PAYMEMETHOD)
         //tb_PaymentMethod.Paytype_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntry.Paytype_ID))]
         public virtual List<tb_PurEntry> tb_PurEntries { get; set; }
@@ -113,7 +113,7 @@ namespace RUINORERP.Model
         //Paytype_ID.FK_TB_PUREN_REF_TB_PAYMETHOD)
         //tb_PaymentMethod.Paytype_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOut.Paytype_ID))]
         public virtual List<tb_SaleOut> tb_SaleOuts { get; set; }
@@ -121,7 +121,7 @@ namespace RUINORERP.Model
         //Paytype_ID.FK_SALEOUT_REF_PAYMENTMETHOD)
         //tb_PaymentMethod.Paytype_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntry.Paytype_ID))]
         public virtual List<tb_PurReturnEntry> tb_PurReturnEntries { get; set; }
@@ -129,7 +129,7 @@ namespace RUINORERP.Model
         //Paytype_ID.FK_PURRETURNENTRY_REE_PAYMENTMETHOD)
         //tb_PaymentMethod.Paytype_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOrder.Paytype_ID))]
         public virtual List<tb_SaleOrder> tb_SaleOrders { get; set; }
@@ -137,7 +137,7 @@ namespace RUINORERP.Model
         //Paytype_ID.FK_TB_SALEO_REFERENCE_TB_PAYME)
         //tb_PaymentMethod.Paytype_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutRe.Paytype_ID))]
         public virtual List<tb_SaleOutRe> tb_SaleOutRes { get; set; }
@@ -145,7 +145,7 @@ namespace RUINORERP.Model
         //Paytype_ID.FK_SALEOUTRE_REF_PAYMENTMETHOD)
         //tb_PaymentMethod.Paytype_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.Paytype_ID))]
         public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
@@ -153,7 +153,7 @@ namespace RUINORERP.Model
         //Paytype_ID.FK_PURENTRYRE_PAYMETHOD)
         //tb_PaymentMethod.Paytype_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.Paytype_ID))]
         public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:23
+// 时间：01/14/2025 18:56:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 银行账号信息表
     /// </summary>
     [Serializable()]
-    [Description("tb_BankAccount")]
+    [Description("银行账号信息表")]
     [SugarTable("tb_BankAccount")]
     public partial class tb_BankAccount: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_BankAccount" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("银行账号信息表tb_BankAccount" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -125,7 +125,7 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Employee.BankAccount_id))]
         public virtual List<tb_Employee> tb_Employees { get; set; }
@@ -133,7 +133,7 @@ namespace RUINORERP.Model
         //BankAccount_id.FK_EMPLOYEE_REF_BANKACCOUNT)
         //tb_BankAccount.BankAccount_id)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CustomerVendor.BankAccount_id))]
         public virtual List<tb_CustomerVendor> tb_CustomerVendors { get; set; }

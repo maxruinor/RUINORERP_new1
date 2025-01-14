@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:32
+// 时间：01/14/2025 18:56:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 币别资料表
     /// </summary>
     [Serializable()]
-    [Description("tb_Currency")]
+    [Description("币别资料表")]
     [SugarTable("tb_Currency")]
     public partial class tb_Currency: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Currency" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("币别资料表tb_Currency" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -265,7 +265,15 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        [Browsable(false)]
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.Currency_ID))]
+        public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
+        //tb_FM_PaymentApplication.Currency_ID)
+        //Currency_ID.FK_PAYMENTAPPLICATION_REF_CURRENCY)
+        //tb_Currency.Currency_ID)
+
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Currency_ID))]
         public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
@@ -273,7 +281,15 @@ namespace RUINORERP.Model
         //Currency_ID.FK_ACCOUNTS_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.Currency_ID))]
+        public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
+        //tb_FM_ExpenseClaim.Currency_ID)
+        //Currency_ID.FK_EXPENSECLAIM_REF_CURRENCY)
+        //tb_Currency.Currency_ID)
+
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.Currency_ID))]
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
@@ -281,7 +297,7 @@ namespace RUINORERP.Model
         //Currency_ID.FK_FM_PAYMENTBILL_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBillDetail.Currency_ID))]
         public virtual List<tb_FM_PrePaymentBillDetail> tb_FM_PrePaymentBillDetails { get; set; }
@@ -289,20 +305,12 @@ namespace RUINORERP.Model
         //Currency_ID.FK_FM_PREPAYMENTDETAIL_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpense.Currency_ID))]
         public virtual List<tb_FM_OtherExpense> tb_FM_OtherExpenses { get; set; }
         //tb_FM_OtherExpense.Currency_ID)
         //Currency_ID.FK_OTHEREXPENSE_REF_CURRENCY)
-        //tb_Currency.Currency_ID)
-
-        [Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.Currency_ID))]
-        public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
-        //tb_FM_ExpenseClaim.Currency_ID)
-        //Currency_ID.FK_EXPENSECLAIM_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
 

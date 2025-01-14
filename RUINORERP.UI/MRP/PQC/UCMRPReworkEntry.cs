@@ -480,6 +480,7 @@ namespace RUINORERP.UI.MRP.PQC
                     entity.CustomerVendor_ID = ReworkReturn.CustomerVendor_ID.Value;
                 }
                 entity.ReworkReturnID = ReworkReturn.ReworkReturnID;
+                entity.ReworkReturnNo = ReworkReturn.ReworkReturnNo;
                 BusinessHelper.Instance.InitEntity(entity);
                 BindData(entity as tb_MRP_ReworkEntry);
             }

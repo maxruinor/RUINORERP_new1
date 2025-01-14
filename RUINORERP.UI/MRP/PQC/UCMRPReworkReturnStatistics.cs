@@ -44,8 +44,8 @@ namespace RUINORERP.UI.MRP.PQC
             //是否能通过一两个主表，通过 外键去找多级关联的表？
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(View_ProdDetail));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProductType));
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOrder));
-            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_SaleOrderDetail));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_MRP_ReworkEntry));
+            base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_MRP_ReworkEntryDetail));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_ProdCategories));
             base._UCMasterQuery.ColDisplayTypes.Add(typeof(tb_Unit));
             base._UCOutlookGridGroupAnalysis.ColDisplayTypes = base._UCMasterQuery.ColDisplayTypes;

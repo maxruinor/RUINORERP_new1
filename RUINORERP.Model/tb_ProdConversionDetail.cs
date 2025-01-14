@@ -326,27 +326,27 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        // [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID_from))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ConversionID))]
         public virtual tb_ProdConversion tb_prodconversion { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        // [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID_to))]
         public virtual tb_ProdDetail tb_proddetail_to { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        // [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Type_ID_from))]
         public virtual tb_ProductType tb_producttype_from { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        // [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Type_ID_to))]
         public virtual tb_ProductType tb_producttype_to { get; set; }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:05
+// 时间：01/14/2025 18:57:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品主次及属性关系表
     /// </summary>
     [Serializable()]
-    [Description("tb_Prod_Attr_Relation")]
+    [Description("产品主次及属性关系表")]
     [SugarTable("tb_Prod_Attr_Relation")]
     public partial class tb_Prod_Attr_Relation: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Prod_Attr_Relation" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("产品主次及属性关系表tb_Prod_Attr_Relation" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -100,8 +100,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 货品
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdBaseID",ColDesc = "产品")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdBaseID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "产品" )]
+        [AdvQueryAttribute(ColName = "ProdBaseID",ColDesc = "货品")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdBaseID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "货品" )]
         [FKRelationAttribute("tb_Prod","ProdBaseID")]
         public long? ProdBaseID
         { 
@@ -130,22 +130,22 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdBaseID))]
         public virtual tb_Prod tb_prod { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(PropertyValueID))]
         public virtual tb_ProdPropertyValue tb_prodpropertyvalue { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Property_ID))]
         public virtual tb_ProdProperty tb_prodproperty { get; set; }
 

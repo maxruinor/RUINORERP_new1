@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:11
+// 时间：01/14/2025 18:57:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品属性值表
     /// </summary>
     [Serializable()]
-    [Description("tb_ProdPropertyValue")]
+    [Description("产品属性值表")]
     [SugarTable("tb_ProdPropertyValue")]
     public partial class tb_ProdPropertyValue: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProdPropertyValue" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("产品属性值表tb_ProdPropertyValue" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -197,12 +197,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Property_ID))]
         public virtual tb_ProdProperty tb_prodproperty { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod_Attr_Relation.PropertyValueID))]
         public virtual List<tb_Prod_Attr_Relation> tb_Prod_Attr_Relations { get; set; }

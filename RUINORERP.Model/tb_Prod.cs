@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:04
+// 时间：01/14/2025 18:57:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 货品基本信息表
     /// </summary>
     [Serializable()]
-    [Description("tb_Prod")]
+    [Description("货品基本信息表")]
     [SugarTable("tb_Prod")]
     public partial class tb_Prod: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_Prod" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("货品基本信息表tb_Prod" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -139,14 +139,13 @@ namespace RUINORERP.Model
         /// <summary>
         /// 厂商型号
         /// </summary>
-        [AdvQueryAttribute(ColName = "VendorModelCode", ColDesc = "厂商型号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "VendorModelCode", Length = 50, IsNullable = true, ColumnDescription = "厂商型号")]
+        [AdvQueryAttribute(ColName = "VendorModelCode",ColDesc = "厂商型号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "VendorModelCode" ,Length=50,IsNullable = true,ColumnDescription = "厂商型号" )]
         public string VendorModelCode
-        {
-            get { return _VendorModelCode; }
-            set
-            {
-                SetProperty(ref _VendorModelCode, value);
+        { 
+            get{return _VendorModelCode;}
+            set{
+            SetProperty(ref _VendorModelCode, value);
             }
         }
 
@@ -555,47 +554,47 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
         public virtual tb_Department tb_department { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
         public virtual tb_Location tb_location { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Category_ID))]
         public virtual tb_ProdCategories tb_prodcategories { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Type_ID))]
         public virtual tb_ProductType tb_producttype { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Rack_ID))]
         public virtual tb_StorageRack tb_storagerack { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdDetail.ProdBaseID))]
         public virtual List<tb_ProdDetail> tb_ProdDetails { get; set; }
@@ -603,7 +602,7 @@ namespace RUINORERP.Model
         //ProdBaseID.FK_TB_PRODD_REFERENCE_TB_PROD)
         //tb_Prod.ProdBaseID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod_Attr_Relation.ProdBaseID))]
         public virtual List<tb_Prod_Attr_Relation> tb_Prod_Attr_Relations { get; set; }
@@ -611,7 +610,7 @@ namespace RUINORERP.Model
         //ProdBaseID.FK_TB_PROD__REF_TB_PROD_4)
         //tb_Prod.ProdBaseID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Packing.ProdBaseID))]
         public virtual List<tb_Packing> tb_Packings { get; set; }

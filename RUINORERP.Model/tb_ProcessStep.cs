@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:03
+// 时间：01/14/2025 18:57:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 流程步骤
     /// </summary>
     [Serializable()]
-    [Description("tb_ProcessStep")]
+    [Description("流程步骤")]
     [SugarTable("tb_ProcessStep")]
     public partial class tb_ProcessStep: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProcessStep" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("流程步骤tb_ProcessStep" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -184,22 +184,22 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(NextNode_ID))]
         public virtual tb_NextNodes tb_nextnodes { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Position_Id))]
         public virtual tb_Position tb_position { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(StepBodyld))]
         public virtual tb_StepBody tb_stepbody { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProcessDefinition.Step_Id))]
         public virtual List<tb_ProcessDefinition> tb_ProcessDefinitions { get; set; }

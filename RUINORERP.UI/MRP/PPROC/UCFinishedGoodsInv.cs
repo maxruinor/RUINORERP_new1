@@ -629,7 +629,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 entity.DeliveryDate = System.DateTime.Now;
                 entity.tb_manufacturingorder = SourceBill;
                 entity.IsOutSourced = SourceBill.IsOutSourced;
-                if (entity.IsOutSourced)
+                if (entity.IsOutSourced.HasValue)
                 {
                     entity.CustomerVendor_ID = SourceBill.CustomerVendor_ID_Out;
                 }

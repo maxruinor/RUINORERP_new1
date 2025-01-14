@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:06
+// 时间：01/14/2025 18:57:02
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品套装表
     /// </summary>
     [Serializable()]
-    [Description("tb_ProdBundle")]
+    [Description("产品套装表")]
     [SugarTable("tb_ProdBundle")]
     public partial class tb_ProdBundle: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_ProdBundle" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("产品套装表tb_ProdBundle" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -141,7 +141,7 @@ namespace RUINORERP.Model
         /// 市场零售价
         /// </summary>
         [AdvQueryAttribute(ColName = "Market_Price",ColDesc = "市场零售价")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Market_Price" , DecimalDigits = 6,IsNullable = true,ColumnDescription = "市场零售价" )]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Market_Price" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "市场零售价" )]
         public decimal? Market_Price
         { 
             get{return _Market_Price;}
@@ -365,12 +365,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
         public virtual tb_Unit tb_unit { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Packing.BundleID))]
         public virtual List<tb_Packing> tb_Packings { get; set; }
@@ -378,7 +378,7 @@ namespace RUINORERP.Model
         //BundleID.FK_PACKI_REF_TB_PRODBundle)
         //tb_ProdBundle.BundleID)
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProdBundleDetail.BundleID))]
         public virtual List<tb_ProdBundleDetail> tb_ProdBundleDetails { get; set; }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:47
+// 时间：01/14/2025 18:56:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 开票资料
     /// </summary>
     [Serializable()]
-    [Description("tb_InvoiceInfo")]
+    [Description("开票资料")]
     [SugarTable("tb_InvoiceInfo")]
     public partial class tb_InvoiceInfo: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             base.FieldNameList = fieldNameList;
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("tb_InvoiceInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("开票资料tb_InvoiceInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -138,10 +138,10 @@ namespace RUINORERP.Model
 
         private string _PIBankNo;
         /// <summary>
-        /// 银行账号
+        /// 银行帐号
         /// </summary>
-        [AdvQueryAttribute(ColName = "PIBankNo",ColDesc = "银行账号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PIBankNo" ,Length=50,IsNullable = true,ColumnDescription = "银行账号" )]
+        [AdvQueryAttribute(ColName = "PIBankNo",ColDesc = "银行帐号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PIBankNo" ,Length=50,IsNullable = true,ColumnDescription = "银行帐号" )]
         public string PIBankNo
         { 
             get{return _PIBankNo;}
@@ -252,11 +252,11 @@ namespace RUINORERP.Model
         /// <summary>
         /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "银行帐号", ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "银行帐号", Length=10,IsNullable = true,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "银行帐号",ColDesc = "")] 
+        [SugarColumn(ColumnDataType = "char", SqlParameterDbType ="String",  ColumnName = "银行帐号" ,Length=10,IsNullable = true,ColumnDescription = "" )]
         public string 银行帐号
         { 
-            get{return _银行帐号; }
+            get{return _银行帐号;}
             set{
             SetProperty(ref _银行帐号, value);
             }
@@ -266,12 +266,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
+        //[Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(CustomerVendor_ID))]
         public virtual tb_CustomerVendor tb_customervendor { get; set; }
 
 
-        [Browsable(false)]
+        //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Contract.InvoiceInfo_ID))]
         public virtual List<tb_Contract> tb_Contracts { get; set; }

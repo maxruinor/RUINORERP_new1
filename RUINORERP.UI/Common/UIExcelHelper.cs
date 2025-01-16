@@ -112,6 +112,18 @@ namespace RUINORERP.UI.Common
                                                 excelSheet.Cells[i + 2, k + 1].Value = newSumDataGridViewMaster[j, i].FormattedValue.ToString();
                                             }
                                         }
+                                        else if (Common.CommonHelper.Instance.GetRealType(newSumDataGridViewMaster[j, i].ValueType) == typeof(Int32))
+                                        {
+                                            //如果是枚举时 看显示的和值是不是一样。是一样优化值。否则显示所见
+                                            if (newSumDataGridViewMaster[j, i].Value != null && !newSumDataGridViewMaster[j, i].Value.ToString().Equals(newSumDataGridViewMaster[j, i].FormattedValue.ToString()))
+                                            {
+                                                excelSheet.Cells[i + 2, k + 1].Value = newSumDataGridViewMaster[j, i].FormattedValue.ToString();
+                                            }
+                                            else
+                                            {
+                                                excelSheet.Cells[i + 2, k + 1].Value = newSumDataGridViewMaster[j, i].Value;
+                                            }
+                                        }
                                         else
                                         {
                                             if (newSumDataGridViewMaster[j, i].Value != null)

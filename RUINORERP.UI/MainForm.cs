@@ -418,7 +418,6 @@ namespace RUINORERP.UI
         public IMemoryCache CacheTemp { get; set; }
 
 
-
         private async void MainForm_Load(object sender, EventArgs e)
         {
             CacheTemp = Startup.GetFromFac<IMemoryCache>();

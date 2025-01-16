@@ -19,6 +19,7 @@ using RUINORERP.Common;
 using RUINORERP.Common.SnowflakeIdHelper;
 using RUINORERP.UI.AdvancedUIModule;
 using Castle.Components.DictionaryAdapter.Xml;
+using System.Web.WebSockets;
 
 namespace RUINORERP.UI.Common
 {
@@ -45,7 +46,7 @@ namespace RUINORERP.UI.Common
         /// 定义模块 模块下定义好了对应枚举再对应上了UI
         /// 可以多次执行，但是发布后不需要每次执行
         /// </summary>
-        public void InitModuleAndMenu()
+        public async void InitModuleAndMenu()
         {
             //这里先提取要找到实体的类型，执行一次
             Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
@@ -60,6 +61,21 @@ namespace RUINORERP.UI.Common
             tb_MenuInfoController<tb_MenuInfo> mc = _appContext.GetRequiredService<tb_MenuInfoController<tb_MenuInfo>>();
             List<EnumDto> modules = new List<EnumDto>();
             modules = typeof(ModuleMenuDefine.模块定义).EnumToList();
+
+            //检测CRM如果没有购买则不会显示
+            if (!MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM))
+            {
+                modules = modules.Where(m => m.Name != ModuleMenuDefine.模块定义.客户关系.ToString()).ToList();
+            }
+            //先把相关的查出来，内存中去判断是否存在。这样可以多次执行（只能是在超级管理员或特殊用户下多次执行）普通用户是不能执行这个的
+            List<tb_ModuleDefinition> ExistModuleList = new List<tb_ModuleDefinition>();
+            ExistModuleList = await mdctr.QueryByNavAsync();
+            if (ExistModuleList==null)
+            {
+                ExistModuleList=new List<tb_ModuleDefinition>();
+            }
+
+            List<tb_ModuleDefinition> WantAddList = new List<tb_ModuleDefinition>();
             foreach (var item in modules)
             {
                 //定义模块
@@ -68,16 +84,17 @@ namespace RUINORERP.UI.Common
                 mod.ModuleNo = BizCodeGenerator.Instance.GetBaseInfoNo(BaseInfoType.ModuleDefinition);
                 mod.Available = true;
                 mod.Visible = true;
-                tb_ModuleDefinition isExistt = mdctr.IsExistEntity(e => e.ModuleName == mod.ModuleName);
+                tb_ModuleDefinition isExistt = ExistModuleList.FirstOrDefault(e => e.ModuleName == mod.ModuleName);
                 if (isExistt == null)
                 {
                     mod = mdctr.AddReEntity(mod);
+                    //WantAddList.Add(mod);
                 }
                 else
                 {
                     mod = isExistt;
                 }
-
+             
                 tb_MenuInfo menuInfoparent = new tb_MenuInfo();
                 // menuInfoparent.MenuID = IdHelper.GetLongId(); //会自动生成ID 第一次这样运行出错，可能没有初始化暂时不管
                 menuInfoparent.MenuName = item.Name;
@@ -129,8 +146,14 @@ namespace RUINORERP.UI.Common
                 }
 
             }
-
-
+            //if (GridSetting.UIGID == 0)
+            //{
+            //    await MainForm.Instance.AppContext.Db.Insertable(GridSetting).ExecuteReturnSnowflakeIdAsync();
+            //}
+            //else
+            //{
+            //    await MainForm.Instance.AppContext.Db.Updateable(GridSetting).ExecuteCommandAsync();
+            //}
         }
 
 
@@ -169,8 +192,6 @@ namespace RUINORERP.UI.Common
                 {
                     AddMenuItem(menuinfo, menuInfoParent, mc);
                 }
-
-
             }
         }
 
@@ -363,7 +384,7 @@ namespace RUINORERP.UI.Common
             {
                 _appContext.Db.CopyNew().Insertable<tb_ButtonInfo>(tb_ButtonInfos).ExecuteReturnSnowflakeIdListAsync();
             }
-           
+
         }
 
         /// <summary>

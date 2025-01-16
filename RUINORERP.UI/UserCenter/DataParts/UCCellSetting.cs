@@ -48,7 +48,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// </summary>
         public KryptonPageCollection Kpages { get; set; } = new KryptonPageCollection();
 
-        
+
         private void RefreshData_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem menuItem)
@@ -67,14 +67,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
             //tb_WorkCenterConfig
 
         }
-       
+
 
         /// <summary>
         /// 绑定工作单元个数
         /// </summary>
         private void BuilderCellListTreeView(tb_WorkCenterConfig centerConfig)
         {
-            if (centerConfig==null)
+            if (centerConfig == null)
             {
                 centerConfig = new tb_WorkCenterConfig();
             }
@@ -83,24 +83,28 @@ namespace RUINORERP.UI.UserCenter.DataParts
             nd.Text = "工作单元设置";
             nd.ImageIndex = 0;
             nd.Tag = centerConfig;
-            List<string> DataOverviewItems = centerConfig.DataOverview.Split(',').ToList();
-            foreach (var item in DataOverviewItems)
+            if (centerConfig != null && !string.IsNullOrEmpty(centerConfig.DataOverview))
             {
-                if (item.IsNullOrEmpty())
+                List<string> DataOverviewItems = centerConfig.DataOverview.Split(',').ToList();
+                foreach (var item in DataOverviewItems)
                 {
-                    continue;
-                }
-                数据概览 DataOverview = (数据概览)Enum.Parse(typeof(数据概览), item);
-                var kp = Kpages.FirstOrDefault(c => c.Name == DataOverview.ToString()
-                && !c.Name.Equals(GlobalConstants.UCCellSettingName));
-                if (kp != null)
-                {
-                    TreeNode node = new TreeNode(kp.Text);
-                    node.Tag = kp;
-                    node.Checked = kp.Visible;
-                    nd.Nodes.Add(node);
+                    if (item.IsNullOrEmpty())
+                    {
+                        continue;
+                    }
+                    数据概览 DataOverview = (数据概览)Enum.Parse(typeof(数据概览), item);
+                    var kp = Kpages.FirstOrDefault(c => c.Name == DataOverview.ToString()
+                    && !c.Name.Equals(GlobalConstants.UCCellSettingName));
+                    if (kp != null)
+                    {
+                        TreeNode node = new TreeNode(kp.Text);
+                        node.Tag = kp;
+                        node.Checked = kp.Visible;
+                        nd.Nodes.Add(node);
+                    }
                 }
             }
+     
 
             //添加重新加载的菜单
             nd.ContextMenuStrip = contextMenuStrip1;

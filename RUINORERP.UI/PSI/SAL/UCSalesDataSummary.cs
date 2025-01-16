@@ -393,7 +393,7 @@ namespace RUINORERP.UI.PSI.SAL
                     if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
                         CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.ClassPath == this.ToString()).FirstOrDefault();
-                        if (CurMenuInfo == null)
+                        if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
                         {
                             MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                             return;
@@ -782,7 +782,7 @@ namespace RUINORERP.UI.PSI.SAL
         private void BaseNavigatorGeneric_Load(object sender, EventArgs e)
         {
             this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.ClassPath == this.ToString()).FirstOrDefault();
-            if (this.CurMenuInfo == null)
+            if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
             {
                 MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                 return;

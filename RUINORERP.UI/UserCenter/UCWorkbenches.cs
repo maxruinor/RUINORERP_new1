@@ -105,7 +105,7 @@ namespace RUINORERP.UI.UserCenter
 
         private void ButtonSpecAny_Click(object sender, EventArgs e)
         {
-            
+
         }
 
         private void KryptonDockingManager1_DockspaceCellAdding(object sender, DockspaceCellEventArgs e)
@@ -403,7 +403,9 @@ namespace RUINORERP.UI.UserCenter
         private void LoadDefaultLayoutFromDb(KryptonPageCollection Kpages)
         {
             //没有个性化文件时用默认的
-            if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout))
+            if (MainForm.Instance.AppContext.CurrentUser != null 
+                && MainForm.Instance.AppContext.CurrentUser_Role_Personalized != null 
+                && !string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout))
             {
                 #region load
                 //加载XML文件

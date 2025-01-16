@@ -107,6 +107,7 @@ namespace RUINORERP.UI.CRM
                     if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                     {
                         BaseEditGeneric<tb_CRM_Customer> frmaddg = frm as BaseEditGeneric<tb_CRM_Customer>;
+                        frmaddg.CurMenuInfo = this.CurMenuInfo;
                         frmaddg.Text = "目标客户编辑";
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_Customer>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();

@@ -31,18 +31,15 @@
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.cmbGridViewList = new Krypton.Toolkit.KryptonComboBox();
-            this.lblPack_ID = new Krypton.Toolkit.KryptonLabel();
+            this.cmbColsDisplayModel = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.btnInitCol = new Krypton.Toolkit.KryptonButton();
             this.panelConditionEdit = new System.Windows.Forms.Panel();
             this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAll = new Krypton.Toolkit.KryptonCheckBox();
             this.listView1 = new System.Windows.Forms.ListView();
-            this.btnInitCol = new Krypton.Toolkit.KryptonButton();
-            this.cmbColsDisplayModel = new Krypton.Toolkit.KryptonComboBox();
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbGridViewList)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbColsDisplayModel)).BeginInit();
             this.SuspendLayout();
             // 
@@ -70,8 +67,6 @@
             this.kryptonPanel1.Controls.Add(this.cmbColsDisplayModel);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Controls.Add(this.btnInitCol);
-            this.kryptonPanel1.Controls.Add(this.cmbGridViewList);
-            this.kryptonPanel1.Controls.Add(this.lblPack_ID);
             this.kryptonPanel1.Controls.Add(this.panelConditionEdit);
             this.kryptonPanel1.Controls.Add(this.chkReverseSelection);
             this.kryptonPanel1.Controls.Add(this.chkAll);
@@ -84,23 +79,32 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(898, 624);
             this.kryptonPanel1.TabIndex = 14;
             // 
-            // cmbGridViewList
+            // cmbColsDisplayModel
             // 
-            this.cmbGridViewList.DropDownWidth = 100;
-            this.cmbGridViewList.IntegralHeight = false;
-            this.cmbGridViewList.Location = new System.Drawing.Point(75, 29);
-            this.cmbGridViewList.Name = "cmbGridViewList";
-            this.cmbGridViewList.Size = new System.Drawing.Size(157, 21);
-            this.cmbGridViewList.TabIndex = 43;
-            this.cmbGridViewList.SelectedIndexChanged += new System.EventHandler(this.cmbGridViewList_SelectedIndexChanged);
+            this.cmbColsDisplayModel.DropDownWidth = 100;
+            this.cmbColsDisplayModel.IntegralHeight = false;
+            this.cmbColsDisplayModel.Location = new System.Drawing.Point(308, 25);
+            this.cmbColsDisplayModel.Name = "cmbColsDisplayModel";
+            this.cmbColsDisplayModel.Size = new System.Drawing.Size(336, 21);
+            this.cmbColsDisplayModel.TabIndex = 46;
+            this.cmbColsDisplayModel.SelectedIndexChanged += new System.EventHandler(this.cmbColsDisplayModel_SelectedIndexChanged);
             // 
-            // lblPack_ID
+            // kryptonLabel1
             // 
-            this.lblPack_ID.Location = new System.Drawing.Point(12, 29);
-            this.lblPack_ID.Name = "lblPack_ID";
-            this.lblPack_ID.Size = new System.Drawing.Size(62, 20);
-            this.lblPack_ID.TabIndex = 42;
-            this.lblPack_ID.Values.Text = "目标表格";
+            this.kryptonLabel1.Location = new System.Drawing.Point(240, 25);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel1.TabIndex = 45;
+            this.kryptonLabel1.Values.Text = "列宽模式";
+            // 
+            // btnInitCol
+            // 
+            this.btnInitCol.Location = new System.Drawing.Point(776, 25);
+            this.btnInitCol.Name = "btnInitCol";
+            this.btnInitCol.Size = new System.Drawing.Size(90, 25);
+            this.btnInitCol.TabIndex = 44;
+            this.btnInitCol.Values.Text = "恢复默认设置";
+            this.btnInitCol.Click += new System.EventHandler(this.btnInitCol_Click);
             // 
             // panelConditionEdit
             // 
@@ -140,33 +144,6 @@
             this.listView1.View = System.Windows.Forms.View.Details;
             this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
             // 
-            // btnInitCol
-            // 
-            this.btnInitCol.Location = new System.Drawing.Point(776, 25);
-            this.btnInitCol.Name = "btnInitCol";
-            this.btnInitCol.Size = new System.Drawing.Size(90, 25);
-            this.btnInitCol.TabIndex = 44;
-            this.btnInitCol.Values.Text = "恢复默认设置";
-            this.btnInitCol.Click += new System.EventHandler(this.btnInitCol_Click);
-            // 
-            // cmbColsDisplayModel
-            // 
-            this.cmbColsDisplayModel.DropDownWidth = 100;
-            this.cmbColsDisplayModel.IntegralHeight = false;
-            this.cmbColsDisplayModel.Location = new System.Drawing.Point(359, 29);
-            this.cmbColsDisplayModel.Name = "cmbColsDisplayModel";
-            this.cmbColsDisplayModel.Size = new System.Drawing.Size(251, 21);
-            this.cmbColsDisplayModel.TabIndex = 46;
-            this.cmbColsDisplayModel.SelectedIndexChanged += new System.EventHandler(this.cmbColsDisplayModel_SelectedIndexChanged);
-            // 
-            // kryptonLabel1
-            // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(291, 29);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel1.TabIndex = 45;
-            this.kryptonLabel1.Values.Text = "列宽模式";
-            // 
             // frmGridViewColSetting
             // 
             this.AcceptButton = this.btnOk;
@@ -181,7 +158,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbGridViewList)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbColsDisplayModel)).EndInit();
             this.ResumeLayout(false);
 
@@ -195,8 +171,6 @@
         private Krypton.Toolkit.KryptonCheckBox chkReverseSelection;
         private Krypton.Toolkit.KryptonCheckBox chkAll;
         public System.Windows.Forms.Panel panelConditionEdit;
-        public Krypton.Toolkit.KryptonComboBox cmbGridViewList;
-        public Krypton.Toolkit.KryptonLabel lblPack_ID;
         private Krypton.Toolkit.KryptonButton btnInitCol;
         public Krypton.Toolkit.KryptonComboBox cmbColsDisplayModel;
         public Krypton.Toolkit.KryptonLabel kryptonLabel1;

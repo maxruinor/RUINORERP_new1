@@ -244,6 +244,7 @@ namespace RUINORERP.UI.CRM
                         if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                         {
                             BaseEditGeneric<tb_CRM_FollowUpRecords> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpRecords>;
+                            frmaddg.CurMenuInfo = this.CurMenuInfo;
                             frmaddg.Text = "跟进记录编辑";
                             frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpRecords>();
                             object obj = frmaddg.bindingSourceEdit.AddNew();

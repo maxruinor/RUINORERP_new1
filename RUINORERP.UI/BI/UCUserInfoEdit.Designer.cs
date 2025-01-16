@@ -31,6 +31,10 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonGroupBox3 = new Krypton.Toolkit.KryptonGroupBox();
+            this.rdbIsSuperUserNo = new Krypton.Toolkit.KryptonRadioButton();
+            this.rdbIsSuperUserYes = new Krypton.Toolkit.KryptonRadioButton();
+            this.lblIsSuperUser = new Krypton.Toolkit.KryptonLabel();
             this.cmbEmployee = new Krypton.Toolkit.KryptonComboBox();
             this.lblEmployee = new Krypton.Toolkit.KryptonLabel();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
@@ -47,13 +51,14 @@
             this.lblis_available = new Krypton.Toolkit.KryptonLabel();
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
-            this.kryptonGroupBox3 = new Krypton.Toolkit.KryptonGroupBox();
-            this.rdbIsSuperUserNo = new Krypton.Toolkit.KryptonRadioButton();
-            this.rdbIsSuperUserYes = new Krypton.Toolkit.KryptonRadioButton();
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.chkModifyPwd = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox3)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox3.Panel)).BeginInit();
+            this.kryptonGroupBox3.Panel.SuspendLayout();
+            this.kryptonGroupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2.Panel)).BeginInit();
@@ -63,10 +68,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1.Panel)).BeginInit();
             this.kryptonGroupBox1.Panel.SuspendLayout();
             this.kryptonGroupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox3.Panel)).BeginInit();
-            this.kryptonGroupBox3.Panel.SuspendLayout();
-            this.kryptonGroupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOk
@@ -89,8 +90,9 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkModifyPwd);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox3);
-            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.lblIsSuperUser);
             this.kryptonPanel1.Controls.Add(this.cmbEmployee);
             this.kryptonPanel1.Controls.Add(this.lblEmployee);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox2);
@@ -110,6 +112,44 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(570, 502);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // kryptonGroupBox3
+            // 
+            this.kryptonGroupBox3.CaptionVisible = false;
+            this.kryptonGroupBox3.Location = new System.Drawing.Point(206, 233);
+            this.kryptonGroupBox3.Name = "kryptonGroupBox3";
+            // 
+            // kryptonGroupBox3.Panel
+            // 
+            this.kryptonGroupBox3.Panel.Controls.Add(this.rdbIsSuperUserNo);
+            this.kryptonGroupBox3.Panel.Controls.Add(this.rdbIsSuperUserYes);
+            this.kryptonGroupBox3.Size = new System.Drawing.Size(106, 56);
+            this.kryptonGroupBox3.TabIndex = 75;
+            // 
+            // rdbIsSuperUserNo
+            // 
+            this.rdbIsSuperUserNo.Checked = true;
+            this.rdbIsSuperUserNo.Location = new System.Drawing.Point(58, 14);
+            this.rdbIsSuperUserNo.Name = "rdbIsSuperUserNo";
+            this.rdbIsSuperUserNo.Size = new System.Drawing.Size(35, 20);
+            this.rdbIsSuperUserNo.TabIndex = 3;
+            this.rdbIsSuperUserNo.Values.Text = "否";
+            // 
+            // rdbIsSuperUserYes
+            // 
+            this.rdbIsSuperUserYes.Location = new System.Drawing.Point(10, 14);
+            this.rdbIsSuperUserYes.Name = "rdbIsSuperUserYes";
+            this.rdbIsSuperUserYes.Size = new System.Drawing.Size(35, 20);
+            this.rdbIsSuperUserYes.TabIndex = 2;
+            this.rdbIsSuperUserYes.Values.Text = "是";
+            // 
+            // lblIsSuperUser
+            // 
+            this.lblIsSuperUser.Location = new System.Drawing.Point(129, 249);
+            this.lblIsSuperUser.Name = "lblIsSuperUser";
+            this.lblIsSuperUser.Size = new System.Drawing.Size(62, 20);
+            this.lblIsSuperUser.TabIndex = 74;
+            this.lblIsSuperUser.Values.Text = "超级用户";
             // 
             // cmbEmployee
             // 
@@ -249,43 +289,14 @@
             this.txtNotes.Size = new System.Drawing.Size(261, 102);
             this.txtNotes.TabIndex = 31;
             // 
-            // kryptonGroupBox3
+            // chkModifyPwd
             // 
-            this.kryptonGroupBox3.CaptionVisible = false;
-            this.kryptonGroupBox3.Location = new System.Drawing.Point(206, 233);
-            this.kryptonGroupBox3.Name = "kryptonGroupBox3";
-            // 
-            // kryptonGroupBox3.Panel
-            // 
-            this.kryptonGroupBox3.Panel.Controls.Add(this.rdbIsSuperUserNo);
-            this.kryptonGroupBox3.Panel.Controls.Add(this.rdbIsSuperUserYes);
-            this.kryptonGroupBox3.Size = new System.Drawing.Size(106, 56);
-            this.kryptonGroupBox3.TabIndex = 75;
-            // 
-            // rdbIsSuperUserNo
-            // 
-            this.rdbIsSuperUserNo.Checked = true;
-            this.rdbIsSuperUserNo.Location = new System.Drawing.Point(58, 14);
-            this.rdbIsSuperUserNo.Name = "rdbIsSuperUserNo";
-            this.rdbIsSuperUserNo.Size = new System.Drawing.Size(35, 20);
-            this.rdbIsSuperUserNo.TabIndex = 3;
-            this.rdbIsSuperUserNo.Values.Text = "否";
-            // 
-            // rdbIsSuperUserYes
-            // 
-            this.rdbIsSuperUserYes.Location = new System.Drawing.Point(10, 14);
-            this.rdbIsSuperUserYes.Name = "rdbIsSuperUserYes";
-            this.rdbIsSuperUserYes.Size = new System.Drawing.Size(35, 20);
-            this.rdbIsSuperUserYes.TabIndex = 2;
-            this.rdbIsSuperUserYes.Values.Text = "是";
-            // 
-            // kryptonLabel1
-            // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(129, 249);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
-            this.kryptonLabel1.TabIndex = 74;
-            this.kryptonLabel1.Values.Text = "超级用户";
+            this.chkModifyPwd.Location = new System.Drawing.Point(473, 53);
+            this.chkModifyPwd.Name = "chkModifyPwd";
+            this.chkModifyPwd.Size = new System.Drawing.Size(75, 20);
+            this.chkModifyPwd.TabIndex = 76;
+            this.chkModifyPwd.Values.Text = "修改密码";
+            this.chkModifyPwd.CheckedChanged += new System.EventHandler(this.chkModifyPwd_CheckedChanged);
             // 
             // UCUserInfoEdit
             // 
@@ -294,10 +305,16 @@
             this.ClientSize = new System.Drawing.Size(570, 502);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCUserInfoEdit";
+            this.Load += new System.EventHandler(this.UCUserInfoEdit_Load);
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox3.Panel)).EndInit();
+            this.kryptonGroupBox3.Panel.ResumeLayout(false);
+            this.kryptonGroupBox3.Panel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox3)).EndInit();
+            this.kryptonGroupBox3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2.Panel)).EndInit();
             this.kryptonGroupBox2.Panel.ResumeLayout(false);
@@ -309,11 +326,6 @@
             this.kryptonGroupBox1.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1)).EndInit();
             this.kryptonGroupBox1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox3.Panel)).EndInit();
-            this.kryptonGroupBox3.Panel.ResumeLayout(false);
-            this.kryptonGroupBox3.Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox3)).EndInit();
-            this.kryptonGroupBox3.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -342,6 +354,7 @@
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox3;
         private Krypton.Toolkit.KryptonRadioButton rdbIsSuperUserNo;
         private Krypton.Toolkit.KryptonRadioButton rdbIsSuperUserYes;
-        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonLabel lblIsSuperUser;
+        private Krypton.Toolkit.KryptonCheckBox chkModifyPwd;
     }
 }

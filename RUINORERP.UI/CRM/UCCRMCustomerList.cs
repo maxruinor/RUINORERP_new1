@@ -118,6 +118,7 @@ namespace RUINORERP.UI.CRM
                     if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                     {
                         BaseEditGeneric<tb_CRM_FollowUpPlans> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpPlans>;
+                        frmaddg.CurMenuInfo = this.CurMenuInfo;
                         frmaddg.Text = "跟进计划编辑";
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpPlans>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();
@@ -157,6 +158,7 @@ namespace RUINORERP.UI.CRM
                     if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                     {
                         BaseEditGeneric<tb_CRM_FollowUpRecords> frmaddg = frm as BaseEditGeneric<tb_CRM_FollowUpRecords>;
+                        frmaddg.CurMenuInfo = this.CurMenuInfo;
                         frmaddg.Text = "跟进记录编辑";
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_CRM_FollowUpRecords>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();
@@ -211,6 +213,7 @@ namespace RUINORERP.UI.CRM
                     if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                     {
                         BaseEditGeneric<tb_CustomerVendor> frmaddg = frm as BaseEditGeneric<tb_CustomerVendor>;
+                        frmaddg.CurMenuInfo = this.CurMenuInfo;
                         frmaddg.Text = "销售客户编辑";
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_CustomerVendor>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();

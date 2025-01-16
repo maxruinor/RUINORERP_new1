@@ -46,7 +46,15 @@ namespace RUINORERP.UI.BI
             */
         }
 
-
+        public override void BuildInvisibleCols()
+        {
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                base.InvisibleColsExp.Add(c => c.Password);
+                base.InvisibleColsExp.Add(c => c.IsSuperUser);
+            }
+           
+        }
 
     }
 }

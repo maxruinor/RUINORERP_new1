@@ -192,6 +192,7 @@ namespace RUINORERP.UI.MRP
                     if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                     {
                         BaseEditGeneric<tb_gl_Comment> frmaddg = frm as BaseEditGeneric<tb_gl_Comment>;
+                        frmaddg.CurMenuInfo = this.CurMenuInfo;
                         frmaddg.Text = "添加批注";
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_gl_Comment>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();

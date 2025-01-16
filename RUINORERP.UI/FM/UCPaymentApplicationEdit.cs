@@ -456,6 +456,7 @@ namespace RUINORERP.UI.FM
                         if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
                         {
                             BaseEditGeneric<tb_FM_PayeeInfo> frmaddg = frm as BaseEditGeneric<tb_FM_PayeeInfo>;
+                            frmaddg.CurMenuInfo = this.CurMenuInfo;
                             frmaddg.Text = "收款账号详情";
                             frmaddg.bindingSourceEdit.DataSource = new List<tb_FM_PayeeInfo>();
                             object obj = frmaddg.bindingSourceEdit.AddNew();

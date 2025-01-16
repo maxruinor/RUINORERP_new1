@@ -50,6 +50,8 @@ namespace RUINORERP.UI.BI
             cmbEmployee.DataBindings.Add(depa);
             #endregion
 
+
+
             // Set initial values
 
             rdbis_enabledYes.Checked = entity.is_enabled;
@@ -88,6 +90,8 @@ namespace RUINORERP.UI.BI
 
             DataBindingHelper.BindData4TextBox<tb_UserInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, true);
 
+
+
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
@@ -97,16 +101,41 @@ namespace RUINORERP.UI.BI
             base.errorProviderForAllInput.DataSource = entity;
         }
 
+
+        //旧密码要保存起来。有时 他可能多次点修改密码。最后又不修改则要把旧密码还回去
+        public string OldPwd = string.Empty;
+
         public override void BindData(BaseEntity entity)
         {
-
+            tb_UserInfo UserEntity = entity as tb_UserInfo;
+            if (UserEntity.User_ID > 0)
+            {
+                OldPwd = UserEntity.Password;
+            }
             DataBindingHelper.BindData4TextBox<tb_UserInfo>(entity, t => t.UserName, txtUserName, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4TextBox<tb_UserInfo>(entity, t => t.Password, txtPassword, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee);
-
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_UserInfo>(entity, t => t.is_enabled, rdbis_enabledYes, rdbis_enabledNo);
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_UserInfo>(entity, t => t.is_available, rdbis_availableYes, rdbis_availableNo);
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_UserInfo>(entity, t => t.IsSuperUser, rdbIsSuperUserYes, rdbIsSuperUserNo);
+            //新增加时密码不显示,修改时判断一下
+            if (UserEntity.User_ID == 0)
+            {
+                lblPassword.Visible = false;
+                txtPassword.Visible = false;
+                chkModifyPwd.Visible = false;
+            }
+            else
+            {
+                chkModifyPwd.Visible = true;
+            }
+
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                lblIsSuperUser.Visible = false;
+                rdbIsSuperUserYes.Visible = false;
+                rdbIsSuperUserNo.Visible = false;
+            }
 
             DataBindingHelper.BindData4TextBox<tb_UserInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, true);
 
@@ -151,12 +180,43 @@ namespace RUINORERP.UI.BI
                     _EditEntity.Password = enPwd;
                     MessageBox.Show("当前用户【" + txtUserName.Text + "】" + "默认密码为:123456,请新用户登陆系统后修改密码！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
+                if (_EditEntity.User_ID > 0 && chkModifyPwd.Checked)
+                {
+                    //修改为UI上的密码
+                    string enPwd = EncryptionHelper.AesEncryptByHashKey(_EditEntity.Password, _EditEntity.UserName);
+                    _EditEntity.Password = enPwd;
+                }
+                if (_EditEntity.User_ID > 0 && !chkModifyPwd.Checked)
+                {
+                    //修改为旧密码，因为没有修改
+                    _EditEntity.Password = OldPwd;
+                }
+
 
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
         }
 
+        private void chkModifyPwd_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkModifyPwd.Checked)
+            {
+                lblPassword.Visible = true;
+                txtPassword.Visible = true;
+                txtPassword.Text = string.Empty;
 
+            }
+            else
+            {
+                lblPassword.Visible = false;
+                txtPassword.Visible = false;
+            }
+        }
+
+        private void UCUserInfoEdit_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

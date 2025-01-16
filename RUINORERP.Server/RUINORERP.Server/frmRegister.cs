@@ -135,7 +135,7 @@ namespace RUINORERP.Server
 
         }
 
-        
+
 
         private async void btnRegister_Click(object sender, EventArgs e)
         {
@@ -260,7 +260,7 @@ namespace RUINORERP.Server
                     }
                 }
                 EditEntity.FunctionModule = string.Join(",", selectedModules);
-                
+
                 //生成机器码前 不加密。因为注册码生成时。提供商要审核时。要看到明码
                 EditEntity.MachineCode = frmMain.Instance.CreateMachineCode(EditEntity);
 
@@ -285,7 +285,50 @@ namespace RUINORERP.Server
             EditEntity.LicenseType = cmbLicenseType.SelectedItem.ToString();
         }
 
+        private void cmbDays_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            /*
+             一个月
+            三个月
+            六个月
+            一年
+            两年
+            三年
+            五年
+            十年
+             */
 
+            switch (cmbDays.SelectedItem.ToString())
+            {
+                case "一个月":
+                     EditEntity.ExpirationDate=System.DateTime.Now.AddMonths(1);
+                    break;
+                case "三个月":
+                    EditEntity.ExpirationDate = System.DateTime.Now.AddMonths(3);
+                    break;
+                case "六个月":
+                    EditEntity.ExpirationDate = System.DateTime.Now.AddMonths(6);
+                    break;
+                case "一年":
+                    EditEntity.ExpirationDate = System.DateTime.Now.AddYears(1);
+                    break;
+                case "两年":
+                    EditEntity.ExpirationDate = System.DateTime.Now.AddYears(2);
+                    break;
+                case "三年":
+                    EditEntity.ExpirationDate = System.DateTime.Now.AddYears(3);
+                    break;
+                case "五年":
+                    EditEntity.ExpirationDate = System.DateTime.Now.AddYears(5);
+                    break;
+                case "十年":
+                    EditEntity.ExpirationDate = System.DateTime.Now.AddYears(10);
+                    break;
+                default:
+                    break;
+            }
+
+        }
     }
 
     public class SelectiveContractResolver : DefaultContractResolver

@@ -57,11 +57,12 @@
             toolStrip1 = new System.Windows.Forms.ToolStrip();
             tsbtnSaveRegInfo = new System.Windows.Forms.ToolStripButton();
             groupBox1 = new System.Windows.Forms.GroupBox();
+            label9 = new System.Windows.Forms.Label();
+            checkedListBoxMod = new System.Windows.Forms.CheckedListBox();
             btnCreateRegInfo = new System.Windows.Forms.Button();
             label3 = new System.Windows.Forms.Label();
             txtRegInfo = new System.Windows.Forms.TextBox();
-            checkedListBoxMod = new System.Windows.Forms.CheckedListBox();
-            label9 = new System.Windows.Forms.Label();
+            cmbDays = new System.Windows.Forms.ComboBox();
             toolStrip1.SuspendLayout();
             groupBox1.SuspendLayout();
             SuspendLayout();
@@ -297,6 +298,7 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(cmbDays);
             groupBox1.Controls.Add(label9);
             groupBox1.Controls.Add(checkedListBoxMod);
             groupBox1.Controls.Add(label1);
@@ -323,6 +325,23 @@
             groupBox1.TabIndex = 30;
             groupBox1.TabStop = false;
             groupBox1.Text = "注册信息";
+            // 
+            // label9
+            // 
+            label9.AutoSize = true;
+            label9.Location = new System.Drawing.Point(625, 22);
+            label9.Name = "label9";
+            label9.Size = new System.Drawing.Size(56, 17);
+            label9.TabIndex = 30;
+            label9.Text = "购买模块";
+            // 
+            // checkedListBoxMod
+            // 
+            checkedListBoxMod.FormattingEnabled = true;
+            checkedListBoxMod.Location = new System.Drawing.Point(687, 22);
+            checkedListBoxMod.Name = "checkedListBoxMod";
+            checkedListBoxMod.Size = new System.Drawing.Size(210, 328);
+            checkedListBoxMod.TabIndex = 29;
             // 
             // btnCreateRegInfo
             // 
@@ -351,22 +370,16 @@
             txtRegInfo.Size = new System.Drawing.Size(461, 81);
             txtRegInfo.TabIndex = 24;
             // 
-            // checkedListBoxMod
+            // cmbDays
             // 
-            checkedListBoxMod.FormattingEnabled = true;
-            checkedListBoxMod.Location = new System.Drawing.Point(687, 22);
-            checkedListBoxMod.Name = "checkedListBoxMod";
-            checkedListBoxMod.Size = new System.Drawing.Size(210, 328);
-            checkedListBoxMod.TabIndex = 29;
-            // 
-            // label9
-            // 
-            label9.AutoSize = true;
-            label9.Location = new System.Drawing.Point(625, 22);
-            label9.Name = "label9";
-            label9.Size = new System.Drawing.Size(56, 17);
-            label9.TabIndex = 30;
-            label9.Text = "购买模块";
+            cmbDays.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            cmbDays.FormattingEnabled = true;
+            cmbDays.Items.AddRange(new object[] { "一个月", "三个月", "六个月", "一年", "两年", "三年", "五年", "十年" });
+            cmbDays.Location = new System.Drawing.Point(601, 113);
+            cmbDays.Name = "cmbDays";
+            cmbDays.Size = new System.Drawing.Size(65, 25);
+            cmbDays.TabIndex = 31;
+            cmbDays.SelectedIndexChanged += cmbDays_SelectedIndexChanged;
             // 
             // frmRegister
             // 
@@ -431,5 +444,6 @@
         private System.Windows.Forms.TextBox txtRegInfo;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.CheckedListBox checkedListBoxMod;
+        private System.Windows.Forms.ComboBox cmbDays;
     }
 }

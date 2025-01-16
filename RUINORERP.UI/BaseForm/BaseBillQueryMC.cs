@@ -124,7 +124,7 @@ namespace RUINORERP.UI.BaseForm
                     if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
                         CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                        if (CurMenuInfo == null)
+                        if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
                         {
                             MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                             return;
@@ -177,20 +177,37 @@ namespace RUINORERP.UI.BaseForm
                     button设置查询条件.ToolTipValues.EnableToolTips = true;
                     button设置查询条件.ToolTipValues.Heading = "提示";
                     button设置查询条件.Click += button设置查询条件_Click;
+                    button设置查询条件.Width = 120;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button设置查询条件);
 
+                    #region 设置子表格式
+                    KryptonContextMenu kcm设置明细表格 = new KryptonContextMenu();
+                    KryptonContextMenuItem menuItem设置明细表格 = new KryptonContextMenuItem("设置明细表格");
+                    menuItem设置明细表格.Text = "设置明细表格";
+                    menuItem设置明细表格.Click += menuItem设置明细表格_Click;
+                    KryptonContextMenuItems kryptonContextMenuItems1 = new KryptonContextMenuItems();
+                    kcm设置明细表格.Items.AddRange(new KryptonContextMenuItemBase[] { kryptonContextMenuItems1 });
+                    kryptonContextMenuItems1.Items.AddRange(new KryptonContextMenuItemBase[] { menuItem设置明细表格 });
+                    #endregion
 
-                    Krypton.Toolkit.KryptonButton button表格显示设置 = new Krypton.Toolkit.KryptonButton();
+                    Krypton.Toolkit.KryptonDropButton button表格显示设置 = new Krypton.Toolkit.KryptonDropButton();
                     button表格显示设置.Text = "表格显示设置";
+                    button表格显示设置.KryptonContextMenu = kcm设置明细表格;
                     button表格显示设置.ToolTipValues.Description = "对表格显示设置进行个性化设置。";
                     button表格显示设置.ToolTipValues.EnableToolTips = true;
                     button表格显示设置.ToolTipValues.Heading = "提示";
+                    button表格显示设置.Width = 120;
                     button表格显示设置.Click += button表格显示设置_Click;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button表格显示设置);
 
                 }
             }
 
+        }
+
+        private async void menuItem设置明细表格_Click(object sender, EventArgs e)
+        {
+            await UIBizSrvice.SetGridViewAsync(typeof(C), _UCBillChildQuery.newSumDataGridViewChild, CurMenuInfo, true);
         }
 
         private async void button表格显示设置_Click(object sender, EventArgs e)
@@ -1287,7 +1304,7 @@ namespace RUINORERP.UI.BaseForm
 
                 Builder();
                 this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                if (this.CurMenuInfo == null)
+                if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
                 {
                     MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                     return;
@@ -1490,7 +1507,7 @@ namespace RUINORERP.UI.BaseForm
             await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols);
 
             await UIBizSrvice.SetGridViewAsync(typeof(C), BaseSubDataGridView, CurMenuInfo, false, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
-            if(_UCBillChildQuery_Related!=null && _UCBillChildQuery_Related.newSumDataGridViewChild!=null)
+            if (_UCBillChildQuery_Related != null && _UCBillChildQuery_Related.newSumDataGridViewChild != null)
             {
                 _UCBillChildQuery_Related.newSumDataGridViewChild.NeedSaveColumnsXml = true;
             }
@@ -1691,7 +1708,7 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
             _UCBillChildQuery.DefaultHideCols = new HashSet<string>();
-            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols,true);
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols, true);
             _UCBillChildQuery.SummaryCols = childlist;
             _UCBillChildQuery.ColNameDataDictionary = ChildColNameDataDictionary;
             KryptonPage page = NewPage("明细信息", 1, _UCBillChildQuery);
@@ -1717,7 +1734,7 @@ namespace RUINORERP.UI.BaseForm
             _UCBillChildQuery_Related.InvisibleCols.AddRange(ExpressionHelper.ExpressionListToHashSet(ChildRelatedInvisibleCols).ToArray());
 
             _UCBillChildQuery_Related.DefaultHideCols = new HashSet<string>();
-            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols,true);
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols, true);
 
             _UCBillChildQuery_Related.ColNameDataDictionary = ChildColNameDataDictionary;
             KryptonPage page = NewPage("关联信息", 1, _UCBillChildQuery_Related);
@@ -1748,7 +1765,7 @@ namespace RUINORERP.UI.BaseForm
 
             _UCBillMasterQuery.DefaultHideCols = new HashSet<string>();
 
-            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols,false);
+            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols, false);
 
             _UCBillMasterQuery.ColNameDataDictionary = MasterColNameDataDictionary;
 

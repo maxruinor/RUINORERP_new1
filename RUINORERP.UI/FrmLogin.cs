@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 using RUINORERP.Business;
+using HLH.Lib.Security;
 
 
 namespace RUINORERP.UI
@@ -129,10 +130,11 @@ namespace RUINORERP.UI
             txtUserName.Focus();
         }
 
-
-
         static CancellationTokenSource source = new CancellationTokenSource();
         public EasyClientService ecs { get; set; }
+
+        public bool IsInitPassword { get; set; } = false;
+
         private async void btnok_Click(object sender, EventArgs e)
         {
             if (txtServerIP.Text.Trim().Length == 0 || txtPort.Text.Trim().Length == 0)
@@ -189,9 +191,9 @@ namespace RUINORERP.UI
                             }
                         }
 
-
+                        bool isInitPwd = false;
                         //传入账号密码返回结果
-                        bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData);
+                        bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData, ref isInitPwd);
                         if (ok)
                         {
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
@@ -211,7 +213,7 @@ namespace RUINORERP.UI
                                     MainForm.Instance.AppContext.CurrentUser.授权状态 = true;
                                     MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
                                 }
-                                
+
                                 //如果已经登陆 ，则提示要不要T掉原来的。
                                 bool AlreadyLogged = await serverAuthorizer.AlreadyloggedinAsync(ecs, UserGlobalConfig.Instance.UseName, 3);
                                 if (AlreadyLogged)
@@ -228,6 +230,9 @@ namespace RUINORERP.UI
                                         return;
                                     }
                                 }
+                                //如果为初始密码则提示弹窗！
+                                IsInitPassword = isInitPwd;
+
                             }
                             else
                             {
@@ -288,8 +293,7 @@ namespace RUINORERP.UI
 
         }
 
-
-        private string IPToIPv4(string strIP,int Port)
+        private string IPToIPv4(string strIP, int Port)
         {
             IPEndPoint endpoint = new IPEndPoint(IPAddress.Parse(strIP), Port);
 

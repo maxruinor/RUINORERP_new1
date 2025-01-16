@@ -37,7 +37,7 @@ namespace RUINORERP.Business.Security
             }
         }
 
-        public static bool Login(string username, string password, ApplicationContext appcontext)
+        public static bool Login(string username, string password, ApplicationContext appcontext, ref bool IsInitPwd)
         {
 
             bool loginSucceed = false;
@@ -78,6 +78,19 @@ namespace RUINORERP.Business.Security
                     loginSucceed = false;
                     return loginSucceed;
                 }
+
+                //密码如果为初始123456，则每次登陆会提示修改
+                string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", username);
+                if( EnPassword == enPwd)
+                {
+                    IsInitPwd=true;
+                }
+                else
+                {
+                    IsInitPwd = false;
+                }
+
+
                 tb_UserInfo user = users[0];
                 if (user != null)
                 {

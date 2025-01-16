@@ -263,7 +263,7 @@ namespace RUINORERP.UI.BaseForm
                     if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
                         CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(T).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                        if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
+                        if ((CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty()) && !MainForm.Instance.AppContext.IsSuperUser)
                         {
                             MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                             return;
@@ -317,6 +317,7 @@ namespace RUINORERP.UI.BaseForm
                     button设置查询条件.ToolTipValues.EnableToolTips = true;
                     button设置查询条件.ToolTipValues.Heading = "提示";
                     button设置查询条件.Click += button设置查询条件_Click;
+                    button设置查询条件.Width = 120;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button设置查询条件);
 
                     Krypton.Toolkit.KryptonButton button表格显示设置 = new Krypton.Toolkit.KryptonButton();
@@ -325,6 +326,7 @@ namespace RUINORERP.UI.BaseForm
                     button表格显示设置.ToolTipValues.EnableToolTips = true;
                     button表格显示设置.ToolTipValues.Heading = "提示";
                     button表格显示设置.Click += button表格显示设置_Click;
+                    button表格显示设置.Width = 120;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button表格显示设置);
                 }
             }

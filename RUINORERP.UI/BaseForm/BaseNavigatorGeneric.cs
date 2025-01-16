@@ -220,7 +220,7 @@ namespace RUINORERP.UI.BaseForm
                     if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
                     {
                         CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-                        if (CurMenuInfo == null)
+                        if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
                         {
                             MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                             return;
@@ -742,7 +742,7 @@ namespace RUINORERP.UI.BaseForm
 
 
             this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
-            if (this.CurMenuInfo == null)
+            if (CurMenuInfo == null && !MainForm.Instance.AppContext.IsSuperUser)
             {
                 MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                 return;

@@ -302,13 +302,28 @@ namespace RUINORERP.Server
                         }
                         else
                         {
+
+                            //检测硬件是不是换过，利用机器来对比
+                            //生成机器码前 不加密。因为注册码生成时。提供商要审核时。要看到明码
+                            //要注册 使用模块这里要处理一下因为保存的是加密后的。生成注册信息（机器码时为了给注册人审核，用了解密后的信息来生成）
+                            registrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+                            if (registrationInfo.MachineCode != frmMain.Instance.CreateMachineCode(registrationInfo))
+                            {
+                                //您没有购买任何模块功能或修改过授权数据，请联系管理员
+                                MessageBox.Show("硬件有变化请重新注册", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                toolStrip1.Visible = false;
+                                menuStrip1.Visible = false;
+                                return;
+                            }
+
+
                             //注册成功！！！
                             //注意这里并不是直接取字段值。因为这个值会放到加密串的。明码可能会修改
                             //功能模块可以显示到UI。但是保存到DB中是加密了的。取出来到时也要解密
                             if (!string.IsNullOrEmpty(registrationInfo.FunctionModule))
                             {
-                                //解密
-                                registrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+                                //解密 上面已经解密了这里不再解密
+                                //registrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
 
                                 if (registrationInfo.FunctionModule == null)
                                 {
@@ -437,6 +452,8 @@ namespace RUINORERP.Server
             cols.Add("ProductVersion");
             cols.Add("LicenseType");
             cols.Add("FunctionModule");
+
+            //只序列化指定的列
             JsonSerializerSettings settings = new JsonSerializerSettings
             {
                 ContractResolver = new SelectiveContractResolver(cols),

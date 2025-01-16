@@ -204,21 +204,21 @@ namespace RUINORERP.UI
 
                 return;
             }
-            if(kryptonDockableWorkspace1.ActivePage!=null && kryptonDockableWorkspace1.ActivePage.UniqueName==e.UniqueName)
+            if (kryptonDockableWorkspace1.ActivePage != null && kryptonDockableWorkspace1.ActivePage.UniqueName == e.UniqueName)
             {
-                 var control = kryptonDockableWorkspace1.ActivePage.Controls[0];
-                 if (control.GetType() != null && control.GetType().BaseType.Name == "BaseListGeneric`1")
-                 {
-                     // 获取泛型参数类型
-                     Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
-                     if (genericArguments.Length > 0)
-                     {
-                         Type genericParameterType = genericArguments[0];
-                         var baseUControl = (BaseUControl)control;
-                 
-                         UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo,  baseUControl.BaseDataGridView1, genericParameterType);
-                     }
-                 }
+                var control = kryptonDockableWorkspace1.ActivePage.Controls[0];
+                if (control.GetType() != null && control.GetType().BaseType.Name == "BaseListGeneric`1")
+                {
+                    // 获取泛型参数类型
+                    Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
+                    if (genericArguments.Length > 0)
+                    {
+                        Type genericParameterType = genericArguments[0];
+                        var baseUControl = (BaseUControl)control;
+
+                        UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseDataGridView1, genericParameterType);
+                    }
+                }
 
                 if (control.GetType() != null && control.GetType().BaseType.Name.Contains("BaseBillQueryMC"))
                 {
@@ -1093,6 +1093,12 @@ namespace RUINORERP.UI
                 }
 
                 UIBizSrvice.RequestCache(nameof(tb_RoleInfo));
+
+                if (loginForm.IsInitPassword)
+                {
+                    MessageBox.Show("初始密码【123456】有风险，请及时修改！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
             }
             else
             {
@@ -1292,7 +1298,7 @@ namespace RUINORERP.UI
 
             // Provide the navigator specific menu
             e.KryptonContextMenu = new KryptonContextMenu();
-            
+
             KryptonContextMenuItems customItems = new KryptonContextMenuItems();
             KryptonContextMenuSeparator customSeparator = new KryptonContextMenuSeparator();
             KryptonContextMenuItem customItem1 = new KryptonContextMenuItem("Custom Item 1", new EventHandler(OnCustomMenuItem));
@@ -1303,7 +1309,7 @@ namespace RUINORERP.UI
 
             // Add set of custom items into the provided menu
             e.KryptonContextMenu.Items.Add(customItems);
-            
+
 
         }
 
@@ -2432,7 +2438,7 @@ namespace RUINORERP.UI
             }
             catch (Exception ex)
             {
-                
+
             }
         }
 

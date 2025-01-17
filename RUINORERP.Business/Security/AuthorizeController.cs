@@ -9,7 +9,7 @@ using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 
 namespace RUINORERP.Business.Security
 {
-    [NoWantIOCAttribute]
+ 
     public interface IAuthorizeController
     {
         bool GetQueryPageLayoutCustomize();
@@ -31,7 +31,7 @@ namespace RUINORERP.Business.Security
     /// 所有设置都是从个性化角色配置再到最终系统配置。按这个顺序来检查或生效。
     /// </summary>
     /// 
-    [NoWantIOCAttribute]
+   // [NoWantIOCAttribute]
     public class AuthorizeController : IAuthorizeController
     {
         private readonly ApplicationContext _context;

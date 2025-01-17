@@ -1637,6 +1637,7 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                MainForm.Instance.LoginWebServer();
             }
             return result;
         }

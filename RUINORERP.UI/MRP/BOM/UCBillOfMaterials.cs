@@ -1455,6 +1455,8 @@ namespace RUINORERP.UI.MRP.BOM
         List<tb_BOM_SDetail> details = new List<tb_BOM_SDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
         {
+            //操作前将数据收集
+            this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             if (EditEntity == null)
             {
                 return false;

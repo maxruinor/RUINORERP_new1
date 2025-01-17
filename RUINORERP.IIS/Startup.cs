@@ -44,6 +44,7 @@ using RUINORERP.Global;
 
 using RUINORERP.Business.Processor;
 using FluentValidation;
+using RUINORERP.Business.Security;
 
 
 
@@ -882,6 +883,14 @@ public IHost CslaDIPortBackup()
                 if (tempTypes[i].Name == "Roles")
                 {
 
+                }
+                if (tempTypes[i].Name == "IAuthorizeController")
+                {
+                    builder.RegisterType<AuthorizeController>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
                 }
                 if (tempTypes[i].Name == "QueryFilter")
                 {

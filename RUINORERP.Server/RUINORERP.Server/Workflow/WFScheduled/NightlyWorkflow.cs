@@ -94,7 +94,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                     if (System.DateTime.Now.Hour == 23 && data.ExecutionFrequency == 2)
                     {
                         CRM_FollowUpPlansService followUpPlansService = Startup.GetFromFac<CRM_FollowUpPlansService>();
-                       // followUpPlansService.AutoUdateCRMPlanStatus();
+                        followUpPlansService.AutoUdateCRMPlanStatus();
                     }
                     else
                     {

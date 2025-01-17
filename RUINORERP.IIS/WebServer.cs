@@ -40,7 +40,7 @@ namespace RUINORERP.IIS
         }
 
         CancellationTokenSource cts = new CancellationTokenSource();
-        public void RunWebServer()
+        public void RunWebServer(string ip, int port)
         {
             //------------------- define routes -------------------
             #region
@@ -120,12 +120,14 @@ namespace RUINORERP.IIS
 
                 ConfigureRoutes();
                 //------------------- start server -------------------           
-                var port = 8081;
+                //  port = 8082;
                 Console.WriteLine("Running HTTP server on: " + port);
-                _logger.LogInformation("Running HTTP server on: " + port);
+                _logger.LogInformation($"Running HTTP server on: {ip}:{port}");
                 string msg = string.Empty;
-                string ip = "192.168.0.254";
-                var ts = HttpServer.ListenAsync(ip, port, cts.Token, Route.OnHttpRequestAsync, msg, useHttps: false);
+                //ip = "192.168.0.254";
+                HttpServer httpServer = new HttpServer();
+                httpServer.OnShowLog += HttpServer_OnShowLog;
+                var ts = httpServer.ListenAsync(ip, port, cts.Token, Route.OnHttpRequestAsync, msg, useHttps: false);
                 if (!string.IsNullOrEmpty(msg))
                 {
                     _logger.LogInformation($"Running HTTP server on: {ip}:{port} msg: {msg}");
@@ -137,6 +139,11 @@ namespace RUINORERP.IIS
             {
                 _logger.LogError("错误exx", exx);
             }
+        }
+
+        private void HttpServer_OnShowLog(string msg)
+        {
+            frmMain.Instance.PrintInfoLog($" HttpServer_OnShowLog {msg}");
         }
 
         private void ConfigureRoutes()
@@ -469,7 +476,21 @@ namespace RUINORERP.IIS
 
         internal void StopWebServer()
         {
-            cts.Cancel();
+            try
+            {
+                cts.Cancel();
+            }
+            catch (Exception ex)
+            {
+
+            }
+            finally
+            {
+                cts.Dispose();
+            }
+            
+
+            
         }
     }
 }

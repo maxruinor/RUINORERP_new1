@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:42
+// 时间：01/17/2025 14:49:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -88,10 +88,10 @@ namespace RUINORERP.Model.QueryDto
 
         private bool _EXPOrINC= true;
         /// <summary>
-        /// 收支标识
+        /// 为收入
         /// </summary>
-        [AdvQueryAttribute(ColName = "EXPOrINC",ColDesc = "收支标识")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "EXPOrINC",IsNullable = false,ColumnDescription = "收支标识" )]
+        [AdvQueryAttribute(ColName = "EXPOrINC",ColDesc = "为收入")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "EXPOrINC",IsNullable = false,ColumnDescription = "为收入" )]
         public bool EXPOrINC 
         { 
             get{return _EXPOrINC;}
@@ -335,15 +335,41 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _Currency_ID;
         /// <summary>
-        /// 
+        /// 币种
         /// </summary>
-        [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Currency_ID",IsNullable = true,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "Currency_ID",ColDesc = "币种")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Currency_ID",IsNullable = true,ColumnDescription = "币种" )]
         [FKRelationAttribute("tb_Currency","Currency_ID")]
         public long? Currency_ID 
         { 
             get{return _Currency_ID;}
             set{SetProperty(ref _Currency_ID, value);}
+        }
+     
+
+        private string _CloseCaseImagePath;
+        /// <summary>
+        /// 结案凭证
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseImagePath",ColDesc = "结案凭证")]
+        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "CloseCaseImagePath",Length=300,IsNullable = true,ColumnDescription = "结案凭证" )]
+        public string CloseCaseImagePath 
+        { 
+            get{return _CloseCaseImagePath;}
+            set{SetProperty(ref _CloseCaseImagePath, value);}
+        }
+     
+
+        private string _CloseCaseOpinions;
+        /// <summary>
+        /// 结案意见
+        /// </summary>
+        [AdvQueryAttribute(ColName = "CloseCaseOpinions",ColDesc = "结案意见")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "CloseCaseOpinions",Length=200,IsNullable = true,ColumnDescription = "结案意见" )]
+        public string CloseCaseOpinions 
+        { 
+            get{return _CloseCaseOpinions;}
+            set{SetProperty(ref _CloseCaseOpinions, value);}
         }
 
 

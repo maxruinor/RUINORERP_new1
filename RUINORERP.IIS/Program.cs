@@ -94,7 +94,7 @@ namespace RUINORERP.IIS
                     Console.WriteLine("接收到的命令行参数如下：");
                     foreach (var arg in args)
                     {
-                        AppContextData.ClientInfo.Version = arg;
+                       // AppContextData. = arg;
                         // Console.WriteLine(arg);
                         //MessageBox.Show(arg);
                     }

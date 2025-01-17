@@ -56,17 +56,19 @@ namespace RUINORERP.UI.BI
                         await Task.Delay(0);
                         if (entity.RoleID > 0)
                         {
-                            if (entity.tb_rolepropertyconfig.RolePropertyID > 0)
+                            if (entity.tb_rolepropertyconfig != null && entity.tb_rolepropertyconfig.RolePropertyID > 0)
                             {
                                 //更新
                                 MainForm.Instance.AppContext.Db.Updateable<tb_RolePropertyConfig>(entity.tb_rolepropertyconfig).ExecuteCommand(); //都是参数化实现
+                                entity.RolePropertyID = entity.tb_rolepropertyconfig.RolePropertyID;
                             }
-                            else
+                            else if (entity.tb_rolepropertyconfig != null && entity.tb_rolepropertyconfig.RolePropertyID == 0)
                             {
                                 //新增
                                 entity.tb_rolepropertyconfig = await MainForm.Instance.AppContext.Db.Insertable<tb_RolePropertyConfig>(entity.tb_rolepropertyconfig).ExecuteReturnEntityAsync(); //都是参数化实现
+                                entity.RolePropertyID = entity.tb_rolepropertyconfig.RolePropertyID;
                             }
-                            entity.RolePropertyID = entity.tb_rolepropertyconfig.RolePropertyID;
+
                             rr.Succeeded = MainForm.Instance.AppContext.Db.Updateable<tb_RoleInfo>(entity).ExecuteCommand() > 0 ? true : false;
 
                         }
@@ -131,7 +133,7 @@ namespace RUINORERP.UI.BI
             foreach (DataGridViewRow dr in this.dataGridView1.SelectedRows)
             {
                 tb_RoleInfo Info = dr.DataBoundItem as tb_RoleInfo;
-                 rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_RoleInfo);
+                rs = await childctr.BaseDeleteByNavAsync(dr.DataBoundItem as tb_RoleInfo);
                 if (rs)
                 {
                     //提示

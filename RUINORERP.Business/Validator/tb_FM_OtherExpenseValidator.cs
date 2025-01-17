@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:27
+// 时间：01/17/2025 14:49:49
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -82,6 +82,8 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
 
  RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.CloseCaseImagePath).MaximumLength(300).WithMessage("结案凭证:不能超过最大长度,300.");
+
+ RuleFor(tb_FM_OtherExpense =>tb_FM_OtherExpense.CloseCaseOpinions).MaximumLength(100).WithMessage("结案意见:不能超过最大长度,100.");
 
            	                //long
                 //ExpenseMainID

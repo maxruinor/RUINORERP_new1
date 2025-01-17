@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:49
+// 时间：01/16/2025 11:47:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,14 +51,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _ID;
+        private long _ID;
         /// <summary>
         /// 公司
         /// </summary>
         [AdvQueryAttribute(ColName = "ID",ColDesc = "公司")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "公司" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "公司" )]
         [FKRelationAttribute("tb_Company","ID")]
-        public long? ID
+        public long ID
         { 
             get{return _ID;}
             set{
@@ -140,20 +140,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ID))]
         public virtual tb_Company tb_company { get; set; }
 
 
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntry.DepartmentID))]
-        public virtual List<tb_MRP_ReworkEntry> tb_MRP_ReworkEntries { get; set; }
-        //tb_MRP_ReworkEntry.DepartmentID)
-        //DepartmentID.FK_MRP_ReworkEntry_REF_Department)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurOrder.DepartmentID))]
         public virtual List<tb_PurOrder> tb_PurOrders { get; set; }
@@ -161,7 +153,15 @@ namespace RUINORERP.Model
         //DepartmentID.FK_TB_PUROR_REFERENCE_TB_DEPAR)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkEntry.DepartmentID))]
+        public virtual List<tb_MRP_ReworkEntry> tb_MRP_ReworkEntries { get; set; }
+        //tb_MRP_ReworkEntry.DepartmentID)
+        //DepartmentID.FK_MRP_ReworkEntry_REF_Department)
+        //tb_Department.DepartmentID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_S.DepartmentID))]
         public virtual List<tb_BOM_S> tb_BOM_Ss { get; set; }
@@ -169,7 +169,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_TB_BILLO_REF_TB_DEPAR1)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_OtherExpenseDetail.DepartmentID))]
         public virtual List<tb_FM_OtherExpenseDetail> tb_FM_OtherExpenseDetails { get; set; }
@@ -177,7 +177,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_FM_OTHEREXPENSES_R_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialRequisition.DepartmentID))]
         public virtual List<tb_MaterialRequisition> tb_MaterialRequisitions { get; set; }
@@ -185,23 +185,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_MATERREQUI_REF_DEPAR)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturn.DepartmentID))]
-        public virtual List<tb_MRP_ReworkReturn> tb_MRP_ReworkReturns { get; set; }
-        //tb_MRP_ReworkReturn.DepartmentID)
-        //DepartmentID.FK_MRP_Reworkreturnl_REF_Department)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntry.DepartmentID))]
-        public virtual List<tb_PurEntry> tb_PurEntries { get; set; }
-        //tb_PurEntry.DepartmentID)
-        //DepartmentID.FK_TB_PUREN_REFERENCE_TB_DEPAR)
-        //tb_Department.DepartmentID)
-
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.DepartmentID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
@@ -209,7 +193,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_TB_PROD_REFERENCE_TB_DEPAR)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProjectGroup.DepartmentID))]
         public virtual List<tb_ProjectGroup> tb_ProjectGroups { get; set; }
@@ -217,7 +201,15 @@ namespace RUINORERP.Model
         //DepartmentID.FK_PROJECTGROUP_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_PurEntry.DepartmentID))]
+        public virtual List<tb_PurEntry> tb_PurEntries { get; set; }
+        //tb_PurEntry.DepartmentID)
+        //DepartmentID.FK_TB_PUREN_REFERENCE_TB_DEPAR)
+        //tb_Department.DepartmentID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_MaterialReturn.DepartmentID))]
         public virtual List<tb_MaterialReturn> tb_MaterialReturns { get; set; }
@@ -225,7 +217,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_MATERIALRETURN_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FinishedGoodsInv.DepartmentID))]
         public virtual List<tb_FinishedGoodsInv> tb_FinishedGoodsInvs { get; set; }
@@ -233,7 +225,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_TB_FINISINV_REF_TB_DEPAR)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.DepartmentID))]
         public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
@@ -241,7 +233,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_PAYMENTAPPLICATION_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurReturnEntry.DepartmentID))]
         public virtual List<tb_PurReturnEntry> tb_PurReturnEntries { get; set; }
@@ -249,7 +241,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_PURRETURNENTRY_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ProductionPlan.DepartmentID))]
         public virtual List<tb_ProductionPlan> tb_ProductionPlans { get; set; }
@@ -257,7 +249,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_TB_PRODU_REFERENCE_TB_DEPAR)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Employee.DepartmentID))]
         public virtual List<tb_Employee> tb_Employees { get; set; }
@@ -265,7 +257,7 @@ namespace RUINORERP.Model
         //DepartmentID.FKTB_EMPLOTB_DEPAR_aB)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BuyingRequisition.DepartmentID))]
         public virtual List<tb_BuyingRequisition> tb_BuyingRequisitions { get; set; }
@@ -273,7 +265,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_BUYINGREQUISITION_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaimDetail.DepartmentID))]
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
@@ -281,7 +273,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_FMEXCLAIMDETAIL_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.DepartmentID))]
         public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
@@ -289,7 +281,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_ACCOUNTS_RE_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_Initial_PayAndReceivable.DepartmentID))]
         public virtual List<tb_FM_Initial_PayAndReceivable> tb_FM_Initial_PayAndReceivables { get; set; }
@@ -297,7 +289,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_FM_INITPR_RE_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentBill.DepartmentID))]
         public virtual List<tb_FM_PaymentBill> tb_FM_PaymentBills { get; set; }
@@ -305,7 +297,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_FM_PAYMENTBILL_RE_DEPARMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_CRM_Customer.DepartmentID))]
         public virtual List<tb_CRM_Customer> tb_CRM_Customers { get; set; }
@@ -313,7 +305,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_CUSTOMER_REF_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PrePaymentBill.DepartmentID))]
         public virtual List<tb_FM_PrePaymentBill> tb_FM_PrePaymentBills { get; set; }
@@ -321,7 +313,7 @@ namespace RUINORERP.Model
         //DepartmentID.FK_FM_PREPAYMENTBILL_DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_PurEntryRe.DepartmentID))]
         public virtual List<tb_PurEntryRe> tb_PurEntryRes { get; set; }
@@ -329,12 +321,20 @@ namespace RUINORERP.Model
         //DepartmentID.FK_TB_PURENTRYRE__DEPARTMENT)
         //tb_Department.DepartmentID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ManufacturingOrder.DepartmentID))]
         public virtual List<tb_ManufacturingOrder> tb_ManufacturingOrders { get; set; }
         //tb_ManufacturingOrder.DepartmentID)
         //DepartmentID.FK_MANUFACTURINGORDER_REF_DEPARTMENT)
+        //tb_Department.DepartmentID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_MRP_ReworkReturn.DepartmentID))]
+        public virtual List<tb_MRP_ReworkReturn> tb_MRP_ReworkReturns { get; set; }
+        //tb_MRP_ReworkReturn.DepartmentID)
+        //DepartmentID.FK_MRP_Reworkreturnl_REF_Department)
         //tb_Department.DepartmentID)
 
 

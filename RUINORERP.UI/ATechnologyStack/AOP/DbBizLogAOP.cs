@@ -103,15 +103,16 @@ namespace RUINORERP.UI.ATechnologyStack.AOP
                     //Task<TResult>
                     else
                     {
-                        invocation.ReturnValue = InternalAsyncHelper.CallAwaitTaskWithPostActionAndFinallyAndGetResult(
-                         invocation.Method.ReturnType.GenericTypeArguments[0],
-                         invocation.ReturnValue,
-                          //async () => await SuccessAction(invocation, dataIntercept),/*成功时执行*/
-                          async (o) => await SuccessAction(invocation, apiLogAopInfo, startTime, o),/*成功时执行*/
-                         ex =>
-                         {
-                             LogEx(ex, apiLogAopInfo);
-                         });
+                        //这里老异常暂时注释掉2025-1-16
+                        //invocation.ReturnValue = InternalAsyncHelper.CallAwaitTaskWithPostActionAndFinallyAndGetResult(
+                        // invocation.Method.ReturnType.GenericTypeArguments[0],
+                        // invocation.ReturnValue,
+                        //  //async () => await SuccessAction(invocation, dataIntercept),/*成功时执行*/
+                        //  async (o) => await SuccessAction(invocation, apiLogAopInfo, startTime, o),/*成功时执行*/
+                        // ex =>
+                        // {
+                        //     LogEx(ex, apiLogAopInfo);
+                        // });
                     }
                     #endregion
 

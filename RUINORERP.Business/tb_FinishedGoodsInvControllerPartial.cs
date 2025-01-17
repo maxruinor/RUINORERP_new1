@@ -233,49 +233,53 @@ namespace RUINORERP.Business
                                 //实发数量/bom配方明细中的基准数量*BOM产出量=可以做的成品数量
                                 CanManufactureQtyBybom = MinQtyDetail.ActualSentQty / miniBomDetail.UsedQty.ToDecimal() * minbom.OutputQty;
                             }
-                            else
-                            {
-                                //找不到就可能是替换料或自己手动添加的铺料。
-                                throw new Exception("制令单明细没有指定所属配方，请修改数据后再试，或联系管理员。");
-                            }
+                            //TODO:注意 这里暂时不处理特殊情况。如果手动添加或替换料则暂时不算能生产的最小数量
+                            //else
+                            //{
+                            //    //找不到就可能是替换料或自己手动添加的铺料。
+                            //    throw new Exception("制令单明细没有指定所属配方，请修改数据后再试，或联系管理员。");
+                            //}
                         }
-                        else
-                        {
-                            //没有找到配方说明在生成制令单时。没有指定。注意如果制令单生成时手动或程序指定了替换料，这时也要把替换料对应 的BOM记录到制令单明细中。用于后面判断生成最小量成品
-                            throw new Exception("制令单明细没有指定所属配方，请修改数据后再试，或联系管理员。");
-                        }
+                        //else
+                        //{
+                        //    //没有找到配方说明在生成制令单时。没有指定。注意如果制令单生成时手动或程序指定了替换料，这时也要把替换料对应 的BOM记录到制令单明细中。用于后面判断生成最小量成品
+                        //    throw new Exception("制令单明细没有指定所属配方，请修改数据后再试，或联系管理员。");
+                        //}
 
                     }
                     //如果总缴库数量大于最小制成数量则审核出错。
                     if (PaidQuantity > CanManufactureQtyBybom)
                     {
-                        string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量，审核失败！";
-                        try
+                        //暂时只是提示。
+
+                        if (MessageBox.Show("系统检测到缴库数量大于发出的关键物料能生产的最小数量,你确定要审核通过吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
                         {
-                            object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
-                            if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
+                            string msg = $"制令单:{manufacturingOrder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量，审核失败！";
+                            try
                             {
-                                //提示哪个关键物料实发数不够生产。
-                                msg += $"\r\n{prodDetail.SKU}:{prodDetail.CNName}实发数量不够生产{CanManufactureQtyBybom}";
+                                object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
+                                if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
+                                {
+                                    //提示哪个关键物料实发数不够生产。
+                                    msg += $"\r\n{prodDetail.SKU}:{prodDetail.CNName}实发数量不够生产{CanManufactureQtyBybom}";
+                                }
                             }
-                        }
-                        catch (Exception tipEx)
-                        {
-                           
+                            catch (Exception tipEx)
+                            {
+
+                            }
+
+                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _unitOfWorkManage.RollbackTran();
+                            _logger.LogInformation(msg);
+                            return rs;
                         }
 
-                        MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        _unitOfWorkManage.RollbackTran();
-                        _logger.LogInformation(msg);
-                        return rs;
                     }
                 }
 
 
                 #endregion
-
-
-
 
                 if (PaidQuantity > manufacturingOrder.ManufacturingQty)
                 {

@@ -425,6 +425,9 @@ namespace RUINORERP.UI
 
             //cache.Set("test1", "test123");
 
+            ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+            configManager.LoadConfigValues();
+
             //手动初始化  打开就加载。省得登陆后还没有加载完
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
             BizCacheHelper.InitManager();
@@ -468,12 +471,15 @@ namespace RUINORERP.UI
             ClearData();
             ClearUI();
             RUINORERP.Extensions.SqlsugarSetup.CheckEvent += SqlsugarSetup_CheckEvent;
-            if (!Login())
+            bool islogin = await Login();
+            if (!islogin)
             {
                 return;
             }
             else
             {
+
+              
 
 
                 UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
@@ -517,7 +523,21 @@ namespace RUINORERP.UI
                     }
 
                     #endregion
-
+                    //这里做一个事件。缓存中的变化了。这里也变化一下。todo:
+                    try
+                    {
+                        bool rs = mc.CheckMenuInitialized();
+                        if (!rs)
+                        {
+                            //如果从来没有初始化过菜单，则执行
+                            InitMenu();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // logger.Error(ex);
+                        MainForm.Instance.uclog.AddLog(ex.Message + ex.StackTrace);
+                    }
                     if (UserGlobalConfig.Instance.MenuPersonalizationlist == null)
                     {
                         UserGlobalConfig.Instance.MenuPersonalizationlist = new ConcurrentDictionary<string, MenuPersonalization>();
@@ -531,25 +551,6 @@ namespace RUINORERP.UI
                                     //list = await dc.BaseQueryByWhereAsync(exp);
                                     //list = MainForm.Instance.list;
                     TryRequestCache(nameof(View_ProdDetail), typeof(View_ProdDetail));
-
-                    //这里做一个事件。缓存中的变化了。这里也变化一下。todo:
-                    try
-                    {
-                        bool rs = mc.CheckMenuInitialized();
-                        if (!rs)
-                        {
-                            //如果从来没有初始化过菜单，则执行
-                            InitMenu();
-                        }
-
-                        //启动心跳线程 这里等待基本就假死了
-                        //await Task.Run(() => { StartHeartbeatService(); });
-                    }
-                    catch (Exception ex)
-                    {
-                        // logger.Error(ex);
-                        MainForm.Instance.uclog.AddLog(ex.Message + ex.StackTrace);
-                    }
 
                 }
             }
@@ -1029,7 +1030,7 @@ namespace RUINORERP.UI
         #region Login/Logout
 
 
-        private bool Login()
+        private async Task<bool> Login()
         {
             bool rs = false;
             RUINORERP.Business.Security.PTPrincipal.Logout(AppContext);
@@ -1074,7 +1075,7 @@ namespace RUINORERP.UI
                     try
                     {
                         MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
-                        MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
+                        await MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
                     }
                     catch (Exception ex)
                     {
@@ -1082,9 +1083,15 @@ namespace RUINORERP.UI
                     }
 
                 }
+
+                //登陆时已经获取了 登陆人所在部门对应的公司。特殊情况才会进入这个查询
                 if (MainForm.Instance.AppContext.CompanyInfo == null)
                 {
-                    MainForm.Instance.AppContext.CompanyInfo = MainForm.Instance.AppContext.Db.Queryable<tb_Company>().Single();
+                    List<tb_Company> Companylist = await MainForm.Instance.AppContext.Db.Queryable<tb_Company>().ToListAsync();
+                    if (Companylist.Count > 0)
+                    {
+                        MainForm.Instance.AppContext.CompanyInfo = Companylist[0];
+                    }
                 }
                 if (AppContext.CompanyInfo != null)
                 {
@@ -1118,11 +1125,14 @@ namespace RUINORERP.UI
             {
                 this.SystemOperatorState.Text = "登出";
                 AuditLogHelper.Instance.CreateAuditLog("登出", "成功登出服务器");
-                MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
-                var result = await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
-                .UpdateColumns(it => new { it.Lastlogout_at }).ExecuteCommandAsync();
-                ClearUI();
+                if (MainForm.Instance.AppContext.CurUserInfo!=null&&MainForm.Instance.AppContext.CurUserInfo.UserInfo!=null)
+                {
+                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
+                    var result = await MainForm.Instance.AppContext.Db.Updateable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo)
+                    .UpdateColumns(it => new { it.Lastlogout_at }).ExecuteCommandAsync();
+                }
 
+                ClearUI();
                 ClearData();
                 Application.DoEvents();
 
@@ -1138,7 +1148,7 @@ namespace RUINORERP.UI
         /// </summary>
         public void LogLock()
         {
-            MainForm.Instance.Invoke(new Action(() =>
+            MainForm.Instance.Invoke(new Action(async () =>
             {
                 this.SystemOperatorState.Text = "注销";
                 Program.AppContextData.IsOnline = false;
@@ -1148,7 +1158,8 @@ namespace RUINORERP.UI
                 ClearRoles();
                 System.GC.Collect();
                 //标记一下状态为注销，可以保存到上下文传到心跳包中
-                if (!Login())
+                bool islogin = await Login();
+                if (!islogin)
                 {
                     return;
                 }
@@ -1632,7 +1643,7 @@ namespace RUINORERP.UI
                 MenuList = p.AddMenu(this.menuStripMain);
                 p.OtherEvent += p_OtherEvent;
                 p.MainMenu = this.menuStripMain;
-                ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
+               
                 voidHandler handler = new voidHandler(LoadEvent);
                 //异步操作接口(注意BeginInvoke方法的不同！)
                 IAsyncResult result = handler.BeginInvoke(new AsyncCallback(callback), "AsycState:OK");

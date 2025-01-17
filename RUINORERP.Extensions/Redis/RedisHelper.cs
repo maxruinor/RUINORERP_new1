@@ -17,6 +17,12 @@ namespace RUINORERP.Extensions.Redis
         /// 数据库id  1-15
         /// </summary>
         public static int DbNum { get; set; }
+
+        /// <summary>
+        /// redis password
+        /// </summary> 
+        public static string RedisServerPWD { get; set; }
+
         /// <summary>
         /// 连接方式
         /// </summary> 
@@ -34,10 +40,23 @@ namespace RUINORERP.Extensions.Redis
             IConfiguration configuration = cfgBuilder.Build();
             string conn = configuration.GetValue<string>("RedisServer");
             ConnectionString = conn;
-          
-        _connectin = string.IsNullOrEmpty(ConnectionString) ?
-                   RedisConnectionHelper.Instance :
-                   RedisConnectionHelper.GetConnectionMultiplexer(ConnectionString);
+            try
+            {
+                RedisServerPWD = configuration.GetValue<string>("RedisServerPWD");
+                if (!string.IsNullOrEmpty(RedisServerPWD))
+                {
+                    ConnectionString = $"{conn},password = {RedisServerPWD}";
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+
+
+            _connectin = string.IsNullOrEmpty(ConnectionString) ?
+                       RedisConnectionHelper.Instance :
+                       RedisConnectionHelper.GetConnectionMultiplexer(ConnectionString);
         }
         /// <summary>
         /// 获取db
@@ -195,6 +214,7 @@ namespace RUINORERP.Extensions.Redis
                 });
             return result;
         }
+
         /// <summary>
         /// 解析
         /// </summary>

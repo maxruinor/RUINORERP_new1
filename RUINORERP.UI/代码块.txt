@@ -153,3 +153,24 @@ var student = db.Queryable<Student>().Where(conModels).ToList();
 
 阅读器关闭时尝试调用 FieldCount 无效。
 重复调用 查询的方法就会出这个错。因为还没有等待结束又使用了。
+
+
+
+
+
+
+
+
+ //对象中的主键会返回到本身实体中
+            await MainForm.Instance.AppContext.Db.Insertable(WantAddModuleList).ExecuteReturnSnowflakeIdListAsync();
+
+             //批量添加的参考代码  
+            //if (GridSetting.UIGID == 0)
+            //{
+
+            //    await MainForm.Instance.AppContext.Db.Insertable(GridSetting).ExecuteReturnSnowflakeIdAsync();
+            //}
+            //else
+            //{
+            //    await MainForm.Instance.AppContext.Db.Updateable(GridSetting).ExecuteCommandAsync();
+            //}

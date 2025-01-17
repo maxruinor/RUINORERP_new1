@@ -198,11 +198,26 @@ namespace RUINORERP.UI.Common
         /// <returns></returns>
         public static async Task SetGridViewAsync(Type GridSourceType, NewSumDataGridView dataGridView, tb_MenuInfo CurMenuInfo, bool ShowSettingForm = false, HashSet<string> InvisibleCols = null, HashSet<string> DefaultHideCols = null, bool SaveGridSetting = false)
         {
-
+            if (dataGridView==null) 
+            {
+                return;
+            }
+            if (MainForm.Instance.AppContext.CurrentUser_Role == null && MainForm.Instance.AppContext.IsSuperUser)
+            {
+                dataGridView.NeedSaveColumnsXml = true;
+                return;
+            }
             tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
             dataGridView.NeedSaveColumnsXml = false;
             //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
+            if (userPersonalized == null)
+            {
+                userPersonalized = new tb_UserPersonalized();
+                userPersonalized.ID = MainForm.Instance.AppContext.CurrentUser_Role.ID;
+                MainForm.Instance.AppContext.CurrentUser_Role.tb_UserPersonalizeds.Add(MainForm.Instance.AppContext.CurrentUser_Role_Personalized);
+                await MainForm.Instance.AppContext.Db.Insertable(MainForm.Instance.AppContext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
+            }
             if (userPersonalized.tb_UIMenuPersonalizations == null)
             {
                 userPersonalized.tb_UIMenuPersonalizations = new();
@@ -306,19 +321,19 @@ namespace RUINORERP.UI.Common
                 }
             }
 
- 
+
             //不管什么情况都处理系统和权限的限制列显示
             originalColumnDisplays.ForEach(c =>
             {
                 //系统指定不显示的
                 if (InvisibleCols != null)
                 {
-                    if(InvisibleCols.Any(ic => c.ColName.Equals(ic)))
+                    if (InvisibleCols.Any(ic => c.ColName.Equals(ic)))
                     {
                         c.Visible = false;
                         c.Disable = true;
                     }
-                    
+
                 }
 
             });
@@ -371,6 +386,10 @@ namespace RUINORERP.UI.Common
         public static async void SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
         {
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
+            if (userPersonalized == null)
+            {
+                return;
+            }
             if (userPersonalized.tb_UIMenuPersonalizations == null)
             {
                 return;

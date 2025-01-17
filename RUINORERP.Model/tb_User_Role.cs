@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:16
+// 时间：01/17/2025 11:45:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -109,35 +109,21 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _WorkDefaultLayout;
-        /// <summary>
-        /// 工作台布局
-        /// </summary>
-        [AdvQueryAttribute(ColName = "WorkDefaultLayout",ColDesc = "工作台布局")] 
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "WorkDefaultLayout" ,Length=2147483647,IsNullable = true,ColumnDescription = "工作台布局" )]
-        public string WorkDefaultLayout
-        { 
-            get{return _WorkDefaultLayout;}
-            set{
-            SetProperty(ref _WorkDefaultLayout, value);
-            }
-        }
-
         #endregion
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(User_ID))]
         public virtual tb_UserInfo tb_userinfo { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(RoleID))]
         public virtual tb_RoleInfo tb_roleinfo { get; set; }
 
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_UserPersonalized.ID))]
         public virtual List<tb_UserPersonalized> tb_UserPersonalizeds { get; set; }

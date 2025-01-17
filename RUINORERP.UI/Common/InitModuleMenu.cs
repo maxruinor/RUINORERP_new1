@@ -45,6 +45,7 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 定义模块 模块下定义好了对应枚举再对应上了UI
         /// 可以多次执行，但是发布后不需要每次执行
+        /// 2025-1-16优化执行为批量添加 可以多次执行
         /// </summary>
         public async void InitModuleAndMenu()
         {
@@ -69,13 +70,19 @@ namespace RUINORERP.UI.Common
             }
             //先把相关的查出来，内存中去判断是否存在。这样可以多次执行（只能是在超级管理员或特殊用户下多次执行）普通用户是不能执行这个的
             List<tb_ModuleDefinition> ExistModuleList = new List<tb_ModuleDefinition>();
-            ExistModuleList = await mdctr.QueryByNavAsync();
-            if (ExistModuleList==null)
+            //ExistModuleList = await mdctr.QueryByNavAsync();
+            ExistModuleList = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
+                .Includes(c => c.tb_MenuInfos, b => b.tb_moduledefinition)
+                .Includes(c => c.tb_MenuInfos, b => b.tb_ButtonInfos)
+                .Includes(c => c.tb_MenuInfos, b => b.tb_FieldInfos)
+                .Includes(c => c.tb_MenuInfos, b => b.tb_UIMenuPersonalizations)
+                .ToListAsync();
+            if (ExistModuleList == null)
             {
-                ExistModuleList=new List<tb_ModuleDefinition>();
+                ExistModuleList = new List<tb_ModuleDefinition>();
             }
 
-            List<tb_ModuleDefinition> WantAddList = new List<tb_ModuleDefinition>();
+            // List<tb_ModuleDefinition> WantAddModuleList = new List<tb_ModuleDefinition>();
             foreach (var item in modules)
             {
                 //定义模块
@@ -87,14 +94,17 @@ namespace RUINORERP.UI.Common
                 tb_ModuleDefinition isExistt = ExistModuleList.FirstOrDefault(e => e.ModuleName == mod.ModuleName);
                 if (isExistt == null)
                 {
-                    mod = mdctr.AddReEntity(mod);
-                    //WantAddList.Add(mod);
+                    //mod = mdctr.AddReEntity(mod);
+                    ExistModuleList.Add(mod);
                 }
                 else
                 {
                     mod = isExistt;
                 }
-             
+                if (mod.tb_MenuInfos == null)
+                {
+                    mod.tb_MenuInfos = new List<tb_MenuInfo>();
+                }
                 tb_MenuInfo menuInfoparent = new tb_MenuInfo();
                 // menuInfoparent.MenuID = IdHelper.GetLongId(); //会自动生成ID 第一次这样运行出错，可能没有初始化暂时不管
                 menuInfoparent.MenuName = item.Name;
@@ -106,48 +116,60 @@ namespace RUINORERP.UI.Common
                 menuInfoparent.Parent_id = 0;
 
                 menuInfoparent.Created_at = System.DateTime.Now;
-                tb_MenuInfo MenuInfo = mc.IsExistEntity(e => e.MenuName == menuInfoparent.MenuName && e.Parent_id == 0);
+                //tb_MenuInfo MenuInfo = mc.IsExistEntity(e => e.MenuName == menuInfoparent.MenuName && e.Parent_id == 0);
+                tb_MenuInfo MenuInfo = mod.tb_MenuInfos.FirstOrDefault(e => e.MenuName == menuInfoparent.MenuName && e.Parent_id == 0);
                 if (MenuInfo == null)
                 {
-                    menuInfoparent = mc.AddReEntity(menuInfoparent);
+                    //menuInfoparent = mc.AddReEntity(menuInfoparent);
+                    mod.tb_MenuInfos.Add(menuInfoparent);
                 }
-                else
-                {
-                    menuInfoparent = MenuInfo;
-                }
-                List<MenuAttrAssemblyInfo> menulist = MenuAssemblylist.Where(it => it.MenuPath.Split('|')[0] == item.Name).ToList();
-
-                模块定义 module = (模块定义)Enum.Parse(typeof(模块定义), item.Name);
-                switch (module)
-                {
-                    case 模块定义.生产管理:
-                        InitNavMenu<生产管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.进销存管理:
-                        InitNavMenu<供应链管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.客户关系:
-                        InitNavMenu<客户关系>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.财务管理:
-                        InitNavMenu<财务管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.行政管理:
-                        InitNavMenu<行政管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.报表管理:
-                        InitNavMenu<报表管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.基础资料:
-                        InitNavMenu<基础资料>(menuInfoparent, menulist);
-                        break;
-                    default:
-                        break;
-                }
+                //else
+                //{
+                //    menuInfoparent = MenuInfo;
+                //}
 
             }
+            //对象中的主键会返回到本身实体中
+            if (ExistModuleList.Where(c => c.ModuleID == 0).ToList().Count > 0)
+            {
+                List<long> ids = await MainForm.Instance.AppContext.Db.Insertable(ExistModuleList.Where(c => c.ModuleID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
+            }
+
+            //这里是默认的第一级菜单来源于模块，默认Parent_id == 0了
+            ExistModuleList.ForEach(c => c.tb_MenuInfos.ForEach(
+               e =>
+               {
+                   e.ModuleID = c.ModuleID;
+                   e.tb_moduledefinition = c;
+               }
+                )
+            );
+
+            List<tb_MenuInfo> WantAddMenuList = new List<tb_MenuInfo>();
+
+            //WantAddModuleList.ForEach(c => c.tb_MenuInfos.Where(me => me.MenuID == 0).ToList().ForEach(e=>StartInitNavMenu(e, MenuAssemblylist, modules[0])));
+            ExistModuleList.ForEach(c => WantAddMenuList.AddRange(c.tb_MenuInfos.Where(me => me.MenuID == 0).ToList()));
+
+            //var menuInfos = from tb_MenuInfo menuInfo in WantAddMenuList
+            //                where menuInfo.MenuID == 0
+            //                select menuInfo;
+            if (WantAddMenuList.Count > 0)
+            {
+                await MainForm.Instance.AppContext.Db.Insertable(WantAddMenuList).ExecuteReturnSnowflakeIdListAsync();
+            }
+
+            List<tb_MenuInfo> needProcessTopMenulist = new List<tb_MenuInfo>();
+            //这里先保存。再循环去处理下级的每个菜单,因为下面的有菜单的上下级关联关系了,这里只处理顶级菜单
+            ExistModuleList.ForEach(c => needProcessTopMenulist.AddRange(c.tb_MenuInfos.Where(c => c.Parent_id == 0).ToList()));
+            foreach (var newItem in needProcessTopMenulist)
+            {
+                StartInitNavMenu(newItem, MenuAssemblylist, newItem.tb_moduledefinition.ModuleName);
+            }
+
+            //批量添加的参考代码  
             //if (GridSetting.UIGID == 0)
             //{
+
             //    await MainForm.Instance.AppContext.Db.Insertable(GridSetting).ExecuteReturnSnowflakeIdAsync();
             //}
             //else
@@ -157,49 +179,130 @@ namespace RUINORERP.UI.Common
         }
 
 
-        private void InitNavMenu<T>(tb_MenuInfo menuParent, List<MenuAttrAssemblyInfo> list)
+        private void StartInitNavMenu(tb_MenuInfo menuInfoparent, List<MenuAttrAssemblyInfo> MenuAssemblylist, string modelName)
+        {
+
+            List<MenuAttrAssemblyInfo> menulist = MenuAssemblylist.Where(it => it.MenuPath.Split('|')[0] == modelName).ToList();
+
+            模块定义 module = (模块定义)Enum.Parse(typeof(模块定义), modelName);
+            switch (module)
+            {
+                case 模块定义.生产管理:
+                    InitNavMenu<生产管理>(menuInfoparent, menulist);
+                    break;
+                case 模块定义.进销存管理:
+                    InitNavMenu<供应链管理>(menuInfoparent, menulist);
+                    break;
+                case 模块定义.客户关系:
+                    InitNavMenu<客户关系>(menuInfoparent, menulist);
+                    break;
+                case 模块定义.财务管理:
+                    InitNavMenu<财务管理>(menuInfoparent, menulist);
+                    break;
+                case 模块定义.行政管理:
+                    InitNavMenu<行政管理>(menuInfoparent, menulist);
+                    break;
+                case 模块定义.报表管理:
+                    InitNavMenu<报表管理>(menuInfoparent, menulist);
+                    break;
+                case 模块定义.基础资料:
+                    InitNavMenu<基础资料>(menuInfoparent, menulist);
+                    break;
+                case 模块定义.系统设置:
+                    InitNavMenu<系统设置>(menuInfoparent, menulist);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+
+        private async void InitNavMenu<T>(tb_MenuInfo menuParent, List<MenuAttrAssemblyInfo> list)
         {
             string parentName = typeof(T).Name;
             tb_MenuInfoController<tb_MenuInfo> mc = _appContext.GetRequiredService<tb_MenuInfoController<tb_MenuInfo>>();
             List<EnumDto> modules = new List<EnumDto>();
             modules = typeof(T).EnumToList();
 
+            List<tb_MenuInfo> ExistMenuInfoList = new List<tb_MenuInfo>();
+            if (menuParent.tb_moduledefinition.tb_MenuInfos == null)
+            {
+                menuParent.tb_moduledefinition.tb_MenuInfos = new List<tb_MenuInfo>();
+            }
+            ExistMenuInfoList = menuParent.tb_moduledefinition.tb_MenuInfos.Where(c => c.Parent_id == menuParent.MenuID).ToList();
+
             foreach (var item in modules)
             {
-                tb_MenuInfo menuInfoParent = new tb_MenuInfo();
-                menuInfoParent.ModuleID = menuParent.ModuleID;
-                menuInfoParent.MenuName = item.Name;
-                menuInfoParent.IsVisble = true;
-                menuInfoParent.IsEnabled = true;
-                menuInfoParent.CaptionCN = item.Name;
-                menuInfoParent.MenuType = "导航菜单";
-                menuInfoParent.Parent_id = menuParent.MenuID;
-                menuInfoParent.Created_at = System.DateTime.Now;
+                tb_MenuInfo menuInfoNextParent = new tb_MenuInfo();
+                menuInfoNextParent.ModuleID = menuParent.ModuleID;
+                menuInfoNextParent.MenuName = item.Name;
+                menuInfoNextParent.IsVisble = true;
+                menuInfoNextParent.IsEnabled = true;
+                menuInfoNextParent.CaptionCN = item.Name;
+                menuInfoNextParent.MenuType = "导航菜单";
+                menuInfoNextParent.Parent_id = menuParent.MenuID;
+                menuInfoNextParent.Created_at = System.DateTime.Now;
 
-                tb_MenuInfo minfo = mc.IsExistEntity(e => e.MenuName == item.Name && e.Parent_id == menuParent.MenuID);
+                //tb_MenuInfo minfo = mc.IsExistEntity(e => e.MenuName == item.Name && e.Parent_id == menuParent.MenuID);
+                tb_MenuInfo minfo = ExistMenuInfoList.FirstOrDefault(e => e.MenuName == item.Name && e.Parent_id == menuParent.MenuID);
                 if (minfo == null)
                 {
-                    minfo = mc.AddReEntity(menuInfoParent);
+                    //minfo = mc.AddReEntity(menuInfoParent);
+                    ExistMenuInfoList.Add(menuInfoNextParent);
                 }
-                else
-                {
-                    menuInfoParent = minfo;
-                }
+                //else
+                //{
+                //    menuInfoNextParent = minfo;
+                //}
 
-                // var arrs = list.GroupBy(x => x.MenuPath.Split('|')[0]);
-                var menulist = list.Where(it => it.MenuPath.Split('|')[0] == parentName && it.MenuPath.Split('|')[1] == item.Name).ToList();
+            }
+
+
+            ExistMenuInfoList.ForEach(
+            e =>
+            {
+                e.ModuleID = menuParent.tb_moduledefinition.ModuleID;
+                e.Parent_id = menuParent.MenuID;
+                e.tb_moduledefinition = menuParent.tb_moduledefinition;
+            }
+             );
+
+            //对象中的主键会返回到本身实体中
+            if (ExistMenuInfoList.Where(c => c.MenuID == 0).ToList().Count > 0)
+            {
+                await MainForm.Instance.AppContext.Db.Insertable(ExistMenuInfoList.Where(c => c.MenuID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
+            }
+
+
+            //上面统一添加后再添加一级菜单
+
+            foreach (tb_MenuInfo NextMenuInfo in ExistMenuInfoList)
+            {
+                var menulist = list.Where(it => it.MenuPath.Split('|')[0] == parentName && it.MenuPath.Split('|')[1] == NextMenuInfo.MenuName).ToList();
                 foreach (var menuinfo in menulist)
                 {
-                    AddMenuItem(menuinfo, menuInfoParent, mc);
+                    AddMenuItem(menuinfo, NextMenuInfo, mc);
                 }
             }
+
         }
 
 
 
         private void AddMenuItem(MenuAttrAssemblyInfo info, tb_MenuInfo ParentMenuInfo, tb_MenuInfoController<tb_MenuInfo> mc)
         {
-            tb_MenuInfo isexist = mc.IsExistEntity(e => e.MenuName == info.Caption && e.Parent_id == ParentMenuInfo.MenuID);
+            List<tb_MenuInfo> ExistMenuInfoList = new List<tb_MenuInfo>();
+            if (ParentMenuInfo.tb_moduledefinition.tb_MenuInfos == null)
+            {
+                ParentMenuInfo.tb_moduledefinition.tb_MenuInfos = new List<tb_MenuInfo>();
+            }
+            ExistMenuInfoList = ParentMenuInfo.tb_moduledefinition.tb_MenuInfos.Where(c => c.Parent_id == ParentMenuInfo.MenuID).ToList();
+
+
+            // List<tb_MenuInfo> WantAddMenuList = new List<tb_MenuInfo>();
+
+            //tb_MenuInfo isexist = mc.IsExistEntity(e => e.MenuName == info.Caption && e.Parent_id == ParentMenuInfo.MenuID);
+            tb_MenuInfo isexist = ExistMenuInfoList.FirstOrDefault(e => e.MenuName == info.Caption && e.Parent_id == ParentMenuInfo.MenuID);
             if (isexist == null)
             {
                 Model.tb_MenuInfo menu = new tb_MenuInfo();
@@ -220,9 +323,13 @@ namespace RUINORERP.UI.Common
                 menu.EntityName = info.EntityName;
                 menu.Created_at = System.DateTime.Now;
                 menu = mc.AddReEntity(menu);
+                // WantAddMenuList.Add(menu);
                 isexist = menu;
             }
-
+            //if (WantAddMenuList.Where(c => c.ModuleID == 0).ToList().Count > 0)
+            //{
+            //    await MainForm.Instance.AppContext.Db.Insertable(WantAddMenuList.Where(c => c.ModuleID == 0).ToList()).ExecuteReturnSnowflakeIdListAsync();
+            //}
 
             //第一次添加时才添加相应的按钮
             InitToolStripItem(info, isexist);
@@ -243,6 +350,13 @@ namespace RUINORERP.UI.Common
             Control c = Startup.ServiceProvider.GetService(info.ClassType) as Control;
             tb_ButtonInfoController<tb_ButtonInfo> BtnController = Startup.GetFromFac<tb_ButtonInfoController<tb_ButtonInfo>>();
             var btns = FindControls<ToolStrip>(c);
+
+            if (menuInfo.tb_ButtonInfos == null)
+            {
+                menuInfo.tb_ButtonInfos = new List<tb_ButtonInfo>();
+            }
+
+
             List<tb_ButtonInfo> tb_ButtonInfos = new List<tb_ButtonInfo>();
             foreach (var item in btns)
             {
@@ -264,7 +378,9 @@ namespace RUINORERP.UI.Common
                                 btnInfo.ClassPath = info.ClassPath;
                                 btnInfo.MenuID = menuInfo.MenuID;
                                 btnInfo.IsEnabled = true;
-                                tb_ButtonInfo ExistBtnInfo = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btn.Text && it.MenuID == menuInfo.MenuID);
+
+                                //tb_ButtonInfo ExistBtnInfo = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btn.Text && it.MenuID == menuInfo.MenuID);
+                                tb_ButtonInfo ExistBtnInfo = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == btn.Text && it.MenuID == menuInfo.MenuID);
                                 if (ExistBtnInfo == null)
                                 {
                                     //tnController.AddReEntity(btnInfo);
@@ -290,7 +406,8 @@ namespace RUINORERP.UI.Common
                                 btnInfo.ClassPath = info.ClassPath;
                                 btnInfo.MenuID = menuInfo.MenuID;
                                 btnInfo.IsEnabled = true;
-                                tb_ButtonInfo ExistBtnInfo = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnSplit.Text && it.MenuID == menuInfo.MenuID);
+                                //tb_ButtonInfo ExistBtnInfo = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnSplit.Text && it.MenuID == menuInfo.MenuID);
+                                tb_ButtonInfo ExistBtnInfo = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == btnSplit.Text && it.MenuID == menuInfo.MenuID);
                                 if (ExistBtnInfo == null)
                                 {
                                     tb_ButtonInfos.Add(btnInfo);
@@ -305,7 +422,8 @@ namespace RUINORERP.UI.Common
                                     btnInfoSub.ClassPath = info.ClassPath;
                                     btnInfoSub.MenuID = menuInfo.MenuID;
                                     btnInfoSub.IsEnabled = true;
-                                    tb_ButtonInfo ExistBtnInfoSub = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
+                                    //tb_ButtonInfo ExistBtnInfoSub = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
+                                    tb_ButtonInfo ExistBtnInfoSub = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
                                     if (ExistBtnInfoSub == null)
                                     {
                                         tb_ButtonInfos.Add(btnInfoSub);
@@ -325,7 +443,8 @@ namespace RUINORERP.UI.Common
                                 btnInfoDrop.ClassPath = info.ClassPath;
                                 btnInfoDrop.MenuID = menuInfo.MenuID;
                                 btnInfoDrop.IsEnabled = true;
-                                tb_ButtonInfo ExistBtnInfoDrop = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnddb.Text && it.MenuID == menuInfo.MenuID);
+                                //tb_ButtonInfo ExistBtnInfoDrop = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnddb.Text && it.MenuID == menuInfo.MenuID);
+                                tb_ButtonInfo ExistBtnInfoDrop = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == btnddb.Text && it.MenuID == menuInfo.MenuID);
                                 if (ExistBtnInfoDrop == null)
                                 {
                                     //tnController.AddReEntity(btnInfo);
@@ -342,7 +461,8 @@ namespace RUINORERP.UI.Common
                                     btnInfo.ClassPath = info.ClassPath;
                                     btnInfo.MenuID = menuInfo.MenuID;
                                     btnInfo.IsEnabled = true;
-                                    tb_ButtonInfo ExistBtnInfo = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == tsi.Text && it.MenuID == menuInfo.MenuID);
+                                    //tb_ButtonInfo ExistBtnInfo = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == tsi.Text && it.MenuID == menuInfo.MenuID);
+                                    tb_ButtonInfo ExistBtnInfo = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == tsi.Text && it.MenuID == menuInfo.MenuID);
                                     if (ExistBtnInfo == null)
                                     {
                                         //tnController.AddReEntity(btnInfo);
@@ -371,7 +491,8 @@ namespace RUINORERP.UI.Common
                         btnInfoSub.ClassPath = info.ClassPath;
                         btnInfoSub.MenuID = menuInfo.MenuID;
                         btnInfoSub.IsEnabled = true;
-                        tb_ButtonInfo ExistBtnInfoSub = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
+                        //tb_ButtonInfo ExistBtnInfoSub = BtnController.IsExistEntity(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
+                        tb_ButtonInfo ExistBtnInfoSub = menuInfo.tb_ButtonInfos.FirstOrDefault(it => it.ClassPath == info.ClassPath && it.BtnText == btnInfoSub.BtnText && it.MenuID == menuInfo.MenuID);
                         if (ExistBtnInfoSub == null)
                         {
                             tb_ButtonInfos.Add(btnInfoSub);
@@ -535,8 +656,9 @@ namespace RUINORERP.UI.Common
                         info.IsChild = isChild;
                         info.ChildEntityName = childType;
                         BusinessHelper.Instance.InitEntity(info);
-                        bool isexist = fieldController.IsExist(e => e.EntityName == info.EntityName && e.FieldName == kv.Key && e.MenuID == menuInfo.MenuID && e.IsChild == isChild);
-                        if (!isexist)
+                        //bool isexist = fieldController.IsExist(e => e.EntityName == info.EntityName && e.FieldName == kv.Key && e.MenuID == menuInfo.MenuID && e.IsChild == isChild);
+                        var existFieldInfo = menuInfo.tb_FieldInfos.FirstOrDefault(e => e.EntityName == info.EntityName && e.FieldName == kv.Key && e.MenuID == menuInfo.MenuID && e.IsChild == isChild);
+                        if (existFieldInfo == null)
                         {
                             tb_FieldInfos.Add(info);
                         }
@@ -551,61 +673,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-
-        /*
-        /// <summary>
-        /// 初始化字段
-        /// </summary>
-        public void InitFieldIno(tb_MenuInfo menuInfo, Type type)
-        {
-            try
-            {
-                List<tb_FieldInfo> fields = new List<tb_FieldInfo>();
-                var attrs = type.GetCustomAttributes<SugarTable>();
-                foreach (var attr in attrs)
-                {
-                    if (attr is SugarTable)
-                    {
-                        var t = Startup.ServiceProvider.GetService(type);//SugarColumn 或进一步取字段特性也可以
-                        ConcurrentDictionary<string, string> cd = ReflectionHelper.GetPropertyValue(t, "FieldNameList") as ConcurrentDictionary<string, string>;
-                        List<tb_FieldInfo> tb_FieldInfos = new List<tb_FieldInfo>();
-                        foreach (KeyValuePair<string, string> kv in cd)
-                        {
-                            tb_FieldInfo info = Startup.ServiceProvider.CreateInstance<tb_FieldInfo>();
-                            info.actionStatus = ActionStatus.新增;
-                            info.ClassPath = type.FullName;
-                            info.EntityName = type.Name;
-                            info.FieldName = kv.Key;
-                            info.FieldText = kv.Value;
-                            info.MenuID = menuInfo.MenuID;
-                            info.ChildEntityName = string.Empty;
-                            //fields.Add(info);
-                            tb_FieldInfo isexist = fieldController.IsExistEntity(e => e.EntityName == type.Name && e.FieldName == kv.Key && e.MenuID == menuInfo.MenuID);
-                            if (isexist == null)
-                            {
-                                //fieldController.AddReEntity(info);
-                                tb_FieldInfos.Add(info);
-                            }
-                        }
-
-                        //fieldController.AddAsync(fields);
-                        //应该要优化为批量新增
-                        if (tb_FieldInfos.Count > 0)
-                        {
-                            _appContext.Db.CopyNew().Insertable<tb_FieldInfo>(tb_FieldInfos).ExecuteReturnSnowflakeIdListAsync();
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.uclog.AddLog(ex.Message, UILogType.错误);
-            }
-        }
-        */
-
         #endregion
-
 
 
     }

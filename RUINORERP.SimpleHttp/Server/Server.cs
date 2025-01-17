@@ -34,8 +34,18 @@ namespace RUINORERP.SimpleHttp
     /// <summary>
     /// HTTP server listener class.
     /// </summary>
-    public static class HttpServer
+    public class HttpServer
     {
+
+
+        public delegate void ShowLogDelegate(string msg);
+        /// <summary>
+        /// 验证数据
+        /// </summary>
+        public event ShowLogDelegate OnShowLog;
+
+
+
         /// <summary>
         /// Creates and starts a new instance of the http(s) server.
         /// </summary>
@@ -45,7 +55,7 @@ namespace RUINORERP.SimpleHttp
         /// <param name="useHttps">True to add 'https://' prefix insteaad of 'http://'.</param>
         /// <param name="maxHttpConnectionCount">Maximum HTTP connection count, after which the incoming requests will wait (sockets are not included).</param>
         /// <returns>Server listening task.</returns>
-        public static async Task ListenAsync(string ip, int port, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync, string msg, bool useHttps = false, byte maxHttpConnectionCount = 32)
+        public async Task ListenAsync(string ip, int port, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync, string msg, bool useHttps = false, byte maxHttpConnectionCount = 32)
         {
             try
             {
@@ -61,12 +71,17 @@ namespace RUINORERP.SimpleHttp
             }
             catch (Exception ex)
             {
+                if (ex != null && OnShowLog != null)
+                {
+                    OnShowLog(ex.Message+ex.StackTrace);
+                }
+
                 msg = ex.Message;
                 // 设置文字颜色为红色
                 Console.ForegroundColor = ConsoleColor.Red;
                 // 输出红色文字
                 Console.WriteLine(msg);
-                
+
                 // 重置文字颜色为默认值
                 Console.ResetColor();
             }
@@ -80,7 +95,7 @@ namespace RUINORERP.SimpleHttp
         /// <param name="onHttpRequestAsync">Action executed on HTTP request.</param>
         /// <param name="maxHttpConnectionCount">Maximum HTTP connection count, after which the incoming requests will wait (sockets are not included).</param>
         /// <returns>Server listening task.</returns>
-        public static async Task ListenAsync(string httpListenerPrefix, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync, byte maxHttpConnectionCount = 32)
+        public async Task ListenAsync(string httpListenerPrefix, CancellationToken token, Func<HttpListenerRequest, HttpListenerResponse, Task> onHttpRequestAsync, byte maxHttpConnectionCount = 32)
         {
             //--------------------- checks args
             if (token == null)
@@ -106,6 +121,10 @@ namespace RUINORERP.SimpleHttp
             catch (Exception ex) when ((ex as HttpListenerException)?.ErrorCode == 5)
             {
                 var msg = getNamespaceReservationExceptionMessage(httpListenerPrefix);
+                if (!string.IsNullOrEmpty(msg) && OnShowLog != null)
+                {
+                    OnShowLog(msg);
+                }
                 throw new UnauthorizedAccessException(msg, ex);
             }
 

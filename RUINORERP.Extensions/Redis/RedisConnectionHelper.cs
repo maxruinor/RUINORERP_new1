@@ -49,7 +49,6 @@ namespace RUINORERP.Extensions.Redis
             }
         }
 
-       
 
         /// <summary>
         /// https://stackexchange.github.io/StackExchange.Redis/Basics

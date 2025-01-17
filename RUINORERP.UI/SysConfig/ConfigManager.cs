@@ -25,10 +25,10 @@ namespace RUINORERP.UI.SysConfig
         public ConfigManager()
         {
             //只会加载一次
-            LoadConfigValues();
+            //LoadConfigValues();
         }
 
-        private async void LoadConfigValues()
+        public async void LoadConfigValues()
         {
             /*
             Assembly assembly = Assembly.GetExecutingAssembly();
@@ -62,10 +62,23 @@ namespace RUINORERP.UI.SysConfig
                 //  appSettings.Value;
             }
             */
+            List<tb_SysGlobalDynamicConfig> configEntries = new List<tb_SysGlobalDynamicConfig>();
+            try
+            {
+                // 从数据库加载配置项
+                tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig> ctr = Startup.GetFromFac<tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig>>();
+                  configEntries = await ctr.QueryAsync();
+            }
+            catch (Exception)
+            {
 
-            // 从数据库加载配置项
-            tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig> ctr = Startup.GetFromFac<tb_SysGlobalDynamicConfigController<tb_SysGlobalDynamicConfig>>();
-            var configEntries = await ctr.QueryAsync();
+                 
+            }
+           
+            if (configEntries == null)
+            {
+                return;
+            }
             foreach (var entry in configEntries)
             {
                 if(!_configCache.ContainsKey(entry.ConfigKey))

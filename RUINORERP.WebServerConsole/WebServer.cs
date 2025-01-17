@@ -128,12 +128,13 @@ namespace RUINORERP.WebServerConsole
 
                 ConfigureRoutes();
                 //------------------- start server -------------------           
-                var port = 8081;
+                var port = 8085;
                 Console.WriteLine("Running HTTP server on: " + port);
                 //_logger.LogInformation("Running HTTP server on: " + port);
                 string msg = string.Empty;
                 CancellationTokenSource cts = new CancellationTokenSource();
-                var ts = HttpServer.ListenAsync("192.168.0.99",port, cts.Token, Route.OnHttpRequestAsync, msg, useHttps: false);
+                HttpServer httpServer=new HttpServer();
+                var ts = httpServer.ListenAsync("192.168.0.74",port, cts.Token, Route.OnHttpRequestAsync, msg, useHttps: false);
                 if (!string.IsNullOrEmpty(msg))
                 {
                     //_logger.LogInformation("Running HTTP server on: " + port);

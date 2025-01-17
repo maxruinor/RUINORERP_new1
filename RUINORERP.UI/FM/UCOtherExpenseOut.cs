@@ -117,12 +117,14 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.ExpenseNo, txtExpenseNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4DataTime<tb_FM_OtherExpense>(entity, t => t.DocumentDate, dtpDocumentDate, false);
+
             //DataBindingHelper.BindData4CehckBox<tb_FM_OtherExpense>(entity, t => t.EXPOrINC, chkEXPOrINC, false);
             //有默认值
             DataBindingHelper.BindData4CheckBox<tb_FM_OtherExpense>(entity, t => t.IncludeTax, chkIncludeTax, false);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.UntaxedAmount.ToString(), txtUntaxedAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_OtherExpense>(entity, t => t.DataStatus, txtstatus, BindDataType4Enum.EnumName, typeof(Global.DataStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_OtherExpense>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             txtstatus.ReadOnly = true;
@@ -164,8 +166,93 @@ namespace RUINORERP.UI.FM
                     toolStripbtnPrint.Enabled = false;
                 }
             };
+            //显示结案凭证图片
+            LoadImageData(entity.CloseCaseImagePath);
             base.BindData(entity);
         }
+
+        private async void LoadImageData(string CloseCaseImagePath)
+        {
+            if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))
+            {
+                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                try
+                {
+                    byte[] img = await httpWebService.DownloadImgFileAsync(CloseCaseImagePath);
+                    magicPictureBox1.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                    magicPictureBox1.Visible = true;
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                }
+            }
+            else
+            {
+                magicPictureBox1.Visible = false;
+            }
+        }
+
+      
+        public override async Task<bool> DeleteRemoteImages()
+        {
+
+            if (EditEntity == null || EditEntity.tb_FM_OtherExpenseDetails == null)
+            {
+                return false;
+            }
+
+            #region 删除主图的结案图。一般没有结案是没有的。结案就不会有结案图了。也有特殊情况。
+
+            if (!string.IsNullOrEmpty(EditEntity.CloseCaseImagePath))
+            {
+                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                string deleteRsult = await httpWebService.DeleteImageAsync(EditEntity.CloseCaseImagePath, "delete123");
+                MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
+            }
+            #endregion
+
+            bool result = true;
+            foreach (tb_FM_OtherExpenseDetail detail in EditEntity.tb_FM_OtherExpenseDetails)
+            {
+                PropertyInfo[] props = typeof(tb_FM_OtherExpenseDetail).GetProperties();
+                foreach (PropertyInfo prop in props)
+                {
+                    var col = sgd[prop.Name];
+                    if (col != null)
+                    {
+                        if (col.CustomFormat == CustomFormatType.WebPathImage)
+                        {
+                            if (detail.GetPropertyValue(prop.Name) != null
+                                && detail.GetPropertyValue(prop.Name).ToString().Contains("-"))
+                            {
+                                string imageNameValue = detail.GetPropertyValue(prop.Name).ToString();
+                                //比较是否更新了图片数据
+                                //old_new 无后缀文件名
+                                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
+                                valueImageWeb.CellImageHashName = imageNameValue;
+                                string oldfileName = valueImageWeb.GetOldRealfileName();
+                                string newfileName = valueImageWeb.GetNewRealfileName();
+                                string TempFileName = string.Empty;
+                                //fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
+                                //保存在本地临时目录 删除
+                                if (System.IO.File.Exists(TempFileName))
+                                {
+                                    System.IO.File.Delete(TempFileName);
+                                }
+                                //上传到服务器，删除本地
+                                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
+                                string deleteRsult = await httpWebService.DeleteImageAsync(newfileName, "delete123");
+                                MainForm.Instance.PrintInfoLog(deleteRsult);
+                            }
+                        }
+                    }
+
+                }
+            }
+            return result;
+        }
+
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
@@ -327,7 +414,26 @@ namespace RUINORERP.UI.FM
                 }
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TotalAmount);
-
+                if (NeedValidated)
+                {//处理图片
+                    bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_OtherExpenseDetails);
+                    if (uploadImg)
+                    {
+                        ////更新图片名后保存到数据库
+                        //int ImgCounter = await MainForm.Instance.AppContext.Db.Updateable<tb_FM_ExpenseClaimDetail>(EditEntity.tb_FM_ExpenseClaimDetails)
+                        //    .UpdateColumns(t => new { t.EvidenceImagePath })
+                        //    .ExecuteCommandAsync();
+                        //if (ImgCounter > 0)
+                        //{
+                        MainForm.Instance.PrintInfoLog($"图片保存成功,。");
+                        //}
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog("图片上传出错。");
+                        return false;
+                    }
+                }
 
                 ReturnMainSubResults<tb_FM_OtherExpense> SaveResult = new ReturnMainSubResults<tb_FM_OtherExpense>();
                 if (NeedValidated)

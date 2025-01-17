@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2025 15:31:57
+// 时间：01/17/2025 11:45:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -84,19 +84,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _DefaultRole;}
             set{SetProperty(ref _DefaultRole, value);}
-        }
-     
-
-        private string _WorkDefaultLayout;
-        /// <summary>
-        /// 工作台布局
-        /// </summary>
-        [AdvQueryAttribute(ColName = "WorkDefaultLayout",ColDesc = "工作台布局")]
-        [SugarColumn(ColumnDataType = "text",SqlParameterDbType ="String",ColumnName = "WorkDefaultLayout",Length=2147483647,IsNullable = true,ColumnDescription = "工作台布局" )]
-        public string WorkDefaultLayout 
-        { 
-            get{return _WorkDefaultLayout;}
-            set{SetProperty(ref _WorkDefaultLayout, value);}
         }
 
 

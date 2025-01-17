@@ -65,7 +65,10 @@ namespace RUINORERP.Server.CommandService
                                 bool success = await Login(Username, Password);
                                 if (success)
                                 {
-                           
+                                    if (frmMain.Instance.IsDebug)
+                                    {
+                                        frmMain.Instance.PrintMsg($"登陆{Username}的指令成功,接下来重复判断");
+                                    }
                                     //优化判断相同用户
                                     //判断 是不是有相同的用户已经登陆了。有的话，则提示新登陆的人是不是T掉旧的用户。不是的话自己退出。
                                     var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(RequestSession.SessionID) && c.User.用户名 == user.UserName);
@@ -75,6 +78,10 @@ namespace RUINORERP.Server.CommandService
                                     }
                                     else
                                     {
+                                        if (frmMain.Instance.IsDebug)
+                                        {
+                                            frmMain.Instance.PrintMsg($"登陆{Username}的指令成功,重复判断通过，接下来人数限制");
+                                        }
                                         //登陆成功时。
                                         if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.registrationInfo.ConcurrentUsers)
                                         {

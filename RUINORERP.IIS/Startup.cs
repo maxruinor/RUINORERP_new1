@@ -666,8 +666,11 @@ public IHost CslaDIPortBackup()
             IConfiguration configuration = cfgBuilder.Build();
             AppSettings.Configuration = configuration;
             string conn = AppSettings.GetValue("ConnectString");
-            services.AddSqlsugarSetup(Program.AppContextData, configuration);
-
+            //services.AddSqlsugarSetup(Program.AppContextData, configuration);
+            string key = "ruinor1234567890";
+            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+            services.AddSqlsugarSetup(Program.AppContextData, newconn);
+            services.AddAppContext(Program.AppContextData);
 
 
             //  services.AddSingleton(typeof(AutoMapperConfig));
@@ -874,6 +877,8 @@ public IHost CslaDIPortBackup()
                 //if (!tempTypes[i].IsDefined(NoWantIOCAttr, false))
                 if (tempTypes[i].IsDefined(NoWantIOCAttr, false))
                     continue;
+
+
                 if (tempTypes[i].Name == "Roles")
                 {
 

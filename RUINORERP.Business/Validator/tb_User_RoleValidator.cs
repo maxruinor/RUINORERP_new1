@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2025 15:31:57
+// 时间：01/17/2025 11:45:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,7 +41,6 @@ namespace RUINORERP.Business
  RuleFor(tb_User_Role =>tb_User_Role.User_ID).Must(CheckForeignKeyValue).WithMessage("用户:下拉选择值不正确。");
 
  RuleFor(tb_User_Role =>tb_User_Role.RoleID).Must(CheckForeignKeyValue).WithMessage("角色:下拉选择值不正确。");
-
 
 
 

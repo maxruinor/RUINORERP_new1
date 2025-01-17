@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINORERP.Common.Extensions;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -42,12 +43,14 @@ namespace RUINORERP.IIS
             {
                 PrintInfoLog("开始启动服务器");
                 _logger.LogInformation("开始启动socket服务器");
-
+                // 定义IP地址和端口号
+                string ip = txtIP.Text;
+                int port = txtPort.Text.ToInt(); // 这里替换为您想要使用的端口号
                 //启动socket
                 frmMain.Instance.PrintInfoLog("StartServerUI Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
                 await Task.Run(() =>
                 {
-                    webserver.RunWebServer();
+                    webserver.RunWebServer(ip, port);
                     //StartServer(); 
                 });
 
@@ -63,20 +66,7 @@ namespace RUINORERP.IIS
         }
 
         WebServer webserver = Startup.GetFromFac<WebServer>();
-        async Task StartServer()
-        {
-            frmMain.Instance.PrintInfoLog("StartServer Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
-            try
-            {
-                webserver.RunWebServer();
-            }
-            catch (Exception e)
-            {
-                frmMain.Instance.PrintInfoLog("_host.RunAsync()" + e.Message);
-
-            }
-
-        }
+        
 
         private void frmMain_Load(object sender, EventArgs e)
         {

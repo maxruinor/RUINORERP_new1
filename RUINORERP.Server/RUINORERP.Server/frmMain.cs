@@ -261,6 +261,17 @@ namespace RUINORERP.Server
 
         private async void frmMain_Load(object sender, EventArgs e)
         {
+
+            IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+            var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
+            IConfiguration configuration = cfgBuilder.Build();
+            AppSettings.Configuration = configuration;
+            string UseDebug = AppSettings.GetValue("UseDebug");
+            if (UseDebug == 0.ToString())
+            {
+                toolStripddbtnDebug.Visible = false;
+            }
+
             try
             {
                 HardwareInfoService infoService = new HardwareInfoService();
@@ -505,7 +516,10 @@ namespace RUINORERP.Server
             }
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>true是通过了检测</returns>
         private bool CheckSystemProtection()
         {
             bool result = false;

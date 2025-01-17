@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using TransInstruction;
 using TransInstruction.CommandService;
 using TransInstruction.DataPortal;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.Server.CommandService
 {
@@ -56,6 +57,11 @@ namespace RUINORERP.Server.CommandService
                 arg2.RequestSession.AddSendData((byte)ServerCmdEnum.用户登陆回复, null, tx.toByte());
                 UserService.发送在线列表(arg2.RequestSession);
                 UserService.发送缓存信息列表(arg2.RequestSession);
+
+                if (frmMain.Instance.IsDebug)
+                {
+                    frmMain.Instance.PrintMsg($"{arg2.user.UserName}登陆完全成功");
+                }
             }
             catch (Exception ex)
             {

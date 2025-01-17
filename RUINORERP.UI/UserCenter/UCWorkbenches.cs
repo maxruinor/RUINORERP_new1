@@ -433,82 +433,84 @@ namespace RUINORERP.UI.UserCenter
             }
         }
 
+        /*
+         保存一下代码！
+         */
+        //private void LoadLayoutFromXml(KryptonPageCollection Kpages)
+        //{
+        //    //加载布局
+        //    try
+        //    {
+        //        //没有个性化文件时用默认的
+        //        if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout))
+        //        {
+        //            #region 优化从数据库取
+        //            //加载XML文件
+        //            XmlDocument xmldoc = new XmlDocument();
+        //            //获取XML字符串
+        //            string xmlStr = xmldoc.InnerXml;
+        //            //字符串转XML
+        //            xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout);
 
-        private void LoadLayoutFromXml(KryptonPageCollection Kpages)
-        {
-            //加载布局
-            try
-            {
-                //没有个性化文件时用默认的
-                if (!string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout))
-                {
-                    #region 优化从数据库取
-                    //加载XML文件
-                    XmlDocument xmldoc = new XmlDocument();
-                    //获取XML字符串
-                    string xmlStr = xmldoc.InnerXml;
-                    //字符串转XML
-                    xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role.WorkDefaultLayout);
+        //            XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
+        //            XmlReaderSettings settings = new XmlReaderSettings();
+        //            using (XmlReader reader = XmlReader.Create(nodeReader, settings))
+        //            {
+        //                while (reader.Read())
+        //                {
+        //                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
+        //                    {
+        //                        //加载停靠信息
+        //                        ws.LoadElementFromXml(reader, Kpages);
+        //                    }
+        //                }
 
-                    XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
-                    XmlReaderSettings settings = new XmlReaderSettings();
-                    using (XmlReader reader = XmlReader.Create(nodeReader, settings))
-                    {
-                        while (reader.Read())
-                        {
-                            if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
-                            {
-                                //加载停靠信息
-                                ws.LoadElementFromXml(reader, Kpages);
-                            }
-                        }
+        //            }
+        //            #endregion
+        //        }
+        //        else
+        //        {
+        //            string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, xmlFileNameWithExtension);
+        //            //Location of XML file
+        //            if (System.IO.File.Exists(xmlfilepath))
+        //            {
+        //                #region load
+        //                // Create the XmlNodeReader object.
+        //                XmlDocument doc = new XmlDocument();
+        //                doc.Load(xmlfilepath);
+        //                XmlNodeReader nodeReader = new XmlNodeReader(doc);
+        //                // Set the validation settings.
+        //                XmlReaderSettings settings = new XmlReaderSettings();
+        //                //settings.ValidationType = ValidationType.Schema;
+        //                //settings.Schemas.Add("urn:bookstore-schema", "books.xsd");
+        //                //settings.ValidationEventHandler += new ValidationEventHandler(ValidationCallBack);
+        //                //settings.NewLineChars = Environment.NewLine;
+        //                //settings.Indent = true;
 
-                    }
-                    #endregion
-                }
-                else
-                {
-                    string xmlfilepath = System.IO.Path.Combine(Application.StartupPath, xmlFileNameWithExtension);
-                    //Location of XML file
-                    if (System.IO.File.Exists(xmlfilepath))
-                    {
-                        #region load
-                        // Create the XmlNodeReader object.
-                        XmlDocument doc = new XmlDocument();
-                        doc.Load(xmlfilepath);
-                        XmlNodeReader nodeReader = new XmlNodeReader(doc);
-                        // Set the validation settings.
-                        XmlReaderSettings settings = new XmlReaderSettings();
-                        //settings.ValidationType = ValidationType.Schema;
-                        //settings.Schemas.Add("urn:bookstore-schema", "books.xsd");
-                        //settings.ValidationEventHandler += new ValidationEventHandler(ValidationCallBack);
-                        //settings.NewLineChars = Environment.NewLine;
-                        //settings.Indent = true;
+        //                using (XmlReader reader = XmlReader.Create(nodeReader, settings))
+        //                {
+        //                    while (reader.Read())
+        //                    {
+        //                        if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
+        //                        {
+        //                            //加载停靠信息
+        //                            ws.LoadElementFromXml(reader, Kpages);
+        //                        }
+        //                    }
 
-                        using (XmlReader reader = XmlReader.Create(nodeReader, settings))
-                        {
-                            while (reader.Read())
-                            {
-                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
-                                {
-                                    //加载停靠信息
-                                    ws.LoadElementFromXml(reader, Kpages);
-                                }
-                            }
+        //                }
+        //                #endregion
+        //            }
+        //        }
 
-                        }
-                        #endregion
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.uclog.AddLog("加载查询页布局配置文件出错。" + ex.Message, Global.UILogType.错误);
-                MainForm.Instance.logger.LogError(ex, "加载查询页布局配置文件出错。");
-            }
-        }
-
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MainForm.Instance.uclog.AddLog("加载查询页布局配置文件出错。" + ex.Message, Global.UILogType.错误);
+        //        MainForm.Instance.logger.LogError(ex, "加载查询页布局配置文件出错。");
+        //    }
+        //}
+     
         #endregion
 
         private void btnReload_Click(object sender, EventArgs e)

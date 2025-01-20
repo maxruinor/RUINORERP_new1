@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Security.Cryptography;
- 
+
 
 namespace HLH.Lib.Security
 {
@@ -79,6 +79,102 @@ namespace HLH.Lib.Security
             }
         }
     }
+    
+
+ 
+        public class AESHelper
+        {
+            /// <summary>
+            /// 默认密钥-密钥的长度必须是32
+            /// </summary>
+            private const string PublicKey = "1234567890123456";
+
+            /// <summary>
+            /// 默认向量
+            /// </summary>
+            private const string Iv = "abcdefghijklmnop";
+            /// <summary>  
+            /// AES加密  
+            /// </summary>  
+            /// <param name="str">需要加密字符串</param>  
+            /// <returns>加密后字符串</returns>  
+            public static String Encrypt(string str)
+            {
+                return Encrypt(str, PublicKey);
+            }
+
+            /// <summary>  
+            /// AES解密  
+            /// </summary>  
+            /// <param name="str">需要解密字符串</param>  
+            /// <returns>解密后字符串</returns>  
+            public static String Decrypt(string str)
+            {
+                return Decrypt(str, PublicKey);
+            }
+            /// <summary>
+            /// AES加密
+            /// </summary>
+            /// <param name="str">需要加密的字符串</param>
+            /// <param name="key">32位密钥</param>
+            /// <returns>加密后的字符串</returns>
+            public static string Encrypt(string str, string key)
+            {
+                Byte[] keyArray = System.Text.Encoding.UTF8.GetBytes(key);
+                Byte[] toEncryptArray = System.Text.Encoding.UTF8.GetBytes(str);
+                var rijndael = new System.Security.Cryptography.RijndaelManaged();
+                rijndael.Key = keyArray;
+                rijndael.Mode = System.Security.Cryptography.CipherMode.ECB;
+                rijndael.Padding = System.Security.Cryptography.PaddingMode.PKCS7;
+                rijndael.IV = System.Text.Encoding.UTF8.GetBytes(Iv);
+                System.Security.Cryptography.ICryptoTransform cTransform = rijndael.CreateEncryptor();
+                Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+                return Convert.ToBase64String(resultArray, 0, resultArray.Length);
+            }
+            /// <summary>
+            /// AES解密
+            /// </summary>
+            /// <param name="str">需要解密的字符串</param>
+            /// <param name="key">32位密钥</param>
+            /// <returns>解密后的字符串</returns>
+            public static string Decrypt(string str, string key)
+            {
+                Byte[] keyArray = System.Text.Encoding.UTF8.GetBytes(key);
+                Byte[] toEncryptArray = Convert.FromBase64String(str);
+                var rijndael = new System.Security.Cryptography.RijndaelManaged();
+                rijndael.Key = keyArray;
+                rijndael.Mode = System.Security.Cryptography.CipherMode.ECB;
+                rijndael.Padding = System.Security.Cryptography.PaddingMode.PKCS7;
+                rijndael.IV = System.Text.Encoding.UTF8.GetBytes(Iv);
+                System.Security.Cryptography.ICryptoTransform cTransform = rijndael.CreateDecryptor();
+                Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+                return System.Text.Encoding.UTF8.GetString(resultArray);
+            }
+        }
+   
+
+    /// <summary>
+    ///说是性能比较好的对称加密方法
+    /// </summary>
+    public class AesEncryptionOther
+    {
+
+        /*
+         在AES加密算法中，密钥的长度可以是128位（16字节）、192位（24字节）或256位（32字节）。在您提供的 EncryptString 方法中，并没有显式指定密钥的长度，而是直接使用传入的 key 参数。这意味着密钥的实际长度取决于调用该方法时传入的 key 的长度。
+然而，为了确保AES算法能够正确工作，传入的 key 必须能够被转换为AES算法支持的密钥长度之一。如果传入的 key 长度不是16、24或32字节，那么在内部实现中，通常会使用某种密钥派生函数（如PBKDF2、Scrypt等）来从原始密钥派生出一个合适长度的密钥。
+
+        对于128位（16字节）的密钥：
+key = "1234567890123456"; // 16个字符
+对于192位（24字节）的密钥：
+key = "123456789012345678901234"; // 24个字符
+对于256位（32字节）的密钥：
+key = "12345678901234567890123456789012"; // 32个字符
+
+
+         */
+ 
+    }
+
 
     /*
      
@@ -91,7 +187,7 @@ namespace HLH.Lib.Security
         {
             // 使用Rfc2898DeriveBytes生成密钥，这里使用一个密码和盐值
             // 密码和盐值应该是随机生成的，并且保密
-           // string password = "your_password_here"; // 请替换为一个安全的密码
+            // string password = "your_password_here"; // 请替换为一个安全的密码
             byte[] salt = new byte[32]; // 盐值长度应至少与密钥长度相同
             using (var rng = new RNGCryptoServiceProvider())
             {
@@ -229,19 +325,19 @@ namespace HLH.Lib.Security
     }
          * **/
 
-//        要生成一个安全的256位AES加密密钥，可以遵循以下步骤：
+        //        要生成一个安全的256位AES加密密钥，可以遵循以下步骤：
 
-//使用安全的随机数生成器：生成密钥需要高质量的随机数。使用安全的随机数生成器（CSPRNG，Cryptographically Secure Pseudo-Random Number Generator）是确保密钥不可预测性的关键。在Java中，SecureRandom类是一个CSPRNG，可以用于生成安全的随机数
-//。
+        //使用安全的随机数生成器：生成密钥需要高质量的随机数。使用安全的随机数生成器（CSPRNG，Cryptographically Secure Pseudo-Random Number Generator）是确保密钥不可预测性的关键。在Java中，SecureRandom类是一个CSPRNG，可以用于生成安全的随机数
+        //。
 
-//密钥生成：使用KeyGenerator类来生成密钥。通过KeyGenerator.getInstance("AES")获得一个KeyGenerator对象，并指定AES算法。然后使用keyGen.init(256, secureRandom)初始化KeyGenerator，指定密钥长度为256位，并传入SecureRandom实例以确保随机性
-//。
+        //密钥生成：使用KeyGenerator类来生成密钥。通过KeyGenerator.getInstance("AES")获得一个KeyGenerator对象，并指定AES算法。然后使用keyGen.init(256, secureRandom)初始化KeyGenerator，指定密钥长度为256位，并传入SecureRandom实例以确保随机性
+        //。
 
-//生成密钥：调用keyGen.generateKey() 生成密钥。这个密钥将是一个SecretKey对象，可以通过secretKey.getEncoded() 方法获取密钥的字节数组表示
-//。
+        //生成密钥：调用keyGen.generateKey() 生成密钥。这个密钥将是一个SecretKey对象，可以通过secretKey.getEncoded() 方法获取密钥的字节数组表示
+        //。
 
-//密钥存储：生成的密钥必须安全存储，以防止未经授权的访问和泄露。可以使用硬件安全模块（HSM）或软件密钥库（如AWS KMS、Azure Key Vault）来保护密钥
-//。
+        //密钥存储：生成的密钥必须安全存储，以防止未经授权的访问和泄露。可以使用硬件安全模块（HSM）或软件密钥库（如AWS KMS、Azure Key Vault）来保护密钥
+        //。
 
 
     }

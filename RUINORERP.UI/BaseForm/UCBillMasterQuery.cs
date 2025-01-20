@@ -17,6 +17,7 @@ using RUINORERP.Common.Extensions;
 using SHControls.DataGrid;
 using SqlSugar;
 using System.Linq.Dynamic.Core;
+using System.Collections.Concurrent;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -157,7 +158,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-
+       
 
         private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {

@@ -34,7 +34,7 @@ namespace RUINORERP.Business.Processor
     /// <summary>
     /// 产品详细表
     /// </summary>
-    public partial class tb_ProdDetailProcessor:BaseProcessor 
+    public partial class tb_ProdDetailProcessor : BaseProcessor
     {
 
         public override QueryFilter GetQueryFilter()
@@ -42,7 +42,10 @@ namespace RUINORERP.Business.Processor
             QueryFilter queryFilter = new QueryFilter();
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_ProdDetail>(c => c.SKU);
-            queryFilter.SetQueryField<tb_ProdDetail>(c => c.Standard_Price);
+            queryFilter.SetQueryField<tb_ProdDetail>(c => c.ProdBaseID, typeof(tb_Prod));
+            queryFilter.SetQueryField<tb_ProdDetail>(c => c.Is_enabled);
+            queryFilter.SetQueryField<tb_ProdDetail>(c => c.Is_available);
+            queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
             queryFilter.SetQueryField<tb_ProdDetail>(c => c.Notes);
             return queryFilter;
         }

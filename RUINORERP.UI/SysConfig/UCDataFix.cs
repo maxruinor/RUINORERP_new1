@@ -236,9 +236,6 @@ namespace RUINORERP.UI.SysConfig
                                 MainForm.Instance.PrintInfoLog($"订单{purOrder.PurOrderNo}:审核过，有对应的入库数据，订单日期为{purOrder.PurDate}。==》 找一下可以修复的情况。");
                             }
 
-
-
-
                             //查一下 只有订单。没有入库单的数据。特别显示一下订单时间
                             if (purOrder.tb_PurEntries.Count > 0 && purOrder.DataStatus == (int)DataStatus.确认 && purOrder.tb_PurOrderDetails.Sum(c => c.DeliveredQuantity) == 0)
                             {
@@ -266,7 +263,6 @@ namespace RUINORERP.UI.SysConfig
                             }
 
                             //如果入库单主单总数量 和明细也不对时，提示一下。
-
                             if (purOrder.tb_PurEntries.Count > 0 && purOrder.tb_PurEntries.Select(c => c.tb_PurEntryDetails.Sum(s => s.Quantity)).Sum() == purOrder.tb_PurEntries.Sum(c => c.TotalQty))
                             {
                                 //do something

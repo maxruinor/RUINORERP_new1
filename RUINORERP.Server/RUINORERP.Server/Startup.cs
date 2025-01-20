@@ -719,7 +719,6 @@ namespace RUINORERP.Server
                 if (tempTypes[i].Name.Contains("UseCsla"))
                 {
                     IOCCslaTypes.Add(tempTypes[i]);
-
                 }
                 else
                 {

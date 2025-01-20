@@ -176,30 +176,9 @@ namespace RUINORERP.UI.PUR
         }
         private void button设置查询条件_Click(object sender, EventArgs e)
         {
-            MenuPersonalizedSettings();
+             
         }
-        protected virtual void MenuPersonalizedSettings()
-        {
-            UserCenter.frmMenuPersonalization frmMenu = new UserCenter.frmMenuPersonalization();
-            frmMenu.MenuPathKey = CurMenuInfo.ClassPath;
-            if (frmMenu.ShowDialog() == DialogResult.OK)
-            {
-                if (!this.DesignMode)
-                {
-                    MenuPersonalization personalization = new MenuPersonalization();
-                    UserGlobalConfig.Instance.MenuPersonalizationlist.TryGetValue(CurMenuInfo.ClassPath, out personalization);
-                    if (personalization != null)
-                    {
-                        decimal QueryShowColQty = personalization.QueryConditionShowColsQty;
-                        QueryDtoProxy = LoadQueryConditionToUI(QueryShowColQty);
-                    }
-                    else
-                    {
-                        QueryDtoProxy = LoadQueryConditionToUI(frmMenu.QueryShowColQty.Value);
-                    }
-                }
-            }
-        }
+    
 
 
         /// <summary>

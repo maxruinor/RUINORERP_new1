@@ -28,6 +28,7 @@ namespace RUINORERP.UI.BaseForm
 
         public NewSumDataGridView BaseMainDataGridView { get; set; }
         public NewSumDataGridView BaseSubDataGridView { get; set; }
+       
         /// <summary>
         /// 从工作台点击过来的时候，这个保存初始化时的查询参数
         ///  这个可用可不用。

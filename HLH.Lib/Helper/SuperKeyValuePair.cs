@@ -37,6 +37,12 @@ namespace HLH.Lib.Helper
        
         }
 
+        public SuperValue(string strValue,object _tag)
+        {
+            superStrValue = strValue;
+            tag = _tag;
+        }
+
         public SuperValue(string strValue, string DataTypeName)
         {
             superStrValue = strValue;
@@ -180,6 +186,11 @@ namespace HLH.Lib.Helper
         public KeyValue()
         {
 
+        }
+        public KeyValue(string k, object v)
+        {
+            key = k;
+            value = v;
         }
 
         public KeyValue(object k, object v)

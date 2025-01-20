@@ -359,6 +359,7 @@ namespace RUINORERP.UI.SysConfig
                     txtBizType.Tag = null;
                 }
                 cmbMenuType.SelectedIndex = cmbMenuType.FindString(info.MenuType);
+                //设置上级菜单节点
                 SearchNodes(info.Parent_id.ToString(), comboBoxTreeView1.TreeView.Nodes, comboBoxTreeView1.TreeView);
 
                 //treeView1.SelectedImageIndex = treeView1.SelectedNode.ImageIndex;
@@ -400,6 +401,7 @@ namespace RUINORERP.UI.SysConfig
                 if (StartNode.Name.ToLower().Contains(SearchText.ToLower()))
                 {
                     treeView1.SelectedNode = StartNode;
+                    comboBoxTreeView1.Text= StartNode.Text;
                     treeView1.SelectedNode.Expand();
                     comboBoxTreeView1.SelectedItem = StartNode;
                     treeView1.Select();

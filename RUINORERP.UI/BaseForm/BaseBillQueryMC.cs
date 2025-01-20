@@ -217,10 +217,10 @@ namespace RUINORERP.UI.BaseForm
 
         private async void button设置查询条件_Click(object sender, EventArgs e)
         {
-            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto);
+            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto as BaseEntity);
             if (rs)
             {
-                QueryDtoProxy = LoadQueryConditionToUI();
+                QueryDto = LoadQueryConditionToUI();
             }
         }
 
@@ -360,7 +360,11 @@ namespace RUINORERP.UI.BaseForm
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
-                        await CloseCase(selectlist);
+                        bool rs = await CloseCase(selectlist);
+                        if (rs)
+                        {
+                            AuditLogHelper.Instance.CreateAuditLog<M>("结案", selectlist[0], $"结案意见:{rs}");
+                        }
                     }
                     break;
                 case MenuItemEnums.转出库单:
@@ -1309,7 +1313,7 @@ namespace RUINORERP.UI.BaseForm
                     MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                     return;
                 }
-                QueryDtoProxy = LoadQueryConditionToUI();
+                QueryDto = LoadQueryConditionToUI();
 
 
 
@@ -1499,13 +1503,13 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-            if (_UCBillMasterQuery!=null)
+            if (_UCBillMasterQuery != null)
             {
                 BaseMainDataGridView = _UCBillMasterQuery.newSumDataGridViewMaster;
                 await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols);
 
             }
-            if (_UCBillChildQuery!=null)
+            if (_UCBillChildQuery != null)
             {
                 BaseSubDataGridView = _UCBillChildQuery.newSumDataGridViewChild;
                 await UIBizSrvice.SetGridViewAsync(typeof(C), BaseSubDataGridView, CurMenuInfo, false, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
@@ -1518,9 +1522,9 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        private BaseEntity _queryDto = new BaseEntity();
+        private object _queryDto = new BaseEntity();
 
-        public BaseEntity QueryDto { get => _queryDto; set => _queryDto = value; }
+        public object QueryDto { get => _queryDto; set => _queryDto = value; }
 
 
         private async void _UCBillMasterQuery_OnSelectDataRow(object entity, object bizKey)
@@ -1640,7 +1644,7 @@ namespace RUINORERP.UI.BaseForm
             kryptonPanel条件生成容器.SuspendLayout();
             if (MainForm.Instance.AppContext.CurrentUser_Role == null && MainForm.Instance.AppContext.IsSuperUser)
             {
-                QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(T), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+                QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
             }
             else
             {
@@ -1654,7 +1658,7 @@ namespace RUINORERP.UI.BaseForm
                     QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
                 }
             }
-            
+
 
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;

@@ -633,6 +633,16 @@ namespace RUINORERP.UI.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
+        internal static System.Drawing.Bitmap import_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("import_32x32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
         internal static System.Drawing.Bitmap import_48x48 {
             get {
                 object obj = ResourceManager.GetObject("import_48x48", resourceCulture);

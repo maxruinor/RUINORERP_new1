@@ -2118,6 +2118,7 @@
     <Compile Include="SysConfig\ConfigHelper.cs" />
     <Compile Include="SysConfig\ConfigKeys.cs" />
     <Compile Include="SysConfig\ConfigManager.cs" />
+    <Compile Include="SysConfig\DataImportExportManager.cs" />
     <Compile Include="SysConfig\UCButtonInfoEdit.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2129,6 +2130,12 @@
     </Compile>
     <Compile Include="SysConfig\UCButtonInfoList.designer.cs">
       <DependentUpon>UCButtonInfoList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SysConfig\UCDataShare.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SysConfig\UCDataShare.Designer.cs">
+      <DependentUpon>UCDataShare.cs</DependentUpon>
     </Compile>
     <Compile Include="SysConfig\UCCacheManage.cs">
       <SubType>UserControl</SubType>
@@ -2587,6 +2594,7 @@
     <Compile Include="WorkFlowTester\worker.cs" />
     <Compile Include="WorkFlowTester\WorkWorkflow.cs" />
     <Compile Include="WorkFlowTester\WorkWorkflow2.cs" />
+    <None Include="ResourceFile\import_32x32.ico" />
     <Content Include="ResourceFile\money-rmb.png" />
     <None Include="ResourceFile\人民币 -32.png" />
     <Content Include="ResourceFile\人民币.png" />
@@ -3347,6 +3355,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCButtonInfoList.resx">
       <DependentUpon>UCButtonInfoList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SysConfig\UCDataShare.resx">
+      <DependentUpon>UCDataShare.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCCacheManage.resx">
       <DependentUpon>UCCacheManage.cs</DependentUpon>

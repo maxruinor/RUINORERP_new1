@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:02
+// 时间：01/21/2025 14:35:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -113,6 +113,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Parent_id",ColDesc = "父类")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Parent_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "父类" )]
+        [FKRelationAttribute("tb_ProdCategories","Parent_id")]
         public long? Parent_id
         { 
             get{return _Parent_id;}
@@ -152,8 +153,21 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Parent_id))]
+        public virtual tb_ProdCategories tb_prodcategories_parent { get; set; }
 
-        //[Browsable(false)]
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ProdCategories.Parent_id))]
+        public virtual List<tb_ProdCategories> tb_ProdCategorieses { get; set; }
+        //tb_ProdCategories.Category_ID)
+        //Category_ID.FK_PRODCATEGORES_RE_PRODCATEGORES_PARENT)
+        //tb_ProdCategories.Parent_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Category_ID))]
         public virtual List<tb_Prod> tb_Prods { get; set; }
@@ -171,6 +185,10 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
+         if("Category_ID"!="Parent_id")
+        {
+        // rs=false;
+        }
 return rs;
 }
 

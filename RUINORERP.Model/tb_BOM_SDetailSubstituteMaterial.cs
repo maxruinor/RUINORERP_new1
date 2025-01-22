@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private long _SubID;
         /// <summary>
-        /// 
+        /// BOM子件
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubID",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SubID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "SubID",ColDesc = "BOM子件")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "SubID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "BOM子件")]
         [FKRelationAttribute("tb_BOM_SDetail","SubID")]
         public long SubID
         { 

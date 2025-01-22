@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:33
+// 时间：01/21/2025 19:17:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,6 +58,17 @@ namespace RUINORERP.Business
 
 
         private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetailSubstituteMaterial> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

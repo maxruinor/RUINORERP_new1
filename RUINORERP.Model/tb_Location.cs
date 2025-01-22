@@ -300,14 +300,7 @@ namespace RUINORERP.Model
         //tb_MRP_ReworkReturnDetail.Location_ID)
         //Location_ID.FK_MRP_Reworkreturndetail_REF_Location)
         //tb_Location.Location_ID)
-
-        //[Browsable(false)]
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetailSecondary.Location_ID))]
-        public virtual List<tb_BOM_SDetailSecondary> tb_BOM_SDetailSecondaries { get; set; }
-        //tb_BOM_SDetailSecondary.Location_ID)
-        //Location_ID.FK_TB_BO_SECREF_TB_LOCAT)
-        //tb_Location.Location_ID)
+        
 
         //[Browsable(false)]
         [SugarColumn(IsIgnore = true)]

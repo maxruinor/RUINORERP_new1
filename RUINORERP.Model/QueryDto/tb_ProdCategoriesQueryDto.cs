@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:44:07
+// 时间：01/21/2025 14:35:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -91,6 +91,7 @@ namespace RUINORERP.Model.QueryDto
         /// </summary>
         [AdvQueryAttribute(ColName = "Parent_id",ColDesc = "父类")]
         [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Parent_id",IsNullable = true,ColumnDescription = "父类" )]
+        [FKRelationAttribute("tb_ProdCategories","Parent_id")]
         public long? Parent_id 
         { 
             get{return _Parent_id;}

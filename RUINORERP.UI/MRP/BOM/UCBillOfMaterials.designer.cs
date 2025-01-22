@@ -117,6 +117,8 @@
             this.kryptonTreeView1 = new Krypton.Toolkit.KryptonTreeView();
             this.kryptonDockingManager1 = new Krypton.Docking.KryptonDockingManager();
             this.BsSubstituteMaterial = new System.Windows.Forms.BindingSource(this.components);
+            this.kryptonLabel6 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbEmployee = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -164,6 +166,7 @@
             this.tabPageTree.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridViewBOMDetail)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.BsSubstituteMaterial)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -176,6 +179,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel6);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbEmployee);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel1);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDataStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblReview);
@@ -235,7 +240,7 @@
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(273, 173);
+            this.kryptonLabel1.Location = new System.Drawing.Point(698, 206);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(64, 20);
             this.kryptonLabel1.TabIndex = 146;
@@ -495,7 +500,7 @@
             this.txtNotes.Location = new System.Drawing.Point(338, 202);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(521, 50);
+            this.txtNotes.Size = new System.Drawing.Size(320, 50);
             this.txtNotes.TabIndex = 125;
             // 
             // lblis_enabled
@@ -1020,6 +1025,23 @@
             this.kryptonTreeView1.Sorted = true;
             this.kryptonTreeView1.TabIndex = 3;
             // 
+            // kryptonLabel6
+            // 
+            this.kryptonLabel6.Location = new System.Drawing.Point(258, 170);
+            this.kryptonLabel6.Name = "kryptonLabel6";
+            this.kryptonLabel6.Size = new System.Drawing.Size(77, 20);
+            this.kryptonLabel6.TabIndex = 147;
+            this.kryptonLabel6.Values.Text = "BOM工程师";
+            // 
+            // cmbEmployee
+            // 
+            this.cmbEmployee.DropDownWidth = 100;
+            this.cmbEmployee.IntegralHeight = false;
+            this.cmbEmployee.Location = new System.Drawing.Point(340, 170);
+            this.cmbEmployee.Name = "cmbEmployee";
+            this.cmbEmployee.Size = new System.Drawing.Size(131, 21);
+            this.cmbEmployee.TabIndex = 148;
+            // 
             // UCBillOfMaterials
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -1079,6 +1101,7 @@
             this.tabPageTree.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridViewBOMDetail)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.BsSubstituteMaterial)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1172,5 +1195,7 @@
         private Krypton.Toolkit.ButtonSpecHeaderGroup buttonSpecHeaderGroup1;
         private SourceGrid.Grid gridSubstituteMaterial;
         private System.Windows.Forms.BindingSource BsSubstituteMaterial;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel6;
+        private Krypton.Toolkit.KryptonComboBox cmbEmployee;
     }
 }

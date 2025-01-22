@@ -862,7 +862,7 @@ namespace RUINORERP.UI.BaseForm
             _UCMasterQuery.ShowSummaryCols();
 
             BaseMainDataGridView = _UCMasterQuery.newSumDataGridViewMaster;
-
+            _UCMasterQuery.newSumDataGridViewMaster.NeedSaveColumnsXml = false;
             await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCMasterQuery.InvisibleCols, _UCMasterQuery.DefaultHideCols);
 
         }

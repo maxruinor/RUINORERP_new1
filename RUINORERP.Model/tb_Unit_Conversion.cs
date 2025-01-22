@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:57:15
+// 时间：01/21/2025 19:17:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,6 +71,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Source_unit_id",ColDesc = "来源单位")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Source_unit_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "来源单位" )]
+        [FKRelationAttribute("tb_Unit","Source_unit_id")]
         public long Source_unit_id
         { 
             get{return _Source_unit_id;}
@@ -85,6 +86,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Target_unit_id",ColDesc = "目标单位")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Target_unit_id" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "目标单位" )]
+        [FKRelationAttribute("tb_Unit","Target_unit_id")]
         public long Target_unit_id
         { 
             get{return _Target_unit_id;}
@@ -124,8 +126,18 @@ namespace RUINORERP.Model
         #endregion
 
         #region 扩展属性
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Target_unit_id))]
+        public virtual tb_Unit tb_unit_Target { get; set; }
 
-        //[Browsable(false)]
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Source_unit_id))]
+        public virtual tb_Unit tb_unit_source { get; set; }
+
+
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetail.UnitConversion_ID))]
         public virtual List<tb_BOM_SDetail> tb_BOM_SDetails { get; set; }
@@ -133,7 +145,7 @@ namespace RUINORERP.Model
         //UnitConversion_ID.FK_BOM_SDetail_REF_UNIT_Conversion)
         //tb_Unit_Conversion.UnitConversion_ID)
 
-        //[Browsable(false)]
+        //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_BOM_SDetailSubstituteMaterial.UnitConversion_ID))]
         public virtual List<tb_BOM_SDetailSubstituteMaterial> tb_BOM_SDetailSubstituteMaterials { get; set; }
@@ -151,6 +163,14 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
+         if("Unit_ID"!="Target_unit_id")
+        {
+        // rs=false;
+        }
+         if("Unit_ID"!="Source_unit_id")
+        {
+        // rs=false;
+        }
 return rs;
 }
 

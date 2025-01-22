@@ -492,7 +492,7 @@ namespace RUINORERP.UI.UControls
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Hidden)]
         public List<ColumnDisplayController> ColumnDisplays { get; set; } = new List<ColumnDisplayController>();
 
-        private bool _NeedSaveColumnsXml = false;
+        private bool _NeedSaveColumnsXml = true;
 
         /// <summary>
         /// 是否保存列自定义设置

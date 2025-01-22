@@ -772,7 +772,7 @@ namespace RUINORERP.UI.MRP.BOM
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.BOM_Name, txtBOM_Name, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_BOM_S>(EditEntity, t => t.property, txtProp, BindDataType4TextBox.Text, false);
-
+            DataBindingHelper.BindData4Cmb<tb_Employee>(EditEntity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee);
             DataBindingHelper.BindData4Cmb<tb_Files>(EditEntity, k => k.Doc_ID, v => v.FileName, cmbDoc_ID);
             DataBindingHelper.BindData4Cmb<tb_BOMConfigHistory>(EditEntity, k => k.BOM_S_VERID, v => v.VerNo, cmbBOM_S_VERID);
             DataBindingHelper.BindData4DataTime<tb_BOM_S>(EditEntity, t => t.Effective_at, dtpEffective_at, false);

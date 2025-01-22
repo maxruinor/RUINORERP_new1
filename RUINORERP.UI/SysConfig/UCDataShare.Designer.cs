@@ -29,42 +29,17 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCDataShare));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.listBoxTableList = new System.Windows.Forms.ListBox();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPage1 = new Krypton.Navigator.KryptonPage();
-            this.kryptonSplitContainerLef = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonSplitContainer3 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanelOut = new Krypton.Toolkit.KryptonPanel();
             this.groupLine3 = new WinLib.Line.GroupLine();
-            this.kryptonPanelOutGrid = new Krypton.Toolkit.KryptonPanel();
-            this.newSumDataGridViewOut = new RUINORERP.UI.UControls.NewSumDataGridView();
-            this.groupLine4 = new WinLib.Line.GroupLine();
-            this.kryptonPage3 = new Krypton.Navigator.KryptonPage();
-            this.kryptonSplitContainer3 = new Krypton.Toolkit.KryptonSplitContainer();
-            this.kryptonPanelInput = new Krypton.Toolkit.KryptonPanel();
-            this.groupLine2 = new WinLib.Line.GroupLine();
-            this.kryptonPanelInputGrid = new Krypton.Toolkit.KryptonPanel();
-            this.newSumDataGridViewImport = new RUINORERP.UI.UControls.NewSumDataGridView();
-            this.groupLine5 = new WinLib.Line.GroupLine();
-            this.toolStripImport = new System.Windows.Forms.ToolStrip();
-            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripButtonSave = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButton5 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripButton6 = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
-            this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
-            this.btnImport = new Krypton.Toolkit.KryptonButton();
-            this.chkALL = new Krypton.Toolkit.KryptonCheckBox();
-            this.btnExport = new Krypton.Toolkit.KryptonButton();
-            this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
-            this.groupLine1 = new WinLib.Line.GroupLine();
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -76,8 +51,38 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.最大行数 = new System.Windows.Forms.ToolStripLabel();
             this.txtMaxRow = new System.Windows.Forms.ToolStripTextBox();
+            this.kryptonPanelInputGrid = new Krypton.Toolkit.KryptonPanel();
+            this.newSumDataGridViewOut = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.groupLine5 = new WinLib.Line.GroupLine();
+            this.kryptonPage3 = new Krypton.Navigator.KryptonPage();
+            this.kryptonSplitContainerLef = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonPanelInput = new Krypton.Toolkit.KryptonPanel();
+            this.groupLine2 = new WinLib.Line.GroupLine();
+            this.toolStripImport = new System.Windows.Forms.ToolStrip();
+            this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonSave = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButton5 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButton6 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripTextBox1 = new System.Windows.Forms.ToolStripTextBox();
+            this.kryptonPanelOutGrid = new Krypton.Toolkit.KryptonPanel();
+            this.newSumDataGridViewImport = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.groupLine4 = new WinLib.Line.GroupLine();
+            this.btnImport = new Krypton.Toolkit.KryptonButton();
+            this.chkALL = new Krypton.Toolkit.KryptonCheckBox();
+            this.btnExport = new Krypton.Toolkit.KryptonButton();
+            this.groupLine1 = new WinLib.Line.GroupLine();
             this.bindingSourceOut = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceImport = new System.Windows.Forms.BindingSource(this.components);
+            this.lblLocation_ID = new Krypton.Toolkit.KryptonLabel();
+            this.cmbLocation_ID = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbStorageRack = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbDepartment = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -94,36 +99,37 @@
             this.kryptonNavigator1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage1)).BeginInit();
             this.kryptonPage1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef.Panel1)).BeginInit();
-            this.kryptonSplitContainerLef.Panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef.Panel2)).BeginInit();
-            this.kryptonSplitContainerLef.Panel2.SuspendLayout();
-            this.kryptonSplitContainerLef.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOut)).BeginInit();
-            this.kryptonPanelOut.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOutGrid)).BeginInit();
-            this.kryptonPanelOutGrid.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewOut)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPage3)).BeginInit();
-            this.kryptonPage3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3.Panel1)).BeginInit();
             this.kryptonSplitContainer3.Panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3.Panel2)).BeginInit();
             this.kryptonSplitContainer3.Panel2.SuspendLayout();
             this.kryptonSplitContainer3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelInput)).BeginInit();
-            this.kryptonPanelInput.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOut)).BeginInit();
+            this.kryptonPanelOut.SuspendLayout();
+            this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelInputGrid)).BeginInit();
             this.kryptonPanelInputGrid.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewImport)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewOut)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPage3)).BeginInit();
+            this.kryptonPage3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef.Panel1)).BeginInit();
+            this.kryptonSplitContainerLef.Panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef.Panel2)).BeginInit();
+            this.kryptonSplitContainerLef.Panel2.SuspendLayout();
+            this.kryptonSplitContainerLef.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelInput)).BeginInit();
+            this.kryptonPanelInput.SuspendLayout();
             this.toolStripImport.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).BeginInit();
-            this.kryptonPanelQuery.SuspendLayout();
-            this.BaseToolStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOutGrid)).BeginInit();
+            this.kryptonPanelOutGrid.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewImport)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceOut)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceImport)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbLocation_ID)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbStorageRack)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbDepartment)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -226,107 +232,6 @@
             this.kryptonPage1.ToolTipTitle = "Page ToolTip";
             this.kryptonPage1.UniqueName = "60445288435B49021FB28348D07C5399";
             // 
-            // kryptonSplitContainerLef
-            // 
-            this.kryptonSplitContainerLef.Cursor = System.Windows.Forms.Cursors.Default;
-            this.kryptonSplitContainerLef.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonSplitContainerLef.Location = new System.Drawing.Point(0, 0);
-            this.kryptonSplitContainerLef.Name = "kryptonSplitContainerLef";
-            this.kryptonSplitContainerLef.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // kryptonSplitContainerLef.Panel1
-            // 
-            this.kryptonSplitContainerLef.Panel1.Controls.Add(this.kryptonPanelInput);
-            this.kryptonSplitContainerLef.Panel1.Controls.Add(this.toolStripImport);
-            // 
-            // kryptonSplitContainerLef.Panel2
-            // 
-            this.kryptonSplitContainerLef.Panel2.Controls.Add(this.kryptonPanelOutGrid);
-            this.kryptonSplitContainerLef.Panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.kryptonSplitContainerLef_Panel2_Paint);
-            this.kryptonSplitContainerLef.Size = new System.Drawing.Size(585, 541);
-            this.kryptonSplitContainerLef.SplitterDistance = 101;
-            this.kryptonSplitContainerLef.TabIndex = 2;
-            // 
-            // kryptonPanelOut
-            // 
-            this.kryptonPanelOut.Controls.Add(this.groupLine3);
-            this.kryptonPanelOut.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanelOut.Location = new System.Drawing.Point(0, 25);
-            this.kryptonPanelOut.Name = "kryptonPanelOut";
-            this.kryptonPanelOut.Size = new System.Drawing.Size(585, 73);
-            this.kryptonPanelOut.TabIndex = 3;
-            // 
-            // groupLine3
-            // 
-            this.groupLine3.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine3.Location = new System.Drawing.Point(0, 72);
-            this.groupLine3.Name = "groupLine3";
-            this.groupLine3.Size = new System.Drawing.Size(585, 1);
-            this.groupLine3.TabIndex = 2;
-            // 
-            // kryptonPanelOutGrid
-            // 
-            this.kryptonPanelOutGrid.Controls.Add(this.newSumDataGridViewImport);
-            this.kryptonPanelOutGrid.Controls.Add(this.groupLine4);
-            this.kryptonPanelOutGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanelOutGrid.Location = new System.Drawing.Point(0, 0);
-            this.kryptonPanelOutGrid.Name = "kryptonPanelOutGrid";
-            this.kryptonPanelOutGrid.Size = new System.Drawing.Size(585, 435);
-            this.kryptonPanelOutGrid.TabIndex = 3;
-            // 
-            // newSumDataGridViewOut
-            // 
-            this.newSumDataGridViewOut.AllowUserToAddRows = false;
-            this.newSumDataGridViewOut.AllowUserToDeleteRows = false;
-            this.newSumDataGridViewOut.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridViewOut.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-            this.newSumDataGridViewOut.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.newSumDataGridViewOut.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.newSumDataGridViewOut.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.newSumDataGridViewOut.CustomRowNo = false;
-            this.newSumDataGridViewOut.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.newSumDataGridViewOut.FieldNameList = null;
-            this.newSumDataGridViewOut.IsShowSumRow = false;
-            this.newSumDataGridViewOut.Location = new System.Drawing.Point(0, 0);
-            this.newSumDataGridViewOut.Name = "newSumDataGridViewOut";
-            this.newSumDataGridViewOut.NeedSaveColumnsXml = false;
-            this.newSumDataGridViewOut.RowTemplate.Height = 23;
-            this.newSumDataGridViewOut.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.newSumDataGridViewOut.Size = new System.Drawing.Size(585, 438);
-            this.newSumDataGridViewOut.SumColumns = null;
-            this.newSumDataGridViewOut.SummaryDescription = "2020-08最新 带有合计列功能;";
-            this.newSumDataGridViewOut.SumRowCellFormat = "N2";
-            this.newSumDataGridViewOut.TabIndex = 2;
-            this.newSumDataGridViewOut.UseCustomColumnDisplay = true;
-            this.newSumDataGridViewOut.UseSelectedColumn = false;
-            this.newSumDataGridViewOut.Use是否使用内置右键功能 = true;
-            this.newSumDataGridViewOut.XmlFileName = "";
-            this.newSumDataGridViewOut.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.newSumDataGridViewOut_CellFormatting);
-            // 
-            // groupLine4
-            // 
-            this.groupLine4.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine4.Location = new System.Drawing.Point(0, 434);
-            this.groupLine4.Name = "groupLine4";
-            this.groupLine4.Size = new System.Drawing.Size(585, 1);
-            this.groupLine4.TabIndex = 2;
-            // 
-            // kryptonPage3
-            // 
-            this.kryptonPage3.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.kryptonPage3.Controls.Add(this.kryptonSplitContainerLef);
-            this.kryptonPage3.Flags = 65534;
-            this.kryptonPage3.LastVisibleSet = true;
-            this.kryptonPage3.MinimumSize = new System.Drawing.Size(50, 50);
-            this.kryptonPage3.Name = "kryptonPage3";
-            this.kryptonPage3.Size = new System.Drawing.Size(585, 541);
-            this.kryptonPage3.Text = "数据导入";
-            this.kryptonPage3.ToolTipTitle = "Page ToolTip";
-            this.kryptonPage3.UniqueName = "4005A0325384478A20BFEBB7440319BD";
-            // 
             // kryptonSplitContainer3
             // 
             this.kryptonSplitContainer3.Cursor = System.Windows.Forms.Cursors.Default;
@@ -344,197 +249,25 @@
             // 
             this.kryptonSplitContainer3.Panel2.Controls.Add(this.kryptonPanelInputGrid);
             this.kryptonSplitContainer3.Size = new System.Drawing.Size(585, 541);
-            this.kryptonSplitContainer3.SplitterDistance = 98;
+            this.kryptonSplitContainer3.SplitterDistance = 167;
             this.kryptonSplitContainer3.TabIndex = 4;
             // 
-            // kryptonPanelInput
+            // kryptonPanelOut
             // 
-            this.kryptonPanelInput.Controls.Add(this.groupLine2);
-            this.kryptonPanelInput.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanelInput.Location = new System.Drawing.Point(0, 25);
-            this.kryptonPanelInput.Name = "kryptonPanelInput";
-            this.kryptonPanelInput.Size = new System.Drawing.Size(585, 76);
-            this.kryptonPanelInput.TabIndex = 2;
+            this.kryptonPanelOut.Controls.Add(this.groupLine3);
+            this.kryptonPanelOut.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelOut.Location = new System.Drawing.Point(0, 25);
+            this.kryptonPanelOut.Name = "kryptonPanelOut";
+            this.kryptonPanelOut.Size = new System.Drawing.Size(585, 142);
+            this.kryptonPanelOut.TabIndex = 3;
             // 
-            // groupLine2
+            // groupLine3
             // 
-            this.groupLine2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine2.Location = new System.Drawing.Point(0, 75);
-            this.groupLine2.Name = "groupLine2";
-            this.groupLine2.Size = new System.Drawing.Size(585, 1);
-            this.groupLine2.TabIndex = 2;
-            // 
-            // kryptonPanelInputGrid
-            // 
-            this.kryptonPanelInputGrid.Controls.Add(this.newSumDataGridViewOut);
-            this.kryptonPanelInputGrid.Controls.Add(this.groupLine5);
-            this.kryptonPanelInputGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanelInputGrid.Location = new System.Drawing.Point(0, 0);
-            this.kryptonPanelInputGrid.Name = "kryptonPanelInputGrid";
-            this.kryptonPanelInputGrid.Size = new System.Drawing.Size(585, 438);
-            this.kryptonPanelInputGrid.TabIndex = 3;
-            // 
-            // newSumDataGridViewImport
-            // 
-            this.newSumDataGridViewImport.AllowUserToAddRows = false;
-            this.newSumDataGridViewImport.AllowUserToDeleteRows = false;
-            this.newSumDataGridViewImport.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridViewImport.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
-            this.newSumDataGridViewImport.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.newSumDataGridViewImport.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.newSumDataGridViewImport.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.newSumDataGridViewImport.CustomRowNo = false;
-            this.newSumDataGridViewImport.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.newSumDataGridViewImport.FieldNameList = null;
-            this.newSumDataGridViewImport.IsShowSumRow = false;
-            this.newSumDataGridViewImport.Location = new System.Drawing.Point(0, 0);
-            this.newSumDataGridViewImport.Name = "newSumDataGridViewImport";
-            this.newSumDataGridViewImport.NeedSaveColumnsXml = false;
-            this.newSumDataGridViewImport.RowTemplate.Height = 23;
-            this.newSumDataGridViewImport.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.newSumDataGridViewImport.Size = new System.Drawing.Size(585, 435);
-            this.newSumDataGridViewImport.SumColumns = null;
-            this.newSumDataGridViewImport.SummaryDescription = "2020-08最新 带有合计列功能;";
-            this.newSumDataGridViewImport.SumRowCellFormat = "N2";
-            this.newSumDataGridViewImport.TabIndex = 1;
-            this.newSumDataGridViewImport.UseCustomColumnDisplay = true;
-            this.newSumDataGridViewImport.UseSelectedColumn = false;
-            this.newSumDataGridViewImport.Use是否使用内置右键功能 = true;
-            this.newSumDataGridViewImport.XmlFileName = "";
-            // 
-            // groupLine5
-            // 
-            this.groupLine5.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine5.Location = new System.Drawing.Point(0, 437);
-            this.groupLine5.Name = "groupLine5";
-            this.groupLine5.Size = new System.Drawing.Size(585, 1);
-            this.groupLine5.TabIndex = 2;
-            // 
-            // toolStripImport
-            // 
-            this.toolStripImport.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.toolStripImport.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButton3,
-            this.toolStripButtonSave,
-            this.toolStripSeparator8,
-            this.toolStripButton5,
-            this.toolStripSeparator9,
-            this.toolStripButton6,
-            this.toolStripSeparator10,
-            this.toolStripLabel1,
-            this.toolStripTextBox1});
-            this.toolStripImport.Location = new System.Drawing.Point(0, 0);
-            this.toolStripImport.Name = "toolStripImport";
-            this.toolStripImport.Size = new System.Drawing.Size(585, 25);
-            this.toolStripImport.TabIndex = 4;
-            this.toolStripImport.Text = "toolStrip1";
-            // 
-            // toolStripButton3
-            // 
-            this.toolStripButton3.Image = global::RUINORERP.UI.Properties.Resources.import_48x48;
-            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton3.Name = "toolStripButton3";
-            this.toolStripButton3.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton3.Text = "导入";
-            // 
-            // toolStripButtonSave
-            // 
-            this.toolStripButtonSave.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSave.Image")));
-            this.toolStripButtonSave.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButtonSave.Name = "toolStripButtonSave";
-            this.toolStripButtonSave.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButtonSave.Text = "保存";
-            // 
-            // toolStripSeparator8
-            // 
-            this.toolStripSeparator8.Name = "toolStripSeparator8";
-            this.toolStripSeparator8.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripButton5
-            // 
-            this.toolStripButton5.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton5.Image")));
-            this.toolStripButton5.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton5.Name = "toolStripButton5";
-            this.toolStripButton5.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton5.Text = "属性";
-            // 
-            // toolStripSeparator9
-            // 
-            this.toolStripSeparator9.Name = "toolStripSeparator9";
-            this.toolStripSeparator9.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripButton6
-            // 
-            this.toolStripButton6.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton6.Image")));
-            this.toolStripButton6.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton6.Name = "toolStripButton6";
-            this.toolStripButton6.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton6.Text = "关闭";
-            // 
-            // toolStripSeparator10
-            // 
-            this.toolStripSeparator10.Margin = new System.Windows.Forms.Padding(100, 0, 0, 0);
-            this.toolStripSeparator10.Name = "toolStripSeparator10";
-            this.toolStripSeparator10.Size = new System.Drawing.Size(6, 25);
-            // 
-            // toolStripLabel1
-            // 
-            this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(59, 22);
-            this.toolStripLabel1.Text = "最大行数";
-            // 
-            // toolStripTextBox1
-            // 
-            this.toolStripTextBox1.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
-            this.toolStripTextBox1.Name = "toolStripTextBox1";
-            this.toolStripTextBox1.ReadOnly = true;
-            this.toolStripTextBox1.Size = new System.Drawing.Size(100, 25);
-            this.toolStripTextBox1.Text = "200";
-            // 
-            // btnImport
-            // 
-            this.btnImport.Location = new System.Drawing.Point(410, 4);
-            this.btnImport.Name = "btnImport";
-            this.btnImport.Size = new System.Drawing.Size(77, 29);
-            this.btnImport.TabIndex = 2;
-            this.btnImport.Values.Text = "导入";
-            // 
-            // chkALL
-            // 
-            this.chkALL.Location = new System.Drawing.Point(41, 8);
-            this.chkALL.Name = "chkALL";
-            this.chkALL.Size = new System.Drawing.Size(49, 20);
-            this.chkALL.TabIndex = 1;
-            this.chkALL.Values.Text = "全选";
-            // 
-            // btnExport
-            // 
-            this.btnExport.Location = new System.Drawing.Point(272, 4);
-            this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(77, 29);
-            this.btnExport.TabIndex = 0;
-            this.btnExport.Values.Text = "导出";
-            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
-            // 
-            // kryptonPanelQuery
-            // 
-            this.kryptonPanelQuery.Controls.Add(this.groupLine1);
-            this.kryptonPanelQuery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.kryptonPanelQuery.Location = new System.Drawing.Point(0, 25);
-            this.kryptonPanelQuery.Name = "kryptonPanelQuery";
-            this.kryptonPanelQuery.Size = new System.Drawing.Size(585, 79);
-            this.kryptonPanelQuery.TabIndex = 2;
-            // 
-            // groupLine1
-            // 
-            this.groupLine1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupLine1.Location = new System.Drawing.Point(0, 78);
-            this.groupLine1.Name = "groupLine1";
-            this.groupLine1.Size = new System.Drawing.Size(585, 1);
-            this.groupLine1.TabIndex = 2;
+            this.groupLine3.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupLine3.Location = new System.Drawing.Point(0, 141);
+            this.groupLine3.Name = "groupLine3";
+            this.groupLine3.Size = new System.Drawing.Size(585, 1);
+            this.groupLine3.TabIndex = 2;
             // 
             // BaseToolStrip
             // 
@@ -623,6 +356,327 @@
             this.txtMaxRow.Size = new System.Drawing.Size(100, 25);
             this.txtMaxRow.Text = "200";
             // 
+            // kryptonPanelInputGrid
+            // 
+            this.kryptonPanelInputGrid.Controls.Add(this.newSumDataGridViewOut);
+            this.kryptonPanelInputGrid.Controls.Add(this.groupLine5);
+            this.kryptonPanelInputGrid.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelInputGrid.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanelInputGrid.Name = "kryptonPanelInputGrid";
+            this.kryptonPanelInputGrid.Size = new System.Drawing.Size(585, 369);
+            this.kryptonPanelInputGrid.TabIndex = 3;
+            // 
+            // newSumDataGridViewOut
+            // 
+            this.newSumDataGridViewOut.AllowUserToAddRows = false;
+            this.newSumDataGridViewOut.AllowUserToDeleteRows = false;
+            this.newSumDataGridViewOut.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridViewOut.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            this.newSumDataGridViewOut.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.newSumDataGridViewOut.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.newSumDataGridViewOut.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.newSumDataGridViewOut.CustomRowNo = false;
+            this.newSumDataGridViewOut.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.newSumDataGridViewOut.FieldNameList = null;
+            this.newSumDataGridViewOut.IsShowSumRow = false;
+            this.newSumDataGridViewOut.Location = new System.Drawing.Point(0, 0);
+            this.newSumDataGridViewOut.Name = "newSumDataGridViewOut";
+            this.newSumDataGridViewOut.NeedSaveColumnsXml = false;
+            this.newSumDataGridViewOut.RowTemplate.Height = 23;
+            this.newSumDataGridViewOut.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.newSumDataGridViewOut.Size = new System.Drawing.Size(585, 369);
+            this.newSumDataGridViewOut.SumColumns = null;
+            this.newSumDataGridViewOut.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.newSumDataGridViewOut.SumRowCellFormat = "N2";
+            this.newSumDataGridViewOut.TabIndex = 2;
+            this.newSumDataGridViewOut.UseCustomColumnDisplay = true;
+            this.newSumDataGridViewOut.UseSelectedColumn = false;
+            this.newSumDataGridViewOut.Use是否使用内置右键功能 = true;
+            this.newSumDataGridViewOut.XmlFileName = "";
+            this.newSumDataGridViewOut.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.newSumDataGridViewOut_CellFormatting);
+            // 
+            // groupLine5
+            // 
+            this.groupLine5.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupLine5.Location = new System.Drawing.Point(0, 368);
+            this.groupLine5.Name = "groupLine5";
+            this.groupLine5.Size = new System.Drawing.Size(585, 1);
+            this.groupLine5.TabIndex = 2;
+            // 
+            // kryptonPage3
+            // 
+            this.kryptonPage3.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
+            this.kryptonPage3.Controls.Add(this.kryptonSplitContainerLef);
+            this.kryptonPage3.Flags = 65534;
+            this.kryptonPage3.LastVisibleSet = true;
+            this.kryptonPage3.MinimumSize = new System.Drawing.Size(50, 50);
+            this.kryptonPage3.Name = "kryptonPage3";
+            this.kryptonPage3.Size = new System.Drawing.Size(585, 541);
+            this.kryptonPage3.Text = "数据导入";
+            this.kryptonPage3.ToolTipTitle = "Page ToolTip";
+            this.kryptonPage3.UniqueName = "4005A0325384478A20BFEBB7440319BD";
+            // 
+            // kryptonSplitContainerLef
+            // 
+            this.kryptonSplitContainerLef.Cursor = System.Windows.Forms.Cursors.Default;
+            this.kryptonSplitContainerLef.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonSplitContainerLef.Location = new System.Drawing.Point(0, 0);
+            this.kryptonSplitContainerLef.Name = "kryptonSplitContainerLef";
+            this.kryptonSplitContainerLef.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // kryptonSplitContainerLef.Panel1
+            // 
+            this.kryptonSplitContainerLef.Panel1.Controls.Add(this.kryptonPanelInput);
+            this.kryptonSplitContainerLef.Panel1.Controls.Add(this.toolStripImport);
+            // 
+            // kryptonSplitContainerLef.Panel2
+            // 
+            this.kryptonSplitContainerLef.Panel2.Controls.Add(this.kryptonPanelOutGrid);
+            this.kryptonSplitContainerLef.Panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.kryptonSplitContainerLef_Panel2_Paint);
+            this.kryptonSplitContainerLef.Size = new System.Drawing.Size(585, 541);
+            this.kryptonSplitContainerLef.SplitterDistance = 169;
+            this.kryptonSplitContainerLef.TabIndex = 2;
+            // 
+            // kryptonPanelInput
+            // 
+            this.kryptonPanelInput.Controls.Add(this.kryptonLabel3);
+            this.kryptonPanelInput.Controls.Add(this.cmbDepartment);
+            this.kryptonPanelInput.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanelInput.Controls.Add(this.cmbStorageRack);
+            this.kryptonPanelInput.Controls.Add(this.lblLocation_ID);
+            this.kryptonPanelInput.Controls.Add(this.cmbLocation_ID);
+            this.kryptonPanelInput.Controls.Add(this.groupLine2);
+            this.kryptonPanelInput.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelInput.Location = new System.Drawing.Point(0, 25);
+            this.kryptonPanelInput.Name = "kryptonPanelInput";
+            this.kryptonPanelInput.Size = new System.Drawing.Size(585, 144);
+            this.kryptonPanelInput.TabIndex = 2;
+            // 
+            // groupLine2
+            // 
+            this.groupLine2.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupLine2.Location = new System.Drawing.Point(0, 143);
+            this.groupLine2.Name = "groupLine2";
+            this.groupLine2.Size = new System.Drawing.Size(585, 1);
+            this.groupLine2.TabIndex = 2;
+            // 
+            // toolStripImport
+            // 
+            this.toolStripImport.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.toolStripImport.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButton3,
+            this.toolStripButtonSave,
+            this.toolStripSeparator8,
+            this.toolStripButton5,
+            this.toolStripSeparator9,
+            this.toolStripButton6,
+            this.toolStripSeparator10,
+            this.toolStripLabel1,
+            this.toolStripTextBox1});
+            this.toolStripImport.Location = new System.Drawing.Point(0, 0);
+            this.toolStripImport.Name = "toolStripImport";
+            this.toolStripImport.Size = new System.Drawing.Size(585, 25);
+            this.toolStripImport.TabIndex = 4;
+            this.toolStripImport.Text = "toolStrip1";
+            // 
+            // toolStripButton3
+            // 
+            this.toolStripButton3.Image = global::RUINORERP.UI.Properties.Resources.import_48x48;
+            this.toolStripButton3.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton3.Name = "toolStripButton3";
+            this.toolStripButton3.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButton3.Text = "导入";
+            // 
+            // toolStripButtonSave
+            // 
+            this.toolStripButtonSave.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButtonSave.Image")));
+            this.toolStripButtonSave.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonSave.Name = "toolStripButtonSave";
+            this.toolStripButtonSave.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButtonSave.Text = "保存";
+            // 
+            // toolStripSeparator8
+            // 
+            this.toolStripSeparator8.Name = "toolStripSeparator8";
+            this.toolStripSeparator8.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripButton5
+            // 
+            this.toolStripButton5.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton5.Image")));
+            this.toolStripButton5.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton5.Name = "toolStripButton5";
+            this.toolStripButton5.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButton5.Text = "属性";
+            // 
+            // toolStripSeparator9
+            // 
+            this.toolStripSeparator9.Name = "toolStripSeparator9";
+            this.toolStripSeparator9.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripButton6
+            // 
+            this.toolStripButton6.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton6.Image")));
+            this.toolStripButton6.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton6.Name = "toolStripButton6";
+            this.toolStripButton6.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButton6.Text = "关闭";
+            // 
+            // toolStripSeparator10
+            // 
+            this.toolStripSeparator10.Margin = new System.Windows.Forms.Padding(100, 0, 0, 0);
+            this.toolStripSeparator10.Name = "toolStripSeparator10";
+            this.toolStripSeparator10.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripLabel1
+            // 
+            this.toolStripLabel1.Name = "toolStripLabel1";
+            this.toolStripLabel1.Size = new System.Drawing.Size(59, 22);
+            this.toolStripLabel1.Text = "最大行数";
+            // 
+            // toolStripTextBox1
+            // 
+            this.toolStripTextBox1.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F);
+            this.toolStripTextBox1.Name = "toolStripTextBox1";
+            this.toolStripTextBox1.ReadOnly = true;
+            this.toolStripTextBox1.Size = new System.Drawing.Size(100, 25);
+            this.toolStripTextBox1.Text = "200";
+            // 
+            // kryptonPanelOutGrid
+            // 
+            this.kryptonPanelOutGrid.Controls.Add(this.newSumDataGridViewImport);
+            this.kryptonPanelOutGrid.Controls.Add(this.groupLine4);
+            this.kryptonPanelOutGrid.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanelOutGrid.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanelOutGrid.Name = "kryptonPanelOutGrid";
+            this.kryptonPanelOutGrid.Size = new System.Drawing.Size(585, 367);
+            this.kryptonPanelOutGrid.TabIndex = 3;
+            // 
+            // newSumDataGridViewImport
+            // 
+            this.newSumDataGridViewImport.AllowUserToAddRows = false;
+            this.newSumDataGridViewImport.AllowUserToDeleteRows = false;
+            this.newSumDataGridViewImport.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridViewImport.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
+            this.newSumDataGridViewImport.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.newSumDataGridViewImport.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.newSumDataGridViewImport.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.newSumDataGridViewImport.CustomRowNo = false;
+            this.newSumDataGridViewImport.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.newSumDataGridViewImport.FieldNameList = null;
+            this.newSumDataGridViewImport.IsShowSumRow = false;
+            this.newSumDataGridViewImport.Location = new System.Drawing.Point(0, 0);
+            this.newSumDataGridViewImport.Name = "newSumDataGridViewImport";
+            this.newSumDataGridViewImport.NeedSaveColumnsXml = false;
+            this.newSumDataGridViewImport.RowTemplate.Height = 23;
+            this.newSumDataGridViewImport.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.newSumDataGridViewImport.Size = new System.Drawing.Size(585, 367);
+            this.newSumDataGridViewImport.SumColumns = null;
+            this.newSumDataGridViewImport.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.newSumDataGridViewImport.SumRowCellFormat = "N2";
+            this.newSumDataGridViewImport.TabIndex = 1;
+            this.newSumDataGridViewImport.UseCustomColumnDisplay = true;
+            this.newSumDataGridViewImport.UseSelectedColumn = false;
+            this.newSumDataGridViewImport.Use是否使用内置右键功能 = true;
+            this.newSumDataGridViewImport.XmlFileName = "";
+            // 
+            // groupLine4
+            // 
+            this.groupLine4.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupLine4.Location = new System.Drawing.Point(0, 366);
+            this.groupLine4.Name = "groupLine4";
+            this.groupLine4.Size = new System.Drawing.Size(585, 1);
+            this.groupLine4.TabIndex = 2;
+            // 
+            // btnImport
+            // 
+            this.btnImport.Location = new System.Drawing.Point(410, 4);
+            this.btnImport.Name = "btnImport";
+            this.btnImport.Size = new System.Drawing.Size(77, 29);
+            this.btnImport.TabIndex = 2;
+            this.btnImport.Values.Text = "导入";
+            // 
+            // chkALL
+            // 
+            this.chkALL.Location = new System.Drawing.Point(41, 8);
+            this.chkALL.Name = "chkALL";
+            this.chkALL.Size = new System.Drawing.Size(49, 20);
+            this.chkALL.TabIndex = 1;
+            this.chkALL.Values.Text = "全选";
+            // 
+            // btnExport
+            // 
+            this.btnExport.Location = new System.Drawing.Point(272, 4);
+            this.btnExport.Name = "btnExport";
+            this.btnExport.Size = new System.Drawing.Size(77, 29);
+            this.btnExport.TabIndex = 0;
+            this.btnExport.Values.Text = "导出";
+            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
+            // 
+            // groupLine1
+            // 
+            this.groupLine1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupLine1.Location = new System.Drawing.Point(0, 78);
+            this.groupLine1.Name = "groupLine1";
+            this.groupLine1.Size = new System.Drawing.Size(585, 1);
+            this.groupLine1.TabIndex = 2;
+            // 
+            // lblLocation_ID
+            // 
+            this.lblLocation_ID.Location = new System.Drawing.Point(27, 18);
+            this.lblLocation_ID.Name = "lblLocation_ID";
+            this.lblLocation_ID.Size = new System.Drawing.Size(62, 20);
+            this.lblLocation_ID.TabIndex = 87;
+            this.lblLocation_ID.Values.Text = "所属仓库";
+            // 
+            // cmbLocation_ID
+            // 
+            this.cmbLocation_ID.DropDownWidth = 100;
+            this.cmbLocation_ID.IntegralHeight = false;
+            this.cmbLocation_ID.Location = new System.Drawing.Point(100, 14);
+            this.cmbLocation_ID.Name = "cmbLocation_ID";
+            this.cmbLocation_ID.Size = new System.Drawing.Size(147, 21);
+            this.cmbLocation_ID.TabIndex = 88;
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(27, 54);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel1.TabIndex = 89;
+            this.kryptonLabel1.Values.Text = "所属货架";
+            // 
+            // cmbStorageRack
+            // 
+            this.cmbStorageRack.DropDownWidth = 100;
+            this.cmbStorageRack.IntegralHeight = false;
+            this.cmbStorageRack.Location = new System.Drawing.Point(100, 50);
+            this.cmbStorageRack.Name = "cmbStorageRack";
+            this.cmbStorageRack.Size = new System.Drawing.Size(147, 21);
+            this.cmbStorageRack.TabIndex = 90;
+            // 
+            // kryptonLabel3
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(32, 92);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel3.TabIndex = 147;
+            this.kryptonLabel3.Values.Text = "所属部门";
+            // 
+            // cmbDepartment
+            // 
+            this.cmbDepartment.DropDownWidth = 100;
+            this.cmbDepartment.IntegralHeight = false;
+            this.cmbDepartment.Location = new System.Drawing.Point(100, 92);
+            this.cmbDepartment.Name = "cmbDepartment";
+            this.cmbDepartment.Size = new System.Drawing.Size(147, 21);
+            this.cmbDepartment.TabIndex = 148;
+            // 
             // UCDataShare
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -648,20 +702,6 @@
             this.kryptonNavigator1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPage1)).EndInit();
             this.kryptonPage1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef.Panel1)).EndInit();
-            this.kryptonSplitContainerLef.Panel1.ResumeLayout(false);
-            this.kryptonSplitContainerLef.Panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef.Panel2)).EndInit();
-            this.kryptonSplitContainerLef.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef)).EndInit();
-            this.kryptonSplitContainerLef.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOut)).EndInit();
-            this.kryptonPanelOut.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOutGrid)).EndInit();
-            this.kryptonPanelOutGrid.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewOut)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPage3)).EndInit();
-            this.kryptonPage3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3.Panel1)).EndInit();
             this.kryptonSplitContainer3.Panel1.ResumeLayout(false);
             this.kryptonSplitContainer3.Panel1.PerformLayout();
@@ -669,19 +709,35 @@
             this.kryptonSplitContainer3.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3)).EndInit();
             this.kryptonSplitContainer3.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelInput)).EndInit();
-            this.kryptonPanelInput.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelInputGrid)).EndInit();
-            this.kryptonPanelInputGrid.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewImport)).EndInit();
-            this.toolStripImport.ResumeLayout(false);
-            this.toolStripImport.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).EndInit();
-            this.kryptonPanelQuery.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOut)).EndInit();
+            this.kryptonPanelOut.ResumeLayout(false);
             this.BaseToolStrip.ResumeLayout(false);
             this.BaseToolStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelInputGrid)).EndInit();
+            this.kryptonPanelInputGrid.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewOut)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPage3)).EndInit();
+            this.kryptonPage3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef.Panel1)).EndInit();
+            this.kryptonSplitContainerLef.Panel1.ResumeLayout(false);
+            this.kryptonSplitContainerLef.Panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef.Panel2)).EndInit();
+            this.kryptonSplitContainerLef.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerLef)).EndInit();
+            this.kryptonSplitContainerLef.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelInput)).EndInit();
+            this.kryptonPanelInput.ResumeLayout(false);
+            this.kryptonPanelInput.PerformLayout();
+            this.toolStripImport.ResumeLayout(false);
+            this.toolStripImport.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelOutGrid)).EndInit();
+            this.kryptonPanelOutGrid.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewImport)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceOut)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceImport)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbLocation_ID)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbStorageRack)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbDepartment)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -695,7 +751,6 @@
         private System.Windows.Forms.ListBox listBoxTableList;
         private Krypton.Toolkit.KryptonButton btnImport;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainerLef;
-        internal Krypton.Toolkit.KryptonPanel kryptonPanelQuery;
         private WinLib.Line.GroupLine groupLine1;
         internal System.Windows.Forms.ToolStrip BaseToolStrip;
         private System.Windows.Forms.ToolStripButton toolStripButton4;
@@ -734,5 +789,11 @@
         private WinLib.Line.GroupLine groupLine4;
         internal Krypton.Toolkit.KryptonPanel kryptonPanelInputGrid;
         private WinLib.Line.GroupLine groupLine5;
+        private Krypton.Toolkit.KryptonLabel lblLocation_ID;
+        private Krypton.Toolkit.KryptonComboBox cmbLocation_ID;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonComboBox cmbStorageRack;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel3;
+        private Krypton.Toolkit.KryptonComboBox cmbDepartment;
     }
 }

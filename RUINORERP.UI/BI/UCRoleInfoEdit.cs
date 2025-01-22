@@ -47,7 +47,7 @@ namespace RUINORERP.UI.BI
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_RoleInfoValidator> (), kryptonPanel1.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_RoleInfoValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             //处理角色属性
@@ -106,6 +106,7 @@ namespace RUINORERP.UI.BI
                 if (roleinfo.tb_rolepropertyconfig == null)
                 {
                     roleinfo.tb_rolepropertyconfig = new tb_RolePropertyConfig();
+                    roleinfo.tb_rolepropertyconfig.RolePropertyName = $"{roleinfo.RoleName}的角色属性配置";
                 }
                 BindDataForProperty(roleinfo.tb_rolepropertyconfig);
             }

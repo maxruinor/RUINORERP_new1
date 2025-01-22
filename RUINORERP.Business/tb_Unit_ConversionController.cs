@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:17
+// 时间：01/21/2025 19:17:35
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -247,6 +247,7 @@ namespace RUINORERP.Business
             {
                 rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Unit_Conversion>(entity as tb_Unit_Conversion)
                         .Include(m => m.tb_BOM_SDetails)
+                    .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
                             .ExecuteCommandAsync();
          
         }
@@ -254,6 +255,7 @@ namespace RUINORERP.Business
         {
             rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Unit_Conversion>(entity as tb_Unit_Conversion)
                 .Include(m => m.tb_BOM_SDetails)
+                .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
                                 .ExecuteCommandAsync();
         }
         
@@ -285,6 +287,7 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Unit_Conversion>()
                                 .Includes(m => m.tb_BOM_SDetails)
+                        .Includes(m => m.tb_BOM_SDetailSubstituteMaterials)
                                         .Where(useLike, dto);
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -295,6 +298,7 @@ namespace RUINORERP.Business
             tb_Unit_Conversion entity = model as tb_Unit_Conversion;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Unit_Conversion>(m => m.UnitConversion_ID== entity.UnitConversion_ID)
                                 .Include(m => m.tb_BOM_SDetails)
+                        .Include(m => m.tb_BOM_SDetailSubstituteMaterials)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -457,7 +461,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Unit_Conversion>> QueryByNavAsync()
         {
             List<tb_Unit_Conversion> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Unit_Conversion>()
+                               .Includes(t => t.tb_unit_source )
+                               .Includes(t => t.tb_unit_Target )
                                             .Includes(t => t.tb_BOM_SDetails )
+                                .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -477,7 +484,10 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_Unit_Conversion>> QueryByNavAsync(Expression<Func<tb_Unit_Conversion, bool>> exp)
         {
             List<tb_Unit_Conversion> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Unit_Conversion>().Where(exp)
+                               .Includes(t => t.tb_unit_source)
+                               .Includes(t => t.tb_unit_Target)
                                             .Includes(t => t.tb_BOM_SDetails )
+                                .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -497,7 +507,10 @@ namespace RUINORERP.Business
          public virtual List<tb_Unit_Conversion> QueryByNav(Expression<Func<tb_Unit_Conversion, bool>> exp)
         {
             List<tb_Unit_Conversion> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Unit_Conversion>().Where(exp)
+                               .Includes(t => t.tb_unit_source)
+                               .Includes(t => t.tb_unit_Target)
                                         .Includes(t => t.tb_BOM_SDetails )
+                            .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
                         .ToList();
             
             foreach (var item in list)
@@ -534,7 +547,10 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Unit_Conversion entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Unit_Conversion>().Where(w => w.UnitConversion_ID == (long)id)
-                                         .Includes(t => t.tb_BOM_SDetails )
+                               .Includes(t => t.tb_unit_source)
+                               .Includes(t => t.tb_unit_Target)
+                                        .Includes(t => t.tb_BOM_SDetails )
+                            .Includes(t => t.tb_BOM_SDetailSubstituteMaterials )
                         .FirstAsync();
             if(entity!=null)
             {

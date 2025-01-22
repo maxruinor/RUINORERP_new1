@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:26
+// 时间：01/21/2025 18:51:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -35,10 +35,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long? _ProdDetailID;
         /// <summary>
-        /// 货品详情
+        /// 产品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "货品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProdDetailID",IsNullable = true,ColumnDescription = "产品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long? ProdDetailID 
         { 
@@ -58,33 +58,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _BOM_ID;}
             set{SetProperty(ref _BOM_ID, value);}
-        }
-     
-
-        private long _Location_ID;
-        /// <summary>
-        /// 仓库
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "仓库")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Location_ID",IsNullable = false,ColumnDescription = "仓库" )]
-        [FKRelationAttribute("tb_Location","Location_ID")]
-        public long Location_ID 
-        { 
-            get{return _Location_ID;}
-            set{SetProperty(ref _Location_ID, value);}
-        }
-     
-
-        private string _property;
-        /// <summary>
-        /// 属性
-        /// </summary>
-        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "属性" )]
-        public string property 
-        { 
-            get{return _property;}
-            set{SetProperty(ref _property, value);}
         }
      
 
@@ -111,6 +84,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Scale;}
             set{SetProperty(ref _Scale, value);}
+        }
+     
+
+        private string _property;
+        /// <summary>
+        /// 副产品属性
+        /// </summary>
+        [AdvQueryAttribute(ColName = "property",ColDesc = "副产品属性")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "property",Length=255,IsNullable = true,ColumnDescription = "副产品属性" )]
+        public string property 
+        { 
+            get{return _property;}
+            set{SetProperty(ref _property, value);}
         }
      
 

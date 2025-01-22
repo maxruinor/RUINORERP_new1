@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：01/21/2025 18:51:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,18 +38,16 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("货品详情:下拉选择值不正确。");
+ RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("产品详情:下拉选择值不正确。");
  RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);
 
  RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.BOM_ID).NotEmpty().When(x => x.BOM_ID.HasValue);
 
- RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.Location_ID).Must(CheckForeignKeyValue).WithMessage("仓库:下拉选择值不正确。");
-
- RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
-
  RuleFor(x => x.Qty).PrecisionScale(8,4,true).WithMessage("数量:小数位不能超过4。");
 
  RuleFor(x => x.Scale).PrecisionScale(8,4,true).WithMessage("比例:小数位不能超过4。");
+
+ RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.property).MaximumLength(127).WithMessage("副产品属性:不能超过最大长度,127.");
 
  RuleFor(x => x.UnitCost).PrecisionScale(8,4,true).WithMessage("单位成本:小数位不能超过4。");
 

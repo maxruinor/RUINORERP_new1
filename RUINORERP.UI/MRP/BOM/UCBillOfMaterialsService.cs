@@ -115,6 +115,10 @@ namespace RUINORERP.UI.MRP.BOM
             newSumDataGridView产品.CustomRowNo = true;
             newSumDataGridView产品.ShowCellToolTips = true;
             newSumDataGridView产品.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
+
+            newSumDataGridViewBOM.NeedSaveColumnsXml = true;
+            newSumDataGridView产品.NeedSaveColumnsXml = true;
+            newSumDataGridViewMain.NeedSaveColumnsXml = true;
         }
 
 

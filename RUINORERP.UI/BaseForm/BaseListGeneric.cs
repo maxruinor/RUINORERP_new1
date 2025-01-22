@@ -1866,6 +1866,7 @@ namespace RUINORERP.UI.BaseForm
 
             if (!this.DesignMode)
             {
+                dataGridView1.NeedSaveColumnsXml = false;
                 await UIBizSrvice.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo);
                 //dataGridView1.ColumnWidthChanged -= DataGridView_ColumnWidthChanged;
                 //dataGridView1.ColumnWidthChanged += DataGridView_ColumnWidthChanged;

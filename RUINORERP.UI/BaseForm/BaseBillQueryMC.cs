@@ -1505,12 +1505,14 @@ namespace RUINORERP.UI.BaseForm
 
             if (_UCBillMasterQuery != null)
             {
-                BaseMainDataGridView = _UCBillMasterQuery.newSumDataGridViewMaster;
+                _UCBillMasterQuery.newSumDataGridViewMaster.NeedSaveColumnsXml = false;
+               BaseMainDataGridView = _UCBillMasterQuery.newSumDataGridViewMaster;
                 await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols);
 
             }
             if (_UCBillChildQuery != null)
             {
+                _UCBillChildQuery.newSumDataGridViewChild.NeedSaveColumnsXml = false;
                 BaseSubDataGridView = _UCBillChildQuery.newSumDataGridViewChild;
                 await UIBizSrvice.SetGridViewAsync(typeof(C), BaseSubDataGridView, CurMenuInfo, false, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
             }

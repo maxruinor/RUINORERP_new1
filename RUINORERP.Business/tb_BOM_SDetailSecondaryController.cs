@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:02:00
+// 时间：01/21/2025 18:51:07
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -462,7 +462,6 @@ namespace RUINORERP.Business
         {
             List<tb_BOM_SDetailSecondary> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSecondary>()
                                .Includes(t => t.tb_bom_s )
-                               .Includes(t => t.tb_location )
                                .Includes(t => t.tb_proddetail )
                                     .ToListAsync();
             
@@ -484,7 +483,6 @@ namespace RUINORERP.Business
         {
             List<tb_BOM_SDetailSecondary> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSecondary>().Where(exp)
                                .Includes(t => t.tb_bom_s )
-                               .Includes(t => t.tb_location )
                                .Includes(t => t.tb_proddetail )
                                     .ToListAsync();
             
@@ -506,7 +504,6 @@ namespace RUINORERP.Business
         {
             List<tb_BOM_SDetailSecondary> list = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSecondary>().Where(exp)
                             .Includes(t => t.tb_bom_s )
-                            .Includes(t => t.tb_location )
                             .Includes(t => t.tb_proddetail )
                                     .ToList();
             
@@ -545,7 +542,6 @@ namespace RUINORERP.Business
         {
             tb_BOM_SDetailSecondary entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSecondary>().Where(w => w.SecID == (long)id)
                              .Includes(t => t.tb_bom_s )
-                            .Includes(t => t.tb_location )
                             .Includes(t => t.tb_proddetail )
                                     .FirstAsync();
             if(entity!=null)

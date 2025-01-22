@@ -74,6 +74,22 @@ namespace RUINORERP.UI.BI
             }
         }
 
+        /// <summary>
+        /// 要保留一条记录
+        /// </summary>
+        /// <returns></returns>
+        protected override Task<bool> Delete()
+        {
+            if (ListDataSoure.Count == 1)
+            {
+                return Task.FromResult(false);
+            }
+            else
+            {
+                return base.Delete();
+            }
+        }
+
         public async ValueTask<object> ExecuteAsync(CancellationToken token)
         {
             int counter = 0;

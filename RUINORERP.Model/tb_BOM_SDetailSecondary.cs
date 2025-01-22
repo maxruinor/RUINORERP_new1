@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 18:56:45
+// 时间：01/21/2025 18:51:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private long? _ProdDetailID;
         /// <summary>
-        /// 货品详情
+        /// 产品详情
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "货品详情")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "货品详情" )]
+        [AdvQueryAttribute(ColName = "ProdDetailID",ColDesc = "产品详情")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ProdDetailID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "产品详情" )]
         [FKRelationAttribute("tb_ProdDetail","ProdDetailID")]
         public long? ProdDetailID
         { 
@@ -68,45 +68,16 @@ namespace RUINORERP.Model
 
         private long? _BOM_ID;
         /// <summary>
-        /// BOM
+        /// BOM配方
         /// </summary>
-        [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "BOM")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "BOM" )]
+        [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "BOM配方")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "BOM配方")]
         [FKRelationAttribute("tb_BOM_S","BOM_ID")]
         public long? BOM_ID
         { 
             get{return _BOM_ID;}
             set{
             SetProperty(ref _BOM_ID, value);
-            }
-        }
-
-        private long _Location_ID;
-        /// <summary>
-        /// 仓库
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "仓库")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "仓库" )]
-        [FKRelationAttribute("tb_Location","Location_ID")]
-        public long Location_ID
-        { 
-            get{return _Location_ID;}
-            set{
-            SetProperty(ref _Location_ID, value);
-            }
-        }
-
-        private string _property;
-        /// <summary>
-        /// 属性
-        /// </summary>
-        [AdvQueryAttribute(ColName = "property",ColDesc = "属性")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "property" ,Length=255,IsNullable = true,ColumnDescription = "属性" )]
-        public string property
-        { 
-            get{return _property;}
-            set{
-            SetProperty(ref _property, value);
             }
         }
 
@@ -135,6 +106,20 @@ namespace RUINORERP.Model
             get{return _Scale;}
             set{
             SetProperty(ref _Scale, value);
+            }
+        }
+
+        private string _property;
+        /// <summary>
+        /// 副产品属性
+        /// </summary>
+        [AdvQueryAttribute(ColName = "property",ColDesc = "副产品属性")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "property" ,Length=255,IsNullable = true,ColumnDescription = "副产品属性" )]
+        public string property
+        { 
+            get{return _property;}
+            set{
+            SetProperty(ref _property, value);
             }
         }
 
@@ -184,17 +169,12 @@ namespace RUINORERP.Model
 
         #region 扩展属性
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(BOM_ID))]
         public virtual tb_BOM_S tb_bom_s { get; set; }
 
         [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
-        [Navigate(NavigateType.OneToOne, nameof(Location_ID))]
-        public virtual tb_Location tb_location { get; set; }
-
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 

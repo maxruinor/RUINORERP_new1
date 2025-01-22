@@ -911,6 +911,7 @@ namespace RUINORERP.UI.ProductEAV
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
             base.BindData(entity);
+            dataGridView1.NeedSaveColumnsXml = true;
             LoadBaseInfoSKUList(_EditEntity);
             listView1.UpdateUI();
             Task task_2 = Task.Run(task_Help);

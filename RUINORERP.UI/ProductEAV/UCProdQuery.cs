@@ -83,7 +83,7 @@ namespace RUINORERP.UI.ProductEAV
             InitializeComponent();
             newSumDataGridView产品.NeedSaveColumnsXml = true;
             newSumDataGridView产品组合.NeedSaveColumnsXml = true;
-            
+
             List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
             kvlist.Add(new KeyValuePair<object, string>(true, "男"));
             kvlist.Add(new KeyValuePair<object, string>(false, "女"));
@@ -113,7 +113,7 @@ namespace RUINORERP.UI.ProductEAV
             // 初始化Timer
             timer.Interval = 1000;
             timer.Tick += new EventHandler(timer_Tick);
-           
+
         }
 
         private bool isMouseOverHeader = false;
@@ -368,14 +368,14 @@ namespace RUINORERP.UI.ProductEAV
                 return;
             }
 
-  
+
 
             //处理创建人 修改人，因为这两个字段没有做外键。固定的所以可以统一处理
 
         }
 
 
-     
+
 
         private void kryptonDataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -579,7 +579,7 @@ namespace RUINORERP.UI.ProductEAV
             var listboms = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_BOM_S>()
                     .RightJoin<tb_ProdDetail>((a, b) => a.ProdDetailID == b.ProdDetailID)
                     // .Includes(a => a.tb_producttype)
-                    .Includes(a => a.tb_BOM_SDetails)
+                    //.Includes(a => a.tb_BOM_SDetails)
                     .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
                     .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
                     .Where(a => allIds.ToArray().Contains(a.ProdDetailID))
@@ -812,7 +812,10 @@ namespace RUINORERP.UI.ProductEAV
             }
             else
             {
-                cmbLocation.SelectedIndex = 1;
+                if (cmbLocation.Items.Count > 1)
+                {
+                    cmbLocation.SelectedIndex = 1;
+                }
             }
 
 

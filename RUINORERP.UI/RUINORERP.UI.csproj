@@ -2595,6 +2595,7 @@
     <Compile Include="WorkFlowTester\WorkWorkflow.cs" />
     <Compile Include="WorkFlowTester\WorkWorkflow2.cs" />
     <None Include="ResourceFile\import_32x32.ico" />
+    <Content Include="InitSQL.sql" />
     <Content Include="ResourceFile\money-rmb.png" />
     <None Include="ResourceFile\人民币 -32.png" />
     <Content Include="ResourceFile\人民币.png" />

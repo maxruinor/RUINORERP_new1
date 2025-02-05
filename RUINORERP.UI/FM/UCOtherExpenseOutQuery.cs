@@ -25,7 +25,7 @@ using RUINORERP.Business.Processor;
 namespace RUINORERP.UI.FM
 {
 
-    [MenuAttrAssemblyInfo("其他费用支出查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收付账款, BizType.其他费用支出)]
+    [MenuAttrAssemblyInfo("其他费用支出查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.其他费用支出)]
     public partial class UCOtherExpenseOutQuery : BaseBillQueryMC<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>
     {
         public UCOtherExpenseOutQuery()

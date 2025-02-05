@@ -31,11 +31,14 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
             base.EditForm = typeof(UCUnitConversionEdit);
 
+            //因为生成时   [FKRelationAttribute("tb_Unit","Target_unit_id")] 这里不对。所以用下面代码修正。生成的会被覆盖
             #region 数据源来源单位和目标单位的字段不等于原始单位表中的主键字段，在显示时通过主键无法找到对应显示的名称
 
             base.SetForeignkeyPointsList<tb_Unit, tb_Unit_Conversion>(s => s.Unit_ID, t => t.Source_unit_id);
             base.SetForeignkeyPointsList<tb_Unit, tb_Unit_Conversion>(s => s.Unit_ID, t => t.Target_unit_id);
-            
+
+            ColDisplayTypes.Add(typeof(tb_Unit));
+
             #endregion
 
         }

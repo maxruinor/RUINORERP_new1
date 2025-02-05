@@ -40,7 +40,7 @@ using Krypton.Toolkit;
 
 namespace RUINORERP.UI.FM
 {
-    [MenuAttrAssemblyInfo("其他费用收入", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收付账款, BizType.其他费用收入)]
+    [MenuAttrAssemblyInfo("其他费用收入", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.其他费用收入)]
     public partial class UCOtherExpenseINC : BaseBillEditGeneric<tb_FM_OtherExpense, tb_FM_OtherExpenseDetail>
     {
         public UCOtherExpenseINC()

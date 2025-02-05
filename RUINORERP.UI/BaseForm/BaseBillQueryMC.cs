@@ -1003,6 +1003,10 @@ namespace RUINORERP.UI.BaseForm
         {
             if (QueryParameters != null)
             {
+                QueryDto = QueryParameters;
+            }
+            if (nodeParameter != null)
+            {
                 if (nodeParameter.queryFilter != null)
                 {
                     //比方todolist 但是标题没有传过来。用现有的标题
@@ -1022,14 +1026,13 @@ namespace RUINORERP.UI.BaseForm
                     }
                     QueryConditionFilter = nodeParameter.queryFilter;
                 }
-                //因为时间不会去掉选择，这里特殊处理
+                //因为时间不会去掉选择，这里特殊处理,(与下面的时间清空是不是重复设置了）
                 foreach (var item in nodeParameter.queryFilter.QueryFields)
                 {
                     if (item.FieldPropertyInfo.PropertyType.Name == "DateTime")
                     {
                         //因为查询UI生成时。自动 转换成代理类如：tb_SaleOutProxy，并且时间是区间型式,将起为null即可
                         QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
-
                         if (kryptonPanelQuery.Controls.Find(item.FieldName, true)[0] is UCAdvDateTimerPickerGroup timerPickerGroup)
                         {
                             timerPickerGroup.dtp1.Checked = false;
@@ -1043,8 +1046,58 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
 
-                Query(QueryParameters, false);
+                //查询条件给值前先将条件清空
+                foreach (var item in nodeParameter.queryFilter.QueryFields)
+                {
+                    if (item.FKTableName.IsNotEmptyOrNull() && item.IsRelated)
+                    {
+                        QueryDto.SetPropertyValue(item.FieldName, -1L);
+                        continue;
+                    }
+                    if (item.FieldPropertyInfo.PropertyType.IsGenericType && item.FieldPropertyInfo.PropertyType.GetBaseType().Name == "DateTime")
+                    {
+                        QueryDto.SetPropertyValue(item.FieldName, null);
+                        if (QueryDto.ContainsProperty(item.FieldName + "_Start"))
+                        {
+                            QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
+                        }
+                        if (QueryDto.ContainsProperty(item.FieldName + "_End"))
+                        {
+                            QueryDto.SetPropertyValue(item.FieldName + "_End", null);
+                        }
+                        continue;
+                    }
+
+                }
+
+
+                //传入查询对象的实例，
+                foreach (ConditionalModel item in nodeParameter.conditionals)
+                {
+                    if (item.ConditionalType == ConditionalType.Equal)
+                    {
+                        switch (item.CSharpTypeName)
+                        {
+                            case "int":
+                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
+                                break;
+                            case "long":
+                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
+                                break;
+                            case "bool":
+                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
+                                break;
+                            default:
+                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
+                                break;
+                        }
+                    }
+                }
+
             }
+
+            Query(QueryDto, false);
+
         }
 
         /// <summary>
@@ -1478,25 +1531,28 @@ namespace RUINORERP.UI.BaseForm
             tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
             if (menuSetting != null)
             {
-                var queryConditionFocused = menuSetting.tb_UIQueryConditions.FirstOrDefault(c => c.Focused == true);
-                if (queryConditionFocused != null)
+                if (menuSetting.tb_UIQueryConditions != null && menuSetting.tb_UIQueryConditions.Count > 0)
                 {
-                    var controls = kryptonPanelQuery.Controls.Find(queryConditionFocused.FieldName, true);
-                    if (controls.Length > 0)
+                    var queryConditionFocused = menuSetting.tb_UIQueryConditions.FirstOrDefault(c => c.Focused == true);
+                    if (queryConditionFocused != null)
                     {
-                        var control = controls[0];
-                        if (control is KryptonTextBox ktxt)
+                        var controls = kryptonPanelQuery.Controls.Find(queryConditionFocused.FieldName, true);
+                        if (controls.Length > 0)
                         {
-                            if (ktxt.CanFocus)
+                            var control = controls[0];
+                            if (control is KryptonTextBox ktxt)
                             {
-                                ktxt.Focus();
+                                if (ktxt.CanFocus)
+                                {
+                                    ktxt.Focus();
+                                }
                             }
-                        }
-                        if (control is KryptonComboBox kcb)
-                        {
-                            if (kcb.CanFocus)
+                            if (control is KryptonComboBox kcb)
                             {
-                                kcb.Focus();
+                                if (kcb.CanFocus)
+                                {
+                                    kcb.Focus();
+                                }
                             }
                         }
                     }
@@ -1506,7 +1562,7 @@ namespace RUINORERP.UI.BaseForm
             if (_UCBillMasterQuery != null)
             {
                 _UCBillMasterQuery.newSumDataGridViewMaster.NeedSaveColumnsXml = false;
-               BaseMainDataGridView = _UCBillMasterQuery.newSumDataGridViewMaster;
+                BaseMainDataGridView = _UCBillMasterQuery.newSumDataGridViewMaster;
                 await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols);
 
             }

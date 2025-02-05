@@ -674,14 +674,15 @@ namespace RUINORERP.UI.SysConfig
                 {
                     #region 用户密码加密
                     List<tb_UserInfo> AllUsers = MainForm.Instance.AppContext.Db.Queryable<tb_UserInfo>()
-                        .Where(c => c.UserName== "龙成华")
+                        .Where(c => c.Password.Length < 10)
                      .ToList();
                     for (int i = 0; i < AllUsers.Count; i++)
                     {
                         AllUsers[i].Notes = AllUsers[i].Password;
                         string enPwd = EncryptionHelper.AesEncryptByHashKey(AllUsers[i].Password, AllUsers[i].UserName);
                         AllUsers[i].Password = enPwd;
-                        // string pwd = EncryptionHelper.AesDecryptByHashKey(enPwd, "张三");
+                        // string pwd = EncryptionHelper.AesDecryptByHashKey(enPwd, "张家歌");
+                        richTextBoxLog.AppendText($"要修复的用户:{AllUsers[i].UserName}" + "\r\n");
                     }
 
                     #endregion

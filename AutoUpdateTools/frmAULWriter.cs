@@ -801,11 +801,20 @@ namespace AULWriter
             //在此处获取文件或者文件夹的路径
             Array array = (Array)e.Data.GetData(DataFormats.FileDrop);
 
+            //已经存在的文件 这里用这个来判断不要重复
+            string[] files = txtUpdatedFiles.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
             //排序
             Array.Sort(array);
 
             foreach (string path in array)
             {
+                if (files.Contains(path))
+                {
+                    richTxtLog.AppendText($"{path}这个路径已存在将会忽略。\r\n");
+                    //已经存在
+                    continue;
+                }
                 if (File.Exists(path))
                 {
                     sb.Append(path).Append("\r\n");

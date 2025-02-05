@@ -224,6 +224,9 @@ namespace RUINORERP.UI.IM
                         case "long":
                             QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
                             break;
+                        case "bool":
+                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
+                            break;
                         default:
                             QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
                             break;
